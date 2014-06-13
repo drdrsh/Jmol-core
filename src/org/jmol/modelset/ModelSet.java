@@ -2350,9 +2350,9 @@ import java.util.Properties;
       int ia = ((BS) specInfo).nextSetBit(0);
       if (ia < 0)
         return new BS();
-      if (at[ia].getGroup3(true) != null)
+      if (at[ia].group.isProtein)
         return at[ia].group.getBSSideChain();
-      // treat as molecule if not PDB residue;
+      // treat as molecule if not PDB protein;
       //$FALL-THROUGH$
     case T.molecule:
       return getMoleculeBitSet((BS) specInfo);
