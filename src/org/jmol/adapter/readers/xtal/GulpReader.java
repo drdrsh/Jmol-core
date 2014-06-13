@@ -5,7 +5,6 @@ import java.util.Map;
 
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.SymmetryInterface;
 import javajs.util.V3;
@@ -140,7 +139,7 @@ public class GulpReader extends AtomSetCollectionReader {
 
   private float a, b, c, alpha, beta, gamma;
   private float[] primitiveData;
-  private static String[] tags = AtomSetCollection.notionalUnitcellTags;
+  final private static String[] tags = { "a", "b", "c", "alpha", "beta", "gamma" };
 
   private static int parameterIndex(String key) {
     for (int i = tags.length; --i >= 0;)

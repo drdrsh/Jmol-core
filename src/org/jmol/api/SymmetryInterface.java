@@ -168,7 +168,7 @@ public interface SymmetryInterface {
 
   public void setSpaceGroupFrom(SymmetryInterface symmetry);
 
-  public void setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo);
+  public void setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, float[] notionalCell);
 
   public void setTimeReversal(int op, int val);
 

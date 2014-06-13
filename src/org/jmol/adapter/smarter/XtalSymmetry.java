@@ -159,6 +159,8 @@ public class XtalSymmetry {
     Logger.info("Using supercell \n" + matSupercell);
   }
 
+  private Lst<float[]> trajectoryUnitCells;
+  
   private void setNotionalUnitCell(float[] info, M3 matUnitCellOrientation,
                                    P3 unitCellOffset) {
     notionalUnitCell = new float[info.length];
@@ -167,6 +169,13 @@ public class XtalSymmetry {
       notionalUnitCell[i] = info[i];
     asc.haveUnitCell = true;
     asc.setAtomSetAuxiliaryInfo("notionalUnitcell", notionalUnitCell);
+    if (asc.isTrajectory) {
+      if (trajectoryUnitCells == null) {
+        trajectoryUnitCells = new Lst<float[]>();
+        asc.setInfo("unitCells", trajectoryUnitCells);
+      }
+      trajectoryUnitCells.addLast(notionalUnitCell);
+    }
     asc.setGlobalBoolean(AtomSetCollection.GLOBAL_UNITCELLS);
     getSymmetry().setUnitCell(notionalUnitCell, false);
     // we need to set the auxiliary info as well, because 

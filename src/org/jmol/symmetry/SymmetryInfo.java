@@ -53,7 +53,7 @@ class SymmetryInfo {
   SymmetryInfo() {    
   }
   
-  float[] setSymmetryInfo(Map<String, Object> info) {
+  float[] setSymmetryInfo(Map<String, Object> info, float[] notionalUnitCell) {
     cellRange = (int[]) info.get("unitCellRange");
     periodicOriginXyz = (P3) info.get("periodicOriginXyz");
     sgName = (String) info.get("spaceGroup");
@@ -86,14 +86,15 @@ class SymmetryInfo {
       infoStr += s;
     }
     infoStr += "\n";
-    float[] notionalUnitcell = (float[]) info.get("notionalUnitcell");
-    if (!SimpleUnitCell.isValid(notionalUnitcell))
+    if (notionalUnitCell == null)
+      notionalUnitCell = (float[]) info.get("notionalUnitcell");
+    if (!SimpleUnitCell.isValid(notionalUnitCell))
       return null;
     coordinatesAreFractional = info.containsKey("coordinatesAreFractional") ? 
         ((Boolean) info.get("coordinatesAreFractional")).booleanValue() 
         : false;    
     isMultiCell = (coordinatesAreFractional && symmetryOperations != null);
-    return notionalUnitcell;
+    return notionalUnitCell;
   }
 }
 

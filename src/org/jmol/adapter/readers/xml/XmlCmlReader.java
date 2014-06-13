@@ -24,7 +24,6 @@
 package org.jmol.adapter.readers.xml;
 
 import org.jmol.adapter.smarter.Bond;
-import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.Atom;
 
 import java.util.NoSuchElementException;
@@ -422,6 +421,9 @@ public class XmlCmlReader extends XmlReader {
     }
   }
 
+  final private static String[] notionalUnitcellTags = { "a", "b", "c", "alpha",
+    "beta", "gamma" };
+
   @Override
   void processEndElement(String name) {
     // if (!uri.equals(NAMESPACE_URI))
@@ -474,7 +476,7 @@ public class XmlCmlReader extends XmlReader {
       if (name.equals("scalar")) {
         state = CRYSTAL;
         if (scalarTitle != null)
-          checkUnitCellItem(AtomSetCollection.notionalUnitcellTags, scalarTitle);
+          checkUnitCellItem(notionalUnitcellTags, scalarTitle);
         else if (scalarDictRef != null)
           checkUnitCellItem(JmolAdapter.cellParamNames, (scalarDictValue
               .startsWith("_") ? scalarDictValue : "_" + scalarDictValue));

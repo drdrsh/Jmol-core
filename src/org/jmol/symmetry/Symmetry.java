@@ -326,9 +326,9 @@ public class Symmetry implements SymmetryInterface {
   @SuppressWarnings("unchecked")
   @Override
   public void setSymmetryInfo(int modelIndex,
-                              Map<String, Object> modelAuxiliaryInfo) {
+                              Map<String, Object> modelAuxiliaryInfo, float[] notionalCell) {
     symmetryInfo = new SymmetryInfo();
-    float[] notionalUnitcell = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo);
+    float[] notionalUnitcell = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo, notionalCell);
     if (notionalUnitcell == null)
       return;
     setUnitCell(notionalUnitcell, modelAuxiliaryInfo.containsKey("jmolData"));

@@ -996,12 +996,19 @@ public final class ModelLoader {
       ms.unitCells = new SymmetryInterface[ms.mc];
       ms.haveUnitCells = true;
       boolean haveMergeCells = (mergeModelSet != null && mergeModelSet.unitCells != null);
-      for (int i = 0; i < ms.mc; i++) {
+      for (int i = 0, pt = 0; i < ms.mc; i++) {
         if (haveMergeCells && i < baseModelCount) {
           ms.unitCells[i] = mergeModelSet.unitCells[i];
         } else {
           ms.unitCells[i] = Interface.getSymmetry();
-          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i));
+          float[] notionalCell = null;
+          if (isTrajectory) {
+            @SuppressWarnings("unchecked")
+            Lst<float[]> lst = (Lst<float[]>) ms.getInfoM("unitCells");
+            if (lst != null)
+              notionalCell = lst.get(pt++);
+          }
+          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i), notionalCell);
         }
       }
     }

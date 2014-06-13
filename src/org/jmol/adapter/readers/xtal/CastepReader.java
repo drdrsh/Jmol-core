@@ -328,6 +328,8 @@ public class CastepReader extends AtomSetCollectionReader {
   }
 
   private void readEnergy(int pt) throws Exception {
+    if (isTrajectory)
+      asc.setTrajectory();
     tokens = getTokens();
     try {
       Double energy = Double.valueOf(Double.parseDouble(tokens[pt]));
@@ -337,15 +339,21 @@ public class CastepReader extends AtomSetCollectionReader {
     } catch (Exception e) {
       appendLoadNote("CASTEP Energy could not be read: " + line);
     }
-    /*    
-    is better to do this also here
-    in case the output is only a 
-    geometry optimization and not 
-    both volume and geometry
-     */
-    applySymmetryAndSetTrajectory();
-    asc.newAtomSetClear(false);
-    setLatticeVectors();
+
+// this change, 4/16/2013, broke the optimization reader
+// one should never start a new atom set without actually
+// adding new atoms. The reader will apply symmetry in the
+// finalization stage. 
+//
+//    /*    
+//    is better to do this also here
+//    in case the output is only a 
+//    geometry optimization and not 
+//    both volume and geometry
+//     */
+//    applySymmetryAndSetTrajectory();
+//    asc.newAtomSetClear(false);
+//    setLatticeVectors();
   }
   
   private void readPhononTrajectories() throws Exception {

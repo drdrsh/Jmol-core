@@ -84,9 +84,6 @@ public class AtomSetCollection {
     return (getAtomSetCollectionAuxiliaryInfo(globalBooleans[globalIndex]) == Boolean.TRUE);
   }
 
-  final public static String[] notionalUnitcellTags = { "a", "b", "c", "alpha",
-      "beta", "gamma" };
-
   public Atom[] atoms = new Atom[256];
   public int ac;
   public Bond[] bonds = new Bond[256];
@@ -163,11 +160,39 @@ public class AtomSetCollection {
   }
 
   public void setTrajectory() {
-    if (!isTrajectory) {
+    if (!isTrajectory)
       trajectorySteps = new Lst<P3[]>();
-    }
     isTrajectory = true;
-    addTrajectoryStep();
+    int n = (bsAtoms == null ? ac : bsAtoms.cardinality());
+    if (n == 0)
+      return;
+    P3[] trajectoryStep = new P3[n];
+    boolean haveVibrations = (n > 0 && atoms[0].vib != null && !Float
+        .isNaN(atoms[0].vib.z));
+    V3[] vibrationStep = (haveVibrations ? new V3[n] : null);
+    P3[] prevSteps = (trajectoryStepCount == 0 ? null : (P3[]) trajectorySteps
+        .get(trajectoryStepCount - 1));
+    for (int i = 0, ii = 0; i < ac; i++) {
+      if (bsAtoms != null && !bsAtoms.get(i))
+        continue;
+      P3 pt = P3.newP(atoms[i]);
+      if (doFixPeriodic && prevSteps != null)
+        pt = fixPeriodic(pt, prevSteps[i]);
+      trajectoryStep[ii] = pt;
+      if (haveVibrations)
+        vibrationStep[ii] = atoms[i].vib;
+      ii++;
+    }
+    if (haveVibrations) {
+      if (vibrationSteps == null) {
+        vibrationSteps = new Lst<V3[]>();
+        for (int i = 0; i < trajectoryStepCount; i++)
+          vibrationSteps.addLast(null);
+      }
+      vibrationSteps.addLast(vibrationStep);
+    }
+    trajectorySteps.addLast(trajectoryStep);
+    trajectoryStepCount++;
   }
 
   /**
@@ -788,37 +813,6 @@ public class AtomSetCollection {
   ////////////////////////////////////////////////////////////////
   // atomSet stuff
   ////////////////////////////////////////////////////////////////
-
-  private void addTrajectoryStep() {
-    int n = (bsAtoms == null ? ac : bsAtoms.cardinality());
-    P3[] trajectoryStep = new P3[n];
-    boolean haveVibrations = (n > 0 && atoms[0].vib != null && !Float
-        .isNaN(atoms[0].vib.z));
-    V3[] vibrationStep = (haveVibrations ? new V3[n] : null);
-    P3[] prevSteps = (trajectoryStepCount == 0 ? null : (P3[]) trajectorySteps
-        .get(trajectoryStepCount - 1));
-    for (int i = 0, ii = 0; i < ac; i++) {
-      if (bsAtoms != null && !bsAtoms.get(i))
-        continue;
-      P3 pt = P3.newP(atoms[i]);
-      if (doFixPeriodic && prevSteps != null)
-        pt = fixPeriodic(pt, prevSteps[i]);
-      trajectoryStep[ii] = pt;
-      if (haveVibrations)
-        vibrationStep[ii] = atoms[i].vib;
-      ii++;
-    }
-    if (haveVibrations) {
-      if (vibrationSteps == null) {
-        vibrationSteps = new Lst<V3[]>();
-        for (int i = 0; i < trajectoryStepCount; i++)
-          vibrationSteps.addLast(null);
-      }
-      vibrationSteps.addLast(vibrationStep);
-    }
-    trajectorySteps.addLast(trajectoryStep);
-    trajectoryStepCount++;
-  }
 
   private static P3 fixPeriodic(P3 pt, P3 pt0) {
     pt.x = fixPoint(pt.x, pt0.x);
