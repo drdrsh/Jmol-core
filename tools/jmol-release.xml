@@ -1,0 +1,119 @@
+<project name="Jmol releases" default="deploy" basedir="..">
+
+  <!--
+    To use this script, the scp task must be available.
+    The scp task requires the jsch jar in the class path.
+  -->
+
+  <!-- Contributions -->
+  <taskdef resource="net/sf/antcontrib/antlib.xml">
+    <classpath>
+      <pathelement location="tools/ant-contrib.jar" />
+    </classpath>
+  </taskdef>
+
+  <property name="zipOnly"         value="true" />
+  <property name="dist.dir"        value="build/dist" />
+  <property name="src.dir"         value="src" />
+  <property name="temp.dir"        value="build/release" />
+  <property name="web.dir"         value="/home/frs/project/j/jm/jmol" />
+  <property name="web.host"        value="frs.sourceforge.net" />
+  <property name="path.release"    value="Jmol-beta/Jmol 14.1" />
+  <property name="prefix.release"  value="Jmol " />
+
+  <property file="${dist.dir}/Jmol.properties" prefix="Jmol.properties" />
+  <property name="version" value="${Jmol.properties.___JmolVersion}" />
+  <propertyregex property="version"
+  			  override = "true"
+	          input="${version}"
+  			  regexp='"'
+	          replace=""
+  		      global="true"
+	          />
+  <echo message="version=${version}" />
+
+  <!-- Copying files to website -->
+  <target name="deploy" >
+
+  	
+    <!-- Ask user for confirmation -->
+
+    <input
+      message="Destination Path: (clear to exit)"
+      defaultvalue="${path.release}/${prefix.release}${version}"
+      addproperty="uploadPath"
+    />
+
+<!-- 	
+  	<input
+      message="Filepath  ${uploadPath0} ?"
+      validargs="y,n"
+      defaultvalue="y"
+      addproperty="do.scp"
+    />
+-->  	
+    <condition property="do.abort">
+      <equals arg1="n" arg2="${do.scp}"/>
+    </condition>
+    <fail if="do.abort">Build aborted by user.</fail>
+
+    <!-- Ask user for username and password -->
+    <input
+      message="${uploadPath} - Please enter username:"
+      addproperty="ssh.user"
+    >
+    	<!-- handler type="secure"/ -->
+    </input>
+    <input
+      message="${uploadPath} - Please enter password:"
+      addproperty="ssh.password"
+    />
+
+    <!-- Prepare temporary image -->
+    <delete dir="${temp.dir}" />
+    <mkdir dir="${temp.dir}" />
+    <mkdir dir="${temp.dir}/${uploadPath}" />
+    <copy todir="${temp.dir}/${uploadPath}"
+          file="${dist.dir}/Jmol-${version}-binary.zip" />
+    <copy tofile="${temp.dir}/${uploadPath}/README-${version}.properties"
+          file="${dist.dir}/Jmol.properties" />
+
+  	<if>
+     <equals arg1="${zipOnly}" arg2="false" />
+  	 <then>
+	    <copy todir="${temp.dir}/${uploadPath}"
+	          file="${dist.dir}/Jmol-${version}-binary.tar.gz" />
+	    <copy todir="${temp.dir}/${uploadPath}"
+	          file="${dist.dir}/Jmol-${version}-full.tar.gz" />
+  	 </then>
+  	</if>
+
+    <!-- Do the copy using scp -->
+    <echo message="Copying binary.zip to ${web.dir}" level="info"/>
+    <scp todir="${ssh.user},jmol:${ssh.password}@${web.host}:${web.dir}"
+         trust="yes" failonerror="true">
+      <fileset dir="${temp.dir}">
+        <include name="**/*.zip"/>
+        <include name="**/*.properties"/>
+      </fileset>
+    </scp>
+    <echo message="Copying binary.tar.gz to ${web.dir}" level="info"/>
+    <scp todir="${ssh.user},jmol:${ssh.password}@${web.host}:${web.dir}"
+         trust="yes" failonerror="true">
+      <fileset dir="${temp.dir}">
+        <include name="**/*-binary.tar.gz"/>
+      </fileset>
+    </scp>
+    <echo message="Copying full.tar.gz to ${web.dir}" level="info"/>
+    <scp todir="${ssh.user},jmol:${ssh.password}@${web.host}:${web.dir}"
+         trust="yes" failonerror="true">
+      <fileset dir="${temp.dir}">
+        <include name="**/*-full.tar.gz"/>
+      </fileset>
+    </scp>
+
+  	<!-- Cleanup -->
+    <delete dir="${temp.dir}"/>
+  </target>
+
+</project>
