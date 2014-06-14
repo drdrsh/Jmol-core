@@ -329,7 +329,7 @@ public class CastepReader extends AtomSetCollectionReader {
 
   private void readEnergy(int pt) throws Exception {
     if (isTrajectory)
-      asc.setTrajectory();
+      applySymmetryAndSetTrajectory();
     tokens = getTokens();
     try {
       Double energy = Double.valueOf(Double.parseDouble(tokens[pt]));
