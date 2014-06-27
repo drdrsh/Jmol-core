@@ -358,6 +358,8 @@ public class CastepReader extends AtomSetCollectionReader {
   
   private void readPhononTrajectories() throws Exception {
     isTrajectory = (desiredVibrationNumber <= 0);
+    if (isTrajectory)
+      asc.setTrajectory();
     doApplySymmetry = true;
     while (line != null && line.contains("<-- E")) {
       asc.newAtomSetClear(false);
