@@ -532,13 +532,13 @@ public class CifReader extends AtomSetCollectionReader {
         + data);
   }
 
-  private final static float[] centerOpts = { 0f, 1f, -1f, 0.5f, -0.5f };
-  private final static String  centerToks = "    1    -1   1/2  -1/2 ";
-                                          // -1  5    10   15   20
-  
   private void addLatticeVectors() {
     lattvecs = null;
     if (centerings != null) {
+      // could be x+1/2,y+1/2,z,+1
+      // or   x+0.5,y+0.5,z,+1
+      // or   0.5+x,0.5+y,z,+1
+      //
       latticeType = "Magnetic";
       lattvecs = new Lst<float[]>();
       for (int i = 0; i < centerings.size(); i++) {
@@ -547,9 +547,18 @@ public class CifReader extends AtomSetCollectionReader {
         f[4] = Float.NaN; // flags magnetic
         String[] tokens = PT.split(PT.replaceAllCharacters(s, "xyz+",""), ",");
         int n = 0;
-        for (int j = 0; j < tokens.length; j++)
-          if ((f[j] = centerOpts[(centerToks.indexOf(tokens[j].trim()) + 1) / 5]) != 0)
+        for (int j = 0; j < tokens.length; j++) {
+          s = tokens[j].trim();
+          if (s.length() == 0)
+            continue;
+          int pt = s.indexOf("/");
+          if (pt < 0) {
+            pt = s.length();
+            s += "/1";
+          }
+          if ((f[j] = PT.parseFloat(s.substring(0, pt)) / PT.parseFloat(s.substring(pt + 1))) != 0)
             n++;
+        }
         if (n >= 2) // needs to have an x y or z as well as a +/-1;
           lattvecs.addLast(f);
       }
@@ -1401,11 +1410,20 @@ public class CifReader extends AtomSetCollectionReader {
       addLatticeVectors();
   }
 
-  final private static byte MAGN_CENTERING = 0;
+  final static byte MAGN_CENTERING = 0;
   
   final private static String[] magnCenteringFields = {
     "_space_group_symop_magn_centering_xyz"
   };
+
+//loop_
+//_space_group_symop.magn_centering_id
+//_space_group_symop.magn_centering_xyz
+//
+//1 x+2/3,y+1/3,z+1/3,+1 mx,my,mz
+//2 x+1/3,y+2/3,z+2/3,+1 mx,my,mz
+//3 x,y,z,+1 mx,my,mz
+
 
   private void processMagCenteringLoopBlock() throws Exception {
     parseLoopParameters(magnCenteringFields);

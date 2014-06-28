@@ -215,13 +215,10 @@ public class MSCifRdr extends MSRdr {
    */
   public int processLoopBlock() throws Exception {
     CifReader cr = (CifReader) this.cr;
-    if (cr.key.equals("_cell_subsystem_code")) {
-      processSubsystemLoopBlock();
-      return 1;
-    }
-    if (cr.key.equals("_jana_cell_twin_matrix_id")) {
-      processTwinMatrixLoopBlock();
-    }
+    if (cr.key.equals("_cell_subsystem_code"))
+      return processSubsystemLoopBlock();
+    if (cr.key.equals("_jana_cell_twin_matrix_id"))
+      return processTwinMatrixLoopBlock();
     if (!cr.key.startsWith("_cell_wave") && !cr.key.contains("fourier")
         && !cr.key.contains("_special_func"))
       return 0;
@@ -408,6 +405,7 @@ public class MSCifRdr extends MSRdr {
     return 1;
   }
     
+  
   private void addMod(String id, String fid, double[] params) {
     if (fid != null)
       id += fid;
@@ -437,7 +435,7 @@ public class MSCifRdr extends MSRdr {
   //2 '2-nd subsystem' 1 0 0 1 0 1 0 0 0 0 1 0 0 0 0 1
   //
   
-  private void processSubsystemLoopBlock() throws Exception {
+  private int processSubsystemLoopBlock() throws Exception {
     CifReader cr = (CifReader) this.cr;
     cr.parseLoopParameters(null);
     while (cr.parser.getData()) {
@@ -445,9 +443,10 @@ public class MSCifRdr extends MSRdr {
       String id = field;
       addSubsystem(id, getSparseMatrix(cr, "_w_", 1, 3 + modDim));
     }
+    return 1;
   }
 
-  private void processTwinMatrixLoopBlock() throws Exception {
+  private int processTwinMatrixLoopBlock() throws Exception {
     CifReader cr = (CifReader) this.cr;
     cr.parseLoopParameters(null);
     while (cr.parser.getData()) {
@@ -455,6 +454,7 @@ public class MSCifRdr extends MSRdr {
       String id = field;
       addTwin(id, getSparseMatrix(cr, "_matrix_", 1, 3));
     }
+    return 1;
   }
 
   private void addTwin(String id, Matrix m) {
