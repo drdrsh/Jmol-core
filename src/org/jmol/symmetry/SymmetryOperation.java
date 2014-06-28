@@ -266,8 +266,10 @@ class SymmetryOperation extends M4 {
       this.xyz = (isBio ? toString() : getXYZFromMatrix(this, false, false, false));
       return true;
     }
-    if (xyz.indexOf(",m") >= 0)
+    if (xyz.indexOf(",m") >= 0) {
       timeReversal = (xyz.indexOf(",m-1") >= 0 ? -1 : 1);
+      allowScaling = true;
+    }
     String strOut = getMatrixFromString(this, xyz, linearRotTrans, allowScaling);
     if (strOut == null)
       return false;

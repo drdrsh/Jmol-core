@@ -106,7 +106,7 @@ class SpaceGroup {
   SymmetryOperation[] finalOperations;
   int operationCount;
   int latticeOp = -1;
-  Map<String, Integer> xyzList = new Hashtable<String, Integer>();
+  Map<String, Integer> xyzList;
 
   private int modDim;
 
@@ -123,18 +123,23 @@ class SpaceGroup {
   
   private SpaceGroup(String cifLine, boolean doInit) {
     index = ++sgIndex;
+    init(doInit && cifLine == null);
     if (!doInit)
       return;
-    if (cifLine == null) {
-      addSymmetry("x,y,z", 0, false);
-    } else {
+    if (cifLine != null)
       buildSpaceGroup(cifLine);
-    }
   }
 
   SpaceGroup set(boolean doNormalize) {
     this.doNormalize = doNormalize;
     return this;
+  }
+  
+  private void init(boolean addXYZ) {
+    xyzList = new Hashtable<String, Integer>();
+    operationCount = 0;
+    if (addXYZ)
+      addSymmetry("x,y,z", 0, false);
   }
   
   static SpaceGroup createSpaceGroup(int desiredSpaceGroupIndex,
@@ -436,7 +441,7 @@ class SpaceGroup {
   
   private int addOperation(String xyz0, int opId, boolean allowScaling) {
     if (xyz0 == null || xyz0.length() < 3) {
-      xyzList = new Hashtable<String, Integer>();
+      init(false);
       return -1;
     }
     boolean isSpecial = (xyz0.charAt(0) == '=');
@@ -494,8 +499,7 @@ class SpaceGroup {
   }
 
   private void generateOperatorsFromXyzInfo(String xyzInfo) {
-    addOperation(null, 0, false);
-    addSymmetry("x,y,z", 0, false);
+    init(true);
     String[] terms = PT.split(xyzInfo.toLowerCase(), ";");
     for (int i = 0; i < terms.length; i++)
       addSymmetry(terms[i], 0, false);
@@ -512,8 +516,7 @@ class SpaceGroup {
       if (hallInfo == null || hallInfo.nRotations == 0)
         h = hallInfo = new HallInfo(hallSymbol);
       setLattice(hallInfo.latticeCode, hallInfo.isCentrosymmetric);
-      addOperation(null, 0, false);
-      addSymmetry("x,y,z", 0, false);
+      init(true);
     }
     M4 mat1 = new M4();
     M4 operation = new M4();
