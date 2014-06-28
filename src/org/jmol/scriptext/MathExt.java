@@ -2374,28 +2374,13 @@ public class MathExt implements JmolMathExtension {
 
   private boolean evaluateWrite(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
-    if (args.length == 0)
-      return false;
-
-    String s = args[0].asString().toUpperCase();
-    if (s.equalsIgnoreCase("COORDS"))
-      s = "COORD";
     switch (args.length) {
+    case 0:
+      return false;
     case 1:
-      if (s.equals("PNGJ"))
-        return mp.addXMap(vwr.getFileAsMap(null));
-      if (s.equals("COORD"))
-        args = new SV[] { SV.newS(s), SV.newS("t.mol") };
-      break;
-    case 2:
-      // write COORD "XXX.MOL"
-      if (s.equals("COORD")) {
-        s = args[1].asString().toUpperCase();
-        if (s.indexOf(".") < 0) // we need an extension
-          s = "." + (s.length() == 0 ? "MOL" : s);
-        args = new SV[] { SV.newS("COORD"), SV.newS(s) };
-      }
-      break;
+      if (!args[0].asString().toUpperCase().equals("PNGJ"))
+        break;
+      return mp.addXMap(vwr.getFileAsMap(null));
     }
     return mp.addXStr(e.getCmdExt().write(args));
   }

@@ -5902,8 +5902,11 @@ public class CmdExt implements JmolCmdExtension {
       }
       if (tok == T.image) {
         T t = T.getTokenFromName(SV.sValue(args[pt]).toLowerCase());
-        if (t != null)
+        if (t != null) {
           type = SV.sValue(t).toUpperCase();
+          isCoord = (t.tok == T.coord);
+          pt++;
+        }
         if (PT.isOneOf(type, driverList.toUpperCase())) {
           // povray, maya, vrml, idtf
           pt++;
@@ -5917,7 +5920,7 @@ public class CmdExt implements JmolCmdExtension {
         } else if (PT.isOneOf(type, ";ZIP;ZIPALL;SPT;STATE;")) {
           pt++;
           break;
-        } else {
+        } else if (!isCoord){
           type = "(image)";
         }
       }
@@ -5984,7 +5987,7 @@ public class CmdExt implements JmolCmdExtension {
           // write isosurface filename.xxx also
           fileName += "." + SV.sValue(tokenAt(pt + 2, args));
         }
-        if (type != "VAR" && pt == pt0)
+        if (type != "VAR" && pt == pt0 && !isCoord)
           type = "IMAGE";
         else if (fileName.length() > 0 && fileName.charAt(0) == '.'
             && (pt == pt0 + 1 || pt == pt0 + 2)) {
