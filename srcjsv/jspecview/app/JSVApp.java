@@ -252,8 +252,7 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	}
 
 	private void toggle(ScriptToken st) {
-		JSVPanel jsvp = vwr.selectedPanel;
-		if (jsvp != null)
+		if (vwr.selectedPanel != null)
 			runScript(st + " TOGGLE");
 	}
 
@@ -276,16 +275,7 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	 */
 	@Override
 	public void addHighlight(double x1, double x2, int r, int g, int b, int a) {
-		vwr.addHighLight(x1, x2, r, g, b, a);
-	}
-
-	/**
-	 * Method that can be called from another applet or from javascript that
-	 * removes all highlights from the plot area of a <code>JSVPanel</code>
-	 */
-	@Override
-	public void removeAllHighlights() {
-		vwr.removeAllHighlights();
+		runScript("HIGHLIGHT " + x1 + " " +x2 + " " + r + " " + g +  " " + b + " " + a); 
 	}
 
 	/**
@@ -299,7 +289,16 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	 */
 	@Override
 	public void removeHighlight(double x1, double x2) {
-		vwr.removeHighlight(x1, x2);
+		runScript("HIGHLIGHT " + x1 + " " + x2 + " OFF"); 
+	}
+
+	/**
+	 * Method that can be called from another applet or from javascript that
+	 * removes all highlights from the plot area of a <code>JSVPanel</code>
+	 */
+	@Override
+	public void removeAllHighlights() {
+		runScript("HIGHLIGHT OFF"); 
 	}
 
 	@Override
@@ -395,8 +394,9 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	}
 
 	/**
-	 * fires peakCallback ONLY if there is a peak found fires coordCallback ONLY
-	 * if there is no peak found or no peakCallback active
+	 * fires peakCallback ONLY if there is a peak found 
+	 * 
+	 * fires coordCallback ONLY if there is no peak found or no peakCallback active
 	 * 
 	 * if (peakFound && havePeakCallback) { do the peakCallback } else { do the
 	 * coordCallback }
@@ -551,8 +551,8 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 
 	@Override
 	public void siValidateAndRepaint(boolean isAll) {
-		PanelData pd;
-		if (vwr.selectedPanel != null && (pd = vwr.pd()) != null)
+		PanelData pd = vwr.pd();
+		if (pd != null)
 			pd.taintedAll = true;
 		appletFrame.validate();
 		repaint();

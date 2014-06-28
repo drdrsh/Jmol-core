@@ -274,8 +274,7 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 					break;
 				case INTEGRATIONRATIOS:
 					integrationRatios = value;
-					if (!isClosed())
-						execIntegrate(null);
+					execIntegrate(null);
 					break;
 				case INTERFACE:
 					interfaceOverlaid = checkOvelayInterface(value);
@@ -339,6 +338,9 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 				case VIEW:
 					execView(value, true);
 					break;
+				case HIGHLIGHT:
+					isOK = highlight(token);
+					break;
 				case FINDX:
 				case GETSOLUTIONCOLOR:
 				case INTEGRATION:
@@ -362,7 +364,7 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 				case YSCALE:
 				case WRITE:
 				case ZOOM:
-					if (selectedPanel == null) {
+					if (isClosed()) {
 						isOK = false;
 						break;
 					}
@@ -482,10 +484,6 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 		return (value.equalsIgnoreCase("single") || value.equalsIgnoreCase("overlay"));
 	}
 
-	public PanelData pd() {
-		return (selectedPanel == null ? null : selectedPanel.getPanelData());
-	}
-
 	private void execPeak(String value) {
 		try {
 			Lst<String> tokens = ScriptToken.getTokens(value);
@@ -528,14 +526,55 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 				}
 			}
 		}
+	}
 
+	private boolean highlight(String value) {
+		Lst<String> tokens = ScriptToken.getTokens(value);
+		int n = tokens.size();
+		switch (n) {
+		case 3:
+		case 5:
+		case 6:
+		case 7:
+			break;
+		case 2:
+		case 4:
+			if (tokens.get(n - 1).equalsIgnoreCase("OFF"))
+				break;
+			//$FALL-THROUGH$
+		default:
+			return false;
+		}
+		if (!isClosed()) {
+			float x1 = PT.parseFloat(n > 1 ? tokens.get(1) : "");
+			float x2 = PT.parseFloat(n > 2 ? tokens.get(2) : "");
+			int r = getRGB(n > 3 ? tokens.get(3) : "100");
+			int g = getRGB(n > 4 ? tokens.get(4) : "100");
+			int b = getRGB(n > 5 ? tokens.get(5) : "100");
+			int a = getRGB(n > 6 ? tokens.get(6) : "100");
+			if (Float.isNaN(x1) || Float.isNaN(x2)) {
+				pd().removeAllHighlights();
+			} else {
+				pd().removeHighlight(x1, x2);
+				if (a < 0)
+					a = 150;
+				if (r >= 0 && g >= 0 && b >= 0)
+					pd().addHighlight(null, x1, x2, null, r, g, b, a);
+			}
+			repaint(true);
+		}
+		return true;
+	}
+
+  private int getRGB(String s) {
+		float f = PT.parseFloat(s);
+		return (int) (Float.isNaN(f) ? -1 : f > 1 ? f : f * 255);
 	}
 
 	private boolean execZoom(String value) {
 		double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-		Lst<String> tokens;
 		value = PT.rep(value, " - ", " ").replace(',',' ');
-		tokens = ScriptToken.getTokens(value);
+		Lst<String> tokens = ScriptToken.getTokens(value);
 		switch (tokens.size()) {
 		default:
 			return false;
@@ -579,8 +618,12 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 		}
 	}
 
+	public PanelData pd() {
+		return (selectedPanel == null ? null : selectedPanel.getPanelData());
+	}
+
 	private boolean isClosed() {
-		return (selectedPanel == null || pd() == null);
+		return (pd() == null);
 	}
 	
 	private void execSelect(String value) {
@@ -626,7 +669,7 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 	}
 
 	private void execIntegrate(String value) {
-		if (selectedPanel == null)
+		if (isClosed())
 			return;
 		pd().checkIntegral(parameters, value);
 		if (integrationRatios != null)
@@ -650,7 +693,7 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 			p.integralOffset = value;
 			break;
 		}
-		if (selectedPanel != null)
+		if (!isClosed())
 			pd().checkIntegral(parameters, "update");
 	}
 
@@ -704,13 +747,6 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 	}
 
 	// / from JavaScript
-
-	public void addHighLight(double x1, double x2, int r, int g, int b, int a) {
-		if (!isClosed()) {
-			pd().addHighlight(null, x1, x2, null, r, g, b, a);
-			repaint(false);
-		}
-	}
 
 	/**
 	 * incoming script processing of <PeakAssignment file="" type="xxx"...> record
@@ -967,9 +1003,7 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 	}
 
 	public String getCoordinate() {
-		// important to use getSelectedPanel() here because it may be from MainFrame
-		// in PRO
-		if (selectedPanel != null) {
+		if (!isClosed()) {
 			Coordinate coord = pd().getClickedCoordinate();
 			if (coord != null)
 				return coord.getXVal() + " " + coord.getYVal();
@@ -1492,20 +1526,6 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 		si.siSetCurrentSource(node.getPanelNode().source);
 	}
 
-	public void removeAllHighlights() {
-		if (!isClosed()) {
-			pd().removeAllHighlights();
-			repaint(false);
-		}
-	}
-
-	public void removeHighlight(double x1, double x2) {
-		if (!isClosed()) {
-			pd().removeHighlight(x1, x2);
-			repaint(false);
-		}
-	}
-
 	public void dispose() {
 		fileHelper = null;
 		if (viewDialog != null)
@@ -1556,9 +1576,9 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 	private int recentStackPercent = 5;
 
 	private void execOverlayOffsetY(int offset) {
-		if (selectedPanel == null)
-			return;
 		if (offset == Integer.MIN_VALUE) {
+			if (selectedPanel == null)
+				return;
 			String soffset = selectedPanel.getInput(
 					"Enter a vertical offset in percent for stacked plots", "Overlay", ""
 							+ recentStackPercent);
@@ -1569,7 +1589,8 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 		}
 		recentStackPercent = offset;
 		parameters.viewOffset = offset;
-		pd().setYStackOffsetPercent(offset);
+		if (isClosed())
+			pd().setYStackOffsetPercent(offset);
 	}
 
 	private void execScriptInline(String script) {

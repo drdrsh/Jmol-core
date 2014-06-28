@@ -1012,17 +1012,15 @@ public class MainFrame extends JFrame implements JmolSyncInterface,
 	@Override
 	@SuppressWarnings("incomplete-switch")
 	public void siUpdateBoolean(ScriptToken st, boolean TF) {
-		JSVPanel jsvp = vwr.selectedPanel;
-		if (jsvp == null)
-			return;
-		switch (st) {
-		case COORDINATESON:
-			toolBar.coordsToggleButton.setSelected(TF);
-			break;
-		case GRIDON:
-			toolBar.gridToggleButton.setSelected(TF);
-			break;
-		}
+		if (vwr.selectedPanel != null)
+			switch (st) {
+			case COORDINATESON:
+				toolBar.coordsToggleButton.setSelected(TF);
+				break;
+			case GRIDON:
+				toolBar.gridToggleButton.setSelected(TF);
+				break;
+			}
 	}
 
 	@Override

@@ -64,7 +64,8 @@ public enum ScriptToken {
   GRIDCOLOR("C"), 
   GRIDON("T"), 
   HIDDEN("TF"), 
-  HIGHLIGHTCOLOR("C"),
+  HIGHLIGHTCOLOR("C"), 
+  HIGHLIGHT("OFF or X1 X2 [OFF] or X1 X2 r g b [a]"),
   INTEGRALOFFSET("percent"),
   INTEGRALRANGE("percent"),
   INTEGRATE, // same as INTEGRATION
