@@ -2,6 +2,7 @@ package javajs.util;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -126,6 +127,27 @@ public class OC extends OutputStream {
     byteCount += s.length(); // not necessarily exactly correct if unicode
     return this;
   }
+
+  public void reset() {
+    sb = null;
+    try {
+      if (os instanceof FileOutputStream) {
+          os.close();
+          os = new FileOutputStream(fileName);
+      } else {
+        os = new ByteArrayOutputStream();
+      }
+      if (bw != null) {
+        bw.close();
+        bw = new BufferedWriter(new OutputStreamWriter(os));
+      }
+    } catch (Exception e) {
+      // not perfect here.
+      System.out.println(e.toString());
+    }
+    byteCount = 0;
+  }
+
 
   /**
    * @j2sOverride

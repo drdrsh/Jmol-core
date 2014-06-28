@@ -304,12 +304,17 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
         return;
       if (offset < nBytes) {
         stream.reset();
+        if (out != null && nBytes != 0)
+          out.reset();
         nBytes = 0;
       } else {
         offset -= nBytes;
       }
-      stream.skipBytes((int)offset);
-      nBytes += offset;
+      if (out == null) {
+        stream.skipBytes((int)offset);
+      } else {
+        readByteArray(new byte[(int)offset], 0, (int) offset);
+      }
     } catch (Exception e) {
       System.out.println(e.toString());
     }
