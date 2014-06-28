@@ -736,13 +736,11 @@ public class JmolUtil implements JmolZipUtilities {
        *            return null;
        */
       {
-        if (apiPlatform.getImageWidth(image) < 1)
-          return "invalid or missing image " + fullPathName;
+        return (apiPlatform.getImageWidth(image) < 1 ?  "invalid or missing image " + fullPathName : image);
       }
     } catch (Exception e) {
       return e.toString() + " opening " + fullPathName;
     }
-    return image;
   }
 
 }
