@@ -308,10 +308,10 @@ public abstract class Monomer extends Group {
     f = getGroupParameter(T.theta);
     if (!Float.isNaN(f))
       info.put("theta", Float.valueOf(f));
-    ProteinStructure structure = (ProteinStructure) getStructure();
-    if(structure != null) {
-      info.put("structureId", Integer.valueOf(structure.strucNo));
-      info.put("structureType", structure.type.getBioStructureTypeName(false));
+    Object structure = getStructure();
+    if(structure instanceof ProteinStructure) {
+      info.put("structureId", Integer.valueOf(((ProteinStructure)structure).strucNo));
+      info.put("structureType", ((ProteinStructure)structure).type.getBioStructureTypeName(false));
     }
     info.put("shapeVisibilityFlags", Integer.valueOf(shapeVisibilityFlags));
     return info;
@@ -319,8 +319,8 @@ public abstract class Monomer extends Group {
   
   @Override
   public String getStructureId() {
-    ProteinStructure structure = (ProteinStructure) getStructure();
-    return (structure == null ? "" : structure.type.getBioStructureTypeName(false));
+    Object structure = getStructure();
+    return (structure instanceof ProteinStructure ? ((ProteinStructure)structure).type.getBioStructureTypeName(false) : "");
   }
 
   /**

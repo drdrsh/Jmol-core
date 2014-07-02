@@ -456,8 +456,11 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
     }
     doCheckUnitCell &= (iHaveUnitCell && (doApplySymmetry || isbiomol));
     finalizeReaderASCR();
-    if (vCompnds != null)
+    if (vCompnds != null) {
       asc.setInfo("compoundSource", vCompnds);
+      for (int i = asc.iSet + 1; --i >= 0;) 
+        asc.setAtomSetAuxiliaryInfoForSet("compoundSource", vCompnds, i);  
+    }
     if (htSites != null) {
       addSites(htSites);
     }
@@ -560,7 +563,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
     if (pt < 0 || pt > 0 && line.charAt(pt - 1) == '\\')
       pt = line.length();
     String key = line.substring(0, pt).trim();
-    String value = (pt < line.length() ? line.substring(pt + 1) : null);
+    String value = (pt < line.length() ? line.substring(pt + 1).trim() : null);
     if (key.equals("MOL_ID")) {
       if (value == null)
         return;
