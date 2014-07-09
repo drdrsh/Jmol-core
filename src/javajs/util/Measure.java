@@ -25,7 +25,7 @@ package javajs.util;
 
 import javajs.api.EigenInterface;
 
-import org.jmol.api.Interface;
+import javajs.api.Interface;
 
 
 
