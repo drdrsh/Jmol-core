@@ -8,6 +8,7 @@ import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M34;
 import javajs.util.M4;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
@@ -25,7 +26,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 import org.jmol.util.Txt;
 
 /**

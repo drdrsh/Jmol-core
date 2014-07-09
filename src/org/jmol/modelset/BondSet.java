@@ -1,5 +1,6 @@
 package org.jmol.modelset;
 
+
 import org.jmol.java.BS;
 import org.jmol.util.BSUtil;
 

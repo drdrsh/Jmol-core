@@ -25,8 +25,8 @@
 package org.jmol.shapespecial;
 
 import org.jmol.shape.Shape;
-import org.jmol.util.BSUtil;
 
+import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;

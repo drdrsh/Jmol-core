@@ -32,10 +32,11 @@ import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
 
 import javajs.util.Lst;
+import javajs.util.Measure;
 import javajs.util.Quat;
 
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 import javajs.util.P3;
 import org.jmol.viewer.JC;
 import org.jmol.script.T;
@@ -420,18 +421,19 @@ public abstract class Monomer extends Group {
 
   protected Object getHelixData2(int tokType, char qType, int mStep) {
     int iPrev = monomerIndex - mStep;
-    Monomer prev = (mStep < 1 || monomerIndex <= 0 ? null : bioPolymer.monomers[iPrev]);
+    Monomer prev = (mStep < 1 || monomerIndex <= 0 ? null
+        : bioPolymer.monomers[iPrev]);
     Quat q2 = getQuaternion(qType);
-    Quat q1 = (mStep < 1 ? Quat.getQuaternionFrameV(JC.axisX, JC.axisY, JC.axisZ, false) 
-        : prev == null ? null : prev.getQuaternion(qType));
+    Quat q1 = (mStep < 1 ? Quat.getQuaternionFrameV(JC.axisX, JC.axisY,
+        JC.axisZ, false) : prev == null ? null : prev.getQuaternion(qType));
     if (q1 == null || q2 == null)
       return getHelixData(tokType, qType, mStep);
     P3 a = (mStep < 1 ? P3.new3(0, 0, 0) : prev.getQuaternionFrameCenter(qType));
     P3 b = getQuaternionFrameCenter(qType);
-    if (a == null || b == null)
-      return getHelixData(tokType, qType, mStep);
-    return Measure.computeHelicalAxis(tokType == T.draw ? "helixaxis" + getUniqueID() : null, 
-        tokType, a, b, q2.div(q1));
+    return (a == null || b == null ? getHelixData(tokType, qType, mStep)
+        : Escape.escapeHelical((tokType == T.draw ? "helixaxis" + getUniqueID()
+            : null), tokType, a, b,
+            Measure.computeHelicalAxis(a, b, q2.div(q1))));
   }
 
   public String getUniqueID() {

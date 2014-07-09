@@ -25,27 +25,23 @@
 package org.jmol.symmetry;
 
 import javajs.util.Lst;
-import javajs.util.SB;
-
-
-
-import org.jmol.api.SymmetryInterface;
-import org.jmol.util.Escape;
-import org.jmol.util.Logger;
-import org.jmol.util.Measure;
-import javajs.util.PT;
-import org.jmol.util.Parser;
-
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
+import javajs.util.PT;
 import javajs.util.Quat;
+import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
+
+import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.ModelSet;
-import org.jmol.script.T;
+import org.jmol.util.Escape;
+import org.jmol.util.Logger;
+import org.jmol.util.Parser;
 
 /*
  * Bob Hanson 4/2006
@@ -776,14 +772,10 @@ class SymmetryOperation extends M4 {
     // axis, and the
     // symop(sym,{0 0 0}) function will return the overall translation.
 
-    Object[] info;
-    info = (Object[]) Measure.computeHelicalAxis(
-        null,
-        T.array,
-        pta00,
-        pt0,
+    T3[] info = Measure.computeHelicalAxis(pta00, pt0,
         Quat.getQuaternionFrame(pt0, pt1, pt2).div(
             Quat.getQuaternionFrame(pta00, pta01, pta02)));
+    // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
     P3 pa1 = (P3) info[0];
     V3 ax1 = (V3) info[1];
     int ang1 = (int) Math.abs(PT.approx(((P3) info[3]).x, 1));
@@ -1026,8 +1018,7 @@ class SymmetryOperation extends M4 {
         float fz = approxF(ftrans.z);
         s = " " + strCoord(ftrans);
         if (fx != 0 && fy != 0 && fz != 0) {
-          if (Math.abs(fx) == Math.abs(fy)
-              && Math.abs(fy) == Math.abs(fz))
+          if (Math.abs(fx) == Math.abs(fy) && Math.abs(fy) == Math.abs(fz))
             info1 = "d-";
           else
             info1 = "g-"; // see group 167
@@ -1056,7 +1047,7 @@ class SymmetryOperation extends M4 {
 
     if (timeReversal != 0)
       info1 += "|spin timeReversal " + (timeReversal == 1 ? "+1" : "-1");
-    
+
     String cmds = null;
     String xyzNew = (isBio ? xyzOriginal : getXYZFromMatrix(this, false, false,
         false));
@@ -1293,7 +1284,8 @@ class SymmetryOperation extends M4 {
       draw1.append("\nvar pt00 = " + Escape.eP(pta00));
       draw1.append("\nsym_point = pt00");
       draw1.append("\nvar p0 = " + Escape.eP(ptemp2));
-      draw1.append("\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
+      draw1
+          .append("\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
       draw1.append("\nsym_target = set2;if (set2) {");
       //      if (haveCentering)
       //      draw1.append(drawid).append(
@@ -1352,9 +1344,10 @@ class SymmetryOperation extends M4 {
       m2.m13 += vtrans.y;
       m2.m23 += vtrans.z;
     }
-    xyzNew = (isBio ? m2.toString() : modDim > 0 ? xyzOriginal : getXYZFromMatrix(m2, false, false, false));
+    xyzNew = (isBio ? m2.toString() : modDim > 0 ? xyzOriginal
+        : getXYZFromMatrix(m2, false, false, false));
     if (timeReversal != 0)
-      xyzNew  += (timeReversal == 1 ? ",m+1" : ",m-1");
+      xyzNew += (timeReversal == 1 ? ",m+1" : ",m-1");
     return new Object[] { xyzNew, xyzOriginal, info1, cmds, approx0(ftrans),
         approx0(trans), approx0(ipt), approx0(pa1), approx0(ax1),
         Integer.valueOf(ang1), m2, vtrans, centering };

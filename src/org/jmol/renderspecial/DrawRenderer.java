@@ -36,10 +36,10 @@ import org.jmol.shapespecial.Draw.EnumDrawType;
 import org.jmol.util.C;
 import org.jmol.util.GData;
 import javajs.util.Lst;
-import org.jmol.util.Measure;
 
 import javajs.util.A4;
 import javajs.util.M3;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.T3;

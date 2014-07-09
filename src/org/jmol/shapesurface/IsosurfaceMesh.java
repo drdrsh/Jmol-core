@@ -40,11 +40,11 @@ import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 import org.jmol.util.MeshSurface;
 
 import javajs.util.CU;
 import javajs.util.M4;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;

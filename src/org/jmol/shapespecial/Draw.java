@@ -38,6 +38,8 @@ import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
+
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.P4;
@@ -45,7 +47,6 @@ import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.util.Measure;
 import org.jmol.util.Txt;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;

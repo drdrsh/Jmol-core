@@ -32,7 +32,6 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.c.STR;
 import org.jmol.java.BS;
 
-import org.jmol.util.BSUtil;
 
 import javajs.util.AU;
 import javajs.util.OC;
@@ -40,6 +39,7 @@ import javajs.util.Lst;
 import javajs.util.SB;
 import javajs.util.P3;
 
+import org.jmol.util.BSUtil;
 import org.jmol.viewer.Viewer;
 
 public class Model {

@@ -21,22 +21,12 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package org.jmol.util;
+package javajs.util;
 
 
-import javajs.util.Lst;
 
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.Quat;
-import javajs.util.V3;
-import javajs.util.T3;
-import javajs.util.PT;
 
-import org.jmol.viewer.JC;
-import org.jmol.modelset.Atom;
-import org.jmol.script.T;
+//import org.jmol.script.T;
 
 final public class Measure {
 
@@ -98,22 +88,32 @@ final public class Measure {
     return (asDegrees ? torsion / radiansPerDegree : torsion);
   }
 
-  public static Object computeHelicalAxis(String id, int tokType, P3 a, P3 b,
-                                    Quat dq) {
-    /*
-                b
-           |   /|
-           |  / |
-           | /  |
-           |/   c
-         b'+   / \
-           |  /   \      Vcb = Vab . n
-         n | /     \d    Vda = (Vcb - Vab) / 2
-           |/theta  \
-         a'+---------a
-                r 
-    */
+  /**
+   * This method calculates measures relating to two points in space 
+   * with related quaternion frame difference. It is used in Jmol for
+   * calculating straightness and many other helical quantities.
+   * 
+   * @param a
+   * @param b
+   * @param dq
+   * @return  new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
+   */
+  public static T3[] computeHelicalAxis(P3 a, P3 b, Quat dq) {
     
+    // TODO: Needs double checking after refactoring of 7/9/2014
+    
+    //                b
+    //           |   /|
+    //           |  / |
+    //           | /  |
+    //           |/   c
+    //         b'+   / \
+    //           |  /   \      Vcb = Vab . n
+    //         n | /     \d    Vda = (Vcb - Vab) / 2
+    //           |/theta  \
+    //         a'+---------a
+    //                r 
+
     V3 vab = new V3();
     vab.sub2(b, a);
     /*
@@ -128,72 +128,39 @@ final public class Measure {
     float v_dot_n = vab.dot(n);
     if (Math.abs(v_dot_n) < 0.0001f)
       v_dot_n = 0;
-    if (tokType == T.axis) {
-      if (v_dot_n != 0)
-        n.scale(v_dot_n);
-      return n;
-    }
     V3 va_prime_d = new V3();
     va_prime_d.cross(vab, n);
     if (va_prime_d.dot(va_prime_d) != 0)
       va_prime_d.normalize();
     V3 vda = new V3();
     V3 vcb = V3.newV(n);
-    if (v_dot_n == 0)
+    if (v_dot_n == 0) {
       v_dot_n = PT.FLOAT_MIN_SAFE; // allow for perpendicular axis to vab
-    vcb.scale(v_dot_n);
+      vcb.scale(v_dot_n);
+    }
     vda.sub2(vcb, vab);
     vda.scale(0.5f);
-    va_prime_d.scale(theta == 0 ? 0 : (float) (vda.length() / Math
-        .tan(theta / 2 / 180 * Math.PI)));
+    va_prime_d.scale(theta == 0 ? 0 : (float) (vda.length() / Math.tan(theta
+        / 2 / 180 * Math.PI)));
     V3 r = V3.newV(va_prime_d);
     if (theta != 0)
       r.add(vda);
-    if (tokType == T.radius)
-      return r;
     P3 pt_a_prime = P3.newP(a);
     pt_a_prime.sub(r);
-    if (tokType == T.point) {
-      return pt_a_prime;
-    }
-    if (v_dot_n != PT.FLOAT_MIN_SAFE)
-      n.scale(v_dot_n);
+    // already done this.
+    //if (v_dot_n != PT.FLOAT_MIN_SAFE)
+      //n.scale(v_dot_n);
     // must calculate directed angle:
     P3 pt_b_prime = P3.newP(pt_a_prime);
     pt_b_prime.add(n);
     theta = computeTorsion(a, pt_a_prime, pt_b_prime, b, true);
     if (Float.isNaN(theta) || r.length() < 0.0001f)
       theta = dq.getThetaDirectedV(n); // allow for r = 0
-    if (tokType == T.angle)
-      return Float.valueOf(theta);
-    /*
-    System.out.println("draw ID test VECTOR " + Escape.escape(pt_a_prime)
-          + " " + Escape.escape(n) + " color "
-          + (theta < 0 ? "{255.0 200.0 0.0}" : "{255.0 0.0 128.0};")
-          +"measure " + Escape.escape(a) + Escape.escape(pt_a_prime) + Escape.escape(pt_b_prime) + Escape.escape(b));
-    */
-    if (tokType == T.draw)
-      return "draw ID \"" + id + "\" VECTOR " + Escape.eP(pt_a_prime)
-          + " " + Escape.eP(n) + " color "
-          + (theta < 0 ? "{255.0 200.0 0.0}" : "{255.0 0.0 128.0}");
-    if (tokType == T.measure)
-      return "measure " + Escape.eP(a) + Escape.eP(pt_a_prime) + Escape.eP(pt_b_prime) + Escape.eP(b);
-    // for now... array:
+    // anything else is an array
     float residuesPerTurn = Math.abs(theta == 0 ? 0 : 360f / theta);
-    float pitch = Math.abs(v_dot_n == PT.FLOAT_MIN_SAFE ? 0 : n.length() * (theta == 0 ? 1 : 360f / theta));
-    switch (tokType) {
-    case T.array:
-      return new Object[] {pt_a_prime, n, r,  P3.new3(theta, pitch, residuesPerTurn)};
-    case T.list:
-      return new String[] { 
-          Escape.eP(pt_a_prime), // a' 
-          Escape.eP(n), // n
-          Escape.eP(r), // r
-          Escape.eP(P3.new3(theta /*(degrees)*/,pitch, residuesPerTurn))
-          };
-    default:
-      return null;
-    }
+    float pitch = Math.abs(v_dot_n == PT.FLOAT_MIN_SAFE ? 0 : n.length()
+        * (theta == 0 ? 1 : 360f / theta));
+    return new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
   }
 
   public static void getPlaneThroughPoints(T3 pointA,
@@ -294,11 +261,13 @@ final public class Measure {
     return !isReversed;
   }
 
+  public final static V3 axisY = V3.new3(0, 1, 0);
+  
   public static void getNormalToLine(P3 pointA, P3 pointB,
                                    V3 vNormNorm) {
     // vector in xy plane perpendicular to a line between two points RMH
     vNormNorm.sub2(pointA, pointB);
-    vNormNorm.cross(vNormNorm, JC.axisY);
+    vNormNorm.cross(vNormNorm, axisY);
     vNormNorm.normalize();
     if (Float.isNaN(vNormNorm.x))
       vNormNorm.set(1, 0, 0);
@@ -439,36 +408,6 @@ final public class Measure {
     for (int i = 1; i < nPoints; i++)
       averagePoint.add(points[i]);
     averagePoint.scale(1f / nPoints);
-  }
-
-  public static P3[] getCenterAndPoints(Lst<P3> vPts) {
-    int n = vPts.size();
-    P3[] pts = new P3[n + 1];
-    pts[0] = new P3();
-    if (n > 0) {
-      for (int i = 0; i < n; i++) {
-        pts[0].add(pts[i + 1] = vPts.get(i));
-      }
-      pts[0].scale(1f / n);
-    }
-    return pts;
-  }
-
-  public static float getRmsd(P3[][] centerAndPoints, Quat q) {
-    double sum2 = 0;
-    P3[] ptsA = centerAndPoints[0];
-    P3[] ptsB = centerAndPoints[1];
-    P3 cA = ptsA[0];
-    P3 cB = ptsB[0];
-    int n = ptsA.length - 1;
-    P3 ptAnew = new P3();
-    
-    for (int i = n + 1; --i >= 1;) {
-      ptAnew.sub2(ptsA[i], cA);
-      q.transformP2(ptAnew, ptAnew).add(cB);
-      sum2 += ptAnew.distanceSquared(ptsB[i]);
-    }
-    return (float) Math.sqrt(sum2 / n);
   }
 
   public static Lst<P3> transformPoints(Lst<P3> vPts, M4 m4, P3 center) {
@@ -635,5 +574,113 @@ final public class Measure {
     return (u > 0 && v > 0 && u + v < 1);
   }
 */
+
+  /**
+   * Closed-form solution of absolute orientation
+   * requiring 1:1 mapping of positions.
+   * 
+   * @param centerAndPoints
+   * @param retStddev
+   * @return unit quaternion representation rotation
+   * 
+   * @author hansonr Bob Hanson
+   * 
+   */
+  public static Quat calculateQuaternionRotation(
+                                                       P3[][] centerAndPoints,
+                                                       float[] retStddev) {
+  
+    retStddev[1] = Float.NaN;
+    Quat q = new Quat();
+    if (centerAndPoints[0].length == 1
+        || centerAndPoints[0].length != centerAndPoints[1].length)
+      return q;
+  
+    /*
+     * see Berthold K. P. Horn,
+     * "Closed-form solution of absolute orientation using unit quaternions" J.
+     * Opt. Soc. Amer. A, 1987, Vol. 4, pp. 629-642
+     * http://www.opticsinfobase.org/viewmedia.cfm?uri=josaa-4-4-629&seq=0
+     * 
+     * 
+     * A similar treatment was developed independently (and later!) 
+     * by G. Kramer, in G. R. Kramer,
+     * "Superposition of Molecular Structures Using Quaternions"
+     * Molecular Simulation, 1991, Vol. 7, pp. 113-119. 
+     * 
+     *  In that treatment there is a lot of unnecessary calculation 
+     *  along the trace of matrix M (eqn 20). 
+     *  I'm not sure why the extra x^2 + y^2 + z^2 + x'^2 + y'^2 + z'^2
+     *  is in there, but they are unnecessary and only contribute to larger
+     *  numerical averaging errors and additional processing time, as far as
+     *  I can tell. Adding aI, where a is a scalar and I is the 4x4 identity
+     *  just offsets the eigenvalues but doesn't change the eigenvectors.
+     * 
+     * and Lydia E. Kavraki, "Molecular Distance Measures"
+     * http://cnx.org/content/m11608/latest/
+     * 
+     */
+  
+    int n = centerAndPoints[0].length - 1;
+    if (n < 2)
+      return q;
+  
+    double Sxx = 0, Sxy = 0, Sxz = 0, Syx = 0, Syy = 0, Syz = 0, Szx = 0, Szy = 0, Szz = 0;
+    P3 ptA = new P3();
+    P3 ptB = new P3();
+    for (int i = n + 1; --i >= 1;) {
+      P3 aij = centerAndPoints[0][i];
+      P3 bij = centerAndPoints[1][i];
+      ptA.sub2(aij, centerAndPoints[0][0]);
+      ptB.sub2(bij, centerAndPoints[0][1]);
+      Sxx += (double) ptA.x * (double) ptB.x;
+      Sxy += (double) ptA.x * (double) ptB.y;
+      Sxz += (double) ptA.x * (double) ptB.z;
+      Syx += (double) ptA.y * (double) ptB.x;
+      Syy += (double) ptA.y * (double) ptB.y;
+      Syz += (double) ptA.y * (double) ptB.z;
+      Szx += (double) ptA.z * (double) ptB.x;
+      Szy += (double) ptA.z * (double) ptB.y;
+      Szz += (double) ptA.z * (double) ptB.z;
+    }
+    retStddev[0] = Eigen.getRmsd(centerAndPoints, q);
+    double[][] N = new double[4][4];
+    N[0][0] = Sxx + Syy + Szz;
+    N[0][1] = N[1][0] = Syz - Szy;
+    N[0][2] = N[2][0] = Szx - Sxz;
+    N[0][3] = N[3][0] = Sxy - Syx;
+  
+    N[1][1] = Sxx - Syy - Szz;
+    N[1][2] = N[2][1] = Sxy + Syx;
+    N[1][3] = N[3][1] = Szx + Sxz;
+  
+    N[2][2] = -Sxx + Syy - Szz;
+    N[2][3] = N[3][2] = Syz + Szy;
+  
+    N[3][3] = -Sxx - Syy + Szz;
+  
+    //this construction prevents JavaScript from requiring preloading of Eigen
+    Eigen eigen = Eigen.newM(N);  
+    float[] v = eigen.getEigenvectorsFloatTransposed()[3];
+    q = Quat.newP4(P4.new4(v[1], v[2], v[3], v[0]));
+    retStddev[1] = Eigen.getRmsd(centerAndPoints, q);
+    return q;
+  }
+
+  public static float getTransformMatrix4(Lst<P3> ptsA, Lst<P3> ptsB, M4 m,
+                                          P3 centerA) {
+    P3[] cptsA = Eigen.getCenterAndPoints(ptsA);
+    P3[] cptsB = Eigen.getCenterAndPoints(ptsB);
+    //System.out.println("draw d1 " + cptsA[0]);
+    //System.out.println("draw d2 " + cptsB[0]);
+    float[] retStddev = new float[2];
+    Quat q = calculateQuaternionRotation(new P3[][] { cptsA, cptsB },
+        retStddev); // was false
+    V3 v = V3.newVsub(cptsB[0], cptsA[0]);
+    m.setMV(q.getMatrix(), v);
+    if (centerA != null)
+      centerA.setT(cptsA[0]);
+    return retStddev[1];
+  }
 
 }

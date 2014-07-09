@@ -75,13 +75,12 @@ import javajs.util.Lst;
 import javajs.util.SB;
 
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 
 import javajs.util.BArray;
 import javajs.util.Base64;
-import javajs.util.Eigen;
 import javajs.util.M3;
 import javajs.util.M4;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
@@ -888,7 +887,7 @@ public class CmdExt implements JmolCmdExtension {
           Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
               + ((Atom) bij).getInfo());
         }
-        q = Eigen.calculateQuaternionRotation(centerAndPoints, retStddev);
+        q = Measure.calculateQuaternionRotation(centerAndPoints, retStddev);
         float r0 = (Float.isNaN(retStddev[1]) ? Float.NaN : Math
             .round(retStddev[0] * 100) / 100f);
         float r1 = (Float.isNaN(retStddev[1]) ? Float.NaN : Math

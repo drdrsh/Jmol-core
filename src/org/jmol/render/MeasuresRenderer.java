@@ -34,12 +34,12 @@ import org.jmol.script.T;
 import org.jmol.shape.Measures;
 import org.jmol.util.C;
 import org.jmol.util.GData;
-import org.jmol.util.Measure;
 import org.jmol.util.Point3fi;
 import org.jmol.util.Vibration;
 
 import javajs.util.A4;
 import javajs.util.M3;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3i;
 

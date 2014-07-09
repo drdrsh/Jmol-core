@@ -82,7 +82,6 @@ import org.jmol.c.STR;
 import org.jmol.c.VDW;
 
 import javajs.J2SIgnoreImport;
-import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.CommandHistory;
@@ -94,6 +93,7 @@ import javajs.api.PlatformViewer;
 import javajs.awt.Dimension;
 import javajs.awt.Font;
 
+import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.GData;
@@ -105,6 +105,8 @@ import org.jmol.util.Parser;
 import javajs.util.P3;
 import javajs.util.P4;
 import org.jmol.util.Rectangle;
+
+import javajs.util.Measure;
 import javajs.util.Rdr;
 import javajs.util.CU;
 import javajs.util.DF;
@@ -115,7 +117,6 @@ import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.util.Measure;
 import org.jmol.util.TempArray;
 import org.jmol.util.Txt;
 import org.jmol.viewer.binding.Binding;

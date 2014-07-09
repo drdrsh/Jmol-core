@@ -43,8 +43,8 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 
+import javajs.util.Measure;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.P3;

@@ -29,6 +29,7 @@ package org.jmol.util;
 import org.jmol.modelset.ModelSet;
 import javajs.util.Lst;
 
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.P4;

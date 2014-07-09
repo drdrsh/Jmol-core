@@ -28,9 +28,9 @@ import java.util.Random;
 
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 import org.jmol.util.MeshSurface;
 
+import javajs.util.Measure;
 import javajs.util.SB;
 import javajs.util.P3;
 import javajs.util.T3;

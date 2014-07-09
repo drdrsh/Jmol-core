@@ -31,10 +31,10 @@ import java.util.Random;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.Measure;
 import javajs.util.T3;
 
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 import javajs.util.P3;
 import org.jmol.util.Txt;
 import javajs.util.V3;

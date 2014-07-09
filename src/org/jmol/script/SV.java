@@ -42,7 +42,6 @@ import javajs.api.JSONEncodable;
 import javajs.util.Lst;
 import javajs.util.SB;
 
-import org.jmol.util.Measure;
 
 import javajs.util.AU;
 import javajs.util.BArray;
@@ -50,6 +49,7 @@ import javajs.util.Base64;
 import javajs.util.M3;
 import javajs.util.M34;
 import javajs.util.M4;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;

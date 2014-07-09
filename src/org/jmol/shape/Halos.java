@@ -25,6 +25,7 @@
 
 package org.jmol.shape;
 
+
 import org.jmol.java.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;

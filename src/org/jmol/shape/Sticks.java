@@ -29,6 +29,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Edge;
+
 import javajs.util.P3;
 import javajs.util.P3i;
 

@@ -44,17 +44,18 @@ import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.java.BS;
 
-import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.GData;
 
 import javajs.util.A4;
 import javajs.util.M3;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
 
+import org.jmol.util.BSUtil;
 import org.jmol.util.Parser;
 import org.jmol.util.Tensor;
 import org.jmol.util.Escape;
@@ -65,7 +66,6 @@ import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.util.Vibration;
 
-import org.jmol.util.Measure;
 import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 import org.jmol.script.T;

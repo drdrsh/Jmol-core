@@ -32,9 +32,10 @@ import java.util.Map;
 
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure; 
 import org.jmol.util.MeshSurface;
+
 import javajs.util.P3;
+import javajs.util.Measure;
 //import javajs.util.P3i;
 import javajs.util.P4;
 import javajs.util.T3;

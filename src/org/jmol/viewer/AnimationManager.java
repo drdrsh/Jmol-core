@@ -26,6 +26,7 @@ package org.jmol.viewer;
 
 import java.util.Map;
 
+
 import org.jmol.thread.JmolThread;
 import org.jmol.util.BSUtil;
 //import javajs.util.List;

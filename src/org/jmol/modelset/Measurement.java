@@ -29,10 +29,10 @@ import org.jmol.util.Escape;
 import org.jmol.util.Point3fi;
 
 import javajs.util.A4;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.PT;
 
-import org.jmol.util.Measure;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.VDW;

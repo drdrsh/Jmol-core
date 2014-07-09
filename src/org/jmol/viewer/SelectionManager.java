@@ -24,10 +24,10 @@
 package org.jmol.viewer;
 
 import org.jmol.script.T;
+import org.jmol.util.BSUtil;
 
 import javajs.util.AU;
 
-import org.jmol.util.BSUtil;
 
 import org.jmol.api.JmolSelectionListener;
 import org.jmol.i18n.GT;

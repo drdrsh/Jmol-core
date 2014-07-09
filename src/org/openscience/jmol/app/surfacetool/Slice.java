@@ -26,7 +26,7 @@
 package org.openscience.jmol.app.surfacetool;
 
 
-import org.jmol.util.Measure;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.V3;

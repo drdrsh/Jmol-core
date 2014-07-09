@@ -25,9 +25,10 @@
 
 package org.jmol.modelset;
 
-import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import javajs.util.P3;
+
+import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;

@@ -31,7 +31,8 @@ import org.jmol.modelset.ModelSet;
 
 import org.jmol.java.BS;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
+
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.V3;
 

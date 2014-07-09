@@ -39,12 +39,12 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.SB;
 
-import org.jmol.util.Measure;
 import org.jmol.util.MeshSurface;
 import org.jmol.util.Normix;
 
 import javajs.util.M3;
 import javajs.util.M4;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;

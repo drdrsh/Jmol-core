@@ -27,6 +27,8 @@ package org.jmol.shapesurface;
 
 import javajs.util.CU;
 import javajs.util.Lst;
+import javajs.util.Measure;
+
 import java.util.Hashtable;
 
 import java.util.Map;
@@ -49,7 +51,6 @@ import org.jmol.util.ColorEncoder;
 import org.jmol.util.ContactPair;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 import javajs.util.P3;
 import org.jmol.util.TempArray;
 import javajs.util.V3;

@@ -33,11 +33,10 @@ import org.jmol.script.ScriptException;
 import org.jmol.util.Escape;
 
 import javajs.util.AU;
-import javajs.util.Eigen;
 import javajs.util.Lst;
+import javajs.util.Measure;
 
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 
 import javajs.util.M4;
 import javajs.util.P3;
@@ -121,7 +120,7 @@ public class SmilesExt implements JmolSmilesExtension {
           ptsB.clear();
           for (int j = 0; j < maps[i].length; j++)
             ptsB.addLast(atoms[maps[i][j]]);
-          float stddev = Eigen.getTransformMatrix4(ptsA, ptsB, m, c);
+          float stddev = Measure.getTransformMatrix4(ptsA, ptsB, m, c);
           Logger.info("getSmilesCorrelation stddev=" + stddev);
           if (vReturn != null) {
             if (stddev < tolerance) {

@@ -30,6 +30,7 @@ import java.util.Map;
 
 import javajs.util.Lst;
 import javajs.util.M34;
+import javajs.util.Measure;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
@@ -39,9 +40,11 @@ import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.T3;
+import javajs.util.V3;
 
 import org.jmol.java.BS;
 import org.jmol.script.SV;
+import org.jmol.script.T;
 
 
 
@@ -618,6 +621,40 @@ public class Escape {
      */
     {
     return x instanceof SV[];
+    }
+  }
+
+  /**
+   * Jmol-specific post-processing of 
+   * the array data returned by Measure.computeHelicalAxis
+   * 
+   * @param id
+   * @param tokType
+   * @param a
+   * @param b
+   * @param pts
+   * @return various objects depending upon tokType
+   */
+  public static Object escapeHelical(String id, int tokType, P3 a, P3 b, T3[] pts) {
+    // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
+    switch (tokType) {
+    case T.point:
+      return (pts == null ? new P3() : pts[0]);
+    case T.axis:
+    case T.radius:
+      return (pts == null ? new V3() : pts[tokType == T.axis ? 1 : 2]);
+    case T.angle:
+      return Float.valueOf(pts == null ? Float.NaN : pts[3].x);
+    case T.draw:
+      return (pts == null ? "" : "draw ID \"" + id + "\" VECTOR "
+          + Escape.eP(pts[0]) + " " + Escape.eP(pts[1]) + " color "
+          + (pts[3].x < 0 ? "{255.0 200.0 0.0}" : "{255.0 0.0 128.0}"));
+    case T.measure:
+      return (pts == null ? "" : "measure " + Escape.eP(a) + Escape.eP(pts[0])
+          + Escape.eP(pts[4]))
+          + Escape.eP(b);
+    default:
+      return (pts == null ? new T3[0] : pts);
     }
   }
 

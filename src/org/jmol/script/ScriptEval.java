@@ -55,7 +55,6 @@ import org.jmol.util.Elements;
 import org.jmol.util.GData;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.PT;
@@ -64,7 +63,7 @@ import org.jmol.util.Parser;
 import javajs.util.A4;
 import javajs.util.BArray;
 import javajs.util.Base64;
-import javajs.util.Eigen;
+import javajs.util.Measure;
 import javajs.util.OC;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -5812,7 +5811,7 @@ public class ScriptEval extends ScriptExpr {
           m4 = new M4();
           points[0] = new P3();
           nPoints = 1;
-          float stddev = (chk ? 0 : Eigen.getTransformMatrix4(ptsA, ptsB, m4,
+          float stddev = (chk ? 0 : Measure.getTransformMatrix4(ptsA, ptsB, m4,
               points[0]));
           // if the standard deviation is very small, we leave ptsB
           // because it will be used to set the absolute final positions
@@ -5881,8 +5880,8 @@ public class ScriptEval extends ScriptExpr {
       if (helicalPath && translation != null) {
         points[1] = P3.newP(points[0]);
         points[1].add(translation);
-        Object[] ret = (Object[]) Measure.computeHelicalAxis(null, T.array,
-            points[0], points[1], q);
+        T3[] ret = Measure.computeHelicalAxis(points[0], points[1], q);
+        //  new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
         points[0] = (P3) ret[0];
         float theta = ((P3) ret[3]).x;
         if (theta != 0) {
@@ -5932,9 +5931,9 @@ public class ScriptEval extends ScriptExpr {
           throw new ScriptInterruption(this, "rotate", 1);
         return;
       }
-      
+
       // must be an internal rotation
-      
+
       if (nPoints == 0)
         points[0] = new P3();
       // rotate MOLECULAR
@@ -5977,7 +5976,8 @@ public class ScriptEval extends ScriptExpr {
         return;
       if (vwr.rotateAboutPointsInternal(this, points[0], points[1], rate,
           endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList)
-          && isJS && isSpin)
+          && isJS
+          && isSpin)
         throw new ScriptInterruption(this, "rotate", 1);
     }
   }

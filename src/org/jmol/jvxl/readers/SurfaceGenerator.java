@@ -137,8 +137,8 @@ import javajs.api.GenericBinaryDocument;
 import javajs.util.AU;
 import javajs.util.Lst;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 
+import javajs.util.Measure;
 import javajs.util.Rdr;
 import javajs.util.OC;
 import javajs.util.PT;

@@ -60,16 +60,16 @@ import javajs.util.SB;
 
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 
 import javajs.util.CU;
-import javajs.util.Eigen;
 import javajs.util.M3;
 import javajs.util.M4;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
+import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.util.Txt;
@@ -517,7 +517,7 @@ public class MathExt implements JmolMathExtension {
         ptsA = e.getPointVector(args[0], 0);
         ptsB = e.getPointVector(args[1], 0);
         if (ptsA != null && ptsB != null)
-          stddev = Eigen.getTransformMatrix4(ptsA, ptsB, m, null);
+          stddev = Measure.getTransformMatrix4(ptsA, ptsB, m, null);
       }
       return (isStdDev || Float.isNaN(stddev) ? mp.addXFloat(stddev) : mp
           .addXM4(m));
@@ -835,50 +835,33 @@ public class MathExt implements JmolMathExtension {
       // helix(pt1, pt2, dq ...)
       P3 pta = mp.ptValue(args[0], true);
       P3 ptb = mp.ptValue(args[1], true);
-      if (args[2].tok != T.point4f)
+      if (tok == T.nada || args[2].tok != T.point4f)
         return false;
       Quat dq = Quat.newP4((P4) args[2].value);
-      switch (tok) {
-      case T.nada:
-        break;
-      case T.point:
-      case T.axis:
-      case T.radius:
-      case T.angle:
-      case T.measure:
-        return mp.addXObj(Measure.computeHelicalAxis(null, tok, pta, ptb, dq));
-      case T.array:
-        String[] data = (String[]) Measure.computeHelicalAxis(null, T.list,
-            pta, ptb, dq);
-        if (data == null)
-          return false;
-        return mp.addXAS(data);
-      default:
-        return mp.addXObj(Measure
-            .computeHelicalAxis(type, T.draw, pta, ptb, dq));
-      }
-    } else {
-      BS bs = (args[0].value instanceof BS ? (BS) args[0].value : 
-        vwr.ms.getAtoms(T.resno, new Integer(args[0].asInt())));
-      switch (tok) {
-      case T.point:
-        return mp.addXObj(getHelixData(bs, T.point));
-      case T.axis:
-        return mp.addXObj(getHelixData(bs, T.axis));
-      case T.radius:
-        return mp.addXObj(getHelixData(bs, T.radius));
-      case T.angle:
-        return mp.addXFloat(((Float) getHelixData(bs, T.angle))
-            .floatValue());
-      case T.draw:
-      case T.measure:
-        return mp.addXObj(getHelixData(bs, tok));
-      case T.array:
-        String[] data = (String[]) getHelixData(bs, T.list);
-        if (data == null)
-          return false;
-        return mp.addXAS(data);
-      }
+      T3[] data = Measure.computeHelicalAxis(pta, ptb, dq);
+      //new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn) };
+      return (data == null ? false : mp.addXObj(Escape.escapeHelical(type, tok,
+          pta, ptb, data)));
+    }
+    BS bs = (args[0].value instanceof BS ? (BS) args[0].value : vwr.ms
+        .getAtoms(T.resno, new Integer(args[0].asInt())));
+    switch (tok) {
+    case T.point:
+      return mp.addXObj(getHelixData(bs, T.point));
+    case T.axis:
+      return mp.addXObj(getHelixData(bs, T.axis));
+    case T.radius:
+      return mp.addXObj(getHelixData(bs, T.radius));
+    case T.angle:
+      return mp.addXFloat(((Float) getHelixData(bs, T.angle)).floatValue());
+    case T.draw:
+    case T.measure:
+      return mp.addXObj(getHelixData(bs, tok));
+    case T.array:
+      String[] data = (String[]) getHelixData(bs, T.list);
+      if (data == null)
+        return false;
+      return mp.addXAS(data);
     }
     return false;
   }

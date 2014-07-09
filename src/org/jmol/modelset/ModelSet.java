@@ -32,7 +32,6 @@ import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 import org.jmol.util.Point3fi;
 import org.jmol.util.Tensor;
 import org.jmol.util.Triangulator;
@@ -41,9 +40,11 @@ import org.jmol.util.Vibration;
 
 import javajs.util.A4;
 import javajs.util.AU;
+import javajs.util.Eigen;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
@@ -4145,7 +4146,7 @@ import java.util.Properties;
       }
       if (vNot.size() == 0)
         return;
-      pt = Measure.getCenterAndPoints(vNot)[0];
+      pt = Eigen.getCenterAndPoints(vNot)[0];
       V3 v = V3.newVsub(thisAtom, pt);
       Quat q = Quat.newVA(v, 180);
       moveAtoms(null, q.getMatrix(), null, bsAtoms, thisAtom, true, false);

@@ -8,6 +8,7 @@ import org.jmol.script.T;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.Measure;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.M4;

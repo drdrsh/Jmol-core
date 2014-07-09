@@ -4,6 +4,7 @@ import java.util.Map;
 
 import javajs.util.CU;
 import javajs.util.Lst;
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
@@ -16,7 +17,6 @@ import org.jmol.modelset.TickInfo;
 import org.jmol.util.Escape;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
-import org.jmol.util.Measure;
 
 
 /**

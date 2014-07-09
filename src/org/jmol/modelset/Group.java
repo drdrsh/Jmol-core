@@ -25,19 +25,18 @@ package org.jmol.modelset;
 
 
 import javajs.J2SRequireImport;
-import org.jmol.util.BSUtil;
 
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.Quat;
 
+import org.jmol.util.BSUtil;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import javajs.util.P3;
-import javajs.util.V3;
 import org.jmol.viewer.JC;
 import org.jmol.c.STR;
 import org.jmol.java.BS;
-import org.jmol.script.T;
 
 import java.util.Hashtable;
 
@@ -410,19 +409,7 @@ public class Group {
    * @return helix data of some sort
    */
   public Object getHelixData(int tokType, char qType, int mStep) {
-        switch (tokType) {
-        case T.point:
-          return new P3();
-        case T.axis:
-        case T.radius:
-          return new V3();
-        case T.angle:
-          return Float.valueOf(Float.NaN);
-        case T.array:
-        case T.list:
-          return new String[] {};
-        }
-    return "";
+    return Escape.escapeHelical(null, tokType, null, null, null);
   }
 
   /**

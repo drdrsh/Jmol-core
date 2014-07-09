@@ -34,8 +34,8 @@ import org.jmol.util.C;
 import org.jmol.util.Edge;
 import javajs.util.Lst;
 
-import org.jmol.util.Measure;
 
+import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.V3;

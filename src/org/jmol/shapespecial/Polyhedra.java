@@ -36,13 +36,13 @@ import org.jmol.util.Logger;
 import org.jmol.util.Normix;
 
 import javajs.util.AU;
+import javajs.util.Measure;
 import javajs.util.SB;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.V3;
 
 
-import org.jmol.util.Measure;
 
 public class Polyhedra extends AtomShape {
 
