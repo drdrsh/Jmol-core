@@ -114,7 +114,7 @@ public interface GenericPlatform extends FontManager {
 
   void notifyEndOfRendering();
 
-  String getDateFormat(boolean isoiec8824);
+  String getDateFormat(String isoType);
   
   GenericFileInterface newFile(String name);
   

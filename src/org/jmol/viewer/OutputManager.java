@@ -149,7 +149,7 @@ abstract class OutputManager {
       fileName = out.getFileName();
       String comment = null;
       Object stateData = null;
-      params.put("date", vwr.apiPlatform.getDateFormat(false));
+      params.put("date", vwr.apiPlatform.getDateFormat(null));
       if (type.startsWith("JP")) {
         type = PT.rep(type, "E", "");
         if (type.equals("JPG64")) {
@@ -803,7 +803,7 @@ abstract class OutputManager {
       boolean doClear = (data.equals("$CLEAR$"));
       if (data.indexOf("$NOW$") >= 0)
         data = PT.rep(data, "$NOW$", vwr.apiPlatform
-            .getDateFormat(false));
+            .getDateFormat(null));
       if (vwr.logFileName == null) {
         Logger.info(data);
         return;

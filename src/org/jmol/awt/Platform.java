@@ -267,12 +267,24 @@ public class Platform implements GenericPlatform {
   }
 
   @Override
-  public String getDateFormat(boolean isoiec8824) {
-    return (isoiec8824 ? "D:"
-        + new SimpleDateFormat("YYYYMMddHHmmssX").format(new Date()) + "'00'"
-        : (new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z"))
-            .format(new Date()));
+  public String getDateFormat(String isoType) {
+    if (isoType == null) {
+      isoType = "EEE, d MMM yyyy HH:mm:ss Z";
+    } else if (isoType.contains("8824")) {
+      return "D:" + new SimpleDateFormat("YYYYMMddHHmmssX").format(new Date())
+          + "'00'";
+    } else if (isoType.contains("8601")) {
+      return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
+    }
+    return new SimpleDateFormat(isoType).format(new Date());
   }
+//  @Override
+//  public String getDateFormat(boolean isoiec8824) {
+//    return (isoiec8824 ? "D:"
+//        + new SimpleDateFormat("YYYYMMddHHmmssX").format(new Date()) + "'00'"
+//        : (new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z"))
+//            .format(new Date()));
+//  }
 
   @Override
   public GenericFileInterface newFile(String name) {

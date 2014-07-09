@@ -318,7 +318,7 @@ public abstract class ___Exporter {
   }
 
   protected String getExportDate() {
-    return vwr.apiPlatform.getDateFormat(false);
+    return vwr.apiPlatform.getDateFormat(null);
   }
 
   protected String rgbFractionalFromColix(short colix) {
