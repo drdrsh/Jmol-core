@@ -60,6 +60,8 @@ class Mouse implements MouseWheelListener, MouseListener,
 
   //double privateKey;
   /**
+   * Mouse is the listener for all events. 
+   * 
    * @param privateKey  
    * @param vwr 
    * @param odisplay 

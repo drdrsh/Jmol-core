@@ -35,7 +35,6 @@ import javajs.util.T3;
 import javajs.util.PT;
 
 import org.jmol.viewer.JC;
-import org.jmol.api.Interface;
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
 
@@ -453,116 +452,6 @@ final public class Measure {
       pts[0].scale(1f / n);
     }
     return pts;
-  }
-
-  public static float getTransformMatrix4(Lst<P3> ptsA, Lst<P3> ptsB, M4 m, P3 centerA, boolean doReport) {
-    P3[] cptsA = getCenterAndPoints(ptsA);
-    P3[] cptsB = getCenterAndPoints(ptsB);
-    //System.out.println("draw d1 " + cptsA[0]);
-    //System.out.println("draw d2 " + cptsB[0]);
-    float[] retStddev = new float[2];
-    Quat q = calculateQuaternionRotation(new P3[][] { cptsA,
-        cptsB }, retStddev, doReport); // was false
-    V3 v = V3.newVsub(cptsB[0], cptsA[0]);
-    m.setMV(q.getMatrix(), v);
-    if (centerA != null)
-      centerA.setT(cptsA[0]);
-    return retStddev[1];
-  }
-  
-  public static Quat calculateQuaternionRotation(
-                                                       P3[][] centerAndPoints,
-                                                       float[] retStddev,
-                                                       boolean doReport) {
-
-    retStddev[1] = Float.NaN;
-    Quat q = new Quat();
-    if (centerAndPoints[0].length == 1
-        || centerAndPoints[0].length != centerAndPoints[1].length)
-      return q;
-
-    /*
-     * see Berthold K. P. Horn,
-     * "Closed-form solution of absolute orientation using unit quaternions" J.
-     * Opt. Soc. Amer. A, 1987, Vol. 4, pp. 629-642
-     * http://www.opticsinfobase.org/viewmedia.cfm?uri=josaa-4-4-629&seq=0
-     * 
-     * 
-     * A similar treatment was developed independently (and later!) 
-     * by G. Kramer, in G. R. Kramer,
-     * "Superposition of Molecular Structures Using Quaternions"
-     * Molecular Simulation, 1991, Vol. 7, pp. 113-119. 
-     * 
-     *  In that treatment there is a lot of unnecessary calculation 
-     *  along the trace of matrix M (eqn 20). 
-     *  I'm not sure why the extra x^2 + y^2 + z^2 + x'^2 + y'^2 + z'^2
-     *  is in there, but they are unnecessary and only contribute to larger
-     *  numerical averaging errors and additional processing time, as far as
-     *  I can tell. Adding aI, where a is a scalar and I is the 4x4 identity
-     *  just offsets the eigenvalues but doesn't change the eigenvectors.
-     * 
-     * and Lydia E. Kavraki, "Molecular Distance Measures"
-     * http://cnx.org/content/m11608/latest/
-     * 
-     */
-
-    int n = centerAndPoints[0].length - 1;
-    if (doReport)
-      for (int i = 1; i <= n; i++) {
-        P3 aij = centerAndPoints[0][i];
-        P3 bij = centerAndPoints[1][i];
-        if (aij instanceof Atom && bij instanceof Atom)
-          Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
-              + ((Atom) bij).getInfo());
-        else
-          break;
-      }
-
-    if (n < 2)
-      return q;
-
-    double Sxx = 0, Sxy = 0, Sxz = 0, Syx = 0, Syy = 0, Syz = 0, Szx = 0, Szy = 0, Szz = 0;
-    P3 ptA = new P3();
-    P3 ptB = new P3();
-    for (int i = n + 1; --i >= 1;) {
-      P3 aij = centerAndPoints[0][i];
-      P3 bij = centerAndPoints[1][i];
-      ptA.sub2(aij, centerAndPoints[0][0]);
-      ptB.sub2(bij, centerAndPoints[0][1]);
-      Sxx += (double) ptA.x * (double) ptB.x;
-      Sxy += (double) ptA.x * (double) ptB.y;
-      Sxz += (double) ptA.x * (double) ptB.z;
-      Syx += (double) ptA.y * (double) ptB.x;
-      Syy += (double) ptA.y * (double) ptB.y;
-      Syz += (double) ptA.y * (double) ptB.z;
-      Szx += (double) ptA.z * (double) ptB.x;
-      Szy += (double) ptA.z * (double) ptB.y;
-      Szz += (double) ptA.z * (double) ptB.z;
-    }
-    retStddev[0] = getRmsd(centerAndPoints, q);
-    double[][] N = new double[4][4];
-    N[0][0] = Sxx + Syy + Szz;
-    N[0][1] = N[1][0] = Syz - Szy;
-    N[0][2] = N[2][0] = Szx - Sxz;
-    N[0][3] = N[3][0] = Sxy - Syx;
-
-    N[1][1] = Sxx - Syy - Szz;
-    N[1][2] = N[2][1] = Sxy + Syx;
-    N[1][3] = N[3][1] = Szx + Sxz;
-
-    N[2][2] = -Sxx + Syy - Szz;
-    N[2][3] = N[3][2] = Syz + Szy;
-
-    N[3][3] = -Sxx - Syy + Szz;
-
-    //this construction prevents JavaScript from requiring preloading of Eigen
-    @SuppressWarnings("static-access")
-    Eigen eigen = ((Eigen) Interface.getUtil("Eigen")).newM(N);
- 
-    float[] v = eigen.getEigenvectorsFloatTransposed()[3];
-    q = Quat.newP4(P4.new4(v[1], v[2], v[3], v[0]));
-    retStddev[1] = getRmsd(centerAndPoints, q);
-    return q;
   }
 
   public static float getRmsd(P3[][] centerAndPoints, Quat q) {

@@ -385,5 +385,11 @@ public class Platform implements GenericPlatform {
     return null;
   }
 
+  @Override
+  public String postBytesOrData(URL url, byte[] outputBytes, String data) {
+    // TODO
+    return null;
+  }
+
 
 }

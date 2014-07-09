@@ -4,6 +4,8 @@ import java.awt.Container;
 import java.awt.Frame;
 import java.awt.GraphicsEnvironment;
 import java.awt.Window;
+import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -22,6 +24,7 @@ import javajs.api.GenericMenuInterface;
 import javajs.api.PlatformViewer;
 import javajs.awt.Font;
 import javajs.util.P3;
+import javajs.util.Rdr;
 
 public class Platform implements GenericPlatform {
 
@@ -285,6 +288,19 @@ public class Platform implements GenericPlatform {
   public Object getBufferedURLInputStream(URL url, byte[] outputBytes,
                                           String post) {
     return AwtFile.getBufferedURLInputStream(url, outputBytes, post);
+  }
+
+  @Override
+  public String postBytesOrData(URL url, byte[] outputBytes, String data) {
+    Object ret = AwtFile.getBufferedURLInputStream(url, outputBytes, data);
+    // check for error
+    if (ret instanceof String)
+      return (String) ret;
+    try {
+      return new String((byte[]) Rdr.getStreamAsBytes((BufferedInputStream) ret, null));
+    } catch (IOException e) {
+      return "" + e;
+    }
   }
 
   @Override

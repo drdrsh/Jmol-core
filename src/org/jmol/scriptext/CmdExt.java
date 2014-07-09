@@ -79,6 +79,7 @@ import org.jmol.util.Measure;
 
 import javajs.util.BArray;
 import javajs.util.Base64;
+import javajs.util.Eigen;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
@@ -878,8 +879,16 @@ public class CmdExt implements JmolCmdExtension {
         } catch (Exception ex) {
           invArg();
         }
-        q = Measure.calculateQuaternionRotation(centerAndPoints, retStddev,
-            true);
+        int n = centerAndPoints[0].length - 1;
+        for (int i = 1; i <= n; i++) {
+          P3 aij = centerAndPoints[0][i];
+          P3 bij = centerAndPoints[1][i];
+          if (!(aij instanceof Atom) || !(bij instanceof Atom))
+            break;
+          Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
+              + ((Atom) bij).getInfo());
+        }
+        q = Eigen.calculateQuaternionRotation(centerAndPoints, retStddev);
         float r0 = (Float.isNaN(retStddev[1]) ? Float.NaN : Math
             .round(retStddev[0] * 100) / 100f);
         float r1 = (Float.isNaN(retStddev[1]) ? Float.NaN : Math
@@ -927,16 +936,18 @@ public class CmdExt implements JmolCmdExtension {
           float[] list;
           if (bsFrom == null
               || bsTo == null
-              || (list = e.getSmilesExt().getFlexFitList(bsFrom, bsTo, strSmiles, !isSmiles)) == null)
+              || (list = e.getSmilesExt().getFlexFitList(bsFrom, bsTo,
+                  strSmiles, !isSmiles)) == null)
             return;
           vwr.setDihedrals(list, null, 1);
         }
-        float stddev = e.getSmilesExt().getSmilesCorrelation(bsFrom, bsTo, strSmiles, null,
-            null, m4, null, !isSmiles, false, null, center, false, false);
+        float stddev = e.getSmilesExt().getSmilesCorrelation(bsFrom, bsTo,
+            strSmiles, null, null, m4, null, !isSmiles, false, null, center,
+            false, false);
         if (Float.isNaN(stddev)) {
           showString("structures do not match");
           return;
-        }  
+        }
         if (doTranslate) {
           translation = new V3();
           m4.getTranslation(translation);
@@ -983,9 +994,10 @@ public class CmdExt implements JmolCmdExtension {
       }
       if (!e.useThreads())
         doAnimate = false;
-      if (vwr.rotateAboutPointsInternal(e, center, pt1, endDegrees
-          / nSeconds, endDegrees, doAnimate, bsFrom, translation, ptsB, null)
-          && doAnimate && e.isJS)
+      if (vwr.rotateAboutPointsInternal(e, center, pt1, endDegrees / nSeconds,
+          endDegrees, doAnimate, bsFrom, translation, ptsB, null)
+          && doAnimate
+          && e.isJS)
         throw new ScriptInterruption(e, "compare", 1);
     }
   }

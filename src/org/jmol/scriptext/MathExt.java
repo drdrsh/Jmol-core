@@ -63,6 +63,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.Measure;
 
 import javajs.util.CU;
+import javajs.util.Eigen;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
@@ -165,6 +166,7 @@ public class MathExt implements JmolMathExtension {
     case T.plane:
     case T.intersection:
       return evaluatePlane(mp, args, tok);
+    case T.eval:
     case T.javascript:
     case T.script:
     case T.show:
@@ -515,7 +517,7 @@ public class MathExt implements JmolMathExtension {
         ptsA = e.getPointVector(args[0], 0);
         ptsB = e.getPointVector(args[1], 0);
         if (ptsA != null && ptsB != null)
-          stddev = Measure.getTransformMatrix4(ptsA, ptsB, m, null, false);
+          stddev = Eigen.getTransformMatrix4(ptsA, ptsB, m, null);
       }
       return (isStdDev || Float.isNaN(stddev) ? mp.addXFloat(stddev) : mp
           .addXM4(m));
@@ -1947,13 +1949,15 @@ public class MathExt implements JmolMathExtension {
     // script(cmd)
     // script(cmd, syncTarget)
     // show(showCmd)
-    if ((tok == T.show || tok == T.javascript) && args.length != 1 
+    if ((tok == T.eval || tok == T.show || tok == T.javascript) && args.length != 1 
         || args.length == 0
         || args.length > 2)
       return false;
     String s = SV.sValue(args[0]);
     SB sb = new SB();
     switch (tok) {
+    case T.eval:
+      return mp.addXObj(vwr.evaluateExpressionAsVariable(s));
     case T.script:
       String appID = (args.length == 2 ? SV.sValue(args[1]) : ".");
       // options include * > . or an appletID with or without "jmolApplet"

@@ -64,6 +64,7 @@ import org.jmol.util.Parser;
 import javajs.util.A4;
 import javajs.util.BArray;
 import javajs.util.Base64;
+import javajs.util.Eigen;
 import javajs.util.OC;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -5811,8 +5812,8 @@ public class ScriptEval extends ScriptExpr {
           m4 = new M4();
           points[0] = new P3();
           nPoints = 1;
-          float stddev = (chk ? 0 : Measure.getTransformMatrix4(ptsA, ptsB, m4,
-              points[0], false));
+          float stddev = (chk ? 0 : Eigen.getTransformMatrix4(ptsA, ptsB, m4,
+              points[0]));
           // if the standard deviation is very small, we leave ptsB
           // because it will be used to set the absolute final positions
           if (stddev > 0.001)

@@ -28,10 +28,10 @@ import org.jmol.api.VolumeDataInterface;
 import org.jmol.java.BS;
 
 import org.jmol.util.BSUtil;
-import org.jmol.util.Eigen;
 import org.jmol.util.Escape;
 
 import javajs.util.AU;
+import javajs.util.Eigen;
 import javajs.util.Lst;
 import javajs.util.T3;
 

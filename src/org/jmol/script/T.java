@@ -717,11 +717,12 @@ public class T {
   public final static int sin          = 4 | 1 << 9 | mathfunc;
   public final static int cos          = 5 | 1 << 9 | mathfunc;
   public final static int sqrt         = 6 | 1 << 9 | mathfunc;
-  public final static int file  = 7 | 1 << 9 | mathfunc | intproperty | scriptCommand;
+  public final static int file         = 7 | 1 << 9 | mathfunc | intproperty | scriptCommand;
   public final static int forcmd       = 8 | 1 << 9 | mathfunc | flowCommand;
   public final static int ifcmd        = 9 | 1 << 9 | mathfunc | flowCommand;
   public final static int abs          = 10 | 1 << 9 | mathfunc;
   public final static int javascript   = 12 /* must be even */| 1 << 9 | mathfunc | implicitStringCommand;
+  public final static int eval         = 13 | 1 << 9 | mathfunc;
   public final static int show         = 14 | 1 << 9 | mathfunc | scriptCommand;
   
   // ___.xxx(a)
@@ -1683,6 +1684,7 @@ public class T {
         "end",
         "endif",
         "exit",
+        "eval",
         "file",
         "files",
         "font",
@@ -2683,6 +2685,7 @@ public class T {
         end,                                // "end"
         endifcmd,                           // "endif"
         exit,                               // "exit"
+        eval,                               // "eval"
         file,                               // "file"
         -1,                                 // "files"
         font,                               // "font"
