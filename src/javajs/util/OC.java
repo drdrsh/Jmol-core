@@ -57,6 +57,7 @@ public class OC extends OutputStream {
   private String type;
 	private boolean isBase64;
 	private OutputStream os0;
+	private byte[] bytes; // preset bytes; output only
   
   public OC setParams(BytePoster bytePoster, String fileName,
                                      boolean asWriter, OutputStream os) {
@@ -76,6 +77,11 @@ public class OC extends OutputStream {
     return this;
   }
 
+  public OC setBytes(byte[] b) {
+  	bytes = b;
+  	return this;
+  }
+  
   public String getFileName() {
     return fileName;
   }
@@ -299,7 +305,7 @@ public class OC extends OutputStream {
 	}
 	
   public byte[] toByteArray() {
-    return (os instanceof ByteArrayOutputStream ? ((ByteArrayOutputStream)os).toByteArray() : null);
+    return (bytes != null ? bytes : os instanceof ByteArrayOutputStream ? ((ByteArrayOutputStream)os).toByteArray() : null);
   }
 
   @Override

@@ -124,4 +124,6 @@ public interface GenericPlatform extends FontManager {
 
   String getLocalUrl(String fileName);
 
+	String postBytesOrData(URL url, byte[] outputBytes, String data);
+
 }
