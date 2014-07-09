@@ -418,8 +418,6 @@ public class Tensor {
     if (a[0][2] != a[2][0]) {
       a[0][2] = a[2][0] = (a[0][2] + a[2][0])/2;
     }
-    Eigen eigen = new Eigen().set(3);
-    eigen.calc(a);
     M3 m = new M3();
     float[] mm = new float[9];
     for (int i = 0, p = 0; i < 3; i++)
@@ -427,26 +425,29 @@ public class Tensor {
         mm[p++] = (float) a[i][j];
     m.setA(mm);
 
-    V3[] evec = eigen.getEigenVectors3();
-    V3 n = new V3();
-    V3 cross = new V3();
-    for (int i = 0; i < 3; i++) {
-      n.setT(evec[i]);
-      m.rotate(n);
-      cross.cross(n, evec[i]);
-      //Logger.info("v[i], n, n x v[i]"+ evec[i] + " " + n + " "  + cross);
-      n.setT(evec[i]);
-      n.normalize();
-      cross.cross(evec[i], evec[(i + 1) % 3]);
-      //Logger.info("draw id eigv" + i + " " + Escape.eP(evec[i]) + " color " + (i ==  0 ? "red": i == 1 ? "green" : "blue") + " # " + n + " " + cross);
-    }
-//    Logger.info("eigVal+vec (" + eigen.d[0] + " + " + eigen.e[0]
-//        + ")\n             (" + eigen.d[1] + " + " + eigen.e[1]
-//        + ")\n             (" + eigen.d[2] + " + " + eigen.e[2] + ")");
-
     V3[] vectors = new V3[3];
     float[] values = new float[3];
-    eigen.fillArrays(vectors, values);
+    new Eigen().setM(a).fillFloatArrays(vectors, values);
+
+// this code was used for testing only
+//  Eigen e = new Eigen().setM(a);  
+//  V3[] evec = eigen.getEigenVectors3();
+//  V3 n = new V3();
+//  V3 cross = new V3();
+//  for (int i = 0; i < 3; i++) {
+//    n.setT(evec[i]);
+//    m.rotate(n);
+//    cross.cross(n, evec[i]);
+//    //Logger.info("v[i], n, n x v[i]"+ evec[i] + " " + n + " "  + cross);
+//    n.setT(evec[i]);
+//    n.normalize();
+//    cross.cross(evec[i], evec[(i + 1) % 3]);
+//    //Logger.info("draw id eigv" + i + " " + Escape.eP(evec[i]) + " color " + (i ==  0 ? "red": i == 1 ? "green" : "blue") + " # " + n + " " + cross);
+//  }
+//  Logger.info("eigVal+vec (" + eigen.d[0] + " + " + eigen.e[0]
+//      + ")\n             (" + eigen.d[1] + " + " + eigen.e[1]
+//      + ")\n             (" + eigen.d[2] + " + " + eigen.e[2] + ")");
+
     newTensorType(vectors, values, type, id);
     asymMatrix = asymmetricTensor;
     symMatrix = a;
@@ -527,7 +528,7 @@ public class Tensor {
     mat[0][1] = mat[1][0] = coefs[3] / 2; //XY
     mat[0][2] = mat[2][0] = coefs[4] / 2; //XZ
     mat[1][2] = mat[2][1] = coefs[5] / 2; //YZ
-    Eigen.getUnitVectors(mat, eigenVectors, eigenValues);
+    new Eigen().setM(mat).fillFloatArrays(eigenVectors, eigenValues);
     setType("adp");
     sortAndNormalize();
     return this;

@@ -24,16 +24,21 @@
 
 package javajs.util;
 
+import javajs.api.EigenInterface;
+
 
 /**
  * Eigenvalues and eigenvectors of a real matrix.
+ * See javajs.api.EigenInterface() as well.
  * 
  * adapted by Bob Hanson from http://math.nist.gov/javanumerics/jama/ (public
- * domain); adding quaternion superimposition capability
+ * domain); adding quaternion superimposition capability; removing
+ * nonsymmetric reduction to Hessenberg form, which we do not need in Jmol.
  * 
- * output is as a set of double[n] columns, but for Jmol we use
- * getEigenvectorsFloatTransformed to return them as a set of rows for easier
- * use as A[0], A[1], etc.
+ * Output is as a set of double[n] columns, but for the EigenInterface
+ * we return them as V3[3] and float[3] (or double[3]) values.
+ * 
+ * Eigenvalues and eigenvectors are sorted from smallest to largest eigenvalue.
  * 
  * <P>
  * If A is symmetric, then A = V*D*V' where the eigenvalue matrix D is diagonal
@@ -49,7 +54,7 @@ package javajs.util;
  * validity of the equation A = V*D*inverse(V) depends upon V.cond().
  **/
 
-public class Eigen {
+public class Eigen implements EigenInterface {
 
   /* ------------------------
   Public Methods
@@ -65,32 +70,56 @@ public class Eigen {
     return this;
   }
 
+  @Override
+  public Eigen setM(double[][] m) {
+    set(m.length);
+    calc(m);
+    return this;
+  }
+
   /**
-   * 
-   * @param m may be 3 or 4 here
-   * @return  Eigen e
+   * return values sorted from smallest to largest value.
    */
-  public static Eigen newM(double[][] m) {
-    Eigen e = new Eigen().set(m.length);
-    e.calc(m);
-    return e;
+  @Override
+  public double[] getEigenvalues() {
+    return d;
   }
 
-  public static void getUnitVectors(double[][] m, V3[] eigenVectors,
-                                    float[] eigenValues) {
-    newM(m).fillArrays(eigenVectors, eigenValues);
-  }
-
-  public void fillArrays(V3[] eigenVectors, float[] eigenValues) {
-    float[][] vectors = getEigenvectorsFloatTransposed();
-    double[] lambdas = getRealEigenvalues();
-    for (int i = 0; i < n; i++) {
-      if (eigenVectors[i] == null)
-        eigenVectors[i] = new V3();
-      eigenVectors[i].setA(vectors[i]);
-      eigenValues[i] = (float) lambdas[i];
+  /**
+   * Specifically for 3x3 systems, returns eigenVectors as V3[3]
+   * and values as float[3]; sorted from smallest to largest value.
+   * 
+   * @param eigenVectors  returned vectors
+   * @param eigenValues   returned values
+   * 
+   */
+  @Override
+  public void fillFloatArrays(V3[] eigenVectors, float[] eigenValues) {
+    for (int i = 0; i < 3; i++) {
+      if (eigenVectors != null) {
+        if (eigenVectors[i] == null)
+          eigenVectors[i] = new V3();
+        eigenVectors[i].set((float) V[0][i], (float) V[1][i], (float) V[2][i]);
+      }
+      if (eigenValues != null)
+        eigenValues[i] = (float) d[i];
     }
   }
+
+  /**
+   * Transpose V and turn into floats; sorted from smallest to largest value.
+   * 
+   * @return ROWS of eigenvectors f[0], f[1], f[2], etc.
+   */
+  @Override
+  public float[][] getEigenvectorsFloatTransposed() {
+    float[][] f = new float[n][n];
+    for (int i = n; --i >= 0;)
+      for (int j = n; --j >= 0;)
+        f[j][i] = (float) V[i][j];
+    return f;
+  }
+
 
   /**
    * Check for symmetry, then construct the eigenvalue decomposition
@@ -163,31 +192,6 @@ public class Eigen {
 
   public double[] getImagEigenvalues() {
     return e;
-  }
-
-  public double[] getEigenvalues() {
-    return d;
-  }
-
-  /**
-   * transpose V and turn into floats
-   * 
-   * @return ROWS of eigenvectors f[0], f[1], f[2], etc.
-   */
-  public float[][] getEigenvectorsFloatTransposed() {
-    float[][] f = new float[n][n];
-    for (int i = n; --i >= 0;)
-      for (int j = n; --j >= 0;)
-        f[j][i] = (float) V[i][j];
-    return f;
-  }
-
-  public V3[] getEigenVectors3() {
-    V3[] v = new V3[3];
-    for (int i = 0; i < 3; i++) {
-      v[i] = V3.new3((float) V[0][i], (float) V[1][i], (float) V[2][i]);
-    }
-    return v;
   }
 
   /* ------------------------
@@ -475,6 +479,23 @@ public class Eigen {
         }
       }
     }
+  }
+
+  private static double hypot(double a, double b) {
+
+    // sqrt(a^2 + b^2) without under/overflow. 
+
+    double r;
+    if (Math.abs(a) > Math.abs(b)) {
+      r = b / a;
+      r = Math.abs(a) * Math.sqrt(1 + r * r);
+    } else if (b != 0) {
+      r = a / b;
+      r = Math.abs(b) * Math.sqrt(1 + r * r);
+    } else {
+      r = 0.0;
+    }
+    return r;
   }
 
   // Nonsymmetric reduction to Hessenberg form.
@@ -1035,55 +1056,5 @@ public class Eigen {
   }
      */
 
-  /* ------------------------
-     Constructor
-   * ------------------------ */
-
-  public static P3[] getCenterAndPoints(Lst<P3> vPts) {
-    int n = vPts.size();
-    P3[] pts = new P3[n + 1];
-    pts[0] = new P3();
-    if (n > 0) {
-      for (int i = 0; i < n; i++) {
-        pts[0].add(pts[i + 1] = vPts.get(i));
-      }
-      pts[0].scale(1f / n);
-    }
-    return pts;
-  }
-
-  public static float getRmsd(P3[][] centerAndPoints, Quat q) {
-    double sum2 = 0;
-    P3[] ptsA = centerAndPoints[0];
-    P3[] ptsB = centerAndPoints[1];
-    P3 cA = ptsA[0];
-    P3 cB = ptsB[0];
-    int n = ptsA.length - 1;
-    P3 ptAnew = new P3();
-    
-    for (int i = n + 1; --i >= 1;) {
-      ptAnew.sub2(ptsA[i], cA);
-      q.transformP2(ptAnew, ptAnew).add(cB);
-      sum2 += ptAnew.distanceSquared(ptsB[i]);
-    }
-    return (float) Math.sqrt(sum2 / n);
-  }
-
-  private static double hypot(double a, double b) {
-
-    // sqrt(a^2 + b^2) without under/overflow. 
-
-    double r;
-    if (Math.abs(a) > Math.abs(b)) {
-      r = b / a;
-      r = Math.abs(a) * Math.sqrt(1 + r * r);
-    } else if (b != 0) {
-      r = a / b;
-      r = Math.abs(b) * Math.sqrt(1 + r * r);
-    } else {
-      r = 0.0;
-    }
-    return r;
-  }
 
 }

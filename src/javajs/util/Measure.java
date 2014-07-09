@@ -23,6 +23,10 @@
  */
 package javajs.util;
 
+import javajs.api.EigenInterface;
+
+import org.jmol.api.Interface;
+
 
 
 
@@ -520,64 +524,65 @@ final public class Measure {
     ptRet.scaleAdd2(vTemp.dot(tempNorm) / l_dot_n, v, pt1);
     return ptRet;
   }
-/*
-  public static Point3f getTriangleIntersection(Point3f a1, Point3f a2,
-                                               Point3f a3, Point4f plane,
-                                               Point3f b1,
-                                               Point3f b2, Point3f b3,
-                                               Vector3f vNorm, Vector3f vTemp, 
-                                               Point3f ptRet, Point3f ptTemp, Vector3f vTemp2, Point4f pTemp, Vector3f vTemp3) {
-    
-    if (getTriangleIntersection(b1, b2, a1, a2, a3, vTemp, plane, vNorm, vTemp2, vTemp3, ptRet, ptTemp))
-      return ptRet;
-    if (getTriangleIntersection(b2, b3, a1, a2, a3, vTemp, plane, vNorm, vTemp2, vTemp3, ptRet, ptTemp))
-      return ptRet;
-    if (getTriangleIntersection(b3, b1, a1, a2, a3, vTemp, plane, vNorm, vTemp2, vTemp3, ptRet, ptTemp))
-      return ptRet;
-    return null;
-  }
-*/
-/*  
-  public static boolean getTriangleIntersection(Point3f b1, Point3f b2,
-                                                Point3f a1, Point3f a2,
-                                                Point3f a3, Vector3f vTemp,
-                                                Point4f plane, Vector3f vNorm,
-                                                Vector3f vTemp2, Vector3f vTemp3,
-                                                Point3f ptRet,
-                                                Point3f ptTemp) {
-    if (distanceToPlane(plane, b1) * distanceToPlane(plane, b2) >= 0)
-      return false;
-    vTemp.sub(b2, b1);
-    vTemp.normalize();
-    if (getIntersection(b1, vTemp, plane, ptRet, vNorm, vTemp2) != null) {
-      if (isInTriangle(ptRet, a1, a2, a3, vTemp, vTemp2, vTemp3))
-        return true;
+
+  /*
+    public static Point3f getTriangleIntersection(Point3f a1, Point3f a2,
+                                                 Point3f a3, Point4f plane,
+                                                 Point3f b1,
+                                                 Point3f b2, Point3f b3,
+                                                 Vector3f vNorm, Vector3f vTemp, 
+                                                 Point3f ptRet, Point3f ptTemp, Vector3f vTemp2, Point4f pTemp, Vector3f vTemp3) {
+      
+      if (getTriangleIntersection(b1, b2, a1, a2, a3, vTemp, plane, vNorm, vTemp2, vTemp3, ptRet, ptTemp))
+        return ptRet;
+      if (getTriangleIntersection(b2, b3, a1, a2, a3, vTemp, plane, vNorm, vTemp2, vTemp3, ptRet, ptTemp))
+        return ptRet;
+      if (getTriangleIntersection(b3, b1, a1, a2, a3, vTemp, plane, vNorm, vTemp2, vTemp3, ptRet, ptTemp))
+        return ptRet;
+      return null;
     }
-    return false;
-  }
-  private static boolean isInTriangle(Point3f p, Point3f a, Point3f b,
-                                      Point3f c, Vector3f v0, Vector3f v1,
-                                      Vector3f v2) {
-    // from http://www.blackpawn.com/texts/pointinpoly/default.html
-    // Compute barycentric coordinates
-    v0.sub(c, a);
-    v1.sub(b, a);
-    v2.sub(p, a);
-    float dot00 = v0.dot(v0);
-    float dot01 = v0.dot(v1);
-    float dot02 = v0.dot(v2);
-    float dot11 = v1.dot(v1);
-    float dot12 = v1.dot(v2);
-    float invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
-    float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-    float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
-    return (u > 0 && v > 0 && u + v < 1);
-  }
-*/
+  */
+  /*  
+    public static boolean getTriangleIntersection(Point3f b1, Point3f b2,
+                                                  Point3f a1, Point3f a2,
+                                                  Point3f a3, Vector3f vTemp,
+                                                  Point4f plane, Vector3f vNorm,
+                                                  Vector3f vTemp2, Vector3f vTemp3,
+                                                  Point3f ptRet,
+                                                  Point3f ptTemp) {
+      if (distanceToPlane(plane, b1) * distanceToPlane(plane, b2) >= 0)
+        return false;
+      vTemp.sub(b2, b1);
+      vTemp.normalize();
+      if (getIntersection(b1, vTemp, plane, ptRet, vNorm, vTemp2) != null) {
+        if (isInTriangle(ptRet, a1, a2, a3, vTemp, vTemp2, vTemp3))
+          return true;
+      }
+      return false;
+    }
+    private static boolean isInTriangle(Point3f p, Point3f a, Point3f b,
+                                        Point3f c, Vector3f v0, Vector3f v1,
+                                        Vector3f v2) {
+      // from http://www.blackpawn.com/texts/pointinpoly/default.html
+      // Compute barycentric coordinates
+      v0.sub(c, a);
+      v1.sub(b, a);
+      v2.sub(p, a);
+      float dot00 = v0.dot(v0);
+      float dot01 = v0.dot(v1);
+      float dot02 = v0.dot(v2);
+      float dot11 = v1.dot(v1);
+      float dot12 = v1.dot(v2);
+      float invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+      float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+      float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+      return (u > 0 && v > 0 && u + v < 1);
+    }
+  */
 
   /**
-   * Closed-form solution of absolute orientation
-   * requiring 1:1 mapping of positions.
+   * Closed-form solution of absolute orientation requiring 1:1 mapping of
+   * positions.
    * 
    * @param centerAndPoints
    * @param retStddev
@@ -586,16 +591,15 @@ final public class Measure {
    * @author hansonr Bob Hanson
    * 
    */
-  public static Quat calculateQuaternionRotation(
-                                                       P3[][] centerAndPoints,
-                                                       float[] retStddev) {
-  
+  public static Quat calculateQuaternionRotation(P3[][] centerAndPoints,
+                                                 float[] retStddev) {
+
     retStddev[1] = Float.NaN;
     Quat q = new Quat();
     if (centerAndPoints[0].length == 1
         || centerAndPoints[0].length != centerAndPoints[1].length)
       return q;
-  
+
     /*
      * see Berthold K. P. Horn,
      * "Closed-form solution of absolute orientation using unit quaternions" J.
@@ -620,11 +624,11 @@ final public class Measure {
      * http://cnx.org/content/m11608/latest/
      * 
      */
-  
+
     int n = centerAndPoints[0].length - 1;
     if (n < 2)
       return q;
-  
+
     double Sxx = 0, Sxy = 0, Sxz = 0, Syx = 0, Syy = 0, Syz = 0, Szx = 0, Szy = 0, Szz = 0;
     P3 ptA = new P3();
     P3 ptB = new P3();
@@ -643,34 +647,35 @@ final public class Measure {
       Szy += (double) ptA.z * (double) ptB.y;
       Szz += (double) ptA.z * (double) ptB.z;
     }
-    retStddev[0] = Eigen.getRmsd(centerAndPoints, q);
+    retStddev[0] = getRmsd(centerAndPoints, q);
     double[][] N = new double[4][4];
     N[0][0] = Sxx + Syy + Szz;
     N[0][1] = N[1][0] = Syz - Szy;
     N[0][2] = N[2][0] = Szx - Sxz;
     N[0][3] = N[3][0] = Sxy - Syx;
-  
+
     N[1][1] = Sxx - Syy - Szz;
     N[1][2] = N[2][1] = Sxy + Syx;
     N[1][3] = N[3][1] = Szx + Sxz;
-  
+
     N[2][2] = -Sxx + Syy - Szz;
     N[2][3] = N[3][2] = Syz + Szy;
-  
+
     N[3][3] = -Sxx - Syy + Szz;
-  
+
     //this construction prevents JavaScript from requiring preloading of Eigen
-    Eigen eigen = Eigen.newM(N);  
-    float[] v = eigen.getEigenvectorsFloatTransposed()[3];
+    
+    float[] v = ((EigenInterface) Interface.getInterface("javajs.util.Eigen"))
+        .setM(N).getEigenvectorsFloatTransposed()[3];
     q = Quat.newP4(P4.new4(v[1], v[2], v[3], v[0]));
-    retStddev[1] = Eigen.getRmsd(centerAndPoints, q);
+    retStddev[1] = getRmsd(centerAndPoints, q);
     return q;
   }
 
   public static float getTransformMatrix4(Lst<P3> ptsA, Lst<P3> ptsB, M4 m,
                                           P3 centerA) {
-    P3[] cptsA = Eigen.getCenterAndPoints(ptsA);
-    P3[] cptsB = Eigen.getCenterAndPoints(ptsB);
+    P3[] cptsA = getCenterAndPoints(ptsA);
+    P3[] cptsB = getCenterAndPoints(ptsB);
     //System.out.println("draw d1 " + cptsA[0]);
     //System.out.println("draw d2 " + cptsB[0]);
     float[] retStddev = new float[2];
@@ -681,6 +686,44 @@ final public class Measure {
     if (centerA != null)
       centerA.setT(cptsA[0]);
     return retStddev[1];
+  }
+
+  /**
+   * from a list of points, create an array that includes the center
+   * point as the first point. This array is used as a starting point for
+   * a quaternion analysis of superposition.
+   * 
+   * @param vPts
+   * @return  array of points with first point center
+   */
+	public static P3[] getCenterAndPoints(Lst<P3> vPts) {
+	  int n = vPts.size();
+	  P3[] pts = new P3[n + 1];
+	  pts[0] = new P3();
+	  if (n > 0) {
+	    for (int i = 0; i < n; i++) {
+	      pts[0].add(pts[i + 1] = vPts.get(i));
+	    }
+	    pts[0].scale(1f / n);
+	  }
+	  return pts;
+	}
+
+  public static float getRmsd(P3[][] centerAndPoints, Quat q) {
+    double sum2 = 0;
+    P3[] ptsA = centerAndPoints[0];
+    P3[] ptsB = centerAndPoints[1];
+    P3 cA = ptsA[0];
+    P3 cB = ptsB[0];
+    int n = ptsA.length - 1;
+    P3 ptAnew = new P3();
+    
+    for (int i = n + 1; --i >= 1;) {
+      ptAnew.sub2(ptsA[i], cA);
+      q.transformP2(ptAnew, ptAnew).add(cB);
+      sum2 += ptAnew.distanceSquared(ptsB[i]);
+    }
+    return (float) Math.sqrt(sum2 / n);
   }
 
 }

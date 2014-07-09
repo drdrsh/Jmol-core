@@ -40,7 +40,6 @@ import org.jmol.util.Vibration;
 
 import javajs.util.A4;
 import javajs.util.AU;
-import javajs.util.Eigen;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -4146,7 +4145,7 @@ import java.util.Properties;
       }
       if (vNot.size() == 0)
         return;
-      pt = Eigen.getCenterAndPoints(vNot)[0];
+      pt = Measure.getCenterAndPoints(vNot)[0];
       V3 v = V3.newVsub(thisAtom, pt);
       Quat q = Quat.newVA(v, 180);
       moveAtoms(null, q.getMatrix(), null, bsAtoms, thisAtom, true, false);

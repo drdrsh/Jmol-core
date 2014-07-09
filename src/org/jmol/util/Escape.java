@@ -30,7 +30,6 @@ import java.util.Map;
 
 import javajs.util.Lst;
 import javajs.util.M34;
-import javajs.util.Measure;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;

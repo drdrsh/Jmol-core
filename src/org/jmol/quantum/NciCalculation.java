@@ -340,6 +340,8 @@ public class NciCalculation extends QuantumCalculation implements
     }
 */  }
   
+  private float[] eigenValues = new float[3];
+  
   private float getValue(double rho, boolean isReducedDensity) {
     double s;
     if (rho == NO_VALUE)
@@ -356,8 +358,8 @@ public class NciCalculation extends QuantumCalculation implements
       hess[1][2] = hess[2][1] = gyzTemp;
       hess[2][2] = gzzTemp;
       eigen.calc(hess);
-      double lambda2 = eigen.getRealEigenvalues()[1];
-      s = (lambda2 < 0 ? -rho : rho);
+      eigen.fillFloatArrays(null, eigenValues);
+      s = (eigenValues[1] < 0 ? -rho : rho);
     }
     return (float) s;
   }
