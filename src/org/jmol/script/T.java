@@ -428,6 +428,7 @@ public class T {
   public final static int spec_resid           = expression | 37;
   public final static int spec_seqcode         = expression | 38;
   public final static int spec_seqcode_range   = expression | 39;
+  public final static int spec_seqid           = expression | 40;
 
   public final static int amino                = predefinedset | 2;
   public final static int dna           = predefinedset | 4;

@@ -527,4 +527,8 @@ public class Model {
     return null;
   }
 
+  public void checkSeqID(int iSpec, BS bs) {
+    return;
+  }
+
  }

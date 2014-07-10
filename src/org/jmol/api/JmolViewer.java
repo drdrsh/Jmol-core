@@ -507,6 +507,7 @@ abstract public class JmolViewer implements JSInterface {
    * @param currentSize 
    * @param rectClip  // unused
    */
+  @Deprecated
   public void renderScreenImage(Object g, Object currentSize,
                                 Object rectClip) {
     apiPlatform.renderScreenImage(g, currentSize);

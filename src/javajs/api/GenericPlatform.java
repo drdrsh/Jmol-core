@@ -67,6 +67,7 @@ public interface GenericPlatform extends FontManager {
 
   Object newOffScreenImage(int w, int h);
   
+  @Deprecated
   void renderScreenImage(Object g, Object currentSize);
 
   int[] getTextPixels(String text, Font font3d, Object gObj,

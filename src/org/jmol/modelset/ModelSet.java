@@ -2305,6 +2305,12 @@ import java.util.Properties;
           bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache));
         }
       return bs;
+    case T.spec_seqid:
+      bs = new BS();
+      int iSpec = ((Integer) specInfo).intValue();
+      for (int i = mc; --i >= 0;) 
+        am[i].checkSeqID(iSpec, bs);
+      return bs;
     case T.bonds:
     case T.isaromatic:
       return getAtomBitsMDb(tokType, specInfo);

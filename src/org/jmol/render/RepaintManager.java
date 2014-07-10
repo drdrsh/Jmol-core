@@ -131,26 +131,8 @@ public class RepaintManager implements JmolRepaintManager {
     // -- "Send me an asynchronous update() event!"
     if (!vwr.haveDisplay)
       return;    
-    /**
-     * Jmol._repaint(applet,asNewThread)
-     * 
-     * should invoke 
-     * 
-     *   setTimeout(applet._applet.viewer.updateJS(width, height)) // may be 0,0
-     *   
-     * when it is ready to do so.
-     * 
-     * @j2sNative
-     * 
-     * if (typeof Jmol != "undefined" && Jmol._repaint)
-     *   Jmol._repaint(this.vwr.applet,true);
-     * 
-     */
-    {
       //System.out.println("RepaintMan repaintNow " + why);
       vwr.apiPlatform.repaint(vwr.getDisplay());
-    }
-     
   }
 
   @Override

@@ -241,6 +241,18 @@ public class SB {
     }
   }
 
+  public int charCodeAt(int i) {
+    /**
+     * @j2sNative
+     * 
+     *            return this.s.charCodeAt(i);
+     * 
+     */
+    {
+      return sb.codePointAt(i);
+    }
+  }
+
   public void setLength(int n) {
     /**
      * @j2sNative

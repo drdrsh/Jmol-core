@@ -56,6 +56,7 @@ class Display {
    * @param g
    * @param size
    */
+  @Deprecated
   static void renderScreenImage(PlatformViewer vwr, Object g, Object size) {
     ((Viewer)vwr).renderScreenImage(g, ((Dimension)size).width, ((Dimension)size).height);
   }

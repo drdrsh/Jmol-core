@@ -54,6 +54,23 @@ class Display {
    * @param canvas  
    */
   static void repaint(Object canvas) {
+    /**
+     * Jmol._repaint(applet,asNewThread)
+     * 
+     * should invoke 
+     * 
+     *   setTimeout(applet._applet.viewer.updateJS(width, height)) // may be 0,0
+     *   
+     * when it is ready to do so.
+     * 
+     * @j2sNative
+     * 
+     * if (typeof Jmol != "undefined" && Jmol._repaint)
+     *   Jmol._repaint(canvas.applet,true);
+     * 
+     */
+    {
+    }
     // N/A -- RepaintManager will never call this in JavaScript 
   }
 

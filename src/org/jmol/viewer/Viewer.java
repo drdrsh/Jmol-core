@@ -3706,13 +3706,26 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       rm.clear(iShape);
   }
 
-  public void renderScreenImageStereo(Object gLeft, boolean checkStereoSlave, int width,
-                                      int height) {
+  public void renderScreenImageStereo(Object gLeft, boolean checkStereoSlave,
+                                      int width, int height) {
     // from paint/update event
     // gRight is for second stereo applet
     // when this is the stereoSlave, no rendering occurs through this applet
     // directly, only from the other applet.
     // this is for relatively specialized geoWall-type installations
+
+    //      Jmol repaint/update system for the application:
+    //      
+    //      threads invoke vwr.refresh()
+    //       
+    //        --> repaintManager.refresh()
+    //        --> vwr.repaint() 
+    //        --> display.repaint()
+    //        --> OS event queue calls Applet.paint() 
+    //        --> vwr.renderScreenImage() 
+    //        --> vwr.notifyViewerRepaintDone() 
+    //        --> repaintManager.repaintDone()
+    //        --> which sets repaintPending false and does notify();
 
     //System.out.println(Thread.currentThread() + "render Screen Image " +
     // creatingImage);
@@ -3726,11 +3739,13 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       //System.out.println(Thread.currentThread() +
       // "notifying repaintManager repaint is done");
     }
-    if (captureParams != null && Boolean.FALSE != captureParams.get("captureEnabled")) {
+    if (captureParams != null
+        && Boolean.FALSE != captureParams.get("captureEnabled")) {
       //showString(transformManager.matrixRotate.toString(), false);
-      if (System.currentTimeMillis() + 50 > ((Long)captureParams.get("endTime")).longValue())
+      if (System.currentTimeMillis() + 50 > ((Long) captureParams
+          .get("endTime")).longValue())
         captureParams.put("captureMode", "end");
-        processWriteOrCapture(captureParams);
+      processWriteOrCapture(captureParams);
     }
     notifyViewerRepaintDone();
   }
@@ -3792,22 +3807,11 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return true;
   }
 
+  /**
+   * JmolViewer interface uses this, but that is all
+   */
   @Override
   public void renderScreenImage(Object g, int width, int height) {
-    /*
-     * Jmol repaint/update system for the application:
-     * 
-     * threads invoke vwr.refresh()
-     *  
-     *   --> repaintManager.refresh()
-     *   --> vwr.repaint() 
-     *   --> display.repaint()
-     *   --> OS event queue | Jmol.paint()
-     *   <-- vwr.renderScreenImage() 
-     *   <-- vwr.notifyViewerRepaintDone() 
-     *   <-- repaintManager.repaintDone()
-     *   <-- which sets repaintPending false and does notify();
-     */
     renderScreenImageStereo(g, false, width, height);
   }
 
@@ -3864,7 +3868,14 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       tm.setAntialias(antialiased);
     }
   }
-
+  
+  /**
+   *  
+   * @param graphic In JavaScript/HTML5, a Canvas.Context2d
+   * @param img
+   * @param x
+   * @param y
+   */
   private void render1(Object graphic, Object img, int x, int y) {
     if (graphic != null && img != null) {
       apiPlatform.drawImage(graphic, img, x, y, dimScreen.width,
