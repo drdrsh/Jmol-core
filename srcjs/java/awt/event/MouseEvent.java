@@ -794,4 +794,21 @@ public class MouseEvent extends InputEvent {
         }
     }
 
+    public boolean isControlDown() {
+      // TODO Auto-generated method stub
+      return ((modifiers & InputEvent.CTRL_MASK) != 0);
+    }
+
+    @Override
+    public boolean isShiftDown() {
+      // TODO Auto-generated method stub
+      return ((modifiers & InputEvent.SHIFT_MASK) != 0);
+    }
+
+    @Override
+    public boolean isAltDown() {
+      // TODO Auto-generated method stub
+      return ((modifiers & InputEvent.ALT_MASK) != 0);
+    }
+
 }
