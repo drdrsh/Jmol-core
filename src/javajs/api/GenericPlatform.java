@@ -121,10 +121,16 @@ public interface GenericPlatform extends FontManager {
   
   Object getBufferedFileInputStream(String name);
   
-  Object getBufferedURLInputStream(URL url, byte[] outputBytes, String post);
+  /**
+   * 
+   * @param url
+   * @param outputBytes
+   * @param post
+   * @param asString
+   * @return may be javajs.util.SB or byte[] or java.io.InputStream
+   */
+  Object getURLContents(URL url, byte[] outputBytes, String post, boolean asString);
 
   String getLocalUrl(String fileName);
-
-	String postBytesOrData(URL url, byte[] outputBytes, String data);
 
 }

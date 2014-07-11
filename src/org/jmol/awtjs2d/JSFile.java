@@ -13,9 +13,11 @@ import org.jmol.viewer.Viewer;
  * 
  * A class that mimics java.io.File
  * 
+ * We allow access to 
+ * 
  */
 
-class JSFile implements GenericFileInterface {
+public class JSFile implements GenericFileInterface {
 
   private String name;
 	private String fullName;
@@ -59,7 +61,15 @@ class JSFile implements GenericFileInterface {
 		return 0; // can't do this, shouldn't be necessary
 	}
 
-  static Object getBufferedURLInputStream(URL url, byte[] outputBytes,
+	/**
+	 * Note that the JS equivalent passes back a javajs.util.SB
+	 * 
+	 * @param url
+	 * @param outputBytes
+	 * @param post
+	 * @return javajs.util.SB or 
+	 */
+  public static Object getURLContents(URL url, byte[] outputBytes,
       String post) {
     try {
       AjaxURLConnection conn = (AjaxURLConnection) url.openConnection();
@@ -67,7 +77,7 @@ class JSFile implements GenericFileInterface {
         conn.outputBytes(outputBytes);
       else if (post != null)
         conn.outputString(post);
-      return conn.getSB();
+      return conn.getContents();
     } catch (Exception e) {
       return e.toString();
     }

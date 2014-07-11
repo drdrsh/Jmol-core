@@ -1,7 +1,7 @@
 package org.jmol.awtjs2d;
 
+import java.io.BufferedInputStream;
 import java.net.URL;
-
 
 import org.jmol.api.Interface;
 
@@ -13,6 +13,8 @@ import javajs.api.PlatformViewer;
 import javajs.awt.Font;
 import javajs.util.AjaxURLStreamHandlerFactory;
 import javajs.util.P3;
+import javajs.util.Rdr;
+import javajs.util.SB;
 
 /**
  * JavaScript 2D canvas version requires Ajax-based URL stream processing.
@@ -402,21 +404,39 @@ public class Platform implements GenericPlatform {
     return null; 
   }
 
+
   @Override
-  public Object getBufferedURLInputStream(URL url, byte[] outputBytes,
-                                          String post) {
-    return JSFile.getBufferedURLInputStream(url, outputBytes, post);
+  public Object getURLContents(URL url, byte[] outputBytes, String post,
+      boolean asString) {
+    return getURLContentsStatic(url, outputBytes, post, asString);
   }
+
+  /**
+   * In case this needs to be performed directly, without interface
+   * @param url
+   * @param outputBytes
+   * @param post
+   * @param asString
+   * @return String or byte[] or javajs.util.SB 
+   */
+  public static Object getURLContentsStatic(URL url, byte[] outputBytes, String post,
+      boolean asString) {
+    Object ret = JSFile.getURLContents(url, outputBytes, post);
+    // check for error
+    try {
+      return (!asString ? ret : ret instanceof String ? ret : ret instanceof SB ? ((SB) ret)
+          .toString() : ret instanceof byte[] ? new String((byte[]) ret)
+          : new String((byte[]) Rdr.getStreamAsBytes((BufferedInputStream) ret,
+              null)));
+    } catch (Exception e) {
+      return "" + e;
+    }
+  }
+
 
   @Override
   public String getLocalUrl(String fileName) {
     // n/a (dialogs only)
-    return null;
-  }
-
-  @Override
-  public String postBytesOrData(URL url, byte[] outputBytes, String data) {
-    // TODO
     return null;
   }
 

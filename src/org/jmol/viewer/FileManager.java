@@ -418,7 +418,8 @@ public class FileManager implements BytePoster {
           name = url.toString();
           if (showMsg && name.toLowerCase().indexOf("password") < 0)
             Logger.info("FileManager opening 1 " + name);
-          ret = vwr.apiPlatform.getBufferedURLInputStream(url, outputBytes, post);
+          // note that in the case of JS, this is a javajs.util.SB.
+          ret = vwr.apiPlatform.getURLContents(url, outputBytes, post, false);
           byte[] bytes = null;
           if (ret instanceof SB) {
             SB sb = (SB) ret;

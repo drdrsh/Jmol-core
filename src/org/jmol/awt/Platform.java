@@ -297,23 +297,17 @@ public class Platform implements GenericPlatform {
   }
 
   @Override
-  public Object getBufferedURLInputStream(URL url, byte[] outputBytes,
-                                          String post) {
-    return AwtFile.getBufferedURLInputStream(url, outputBytes, post);
-  }
-
-  @Override
-  public String postBytesOrData(URL url, byte[] outputBytes, String data) {
-    Object ret = AwtFile.getBufferedURLInputStream(url, outputBytes, data);
-    // check for error
-    if (ret instanceof String)
-      return (String) ret;
+  public Object getURLContents(URL url, byte[] outputBytes, String post,
+      boolean asString) {
+    Object ret = AwtFile.getURLContents(url, outputBytes, post);
     try {
-      return new String((byte[]) Rdr.getStreamAsBytes((BufferedInputStream) ret, null));
+      return (!asString ? ret : ret instanceof String ? ret : new String(
+          (byte[]) Rdr.getStreamAsBytes((BufferedInputStream) ret, null)));
     } catch (IOException e) {
       return "" + e;
     }
   }
+
 
   @Override
   public String getLocalUrl(String fileName) {

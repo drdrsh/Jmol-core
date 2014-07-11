@@ -30,7 +30,7 @@ public class AjaxURLConnection extends URLConnection {
    * the method is "private", but in JavaScript that can still be overloaded.
    * Just set something to org.jmol.awtjs.JmolURLConnection.prototype.doAjax
    * 
-   * @return file data
+   * @return file data as a javajs.util.SB or byte[] depending upon the file type.
    * 
    * 
    */
@@ -61,7 +61,10 @@ public class AjaxURLConnection extends URLConnection {
   	//     type = "application/x-www-form-urlencoded";
   }
 
-	public Object getSB() {
+  /**
+   * @return javajs.util.SB or byte[], depending upon the file type
+   */
+	public Object getContents() {
 		return doAjax();
 	}
 
