@@ -74,7 +74,7 @@ public class ModelKitPopup extends JmolGenericPopup {
     if (element == null || Elements.elementNumberFromSymbol(element, true) == 0)
       return null;
     menuSetLabel(item, element);
-    ((JMenuItem) item).setActionCommand("assignAtom_" + element + "P!:??");
+    ((AwtSwingComponent) item).setActionCommand("assignAtom_" + element + "P!:??");
     return "set picking assignAtom_" + element;
   }
   
