@@ -71,7 +71,6 @@ class Display {
      */
     {
     }
-    // N/A -- RepaintManager will never call this in JavaScript 
   }
 
   /**

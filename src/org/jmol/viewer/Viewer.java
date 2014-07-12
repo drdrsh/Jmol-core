@@ -3772,6 +3772,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     } else {
       if (isStereoSlave)
         return;
+      // getGraphics returns a canvas context2d
       renderScreenImageStereo(apiPlatform.getGraphics(null), true, width, height);
     }
   }
