@@ -1545,6 +1545,9 @@ public class StateCreator extends JmolStateCreator {
         case AtomCollection.TAINT_ATOMNO:
           s.appendI(atoms[i].getAtomNumber());
           break;
+        case AtomCollection.TAINT_SEQID:
+          s.appendI(atoms[i].getSeqID());
+          break;
         case AtomCollection.TAINT_ATOMNAME:
           s.append(atoms[i].getAtomName());
           break;

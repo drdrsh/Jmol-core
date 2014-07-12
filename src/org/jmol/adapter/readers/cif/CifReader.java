@@ -848,7 +848,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte B_ISO = 10;
   final private static byte COMP_ID = 11;
   final private static byte AUTH_ASYM_ID = 12;
-  final private static byte SEQ_ID = 13;
+  final private static byte AUTH_SEQ_ID = 13;
   final private static byte INS_CODE = 14;
   final private static byte ALT_ID = 15;
   final private static byte GROUP_PDB = 16;
@@ -907,6 +907,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte MOMENT_Y = 68;
   final private static byte MOMENT_Z = 69;
   final private static byte ATOM_ID = 70;
+  final private static byte SEQ_ID = 71; 
 
   final private static String[] atomFields = { "_atom_site_type_symbol",
       "_atom_site_label", "_atom_site_auth_atom_id", "_atom_site_fract_x",
@@ -944,7 +945,7 @@ public class CifReader extends AtomSetCollectionReader {
       "_atom_site_moment_crystalaxis_mx", "_atom_site_moment_crystalaxis_my",
       "_atom_site_moment_crystalaxis_mz", "_atom_site_moment_crystalaxis_x",
       "_atom_site_moment_crystalaxis_y", "_atom_site_moment_crystalaxis_z",
-      "_atom_site_id" };
+      "_atom_site_id", "_atom_site_label_seq_id" };
 
   final private static String singleAtomID = atomFields[CC_COMP_ID];
 
@@ -1034,11 +1035,15 @@ public class CifReader extends AtomSetCollectionReader {
       String assemblyId = null;
       String strChain = null;
       String id = null;
+      int seqID = 0;
       int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         int tok = fieldProperty(i);
         switch (tok) {
         case NONE:
+          break;
+        case SEQ_ID:
+          seqID = parseIntStr(field);
           break;
         case ATOM_ID:
           id = field;
@@ -1124,7 +1129,7 @@ public class CifReader extends AtomSetCollectionReader {
           atom.chainID = vwr.getChainID(
               strChain = field);
           break;
-        case SEQ_ID:
+        case AUTH_SEQ_ID:
           atom.sequenceNumber = parseIntStr(field);
           break;
         case INS_CODE:
@@ -1258,8 +1263,15 @@ public class CifReader extends AtomSetCollectionReader {
         addAssemblyId(assemblyId, strChain);
       }
       asc.addAtomWithMappedName(atom);
-      if (id != null)
+      if (id != null) {
         asc.atomSymbolicMap.put(id, atom);
+        if (seqID > 0) {
+          V3 pt = atom.vib;
+          if (pt == null)
+            pt = asc.addVibrationVector(atom.index, 0, Float.NaN, T.seqid);
+          pt.x = seqID;
+        }
+      }
       ac++;
       if (modDim > 0 && siteMult != 0)
         atom.vib = V3.new3(siteMult, 0, Float.NaN);
@@ -1272,8 +1284,15 @@ public class CifReader extends AtomSetCollectionReader {
     return true;
   }
 
-  private  Lst<Map<String, String>> vCompnds;
-  private Map<String, Map<String, String>> htModels;
+//  private  Lst<Map<String, String>> vCompnds;
+//  private Map<String, Map<String, String>> htModels;
+  
+  /**
+   * An idea that was not followed up.
+   * 
+   * @param assemblyId  
+   * @param strChain 
+   */
   private void addAssemblyId(String assemblyId, String strChain) {
 //    if (vCompnds == null) {
 //      vCompnds = new Lst<Map<String, String>>();

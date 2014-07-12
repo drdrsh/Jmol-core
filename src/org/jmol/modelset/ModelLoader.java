@@ -776,7 +776,7 @@ public final class ModelLoader {
         jbr.setHaveHsAlready(true);
       String name = iterAtom.getAtomName(); 
       int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
-      addAtom(isPdbThisModel, iterAtom.getAtomSymmetry(), 
+      addAtom(isPdbThisModel, iterAtom.getSymmetry(),
           iterAtom.getAtomSite(),
           iterAtom.getUniqueID(),
           isotope,
@@ -788,10 +788,11 @@ public final class ModelLoader {
           iterAtom.getBfactor(), 
           iterAtom.getXYZ(),
           iterAtom.getIsHetero(), 
-          iterAtom.getAtomSerial(), 
+          iterAtom.getSerial(), 
+          iterAtom.getSeqID(),
           group3,
           iterAtom.getVib(), 
-          iterAtom.getAlternateLocationID(),
+          iterAtom.getAltLoc(),
           iterAtom.getRadius()          
           );
     }
@@ -837,7 +838,7 @@ public final class ModelLoader {
                        String atomName, int formalCharge, float partialCharge,
                        Lst<Object> tensors, float occupancy, float bfactor,
                        P3 xyz, boolean isHetero,
-                       int atomSerial, String group3,
+                       int atomSerial, int atomSeqID, String group3,
                        V3 vib,
                        char alternateLocationID, float radius) {
     byte specialAtomID = 0;
@@ -850,7 +851,7 @@ public final class ModelLoader {
         specialAtomID = 0;
     }
     Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber,
-        atomName, atomSerial, atomSite, xyz, radius, vib, formalCharge, partialCharge, occupancy, bfactor, tensors,
+        atomName, atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge, partialCharge, occupancy, bfactor, tensors,
         isHetero, specialAtomID, atomSymmetry);
     atom.setAltLoc(alternateLocationID);
     htAtomMap.put(atomUid, atom);

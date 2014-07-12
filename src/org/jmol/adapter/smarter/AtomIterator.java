@@ -27,6 +27,7 @@ package org.jmol.adapter.smarter;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.java.BS;
+import org.jmol.script.T;
 
 import javajs.util.Lst;
 import javajs.util.P3;
@@ -69,7 +70,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
 	
 	@Override
-  public BS getAtomSymmetry() {
+  public BS getSymmetry() {
 		return atom.bsSymmetry;
 	}
 
@@ -122,11 +123,21 @@ class AtomIterator implements JmolAdapterAtomIterator {
 		return atom.radius;
 	}
 	
+	/**
+	 * Note that atom.vib also serves to deliver specific 
+	 * data items.
+	 */
 	@Override
   public V3 getVib() {
 	  return (atom.vib == null || Float.isNaN(atom.vib.z) ? null : 
 	    atom.vib);
 	}
+
+  @Override
+  public int getSeqID() {
+    return (atom.vib == null || !Float.isNaN(atom.vib.y) || atom.vib.z != T.seqid ? 0 : 
+      (int) atom.vib.x);
+  }
 
 	
 	@Override
@@ -148,7 +159,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
 	
 	@Override
-  public int getAtomSerial() {
+  public int getSerial() {
 		return atom.atomSerial;
 	}
 
@@ -160,7 +171,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
 	
 	@Override
-  public char getAlternateLocationID() {
+  public char getAltLoc() {
 		return JmolAdapter.canonizeAlternateLocationID(atom.altLoc);
 	}
 

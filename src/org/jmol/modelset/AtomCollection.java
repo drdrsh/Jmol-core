@@ -91,6 +91,7 @@ abstract public class AtomCollection {
     atomNames = null;
     atomTypes = null;
     atomSerials = null;
+    atomSeqIDs = null;
     vibrations = null;
     occupancies = null;
     bfactor100s = null;
@@ -104,6 +105,7 @@ abstract public class AtomCollection {
     atomNames = mergeModelSet.atomNames;
     atomTypes = mergeModelSet.atomTypes;
     atomSerials = mergeModelSet.atomSerials;
+    atomSeqIDs = mergeModelSet.atomSeqIDs;
     vibrations = mergeModelSet.vibrations;
     occupancies = mergeModelSet.occupancies;
     bfactor100s = mergeModelSet.bfactor100s;
@@ -154,6 +156,7 @@ abstract public class AtomCollection {
   String[] atomNames;
   String[] atomTypes;
   int[] atomSerials;
+  int[] atomSeqIDs;
   public Vibration[] vibrations;
   float[] occupancies;
   short[] bfactor100s;
@@ -572,6 +575,10 @@ abstract public class AtomCollection {
         taintAtom(i, TAINT_ATOMNO);
         setAtomNumber(i, iValue);
         break;
+      case T.seqid:
+        taintAtom(i, TAINT_SEQID);
+        setAtomSeqID(i, iValue);
+        break;
       case T.atomtype:
         taintAtom(i, TAINT_ATOMTYPE);
         setAtomType(i, sValue);
@@ -758,6 +765,14 @@ abstract public class AtomCollection {
     return true;
   }
   
+  public boolean setAtomSeqID(int atomIndex, int seqID) {
+    if (atomSeqIDs == null) {
+      atomSeqIDs = new int[at.length];
+    }
+    atomSeqIDs[atomIndex] = seqID;
+    return true;
+  }
+  
   protected boolean setOccupancy(int atomIndex, float occupancy) {
     if (occupancies == null) {
       if (occupancy == 100)
@@ -856,6 +871,9 @@ abstract public class AtomCollection {
           continue;
         case TAINT_ATOMNO:
           setAtomNumber(atomIndex, (int) x);
+          break;
+        case TAINT_SEQID:
+          setAtomSeqID(atomIndex, (int) x);
           break;
         case TAINT_ATOMNAME:
           setAtomName(atomIndex, tokens[pt]);
@@ -967,12 +985,13 @@ abstract public class AtomCollection {
   final public static byte TAINT_VANDERWAALS = 11;
   final public static byte TAINT_VIBRATION = 12;
   final public static byte TAINT_ATOMNO = 13;
-  final public static byte TAINT_MAX = 14; // 1 more than last number, above
+  final public static byte TAINT_SEQID = 14;
+  final public static byte TAINT_MAX = 15; // 1 more than last number, above
   
   public static String[] userSettableValues;
   static {
     // this allows the Google Closure compiler to skip all the TAINTED defs in Clazz.defineStatics
-    userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupany partialCharge temperature valence vanderWaals vibrationVector atomNo".split(" ");
+    userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupany partialCharge temperature valence vanderWaals vibrationVector atomNo seqID".split(" ");
   }
   
   public BS[] tainted;  // not final -- can be set to null
@@ -2620,6 +2639,8 @@ abstract public class AtomCollection {
     atomTypes = (String[]) AU.deleteElements(atomTypes, firstAtomIndex,
         nAtoms);
     atomSerials = (int[]) AU.deleteElements(atomSerials, firstAtomIndex,
+        nAtoms);
+    atomSeqIDs = (int[]) AU.deleteElements(atomSeqIDs, firstAtomIndex,
         nAtoms);
     bfactor100s = (short[]) AU.deleteElements(bfactor100s,
         firstAtomIndex, nAtoms);

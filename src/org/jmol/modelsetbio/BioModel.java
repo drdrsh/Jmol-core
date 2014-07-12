@@ -782,22 +782,4 @@ public final class BioModel extends Model{
           pdbCONECT, bsWritten, ptTemp);
   }
 
-  private Lst<int[]> mapSeqID;
-  /**
-   * check for sequenceID, by chain 
-   */
-  @Override
-    public void checkSeqID(int iSpec, BS bs) {
-      if (mapSeqID == null || iSpec < 1)
-        return;
-      int pt;
-      for (int i = mapSeqID.size(); --i >= 0;) {
-        int[] a = mapSeqID.get(i);
-        if (iSpec >= a.length || (pt = a[iSpec]) < 0)
-          continue;
-      }
-        
-  }
-
-
 }

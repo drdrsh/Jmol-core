@@ -37,7 +37,7 @@ public interface JmolAdapterAtomIterator {
 
 	abstract public int getAtomSetIndex();
 
-	abstract public BS getAtomSymmetry();
+	abstract public BS getSymmetry();
 
 	abstract public int getAtomSite();
 
@@ -65,16 +65,18 @@ public interface JmolAdapterAtomIterator {
 
 	abstract public boolean getIsHetero();
 
-	abstract public int getAtomSerial();
+	abstract public int getSerial();
 
 	abstract public int getChainID();
 
-	abstract public char getAlternateLocationID();
+	abstract public char getAltLoc();
 	
 	abstract public String getGroup3();
 
 	abstract public int getSequenceNumber();
 
 	abstract public char getInsertionCode();
+
+  abstract public int getSeqID();
 
 }

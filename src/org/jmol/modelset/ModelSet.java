@@ -765,8 +765,12 @@ import java.util.Properties;
       Atom atom1 = vConnections.get(i);
       // hmm. atom1.group will not be expanded, though...
       // something like within(group,...) will not select these atoms!
-      Atom atom2 = addAtom(modelIndex, atom1.group, 1, "H"
-          + n, n, n, pts[i], Float.NaN, null, 0, 0, 100, Float.NaN, null, false, (byte) 0, null);
+      Atom atom2 = addAtom(
+          modelIndex, atom1.group, 
+          1, "H" + n, n, atom1.getSeqID(), n, 
+          pts[i], Float.NaN, null, 
+          0, 0, 100, Float.NaN, null, 
+          false, (byte) 0, null);
       
       atom2.setMadAtom(vwr, rd);
       bs.set(atom2.i);
@@ -2305,12 +2309,6 @@ import java.util.Properties;
           bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache));
         }
       return bs;
-    case T.spec_seqid:
-      bs = new BS();
-      int iSpec = ((Integer) specInfo).intValue();
-      for (int i = mc; --i >= 0;) 
-        am[i].checkSeqID(iSpec, bs);
-      return bs;
     case T.bonds:
     case T.isaromatic:
       return getAtomBitsMDb(tokType, specInfo);
@@ -3483,6 +3481,9 @@ import java.util.Properties;
     if (atomSerials != null)
       for (int i = i0; i < ac; i++)
         atomSerials[i] = atomSerials[map[i]];
+    if (atomSeqIDs != null)
+      for (int i = i0; i < ac; i++)
+        atomSeqIDs[i] = atomSeqIDs[map[i]];
   }
 
   protected void growAtomArrays(int newLength) {
@@ -3504,10 +3505,14 @@ import java.util.Properties;
       atomTypes = AU.arrayCopyS(atomTypes, newLength);
     if (atomSerials != null)
       atomSerials = AU.arrayCopyI(atomSerials, newLength);
+    if (atomSeqIDs != null)
+      atomSeqIDs = AU.arrayCopyI(atomSeqIDs, newLength);
   }
 
-  public Atom addAtom(int modelIndex, Group group, int atomicAndIsotopeNumber,
-                      String atomName, int atomSerial, int atomSite, P3 xyz,
+  public Atom addAtom(int modelIndex, Group group, 
+                      int atomicAndIsotopeNumber,
+                      String atomName, int atomSerial, int atomSeqID, 
+                      int atomSite, P3 xyz,
                       float radius, V3 vib, int formalCharge,
                       float partialCharge, float occupancy, float bfactor,
                       Lst<Object> tensors, boolean isHetero,
@@ -3549,6 +3554,11 @@ import java.util.Properties;
       if (atomSerials == null)
         atomSerials = new int[at.length];
       atomSerials[ac] = atomSerial;
+    }
+    if (atomSeqID != 0) {
+      if (atomSeqIDs == null)
+        atomSeqIDs = new int[at.length];
+      atomSeqIDs[ac] = atomSeqID;
     }
     if (vib != null)
       setVibrationVector(ac, vib);

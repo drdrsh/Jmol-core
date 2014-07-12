@@ -650,10 +650,14 @@ public class Atom extends Point3fi implements BNode {
    public int getAtomNumber() {
      int[] atomSerials = group.chain.model.ms.atomSerials;
      // shouldn't ever be null.
-     return (atomSerials != null ? atomSerials[i] : i);
+     return (atomSerials == null ? i : atomSerials[i]);
 //        : group.chain.model.modelSet.isZeroBased ? atomIndex : atomIndex);
    }
 
+   public int getSeqID() {
+     int[] ids = group.chain.model.ms.atomSeqIDs;
+     return (ids == null ? 0 : ids[i]);
+   }
    public boolean isVisible(int flags) {
      return ((shapeVisibilityFlags & flags) == flags);
    }
@@ -1211,6 +1215,8 @@ public class Atom extends Point3fi implements BNode {
     switch (tokWhat) {
     case T.atomno:
       return atom.getAtomNumber();
+    case T.seqid:
+      return atom.getSeqID();
     case T.atomid:
       return atom.atomID;
     case T.atomindex:

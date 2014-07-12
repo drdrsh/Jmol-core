@@ -237,9 +237,10 @@ public final class Resolver implements JmolBioResolver {
     bsAddedHydrogens.setBits(ac, ac + nH);
     boolean isHetero = ms.at[iFirst].isHetero();
     P3 xyz = P3.new3(Float.NaN, Float.NaN, Float.NaN);
+    Atom a = ms.at[iFirst];
     for (int i = 0; i < nH; i++)
-      ms.addAtom(ms.at[iFirst].mi, ms.at[iFirst].getGroup(), 1, 
-          "H", 0, 0, xyz, Float.NaN, null, 0, 0, 1, 0,
+      ms.addAtom(a.mi, a.getGroup(), 1, 
+          "H", 0, a.getSeqID(), 0, xyz, Float.NaN, null, 0, 0, 1, 0,
           null, isHetero, (byte) 0, null).deleteBonds(null);
   }
 

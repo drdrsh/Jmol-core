@@ -428,7 +428,6 @@ public class T {
   public final static int spec_resid           = expression | 37;
   public final static int spec_seqcode         = expression | 38;
   public final static int spec_seqcode_range   = expression | 39;
-  public final static int spec_seqid           = expression | 40;
 
   public final static int amino                = predefinedset | 2;
   public final static int dna           = predefinedset | 4;
@@ -604,9 +603,10 @@ public class T {
   public final static int polymer       = intproperty | 17;
   public final static int polymerlength = intproperty | 18;
   public final static int resno         = intproperty | 19;
-  public final static int site          = intproperty | 20;
-  public final static int strucno       = intproperty | 21;
-  public final static int valence       = intproperty | 22 | settable;
+  public final static int seqid         = intproperty | 20;
+  public final static int site          = intproperty | 21;
+  public final static int strucno       = intproperty | 22;
+  public final static int valence       = intproperty | 23 | settable;
 
   // float values must be multiplied by 100 prior to comparing to integer values
 
@@ -2060,6 +2060,7 @@ public class T {
         "search",
         "smarts",
         "selected",
+        "seqid",
         "shapely",
         "sidechain",
         "sin",
@@ -3061,6 +3062,7 @@ public class T {
         search,                             // "search"
         -1,                                 // "smarts"
         selected,                           // "selected"
+        seqid,                              // "seqid"
         shapely,                            // "shapely"
         sidechain,                          // "sidechain"
         sin,                                // "sin"
