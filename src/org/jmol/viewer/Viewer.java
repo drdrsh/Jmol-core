@@ -4103,9 +4103,10 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public static boolean isDatabaseCode(char ch) {
-    return (ch == '$' // NCI resolver
-        || ch == '=' // RCSB model or ligand
-    || ch == ':' // PubChem
+    return (ch == '*' // PDBE
+         || ch == '$' // NCI resolver
+         || ch == '=' // RCSB model or ligand
+         || ch == ':' // PubChem
     );
   }
 
@@ -4149,7 +4150,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       if (f.indexOf(".") > 0 && s.indexOf("%FILE.") >= 0)
         s = s.substring(0, s.indexOf("%FILE") + 5);
       return Txt.formatStringS(s, "FILE", f);
-
+    case '*':
+      return g.resolveDataBase("pdbe", f);
     case ':': // PubChem
       format = g.pubChemFormat;
       if (f.equals("")) {
