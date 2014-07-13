@@ -91,7 +91,7 @@ public class RepaintManager implements JmolRepaintManager {
      * @j2sNative
      * 
      *  if (typeof Jmol != "undefined" && Jmol._repaint) 
-     *    Jmol._repaint(this.vwr.applet, false);
+     *    Jmol._repaint(this.vwr.html5Applet, false);
      *  this.repaintDone();
      */
     {

@@ -4,6 +4,8 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.image.MemoryImageSource;
@@ -99,6 +101,22 @@ class Display {
     xyTemp.y = (int) ptTemp.y;
     SwingUtilities.convertPointFromScreen(xyTemp, (Component) display);
     ptTemp.set(xyTemp.x, xyTemp.y, Float.NaN);
+  }
+
+  /**
+   * 
+   * @param g
+   * @param img
+   * @param x
+   * @param y
+   * @param width
+   *        unused in Jmol proper
+   * @param height
+   *        unused in Jmol proper
+   */
+  static void drawImage(Object g, Object img, int x, int y, int width,
+                        int height) {
+    ((Graphics) g).drawImage((java.awt.Image) img, x, y, null);
   }
 
 

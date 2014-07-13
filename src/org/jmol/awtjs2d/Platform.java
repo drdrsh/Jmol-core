@@ -144,7 +144,7 @@ public class Platform implements GenericPlatform {
                         int height) {
     
     // from Viewer.render1
-    Image.drawImage(context, canvas, x, y, width, height);
+    Display.drawImage(context, canvas, x, y, width, height);
   }
 
 	@Override
@@ -242,8 +242,8 @@ public class Platform implements GenericPlatform {
 	}
 
 	@Override
-  public Object getGraphics(Object image) {
-		return (image == null ? context : Image.getGraphics(image));
+  public Object getGraphics(Object canvas) {
+		return (canvas == null ? context : Image.getGraphics(canvas));
 	}
 
   @Override
@@ -267,7 +267,7 @@ public class Platform implements GenericPlatform {
      * @j2sNative
      * 
      *  if (typeof Jmol != "undefined" && Jmol._getHiddenCanvas)
-     *    return Jmol._getHiddenCanvas(this.vwr.applet, "stereoImage", w, h); 
+     *    return Jmol._getHiddenCanvas(this.vwr.html5Applet, "stereoImage", w, h); 
      */
     {}
     return null;
@@ -279,7 +279,7 @@ public class Platform implements GenericPlatform {
      * @j2sNative
      * 
      *  if (typeof Jmol != "undefined" && Jmol._getHiddenCanvas)
-     *    return Jmol._getHiddenCanvas(this.vwr.applet, "textImage", w, h); 
+     *    return Jmol._getHiddenCanvas(this.vwr.html5Applet, "textImage", w, h); 
      */
     {}
     return null;

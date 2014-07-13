@@ -253,7 +253,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public GData gdata;
-  Object applet; // j2s only
+  Object html5Applet; // j2s only
 
   ActionManager actionManager;
   
@@ -272,10 +272,10 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public StatusManager sm;
   public TransformManager tm;
   
-  public final static String strJavaVendor = "Java: " + System.getProperty("java.vendor",
+  public static String strJavaVendor = "Java: " + System.getProperty("java.vendor",
       "j2s");
-  public final static String strOSName = System.getProperty("os.name", "");
-  public final static String strJavaVersion = "Java " + System.getProperty(
+  public static String strOSName = System.getProperty("os.name", "");
+  public static String strJavaVersion = "Java " + System.getProperty(
       "java.version", "");
 
   String syncId = "";
@@ -405,7 +405,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return vwrOptions;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "null", "unused" })
   private void setOptions(Map<String, Object> info) {
 
     vwrOptions = info;
@@ -465,20 +465,26 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       platform = (String) o;
       isWebGL = (platform.indexOf(".awtjs.") >= 0);
       isJS = isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
+      Object applet = null;
+      String ver = "?";
       /**
        * @j2sNative
        * 
        *            if(self.Jmol) { 
-       *            this.applet = Jmol._applets[this.htmlName.split("_object")[0]];
-       *            this.strJavaVersion = org.jmol.viewer.Viewer.strJavaVersion = Jmol._version;
-       *            this.strJavaVendor = org.jmol.viewer.Viewer.strJavaVendor = "Java2Script " + (this.isWebGL ? "(WebGL)" : "(HTML5)"); 
+       *              applet = Jmol._applets[this.htmlName.split("_object")[0]];
+       *              ver = Jmol._version;
        *            }
        * 
        * 
        */
       {
+        ver = null;
       }
-
+      if (ver != null) {
+        html5Applet = applet;        
+        strJavaVersion = ver;
+        strJavaVendor = "Java2Script " + (this.isWebGL ? "(WebGL)" : "(HTML5)");
+      }
       o = Interface.getInterface(platform);
     }
     apiPlatform = (GenericPlatform) o;
@@ -839,6 +845,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    * 
    */
   public Object getGLmolView() {
+    @SuppressWarnings("unused")
     TransformManager tm = this.tm;
     /**
      * @j2sNative
@@ -858,9 +865,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     *             };
      */
     {
-      return tm;
+      return null;
     }
-    
   }
 
   public void setRotationRadius(float angstroms, boolean doAll) {
@@ -1515,12 +1521,10 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    */
   private GenericMouseInterface mouse;
 
-  @Override
   public void processTwoPointGesture(float[][][] touches) {
     mouse.processTwoPointGesture(touches);
   }
   
-  @Override
   public boolean processMouseEvent(int id, int x, int y, int modifiers,
                                      long time) {
     // also used for JavaScript from jQuery
@@ -2695,7 +2699,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     finalizeTransformParameters();
   }
 
-  @Override
   public void startHoverWatcher(boolean tf) {
     if (tf && inMotion || !haveDisplay || tf && (!hoverEnabled || am.animationOn))
       return;
@@ -3507,7 +3510,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    * Viewer.repaint() invokes display.repaint(), provided display is not null
    * (headless) 3) The system responds with an invocation of
    * Jmol.update(Graphics g), which we are routing through Jmol.paint(Graphics
-   * g). 4) Jmol.update invokes Viewer.setScreenDimension(size), which makes the
+   * g). 4) Jmol.update invokes Viewer.setScreenDimensions(size), which makes the
    * necessary changes in parameters for any new window size. 5) Jmol.update
    * invokes Viewer.renderScreenImage(g, size, rectClip) 6)
    * Viewer.renderScreenImage checks object visibility, invokes render1 to do
@@ -3541,7 +3544,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
          * @j2sNative
          * 
          *            if (!this.applet) return;
-         *            this.applet._refresh(); 
+         *            this.html5Applet._refresh(); 
          */
         {
           System.out.println(tm);
@@ -3756,24 +3759,21 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   /**
    * for JavaScript only
    * 
-   * @param width
-   * @param height
    */
-  @Override
-  public void updateJS(int width, int height) {
+  public void updateJS() {
     if (isWebGL) {
       if (jsParams == null) {
         jsParams = new Hashtable<String, Object>();
         jsParams.put("type", "JS");
       }
-      if (updateWindow(width, height))
+      if (updateWindow(0, 0))
         render();
       notifyViewerRepaintDone();
     } else {
       if (isStereoSlave)
         return;
       // getGraphics returns a canvas context2d
-      renderScreenImageStereo(apiPlatform.getGraphics(null), true, width, height);
+      renderScreenImageStereo(apiPlatform.getGraphics(null), true, 0, 0);
     }
   }
 
@@ -3786,14 +3786,17 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    * 
    */
   private void updateJSView(int imodel, int iatom) {
+    @SuppressWarnings("unused")
+    Object applet = this.html5Applet;
     /**
      * @j2sNative
      * 
-     * this.applet && this.applet._viewSet != null && this.applet._atomPickedCallback(imodel, iatom);
+     * applet && applet._viewSet != null && applet._atomPickedCallback(imodel, iatom);
      * 
      */
     {}
   }
+  
   private boolean updateWindow(int width, int height) {
     //System.out.println("Viewer updateWindow " + width + " " + height);
     if (!refreshing || creatingImage)
@@ -4034,8 +4037,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
      * @j2sNative
      * 
      *            if (strScript.indexOf("JSCONSOLE") == 0) {
-     *            this.applet._showInfo(strScript.indexOf("CLOSE")<0); if
-     *            (strScript.indexOf("CLEAR") >= 0) this.applet._clearConsole();
+     *            this.html5Applet._showInfo(strScript.indexOf("CLOSE")<0); if
+     *            (strScript.indexOf("CLEAR") >= 0) this.html5Applet._clearConsole();
      *            return null; }
      */
     {
@@ -4995,7 +4998,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       updateJSView(getAtomModelIndex(atomIndex), atomIndex);
   }
   
-  @Override
   public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
     if (mode == 0) {
       g.setS("_fileDropped", fileName);
@@ -9244,14 +9246,13 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   /**
-   * JmolViewer interface -- allows saving files in memory for later retrieval
+   * JSInterface -- allows saving files in memory for later retrieval
    * 
    * @param key
    * @param data
    * 
    */
 
-  @Override
   public void cachePut(String key, Object data) {
     // PyMOL reader and isosurface
     // HTML5/JavaScript load ?  and  script ? 
@@ -9259,7 +9260,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     fm.cachePut(key, data);
   }
 
-  @Override
   public int cacheFileByName(String fileName, boolean isAdd) {
     // cache command in script
     if (fileName == null) {
@@ -9650,9 +9650,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return !isApplet || isSignedApplet;
   }
 
-  @Override
-  public Object getApplet() {
-    return applet;
+  public Object getHTML5Applet() {
+    return html5Applet;
   }
 
   public T[] comileExpr(String expr) {

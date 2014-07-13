@@ -61,7 +61,7 @@ public class JSExporter {// extends CartesianExporter {
 //    /**
 //     * @j2sNative
 //     * 
-//     * this.applet = this.vwr.applet
+//     * this.applet = this.vwr.html5Applet
 //     * 
 //     */
 //    {}

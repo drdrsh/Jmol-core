@@ -1653,7 +1653,7 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
             float dSlab, float floatSecondsTotal, int fps) {
 
     movetoThread = (JmolThread) Interface
-        .getOption("thread.MoveThread");
+        .getOption("thread.MoveToThread");
     movetoThread.setManager(this, vwr, new Object[] { dRot, dTrans,
         new float[] { dZoom, dSlab, floatSecondsTotal, fps } });
     if (floatSecondsTotal > 0)

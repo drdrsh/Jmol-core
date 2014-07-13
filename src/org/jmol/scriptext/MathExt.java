@@ -1553,7 +1553,8 @@ public class MathExt implements JmolMathExtension {
         pt3 = mp.ptValue(args[2], false);
         if (pt3 == null)
           return mp.addXStr("");
-        // interesection(ptLine, vLine, pt2); // IE intersection of plane perp to line through pt2
+        // intersection(ptLine, vLine, pt2); 
+        // IE intersection of plane perp to line through pt2
         V3 v = new V3();
         Measure.projectOntoAxis(pt3, pt1, vLine, v);
         return mp.addXPt(pt3);

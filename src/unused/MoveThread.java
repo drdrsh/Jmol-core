@@ -23,10 +23,12 @@
  *  02110-1301, USA.
  */
 
-package org.jmol.thread;
+package unused;
 
 
 import javajs.util.V3;
+
+import org.jmol.thread.JmolThread;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 

@@ -824,8 +824,12 @@ public class ScriptMathProcessor {
     // we cannot know what variables are real
     // if this is a property selector, as in x.func(), then we
     // just exit; otherwise we add a new TRUE to xStack
-    return (!chk ? getMathExt().evaluate(this, op, args, tok)
-        : op.tok == T.propselector ? true : addXBool(true));
+    
+    if (!chk)
+      return getMathExt().evaluate(this, op, args, tok);
+    if (op.tok == T.propselector)
+      xPt--; // pop x in "x.func(...)"
+    return addXBool(true);
   }
   
   

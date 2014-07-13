@@ -73,6 +73,7 @@ public class Platform implements GenericPlatform {
    * @param g
    * @param size
    */
+  @SuppressWarnings("deprecation")
   @Override
   public void renderScreenImage(Object g, Object size) {
     Display.renderScreenImage(vwr, g, size);
@@ -132,7 +133,7 @@ public class Platform implements GenericPlatform {
 
   @Override
   public void drawImage(Object g, Object img, int x, int y, int width, int height) {
-    Image.drawImage(g, img, x, y, width, height);
+    Display.drawImage(g, img, x, y, width, height);
   }
 
   @Override

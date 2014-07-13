@@ -35,7 +35,6 @@ import org.jmol.java.BS;
 import org.jmol.util.BoxInfo;
 
 import javajs.api.GenericPlatform;
-import javajs.api.JSInterface;
 import javajs.awt.Dimension;
 import javajs.util.OC;
 import javajs.util.P3;
@@ -50,7 +49,7 @@ import org.jmol.viewer.Viewer;
  *
  **/
 
-abstract public class JmolViewer implements JSInterface {
+abstract public class JmolViewer {
 
   // several; methods were deprecated and removed in 13.1.15. All are accessible via "getXxxx" methods:
   
@@ -214,7 +213,6 @@ abstract public class JmolViewer implements JSInterface {
 
   abstract public String getSmiles(BS atoms) throws Exception;
   
-  @Override
   abstract public void setScreenDimension(int width, int height);
   abstract public int getScreenWidth();
   abstract public int getScreenHeight();
@@ -470,7 +468,6 @@ abstract public class JmolViewer implements JSInterface {
 
   abstract public JmolAdapter getModelAdapter();
 
-  @Override
   abstract public void openFileAsyncSpecial(String fileName, int flags);
   
   public void openFileAsync(String fileName) {
@@ -488,15 +485,6 @@ abstract public class JmolViewer implements JSInterface {
 
   abstract public void processMultitouchEvent(int groupID, int eventType, int touchID, int iData,
                            P3 pt, long time);
-
-  @Override
-  abstract public boolean processMouseEvent(int id, int x, int y, int modifiers,
-                                     long when);
-
-  public void mouseEvent(int id, int x, int y, int modifiers,
-                         long when) {
-    processMouseEvent(id, x, y, modifiers, when);
-  }
 
   public GenericPlatform apiPlatform; // used in Viewer and JmolViewer
 
@@ -520,9 +508,6 @@ abstract public class JmolViewer implements JSInterface {
   public static String getJmolValueAsString(JmolViewer jmolViewer, String var) {
     return (jmolViewer == null ? "" : "" + jmolViewer.getParameter(var));
   }
-
-  @Override
-  abstract public void cachePut(String key, Object data);
 
   abstract public void renderScreenImage(Object g, int width, int height);
   abstract public String evalFile(String strFilename);
@@ -570,16 +555,6 @@ abstract public class JmolViewer implements JSInterface {
   abstract public String runScript(String script);
   abstract public int modelGetLastVibrationIndex(int i, int tok);
   abstract public String extractMolData(String what);
-  
-  /**
-   * used in JSmolApplet.js for drag-drop behavior.
-   * 
-   * @param fileName
-   * @param isAdd
-   * @return number of bytes cached
-   */
-  @Override
-  abstract public int cacheFileByName(String fileName, boolean isAdd);
   
   abstract public String getClipboardText();
   

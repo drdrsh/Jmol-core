@@ -235,22 +235,6 @@ class Image {
     return ((java.awt.Image) image).getGraphics();
   }
 
-  /**
-   * 
-   * @param g
-   * @param img
-   * @param x
-   * @param y
-   * @param width
-   *        unused in Jmol proper
-   * @param height
-   *        unused in Jmol proper
-   */
-  static void drawImage(Object g, Object img, int x, int y, int width,
-                        int height) {
-    ((Graphics) g).drawImage((java.awt.Image) img, x, y, null);
-  }
-
   static void flush(Object image) {
     ((java.awt.Image) image).flush();
   }

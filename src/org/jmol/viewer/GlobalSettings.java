@@ -1007,7 +1007,8 @@ public class GlobalSettings {
           + ";picking;pickingstyle;propertycolorschemeoverload;radius;rgbblue;rgbgreen;rgbred"
           + ";scaleangstromsperinch;selectionhalos;showscript;showselections;solvent;strandcount"
           + ";spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;" + CBK.getNameList()
-          + ";undo;atompicking;drawpicking;bondpicking;modelkitmode;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
+          + ";undo;atompicking;drawpicking;bondpicking;pickspinrate;picklabel"
+          + ";modelkitmode;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
           + ";").toLowerCase();
 
     Object getAllVariables() {

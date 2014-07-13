@@ -157,7 +157,7 @@ public class JSExporter extends __CartesianExporter {
   
   @Override
   protected void outputHeader() {
-    applet = this.vwr.getApplet();
+    applet = this.vwr.getHTML5Applet();
     useTable = new UseTable("JS");
     htSpheresRendered.clear();
     htObjects.clear();

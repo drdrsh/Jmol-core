@@ -118,7 +118,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
 
   protected void initialize(Viewer vwr, PopupResource bundle, String title) {
     this.vwr = vwr;
-    initSwing(title, bundle, vwr.getApplet(), vwr.isJS, 
+    initSwing(title, bundle, vwr.getHTML5Applet(), vwr.isJS, 
         vwr.getBooleanProperty("_signedApplet"), vwr.isWebGL);
   }
 
@@ -327,7 +327,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     if (currentFrankId != null && currentFrankId == id && nFrankList > 0)
       return;
     if (frankPopup == null)
-      frankPopup = helper.menuCreatePopup("Frank", vwr.getApplet());
+      frankPopup = helper.menuCreatePopup("Frank", vwr.getHTML5Applet());
     // thisPopup is needed by the JavaScript side of the operation
     thisPopup = frankPopup;
     menuRemoveAll(frankPopup, 0);

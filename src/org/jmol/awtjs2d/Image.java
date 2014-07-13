@@ -185,41 +185,4 @@ class Image {
       return null;
     }
   }
-
-  /**
-   * 
-   * @param context
-   * @param canvas
-   * @param x
-   * @param y
-   * @param width  unused in Jmol proper
-   * @param height unused in Jmol proper
-   */
-  static void drawImage(Object context, Object canvas, int x, int y, int width, int height) {
-    /*
-     * red=imgData.data[0];
-     * green=imgData.data[1];
-     * blue=imgData.data[2];
-     * alpha=imgData.data[3];
-     */
-
-    /**
-     * @j2sNative
-     * 
-     var buf8 = canvas.buf8;
-     var buf32 = canvas.buf32;
-      var n = width * height;
-      var dw = (canvas.width - width) * 4;
-      for (var i = 0, j = x * 4; i < n;) {
-        buf8[j++] = (buf32[i] >> 16) & 0xFF;
-        buf8[j++] = (buf32[i] >> 8) & 0xFF;
-        buf8[j++] = buf32[i] & 0xFF;
-        buf8[j++] = 0xFF;
-        if (((++i)%width)==0) j += dw;
-      }
-      context.putImageData(canvas.imgdata,x,y);
-     */
-    {
-    }
-  }
 }

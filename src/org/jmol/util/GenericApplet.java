@@ -54,7 +54,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
   protected Object gRight;
   protected Viewer viewer;
   protected Map<CBK, String> callbacks = new Hashtable<CBK, String>();
-
   protected Map<String, Object> vwrOptions;
 
   protected boolean haveNotifiedError;

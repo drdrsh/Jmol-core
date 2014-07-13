@@ -29,6 +29,8 @@ import org.jmol.util.Parser;
 import org.jmol.util.GenericApplet;
 
 import java.net.URL;
+
+import javajs.api.JSInterface;
 import javajs.util.PT;
 
 import java.util.Hashtable;
@@ -42,7 +44,7 @@ import java.util.Map;
  * 
  */
 
-public class Jmol extends GenericApplet {
+public class Jmol extends GenericApplet implements JSInterface {
 
   private Map<String, Object> htParams = new Hashtable<String, Object>();
 
@@ -255,6 +257,74 @@ public class Jmol extends GenericApplet {
     } catch (Exception e) {
       //ignore if page is closing
     }
+  }
+
+  // JSInterface -- methods called from JSmol JavaScript library
+  
+  @Override
+  public int cacheFileByName(String fileName, boolean isAdd) {
+    return viewer.cacheFileByName(fileName, isAdd);
+  }
+
+  @Override
+  public void cachePut(String key, Object data) {
+    viewer.cachePut(key, data);
+  }
+
+  @Override
+  public Object getGLmolView() {
+    return viewer.getGLmolView();
+  }
+
+  @Override
+  public String getFullName() {
+    return fullName;
+  }
+
+  @Override
+  public boolean processMouseEvent(int id, int x, int y, int modifiers,
+                                   long time) {
+    return viewer.processMouseEvent(id, x, y, modifiers, time);
+  }
+
+  @Override
+  public void setDisplay(Object canvas) {
+    viewer.setDisplay(canvas);
+  }
+
+  @Override
+  public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
+    return viewer.setStatusDragDropped(mode, x, y, fileName);
+  }
+
+  @Override
+  public void startHoverWatcher(boolean enable) {
+    viewer.startHoverWatcher(enable);
+  }
+
+  @Override
+  public void update() {
+    viewer.updateJS();
+  }
+
+  @Override
+  public String openFile(String fileName) {
+    return viewer.openFile(fileName);
+  }
+
+  @Override
+  public void openFileAsyncSpecial(String fileName, int flags) {
+    viewer.openFileAsyncSpecial(fileName, flags);
+  }
+
+  @Override
+  public void processTwoPointGesture(float[][][] touches) {
+    viewer.processTwoPointGesture(touches);
+  }
+
+  @Override
+  public void setScreenDimension(int width, int height) {
+    viewer.setScreenDimension(width, height);
   }
 
 }

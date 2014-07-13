@@ -68,7 +68,7 @@ class FileLoadThread extends JmolThread {
         /**
          * @j2sNative
          * 
-         * return Jmol._loadFileAsynchronously(this, this.vwr.applet, this.fileName, null);
+         * return Jmol._loadFileAsynchronously(this, this.vwr.html5Applet, this.fileName, null);
          * 
          */
         {
@@ -81,7 +81,7 @@ class FileLoadThread extends JmolThread {
   }
 
   /**
-   * Called by Jmol._loadFileAsyncDone(this.vwr.applet). Allows for callback
+   * Called by Jmol._loadFileAsyncDone(this.vwr.html5Applet). Allows for callback
    * to set the file name.
    * 
    * @param fileName
