@@ -359,8 +359,10 @@ class SpaceGroup {
    * @return valid space group or null
    */
   SpaceGroup getDerivedSpaceGroup() {
-    if (index >= 0 && index < SG.length 
-        || modDim > 0 || operations[0].timeReversal != 0)
+    if (index >= 0 && index < SG.length   
+        || modDim > 0 || operations == null
+        || operations.length == 0
+        || operations[0].timeReversal != 0)
       return this;
     if (finalOperations != null)
       setFinalOperations(null, 0, 0, false);
@@ -770,9 +772,9 @@ class SpaceGroup {
   
   private void buildSpaceGroup(String cifLine) {
     String[] terms = PT.split(cifLine.toLowerCase(), ";");    
-    isBilbao = (terms.length < 5);
     intlTableNumberFull = terms[0].trim(); // International Table Number :
                                            // options
+    isBilbao = (terms.length < 5 && !intlTableNumberFull.equals("0"));
     // 4:c*;c2^2;p 1 1 21*;p 21
     String[]  parts = PT.split(intlTableNumberFull, ":");
     intlTableNumber = parts[0];

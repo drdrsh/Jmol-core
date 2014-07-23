@@ -33,15 +33,16 @@ public class Structure {
   public int serialID;
   public int strandCount;
 
+  public int startSequenceNumber;
   public int startChainID;
   public String startChainStr;  
   public char startInsertionCode = '\0';
+  
+  public int endSequenceNumber;
   public int endChainID;
   public String endChainStr;
-
   public char endInsertionCode = '\0';
-  public int startSequenceNumber;
-  public int endSequenceNumber;
+  
   public int[] atomStartEnd = new int[2];
   public int[] modelStartEnd = new int[] {-1, -1};
   

@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.PT;
 
 import org.jmol.util.Logger;
 
@@ -78,7 +79,7 @@ public class T {
   public final static String[] astrType;
   
   static {
-    astrType = "nada identifier integer decimal string seqcode hash array point point4 bitset matrix3f matrix4f array hash bytearray keyword".split(" ");    
+    astrType = PT.split("nada identifier integer decimal string seqcode hash array point point4 bitset matrix3f matrix4f array hash bytearray keyword"," ");    
   }
 
   public final static int nada       =  0;
@@ -782,7 +783,8 @@ public class T {
 
   // anything beyond 3 are set "unlimited"
 
-  public final static int replace      = 1 | 7 << 9 | mathfunc | mathproperty;
+  public final static int in           = 1 | 0 << 9 | mathfunc | mathproperty;
+  public final static int replace      = 2 | 7 << 9 | mathfunc | mathproperty;
 
   // set parameters 
   
@@ -1104,7 +1106,8 @@ public class T {
   public final static int align         = misc  | 8;
   public final static int allconnected  = misc  | 10;
   public final static int angstroms     = misc  | 12;
-  public final static int anisotropy    = misc  | 14;
+  public final static int anisotropy    = misc  | 13;
+  public final static int annotations   = misc  | 14;
   public final static int append        = misc  | 15;
   public final static int arc           = misc  | 16 | expression;
   public final static int area          = misc  | 18;
@@ -1192,7 +1195,6 @@ public class T {
   public final static int inchi          = misc  | 153;
   public final static int inchikey       = misc  | 154;
   public final static int image          = misc  | 155;
-  public final static int in             = misc  | 156;
   public final static int increment      = misc  | 157;
   public final static int info    = misc  | 158;
   public final static int inline         = misc  | 159;
@@ -1857,6 +1859,7 @@ public class T {
         "ambientOcclusion",
         "amino",
         "angle",
+        "annotations",
         "array",
         "as",
         "atomID",
@@ -2859,6 +2862,7 @@ public class T {
         ambientocclusion,                   // "ambientOcclusion"
         amino,                              // "amino"
         angle,                              // "angle"
+        annotations,                        // "annotations"
         array,                              // "array"
         as,                                 // "as"
         atomid,                             // "atomID"

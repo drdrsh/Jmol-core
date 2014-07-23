@@ -146,10 +146,10 @@ abstract class ScriptTokenParser {
       }
     }
 
-    if ((isNewSet || isSetBrace) && size < ptNewSetModifier + 2)
-      return commandExpected();
-    return (size == 1 || !T.tokAttr(tokCommand, T.noArgs) ? true
-        : error(ERROR_badArgumentCount));
+    return ((isNewSet || isSetBrace) && size < ptNewSetModifier + 2
+        ? commandExpected() 
+            : size == 1 || !T.tokAttr(tokCommand, T.noArgs) ? true
+            : error(ERROR_badArgumentCount));
   }
 
 
@@ -627,6 +627,7 @@ abstract class ScriptTokenParser {
     // within ( distance, orClause)
     // within ( group|branch|etc, ....)
     // within ( distance, group, ....)
+    // within ( annotation, "xxxx")
 
     addNextToken();
     if (!addNextTokenIf(T.leftparen))
@@ -683,6 +684,7 @@ abstract class ScriptTokenParser {
       case T.search:
       case T.smiles:
       case T.substructure:
+      case T.annotations:
         addTokenToPostfix(T.string, theValue);
         if (!addNextTokenIf(T.comma))
           return false;

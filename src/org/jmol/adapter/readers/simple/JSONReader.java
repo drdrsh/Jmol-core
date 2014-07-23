@@ -76,7 +76,7 @@ public class JSONReader extends AtomSetCollectionReader {
   }
 
   private void getScaling(String[] s) {
-    String[] xyz = s[0].split(":");
+    String[] xyz = PT.split(s[0], ":");
     scale = P3.new3(1, 1, 1);
     for (int j = 0; j < xyz.length; j += 2)
       if (xyz[j].length() == 1)
@@ -108,7 +108,7 @@ public class JSONReader extends AtomSetCollectionReader {
     //  l : H : x :-18.426 :  y :13.716001 : z :17.006
 
     for (int i = 0; i < atoms.length; ++i) {
-      String[] lxyz = atoms[i].split(":");
+      String[] lxyz = PT.split(atoms[i],":");
       Atom atom = asc.addNewAtom();
       float x = 0, y = 0, z = 0;
       String l = "C";
@@ -140,7 +140,7 @@ public class JSONReader extends AtomSetCollectionReader {
 
   private void readBonds(String[] bonds) throws Exception {
     for (int i = 0; i < bonds.length; ++i) {
-      String[] beo = bonds[i].split(":");
+      String[] beo = PT.split(bonds[i],":");
       int b = 0, e = 0, order = 1;
       for (int j = 0; j < beo.length; j += 2)
         if (beo[j].length() == 1)

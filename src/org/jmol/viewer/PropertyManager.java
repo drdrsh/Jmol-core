@@ -267,10 +267,11 @@ public class PropertyManager implements JmolPropertyManager {
     propertyName = PT.rep(propertyName, "\0\0", "\0");
     String[] names = PT.split(PT.trim(propertyName, "\0"), "\0");
     SV[] args = new SV[names.length];
-    for (int i = 0, n; i < names.length; i++) {
-      args[i] = ((n = PT.parseInt(names[i])) == Integer.MIN_VALUE ? SV.newV(
-          T.string, names[i]) : SV.newI(n));
-    }
+    for (int i = 0, n; i < names.length; i++)
+      args[i] = (names[i].startsWith("'") || names[i].startsWith("\"") 
+          ? SV.newS(PT.trim(names[i], "'\""))
+              : (n = PT.parseInt(names[i])) == Integer.MIN_VALUE ? 
+                  SV.newS(names[i]) : SV.newI(n));
     return args;
   }
 
@@ -399,20 +400,20 @@ public class PropertyManager implements JmolPropertyManager {
           }
         }
 
-        boolean isWild = (key.startsWith("*") || key.endsWith("*"));
+        boolean isWild = (key.startsWith("*") || key.endsWith("*") || key.indexOf(",") >= 0);
         if (isWild && v2 == null)
           v2 = new Lst<Object>();
-        if (isWild && key.length() == 1 || key.equals("*/")) {
+        if (isWild && key.length() == 1) {
           if (ptr == ((SV[]) args).length) {
             v2.addLast(property);
             return v2;
           }
           return extractProperty(property, args, ptr, v2, true);
         }
-        if (key.startsWith("*/")) {
+        if (key.contains(",")) {
           Map<String, Object> mapNew = null;
           mapNew = new Hashtable<String, Object>();
-          String[] tokens = PT.split(key.substring(2), ",");
+          String[] tokens = PT.split(key, ",");
           for (int i = tokens.length; --i >= 0;)
             PT.getMapSubset(h, tokens[i], mapNew);
           if (ptr == ((SV[]) args).length) {
@@ -451,6 +452,8 @@ public class PropertyManager implements JmolPropertyManager {
       if (args[i].tok == T.string) {
         String key = (String) args[i].value;
         // SELECT nt* WHERE name!=WC
+        // SELECT a,b,c WHERE x.in(...)
+        
         if (key.toUpperCase().startsWith("SELECT ")) {
           if (argsNew == null)
             argsNew = (SV[]) AU.arrayCopyObject(args, args.length);
@@ -461,7 +464,7 @@ public class PropertyManager implements JmolPropertyManager {
           if (pt < 0) {
             argsNew[i].value = key;
           } else {
-            argsNew[i] = SV.newV(T.select, vwr.comileExpr(key.substring(pt + 6)
+            argsNew[i] = SV.newV(T.select, vwr.compileExpr(key.substring(pt + 6)
                 .trim()));
             argsNew[i].myName = key.substring(0, pt).trim();
           }
@@ -1250,16 +1253,17 @@ public class PropertyManager implements JmolPropertyManager {
         case T.chain:
         case T.residue:
         case T.sequence:
+        case T.group1:
           int id = a.getChainID();
           s = (id == 0 ? " " : a.getChainIDStr());
           if (id > 255)
             s = PT.esc(s);
           switch (tok) {
           case T.residue:
-            s = "[" + a.getGroup3(false) + "]"
-                + a.getSeqcodeString() + ":" + s;
+            s = "[" + a.getGroup3(false) + "]" + a.getSeqcodeString() + ":" + s;
             break;
           case T.sequence:
+          case T.group1:
             if (a.getModelIndex() != modelLast) {
               info.appendC('\n');
               n = 0;
@@ -1277,16 +1281,20 @@ public class PropertyManager implements JmolPropertyManager {
             }
             Group g = a.getGroup();
             if (g != glast) {
-              if ((n++) % 5 == 0 && n > 1)
-                info.appendC('\n');
-              Txt.leftJustify(info, "          ", "["
-                  + a.getGroup3(false) + "]" + a.getResno() + " ");
               glast = g;
+              if (tok == T.group1) {
+                info.append(a.getGroup1('?'));
+              } else {
+                if ((n++) % 5 == 0 && n > 1)
+                  info.appendC('\n');
+                Txt.leftJustify(info, "          ", "[" + a.getGroup3(false)
+                    + "]" + a.getResno() + " ");
+              }
             }
             continue;
           }
           break;
-        }        
+        }
         if (info.indexOf("\n" + s + "\n") < 0)
           info.append(s).appendC('\n');
       }

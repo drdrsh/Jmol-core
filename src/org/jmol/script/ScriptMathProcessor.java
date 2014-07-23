@@ -930,6 +930,8 @@ public class ScriptMathProcessor {
       }
     case T.propselector:
       int iv = op.intValue & ~T.minmaxmask;
+      if (chk)
+        return addXObj(SV.newS(""));
       if (vwr.allowArrayDotNotation)
         switch (x2.tok) {
         case T.hash:
@@ -1047,6 +1049,11 @@ public class ScriptMathProcessor {
     }
     for(Entry<String, SV> e: map.entrySet()) {
       String k = e.getKey();
+      if (isAll && (k.length() == 0 || !Character.isAlphabetic(k.charAt(0)))) {
+        if (prefix.endsWith("."))
+          prefix = prefix.substring(0, prefix.length() - 1);
+        k = "[" + PT.esc(k) + "]";
+      }
       keys.addLast(prefix + k);
       if (isAll)
         getKeyList(e.getValue(), true, keys, prefix + k + ".");

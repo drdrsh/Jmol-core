@@ -154,7 +154,23 @@ public class Platform implements GenericPlatform {
 
 	@Override
   public void repaint(Object canvas) {
-		Display.repaint(canvas);
+    /**
+     * Jmol._repaint(applet,asNewThread)
+     * 
+     * should invoke 
+     * 
+     *   setTimeout(applet._applet.update(applet._canvas)) // may be 0,0
+     *   
+     * when it is ready to do so.
+     * 
+     * @j2sNative
+     * 
+     * if (typeof Jmol != "undefined" && Jmol._repaint)
+     *   Jmol._repaint(this.vwr.html5Applet,true);
+     * 
+     */
+    {
+    }
 	}
 
 	@Override

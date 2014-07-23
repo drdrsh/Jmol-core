@@ -76,18 +76,17 @@ public class AlphaPolymer extends BioPolymer {
     if ((indexStart = getIndex(startChainID, startSeqcode, i0, i1)) == -1
         || (indexEnd = getIndex(endChainID, endSeqcode, i0, i1)) == -1)
       return;
-    if (istart >= 0 && bsAssigned != null) {
+    if (type != STR.ANNOTATION && istart >= 0 && bsAssigned != null) {
       int pt = bsAssigned.nextSetBit(monomers[indexStart].firstAtomIndex);
       if (pt >= 0 && pt < monomers[indexEnd].lastAtomIndex)
         return;
     }
-    addStructureProtected(type, structureID, serialID, strandCount, indexStart,
-        indexEnd);
-    if (istart >= 0)
+    if (addStructureProtected(type, structureID, serialID, strandCount, indexStart,
+        indexEnd) && istart >= 0)
       bsAssigned.setBits(istart, iend + 1);
   }
 
-  public void addStructureProtected(STR type, 
+  public boolean addStructureProtected(STR type, 
                              String structureID, int serialID, int strandCount,
                              int indexStart, int indexEnd) {
 
@@ -96,39 +95,45 @@ public class AlphaPolymer extends BioPolymer {
       Logger.error("AlphaPolymer:addSecondaryStructure error: " +
                          " indexStart:" + indexStart +
                          " indexEnd:" + indexEnd);
-      return;
+      return false;
     }
     int structureCount = indexEnd - indexStart + 1;
-    ProteinStructure proteinstructure = null;
+    ProteinStructure ps = null;
+    boolean isAnnotation = false;
     switch(type) {
+    case ANNOTATION:
+      ps = new Annotation(this, indexStart, structureCount, structureID);
+      isAnnotation = true;
+      break;
     case HELIX:
     case HELIXALPHA:
     case HELIX310:
     case HELIXPI:
-      proteinstructure = new Helix(this, indexStart, structureCount, type);
+      ps = new Helix(this, indexStart, structureCount, type);
       break;
     case SHEET:
-      proteinstructure = new Sheet(this, indexStart, structureCount, type);
+      ps = new Sheet(this, indexStart, structureCount, type);
       break;
     case TURN:
-      proteinstructure = new Turn(this, indexStart, structureCount);
+      ps = new Turn(this, indexStart, structureCount);
       break;
     default:
       Logger.error("unrecognized secondary structure type");
-      return;
+      return false;
     }
-    proteinstructure.structureID = structureID;
-    proteinstructure.serialID = serialID;
-    proteinstructure.strandCount = strandCount;
-    for (int i = indexStart; i <= indexEnd; ++i) {
-      ((AlphaMonomer)monomers[i]).setStructure(proteinstructure);
+    ps.structureID = structureID;
+    ps.serialID = serialID;
+    ps.strandCount = strandCount;
+      for (int i = indexStart; i <= indexEnd; ++i) {
+        ((AlphaMonomer)monomers[i]).setStructure(ps, isAnnotation);
     }
+    return true;
   }
   
   @Override
   public void clearStructures() {
     for (int i = 0; i < monomerCount; i++)
-      ((AlphaMonomer)monomers[i]).setStructure(null);
+      ((AlphaMonomer)monomers[i]).setStructure(null, false);
   }
 
   ///////////////////////////////////////////////////////////

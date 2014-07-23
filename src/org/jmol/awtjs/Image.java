@@ -125,21 +125,6 @@ class Image {
 	}
 
 	/**
-	 * 
-	 * @param g
-	 * @param img
-	 * @param x
-	 * @param y
-	 * @param width
-	 *          unused in Jmol proper
-	 * @param height
-	 *          unused in Jmol proper
-	 */
-	static void drawImage(Object g, Object img, int x, int y, int width,
-			int height) {
-	}
-
-	/**
    * @param image  
    */
 	static void flush(Object image) {

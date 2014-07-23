@@ -4154,6 +4154,16 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         s = s.substring(0, s.indexOf("%FILE") + 5);
       return Txt.formatStringS(s, "FILE", f);
     case '*':
+      // European Bioinformatics Institute
+      if (name.startsWith("*note/")) {
+        //  *note/annotation/type/xxxx
+        int pt = name.lastIndexOf("/");
+        f = name.substring(pt + 1);
+        format = name.substring(6, pt);
+        if (format.equals("all"))
+          format = "mappings";
+        return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
+      }
       return g.resolveDataBase("pdbe", f);
     case ':': // PubChem
       format = g.pubChemFormat;
@@ -9027,7 +9037,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    */
   public String getSmilesOpt(BS bsSelected, int index1, int index2,
                           boolean explicitH, boolean isBioSmiles,
-                          boolean bioAllowUnmatchedRings, boolean bioAddCrossLinks, boolean bioAddComment) throws Exception {
+                          boolean bioAllowUnmatchedRings, 
+                          boolean bioAddCrossLinks, 
+                          boolean bioAddComment) throws Exception {
     Atom[] atoms = ms.at;
     if (bsSelected == null) {
       if (index1 < 0 || index2 < 0) {
@@ -9414,7 +9426,10 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return isOK;
   }
 
-  // synchronized here trapped the eventQueue
+  /** synchronized here trapped the eventQueue;
+   * see also evaluateExpressionAsVariable
+   * 
+   */
   @Override
   public Object evaluateExpression(Object stringOrTokens) {
     return (getScriptManager() == null ? null : eval.evaluateExpression(stringOrTokens, false, false));
@@ -9650,17 +9665,21 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return !isApplet || isSignedApplet;
   }
 
-  public Object getHTML5Applet() {
+  public Object getHtml5Applet() {
     return html5Applet;
   }
 
-  public T[] comileExpr(String expr) {
+  public T[] compileExpr(String expr) {
     Object o = (getScriptManager() == null ? null : eval.evaluateExpression(expr, false, true));
     return (o instanceof T[] ? (T[]) o : new T[] {T.o(T.string, expr)});
   }
 
   public boolean checkSelect(Map<String, SV> h, T[] value) {
     return getScriptManager() != null  && eval.checkSelect(h, value);
+  }
+
+  public String getAnnotationInfo(SV d, String match) {
+    return getDSSRParser().getAnnotationInfo(d, match);
   }
 
 }

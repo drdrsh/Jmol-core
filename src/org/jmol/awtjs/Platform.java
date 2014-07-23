@@ -29,7 +29,7 @@ public class Platform extends org.jmol.awtjs2d.Platform {
   @Override
 	public void drawImage(Object g, Object img, int x, int y, int width,
 			int height) {
-		Image.drawImage(g, img, x, y, width, height);
+    // not used in WebGL version
 	}
 
   @Override

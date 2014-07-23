@@ -662,6 +662,8 @@ public final class Resolver implements JmolBioResolver {
    * We do turn first, because sometimes a group is defined twice, and this way
    * it gets marked as helix or sheet if it is both one of those and turn.
    * 
+   * Jmol 14.3 - adds sequence ANNOTATION
+   *  
    * @param adapter
    * @param atomSetCollection
    */

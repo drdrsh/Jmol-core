@@ -483,10 +483,10 @@ public class IsosurfaceRenderer extends MeshRenderer {
         // mesh only
         // check: 1 (ab) | 2(bc) | 4(ac)
         check &= polygon[3];
-        if (iShowTriangles)
-          check = 7;
         if (check == 0)
           continue;
+        if (iShowTriangles)
+          check = 7;
         pt1i.setT(screens[iA]);
         pt2i.setT(screens[iB]);
         pt3i.setT(screens[iC]);

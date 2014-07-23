@@ -181,6 +181,8 @@ public class MathExt implements JmolMathExtension {
       return evaluatePrompt(mp, args);
     case T.random:
       return evaluateRandom(mp, args);
+    case T.in:
+      return evaluateIn(mp, args);
     case T.replace:
       return evaluateReplace(mp, args);
     case T.search:
@@ -1893,6 +1895,26 @@ public class MathExt implements JmolMathExtension {
 
   }
 
+  private boolean evaluateIn(ScriptMathProcessor mp, SV[] args)
+      throws ScriptException {
+    SV x1 = mp.getX();
+    switch (args.length) {
+    case 1:
+      Lst<SV> lst = args[0].getList();
+      if (lst != null)
+        for (int i = 0, n = lst.size(); i < n; i++)
+          if (SV.areEqual(x1, lst.get(i)))
+            return mp.addXInt(i + 1);
+      break;
+    default:
+      for (int i = 0; i < args.length; i++)
+        if (SV.areEqual(x1, args[i]))
+          return mp.addXInt(i + 1);
+      break;
+    }
+    return mp.addXInt(0);
+  }
+  
   private boolean evaluateReplace(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
     boolean isAll = false;
@@ -2303,6 +2325,7 @@ public class MathExt implements JmolMathExtension {
       case T.basepair:
       case T.sequence:
       case T.dssr:
+      case T.annotations:
         return mp.addXBs(vwr.ms.getAtoms(tok,
             SV.sValue(args[args.length - 1])));
       }

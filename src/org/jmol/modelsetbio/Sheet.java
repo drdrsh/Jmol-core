@@ -32,12 +32,9 @@ import javajs.util.V3;
 
 public class Sheet extends ProteinStructure {
 
-  AlphaPolymer alphaPolymer;
-
-  Sheet(AlphaPolymer alphaPolymer, int monomerIndex, int monomerCount, STR subtype) {
-    setupPS(alphaPolymer, STR.SHEET, monomerIndex,
+  Sheet(AlphaPolymer apolymer, int monomerIndex, int monomerCount, STR subtype) {
+    setupPS(apolymer, STR.SHEET, monomerIndex,
         monomerCount);
-    this.alphaPolymer = alphaPolymer;
     this.subtype = subtype;
   }
 
@@ -46,13 +43,13 @@ public class Sheet extends ProteinStructure {
     if (axisA != null)
       return;
     if (nRes == 2) {
-      axisA = alphaPolymer.getLeadPoint(monomerIndexFirst);
-      axisB = alphaPolymer.getLeadPoint(monomerIndexFirst + 1);
+      axisA = apolymer.getLeadPoint(monomerIndexFirst);
+      axisB = apolymer.getLeadPoint(monomerIndexFirst + 1);
     } else {
       axisA = new P3();
-      alphaPolymer.getLeadMidPoint(monomerIndexFirst + 1, axisA);
+      apolymer.getLeadMidPoint(monomerIndexFirst + 1, axisA);
       axisB = new P3();
-      alphaPolymer.getLeadMidPoint(monomerIndexFirst + nRes - 1, axisB);
+      apolymer.getLeadMidPoint(monomerIndexFirst + nRes - 1, axisB);
     }
 
     axisUnitVector = new V3();
@@ -60,7 +57,7 @@ public class Sheet extends ProteinStructure {
     axisUnitVector.normalize();
 
     P3 tempA = new P3();
-    alphaPolymer.getLeadMidPoint(monomerIndexFirst, tempA);
+    apolymer.getLeadMidPoint(monomerIndexFirst, tempA);
     if (lowerNeighborIsHelixOrSheet()) {
       //System.out.println("ok"); 
     } else {
@@ -68,7 +65,7 @@ public class Sheet extends ProteinStructure {
           .projectOntoAxis(tempA, axisA, axisUnitVector, vectorProjection);
     }
     P3 tempB = new P3();
-    alphaPolymer.getLeadMidPoint(monomerIndexFirst + nRes, tempB);
+    apolymer.getLeadMidPoint(monomerIndexFirst + nRes, tempB);
     if (upperNeighborIsHelixOrSheet()) {
       //System.out.println("ok");       
     } else {
@@ -83,16 +80,16 @@ public class Sheet extends ProteinStructure {
   V3 heightUnitVector;
 
   void calcSheetUnitVectors() {
-    if (!(alphaPolymer instanceof AminoPolymer))
+    if (!(apolymer instanceof AminoPolymer))
       return;
     if (widthUnitVector == null) {
       V3 vectorCO = new V3();
       V3 vectorCOSum = new V3();
-      AminoMonomer amino = (AminoMonomer) alphaPolymer.monomers[monomerIndexFirst];
+      AminoMonomer amino = (AminoMonomer) apolymer.monomers[monomerIndexFirst];
       vectorCOSum.sub2(amino.getCarbonylOxygenAtom(), amino
           .getCarbonylCarbonAtom());
       for (int i = nRes; --i > monomerIndexFirst;) {
-        amino = (AminoMonomer) alphaPolymer.monomers[i];
+        amino = (AminoMonomer) apolymer.monomers[i];
         vectorCO.sub2(amino.getCarbonylOxygenAtom(), amino
             .getCarbonylCarbonAtom());
         if (vectorCOSum.angle(vectorCO) < (float) Math.PI / 2)

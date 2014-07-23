@@ -1096,6 +1096,8 @@ public class PT {
   }
 
   public static Object getMapValueNoCase(Map<String, ?> h, String key) {
+    if ("this".equals(key))
+      return h;
     Object val = h.get(key);
     if (val == null)
       for (Entry<String, ?> e : h.entrySet())

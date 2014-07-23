@@ -33,6 +33,7 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolDSSRParser;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
+import org.jmol.script.SV;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
@@ -143,6 +144,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected String readerName;
   public Map<String, Object> htParams;
   public Lst<P3[]> trajectorySteps;
+  private Object annotations;
 
   //protected String parameterData;
 
@@ -365,10 +367,25 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   protected void finalizeReaderASCR() throws Exception {
     applySymmetryAndSetTrajectory();
-    setLoadNote();
     asc.finalizeStructures();
     if (doCentralize)
       asc.centralize();
+    Map<String, Object>info = asc.getAtomSetAuxiliaryInfo(0);
+    if (annotations != null && info != null) {
+      String s = ((SV) annotations).getMapKeys(2, true);
+      int pt = s.indexOf("{ ", 2);
+      if (pt >= 0)
+        s = s.substring(pt + 2);
+      s = PT.rep(PT.replaceAllCharacters(s,"{}", "").trim(), "\n", "\n  ")
+          + "\nUse SHOW ANNOTATIONS for details.";
+      appendLoadNote("\nAnnotations loaded:\n   " + s);
+      for (int i = asc.atomSetCount; --i >= 0;) {
+        info = asc.getAtomSetAuxiliaryInfo(i);
+        info.put("annotations", annotations);
+      }
+      addJmolScript("select * or within(annotations,'*')");
+    }
+    setLoadNote();
   }
 
   /////////////////////////////////////////////////////////////////////////////////////
@@ -573,6 +590,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         setFractionalCoordinates(false);
       // with appendNew == false and UNITCELL parameter, we assume fractional coordinates
     }
+    annotations = htParams.get("annotations");
   }
 
   protected void initializeSymmetryOptions() {

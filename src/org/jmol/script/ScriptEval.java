@@ -27,6 +27,7 @@ import javajs.awt.Font;
 import javajs.util.Lst;
 import javajs.util.SB;
 
+import java.util.Arrays;
 import java.util.Hashtable;
 
 import java.util.Map;
@@ -3500,6 +3501,12 @@ public class ScriptEval extends ScriptExpr {
             case T.varray:
               bsOrList = vl.getList();
               break;
+            case T.hash:
+              Map<String, SV> m = vl.getMap();
+              String[] keys = new String[m.keySet().size()];
+              Arrays.sort(keys);
+              bsOrList = m.keySet().toArray(keys);
+              break;
             default:
               invArg();
             }
@@ -4406,6 +4413,15 @@ public class ScriptEval extends ScriptExpr {
             "=dssr/" + filename.substring(1, 5) };
         filename = "fileSet";
         loadScript = null;
+      } else if (!isConcat && filename.startsWith("*") && filename.indexOf("/") > 1) {
+
+          // load *1cbs/all  -->  load *1cbs + *note/all/1cbs
+
+          isConcat = true;
+          String[] tokens = PT.split(filename,"/");
+          filenames = new String[] { tokens[0], "*note/" + tokens[1] + "/" + tokens[0].substring(1) };
+          filename = "fileSet";
+          loadScript = null;
       } else {
         if (sOptions.length() > 0)
           loadScript.append(" /*options*/ ").append(sOptions.toString());

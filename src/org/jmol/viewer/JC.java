@@ -61,6 +61,7 @@ public final class JC {
     "pdb", "http://www.rcsb.org/pdb/files/%FILE.pdb.gz",
     "pdbe", "http://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
     "pubchem", "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
+    "map", "http://ves-hx-89.ebi.ac.uk/api/%TYPE/%FILE" 
   };
 
   
@@ -1263,7 +1264,6 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
     'A',
     'T',
     'U',
-    'I',
     'I',
     };
 

@@ -6351,6 +6351,17 @@ public class CmdExt implements JmolCmdExtension {
       if (!chk)
         msg = ((SV) e.theToken).escape();
       break;
+    case T.annotations:
+      e.checkLength23();
+      len = st.length;
+      if (!chk) {
+        Object d = vwr.ms.getInfo(vwr.am.cmi, "annotations");
+        if (d instanceof SV)
+          msg = vwr.getAnnotationInfo((SV)d, e.optParameterAsString(2));
+        else
+          msg = "no annotation information has been loaded";
+      }
+      break;
     case T.cache:
       if (!chk)
         msg = Escape.e(vwr.cacheList());
@@ -6798,16 +6809,20 @@ public class CmdExt implements JmolCmdExtension {
       str = "solventProbeRadius";
       break;
     // Chime related
+    case T.sequence:
+      if ((len = slen) == 3 && tokAt(2) == T.off)
+        tok = T.group1;
+      //$FALL-THROUGH$
     case T.basepair:
     case T.chain:
-    case T.sequence:
     case T.residue:
     case T.selected:
     case T.group:
     case T.atoms:
     case T.info:
       //case T.bonds: // ?? was this ever implemented? in Chime?
-      msg = vwr.getChimeInfo(tok);
+      if (!chk)
+        msg = vwr.getChimeInfo(tok);
       break;
     // not implemented
     case T.echo:

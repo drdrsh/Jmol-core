@@ -958,6 +958,25 @@ public class BS implements Cloneable, JSONEncodable {
    */
   @Override
   public String toString() {
+    return escape(this, '{', '}');
+  }
+  
+
+  /**
+   * 
+   * @param max
+   * @return n bits below max
+   */
+  public int cardinalityN(int max) {
+    int n = cardinality();
+    for (int i = length(); --i >= max;)
+      if (get(i))
+        n--;
+    return n;
+  }
+
+  @Override
+  public String toJSON() {
     // checkInvariants();
 
     int numBits = (wordsInUse > 128) ? cardinality() : wordsInUse
@@ -980,25 +999,6 @@ public class BS implements Cloneable, JSONEncodable {
     return b.toString();
   }
   
-
-  /**
-   * 
-   * @param max
-   * @return n bits below max
-   */
-  public int cardinalityN(int max) {
-    int n = cardinality();
-    for (int i = length(); --i >= max;)
-      if (get(i))
-        n--;
-    return n;
-  }
-
-  @Override
-  public String toJSON() {
-    return toString();
-  }
-
   /**
    * ({ 1 2 3:5 }) or ({null}) or [{ 1 2 3:5 }]
    * 

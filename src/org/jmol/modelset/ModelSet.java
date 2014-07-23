@@ -2295,6 +2295,23 @@ import java.util.Properties;
     switch (tokType) {
     default:
       return getAtomBitsMDa(tokType, specInfo);
+    case T.annotations:
+      bs = new BS();
+      JmolDSSRParser pa = vwr.getDSSRParser();
+      Object ann;
+      for (int i = mc; --i >= 0;)
+        if ((ann = getInfo(i, "annotations")) != null) {
+          Map<String, Object> cache = (am[i].dssrCache == null ? am[i].dssrCache = new Hashtable<String, Object>()
+              : am[i].dssrCache);
+          Object annotv = cache.get(" ANNOTV ");
+          if (annotv == null) {
+            annotv = (ann instanceof SV ? ann 
+                : vwr.evaluateExpressionAsVariable(ann));
+            cache.put(" ANNOTV ", annotv);
+          }
+          bs.or(pa.getAtomBits(vwr, (String) specInfo, annotv, cache, am[i].bsAtoms));
+        }
+      return bs;
     case T.dssr:
       bs = new BS();
       JmolDSSRParser p = vwr.getDSSRParser();
@@ -2306,7 +2323,7 @@ import java.util.Properties;
           Object dssrv = cache.get(" DSSRV ");
           if (dssrv == null)
             cache.put(" DSSRV ", dssrv = SV.getVariable(dssr));
-          bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache));
+          bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache, null));
         }
       return bs;
     case T.bonds:

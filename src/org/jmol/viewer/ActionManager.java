@@ -534,7 +534,7 @@ public class ActionManager implements EventManager {
 
   private final static String[] pickingModeNames;
   static {
-    pickingModeNames = "off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand".split(" ");
+    pickingModeNames = PT.split("off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand"," ");
   }
   
   public final static String getPickingModeName(int pickingMode) {
@@ -552,7 +552,7 @@ public class ActionManager implements EventManager {
   private final static String[] pickingStyleNames;
   
   static {
-    pickingStyleNames = "toggle selectOrToggle extendedSelect drag measure measureoff".split(" ");
+    pickingStyleNames = PT.split("toggle selectOrToggle extendedSelect drag measure measureoff"," ");
   }
   
   public final static String getPickingStyleName(int pickingStyle) {

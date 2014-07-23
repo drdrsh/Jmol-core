@@ -3,14 +3,14 @@ package javajs.util;
 public class BC {
 
   public BC() {
-    // for reflection
+    // unnecessary to instantialize unless subclassed
   }
   
-  public float bytesToFloat(byte[] bytes, int j, boolean isBigEndian) throws Exception {
+  public static float bytesToFloat(byte[] bytes, int j, boolean isBigEndian) throws Exception {
     return intToFloat(bytesToInt(bytes, j, isBigEndian));
   }
 
-  protected int bytesToInt(byte[] bytes, int j, boolean isBigEndian) {
+  public static int bytesToInt(byte[] bytes, int j, boolean isBigEndian) {
     int n = (isBigEndian ? (bytes[j + 3] & 0xff) | (bytes[j + 2] & 0xff) << 8
         | (bytes[j + 1] & 0xff) << 16 | (bytes[j] & 0xff) << 24
         : (bytes[j++] & 0xff) | (bytes[j++] & 0xff) << 8
@@ -26,7 +26,7 @@ public class BC {
     }
   }
 
-  public float intToFloat(int x) throws Exception {
+  public static float intToFloat(int x) throws Exception {
     /**
      * see http://en.wikipedia.org/wiki/Binary32
      * 
@@ -61,7 +61,7 @@ public class BC {
    * @param isBigEndian
    * @return float
    */
-  public float bytesToDoubleToFloat(byte[] bytes, int j, boolean isBigEndian) {
+  public static float bytesToDoubleToFloat(byte[] bytes, int j, boolean isBigEndian) {
     {
       // IEEE754: sign (1 bit), exponent (11 bits), fraction (52 bits).
       // seeeeeee eeeeffff ffffffff ffffffff ffffffff xxxxxxxx xxxxxxxx xxxxxxxx

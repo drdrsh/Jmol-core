@@ -769,25 +769,7 @@ public class BS implements Cloneable, JSONEncodable {
    */
   @Override
   public String toString() {
-
-    int numBits = (wordsInUse > 128) ? cardinality() : wordsInUse
-        * BITS_PER_WORD;
-    SB b = SB.newN(6 * numBits + 2);
-    b.appendC('[');
-
-    int i = nextSetBit(0);
-    if (i != -1) {
-      b.appendI(i);
-      for (i = nextSetBit(i + 1); i >= 0; i = nextSetBit(i + 1)) {
-        int endOfRun = nextClearBit(i);
-        do {
-          b.append(", ").appendI(i);
-        } while (++i < endOfRun);
-      }
-    }
-
-    b.appendC(']');
-    return b.toString();
+    return escape(this, '{', '}');
   }
   
   private final static int[] emptyBitmap = new int[0];
@@ -799,8 +781,11 @@ public class BS implements Cloneable, JSONEncodable {
    * @return bs
    */
   public static BS copy(BS bitsetToCopy) {
-    BS bs = null;
+    BS bs;
     /**
+     * Clazz.clone will copy wordsInUse and sizeIsSticky, 
+     * but just a pointer to the words array.
+     * 
      * @j2sNative
      * 
      *            bs = Clazz.clone(bitsetToCopy);
@@ -813,7 +798,7 @@ public class BS implements Cloneable, JSONEncodable {
     if (wordCount == 0) {
       bs.words = emptyBitmap;
     } else {
-      bs.words = new int[wordCount];
+      bs.words = new int[bs.wordsInUse = wordCount];
       System.arraycopy(bitsetToCopy.words, 0, bs.words, 0, wordCount);
     }
     return bs;
@@ -834,7 +819,25 @@ public class BS implements Cloneable, JSONEncodable {
 
   @Override
   public String toJSON() {
-    return toString();
+
+    int numBits = (wordsInUse > 128) ? cardinality() : wordsInUse
+        * BITS_PER_WORD;
+    SB b = SB.newN(6 * numBits + 2);
+    b.appendC('[');
+
+    int i = nextSetBit(0);
+    if (i != -1) {
+      b.appendI(i);
+      for (i = nextSetBit(i + 1); i >= 0; i = nextSetBit(i + 1)) {
+        int endOfRun = nextClearBit(i);
+        do {
+          b.append(", ").appendI(i);
+        } while (++i < endOfRun);
+      }
+    }
+
+    b.appendC(']');
+    return b.toString();
   }
 
   public static String escape(BS bs, char chOpen, char chClose) {

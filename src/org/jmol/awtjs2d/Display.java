@@ -51,29 +51,6 @@ class Display {
   }
 
   /**
-   * @param canvas  
-   */
-  static void repaint(Object canvas) {
-    /**
-     * Jmol._repaint(applet,asNewThread)
-     * 
-     * should invoke 
-     * 
-     *   setTimeout(applet._applet.update(applet._canvas)) // may be 0,0
-     *   
-     * when it is ready to do so.
-     * 
-     * @j2sNative
-     * 
-     * if (typeof Jmol != "undefined" && Jmol._repaint)
-     *   Jmol._repaint(canvas.applet,true);
-     * 
-     */
-    {
-    }
-  }
-
-  /**
    * legacy apps will use this
    * 
    * @param vwr

@@ -1128,8 +1128,9 @@ public class AtomSetCollection {
   }
 
   Map<String, Object> getAtomSetAuxiliaryInfo(int atomSetIndex) {
-    return atomSetAuxiliaryInfo[atomSetIndex >= atomSetCount ? atomSetCount - 1
-        : atomSetIndex];
+    int i = (atomSetIndex >= atomSetCount ? atomSetCount - 1
+        : atomSetIndex);
+    return (i < 0 ? null : atomSetAuxiliaryInfo[i]);
   }
 
   //// for XmlChem3dReader, but could be for CUBE

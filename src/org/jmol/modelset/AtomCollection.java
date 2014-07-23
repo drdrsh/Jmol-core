@@ -991,7 +991,7 @@ abstract public class AtomCollection {
   public static String[] userSettableValues;
   static {
     // this allows the Google Closure compiler to skip all the TAINTED defs in Clazz.defineStatics
-    userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupany partialCharge temperature valence vanderWaals vibrationVector atomNo seqID".split(" ");
+    userSettableValues = PT.split("atomName atomType coord element formalCharge hydrophobicity ionic occupany partialCharge temperature valence vanderWaals vibrationVector atomNo seqID", " ");
   }
   
   public BS[] tainted;  // not final -- can be set to null

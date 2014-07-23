@@ -83,7 +83,18 @@ public class CifDataParser implements GenericCifDataParser {
   private String[] loopData;
   private SB fileHeader = new SB();
   private boolean isHeader = true;
-  
+  private String nullString = "\0";
+
+  /**
+   * Set the string value of what is returned for "." and "?"
+   * 
+   * @param nullString null here returns "." and "?"; default is "\0"
+   * 
+   */
+  public void setNullValue(String nullString) {
+    this.nullString  = nullString;    
+  }
+
   /**
    * A global, static map that contains field information. The assumption is that
    * if we read a set of fields for, say, atom_site, once in a lifetime, then
@@ -277,10 +288,10 @@ public class CifDataParser implements GenericCifDataParser {
    */
   @Override
   public String getNextToken() throws Exception {
-    while (!hasMoreTokens())
+    while (!strHasMoreTokens())
       if (setStringNextLine() == null)
         return null;
-    return nextToken();
+    return nextStrToken();
   }
 
   /**
@@ -314,11 +325,11 @@ public class CifDataParser implements GenericCifDataParser {
    */
   @Override
   public String peekToken() throws Exception {
-    while (!hasMoreTokens())
+    while (!strHasMoreTokens())
       if (setStringNextLine() == null)
         return null;
     int ich = this.ich;
-    strPeeked = nextToken();
+    strPeeked = nextStrToken();
     ichPeeked= this.ich;
     this.ich = ich;
     return strPeeked;
@@ -549,7 +560,7 @@ public class CifDataParser implements GenericCifDataParser {
    * @return TRUE if there are more tokens in the line buffer
    * 
    */
-  private boolean hasMoreTokens() {
+  private boolean strHasMoreTokens() {
     if (str == null)
       return false;
     char ch = '#';
@@ -567,7 +578,7 @@ public class CifDataParser implements GenericCifDataParser {
    *
    * @return null if no more tokens, "\0" if '.' or '?', or next token 
    */
-  private String nextToken() {
+  private String nextStrToken() {
     if (ich == cch)
       return null;
     int ichStart = ich;
@@ -577,8 +588,8 @@ public class CifDataParser implements GenericCifDataParser {
       while (ich < cch && (ch = str.charAt(ich)) != ' ' && ch != '\t')
         ++ich;
       if (ich == ichStart + 1)
-        if (str.charAt(ichStart) == '.' || str.charAt(ichStart) == '?')
-          return "\0";
+        if (nullString != null && (str.charAt(ichStart) == '.' || str.charAt(ichStart) == '?'))
+          return nullString;
       String s = str.substring(ichStart, ich);
       return s;
     }

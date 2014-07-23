@@ -30,7 +30,6 @@ import javajs.api.PlatformViewer;
 import javajs.api.SC;
 
 import javax.swing.ImageIcon;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 

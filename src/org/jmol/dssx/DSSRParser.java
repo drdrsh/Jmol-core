@@ -25,6 +25,7 @@ package org.jmol.dssx;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javajs.api.GenericLineReader;
 import javajs.util.Lst;
@@ -50,6 +51,25 @@ import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
+/** 
+ * 
+ * A parser for output from 3DNA web service.
+ * 
+ *   load =1d66/dssr
+ * 
+ * also other annotations now, 
+ * 
+ *   load *1cbs/all
+ *   
+ * calls EBI/EBML for the mmCIF file and also 
+ * retrieves the annotation mapping report.
+ * 
+ * Bob Hanson
+ * July 2014
+ * 
+ * @author Bob Hanson hansonr@stolaf.edu
+ * 
+ */
 public class DSSRParser implements JmolDSSRParser {
 
   private GenericLineReader reader;
@@ -158,14 +178,14 @@ public class DSSRParser implements JmolDSSRParser {
     return message.toString();
   }
 
-  /*
-Mapping of 76 nucleotide identifiers
-  no.    3-letter   1-letter    idstr
-  58     1MA         a        [1MA]58:A
-  76       A         A        [A]76:A
-0         1         2
-0123456789012345678901
-   */
+
+//Mapping of 76 nucleotide identifiers
+//  no.    3-letter   1-letter    idstr
+//  58     1MA         a        [1MA]58:A
+//  76       A         A        [A]76:A
+//0         1         2
+//0123456789012345678901
+
   private void mapGroups(Map<String, String> map) throws Exception {
     rd();
     int n = 0;
@@ -190,11 +210,10 @@ Mapping of 76 nucleotide identifiers
       addMessage(n + " nonstandard base" + (n > 1 ? "s" :"") + ":" + s);
   }
   
-  /*
-  >1ehz nts=18 [whole]
-  TAACGGTTA&TAACCGTTA
-  .((((((((&)))))))).
-   */
+//  >1ehz nts=18 [whole]
+//  TAACGGTTA&TAACCGTTA
+//  .((((((((&)))))))).
+
   private void readStructure() throws Exception {
     addMessage("");
     addMessage(line);
@@ -206,13 +225,12 @@ Mapping of 76 nucleotide identifiers
     addMessage("");
   }
 
-  /*
-  List of 39 H-bonds
-   15   578  #1     p    2.768 O/N O4@A.U2647 N1@A.G2673
-   35   555  #2     p    2.776 O/N O6@A.G2648 N3@A.U2672
-   36   554  #3     p    2.826 N/O N1@A.G2648 O2@A.U2672
-   55   537  #4     p    2.965 O/N O2@A.C2649 N2@A.G2671
-   */
+//  List of 39 H-bonds
+//   15   578  #1     p    2.768 O/N O4@A.U2647 N1@A.G2673
+//   35   555  #2     p    2.776 O/N O6@A.G2648 N3@A.U2672
+//   36   554  #3     p    2.826 N/O N1@A.G2648 O2@A.U2672
+//   55   537  #4     p    2.965 O/N O2@A.C2649 N2@A.G2671
+
   private void readHBonds(int n) throws Exception {
     Lst<Map<String, Object>> list = newList("hBonds");
     for (int i = 0; i < n; i++) {
@@ -301,41 +319,40 @@ Mapping of 76 nucleotide identifiers
     return list;
   }
 
-  /*
-  ****************************************************************************
-  Note: for the various types of loops listed below, numbers within the first
-      set of brackets are the number of loop nts, and numbers in the second
-      set of brackets are the identities of the stems (positive number) or
-      lone WC/wobble pairs (negative numbers) to which they are linked.
+//  ****************************************************************************
+//  Note: for the various types of loops listed below, numbers within the first
+//      set of brackets are the number of loop nts, and numbers in the second
+//      set of brackets are the identities of the stems (positive number) or
+//      lone WC/wobble pairs (negative numbers) to which they are linked.
+//
+//  ****************************************************************************
+//  List of 68 hairpin loops
+//   1 hairpin loop: nts=10; [8]; linked by [#7]
+//     nts=10 UGCCAAGCUG 0.U55,0.G56,0.C57,0.C58,0.A59,0.A60,0.G61,0.C62,0.U63,0.G64
+//       nts=8 GCCAAGCU 0.G56,0.C57,0.C58,0.A59,0.A60,0.G61,0.C62,0.U63
+//
+//
+//  ****************************************************************************
+//  List of 67 internal loops
+//   1 symmetric internal loop: nts=14; [5,5]; linked by [#1,#-1]
+//     nts=14 GUGGAUUAUGAAAU 0.G21,0.U22,0.G23,0.G24,0.A25,0.U26,0.U27,0.A516,0.U517,0.G518,0.A519,0.A520,0.A521,0.U522
+//       nts=5 UGGAU 0.U22,0.G23,0.G24,0.A25,0.U26
+//       nts=5 UGAAA 0.U517,0.G518,0.A519,0.A520,0.A521
+//   2 asymmetric internal loop: nts=7; [1,2]; linked by [#4,#-2]
+//     nts=7 GCGCAAC 0.G39,0.C40,0.G41,0.C440,0.A441,0.A442,0.C443
+//       nts=1 C 0.C40
+//       nts=2 AA 0.A441,0.A442
+//   3 symmetric internal loop: nts=8; [2,2]; linked by [#8,#9]
+//     nts=8 CAAGCACG 0.C58,0.A59,0.A60,0.G61,0.C85,0.A86,0.C87,0.G88
+//       nts=2 AA 0.A59,0.A60
+//       nts=2 AC 0.A86,0.C87
+//
+//
+//  List of 1 kissing loop interaction
+//   1 stem #29 between hairpin loops #12 and #50
+//
+//
 
-  ****************************************************************************
-  List of 68 hairpin loops
-   1 hairpin loop: nts=10; [8]; linked by [#7]
-     nts=10 UGCCAAGCUG 0.U55,0.G56,0.C57,0.C58,0.A59,0.A60,0.G61,0.C62,0.U63,0.G64
-       nts=8 GCCAAGCU 0.G56,0.C57,0.C58,0.A59,0.A60,0.G61,0.C62,0.U63
-
-
-  ****************************************************************************
-  List of 67 internal loops
-   1 symmetric internal loop: nts=14; [5,5]; linked by [#1,#-1]
-     nts=14 GUGGAUUAUGAAAU 0.G21,0.U22,0.G23,0.G24,0.A25,0.U26,0.U27,0.A516,0.U517,0.G518,0.A519,0.A520,0.A521,0.U522
-       nts=5 UGGAU 0.U22,0.G23,0.G24,0.A25,0.U26
-       nts=5 UGAAA 0.U517,0.G518,0.A519,0.A520,0.A521
-   2 asymmetric internal loop: nts=7; [1,2]; linked by [#4,#-2]
-     nts=7 GCGCAAC 0.G39,0.C40,0.G41,0.C440,0.A441,0.A442,0.C443
-       nts=1 C 0.C40
-       nts=2 AA 0.A441,0.A442
-   3 symmetric internal loop: nts=8; [2,2]; linked by [#8,#9]
-     nts=8 CAAGCACG 0.C58,0.A59,0.A60,0.G61,0.C85,0.A86,0.C87,0.G88
-       nts=2 AA 0.A59,0.A60
-       nts=2 AC 0.A86,0.C87
-
-
-  List of 1 kissing loop interaction
-   1 stem #29 between hairpin loops #12 and #50
-
-
-   */
   private void readLoops(int n) throws Exception {
     if (line.indexOf("internal") >= 0) {
       readSets("internalLoops", n, 2, 4);
@@ -346,43 +363,41 @@ Mapping of 76 nucleotide identifiers
     }
   }
 
-  /*
-  List of 35 junctions
-   1 3-way junction: nts=12; [0,6,0]; linked by [#-1,#2,#-14]
-     nts=12 UGCUGCAAAGCA 0.U27,0.G28,0.C480,0.U481,0.G482,0.C483,0.A484,0.A485,0.A486,0.G487,0.C515,0.A516
-       nts=0
-       nts=6 UGCAAA 0.U481,0.G482,0.C483,0.A484,0.A485,0.A486
-       nts=0
-   2 3-way junction: nts=27; [2,15,4]; linked by [#2,#3,#30]
-     nts=27 CUCGCGAUAGUGAACAAGUAGCGAACG 0.C29,0.U30,0.C31,0.G32,0.C451,0.G452,0.A453,0.U454,0.A455,0.G456,0.U457,0.G458,0.A459,0.A460,0.C461,0.A462,0.A463,0.G464,0.U465,0.A466,0.G467,0.C474,0.G475,0.A476,0.A477,0.C478,0.G479
-       nts=2 UC 0.U30,0.C31
-       nts=15 GAUAGUGAACAAGUA 0.G452,0.A453,0.U454,0.A455,0.G456,0.U457,0.G458,0.A459,0.A460,0.C461,0.A462,0.A463,0.G464,0.U465,0.A466
-       nts=4 GAAC 0.G475,0.A476,0.A477,0.C478
-   3 6-way junction: nts=36; [0,3,9,3,3,6]; linked by [#-2,#5,#-4,#15,#16,#18]
-     nts=36 GCGGAACGGAACAGAAAAUGAUGUACAGCUAAACAC 0.G41,0.C42,0.G149,0.G150,0.A151,0.A152,0.C153,0.G184,0.G185,0.A186,0.A187,0.C188,0.A189,0.G190,0.A191,0.A192,0.A193,0.A194,0.U202,0.G203,0.A204,0.U205,0.G206,0.U233,0.A234,0.C235,0.A236,0.G237,0.C433,0.U434,0.A435,0.A436,0.A437,0.C438,0.A439,0.C440
-       nts=0
-       nts=3 GAA 0.G150,0.A151,0.A152
-       nts=9 GAACAGAAA 0.G185,0.A186,0.A187,0.C188,0.A189,0.G190,0.A191,0.A192,0.A193
-       nts=3 GAU 0.G203,0.A204,0.U205
-       nts=3 ACA 0.A234,0.C235,0.A236
-       nts=6 UAAACA 0.U434,0.A435,0.A436,0.A437,0.C438,0.A439
-   */
+//  List of 35 junctions
+//   1 3-way junction: nts=12; [0,6,0]; linked by [#-1,#2,#-14]
+//     nts=12 UGCUGCAAAGCA 0.U27,0.G28,0.C480,0.U481,0.G482,0.C483,0.A484,0.A485,0.A486,0.G487,0.C515,0.A516
+//       nts=0
+//       nts=6 UGCAAA 0.U481,0.G482,0.C483,0.A484,0.A485,0.A486
+//       nts=0
+//   2 3-way junction: nts=27; [2,15,4]; linked by [#2,#3,#30]
+//     nts=27 CUCGCGAUAGUGAACAAGUAGCGAACG 0.C29,0.U30,0.C31,0.G32,0.C451,0.G452,0.A453,0.U454,0.A455,0.G456,0.U457,0.G458,0.A459,0.A460,0.C461,0.A462,0.A463,0.G464,0.U465,0.A466,0.G467,0.C474,0.G475,0.A476,0.A477,0.C478,0.G479
+//       nts=2 UC 0.U30,0.C31
+//       nts=15 GAUAGUGAACAAGUA 0.G452,0.A453,0.U454,0.A455,0.G456,0.U457,0.G458,0.A459,0.A460,0.C461,0.A462,0.A463,0.G464,0.U465,0.A466
+//       nts=4 GAAC 0.G475,0.A476,0.A477,0.C478
+//   3 6-way junction: nts=36; [0,3,9,3,3,6]; linked by [#-2,#5,#-4,#15,#16,#18]
+//     nts=36 GCGGAACGGAACAGAAAAUGAUGUACAGCUAAACAC 0.G41,0.C42,0.G149,0.G150,0.A151,0.A152,0.C153,0.G184,0.G185,0.A186,0.A187,0.C188,0.A189,0.G190,0.A191,0.A192,0.A193,0.A194,0.U202,0.G203,0.A204,0.U205,0.G206,0.U233,0.A234,0.C235,0.A236,0.G237,0.C433,0.U434,0.A435,0.A436,0.A437,0.C438,0.A439,0.C440
+//       nts=0
+//       nts=3 GAA 0.G150,0.A151,0.A152
+//       nts=9 GAACAGAAA 0.G185,0.A186,0.A187,0.C188,0.A189,0.G190,0.A191,0.A192,0.A193
+//       nts=3 GAU 0.G203,0.A204,0.U205
+//       nts=3 ACA 0.A234,0.C235,0.A236
+//       nts=6 UAAACA 0.U434,0.A435,0.A436,0.A437,0.C438,0.A439
+
   private void readJunctions(int n) throws Exception {
     readSets("junctions", n, 0, 3);
   }
 
-  /*
-  ****************************************************************************
-  List of 38 bulges
-   1 bulge: nts=5; [0,1]; linked by [#3,#4]
-     nts=5 GCGAC 0.G33,0.C34,0.G448,0.A449,0.C450
-       nts=0
-       nts=1 A 0.A449
-   2 bulge: nts=5; [0,1]; linked by [#-4,#14]
-     nts=5 CCGAG 0.C153,0.C154,0.G182,0.A183,0.G184
-       nts=0
-       nts=1 A 0.A183
-   */
+//  ****************************************************************************
+//  List of 38 bulges
+//   1 bulge: nts=5; [0,1]; linked by [#3,#4]
+//     nts=5 GCGAC 0.G33,0.C34,0.G448,0.A449,0.C450
+//       nts=0
+//       nts=1 A 0.A449
+//   2 bulge: nts=5; [0,1]; linked by [#-4,#14]
+//     nts=5 CCGAG 0.C153,0.C154,0.G182,0.A183,0.G184
+//       nts=0
+//       nts=1 A 0.A183
+
   private void readBulges(int n) throws Exception {
     readSets("bulges", n, 2, 2);
   }
@@ -460,21 +475,20 @@ Mapping of 76 nucleotide identifiers
     return list;
   }
 
-  /*
-  List of 106 A-minor motifs
-   1  type=I A/U-A  0.A48/0.U43,0.A148 WC
-        -0.U43  H-bonds[1]: "O2'(hydroxyl)-O2'(hydroxyl)[2.90]"
-        +0.A148 H-bonds[1]: "N1-O2'(hydroxyl)[2.74]"
-   2  type=I A/G-C  0.A69/0.G54,0.C65 WC
-        +0.G54  H-bonds[2]: "N1-O2'(hydroxyl)[2.69],N3-N2(amino)[2.84]"
-        -0.C65  H-bonds[2]: "O2'(hydroxyl)-O2'(hydroxyl)[2.62],O2'(hydroxyl)-O2(carbonyl)[2.61]"
-   3  type=I A/G-C  0.A98/0.G81,0.C93 WC
-        +0.G81  H-bonds[2]: "N1-O2'(hydroxyl)[2.67],N3-N2(amino)[3.12]"
-        -0.C93  H-bonds[0]: ""
-   4  type=II A/G-C 0.A152/0.G41,0.C440 WC
-        +0.G41  H-bonds[0]: ""
-        -0.C440 H-bonds[3]: "O2'(hydroxyl)-O3'[3.17],O2'(hydroxyl)-O2'(hydroxyl)[2.73],N3-O2'(hydroxyl)[2.70]"
-   */
+//  List of 106 A-minor motifs
+//   1  type=I A/U-A  0.A48/0.U43,0.A148 WC
+//        -0.U43  H-bonds[1]: "O2'(hydroxyl)-O2'(hydroxyl)[2.90]"
+//        +0.A148 H-bonds[1]: "N1-O2'(hydroxyl)[2.74]"
+//   2  type=I A/G-C  0.A69/0.G54,0.C65 WC
+//        +0.G54  H-bonds[2]: "N1-O2'(hydroxyl)[2.69],N3-N2(amino)[2.84]"
+//        -0.C65  H-bonds[2]: "O2'(hydroxyl)-O2'(hydroxyl)[2.62],O2'(hydroxyl)-O2(carbonyl)[2.61]"
+//   3  type=I A/G-C  0.A98/0.G81,0.C93 WC
+//        +0.G81  H-bonds[2]: "N1-O2'(hydroxyl)[2.67],N3-N2(amino)[3.12]"
+//        -0.C93  H-bonds[0]: ""
+//   4  type=II A/G-C 0.A152/0.G41,0.C440 WC
+//        +0.G41  H-bonds[0]: ""
+//        -0.C440 H-bonds[3]: "O2'(hydroxyl)-O3'[3.17],O2'(hydroxyl)-O2'(hydroxyl)[2.73],N3-O2'(hydroxyl)[2.70]"
+
   private void readMotifs(int n) throws Exception {
     Lst<Map<String, Object>> motifs = newList("aMinorMotifs");
     for (int i = 0; i < n; i++) {
@@ -487,17 +501,17 @@ Mapping of 76 nucleotide identifiers
     }
   }
 
-  /*
-  List of 9 (possible) kink turns
-   1 Normal k-turn with GA on NC-helix#5; iloop#4
-      C#11[0.C93,0.G81 CG] [0.G97,0.A80 GA] NC#10[0.G77,0.C100 GC]
-      strand1 nts=15; GGCGAAGAACCAUGG 0.G91,0.G92,0.C93,0.G94,0.A95,0.A96,0.G97,0.A98,0.A99,0.C100,0.C101,0.A102,0.U103,0.G104,0.G105
-      strand2 nts=12; CCAUGGGGAGCC 0.C72,0.C73,0.A74,0.U75,0.G76,0.G77,0.G78,0.G79,0.A80,0.G81,0.C82,0.C83
-   2 Undecided case with GA on NC-helix#14; iloop#7
-      C#22[0.C280,0.G369 CG] [0.A285,0.G367 AG] NC#-9[0.G365,0.C287 GC]
-      strand1 nts=13; GCUACCUCUCAUC 0.G275,0.C276,0.U277,0.A278,0.C279,0.C280,0.U281,0.C282,0.U283,0.C284,0.A285,0.U286,0.C287
-      strand2 nts=10; GUGCGGUAGU 0.G365,0.U366,0.G367,0.C368,0.G369,0.G370,0.U371,0.A372,0.G373,0.U374
-   */
+ 
+//  List of 9 (possible) kink turns
+//   1 Normal k-turn with GA on NC-helix#5; iloop#4
+//      C#11[0.C93,0.G81 CG] [0.G97,0.A80 GA] NC#10[0.G77,0.C100 GC]
+//      strand1 nts=15; GGCGAAGAACCAUGG 0.G91,0.G92,0.C93,0.G94,0.A95,0.A96,0.G97,0.A98,0.A99,0.C100,0.C101,0.A102,0.U103,0.G104,0.G105
+//      strand2 nts=12; CCAUGGGGAGCC 0.C72,0.C73,0.A74,0.U75,0.G76,0.G77,0.G78,0.G79,0.A80,0.G81,0.C82,0.C83
+//   2 Undecided case with GA on NC-helix#14; iloop#7
+//      C#22[0.C280,0.G369 CG] [0.A285,0.G367 AG] NC#-9[0.G365,0.C287 GC]
+//      strand1 nts=13; GCUACCUCUCAUC 0.G275,0.C276,0.U277,0.A278,0.C279,0.C280,0.U281,0.C282,0.U283,0.C284,0.A285,0.U286,0.C287
+//      strand2 nts=10; GUGCGGUAGU 0.G365,0.U366,0.G367,0.C368,0.G369,0.G370,0.U371,0.A372,0.G373,0.U374
+   
   private void readTurns(int n) throws Exception {
     Lst<Map<String, Object>> turns = newList("kinkTurns");
     for (int i = 0; i < n; i++) {
@@ -511,42 +525,42 @@ Mapping of 76 nucleotide identifiers
     }
   }
 
-  /*
-  List of 12 base pairs
-      nt1              nt2             bp  name         Saenger    LW DSSR
-   1 A.C1             B.G12            C-G WC           19-XIX    cWW cW-W
-   2 A.G2             B.C11            G-C WC           19-XIX    cWW cW-W
-   3 A.C3             B.G10            C-G WC           19-XIX    cWW cW-W
-   4 A.G4             B.C9             G-C WC           19-XIX    cWW cW-W
-   5 A.A5             B.T8             A-T WC           20-XX     cWW cW-W
-   6 A.A6             B.T7             A-T WC           20-XX     cWW cW-W
-   7 A.T7             B.A6             T-A WC           20-XX     cWW cW-W
-   8 A.T8             B.A5             T-A WC           20-XX     cWW cW-W
-   9 A.C9             B.G4             C-G WC           19-XIX    cWW cW-W
-  10 A.G10            B.C3             G-C WC           19-XIX    cWW cW-W
-  11 A.C11            B.G2             C-G WC           19-XIX    cWW cW-W
-  12 A.G12            B.C1             G-C WC           19-XIX    cWW cW-W
+//  List of 12 base pairs
+//      nt1              nt2             bp  name         Saenger    LW DSSR
+//   1 A.C1             B.G12            C-G WC           19-XIX    cWW cW-W
+//   2 A.G2             B.C11            G-C WC           19-XIX    cWW cW-W
+//   3 A.C3             B.G10            C-G WC           19-XIX    cWW cW-W
+//   4 A.G4             B.C9             G-C WC           19-XIX    cWW cW-W
+//   5 A.A5             B.T8             A-T WC           20-XX     cWW cW-W
+//   6 A.A6             B.T7             A-T WC           20-XX     cWW cW-W
+//   7 A.T7             B.A6             T-A WC           20-XX     cWW cW-W
+//   8 A.T8             B.A5             T-A WC           20-XX     cWW cW-W
+//   9 A.C9             B.G4             C-G WC           19-XIX    cWW cW-W
+//  10 A.G10            B.C3             G-C WC           19-XIX    cWW cW-W
+//  11 A.C11            B.G2             C-G WC           19-XIX    cWW cW-W
+//  12 A.G12            B.C1             G-C WC           19-XIX    cWW cW-W
+//  
+//     9 [U]8:A           [A]21:A          U+A --           n/a       ... ....
+//       [-161.5(anti) C3'-endo lambda=111.1] [-160.2(anti) C3'-endo lambda=50.1]
+//       d(C1'-C1')=8.76 d(N1-N9)=8.70 d(C6-C8)=10.78 tor(C1'-N1-N9-C1')=158.5
+//       H-bonds[1]: "O2'(hydroxyl)-N1[2.68]"
+//       bp-pars: [-1.22   -8.06   -0.19   -9.35   19.04   -117.98]
+//       
+//       
+//   9 [U]8:A           [A]21:A          U+A --           00-n/a    ... ....
+//       [-161.5(anti) C3'-endo lambda=111.1] [-160.2(anti) C3'-endo lambda=50.1]
+//       d(C1'-C1')=8.76 d(N1-N9)=8.70 d(C6-C8)=10.78 tor(C1'-N1-N9-C1')=158.5
+//       H-bonds[1]: "O2'(hydroxyl)-N1[2.68]"
+//       bp-pars: [-1.22   -8.06   -0.19   -9.35   19.04   -117.98]
+//
+//
+//  List of 50 lone WC/wobble pairs
+//  Note: lone WC/wobble pairs are assigned negative indices to differentiate
+//        them from the stem numbers, which are positive.
+//        ------------------------------------------------------------------
+//  -1 0.U27            0.A516           U-A WC           20-XX     cWW cW-W
+
   
-     9 [U]8:A           [A]21:A          U+A --           n/a       ... ....
-       [-161.5(anti) C3'-endo lambda=111.1] [-160.2(anti) C3'-endo lambda=50.1]
-       d(C1'-C1')=8.76 d(N1-N9)=8.70 d(C6-C8)=10.78 tor(C1'-N1-N9-C1')=158.5
-       H-bonds[1]: "O2'(hydroxyl)-N1[2.68]"
-       bp-pars: [-1.22   -8.06   -0.19   -9.35   19.04   -117.98]
-       
-       
-   9 [U]8:A           [A]21:A          U+A --           00-n/a    ... ....
-       [-161.5(anti) C3'-endo lambda=111.1] [-160.2(anti) C3'-endo lambda=50.1]
-       d(C1'-C1')=8.76 d(N1-N9)=8.70 d(C6-C8)=10.78 tor(C1'-N1-N9-C1')=158.5
-       H-bonds[1]: "O2'(hydroxyl)-N1[2.68]"
-       bp-pars: [-1.22   -8.06   -0.19   -9.35   19.04   -117.98]
-
-
-  List of 50 lone WC/wobble pairs
-  Note: lone WC/wobble pairs are assigned negative indices to differentiate
-        them from the stem numbers, which are positive.
-        ------------------------------------------------------------------
-  -1 0.U27            0.A516           U-A WC           20-XX     cWW cW-W
-   */
   private void readPairs(int n) throws Exception {
     Lst<Map<String, Object>> pairs;
     if (line.indexOf("lone ") >= 0) {
@@ -573,62 +587,58 @@ Mapping of 76 nucleotide identifiers
       getBPData(0, null, true);
   }
 
-  /*
-  List of 1 helix
-  Note: a helix is defined by base-stacking interactions, regardless of bp
-        type and backbone connectivity, and may contain more than one stem.
-      helix#number[stems-contained] bps=number-of-base-pairs in the helix
-      bp-type: '|' for a canonical WC/wobble pair, '.' otherwise
-      helix-form: classification of a dinucleotide step comprising the bp
-        above the given designation and the bp that follows it. Types
-        include 'A', 'B' or 'Z' for the common A-, B- and Z-form helices,
-        '.' for an unclassified step, and 'x' for a step without a
-        continuous backbone.
-      --------------------------------------------------------------------
-  helix#1[1] bps=12
-      strand-1 5'-CGCGAATTCGCG-3'
-       bp-type    ||||||||||||
-      strand-2 3'-GCGCTTAAGCGC-5'
-      helix-form  BBBBBBBBBBB
-   1 A.C1             B.G12            C-G WC           19-XIX    cWW cW-W
-   2 A.G2             B.C11            G-C WC           19-XIX    cWW cW-W
-   3 A.C3             B.G10            C-G WC           19-XIX    cWW cW-W
-   4 A.G4             B.C9             G-C WC           19-XIX    cWW cW-W
-   5 A.A5             B.T8             A-T WC           20-XX     cWW cW-W
-   6 A.A6             B.T7             A-T WC           20-XX     cWW cW-W
-   7 A.T7             B.A6             T-A WC           20-XX     cWW cW-W
-   8 A.T8             B.A5             T-A WC           20-XX     cWW cW-W
-   9 A.C9             B.G4             C-G WC           19-XIX    cWW cW-W
-  10 A.G10            B.C3             G-C WC           19-XIX    cWW cW-W
-  11 A.C11            B.G2             C-G WC           19-XIX    cWW cW-W
-  12 A.G12            B.C1             G-C WC           19-XIX    cWW cW-W
-  
-  List of 1 stem
-  Note: a stem is defined as a helix consisting of only canonical WC/wobble
-        pairs, with a continuous backbone.
-      stem#number[#helix-number containing this stem]
-      Other terms are defined as in the above Helix section.
-      --------------------------------------------------------------------
-  stem#1[#1] bps=12
-      strand-1 5'-CGCGAATTCGCG-3'
-       bp-type    ||||||||||||
-      strand-2 3'-GCGCTTAAGCGC-5'
-      helix-form  BBBBBBBBBBB
-   1 A.C1             B.G12            C-G WC           19-XIX    cWW cW-W
-   2 A.G2             B.C11            G-C WC           19-XIX    cWW cW-W
-   3 A.C3             B.G10            C-G WC           19-XIX    cWW cW-W
-   4 A.G4             B.C9             G-C WC           19-XIX    cWW cW-W
-   5 A.A5             B.T8             A-T WC           20-XX     cWW cW-W
-   6 A.A6             B.T7             A-T WC           20-XX     cWW cW-W
-   7 A.T7             B.A6             T-A WC           20-XX     cWW cW-W
-   8 A.T8             B.A5             T-A WC           20-XX     cWW cW-W
-   9 A.C9             B.G4             C-G WC           19-XIX    cWW cW-W
-  10 A.G10            B.C3             G-C WC           19-XIX    cWW cW-W
-  11 A.C11            B.G2             C-G WC           19-XIX    cWW cW-W
-  12 A.G12            B.C1             G-C WC           19-XIX    cWW cW-W
-
-
-   */
+//  List of 1 helix
+//  Note: a helix is defined by base-stacking interactions, regardless of bp
+//        type and backbone connectivity, and may contain more than one stem.
+//      helix#number[stems-contained] bps=number-of-base-pairs in the helix
+//      bp-type: '|' for a canonical WC/wobble pair, '.' otherwise
+//      helix-form: classification of a dinucleotide step comprising the bp
+//        above the given designation and the bp that follows it. Types
+//        include 'A', 'B' or 'Z' for the common A-, B- and Z-form helices,
+//        '.' for an unclassified step, and 'x' for a step without a
+//        continuous backbone.
+//      --------------------------------------------------------------------
+//  helix#1[1] bps=12
+//      strand-1 5'-CGCGAATTCGCG-3'
+//       bp-type    ||||||||||||
+//      strand-2 3'-GCGCTTAAGCGC-5'
+//      helix-form  BBBBBBBBBBB
+//   1 A.C1             B.G12            C-G WC           19-XIX    cWW cW-W
+//   2 A.G2             B.C11            G-C WC           19-XIX    cWW cW-W
+//   3 A.C3             B.G10            C-G WC           19-XIX    cWW cW-W
+//   4 A.G4             B.C9             G-C WC           19-XIX    cWW cW-W
+//   5 A.A5             B.T8             A-T WC           20-XX     cWW cW-W
+//   6 A.A6             B.T7             A-T WC           20-XX     cWW cW-W
+//   7 A.T7             B.A6             T-A WC           20-XX     cWW cW-W
+//   8 A.T8             B.A5             T-A WC           20-XX     cWW cW-W
+//   9 A.C9             B.G4             C-G WC           19-XIX    cWW cW-W
+//  10 A.G10            B.C3             G-C WC           19-XIX    cWW cW-W
+//  11 A.C11            B.G2             C-G WC           19-XIX    cWW cW-W
+//  12 A.G12            B.C1             G-C WC           19-XIX    cWW cW-W
+//  
+//  List of 1 stem
+//  Note: a stem is defined as a helix consisting of only canonical WC/wobble
+//        pairs, with a continuous backbone.
+//      stem#number[#helix-number containing this stem]
+//      Other terms are defined as in the above Helix section.
+//      --------------------------------------------------------------------
+//  stem#1[#1] bps=12
+//      strand-1 5'-CGCGAATTCGCG-3'
+//       bp-type    ||||||||||||
+//      strand-2 3'-GCGCTTAAGCGC-5'
+//      helix-form  BBBBBBBBBBB
+//   1 A.C1             B.G12            C-G WC           19-XIX    cWW cW-W
+//   2 A.G2             B.C11            G-C WC           19-XIX    cWW cW-W
+//   3 A.C3             B.G10            C-G WC           19-XIX    cWW cW-W
+//   4 A.G4             B.C9             G-C WC           19-XIX    cWW cW-W
+//   5 A.A5             B.T8             A-T WC           20-XX     cWW cW-W
+//   6 A.A6             B.T7             A-T WC           20-XX     cWW cW-W
+//   7 A.T7             B.A6             T-A WC           20-XX     cWW cW-W
+//   8 A.T8             B.A5             T-A WC           20-XX     cWW cW-W
+//   9 A.C9             B.G4             C-G WC           19-XIX    cWW cW-W
+//  10 A.G10            B.C3             G-C WC           19-XIX    cWW cW-W
+//  11 A.C11            B.G2             C-G WC           19-XIX    cWW cW-W
+//  12 A.G12            B.C1             G-C WC           19-XIX    cWW cW-W
 
   /**
    * 
@@ -689,23 +699,21 @@ Mapping of 76 nucleotide identifiers
     return data;
   }
 
-  /*
-  "--more" option for base pairs:
-   [-167.8(anti) C3'-endo lambda=42.1] [-152.8(anti) C3'-endo lambda=68.6] 
-   d(C1'-C1')=10.44 d(N1-N9)=8.84 d(C6-C8)=9.70 tor(C1'-N1-N9-C1')=-8.1 
-   H-bonds[2]: "O6(carbonyl)-N3(imino)[2.78],N1(imino)-O2(carbonyl)[2.83]" 
-   bp-pars: [-2.37 -0.60 0.11 4.67 -7.75 -2.95]
-  
-   stems/helices:
-   
-       bp1-pars:  [-0.09    -0.11    0.08     -4.80    -11.89   0.28]
-       step-pars:  [0.38     -1.60    2.63     -5.03    7.04     22.51]
-       heli-pars:  [-5.46    -2.08    1.92     17.23    12.32    24.10]
-        bp2-pars:  [-2.56    -0.51    0.46     11.05    -9.69    -1.55]
-       C1'-based:                rise=3.62                 twist=36.20
-       C1'-based:              h-rise=2.57               h-twist=37.91
+//  "--more" option for base pairs:
+//   [-167.8(anti) C3'-endo lambda=42.1] [-152.8(anti) C3'-endo lambda=68.6] 
+//   d(C1'-C1')=10.44 d(N1-N9)=8.84 d(C6-C8)=9.70 tor(C1'-N1-N9-C1')=-8.1 
+//   H-bonds[2]: "O6(carbonyl)-N3(imino)[2.78],N1(imino)-O2(carbonyl)[2.83]" 
+//   bp-pars: [-2.37 -0.60 0.11 4.67 -7.75 -2.95]
+//  
+//   stems/helices:
+//   
+//       bp1-pars:  [-0.09    -0.11    0.08     -4.80    -11.89   0.28]
+//       step-pars:  [0.38     -1.60    2.63     -5.03    7.04     22.51]
+//       heli-pars:  [-5.46    -2.08    1.92     17.23    12.32    24.10]
+//        bp2-pars:  [-2.56    -0.51    0.46     11.05    -9.69    -1.55]
+//       C1'-based:                rise=3.62                 twist=36.20
+//       C1'-based:              h-rise=2.57               h-twist=37.91
 
-   */
   private void readMore(Map<String, Object> data, boolean isBP, boolean isRev)
       throws Exception {
     String info = "";
@@ -770,19 +778,17 @@ Mapping of 76 nucleotide identifiers
             Math.min(line.length(), pt + 10)))));
   }
 
-  /*
-  List of 31 non-loop single-stranded segments
-   1 nts=3 UAU 0.U10,0.A11,0.U12
-   2 nts=1 A 0.A128
-
-  List of 46 ribose zippers
-   1 nts=4 UUAG 0.U26,0.U27,0.A1318,0.G1319
-   2 nts=4 ACAC 0.A152,0.C153,0.A439,0.C440
-   
-  List of 233 multiplets
-  10 nts=3 AAA 0.A59,0.A60,0.A86
-  11 nts=3* AGG 0.A80,0.G94,0.G97
-   */
+//  List of 31 non-loop single-stranded segments
+//   1 nts=3 UAU 0.U10,0.A11,0.U12
+//   2 nts=1 A 0.A128
+//
+//  List of 46 ribose zippers
+//   1 nts=4 UUAG 0.U26,0.U27,0.A1318,0.G1319
+//   2 nts=4 ACAC 0.A152,0.C153,0.A439,0.C440
+//   
+//  List of 233 multiplets
+//  10 nts=3 AAA 0.A59,0.A60,0.A86
+//  11 nts=3* AGG 0.A80,0.G94,0.G97
 
   private Lst<Map<String, Object>> readNTList(String ntsKey, String type, int n)
       throws Exception {
@@ -941,33 +947,269 @@ Mapping of 76 nucleotide identifiers
     return line;
   }
 
+  ///////////////////// annotations ////////////////
+
+
+//format developed at EBI July 2014
+//key elements are:
+//  -JSON format
+//  -main entries ("Pfam", "InterPro") are first or second heading
+//  -mappings have "start" and "end" with "residue_numbeer" being
+//                 mmCIF value for _atom_site.label_seq_id
+//  -only available for mmCIF files, not PDB files, where seq_id is not available.
+//
+// {
+//   "1cbs": {
+//       "Pfam": {
+//           "PF00061": {
+//               "identifier": "Lipocalin / cytosolic fatty-acid binding protein family",
+//               "description": "Lipocalin / cytosolic fatty-acid binding protein family",
+//               "mappings": [
+//                   {
+//                       "entity_id": 1,
+//                       "end": {
+//                           "author_residue_number": 137,
+//                           "author_insertion_code": "",
+//                           "residue_number": 137
+//                       },
+//                       "chain_id": "A",
+//                       "start": {
+//                           "author_residue_number": 4,
+//                           "author_insertion_code": "",
+//                           "residue_number": 4
+//                       },
+//                       "struct_asym_id": "A"
+//                   }
+//               ]
+//           }
+//       },
+//       "InterPro": {
+// ...
+
+ 
+ /**
+  * @param a an annotation structure wrapped as a script variable
+  * @param match can contain "mappings" to get those specifically
+  * @return tab-separated line-based listing
+  */
+ @Override
+ public String getAnnotationInfo(SV a, String match) {
+   SB sb = new SB();
+   if ("".equals(match))
+     match = null;
+   boolean isMappings = (match != null && match.contains("mappings"));
+   if (isMappings) 
+     match = PT.rep(match, "mappings", "").trim();
+   if ("".equals(match))
+     match = null;
+   boolean isMappingOnly = (match != null && match.indexOf(".") >= 0 && match.indexOf(".*") < 0);
+   match = PT.rep(match, "*", "");
+   getAnnotationKVPairs(a, match, "", sb, "", isMappings, isMappingOnly);
+   return sb.toString();
+ }
+
   ///////////////////// post-load processing ////////////////
 
   @SuppressWarnings("unchecked")
   @Override
-  public BS getAtomBits(Viewer vwr, String key, Object dssr,
-                        Map<String, Object> dssrCache) {
-    // Check to see if we have already asked for pairs or the data type
-    // does not have the "basePairs" key
+  /**
+   * 
+   * Retrieve a set of atoms using vwr.extractProperty with 
+   * a [select ... where ...] syntax. Used for both DSSR
+   * and for annotations
+   * 
+   */
+  public BS getAtomBits(Viewer vwr, String key, Object dbObj,
+                        Map<String, Object> dssrCache, BS bsModel) {
+    boolean isAnnotation = (bsModel != null);
+    boolean doCache = !key.contains("NOCACHE");
+    if (!doCache) {
+      key = PT.rep(key, "NOCACHE","").trim();
+    }
     String s = key.toLowerCase();
-    if (s.indexOf("pairs") < 0 && s.indexOf("kissingloops") < 0
-        && s.indexOf("linkedby") < 0 && s.indexOf("multiplets") < 0
-        && s.indexOf("singlestrand") < 0)
-      key += ".basePairs";
-    if (s.indexOf(".nt") < 0 && s.indexOf(".res") < 0
-        && s.indexOf("[selecet res") < 0 && s.indexOf("[selecet nt") < 0)
-      key += ".res*";
-    BS bs = (BS) dssrCache.get(key);
-    Map<String, BS> htChains = new Hashtable<String, BS>();
-    if (bs == null) {
-      dssrCache.put(key, bs = new BS());
-      Object data = vwr.extractProperty(dssr, key, -1);
-      if (data instanceof Lst<?>)
-        getBsAtoms(vwr, null, (Lst<SV>) data, bs, htChains);
+    if (!isAnnotation) {
+      // Check to see if we have already asked for pairs or the data type
+      // does not have the "basePairs" key
+      if (s.indexOf("pairs") < 0 && s.indexOf("kissingloops") < 0
+          && s.indexOf("linkedby") < 0 && s.indexOf("multiplets") < 0
+          && s.indexOf("singlestrand") < 0)
+        key += ".basePairs";
+      if (s.indexOf(".nt") < 0 && s.indexOf(".res") < 0
+          && s.indexOf("[select res") < 0 && s.indexOf("[select nt") < 0)
+        key += ".res*";
+    }
+    BS bs = (doCache ? (BS) dssrCache.get(key) : null);
+    if (bs != null)
+      return bs;
+    bs = new BS();
+    try {
+      if (doCache)
+        dssrCache.put(key, bs);
+      Object data;
+      if (!isAnnotation) {
+        Map<String, BS> htChains = new Hashtable<String, BS>();
+        data = vwr.extractProperty(dbObj, key, -1);
+        if (data instanceof Lst<?>)
+          getBsAtoms(vwr, null, (Lst<SV>) data, bs, htChains);
+        return bs;
+      }
+
+      Map<String, SV> map = ((SV) dbObj).getMap();
+      SV main = map.get("_map");
+      if (main == null)
+        main = initializeAnnotation(map);
+      map = main.getMap();
+      // select within(annotations,"InterPro.* where identifier like '*-like'")
+      int pt = s.indexOf(" where ");
+      String tableName = PT.rep((pt < 0 ? key : key.substring(0, pt)), " ","");
+      String newKey = "select mappings" + (pt < 0 ? "" : key.substring(pt));
+      if (tableName.indexOf(".") < 0)
+        tableName += ".*";
+      String[] keys = PT.split(tableName, ".");
+      boolean isWild = false;
+      int i = 0;
+      tableName = "";
+      for (; i < keys.length; i++) {
+        tableName += (i == 0 ? "" : ".") + keys[i];
+        if (keys[i].equals("*")) {
+          isWild = true;
+          break;
+        }
+        SV svMap = map.get(keys[i]);
+        if (svMap == null) {
+          Logger.info("Annotation database not found: '" + keys[i] + "' note that this is case-sensitive, for example SCOP Pfam, etc. Options include: " + main.getMapKeys(1,  true));
+          return bs;
+        }
+        map = svMap.getMap();
+      }
+      Logger.info("looking for " + newKey + " in " + tableName);
+      // this is either the right map or we have a wildcard.
+      if (i == 0) {
+        for (String b : main.getMap().keySet())
+          for (String a : (map = main.getMap().get(b).getMap()).keySet())
+            findAnnotationAtoms(vwr, b + "." + a, map.get(a).getMap(), newKey, bs);
+      } else if (isWild) {
+        for (String a : map.keySet())
+          findAnnotationAtoms(vwr, a, map.get(a).getMap(), newKey, bs);
+      } else {
+        findAnnotationAtoms(vwr, tableName, map, newKey, bs);
+      }
+      bs.and(bsModel);
+    } catch (Exception e) {
+      System.out.println(e.toString() + " in DSSRParser");
+      bs.clearAll();
     }
     return bs;
   }
 
+  /**
+   * We create a main list of mappings, where each mapping
+   * has _atoms, _dbName, _domainName.
+   * 
+   * @param map
+   * @return
+   */
+  private SV initializeAnnotation(Map<String, SV> map) {
+    SV main = map.entrySet().iterator().next().getValue();
+    map.put("_map",  main);
+    boolean noSingles = true; // different for validation
+    Map<String, SV> _cat = new Hashtable<String, SV>();
+    map.put("_cat", SV.newV(T.hash, _cat));
+    Lst<SV> list = new Lst<SV>();
+    map.put("_list", SV.newV(T.varray,  list));
+    for (Entry<String, SV> e : main.getMap().entrySet()) {
+      String _dbName = e.getKey();
+      SV _dbMap = e.getValue();
+      _cat.putAll(_dbMap.getMap());
+      for (Entry<String, SV> e2 : _dbMap.getMap().entrySet()) {
+        String _domainName = e2.getKey();
+        SV _domainMap = e2.getValue();
+
+        SV _domainList = _domainMap.mapGet("mappings");
+        Lst<SV> _mapList = _domainList.getList();
+        for (int i = _mapList.size(); --i >= 0;) {
+          SV mapping = _mapList.get(i);
+          list.addLast(mapping);
+          Map<String, SV> mmap = mapping.getMap();
+          SV _chain = mmap.get("chain_id");
+          SV start = mmap.get("start");
+          SV end = mmap.get("end");
+          int res1 = 0;
+          int res2 = 0;
+          String rescode = "chain='" + _chain.value + "'";
+          if (start != null && end != null) {
+            res1 = start.getMap().get("residue_number").intValue;
+            res2 = end.getMap().get("residue_number").intValue;
+            rescode += "&seqid>=" + res1 + "&seqid<=" + res2;
+          } else {
+            rescode += "&seqid>0";
+          }
+          SV _atoms = (noSingles && res1 >= res2 ? SV.getVariable(new BS()) : _cat.get(rescode));
+          if (_atoms == null)
+            _cat.put(rescode, _atoms = SV.newS(rescode));
+          // note that using SV, we can MUTATE _atoms from String to Bitset
+          // and _cat and all references will update, because it is just 
+          // a pointer, not a copy.
+          
+          mmap.put("_atoms", _atoms);
+          mmap.put("_chain", _chain);
+          mmap.put("_dbName", SV.newS(_dbName));
+          mmap.put("_domainName", SV.newS(_domainName));
+        }        
+      }
+    }
+    return main;
+  }
+
+  /**
+   * find annotations; allows for wild cards InterPro.* where .....
+   * 
+   * @param vwr
+   * @param name
+   * @param map
+   * @param key
+   * @param bs
+   */
+  private void findAnnotationAtoms(Viewer vwr, String name,
+                                   Map<String, SV> map, String key, BS bs) {
+    if (map == null)
+      return;
+    System.out.println("Checking " + name + " for " + key);
+    Object data = vwr.extractProperty(map, "[" + key + "]", -1);
+    if (!(data instanceof SV))
+      return;
+    Lst<SV> list = ((SV) data).getList();
+    if (list == null)
+      return;
+
+    // go through all mappings
+    for (int i = 0, n = list.size(); i < n; i++) {
+      Map<String, SV> mapping = list.get(i).getMap();
+      if (mapping == null)
+        return;
+      SV _atoms = mapping.get("_atoms");
+      if (_atoms.tok != T.bitset) {
+        BS bs2 = vwr.getAtomBitSet(_atoms.value);
+        Logger.info(name + "#" + (i + 1) + " found " + bs2.cardinality()
+            + " for " + _atoms.value);
+        // mutate _atoms from String to BitSet!
+        // all references are updated instantly!
+        _atoms.tok = T.bitset;
+        _atoms.value = bs2;
+      }
+      bs.or((BS) _atoms.value);
+    }
+  }
+
+  /**
+   * parsing a residue designation for tokens in DSSR.
+   * 
+   * @param vwr
+   * @param res
+   * @param lst
+   * @param bs
+   * @param htChains
+   */
   private void getBsAtoms(Viewer vwr, String res, Lst<?> lst, BS bs,
                           Map<String, BS> htChains) {
     String[] tokens;
@@ -1135,6 +1377,44 @@ Mapping of 76 nucleotide identifiers
     }
     return (info != null ? (String) ((Map<String, Object>) info.get("dssr"))
         .get("summary") : out == null ? "model has no nucleotides" : out);
+  }
+
+
+  private void getAnnotationKVPairs(SV a, String match, String dotPath, SB sb, String pre,
+                        boolean showMappings, boolean isMappingOnly) {
+    Map<String, SV> map = a.getMap();
+    if (map == null)
+      return;
+    boolean haveMapping = false;
+    boolean haveMatch = false;
+    for (Entry<String, SV> e : map.entrySet()) {
+      String key = e.getKey();
+      boolean isMapping = key.equals("mappings");
+      if (isMapping) {
+        haveMapping = true;
+        continue;
+      }
+      SV val = e.getValue();
+      if (val.tok == T.hash && !isMapping) {
+        getAnnotationKVPairs(val, match, (dotPath.length() == 0 ? "" : dotPath + ".") + key, 
+            sb, (pre.length() == 0 ? "" : pre + "\t") + key,
+            showMappings, isMappingOnly);
+      } else {
+        String s = val.asString();
+        if (match == null || s.indexOf(match) >= 0 || pre.indexOf(match) >= 0
+            || key.indexOf(match) >= 0 || dotPath.indexOf(match) >= 0) {
+          haveMatch = true;
+            if (showMappings && isMappingOnly)
+              continue;
+            if (pre.length() > 0)
+              sb.append(pre).append("\t");
+            sb.append(key).append("=");
+          sb.append(s).append("\n");
+        }
+      }
+    }
+    if (haveMapping && showMappings && haveMatch)
+      sb.append(map.get("mappings").asString()).append("\n");
   }
 
 }

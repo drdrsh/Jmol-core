@@ -76,7 +76,7 @@ public class JSExporter extends __CartesianExporter {
 
   private Map<String, Object[]> htObjects = new Hashtable<String, Object[]>();
 
-  Object applet;
+  Object html5Applet;
 
   private UseTable useTable;
 
@@ -157,16 +157,16 @@ public class JSExporter extends __CartesianExporter {
   
   @Override
   protected void outputHeader() {
-    applet = this.vwr.getHTML5Applet();
+    html5Applet = this.vwr.getHtml5Applet();
     useTable = new UseTable("JS");
     htSpheresRendered.clear();
     htObjects.clear();
-    jsInitExport(applet);
+    jsInitExport(html5Applet);
   }
 
   @Override
   protected void outputFooter() {
-    jsEndExport(applet);
+    jsEndExport(html5Applet);
     htSpheresRendered.clear();
     htObjects.clear();
     useTable = null;
@@ -187,7 +187,7 @@ public class JSExporter extends __CartesianExporter {
     else
       htObjects.put(ret[0],
           o = new Object[] { getColor(colix), Float.valueOf(radius) });
-    jsSphere(applet, ret[0], !found, ptCenter, o);
+    jsSphere(html5Applet, ret[0], !found, ptCenter, o);
   }
 
   private String[] ret = new String[1];
@@ -212,7 +212,7 @@ public class JSExporter extends __CartesianExporter {
           ret[0],
           o = new Object[] { getColor(colix), Float.valueOf(length),
               Float.valueOf(radius) });
-    jsCylinder(applet, ret[0], !found, pt1, pt2, o);
+    jsCylinder(html5Applet, ret[0], !found, pt1, pt2, o);
     return true;
   }
 
@@ -247,14 +247,14 @@ public class JSExporter extends __CartesianExporter {
                                Map<Short, Integer> htColixes, P3 offset) {
     int[] vertexColors = getColors(vertexColixes);
     int[] polygonColors = getColors(polygonColixes);
-    jsSurface(applet, vertices, normals, indices, nVertices, nPolygons, nFaces,
+    jsSurface(html5Applet, vertices, normals, indices, nVertices, nPolygons, nFaces,
         bsPolygons, faceVertexMax, g3d.getColorArgbOrGray(colix), vertexColors,
         polygonColors);
   }
 
   @Override
   protected void outputTriangle(P3 pt1, P3 pt2, P3 pt3, short colix) {
-    jsTriangle(applet, g3d.getColorArgbOrGray(colix), pt1, pt2, pt3);
+    jsTriangle(html5Applet, g3d.getColorArgbOrGray(colix), pt1, pt2, pt3);
   }
 
   @Override

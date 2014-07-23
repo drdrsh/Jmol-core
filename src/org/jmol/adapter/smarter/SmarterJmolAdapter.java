@@ -32,6 +32,8 @@ import org.jmol.api.JmolFilesReaderInterface;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.util.Lst;
+
+import org.jmol.script.SV;
 import org.jmol.util.Logger;
 import javajs.util.P3;
 import javajs.util.Rdr;
@@ -185,8 +187,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
    * 
    */
   @Override
-  public Object getAtomSetCollectionReaders(
-                                            JmolFilesReaderInterface filesReader,
+  public Object getAtomSetCollectionReaders(JmolFilesReaderInterface filesReader,
                                             String[] names, String[] types,
                                             Map<String, Object> htParams,
                                             boolean getReadersOnly) {
@@ -199,7 +200,20 @@ public class SmarterJmolAdapter extends JmolAdapter {
     if (htParams.containsKey("concatenate")) {
       String s = "";
       for (int i = 0; i < size; i++) {
-        s += vwr.getFileAsString(names[i], false);
+        String f = vwr.getFileAsString(names[i], false);
+        if (f.startsWith("java.") && names[i].startsWith("http://ves-hx-89.ebi.ac.uk")) {
+          f = vwr.getFileAsString(names[i].substring(names[i].lastIndexOf("/") + 1)+ ".json", false);
+        }
+        if (i == 1 && size == 2 && f.startsWith("{")) {
+          // JSON annotations
+
+          SV x = vwr.evaluateExpressionAsVariable(f);
+          if (x != null && x.getMap() != null) {
+            htParams.put("annotations", x);
+          }
+          continue;
+        }
+        s += f;
         if (!s.endsWith("\n"))
           s += "\n";
       }
@@ -225,8 +239,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
         r = (AtomSetCollectionReader) ret;
         r.setup(null, null, null);
         if (r.isBinary) {
-          r.setup(names[i], htParams, filesReader
-              .getBufferedReaderOrBinaryDocument(i, true));
+          r.setup(names[i], htParams,
+              filesReader.getBufferedReaderOrBinaryDocument(i, true));
         } else {
           r.setup(names[i], htParams, reader);
         }

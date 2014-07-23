@@ -115,7 +115,7 @@ public abstract class ProteinStructure {
       STR type = monomers[++index].getProteinStructureType();
       int mLast = -1;
       for (int i = 0, pt = index; i < n; i++, pt++) {
-        ((AlphaMonomer)monomers[pt]).setStructure(null);
+        ((AlphaMonomer)monomers[pt]).setStructure(null, false);
         //System.out.println("bp monomer=" + pt + " " + monomers[pt] + " " + type);
         mLast = monomers[pt].setProteinStructureType(type, mLast);
       }

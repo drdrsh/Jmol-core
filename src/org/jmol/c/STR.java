@@ -43,7 +43,8 @@ public enum STR {
   CARBOHYDRATE(6,0xFFA6A6FA),
   HELIX310(7,0xFFA00080),
   HELIXALPHA(8,0xFFFF0080),
-  HELIXPI(9,0xFF600080);
+  HELIXPI(9,0xFF600080),
+  ANNOTATION(-2,0);
   
   private int id;
   private int color;
