@@ -53,6 +53,7 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.api.JSInterface;
 import javajs.util.Lst;
 import javajs.util.PT;
 
@@ -86,7 +87,7 @@ import jspecview.js2d.JsMainPanel;
  */
 
 public class JSVApplet implements JSVAppletInterface,
-		AppletFrame {
+		AppletFrame, JSInterface {
 
 	protected JSVApp app;
 	public JSViewer viewer;
@@ -191,6 +192,7 @@ public class JSVApplet implements JSVAppletInterface,
 		System.out.println("JSpecView " + this + " finalized");
 	}
 
+	@Override
 	public void destroy() {
 //		if (commandWatcherThread != null) {
 //			commandWatcherThread.interrupt();
@@ -571,6 +573,81 @@ public class JSVApplet implements JSVAppletInterface,
 	@Override
 	public JSVApp getApp() {
 		return app;
+	}
+
+	@Override
+	public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+	@Override
+	public int cacheFileByName(String fileName, boolean isAdd) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void cachePut(String key, Object data) {
+		// TODO Auto-generated method stub		
+	}
+
+	@Override
+	public Object getGLmolView() {
+		return null;
+	}
+
+	@Override
+	public String getFullName() {
+		return app.vwr.fullName;
+	}
+
+	@Override
+	public boolean processMouseEvent(int id, int x, int y, int modifiers,
+			long time) {
+		return app.vwr.processMouseEvent(id, x, y, modifiers, time);
+	}
+
+	@Override
+	public void setDisplay(Object canvas) {
+		app.vwr.setDisplay(canvas);
+	}
+
+	@Override
+	public void startHoverWatcher(boolean enable) {
+		// TODO Auto-generated method stub		
+	}
+
+	@Override
+	public void update() {
+		app.vwr.updateJS();		
+	}
+
+	@Override
+	public String loadInlineString(String mol, String script, boolean isAppend) {
+		// not supported
+		return null;
+	}
+
+	@Override
+	public String openFile(String fileName) {
+	  app.vwr.openFile(fileName, true);
+	  return null;
+	}
+
+	@Override
+	public void openFileAsyncSpecial(String fileName, int flags) {
+		app.vwr.openFileAsyncSpecial(fileName, flags);
+	}
+
+	@Override
+	public void processTwoPointGesture(float[][][] touches) {
+		app.vwr.processTwoPointGesture(touches);
+	}
+
+	@Override
+	public void setScreenDimension(int width, int height) {
+		app.vwr.setScreenDimension(width, height);		
 	}
 
 }

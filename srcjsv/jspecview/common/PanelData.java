@@ -495,7 +495,7 @@ public class PanelData implements EventManager {
 	public void printVersion(Object g, int pageHeight) {
 		g2d.setGraphicsColor(g, BLACK);
 		Font font = setFont(g, 100, Font.FONT_STYLE_PLAIN, 12, true);
-		String s = jsvp.getApiPlatform().getDateFormat(false) + " JSpecView "
+		String s = jsvp.getApiPlatform().getDateFormat(null) + " JSpecView "
 				+ JSVersion.VERSION_SHORT;
 		int w = font.stringWidth(s);
 		g2d.drawString(g, s, (thisWidth - right) * scalingFactor - w, pageHeight

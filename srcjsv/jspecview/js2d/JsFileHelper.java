@@ -52,7 +52,7 @@ public class JsFileHelper implements JSVFileHelper {
 	  // userData[0]: isAppend
 	  // userData[1]: script
 		
-		Object applet = vwr.applet;
+		Object applet = vwr.html5Applet;
 		/**
 		 * @j2sNative
 		 * 

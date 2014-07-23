@@ -1,5 +1,6 @@
 package jspecview.js2d;
 
+import java.io.BufferedInputStream;
 import java.net.URL;
 
 import javajs.api.GenericFileInterface;
@@ -10,6 +11,8 @@ import javajs.api.PlatformViewer;
 import javajs.awt.Font;
 import javajs.util.P3;
 import javajs.util.AjaxURLStreamHandlerFactory;
+import javajs.util.Rdr;
+import javajs.util.SB;
 
 import jspecview.api.JSVPanel;
 import jspecview.app.GenericMouse;
@@ -234,8 +237,8 @@ public class JsPlatform implements GenericPlatform {
 	}
 
 	@Override
-	public Object getGraphics(Object image) {
-		return (image == null ? context : Image.getGraphics(image));
+	public Object getGraphics(Object canvas) {
+		return (canvas == null ? context : (context = Image.getGraphics(this.canvas = canvas)));
 	}
 
   @Override
@@ -313,7 +316,7 @@ public class JsPlatform implements GenericPlatform {
 	}
 
   @Override
-	public String getDateFormat(boolean isoiec8824) {
+  public String getDateFormat(String isoType) {
     /**
      * 
      * Mon Jan 07 2013 19:54:39 GMT-0600 (Central Standard Time)
@@ -321,7 +324,14 @@ public class JsPlatform implements GenericPlatform {
      * 
      * @j2sNative
      * 
-     * if (isoiec8824) {
+     * if (isoType == null) {
+     * } else if (isoType.indexOf("8824") >= 0) {
+     *   var d = new Date();
+     *   var x = d.toString().split(" ");
+     *   var MM = "0" + d.getMonth(); MM = MM.substring(MM.length - 2);
+     *   var dd = "0" + d.getDate(); dd = dd.substring(dd.length - 2);
+     *   return x[3] + MM + dd + x[4].replace(/\:/g,"") + x[5].substring(3,6) + "'" + x[5].substring(6,8) + "'"   
+     * } else if (isoType.indexOf("8601") >= 0){
      *   var d = new Date();
      *   var x = d.toString().split(" ");
      *   var MM = "0" + d.getMonth(); MM = MM.substring(MM.length - 2);
@@ -346,15 +356,25 @@ public class JsPlatform implements GenericPlatform {
     return null; 
   }
 
-  @Override
-	public Object getBufferedURLInputStream(URL url, byte[] outputBytes,
-                                          String post) {
-    return JsFile.getBufferedURLInputStream(url, outputBytes, post);
-  }
+	@Override
+	public Object getURLContents(URL url, byte[] outputBytes, String post,
+			boolean asString) {
+		Object ret = JsFile.getURLContents(url, outputBytes, post);
+		// check for error
+		try {
+			return (!asString ? ret : ret instanceof String ? ret : ret instanceof SB ? ((SB) ret)
+					.toString() : ret instanceof byte[] ? new String((byte[]) ret)
+					: new String((byte[]) Rdr.getStreamAsBytes((BufferedInputStream) ret,
+							null)));
+		} catch (Exception e) {
+			return "" + e;
+		}
+	}
 
 	@Override
 	public String getLocalUrl(String fileName) {
 		// not used in JSpecView
 		return null;
 	}
+
 }

@@ -205,7 +205,7 @@ public class JDXExporter implements JSVExporter {
         newLine);
     String d = spectrum.getDate();
     String longdate = "";
-    String currentTime = vwr.apiPlatform.getDateFormat(false);
+    String currentTime = vwr.apiPlatform.getDateFormat(null);
     if (spectrum.getLongDate().equals("") || d.length() != 8) {
       longdate = currentTime + " $$ export date from JSpecView";
     } else if (d.length() == 8) { // give a 50 year window; Y2K compliant

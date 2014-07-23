@@ -359,13 +359,13 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	public void repaint() {
 		
 		@SuppressWarnings("unused")
-		Object applet = (vwr == null ? null : vwr.applet);
+		Object applet = (vwr == null ? null : vwr.html5Applet);
     /**
      * Jmol._repaint(applet,asNewThread)
      * 
      * should invoke 
      * 
-     *   setTimeout(applet._applet.viewer.updateJS(width, height)) // may be 0,0
+     *   setTimeout(applet._applet.updateJS(applet._canvas)) // may be 0,0
      *   
      * when it is ready to do so.
      * 
@@ -471,9 +471,7 @@ public class JSVApp implements PanelListener, JSVAppInterface {
    */
   private void updateJSView(String msg) {
   	
-  	// actually, this is not implemented in JSmolJSV.js
-  	
-  	Object applet = this.vwr.applet;
+  	Object applet = this.vwr.html5Applet;
   	@SuppressWarnings("unused")
 		JSVPanel panel = (applet == null ? null : vwr.selectedPanel);
     /**

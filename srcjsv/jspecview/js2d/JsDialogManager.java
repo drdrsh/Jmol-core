@@ -71,7 +71,7 @@ public class JsDialogManager extends DialogManager {
     // for export and others
 		int i = -1;
 		@SuppressWarnings("unused")
-		Object applet = this.vwr.applet;
+		Object applet = this.vwr.html5Applet;
 		/**
 		 * @j2sNative
 		 * 

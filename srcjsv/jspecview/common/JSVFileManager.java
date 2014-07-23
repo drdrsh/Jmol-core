@@ -387,7 +387,7 @@ public class JSVFileManager {
 			}
 			Logger.info("JSVFileManager opening URL " + url
 					+ (post == null ? "" : " with POST of " + post.length() + " bytes"));
-			in = viewer.apiPlatform.getBufferedURLInputStream(url, postBytes, post);
+			in = viewer.apiPlatform.getURLContents(url, postBytes, post, false);
 		} else {
 			if (showMsg)
 				Logger.info("JSVFileManager opening file " + name);
@@ -457,7 +457,7 @@ public class JSVFileManager {
 		int pt = molFile.indexOf("\n");
 		pt = molFile.indexOf("\n", pt + 1);
 		if (pt > 0 && pt == molFile.indexOf("\n \n"))
-			molFile = molFile.substring(0, pt + 1) + "Created " + viewer.apiPlatform.getDateFormat(true) + " by JSpecView " + JSVersion.VERSION
+			molFile = molFile.substring(0, pt + 1) + "Created " + viewer.apiPlatform.getDateFormat("8824") + " by JSpecView " + JSVersion.VERSION
 					+ molFile.substring(pt + 1);
 		pt = 0;
 		pt = jcamp.indexOf("##.");

@@ -47,7 +47,7 @@ class AwtFile extends File implements GenericFileInterface {
 		}
 	}
 
-	static Object getBufferedURLInputStream(URL url, byte[] outputBytes,
+	static Object getURLContents(URL url, byte[] outputBytes,
 			String post) {
 		try {
 			URLConnection conn = url.openConnection();

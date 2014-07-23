@@ -20,7 +20,6 @@ import javajs.util.SB;
 import javajs.api.BytePoster;
 import javajs.api.GenericFileInterface;
 import javajs.api.GenericPlatform;
-import javajs.api.JSInterface;
 import javajs.api.PlatformViewer;
 import javajs.awt.Dimension;
 
@@ -58,7 +57,7 @@ import jspecview.tree.SimpleTree;
  * @author Bob Hanson hansonr@stolaf.edu
  * 
  */
-public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
+public class JSViewer implements PlatformViewer, BytePoster  {
 
 	public final static String sourceLabel = "Original...";
 
@@ -116,7 +115,7 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 	public String appletID;
 	public String fullName;
 	public String syncID;
-	public Object applet; // will be an JavaScript object if this is JavaScript
+	public Object html5Applet; // will be an JavaScript object if this is JavaScript
 
 	public Object display;
 	
@@ -1332,12 +1331,12 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 	public void load(String value, String script) {
 		/**
 		 * When part of a view set, route all internal 
-		 * database requests through this.applet._search.  
+		 * database requests through this.html5Applet._search.  
 		 * 
 		 * @j2sNative
 		 * 
-		 * if (this.applet._viewSet != null && !value.startsWith("ID"))
-		 *    return this.applet._search(value);
+		 * if (this.html5Applet._viewSet != null && !value.startsWith("ID"))
+		 *    return this.html5Applet._search(value);
 		 *    
 		 */
 		// load   (alone) just runs defaultLoadScript
@@ -1615,7 +1614,6 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 		setScreenDimension(wh[0], wh[1]);
 	}
 
-	@Override
 	public void setScreenDimension(int width, int height) {
 		// There is a bug in Netscape 4.7*+MacOS 9 when comparing dimension objects
 		// so don't try dim1.equals(dim2)
@@ -1642,11 +1640,8 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 	/**
 	 * for JavaScript only; this is the call to draw the spectrum
 	 * 
-	 * @param width
-	 * @param height
 	 */
-	@Override
-	public void updateJS(int width, int height) {
+	public void updateJS() {
 		if (selectedPanel != null)
 			selectedPanel.paintComponent(apiPlatform.getGraphics(null));
 	}
@@ -1661,41 +1656,21 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 	 * @param time
 	 * @return t/f
 	 */
-	@Override
 	public boolean processMouseEvent(int id, int x, int y, int modifiers,
 			long time) {
 		return (selectedPanel != null && selectedPanel.processMouseEvent(id, x,
 				y, modifiers, time));
 	}
 
-	@Override
 	public void processTwoPointGesture(float[][][] touches) {
 		if (!isClosed())
 			selectedPanel.processTwoPointGesture(touches);
 	}
 
-	@Override
 	public Object getApplet() {
-		return applet;
+		return html5Applet;
 	}
 
-	@Override
-	public void startHoverWatcher(boolean enable) {
-		// n/a?
-	}
-
-	@Override
-	public int cacheFileByName(String fileName, boolean isAdd) {
-		// n/a
-		return 0;
-	}
-
-	@Override
-	public void cachePut(String key, Object data) {
-		// n/a
-	}
-
-	@Override
 	public void openFileAsyncSpecial(String fileName, int flags) {
 		String ans = (currentSource == null ? "NO" : getDialogManager()
 				.getDialogInput(this,
@@ -2007,7 +1982,7 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 					 */
 					{
 					}
-					this.applet = applet;
+					this.html5Applet = applet;
 					break;
 				case AUTOINTEGRATE:
 					autoIntegrate = Parameters.isTrue(value);
@@ -2059,10 +2034,5 @@ public class JSViewer implements PlatformViewer, JSInterface, BytePoster  {
 		return (int) pt.x + "," + (int) pt.y + "," + (int) pt.z;
 	}
 
-	@Override
-	public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 }

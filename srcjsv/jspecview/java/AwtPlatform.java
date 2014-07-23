@@ -4,6 +4,8 @@ import java.awt.Container;
 import java.awt.Frame;
 import java.awt.GraphicsEnvironment;
 import java.awt.Window;
+import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,6 +17,7 @@ import javajs.api.GenericPlatform;
 import javajs.api.PlatformViewer;
 import javajs.awt.Font;
 import javajs.util.P3;
+import javajs.util.Rdr;
 
 import javax.swing.JDialog;
 
@@ -261,13 +264,18 @@ public class AwtPlatform implements GenericPlatform {
   }
 
   @Override
-	public String getDateFormat(boolean isoiec8824) {
-    return (isoiec8824 ? "D:"
-        + new SimpleDateFormat("YYYYMMddHHmmssX").format(new Date()) + "'00'"
-        : (new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z"))
-            .format(new Date()));
+  public String getDateFormat(String isoType) {
+    if (isoType == null) {
+      isoType = "EEE, d MMM yyyy HH:mm:ss Z";
+    } else if (isoType.contains("8824")) {
+      return "D:" + new SimpleDateFormat("YYYYMMddHHmmssX").format(new Date())
+          + "'00'";
+    } else if (isoType.contains("8601")) {
+      return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date());
+    }
+    return new SimpleDateFormat(isoType).format(new Date());
   }
-  
+	
   @Override
 	public GenericFileInterface newFile(String name) {
     return new AwtFile(name);
@@ -279,9 +287,15 @@ public class AwtPlatform implements GenericPlatform {
   }
 
   @Override
-	public Object getBufferedURLInputStream(URL url, byte[] outputBytes,
-                                          String post) {
-    return AwtFile.getBufferedURLInputStream(url, outputBytes, post);
+  public Object getURLContents(URL url, byte[] outputBytes, String post,
+      boolean asString) {
+    Object ret = AwtFile.getURLContents(url, outputBytes, post);
+    try {
+      return (!asString ? ret : ret instanceof String ? ret : new String(
+          (byte[]) Rdr.getStreamAsBytes((BufferedInputStream) ret, null)));
+    } catch (IOException e) {
+      return "" + e;
+    }
   }
 
 	@Override
@@ -289,5 +303,6 @@ public class AwtPlatform implements GenericPlatform {
 		// not used in JSpecView
 		return null;
 	}
+
 
 }

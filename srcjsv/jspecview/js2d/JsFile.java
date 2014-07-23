@@ -58,7 +58,7 @@ class JsFile implements GenericFileInterface {
 		return 0; // can't do this, shouldn't be necessary
 	}
 
-  static Object getBufferedURLInputStream(URL url, byte[] outputBytes,
+  static Object getURLContents(URL url, byte[] outputBytes,
       String post) {
     try {
       AjaxURLConnection conn = (AjaxURLConnection) url.openConnection();
@@ -66,7 +66,7 @@ class JsFile implements GenericFileInterface {
         conn.outputBytes(outputBytes);
       else if (post != null)
         conn.outputString(post);
-      return conn.getSB();
+      return conn.getContents();
     } catch (Exception e) {
       return e.toString();
     }
