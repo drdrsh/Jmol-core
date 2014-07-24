@@ -92,7 +92,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
 
   protected void init(Object applet) {
     appletObject = applet;
-    htmlName = getJmolParameter("name");
+    htmlName = PT.split(getJmolParameter("name"), "_object")[0];
     syncId = getJmolParameter("syncId");
     fullName = htmlName + "__" + syncId + "__";
     System.out.println("Jmol JavaScript applet " + fullName + " initializing");

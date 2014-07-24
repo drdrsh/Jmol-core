@@ -5916,7 +5916,8 @@ public class CmdExt implements JmolCmdExtension {
         if (t != null) {
           type = SV.sValue(t).toUpperCase();
           isCoord = (t.tok == T.coord);
-          pt++;
+          if (isCoord)
+            pt++;
         }
         if (PT.isOneOf(type, driverList.toUpperCase())) {
           // povray, maya, vrml, idtf

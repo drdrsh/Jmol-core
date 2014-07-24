@@ -31,7 +31,6 @@ import java.util.Map.Entry;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.PT;
 
 import org.jmol.util.Logger;
 
@@ -79,7 +78,7 @@ public class T {
   public final static String[] astrType;
   
   static {
-    astrType = PT.split("nada identifier integer decimal string seqcode hash array point point4 bitset matrix3f matrix4f array hash bytearray keyword"," ");    
+    astrType = "nada identifier integer decimal string seqcode hash array point point4 bitset matrix3f matrix4f array hash bytearray keyword".split(" ");    
   }
 
   public final static int nada       =  0;
