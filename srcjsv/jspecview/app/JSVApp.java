@@ -650,7 +650,7 @@ public class JSVApp implements PanelListener, JSVAppInterface {
 	@Override
 	public String siLoaded(String value) {
 		if (loadFileCallbackFunctionName != null)
-			appletFrame.callToJavaScript(loadFileCallbackFunctionName, new Object[] { vwr.appletID,
+			appletFrame.callToJavaScript(loadFileCallbackFunctionName, new Object[] { vwr.appletName,
 					value });
 		updateJSView(null);
 		return null;

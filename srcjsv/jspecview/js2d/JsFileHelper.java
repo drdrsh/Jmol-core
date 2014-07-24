@@ -66,7 +66,7 @@ public class JsFileHelper implements JSVFileHelper {
 	}
 
   /**
-   * Called by Jmol._loadFileAsyncDone(this.vwr.applet). Allows for callback
+   * Called by Jmol._loadFileAsyncDone(this.vwr.html5Applet). Allows for callback
    * to set the file name.
    * 
    * @param fileName

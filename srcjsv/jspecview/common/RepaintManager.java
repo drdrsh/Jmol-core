@@ -19,11 +19,13 @@ public class RepaintManager {
     }
     repaintPending = true;
     vwr.pd().taintedAll = true;
+    @SuppressWarnings("unused")
+		Object applet = vwr.html5Applet;
     /**
      * @j2sNative
      * 
-     *  if (typeof Jmol != "undefined" && Jmol._repaint && this.vwr.applet) 
-     *    Jmol._repaint(this.vwr.applet, false);
+     *  if (typeof Jmol != "undefined" && Jmol._repaint && applet) 
+     *    Jmol._repaint(applet, false);
      *  this.repaintDone();
      */
     {

@@ -112,7 +112,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 
 	private String recentScript = "";
 
-	public String appletID;
+	public String appletName;
 	public String fullName;
 	public String syncID;
 	public Object html5Applet; // will be an JavaScript object if this is JavaScript
@@ -1329,14 +1329,16 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 	}
 
 	public void load(String value, String script) {
+		@SuppressWarnings("unused")
+		Object applet = html5Applet;
 		/**
 		 * When part of a view set, route all internal 
 		 * database requests through this.html5Applet._search.  
 		 * 
 		 * @j2sNative
 		 * 
-		 * if (this.html5Applet._viewSet != null && !value.startsWith("ID"))
-		 *    return this.html5Applet._search(value);
+		 * if (applet._viewSet != null && !value.startsWith("ID"))
+		 *    return applet._search(value);
 		 *    
 		 */
 		// load   (alone) just runs defaultLoadScript
@@ -1969,8 +1971,8 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 				case UNKNOWN:
 					break;
 				case APPLETID:
-					fullName = appletID + "__" 
-				      + (appletID = value) + "__";
+					fullName = appletName + "__" 
+				      + (appletName = value) + "__";
 					Object applet = null;
 					/**
 					 * @j2sNative
@@ -2020,7 +2022,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 				// initialSpectrumNumber = Integer.parseInt(value);
 				// break;
 				case SYNCID:
-					fullName = appletID + "__" 
+					fullName = appletName + "__" 
 							+ (syncID = value) + "__";
 					break;
 				}

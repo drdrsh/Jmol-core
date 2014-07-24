@@ -130,7 +130,7 @@ public class JSVApplet extends JApplet implements JSVAppletInterface,
 		Logger.info(getAppletInfo());
 		if (app.appletReadyCallbackFunctionName != null && viewer.fullName != null)
 			callToJavaScript(app.appletReadyCallbackFunctionName, new Object[] {
-					viewer.appletID, viewer.fullName, Boolean.TRUE, this });
+					viewer.appletName, viewer.fullName, Boolean.TRUE, this });
 	}
 
 	private static final long serialVersionUID = 1L;

@@ -118,7 +118,7 @@ public class JSVApplet implements JSVAppletInterface,
 		
 		if (app.appletReadyCallbackFunctionName != null && viewer.fullName != null)
 			callToJavaScript(app.appletReadyCallbackFunctionName, new Object[] {
-					viewer.appletID, viewer.fullName, Boolean.TRUE, this });
+					viewer.appletName, viewer.fullName, Boolean.TRUE, this });
 	}
 
 	protected void initViewer() {
