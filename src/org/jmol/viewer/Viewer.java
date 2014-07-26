@@ -46,7 +46,7 @@ import org.jmol.modelset.StateScript;
 import org.jmol.modelset.TickInfo;
 
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
-import org.jmol.api.JmolDSSRParser;
+import org.jmol.api.JmolAnnotationParser;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolNMRInterface;
 import org.jmol.api.AtomIndexIterator;
@@ -2541,9 +2541,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         g.dsspCalcHydrogen, setStructure);
   }
 
-  private JmolDSSRParser dssrParser;  
-  public JmolDSSRParser getDSSRParser() {
-    return (dssrParser == null ? (dssrParser = (JmolDSSRParser) Interface.getOption("dssx.DSSRParser")) : dssrParser);
+  private JmolAnnotationParser annotationParser;  
+  public JmolAnnotationParser getAnnotationParser() {
+    return (annotationParser == null ? (annotationParser = (JmolAnnotationParser) Interface.getOption("dssx.AnnotationParser")) : annotationParser);
   }
 
   @Override
@@ -4155,15 +4155,20 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return Txt.formatStringS(s, "FILE", f);
     case '*':
       // European Bioinformatics Institute
-      if (name.startsWith("*note/")) {
-        //  *note/annotation/type/xxxx
+      if (name.startsWith("*ann/")) {
+        //  *ann/.../.../.../xxxx
         int pt = name.lastIndexOf("/");
         f = name.substring(pt + 1);
-        format = name.substring(6, pt);
-        if (format.equals("all"))
-          format = "mappings";
+        format = (pt > 4 ? name.substring(5) : "mappings");
+        return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
+      } else       if (name.startsWith("*val/")) {
+        //  *val/.../.../.../xxxx
+        int ptv = name.lastIndexOf("/");
+        f = name.substring(ptv + 1);
+        format = (ptv > 4 ? name.substring(5) : "validation/outliers/all");
         return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
       }
+      // these are processed in SmarterJmolAdapter
       return g.resolveDataBase("pdbe", f);
     case ':': // PubChem
       format = g.pubChemFormat;
@@ -9678,8 +9683,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return getScriptManager() != null  && eval.checkSelect(h, value);
   }
 
-  public String getAnnotationInfo(SV d, String match) {
-    return getDSSRParser().getAnnotationInfo(d, match);
+  public String getAnnotationInfo(SV d, String match, int type) {
+    return getAnnotationParser().getAnnotationInfo(d, match, type);
   }
-
 }

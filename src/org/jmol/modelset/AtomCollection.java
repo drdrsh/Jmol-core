@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolEnvCalc;
 import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.RadiusData;
@@ -911,7 +912,7 @@ abstract public class AtomCollection {
         taintAtom(atomIndex, (byte) type);
       }
       if (type == TAINT_MAX && n > 0)
-        vwr.setData(name, new Object[] {name, fData, bs, Integer.valueOf(1)}, 0, 0, 0, 0, 0);
+        vwr.setData(name, new Object[] {name, fData, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_AF)}, 0, 0, 0, 0, 0);
         
     } catch (Exception e) {
       Logger.error("AtomCollection.loadData error: " + e);

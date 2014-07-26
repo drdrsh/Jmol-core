@@ -168,10 +168,10 @@ public class V3000Rdr {
       return;
     for (String key : userData.keySet()) {
       String[] a = userData.get(key);
-      SB sb = new SB();
+      float[] f = new float[a.length];
       for (int i = 0; i < a.length; i++)
-        sb.append(a[i] == null ? "0" : a[i]).appendC('\n');
-      mr.asc.setAtomSetAtomProperty(key, sb.toString(), -1);
+        f[i] = (a[i] == null ? 0 : mr.parseFloatStr(a[i]));
+      mr.asc.setAtomProperties(key, f, -1);
     }
   }
 

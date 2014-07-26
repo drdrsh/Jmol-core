@@ -42,6 +42,7 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterBondIterator;
 import org.jmol.api.JmolBioResolver;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
@@ -407,22 +408,23 @@ public final class ModelLoader {
   @SuppressWarnings("unchecked")
   private void setAtomProperties() {
     // Crystal reader, PDB tlsGroup
+    // assumes String line-encoded float[] or just float[] values
     int modelCount = ms.mc;
     for (int i = baseModelIndex; i < modelCount; i++) {
-      Map<String, String> atomProperties = (Map<String, String>) ms.getInfo(i,
+      Map<String, Object> atomProperties = (Map<String, Object>) ms.getInfo(i,
           "atomProperties");
       if (atomProperties == null)
         continue;
-      for (Map.Entry<String, String> entry : atomProperties.entrySet()) {
+      for (Map.Entry<String, Object> entry : atomProperties.entrySet()) {
         String key = entry.getKey();
-        String value = entry.getValue();
+        Object value = entry.getValue();
         // no deletions yet...
         BS bs = ms.getModelAtomBitSetIncludingDeleted(i, true);
         if (doAddHydrogens)
           value = jbr.fixPropertyValue(bs, value);
         key = "property_" + key.toLowerCase();
         Logger.info("creating " + key + " for model " + ms.getModelName(i));
-        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(0), Boolean.FALSE }, ms.ac, 0,
+        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE }, ms.ac, 0,
             0, Integer.MAX_VALUE, 0);
       }
     }

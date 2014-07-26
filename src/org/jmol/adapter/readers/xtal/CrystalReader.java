@@ -1052,9 +1052,9 @@ public class CrystalReader extends AtomSetCollectionReader {
    */
   private boolean readData(String name, int nfields) throws Exception {
     createAtomsFromCoordLines();
-    String[] s = new String[ac];
+    float[] f = new float[ac];
     for (int i = 0; i < ac; i++)
-      s[i] = "0";
+      f[i] = 0;
     String data = "";
     while (rd() != null && (line.length() < 4 || Character.isDigit(line.charAt(3))))
       data += line;
@@ -1063,10 +1063,9 @@ public class CrystalReader extends AtomSetCollectionReader {
     for (int i = 0, pt = nfields - 1; i < ac; i++, pt += nfields) {
       int iConv = getAtomIndexFromPrimitiveIndex(i);
       if (iConv >= 0)
-        s[iConv] = tokens[pt];
+        f[iConv] = parseFloatStr(tokens[pt]);
     }
-    data = PT.join(s, '\n', 0);
-    asc.setAtomSetAtomProperty(name, data, -1);
+    asc.setAtomProperties(name, f, -1);
     return true;
   }
 

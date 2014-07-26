@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.MepCalculationInterface;
 import org.jmol.api.MinimizerInterface;
 import org.jmol.api.SymmetryInterface;
@@ -393,7 +394,7 @@ public class CmdExt implements JmolCmdExtension {
         case T.dssr:
           if (chk)
             return;
-          e.showString(vwr.getDSSRParser().calculateStructure(vwr, bs1));
+          e.showString(vwr.getAnnotationParser().calculateDSSRStructure(vwr, bs1));
           return;
         case T.dssp:
           asDSSP = true;
@@ -2559,7 +2560,7 @@ public class CmdExt implements JmolCmdExtension {
       for (int ie = 1; ie <= n; ie++)
         eArray[ie] = ie;
       d[2] = eArray;
-      d[3] = Integer.valueOf(0);
+      d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
       vwr.setData("element_vdw", d, n, 0, 0, 0, 0);
       return;
     }
@@ -2567,7 +2568,7 @@ public class CmdExt implements JmolCmdExtension {
       // data2d_someName
       d[0] = dataLabel;
       d[1] = parseDataArray(dataString, false);
-      d[3] = Integer.valueOf(2);
+      d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_AFF);
       vwr.setData(dataLabel, d, 0, 0, 0, 0, 0);
       return;
     }
@@ -2575,7 +2576,7 @@ public class CmdExt implements JmolCmdExtension {
       // data3d_someName
       d[0] = dataLabel;
       d[1] = parseDataArray(dataString, true);
-      d[3] = Integer.valueOf(3);
+      d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_AFFF);
       vwr.setData(dataLabel, d, 0, 0, 0, 0, 0);
       return;
     }
@@ -2632,7 +2633,7 @@ public class CmdExt implements JmolCmdExtension {
         d[2] = BSUtil.copy(bs);
       }
       d[1] = dataString;
-      d[3] = Integer.valueOf(0);
+      d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
       vwr.setData(dataType, d, ac, atomNumberField,
           atomNumberFieldColumnCount, propertyField, propertyFieldColumnCount);
       return;
@@ -2646,7 +2647,7 @@ public class CmdExt implements JmolCmdExtension {
     // this is just information to be stored.
     d[0] = dataLabel;
     d[1] = dataString;
-    d[3] = Integer.valueOf(0);
+    d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
     vwr.setData(dataType, d, 0, 0, 0, 0, 0);
   }
 
@@ -4646,9 +4647,10 @@ public class CmdExt implements JmolCmdExtension {
             dataOut[(isProperty ? pt : nOut)] = F.floatValue();
             nOut++;
           }
+          // note: this was DATA_TYPE_STRING ?? 
           if (isProperty)
             vwr.setData(property2, new Object[] { property2, dataOut, bsOut,
-                Integer.valueOf(0), Boolean.TRUE }, vwr.getAtomCount(), 0,
+                Integer.valueOf(JmolDataManager.DATA_TYPE_AF), Boolean.TRUE }, vwr.getAtomCount(), 0,
                 0, Integer.MAX_VALUE, 0);
           else
             vwr.setAtomProperty(bsOut, tokProp2, 0, 0, null, dataOut, null);
@@ -6358,9 +6360,22 @@ public class CmdExt implements JmolCmdExtension {
       if (!chk) {
         Object d = vwr.ms.getInfo(vwr.am.cmi, "annotations");
         if (d instanceof SV)
-          msg = vwr.getAnnotationInfo((SV)d, e.optParameterAsString(2));
+          msg = vwr.getAnnotationInfo((SV) d, e.optParameterAsString(2),
+              T.annotations);
         else
           msg = "no annotation information has been loaded";
+      }
+      break;
+    case T.validation:
+      e.checkLength23();
+      len = st.length;
+      if (!chk) {
+        Object d = vwr.ms.getInfo(vwr.am.cmi, "validation");
+        if (d instanceof SV)
+          msg = vwr.getAnnotationInfo((SV) d, e.optParameterAsString(2),
+              T.validation);
+        else
+          msg = "no validation information has been loaded";
       }
       break;
     case T.cache:
@@ -6375,7 +6390,8 @@ public class CmdExt implements JmolCmdExtension {
         if (d == null)
           msg = "no DSSR information has been read";
         else if (len > 2)
-          msg = SV.getVariable(vwr.extractProperty(d, stringParameter(2), -1)).asString();
+          msg = SV.getVariable(vwr.extractProperty(d, stringParameter(2), -1))
+              .asString();
         else
           msg = "" + SV.getVariable(d).asString();
       }
@@ -6433,15 +6449,17 @@ public class CmdExt implements JmolCmdExtension {
     case T.symop:
       String type;
       int iop = 0;
-      P3 pt1 = null, pt2 = null;
+      P3 pt1 = null,
+      pt2 = null;
       if (slen > 3 && tokAt(3) != T.string) {
         pt1 = centerParameter(2);
         pt2 = centerParameter(++e.iToken);
       } else {
         // show symop 3 "fmatrix"
-       iop = (tokAt(2) == T.integer ? intParameter(2) : 0);
+        iop = (tokAt(2) == T.integer ? intParameter(2) : 0);
       }
-      type = (tokAt(e.iToken + 1) == T.string ? stringParameter(++e.iToken) : null);
+      type = (tokAt(e.iToken + 1) == T.string ? stringParameter(++e.iToken)
+          : null);
       checkLength(len = ++e.iToken);
       if (!chk)
         msg = vwr.getSymmetryOperation(iop, pt1, pt2, type);
@@ -6489,8 +6507,8 @@ public class CmdExt implements JmolCmdExtension {
         return;
       int modelIndex = vwr.am.cmi;
       if (modelIndex < 0)
-        e.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK,
-            "show " + e.theToken.value);
+        e.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK, "show "
+            + e.theToken.value);
       msg = plot(st);
       len = slen;
       break;
@@ -6508,8 +6526,8 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.variables:
       if (!chk)
-        msg = vwr.getAtomDefs(e.definedAtomSets)
-            + vwr.g.getVariableList() + getContext(true);
+        msg = vwr.getAtomDefs(e.definedAtomSets) + vwr.g.getVariableList()
+            + getContext(true);
       break;
     case T.trajectory:
       if (!chk)
@@ -6525,8 +6543,7 @@ public class CmdExt implements JmolCmdExtension {
       value = "" + vwr.getBoolean(T.debugscript);
       break;
     case T.strandcount:
-      msg = "set strandCountForStrands "
-          + vwr.getStrandCount(JC.SHAPE_STRANDS)
+      msg = "set strandCountForStrands " + vwr.getStrandCount(JC.SHAPE_STRANDS)
           + "; set strandCountForMeshRibbon "
           + vwr.getStrandCount(JC.SHAPE_MESHRIBBON);
       break;
@@ -6852,11 +6869,12 @@ public class CmdExt implements JmolCmdExtension {
     case T.var:
       str = paramAsStr(len++);
       SV v = (SV) e.getParameter(str, T.variable, true);
-      if (tok == T.json) {
-        msg = v.toJSON();
-      } else {
-        msg = v.escape();
-      }
+      if (!chk)
+        if (tok == T.json) {
+          msg = v.toJSON();
+        } else {
+          msg = v.escape();
+        }
       break;
     }
     checkLength(len);
@@ -6870,7 +6888,8 @@ public class CmdExt implements JmolCmdExtension {
       if (str.indexOf(" ") >= 0)
         showString(str);
       else
-        showString(str + " = " + ((SV) e.getParameter(str, T.variable, true)).escape());
+        showString(str + " = "
+            + ((SV) e.getParameter(str, T.variable, true)).escape());
     }
   }
 

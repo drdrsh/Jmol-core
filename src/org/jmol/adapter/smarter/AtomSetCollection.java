@@ -64,13 +64,16 @@ public class AtomSetCollection {
 
   private final static String[] globalBooleans = {
       "someModelsHaveFractionalCoordinates", "someModelsHaveSymmetry",
-      "someModelsHaveUnitcells", "someModelsHaveCONECT", "isPDB" };
+      "someModelsHaveUnitcells", "someModelsHaveCONECT", "isPDB", "someModelsHaveAnnotations", "someModelsHaveValidations" };
 
   public final static int GLOBAL_FRACTCOORD = 0;
   public final static int GLOBAL_SYMMETRY = 1;
   public final static int GLOBAL_UNITCELLS = 2;
   public final static int GLOBAL_CONECT = 3;
   public final static int GLOBAL_ISPDB = 4;
+  public final static int GLOBAL_ANNOTATIONS = 5;
+  public final static int GLOBAL_VALIDATIONS = 6;
+  
 
   public void clearGlobalBoolean(int globalIndex) {
     ascAuxiliaryInfo.remove(globalBooleans[globalIndex]);
@@ -94,7 +97,7 @@ public class AtomSetCollection {
   public int iSet = -1;
 
   private int[] atomSetNumbers = new int[16];
-  private int[] atomSetAtomIndexes = new int[16];
+  public int[] atomSetAtomIndexes = new int[16];
   private int[] atomSetAtomCounts = new int[16];
   private int[] atomSetBondCounts = new int[16];
   private Map<String, Object>[] atomSetAuxiliaryInfo = new Hashtable[16];
@@ -1007,16 +1010,16 @@ public class AtomSetCollection {
       p.put(key.substring(1), value);
   }
 
-  public void setAtomSetAtomProperty(String key, String data, int atomSetIndex) {
-    if (!data.endsWith("\n"))
-      data += "\n";
+  public void setAtomProperties(String key, Object data, int atomSetIndex) {
+    if (data instanceof String && !((String) data).endsWith("\n"))
+      data = data + "\n";
     if (atomSetIndex < 0)
       atomSetIndex = iSet;
-    Map<String, String> p = (Map<String, String>) getAtomSetAuxiliaryInfoValue(
+    Map<String, Object> p = (Map<String, Object>) getAtomSetAuxiliaryInfoValue(
         atomSetIndex, "atomProperties");
     if (p == null)
       setAtomSetAuxiliaryInfoForSet("atomProperties",
-          p = new Hashtable<String, String>(), atomSetIndex);
+          p = new Hashtable<String, Object>(), atomSetIndex);
     p.put(key, data);
   }
 

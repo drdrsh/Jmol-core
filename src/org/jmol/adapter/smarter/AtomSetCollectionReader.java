@@ -30,7 +30,6 @@ import java.util.Map;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
-import org.jmol.api.JmolDSSRParser;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
 import org.jmol.script.SV;
@@ -145,6 +144,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Map<String, Object> htParams;
   public Lst<P3[]> trajectorySteps;
   private Object annotations;
+  public Object validation;
 
   //protected String parameterData;
 
@@ -220,6 +220,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected int stateScriptVersionInt = Integer.MAX_VALUE; // for compatibility PDB reader Jmol 12.0.RC24 fix 
   // http://jmol.svn.sourceforge.net/viewvc/jmol/trunk/Jmol/src/org/jmol/adapter/readers/cifpdb/PdbReader.java?r1=13502&r2=13525
 
+  public int baseAtomIndex;
+
   protected void setup(String fullPath, Map<String, Object> htParams, Object reader) {
     setupASCR(fullPath, htParams, reader);
   }
@@ -268,7 +270,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   private void fixBaseIndices() {
     try {
-    int baseAtomIndex = ((Integer) htParams.get("baseAtomIndex")).intValue();
     int baseModelIndex = ((Integer) htParams.get("baseModelIndex")).intValue();
     baseAtomIndex += asc.ac;
     baseModelIndex += asc.atomSetCount;
@@ -372,6 +373,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       asc.centralize();
     Map<String, Object>info = asc.getAtomSetAuxiliaryInfo(0);
     if (annotations != null && info != null) {
+      asc.setGlobalBoolean(AtomSetCollection.GLOBAL_ANNOTATIONS); 
       String s = ((SV) annotations).getMapKeys(2, true);
       int pt = s.indexOf("{ ", 2);
       if (pt >= 0)
@@ -383,7 +385,12 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         info = asc.getAtomSetAuxiliaryInfo(i);
         info.put("annotations", annotations);
       }
-      addJmolScript("select * or within(annotations,'*')");
+    }
+    if (validation != null && info != null) {
+      for (int i = asc.atomSetCount; --i >= 0;) {
+        info = asc.getAtomSetAuxiliaryInfo(i);
+        info.put("validation", validation);
+      }
     }
     setLoadNote();
   }
@@ -471,6 +478,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   @SuppressWarnings("unchecked")
   private void initialize() {
+    baseAtomIndex = ((Integer) htParams.get("baseAtomIndex")).intValue();
     Object o = htParams.get("supercell");
     if (o instanceof String)
       strSupercell = (String) o;
@@ -591,6 +599,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       // with appendNew == false and UNITCELL parameter, we assume fractional coordinates
     }
     annotations = htParams.get("annotations");
+    validation = htParams.get("validations");
   }
 
   protected void initializeSymmetryOptions() {
@@ -1692,10 +1701,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return line;
   }
 
-  protected void processDSSR(GenericLineReader reader, Map<String, String> htGroup1) throws Exception {
-    appendLoadNote(((JmolDSSRParser) Interface.getOption("dssx.DSSRParser")).process(
-        asc.getAtomSetAuxiliaryInfo(Integer.MAX_VALUE), reader, line, htGroup1));
-    
+  protected void processDSSR(GenericLineReader reader,
+                             Map<String, String> htGroup1) throws Exception {
+    String s = vwr.getAnnotationParser().processDSSR(
+        asc.getAtomSetAuxiliaryInfo(Integer.MAX_VALUE), reader, line, htGroup1);
+    appendLoadNote(s);
   }
 
   public void appendUunitCellInfo(String info) {

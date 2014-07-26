@@ -352,6 +352,7 @@ public class CifReader extends AtomSetCollectionReader {
     chemicalName = "";
     thisStructuralFormula = "";
     thisFormula = "";
+    iHaveDesiredModel = isLastModel(modelNumber);
     if (isCourseGrained)
       asc.setAtomSetAuxiliaryInfo("courseGrained", Boolean.TRUE);
     if (nAtoms0 == asc.ac) {
@@ -361,7 +362,6 @@ public class CifReader extends AtomSetCollectionReader {
       asc.removeCurrentAtomSet();
     } else {
       applySymmetryAndSetTrajectory();
-      iHaveDesiredModel = isLastModel(modelNumber);
     }
   }
 
@@ -414,6 +414,13 @@ public class CifReader extends AtomSetCollectionReader {
     if (isPDB)
       asc.setCheckSpecial(false);
     boolean doCheckBonding = doCheckUnitCell && !isPDB;
+    if (isPDB) {
+      int modelIndex = asc.iSet;
+      asc.setAtomSetAuxiliaryInfo(
+          "PDB_CONECT_firstAtom_count_max",
+          new int[] { asc.getAtomSetAtomIndex(modelIndex),
+              asc.getAtomSetAtomCount(modelIndex), maxSerial });
+    }
     if (htCellTypes != null) {
       for (Entry<String, String> e : htCellTypes.entrySet())
         asc.setAtomSetAuxiliaryInfo("unitcell_" + e.getKey(), e.getValue());
@@ -685,6 +692,7 @@ public class CifReader extends AtomSetCollectionReader {
       asc.setAtomSetAuxiliaryInfo("chemicalName", chemicalName);
       asc.setAtomSetAuxiliaryInfo("structuralFormula", thisStructuralFormula);
       asc.setAtomSetAuxiliaryInfo("formula", thisFormula);
+      
       return;
     }
     if (key.startsWith("_symmetry_equiv_pos")
@@ -784,6 +792,7 @@ public class CifReader extends AtomSetCollectionReader {
   private String lastDisorderAssembly;
   private Lst<float[]> lattvecs;
   private Lst<String> centerings;
+  private int maxSerial;
 
   final private static byte ATOM_TYPE_SYMBOL = 0;
   final private static byte ATOM_TYPE_OXIDATION_NUMBER = 1;
@@ -1130,7 +1139,7 @@ public class CifReader extends AtomSetCollectionReader {
               strChain = field);
           break;
         case AUTH_SEQ_ID:
-          atom.sequenceNumber = parseIntStr(field);
+          maxSerial = Math.max(maxSerial, atom.sequenceNumber = parseIntStr(field));
           break;
         case INS_CODE:
           atom.insertionCode = firstChar;

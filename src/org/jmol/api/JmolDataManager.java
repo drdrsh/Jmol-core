@@ -9,6 +9,12 @@ import org.jmol.viewer.Viewer;
 
 public interface JmolDataManager {
 
+  public final static int DATA_TYPE_UNKNOWN = -1;
+  public final static int DATA_TYPE_STRING = 0;
+  public final static int DATA_TYPE_AF = 1;
+  public final static int DATA_TYPE_AFF = 2;
+  public final static int DATA_TYPE_AFFF = 3;
+
   JmolDataManager set(Viewer vwr);
 
   boolean getDataState(JmolStateCreator stateCreator, SB commands);

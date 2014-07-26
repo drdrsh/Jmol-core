@@ -16,6 +16,7 @@ import javajs.util.SB;
 import javajs.util.T3;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolDataManager;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
@@ -2079,8 +2080,9 @@ abstract class ScriptExpr extends ScriptParam {
           vwr.setData(
               propertyName,
               new Object[] { propertyName, obj, BSUtil.copy(bs),
-                  Integer.valueOf(tv.tok == T.varray ? 1 : 0) }, nAtoms, 0, 0,
-              tv.tok == T.varray ? Integer.MAX_VALUE : Integer.MIN_VALUE, 0);
+                  Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN) }, nAtoms,
+              0, 0, tv.tok == T.varray ? Integer.MAX_VALUE : Integer.MIN_VALUE,
+              0);
           break;
         }
         setBitsetProperty(bs, T.getTokFromName(propertyName), tv.asInt(),
@@ -2118,10 +2120,8 @@ abstract class ScriptExpr extends ScriptParam {
       if (tv.tok == T.varray)
         vv = tv.asString();
       // very inefficient!
-      vwr.setData(key,
-          new Object[] { key, "" + vv, BSUtil.copy(vwr.bsA()),
-              Integer.valueOf(0) }, vwr.getAtomCount(), 0, 0,
-          Integer.MIN_VALUE, 0);
+      vwr.setData(key, new Object[] { key, "" + vv, BSUtil.copy(vwr.bsA()),
+          Integer.valueOf(0) }, vwr.getAtomCount(), 0, 0, Integer.MIN_VALUE, 0);
       return null;
     }
 

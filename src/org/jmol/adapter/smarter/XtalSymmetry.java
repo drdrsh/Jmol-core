@@ -636,7 +636,7 @@ public class XtalSymmetry {
                 * operationCount, cartesians, ms, disableSymmetry);
         }
     if (iCell * noSymmetryCount == asc.ac - firstSymmetryAtom)
-      appendAtomProperties(iCell);
+      duplicateAtomProperties(iCell);
     setSymmetryOps();
     asc.setAtomSetAuxiliaryInfo("presymmetryAtomIndex",
         Integer.valueOf(firstSymmetryAtom));
@@ -835,20 +835,26 @@ public class XtalSymmetry {
   }
 
   @SuppressWarnings("unchecked")
-  private void appendAtomProperties(int nTimes) {
-    Map<String, String> p = (Map<String, String>) asc
+  private void duplicateAtomProperties(int nTimes) {
+    Map<String, Object> p = (Map<String, Object>) asc
         .getAtomSetAuxiliaryInfoValue(-1, "atomProperties");
-    if (p == null) {
-      return;
-    }
-    for (Map.Entry<String, String> entry : p.entrySet()) {
-      String key = entry.getKey();
-      String data = entry.getValue();
-      SB s = new SB();
-      for (int i = nTimes; --i >= 0;)
-        s.append(data);
-      p.put(key, s.toString());
-    }
+    if (p != null)
+      for (Map.Entry<String, Object> entry : p.entrySet()) {
+        String key = entry.getKey();
+        Object val = entry.getValue();
+        if (val instanceof String) {
+          String data = (String) val;
+          SB s = new SB();
+          for (int i = nTimes; --i >= 0;)
+            s.append(data);
+          p.put(key, s.toString());
+        } else {
+          float[] f = (float[]) val;
+          float[] fnew = new float[f.length * nTimes];
+          for (int i = nTimes; --i >= 0;)
+            System.arraycopy(f, 0, fnew, i * f.length, f.length);
+        }
+      }
   }
 
   private void finalizeSymmetry(SymmetryInterface symmetry) {

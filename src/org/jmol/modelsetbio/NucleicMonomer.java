@@ -562,7 +562,7 @@ public boolean isCrossLinked(Group g) {
   
   public Lst<BasePair> getBasePairs() {
     if (!((NucleicPolymer) bioPolymer).isDssrSet)
-      bioPolymer.model.ms.vwr.getDSSRParser().setAllDSSRParametersForModel(bioPolymer.model.ms.vwr, bioPolymer.model.modelIndex);    
+      bioPolymer.model.ms.vwr.getAnnotationParser().setAllDSSRParametersForModel(bioPolymer.model.ms.vwr, bioPolymer.model.modelIndex);    
     return bps;
   }
 

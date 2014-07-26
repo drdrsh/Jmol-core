@@ -8,7 +8,7 @@ import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.Matrix;
 import javajs.util.P3;
-import javajs.util.SB;
+//import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
@@ -63,8 +63,8 @@ public class MSRdr implements MSInterface {
     return sigma;
   }
 
-  private double[] q1;
-  private P3 q1Norm;
+  //private double[] q1;
+  //private P3 q1Norm;
   private Map<String, double[]> htModulation;
   private Map<String, Lst<Modulation>> htAtomMods;
 
@@ -275,10 +275,11 @@ public class MSRdr implements MSInterface {
     if (cr.symmetry != null)
       nOps = cr.symmetry.getSpaceGroupOperationCount();
     iopLast = -1;
-    SB sb = new SB();
-    for (int i = cr.asc.getLastAtomSetAtomIndex(); i < n; i++)
-      modulateAtom(atoms[i], sb);
-    cr.asc.setAtomSetAtomProperty("modt", sb.toString(), -1);
+    int i0 = cr.asc.getLastAtomSetAtomIndex();
+    //float[] modT = new float[n - i0];
+    for (int i = i0; i < n; i++)
+      modulateAtom(atoms[i]);
+    //cr.asc.setProperty_Type("modt", sb.toString(), -1);
     htAtomMods = null;
     if (minXYZ0 != null)
       trimAtomSet();
@@ -308,12 +309,11 @@ public class MSRdr implements MSInterface {
       cr.appendUunitCellInfo("q" + (i + 1) + "=" + fixPt(pt[0]) + " " + fixPt(pt[1]) + " " + fixPt(pt[2]));
       sigma.getArray()[i] = new double[] { pt[0], pt[1], pt[2] };
     }
-    q1 = sigma.getArray()[0];
+    //q1 = sigma.getArray()[0];
 
     // q1Norm is used specifically for occupancy modulation, where dim = 1 only
 
-    q1Norm = P3
-        .new3(q1[0] == 0 ? 0 : 1, q1[1] == 0 ? 0 : 1, q1[2] == 0 ? 0 : 1);
+    //q1Norm = P3.new3(q1[0] == 0 ? 0 : 1, q1[1] == 0 ? 0 : 1, q1[2] == 0 ? 0 : 1);
     double[] pt;
 
     // Take care of loose ends.
@@ -626,9 +626,8 @@ public class MSRdr implements MSInterface {
    * one modT per dimension.
    * 
    * @param a
-   * @param sb
    */
-  private void modulateAtom(Atom a, SB sb) {
+  private void /*float*/ modulateAtom(Atom a) {
 
     // Modulation is based on an atom's first symmetry operation.
     // (Special positions should generate the same atom regardless of which operation is employed.)
@@ -646,7 +645,7 @@ public class MSRdr implements MSInterface {
       list = new Lst<Modulation>();
     }
     if (list == null || cr.symmetry == null || a.bsSymmetry == null)
-      return;
+      return;// 0;
 
     int iop = Math.max(a.bsSymmetry.nextSetBit(0), 0);
     if (modLast)
@@ -670,8 +669,8 @@ public class MSRdr implements MSInterface {
 
     // The magic happens here.
 
-    ModulationSet ms = new ModulationSet().setMod(a.index + " " + a.atomName, a,
-        modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a));
+    ModulationSet ms = new ModulationSet().setMod(a.index + " " + a.atomName,
+        a, modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a));
     ms.calculate(null, false);
 
     // ms parameter values are used to set occupancies, 
@@ -712,7 +711,7 @@ public class MSRdr implements MSInterface {
         // restore ORIGINAL (unrotated) anisotropy parameters
         a.anisoBorU = new float[8];
         for (int i = 0; i < 8; i++)
-            a.anisoBorU[i] = t.parBorU[i];
+          a.anisoBorU[i] = t.parBorU[i];
         t.isUnmodulated = true;
       }
       if (a.anisoBorU == null) {
@@ -748,14 +747,16 @@ public class MSRdr implements MSInterface {
     if (Float.isNaN(ms.x))
       ms.set(0, 0, 0);
     a.vib = ms;
-    // set property_modT to be Math.floor (q.r/|q|) -- really only for d=1
 
-    if (modVib || a.foccupancy != 0) {
-      float t = q1Norm.dot(a);
-      if (Math.abs(t - (int) t) > 0.001f)
-        t = (int) Math.floor(t);
-      sb.append(((int) t) + "\n");
-    }
+    // BH: removed 7/2014; not documented and not useful
+//    // set property_modT to be Math.floor (q.r/|q|) -- really only for d=1
+//
+//    if (!modVib && a.foccupancy == 0)
+//      return Float.NaN;
+//    float t = q1Norm.dot(a);
+//    if (Math.abs(t - (int) t) > 0.001f)
+//      t = (int) Math.floor(t);
+//    return (int) t;
   }
 
   /**

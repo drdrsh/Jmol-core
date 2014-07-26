@@ -4414,12 +4414,20 @@ public class ScriptEval extends ScriptExpr {
         filename = "fileSet";
         loadScript = null;
       } else if (!isConcat && filename.startsWith("*") && filename.indexOf("/") > 1) {
+        
+          // EBI annotations and validations
 
-          // load *1cbs/all  -->  load *1cbs + *note/all/1cbs
+          // load *1cbs/ann/xx/xx  -->  load *1cbs + *ann/xx/xx/1cbs
+          // load *1cbs/val/xx/xx  -->  load *1cbs + *val/xx/xx/1cbs
+          // load *1cbs/map/xx/xx  -->  load *1cbs + *map/xx/xx/1cbs electron density?
 
           isConcat = true;
-          String[] tokens = PT.split(filename,"/");
-          filenames = new String[] { tokens[0], "*note/" + tokens[1] + "/" + tokens[0].substring(1) };
+          int pt = filename.indexOf("/");
+          String id = filename.substring(1, pt);
+          String ext = filename.substring(pt + 1);          
+          filenames = (ext.equals("all") ? 
+            new String[] { "*" + id, "*ann/" + id ,  "*val/" + id }
+          : new String[] { "*" + id, "*" + ext + "/" + id });
           filename = "fileSet";
           loadScript = null;
       } else {

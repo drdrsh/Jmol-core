@@ -621,22 +621,19 @@ Species   Ion     s      p      d      f     Total  Charge (e)
     boolean haveSpin = (line.indexOf("Spin") >= 0);
     rd();
     Atom[] atoms = asc.atoms;
-    String[] spins = (haveSpin ? new String[atoms.length] : null);
+    float[] spins = (haveSpin ? new float[atoms.length] : null);
     if (spins != null)
       for (int i = 0; i < spins.length; i++)
-        spins[i] = "0";
+        spins[i] = 0;
     while (rd() != null && line.indexOf('=') < 0) {
       int index = readOutputAtomIndex();
       float charge = parseFloatStr(tokens[haveSpin ? tokens.length - 2 : tokens.length - 1]);
       atoms[index].partialCharge = charge;
       if (haveSpin)
-        spins[index] = tokens[tokens.length - 1];
+        spins[index] = parseFloatStr(tokens[tokens.length - 1]);
     }
-    if (haveSpin) {
-      String data = PT.join(spins, '\n', 0);
-      asc.setAtomSetAtomProperty("spin", data, -1);
-    }
-
+    if (haveSpin)
+      asc.setAtomProperties("spin", spins, -1);
     
   }
 

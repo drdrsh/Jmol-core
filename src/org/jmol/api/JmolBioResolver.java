@@ -27,7 +27,7 @@ public interface JmolBioResolver {
 
   public void initialize(ModelLoader modelLoader);
 
-  public String fixPropertyValue(BS bsAtoms, String data);
+  public Object fixPropertyValue(BS bsAtoms, Object data);
 
   public Model getBioModel(int modelIndex,
                         int trajectoryBaseIndex, String jmolData,

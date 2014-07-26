@@ -364,16 +364,17 @@ public class FileManager implements BytePoster {
         : null);
   }
 
-  public Object getBufferedInputStreamOrErrorMessageFromName(
-                                                             String name,
+  public Object getBufferedInputStreamOrErrorMessageFromName(String name,
                                                              String fullName,
                                                              boolean showMsg,
                                                              boolean checkOnly,
                                                              byte[] outputBytes,
-                                                             boolean allowReader, boolean allowCached) {
+                                                             boolean allowReader,
+                                                             boolean allowCached) {
     byte[] cacheBytes = null;
     if (allowCached && outputBytes == null) {
-      cacheBytes = (fullName == null || jmb.pngjCache == null ? null : getCachedPngjBytes(fullName));
+      cacheBytes = (fullName == null || jmb.pngjCache == null ? null
+          : getCachedPngjBytes(fullName));
       if (cacheBytes == null)
         cacheBytes = (byte[]) cacheGet(name, true);
     }
@@ -386,15 +387,16 @@ public class FileManager implements BytePoster {
         boolean isPngjPost = (isPngjBinaryPost || name.indexOf("?POST?_PNGJ_") >= 0);
         if (name.indexOf("?POST?_PNG_") > 0 || isPngjPost) {
           String[] errMsg = new String[1];
-          byte[] bytes = vwr.getImageAsBytes(isPngjPost ? "PNGJ" : "PNG", 0, 0, -1, errMsg);
+          byte[] bytes = vwr.getImageAsBytes(isPngjPost ? "PNGJ" : "PNG", 0, 0,
+              -1, errMsg);
           if (errMsg[0] != null)
             return errMsg[0];
           if (isPngjBinaryPost) {
             outputBytes = bytes;
             name = PT.rep(name, "?_", "=_");
           } else {
-            name = new SB().append(name).append("=").appendSB(
-                Base64.getBase64(bytes)).toString();
+            name = new SB().append(name).append("=")
+                .appendSB(Base64.getBase64(bytes)).toString();
           }
         }
         int iurl = urlTypeIndex(name);
@@ -420,6 +422,17 @@ public class FileManager implements BytePoster {
             Logger.info("FileManager opening 1 " + name);
           // note that in the case of JS, this is a javajs.util.SB.
           ret = vwr.apiPlatform.getURLContents(url, outputBytes, post, false);
+          if (ret instanceof String && ((String) ret).startsWith("java.")
+              && name.startsWith("http://ves-hx-89.ebi.ac.uk")) {
+            // temporary bypass for EBI firewalled development server
+            // defaulting to current directory and JSON file
+            name = "http://chemapps.stolaf.edu/jmol/jsmol/data/" 
+            + name.substring(name.lastIndexOf("/") + 1) 
+            + (name.indexOf("/val") >= 0 ? ".val" : ".ann") + ".json";
+            ret = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
+                showMsg, checkOnly, outputBytes, allowReader, allowCached);
+          }
+
           byte[] bytes = null;
           if (ret instanceof SB) {
             SB sb = (SB) ret;
@@ -431,7 +444,8 @@ public class FileManager implements BytePoster {
           }
           if (bytes != null)
             ret = Rdr.getBIS(bytes);
-        } else if (!allowCached || (cacheBytes = (byte[]) cacheGet(name, true)) == null) {
+        } else if (!allowCached
+            || (cacheBytes = (byte[]) cacheGet(name, true)) == null) {
           if (showMsg)
             Logger.info("FileManager opening 2 " + name);
           ret = vwr.apiPlatform.getBufferedFileInputStream(name);
@@ -439,7 +453,8 @@ public class FileManager implements BytePoster {
         if (ret instanceof String)
           return ret;
       }
-      bis = (cacheBytes == null ? (BufferedInputStream) ret : Rdr.getBIS(cacheBytes));
+      bis = (cacheBytes == null ? (BufferedInputStream) ret : Rdr
+          .getBIS(cacheBytes));
       if (checkOnly) {
         bis.close();
         bis = null;

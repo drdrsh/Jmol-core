@@ -694,7 +694,7 @@ public class SV extends T implements JSONEncodable {
           if (isEscaped && i > 0)
             sb.append(",");
           SV sv = sx.get(i);
-          sValueArray(sb, sv, path, tabs + "\t", isEscaped, tabs.length() == 0 && !isEscaped && isRawType(sv.tok), addValues, maxLevels, skipEmpty);
+          sValueArray(sb, sv, path, tabs + "  ", isEscaped, tabs.length() == 0 && !isEscaped && isRawType(sv.tok), addValues, maxLevels, skipEmpty);
           if (!isEscaped)
             sb.append("\n");
         }
@@ -727,10 +727,10 @@ public class SV extends T implements JSONEncodable {
       for (int i = 0; i < keys.length; i++) {
         String key = keys[i];
         if (addValues)
-          sb.append(sep).append(PT.esc(key));
+          sb.append(sep).append(PT.esc(key)).append(":");
         else
            sb.appendC(' ').append(key);
-        sValueArray(sb, ht.get(key), path, tabs+"\t", true, false, addValues, maxLevels, skipEmpty);
+        sValueArray(sb, ht.get(key), path, tabs+"  ", true, false, addValues, maxLevels, skipEmpty);
         sep = ",";
       }
       sb.append(" }");
@@ -740,18 +740,18 @@ public class SV extends T implements JSONEncodable {
       return;
     }
     sb.append(tabs).append("{\n");
-    tabs += "\t";
+    tabs += "  ";
     for (int i = 0; i < keys.length; i++) {
       sb.append(tabs);
       String key = keys[i];
-      sb.append(key).append("\t:");
+      sb.append(key).append("  :");
       SB sb2 = new SB();
       SV v = ht.get(key);
       isEscaped = isRawType(v.tok);
       sValueArray(sb2, v, path, tabs, isEscaped, false, addValues, maxLevels, skipEmpty);
       String value = sb2.toString();
       if (isEscaped && addValues)
-        sb.append("\t");
+        sb.append("  ");
       else 
         sb.append("\n");
       sb.append(value).append("\n");

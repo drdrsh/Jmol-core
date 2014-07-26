@@ -61,7 +61,7 @@ import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
-import org.jmol.api.JmolDSSRParser;
+import org.jmol.api.JmolAnnotationParser;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.AtomData;
@@ -2297,7 +2297,7 @@ import java.util.Properties;
       return getAtomBitsMDa(tokType, specInfo);
     case T.annotations:
       bs = new BS();
-      JmolDSSRParser pa = vwr.getDSSRParser();
+      JmolAnnotationParser pa = vwr.getAnnotationParser();
       Object ann;
       for (int i = mc; --i >= 0;)
         if ((ann = getInfo(i, "annotations")) != null) {
@@ -2309,12 +2309,29 @@ import java.util.Properties;
                 : vwr.evaluateExpressionAsVariable(ann));
             cache.put(" ANNOTV ", annotv);
           }
-          bs.or(pa.getAtomBits(vwr, (String) specInfo, annotv, cache, am[i].bsAtoms));
+          bs.or(pa.getAtomBits(vwr, (String) specInfo, annotv, cache, am[i].bsAtoms, T.annotations));
+        }
+      return bs;
+    case T.validation:
+      bs = new BS();
+      Object val;
+      JmolAnnotationParser pav = vwr.getAnnotationParser();
+      for (int i = mc; --i >= 0;)
+        if ((val = getInfo(i, "validation")) != null) {
+          Map<String, Object> cache = (am[i].dssrCache == null ? am[i].dssrCache = new Hashtable<String, Object>()
+              : am[i].dssrCache);
+          Object validv = cache.get(" VALIDV ");
+          if (validv == null) {
+            validv = (val instanceof SV ? val 
+                : vwr.evaluateExpressionAsVariable(val));
+            cache.put(" VALIDV ", validv);
+          }
+          bs.or(pav.getAtomBits(vwr, (String) specInfo, validv, cache, am[i].bsAtoms, T.validation));
         }
       return bs;
     case T.dssr:
       bs = new BS();
-      JmolDSSRParser p = vwr.getDSSRParser();
+      JmolAnnotationParser p = vwr.getAnnotationParser();
       Object dssr;
       for (int i = mc; --i >= 0;)
         if ((dssr = getInfo(i, "dssr")) != null) {
@@ -2323,7 +2340,7 @@ import java.util.Properties;
           Object dssrv = cache.get(" DSSRV ");
           if (dssrv == null)
             cache.put(" DSSRV ", dssrv = SV.getVariable(dssr));
-          bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache, null));
+          bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache, null, T.dssr));
         }
       return bs;
     case T.bonds:

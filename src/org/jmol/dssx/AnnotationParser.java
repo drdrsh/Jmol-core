@@ -25,16 +25,18 @@ package org.jmol.dssx;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import javajs.api.GenericLineReader;
+import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
 
-import org.jmol.api.JmolDSSRParser;
+import org.jmol.api.JmolAnnotationParser;
 import org.jmol.java.BS;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.HBond;
@@ -70,7 +72,7 @@ import org.jmol.viewer.Viewer;
  * @author Bob Hanson hansonr@stolaf.edu
  * 
  */
-public class DSSRParser implements JmolDSSRParser {
+public class AnnotationParser implements JmolAnnotationParser {
 
   private GenericLineReader reader;
   private String line;
@@ -80,12 +82,12 @@ public class DSSRParser implements JmolDSSRParser {
   private Map<String, String[]> htPar;
   private Lst<Map<String, Object>> basePairs;
 
-  public DSSRParser() {
+  public AnnotationParser() {
     // for reflection
   }
 
   @Override
-  public String process(Map<String, Object> info, GenericLineReader reader,
+  public String processDSSR(Map<String, Object> info, GenericLineReader reader,
                         String line0, Map<String, String> htGroup1) throws Exception {
     info.put("dssr", dssr = new Hashtable<String, Object>());
     htTemp = new Hashtable<String, Object>();
@@ -947,6 +949,133 @@ public class DSSRParser implements JmolDSSRParser {
     return line;
   }
 
+  //////////////// DSSR post load /////////////////
+  
+  ////////////////////  DSSR ///////////////
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public void setAllDSSRParametersForModel(Viewer vwr, int modelIndex) {
+    Map<String, Object> dssr = (Map<String, Object>) vwr.ms.getInfo(modelIndex,
+        "dssr");
+    Lst<Map<String, Object>> lst = (dssr == null ? null
+        : (Lst<Map<String, Object>>) dssr.get("basePairs"));
+    Lst<Map<String, Object>> lst1 = (dssr == null ? null
+        : (Lst<Map<String, Object>>) dssr.get("singleStranded"));
+
+    if (lst == null && lst1 == null) {
+      BioModel m = (BioModel) vwr.ms.am[modelIndex];
+      int n = m.getBioPolymerCount();
+      for (int i = n; --i >= 0;) {
+        BioPolymer bp = m.getBioPolymer(i);
+        if (bp.isNucleic())
+          ((NucleicPolymer) bp).isDssrSet = true;
+      }
+      return;
+    }
+    Map<String, BS> htChains = new Hashtable<String, BS>();
+    BS bs = new BS();
+    if (lst != null) {
+      for (int i = lst.size(); --i >= 0;) {
+        Map<String, Object> bpInfo = lst.get(i);
+        BasePair.add(bpInfo, setPhos(vwr, 1, bpInfo, bs, htChains), setPhos(
+            vwr, 2, bpInfo, bs, htChains));
+      }
+    }
+    if (lst1 != null)
+      for (int i = lst1.size(); --i >= 0;) {
+        Map<String, Object> bp = lst1.get(i);
+        Lst<Object> resnos = (Lst<Object>) bp.get("resnos");
+        for (int j = resnos.size(); --j >= 0;)
+          setRes(vwr, (String) resnos.get(j), bs, htChains);
+      }
+  }
+
+  private NucleicMonomer setPhos(Viewer vwr, int n, Map<String, Object> bp,
+                                 BS bs, Map<String, BS> htChains) {
+    return setRes(vwr, (String) bp.get("res" + n), bs, htChains);
+  }
+
+  private NucleicMonomer setRes(Viewer vwr, String res, BS bs,
+                                Map<String, BS> htChains) {
+    bs.clearAll();
+    getBsAtoms(vwr, res, null, bs, htChains);
+    NucleicMonomer group = (NucleicMonomer) vwr.ms.at[bs.nextSetBit(0)]
+        .getGroup();
+    ((NucleicPolymer) group.bioPolymer).isDssrSet = true;
+    return group;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public String getHBonds(ModelSet ms, int modelIndex, Lst<Bond> vHBonds,
+                          boolean doReport) {
+    Object info = ms.getInfo(modelIndex, "dssr");
+    if (info != null)
+      info = ((Map<String, Object>) info).get("hBonds");
+    if (info == null)
+      return "no DSSR hydrogen-bond data";
+    Lst<Map<String, Object>> list = (Lst<Map<String, Object>>) info;
+    int a0 = ms.am[modelIndex].firstAtomIndex - 1;
+    try {
+      for (int i = list.size(); --i >= 0;) {
+        Map<String, Object> hbond = list.get(i);
+        int a1 = ((Integer) hbond.get("atno1")).intValue() + a0;
+        int a2 = ((Integer) hbond.get("atno2")).intValue() + a0;
+        float energy = (hbond.containsKey("energy") ? ((Float) hbond
+            .get("energy")).floatValue() : 0);
+        vHBonds.addLast(new HBond(ms.at[a1], ms.at[a2], Edge.BOND_H_REGULAR,
+            (short) 1, C.INHERIT_ALL, energy));
+      }
+    } catch (Exception e) {
+      Logger.error("Exception " + e + " in DSSRParser.getHBonds");
+    }
+    return "DSSR reports " + list.size() + " hydrogen bonds";
+  }
+
+  @Override
+  public String calculateDSSRStructure(Viewer vwr, BS bsAtoms) {
+    BS bs = vwr.ms.getModelBS(bsAtoms == null ? vwr.bsA() : bsAtoms, true);
+    String s = "";
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      s += getDSSRForModel(vwr, i);
+    return s;
+  }
+
+  @SuppressWarnings("unchecked")
+  private String getDSSRForModel(Viewer vwr, int modelIndex) {
+    Map<String, Object> info = null;
+    String out = null;
+    while (true) {
+      if (!vwr.ms.am[modelIndex].isBioModel)
+        break;
+      info = vwr.ms.getModelAuxiliaryInfo(modelIndex);
+      if (info.containsKey("dssr"))
+        break;
+      BS bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+      bs.and(vwr.ms.getAtoms(T.nucleic, null));
+      if (bs.nextClearBit(0) < 0) {
+        info = null;
+        break;
+      }
+      try {
+        String name = (String) vwr.setLoadFormat("=dssrModel/", '=', false);
+        name = PT.rep(name, "%20", " ");
+        Logger.info("fetching " + name + "[pdb data]");
+        String data = vwr.getPdbAtomData(bs, null);
+        data = vwr.getFileAsString(name + data, false);
+        processDSSR(info, new Rdr(Rdr.getBR(data)), null, null);
+      } catch (Exception e) {
+        info = null;
+        out = "" + e;
+      }
+      break;
+    }
+    return (info != null ? (String) ((Map<String, Object>) info.get("dssr"))
+        .get("summary") : out == null ? "model has no nucleotides" : out);
+  }
+
+  
   ///////////////////// annotations ////////////////
 
 
@@ -988,118 +1117,174 @@ public class DSSRParser implements JmolDSSRParser {
 
  
  /**
+  * 
+  * Get a string report of annotation data
+  * 
   * @param a an annotation structure wrapped as a script variable
   * @param match can contain "mappings" to get those specifically
   * @return tab-separated line-based listing
   */
  @Override
- public String getAnnotationInfo(SV a, String match) {
+ public String getAnnotationInfo(SV a, String match, int type) {
    SB sb = new SB();
    if ("".equals(match))
      match = null;
-   boolean isMappings = (match != null && match.contains("mappings"));
-   if (isMappings) 
-     match = PT.rep(match, "mappings", "").trim();
+   boolean isDetail = (match != null && (match.equals("all") || match.endsWith(" all")));
+   if (isDetail) 
+     match = match.substring(0, Math.max(0, match.length() - 4)).trim();
    if ("".equals(match))
      match = null;
    boolean isMappingOnly = (match != null && match.indexOf(".") >= 0 && match.indexOf(".*") < 0);
    match = PT.rep(match, "*", "");
-   getAnnotationKVPairs(a, match, "", sb, "", isMappings, isMappingOnly);
+   try{
+   getAnnotationKVPairs(a, match, "", sb, "", isDetail, isMappingOnly, type);
+   } catch (Exception e) {
+     /**
+      * @j2sNative
+      * 
+      * System.out.println(e);
+      */
+     {
+     System.out.println(e.getStackTrace());
+     }
+   }
    return sb.toString();
  }
 
-  ///////////////////// post-load processing ////////////////
+ /**
+  * Construct a nice listing for this annotation, including validation 
+  * 
+  * @param a
+  * @param match
+  * @param dotPath
+  * @param sb
+  * @param pre
+  * @param showDetail
+  * @param isMappingOnly
+  * @param type
+  */
+ private void getAnnotationKVPairs(SV a, String match, String dotPath, SB sb,
+                                   String pre, boolean showDetail,
+                                   boolean isMappingOnly, int type) {
+   Map<String, SV> map = a.getMap();
+   if (map == null || map.isEmpty())
+     return;
+   if (map.containsKey("_map"))
+     map = map.get("_map").getMap();
+   //    map = map.values().iterator().next().getMap();
+   String detailKey = (type == T.annotations ? "mappings" : "outliers");
+   if (showDetail && map.containsKey(detailKey)) {
+     sb.append(map.get(detailKey).asString()).append("\n");
+     return;
+   }
+   for (Entry<String, SV> e : map.entrySet()) {
+     String key = e.getKey();
+     if (key.equals(detailKey))
+       continue;
+     SV val = e.getValue();
+     if (val.tok == T.hash) {
+       if (type == T.validation && !showDetail)
+         sb.append(key + "\n");
+       else
+         getAnnotationKVPairs(val, match, (dotPath.length() == 0 ? ""
+             : dotPath + ".") + key, sb, (pre.length() == 0 ? "" : pre + "\t")
+             + key, showDetail, isMappingOnly, type);
+     } else {
+       String s = val.asString();
+       if (match == null || s.indexOf(match) >= 0 || pre.indexOf(match) >= 0
+           || key.indexOf(match) >= 0 || dotPath.indexOf(match) >= 0) {
+         if (showDetail && isMappingOnly)
+           continue;
+         if (pre.length() > 0)
+           sb.append(pre).append("\t");
+         sb.append(key).append("=");
+         sb.append(s).append("\n");
+       }
+     }
+   }
+ }
 
-  @SuppressWarnings("unchecked")
+ /**
+  * Returns a Lst<Object> of property data in the form 
+  * name(String), data(float[]), modelIndex (Integer);
+  * 
+  */
   @Override
-  /**
-   * 
-   * Retrieve a set of atoms using vwr.extractProperty with 
-   * a [select ... where ...] syntax. Used for both DSSR
-   * and for annotations
-   * 
-   */
-  public BS getAtomBits(Viewer vwr, String key, Object dbObj,
-                        Map<String, Object> dssrCache, BS bsModel) {
-    boolean isAnnotation = (bsModel != null);
-    boolean doCache = !key.contains("NOCACHE");
-    if (!doCache) {
-      key = PT.rep(key, "NOCACHE","").trim();
-    }
-    String s = key.toLowerCase();
-    if (!isAnnotation) {
-      // Check to see if we have already asked for pairs or the data type
-      // does not have the "basePairs" key
-      if (s.indexOf("pairs") < 0 && s.indexOf("kissingloops") < 0
-          && s.indexOf("linkedby") < 0 && s.indexOf("multiplets") < 0
-          && s.indexOf("singlestrand") < 0)
-        key += ".basePairs";
-      if (s.indexOf(".nt") < 0 && s.indexOf(".res") < 0
-          && s.indexOf("[select res") < 0 && s.indexOf("[select nt") < 0)
-        key += ".res*";
-    }
-    BS bs = (doCache ? (BS) dssrCache.get(key) : null);
-    if (bs != null)
-      return bs;
-    bs = new BS();
+  public Lst<Object> catalogValidations(Viewer viewer, SV map0, int[] modelAtomIndices, Map<String, int[]> resMap, Map<String, Integer> atomMap) {
+    Map<String, SV> data = map0.getMap();
+    if (data == null)
+      return null;
+    Lst<Object> retProperties = new Lst<Object>();
+    int nModels = modelAtomIndices.length - 1;
     try {
-      if (doCache)
-        dssrCache.put(key, bs);
-      Object data;
-      if (!isAnnotation) {
-        Map<String, BS> htChains = new Hashtable<String, BS>();
-        data = vwr.extractProperty(dbObj, key, -1);
-        if (data instanceof Lst<?>)
-          getBsAtoms(vwr, null, (Lst<SV>) data, bs, htChains);
-        return bs;
-      }
+      // get second level, skipping "xxxx":
+      data = data.entrySet().iterator().next().getValue().getMap();
+      // add _map as a new top-level key pointing to the same thing
+      map0.getMap().put("_map", SV.newV(T.hash, data));
 
-      Map<String, SV> map = ((SV) dbObj).getMap();
-      SV main = map.get("_map");
-      if (main == null)
-        main = initializeAnnotation(map);
-      map = main.getMap();
-      // select within(annotations,"InterPro.* where identifier like '*-like'")
-      int pt = s.indexOf(" where ");
-      String tableName = PT.rep((pt < 0 ? key : key.substring(0, pt)), " ","");
-      String newKey = "select mappings" + (pt < 0 ? "" : key.substring(pt));
-      if (tableName.indexOf(".") < 0)
-        tableName += ".*";
-      String[] keys = PT.split(tableName, ".");
-      boolean isWild = false;
-      int i = 0;
-      tableName = "";
-      for (; i < keys.length; i++) {
-        tableName += (i == 0 ? "" : ".") + keys[i];
-        if (keys[i].equals("*")) {
-          isWild = true;
-          break;
+      //    {
+      //      "1blu": {
+      //  -->     "bond_angles": [
+      //              {
+      //                  "units": [
+      //                      "|1|A|TYR|44|CB|||",
+      //                      "|1|A|TYR|44|CG|||",
+      //                      "|1|A|TYR|44|CD1|||"
+      //                  ],
+      //                  "value": 5.57
+      //              },
+      //
+      /// each residue ID points to the specific properties that involve them. 
+      Set<Entry<String, SV>> set = data.entrySet();
+      SV sv;
+      Map<String, SV> map;
+      for (Entry<String, SV> e : set) {
+        float[][] floats = AU.newFloat2(nModels);
+        for (int m = nModels; --m >= 0;)
+          floats[m] = new float[modelAtomIndices[m + 1] - modelAtomIndices[m]];
+        sv = e.getValue();
+        Lst<SV> outliers = sv.getList();
+        if (outliers == null) {
+          map = sv.getMap();
+          if (map != null && (sv = map.get("outliers")) != null)
+            outliers = sv.getList();
         }
-        SV svMap = map.get(keys[i]);
-        if (svMap == null) {
-          Logger.info("Annotation database not found: '" + keys[i] + "' note that this is case-sensitive, for example SCOP Pfam, etc. Options include: " + main.getMapKeys(1,  true));
-          return bs;
+        if (outliers != null) {
+          boolean hasUnit = false;
+          String key = e.getKey();
+          SV svType = SV.newS(key);
+          for (int j = outliers.size(); --j >= 0;) {
+            map = outliers.get(j).getMap();
+            sv = map.get("units");
+            SV svv = map.get("value");
+            BS bsAtoms = new BS();
+            map.put("_atoms", SV.getVariable(bsAtoms));
+            map.put("_type", svType);            
+            float val = (svv == null ? 1 : SV.fValue(svv));
+            Lst<SV> units = (val == 0 || sv == null || sv.tok != T.varray ? null
+                : sv.getList());
+            if (units != null && units.size() > 0) {
+              hasUnit = true;
+              for (int k = units.size(); --k >= 0;)
+                catalogUnit(viewer, floats, units.get(k).asString(), val, bsAtoms,
+                    modelAtomIndices, resMap, atomMap);
+            }
+          }
+          if (hasUnit) {
+            for (int m = nModels; --m >= 0;)
+              if (floats[m] != null) {
+                retProperties.addLast(key);
+                retProperties.addLast(floats[m]);
+                retProperties.addLast(Integer.valueOf(m));
+              }
+          }
         }
-        map = svMap.getMap();
       }
-      Logger.info("looking for " + newKey + " in " + tableName);
-      // this is either the right map or we have a wildcard.
-      if (i == 0) {
-        for (String b : main.getMap().keySet())
-          for (String a : (map = main.getMap().get(b).getMap()).keySet())
-            findAnnotationAtoms(vwr, b + "." + a, map.get(a).getMap(), newKey, bs);
-      } else if (isWild) {
-        for (String a : map.keySet())
-          findAnnotationAtoms(vwr, a, map.get(a).getMap(), newKey, bs);
-      } else {
-        findAnnotationAtoms(vwr, tableName, map, newKey, bs);
-      }
-      bs.and(bsModel);
+      return retProperties;
     } catch (Exception e) {
-      System.out.println(e.toString() + " in DSSRParser");
-      bs.clearAll();
+      Logger.info(e + " while cataloging validations");
+      return null;
     }
-    return bs;
   }
 
   /**
@@ -1107,7 +1292,7 @@ public class DSSRParser implements JmolDSSRParser {
    * has _atoms, _dbName, _domainName.
    * 
    * @param map
-   * @return
+   * @return  main map
    */
   private SV initializeAnnotation(Map<String, SV> map) {
     SV main = map.entrySet().iterator().next().getValue();
@@ -1201,6 +1386,206 @@ public class DSSRParser implements JmolDSSRParser {
     }
   }
 
+  //UnitIDs are based on http://rna.bgsu.edu/main/rna-3d-hub-help/unit-ids/
+  //  
+  //  Unit Identifier Specification
+  //
+  //  We describe the type and case sensitivity of each field in the list below. In addition, we list which item in the mmCIF the data for each field comes from. We also show several examples of the IDs and their interpretation at the end.
+  //
+  //  Unit ids can also be used to identify atoms. When identifying entire residues, the atom field is left blank.
+  //
+  //      PDB ID Code
+  //          From PDBx/mmCIF item: _entry.id
+  //          4 characters, case-insensitive
+  //      Model Number
+  //          From PDBx/mmCIF item: _atom_site.pdbx_PDB_model_num
+  //          integer, range 1-99
+  //      Chain ID
+  //          From PDBx/mmCIF item: _atom_site.auth_asym_id
+  //          1 character, case-sensitive
+  //      Residue/Nucleotide/Component Identifier
+  //          From PDBx/mmCIF item: _atom_site.label_comp_id
+  //          1-3 characters, case-insensitive
+  //      Residue/Nucleotide/Component Number
+  //          From PDBx/mmCIF item: _atom_site.auth_seq_id
+  //          integer, range: -999..9999 (there are negative residue numbers)
+  //      Atom Name (Optional, default: blank)
+  //          From PDBx/mmCIF item: _atom_site.label_atom_id
+  //          0-4 characters, case-insensitive
+  //          blank means all atoms
+  //      Alternate ID (Optional, default: blank)
+  //          From PDBx/mmCIF item: _atom_site.label_alt_id
+  //          Default value: blank
+  //          One of ['A', 'B', '0'], case-insensitive
+  //      Insertion Code (Optional, default: blank)
+  //          From PDBx/mmCIF item: _atom_site.pdbx_PDB_ins_code
+  //          1 character, case-insensitive
+  //      Symmetry Operation (Optional, default: 1_555)
+  //          As defined in PDBx/mmCIF item: _pdbx_struct_oper_list.name
+  //          5-6 characters, case-insensitive
+  //          For viral icosahedral structures, use “P_” + model number instead of symmetry operators. For example, 1A34|1|A|VAL|88|||P_1
+  //
+  //  Examples
+  //
+  //      Chain A in 1ABC = “1ABC|1|A”
+  //      Nucleotide U(10) chain B of 1ABC = “1ABC|1|B|U|10”
+  //      Nucleotide U(15A) chain B, default symmetry operator = “1ABC|1|B|U|15|||A”
+  //      Nucleotide C(25) chain D subject to symmetry operation 2_655 = “1ABC|1|D|C|25||||2_655”
+  //
+  //  Unit ids for entire residues can contain 4, 7, or 8 string separators (|).
+
+  /**
+   * Carried out for each unit
+   * @param viewer 
+   * 
+   * @param vals
+   *        model-based array of float values for a given validation type
+   * @param unitID
+   * @param val
+   * @param bsAtoms 
+   * @param modelAtomIndices 
+   * @param resMap 
+   * @param atomMap 
+   */
+  private static void catalogUnit(Viewer viewer, float[][] vals, String unitID, float val, BS bsAtoms, int[] modelAtomIndices,
+                                  Map<String, int[]> resMap, Map<String, Integer> atomMap
+                                  
+      
+      ) {
+
+    // (pdbid)|model|chain|RESNAME|resno|ATOMNAME|altcode|inscode|(symmetry)
+    //   0       1     2      3      4      5        6       7       8
+
+    // becomes
+
+    // model_chainCode_resno_inscode
+    // model_chainCode_resno_inscode_ATOMNAME_altcode
+    //   
+
+    String[] s = PT.split(unitID + "|||", "|");
+    // must have at least model, chain, resname, and resno
+    if (s.length < 8 || s[1].length() == 0 || s[2].length() == 0
+        || s[3].length() == 0 || s[4].length() == 0)
+      return;
+    int m = (s[1].length() == 0 ? 0 : PT.parseInt(s[1]) - 1);
+    String res = s[1] + "_" + viewer.getChainID(s[2]) + "_" + s[4] + "_"
+        + s[7].toLowerCase();
+    if (m >= modelAtomIndices.length)
+      return;
+    int i0 = modelAtomIndices[m];
+    if (atomMap == null || s[5].length() == 0 ) {
+      int[] a2 = resMap.get(res);
+      if (a2 != null)
+        for (int j = a2[1], j0 = a2[0]; --j >= j0;) {
+          bsAtoms.set(i0 + j);
+          vals[m][j] += Math.abs(val);
+        }
+    } else {
+      String atom = res + "_" + s[5].toUpperCase() + "_" + s[6].toLowerCase();
+      Integer ia = atomMap.get(atom);
+      if (ia != null) {
+        int j = ia.intValue();
+        bsAtoms.set(i0 + j);
+        vals[m][j] += Math.abs(val);
+      }
+    }
+  }
+  
+  ///////////////////// general post-load processing ////////////////
+
+  @SuppressWarnings("unchecked")
+  @Override
+  /**
+   * 
+   * Retrieve a set of atoms using vwr.extractProperty with 
+   * a [select ... where ...] syntax. Used for both DSSR
+   * and for annotations
+   * 
+   */
+  public BS getAtomBits(Viewer vwr, String key, Object dbObj,
+                        Map<String, Object> dssrCache, BS bsModel, int type) {
+    boolean isAnnotations = (type == T.annotations);
+    boolean isValidation = (type == T.validation);
+    boolean doCache = !key.contains("NOCACHE");
+    if (!doCache) {
+      key = PT.rep(key, "NOCACHE","").trim();
+    }
+    String s = key.toLowerCase();
+    if (!isAnnotations && !isValidation) {
+      // Check to see if we have already asked for pairs or the data type
+      // does not have the "basePairs" key
+      if (s.indexOf("pairs") < 0 && s.indexOf("kissingloops") < 0
+          && s.indexOf("linkedby") < 0 && s.indexOf("multiplets") < 0
+          && s.indexOf("singlestrand") < 0)
+        key += ".basePairs";
+      if (s.indexOf(".nt") < 0 && s.indexOf(".res") < 0
+          && s.indexOf("[select res") < 0 && s.indexOf("[select nt") < 0)
+        key += ".res*";
+    }
+    BS bs = (doCache ? (BS) dssrCache.get(key) : null);
+    if (bs != null)
+      return bs;
+    bs = new BS();
+    try {
+      if (doCache)
+        dssrCache.put(key, bs);
+      Object data;
+      if (!isAnnotations) {
+        Map<String, BS> htChains = new Hashtable<String, BS>();
+        data = vwr.extractProperty(dbObj, key, -1);
+        if (data instanceof Lst<?>)
+          getBsAtoms(vwr, null, (Lst<SV>) data, bs, htChains);
+        return bs;
+      }
+
+      Map<String, SV> map = ((SV) dbObj).getMap();
+      SV main = map.get("_map");
+      if (main == null)
+        main = initializeAnnotation(map);
+      map = main.getMap();
+      // select within(annotations,"InterPro.* where identifier like '*-like'")
+      int pt = s.indexOf(" where ");
+      String tableName = PT.rep((pt < 0 ? key : key.substring(0, pt)), " ","");
+      String newKey = "select " + (isAnnotations ? "mappings" : "outliers") + (pt < 0 ? "" : key.substring(pt));
+      if (tableName.indexOf(".") < 0)
+        tableName += ".*";
+      String[] keys = PT.split(tableName, ".");
+      boolean isWild = false;
+      int i = 0;
+      tableName = "";
+      for (; i < keys.length; i++) {
+        tableName += (i == 0 ? "" : ".") + keys[i];
+        if (keys[i].equals("*")) {
+          isWild = true;
+          break;
+        }
+        SV svMap = map.get(keys[i]);
+        if (svMap == null) {
+          Logger.info("Annotation database not found: '" + keys[i] + "' note that this is case-sensitive, for example SCOP Pfam, etc. Options include: " + main.getMapKeys(1,  true));
+          return bs;
+        }
+        map = svMap.getMap();
+      }
+      Logger.info("looking for " + newKey + " in " + tableName);
+      // this is either the right map or we have a wildcard.
+      if (i == 0) {
+        for (String b : main.getMap().keySet())
+          for (String a : (map = main.getMap().get(b).getMap()).keySet())
+            findAnnotationAtoms(vwr, b + "." + a, map.get(a).getMap(), newKey, bs);
+      } else if (isWild) {
+        for (String a : map.keySet())
+          findAnnotationAtoms(vwr, a, map.get(a).getMap(), newKey, bs);
+      } else {
+        findAnnotationAtoms(vwr, tableName, map, newKey, bs);
+      }
+      bs.and(bsModel);
+    } catch (Exception e) {
+      System.out.println(e.toString() + " in DSSRParser");
+      bs.clearAll();
+    }
+    return bs;
+  }
+
   /**
    * parsing a residue designation for tokens in DSSR.
    * 
@@ -1257,164 +1642,6 @@ public class DSSRParser implements JmolDSSRParser {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public void setAllDSSRParametersForModel(Viewer vwr, int modelIndex) {
-    Map<String, Object> dssr = (Map<String, Object>) vwr.ms.getInfo(modelIndex,
-        "dssr");
-    Lst<Map<String, Object>> lst = (dssr == null ? null
-        : (Lst<Map<String, Object>>) dssr.get("basePairs"));
-    Lst<Map<String, Object>> lst1 = (dssr == null ? null
-        : (Lst<Map<String, Object>>) dssr.get("singleStranded"));
 
-    if (lst == null && lst1 == null) {
-      BioModel m = (BioModel) vwr.ms.am[modelIndex];
-      int n = m.getBioPolymerCount();
-      for (int i = n; --i >= 0;) {
-        BioPolymer bp = m.getBioPolymer(i);
-        if (bp.isNucleic())
-          ((NucleicPolymer) bp).isDssrSet = true;
-      }
-      return;
-    }
-    Map<String, BS> htChains = new Hashtable<String, BS>();
-    BS bs = new BS();
-    if (lst != null) {
-      for (int i = lst.size(); --i >= 0;) {
-        Map<String, Object> bpInfo = lst.get(i);
-        BasePair.add(bpInfo, setPhos(vwr, 1, bpInfo, bs, htChains), setPhos(
-            vwr, 2, bpInfo, bs, htChains));
-      }
-    }
-    if (lst1 != null)
-      for (int i = lst1.size(); --i >= 0;) {
-        Map<String, Object> bp = lst1.get(i);
-        Lst<Object> resnos = (Lst<Object>) bp.get("resnos");
-        for (int j = resnos.size(); --j >= 0;)
-          setRes(vwr, (String) resnos.get(j), bs, htChains);
-      }
-  }
-
-  private NucleicMonomer setPhos(Viewer vwr, int n, Map<String, Object> bp,
-                                 BS bs, Map<String, BS> htChains) {
-    return setRes(vwr, (String) bp.get("res" + n), bs, htChains);
-  }
-
-  private NucleicMonomer setRes(Viewer vwr, String res, BS bs,
-                                Map<String, BS> htChains) {
-    bs.clearAll();
-    getBsAtoms(vwr, res, null, bs, htChains);
-    NucleicMonomer group = (NucleicMonomer) vwr.ms.at[bs.nextSetBit(0)]
-        .getGroup();
-    ((NucleicPolymer) group.bioPolymer).isDssrSet = true;
-    return group;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public String getHBonds(ModelSet ms, int modelIndex, Lst<Bond> vHBonds,
-                          boolean doReport) {
-    Object info = ms.getInfo(modelIndex, "dssr");
-    if (info != null)
-      info = ((Map<String, Object>) info).get("hBonds");
-    if (info == null)
-      return "no DSSR hydrogen-bond data";
-    Lst<Map<String, Object>> list = (Lst<Map<String, Object>>) info;
-    int a0 = ms.am[modelIndex].firstAtomIndex - 1;
-    try {
-      for (int i = list.size(); --i >= 0;) {
-        Map<String, Object> hbond = list.get(i);
-        int a1 = ((Integer) hbond.get("atno1")).intValue() + a0;
-        int a2 = ((Integer) hbond.get("atno2")).intValue() + a0;
-        float energy = (hbond.containsKey("energy") ? ((Float) hbond
-            .get("energy")).floatValue() : 0);
-        vHBonds.addLast(new HBond(ms.at[a1], ms.at[a2], Edge.BOND_H_REGULAR,
-            (short) 1, C.INHERIT_ALL, energy));
-      }
-    } catch (Exception e) {
-      Logger.error("Exception " + e + " in DSSRParser.getHBonds");
-    }
-    return "DSSR reports " + list.size() + " hydrogen bonds";
-  }
-
-  @Override
-  public String calculateStructure(Viewer vwr, BS bsAtoms) {
-    BS bs = vwr.ms.getModelBS(bsAtoms == null ? vwr.bsA() : bsAtoms, true);
-    String s = "";
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-      s += getDSSRForModel(vwr, i);
-    return s;
-  }
-
-  @SuppressWarnings("unchecked")
-  private String getDSSRForModel(Viewer vwr, int modelIndex) {
-    Map<String, Object> info = null;
-    String out = null;
-    while (true) {
-      if (!vwr.ms.am[modelIndex].isBioModel)
-        break;
-      info = vwr.ms.getModelAuxiliaryInfo(modelIndex);
-      if (info.containsKey("dssr"))
-        break;
-      BS bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-      bs.and(vwr.ms.getAtoms(T.nucleic, null));
-      if (bs.nextClearBit(0) < 0) {
-        info = null;
-        break;
-      }
-      try {
-        String name = (String) vwr.setLoadFormat("=dssrModel/", '=', false);
-        name = PT.rep(name, "%20", " ");
-        Logger.info("fetching " + name + "[pdb data]");
-        String data = vwr.getPdbAtomData(bs, null);
-        data = vwr.getFileAsString(name + data, false);
-        process(info, new Rdr(Rdr.getBR(data)), null, null);
-      } catch (Exception e) {
-        info = null;
-        out = "" + e;
-      }
-      break;
-    }
-    return (info != null ? (String) ((Map<String, Object>) info.get("dssr"))
-        .get("summary") : out == null ? "model has no nucleotides" : out);
-  }
-
-
-  private void getAnnotationKVPairs(SV a, String match, String dotPath, SB sb, String pre,
-                        boolean showMappings, boolean isMappingOnly) {
-    Map<String, SV> map = a.getMap();
-    if (map == null)
-      return;
-    boolean haveMapping = false;
-    boolean haveMatch = false;
-    for (Entry<String, SV> e : map.entrySet()) {
-      String key = e.getKey();
-      boolean isMapping = key.equals("mappings");
-      if (isMapping) {
-        haveMapping = true;
-        continue;
-      }
-      SV val = e.getValue();
-      if (val.tok == T.hash && !isMapping) {
-        getAnnotationKVPairs(val, match, (dotPath.length() == 0 ? "" : dotPath + ".") + key, 
-            sb, (pre.length() == 0 ? "" : pre + "\t") + key,
-            showMappings, isMappingOnly);
-      } else {
-        String s = val.asString();
-        if (match == null || s.indexOf(match) >= 0 || pre.indexOf(match) >= 0
-            || key.indexOf(match) >= 0 || dotPath.indexOf(match) >= 0) {
-          haveMatch = true;
-            if (showMappings && isMappingOnly)
-              continue;
-            if (pre.length() > 0)
-              sb.append(pre).append("\t");
-            sb.append(key).append("=");
-          sb.append(s).append("\n");
-        }
-      }
-    }
-    if (haveMapping && showMappings && haveMatch)
-      sb.append(map.get("mappings").asString()).append("\n");
-  }
 
 }

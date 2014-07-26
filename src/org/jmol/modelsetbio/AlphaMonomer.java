@@ -24,8 +24,8 @@
 package org.jmol.modelsetbio;
 
 
-import java.util.Hashtable;
-import java.util.Map;
+//import java.util.Hashtable;
+//import java.util.Map;
 
 import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
@@ -67,33 +67,33 @@ public class AlphaMonomer extends Monomer {
 
   public ProteinStructure proteinStructure;
   protected P3 nitrogenHydrogenPoint;
-  private Map<String, Annotation> annotations;
+//  private Map<String, Annotation> annotations;
   
   @Override
   public Object getStructure() {
     return proteinStructure;
   }
 
-  void setStructure(ProteinStructure ps, boolean isAnnotation) {
-    if (isAnnotation) {
-      addAnnotation((Annotation) ps);
-      return;
-    }
-    
+  void setStructure(ProteinStructure ps/*, boolean isAnnotation*/) {
+//    if (isAnnotation) {
+//      addAnnotation((Annotation) ps);
+//      return;
+//    }
+//    
     if ((proteinStructure = ps) == null)
       nitrogenHydrogenPoint = null;
   }
     
-  private void addAnnotation(Annotation a) {
-    if (a == null) {
-      annotations = null;
-      return;
-    }
-    if (annotations == null)
-      annotations = new Hashtable<String, Annotation>();
-    annotations.put(a.structureID, a); 
-  }
-
+//  private void addAnnotation(Annotation a) {
+//    if (a == null) {
+//      annotations = null;
+//      return;
+//    }
+//    if (annotations == null)
+//      annotations = new Hashtable<String, Annotation>();
+//    annotations.put(a.structureID, a); 
+//  }
+//
   @Override
   public void setStrucNo(int n) {
     if (proteinStructure != null)
@@ -147,19 +147,19 @@ public class AlphaMonomer extends Monomer {
       case HELIXALPHA:
       case HELIX310:
       case HELIXPI:
-        setStructure(new Helix((AlphaPolymer) bioPolymer, monomerIndex, 1, type), false);
+        setStructure(new Helix((AlphaPolymer) bioPolymer, monomerIndex, 1, type));//, false);
         break;
       case SHEET:
-        setStructure(new Sheet((AlphaPolymer) bioPolymer, monomerIndex, 1, type), false);
+        setStructure(new Sheet((AlphaPolymer) bioPolymer, monomerIndex, 1, type));//, false);
         break;
       case TURN:
-        setStructure(new Turn((AlphaPolymer) bioPolymer, monomerIndex, 1), false);
+        setStructure(new Turn((AlphaPolymer) bioPolymer, monomerIndex, 1));//, false);
         break;
       case NONE:
-        setStructure(null, false);
+        setStructure(null);//, false);
       }
     } else {
-      setStructure(bioPolymer.getProteinStructure(monomerIndexCurrent), false);
+      setStructure(bioPolymer.getProteinStructure(monomerIndexCurrent));//, false);
       if (proteinStructure != null)
         proteinStructure.addMonomer(monomerIndex);
     }

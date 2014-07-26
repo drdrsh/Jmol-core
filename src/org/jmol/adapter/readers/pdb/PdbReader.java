@@ -1769,7 +1769,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
     Lst<Map<String, Object>> groups = ( Lst<Map<String, Object>>) tlsGroupInfo
         .get("groups");
     int index0 = asc.getAtomSetAtomIndex(iModel);
-    int[] data = new int[asc.getAtomSetAtomCount(iModel)];
+    float[] data = new float[asc.getAtomSetAtomCount(iModel)];
     int indexMax = index0 + data.length;
     Atom[] atoms = asc.atoms;
     int nGroups = groups.size();
@@ -1809,11 +1809,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
         }
       }
     }
-    SB sdata = new SB();
-    for (int i = 0; i < data.length; i++)
-      sdata.appendI(data[i]).appendC('\n');
-    asc.setAtomSetAtomProperty("tlsGroup", sdata.toString(),
-        iModel);
+    asc.setAtomProperties("tlsGroup", data, iModel);
     asc.setAtomSetAuxiliaryInfoForSet("TLS", tlsGroupInfo, iModel);
     asc.setTensors();
   }

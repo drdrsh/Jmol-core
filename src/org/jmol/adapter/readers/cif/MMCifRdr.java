@@ -25,7 +25,6 @@ package org.jmol.adapter.readers.cif;
 
 import java.util.Hashtable;
 import java.util.Map;
-
 import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.P3;
@@ -35,6 +34,7 @@ import javajs.util.SB;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.Structure;
+import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.c.STR;
 import org.jmol.java.BS;
@@ -43,15 +43,14 @@ import org.jmol.util.SimpleUnitCell;
 
 /**
  * @author Bob Hanson (hansonr@stolaf.edu)
- *  
+ * 
  */
 public class MMCifRdr {
-
 
   public MMCifRdr() {
     // for reflection
   }
-  
+
   private CifReader cr;
 
   private boolean isBiomolecule;
@@ -59,19 +58,18 @@ public class MMCifRdr {
   private Map<String, P3> chainAtomMap;
   private Map<String, int[]> chainAtomCounts;
 
-  private  Lst<Map<String, Object>> vBiomolecules;
+  private Lst<Map<String, Object>> vBiomolecules;
   private Map<String, Object> thisBiomolecule;
-  private Map<String,M4> htBiomts;
+  private Map<String, M4> htBiomts;
   private Map<String, Map<String, Object>> htSites;
 
   private Map<String, BS> assemblyIdAtoms;
   private final static int NONE = -1;
-  
+
   private int thisChain = -1;
 
   private P3 chainSum;
   private int[] chainAtomCount;
-
 
   public boolean initialize(CifReader r) {
     cr = r;
@@ -83,20 +81,27 @@ public class MMCifRdr {
       chainAtomCounts = new Hashtable<String, int[]>();
     }
     if (cr.checkFilterKey("BIOMOLECULE")) // PDB format
-     cr.filter = PT.rep(cr.filter, "BIOMOLECULE","ASSEMBLY");
+      cr.filter = PT.rep(cr.filter, "BIOMOLECULE", "ASSEMBLY");
     isBiomolecule = cr.checkFilterKey("ASSEMBLY");
     return isCourseGrained;
   }
-  
+
   public void finalizeReader(int nAtoms) throws Exception {
     if (byChain && !isBiomolecule)
-      for (String id: chainAtomMap.keySet())
+      for (String id : chainAtomMap.keySet())
         createParticle(id);
     AtomSetCollection asc = cr.asc;
-    if (!isCourseGrained && asc.ac == nAtoms)
+    if (!isCourseGrained && asc.ac == nAtoms) {
       asc.removeCurrentAtomSet();
-    else
+    } else {
+      if (cr.validation != null) {
+        CifValidationParser vs = ((CifValidationParser) Interface.getInterface("org.jmol.adapter.readers.cif.ValidationParser")).set(cr);
+        String note = vs.finalizeValidations();
+        if (note != null)
+          cr.appendLoadNote(note);
+      }
       cr.applySymmetryAndSetTrajectory();
+    }
     if (htSites != null)
       cr.addSites(htSites);
     if (vBiomolecules != null && vBiomolecules.size() == 1
@@ -106,12 +111,14 @@ public class MMCifRdr {
       cr.appendLoadNote("Constructing " + ht.get("name"));
       setBiomolecules(ht);
       if (thisBiomolecule != null) {
-        asc.getXSymmetry().applySymmetryBio(thisBiomolecule, cr.notionalUnitCell, cr.applySymmetryToBonds, cr.filter);
+        asc.getXSymmetry().applySymmetryBio(thisBiomolecule,
+            cr.notionalUnitCell, cr.applySymmetryToBonds, cr.filter);
         asc.xtalSymmetry = null;
       }
     }
 
   }
+
   ////////////////////////////////////////////////////////////////
   // assembly data
   ////////////////////////////////////////////////////////////////
@@ -119,83 +126,79 @@ public class MMCifRdr {
   final private static byte OPER_ID = 12;
   final private static byte OPER_XYZ = 13;
   final private static String[] operFields = {
-    "_pdbx_struct_oper_list_matrix[1][1]",
-    "_pdbx_struct_oper_list_matrix[1][2]", 
-    "_pdbx_struct_oper_list_matrix[1][3]", 
-    "_pdbx_struct_oper_list_vector[1]", 
-    "_pdbx_struct_oper_list_matrix[2][1]", 
-    "_pdbx_struct_oper_list_matrix[2][2]", 
-    "_pdbx_struct_oper_list_matrix[2][3]", 
-    "_pdbx_struct_oper_list_vector[2]", 
-    "_pdbx_struct_oper_list_matrix[3][1]", 
-    "_pdbx_struct_oper_list_matrix[3][2]", 
-    "_pdbx_struct_oper_list_matrix[3][3]", 
-    "_pdbx_struct_oper_list_vector[3]",
-    "_pdbx_struct_oper_list_id", 
-    "_pdbx_struct_oper_list_symmetry_operation" 
-  };
+      "_pdbx_struct_oper_list_matrix[1][1]",
+      "_pdbx_struct_oper_list_matrix[1][2]",
+      "_pdbx_struct_oper_list_matrix[1][3]",
+      "_pdbx_struct_oper_list_vector[1]",
+      "_pdbx_struct_oper_list_matrix[2][1]",
+      "_pdbx_struct_oper_list_matrix[2][2]",
+      "_pdbx_struct_oper_list_matrix[2][3]",
+      "_pdbx_struct_oper_list_vector[2]",
+      "_pdbx_struct_oper_list_matrix[3][1]",
+      "_pdbx_struct_oper_list_matrix[3][2]",
+      "_pdbx_struct_oper_list_matrix[3][3]",
+      "_pdbx_struct_oper_list_vector[3]", "_pdbx_struct_oper_list_id",
+      "_pdbx_struct_oper_list_symmetry_operation" };
 
   final private static byte ASSEM_ID = 0;
   final private static byte ASSEM_OPERS = 1;
   final private static byte ASSEM_LIST = 2;
   final private static String[] assemblyFields = {
-    "_pdbx_struct_assembly_gen_assembly_id", 
-    "_pdbx_struct_assembly_gen_oper_expression", 
-    "_pdbx_struct_assembly_gen_asym_id_list" 
-  };
-  
+      "_pdbx_struct_assembly_gen_assembly_id",
+      "_pdbx_struct_assembly_gen_oper_expression",
+      "_pdbx_struct_assembly_gen_asym_id_list" };
+
   /*
-_pdbx_struct_assembly_gen.assembly_id       1 
-_pdbx_struct_assembly_gen.oper_expression   1,2,3,4 
-_pdbx_struct_assembly_gen.asym_id_list      A,B,C 
-# 
-loop_
-_pdbx_struct_oper_list.id 
-_pdbx_struct_oper_list.type 
-_pdbx_struct_oper_list.name 
-_pdbx_struct_oper_list.symmetry_operation 
-_pdbx_struct_oper_list.matrix[1][1] 
-_pdbx_struct_oper_list.matrix[1][2] 
-_pdbx_struct_oper_list.matrix[1][3] 
-_pdbx_struct_oper_list.vector[1] 
-_pdbx_struct_oper_list.matrix[2][1] 
-_pdbx_struct_oper_list.matrix[2][2] 
-_pdbx_struct_oper_list.matrix[2][3] 
-_pdbx_struct_oper_list.vector[2] 
-_pdbx_struct_oper_list.matrix[3][1] 
-_pdbx_struct_oper_list.matrix[3][2] 
-_pdbx_struct_oper_list.matrix[3][3] 
-_pdbx_struct_oper_list.vector[3] 
-1 'identity operation'         1_555  x,y,z          1.0000000000  0.0000000000  0.0000000000 0.0000000000  0.0000000000  
-1.0000000000  0.0000000000 0.0000000000  0.0000000000 0.0000000000 1.0000000000  0.0000000000  
-2 'crystal symmetry operation' 15_556 y,x,-z+1       0.0000000000  1.0000000000  0.0000000000 0.0000000000  1.0000000000  
-0.0000000000  0.0000000000 0.0000000000  0.0000000000 0.0000000000 -1.0000000000 52.5900000000 
-3 'crystal symmetry operation' 10_665 -x+1,-y+1,z    -1.0000000000 0.0000000000  0.0000000000 68.7500000000 0.0000000000  
--1.0000000000 0.0000000000 68.7500000000 0.0000000000 0.0000000000 1.0000000000  0.0000000000  
-4 'crystal symmetry operation' 8_666  -y+1,-x+1,-z+1 0.0000000000  -1.0000000000 0.0000000000 68.7500000000 -1.0000000000 
-0.0000000000  0.0000000000 68.7500000000 0.0000000000 0.0000000000 -1.0000000000 52.5900000000 
-# 
+  _pdbx_struct_assembly_gen.assembly_id       1 
+  _pdbx_struct_assembly_gen.oper_expression   1,2,3,4 
+  _pdbx_struct_assembly_gen.asym_id_list      A,B,C 
+  # 
+  loop_
+  _pdbx_struct_oper_list.id 
+  _pdbx_struct_oper_list.type 
+  _pdbx_struct_oper_list.name 
+  _pdbx_struct_oper_list.symmetry_operation 
+  _pdbx_struct_oper_list.matrix[1][1] 
+  _pdbx_struct_oper_list.matrix[1][2] 
+  _pdbx_struct_oper_list.matrix[1][3] 
+  _pdbx_struct_oper_list.vector[1] 
+  _pdbx_struct_oper_list.matrix[2][1] 
+  _pdbx_struct_oper_list.matrix[2][2] 
+  _pdbx_struct_oper_list.matrix[2][3] 
+  _pdbx_struct_oper_list.vector[2] 
+  _pdbx_struct_oper_list.matrix[3][1] 
+  _pdbx_struct_oper_list.matrix[3][2] 
+  _pdbx_struct_oper_list.matrix[3][3] 
+  _pdbx_struct_oper_list.vector[3] 
+  1 'identity operation'         1_555  x,y,z          1.0000000000  0.0000000000  0.0000000000 0.0000000000  0.0000000000  
+  1.0000000000  0.0000000000 0.0000000000  0.0000000000 0.0000000000 1.0000000000  0.0000000000  
+  2 'crystal symmetry operation' 15_556 y,x,-z+1       0.0000000000  1.0000000000  0.0000000000 0.0000000000  1.0000000000  
+  0.0000000000  0.0000000000 0.0000000000  0.0000000000 0.0000000000 -1.0000000000 52.5900000000 
+  3 'crystal symmetry operation' 10_665 -x+1,-y+1,z    -1.0000000000 0.0000000000  0.0000000000 68.7500000000 0.0000000000  
+  -1.0000000000 0.0000000000 68.7500000000 0.0000000000 0.0000000000 1.0000000000  0.0000000000  
+  4 'crystal symmetry operation' 8_666  -y+1,-x+1,-z+1 0.0000000000  -1.0000000000 0.0000000000 68.7500000000 -1.0000000000 
+  0.0000000000  0.0000000000 68.7500000000 0.0000000000 0.0000000000 -1.0000000000 52.5900000000 
+  # 
 
    */
 
   private String[] assem = null;
+
   //private String data;
   //private String key;
-  
+
   public void processEntry() throws Exception {
     if (cr.key.startsWith("_pdbx_entity_nonpoly"))
       processDataNonpoly();
     else if (cr.key.startsWith("_pdbx_struct_assembly_gen"))
       processDataAssemblyGen();
   }
-  
+
   final private static byte STRUCT_REF_G3 = 0;
   final private static byte STRUCT_REF_G1 = 1;
 
   final private static String[] structRefFields = {
-    "_struct_ref_seq_dif_mon_id", 
-    "_struct_ref_seq_dif.db_mon_id" 
-  };
+      "_struct_ref_seq_dif_mon_id", "_struct_ref_seq_dif.db_mon_id" };
 
   private boolean processSequence() throws Exception {
     parseLoopParameters(structRefFields);
@@ -215,7 +218,8 @@ _pdbx_struct_oper_list.vector[3]
       }
       if (g1 != null && g3 != null) {
         if (cr.htGroup1 == null)
-          cr.asc.setInfo("htGroup1", cr.htGroup1 = new Hashtable<String, String>());
+          cr.asc.setInfo("htGroup1",
+              cr.htGroup1 = new Hashtable<String, String>());
         cr.htGroup1.put(g3, g1);
       }
     }
@@ -281,48 +285,52 @@ _pdbx_struct_oper_list.vector[3]
     if (!cr.checkFilterKey("ASSEMBLY " + id + ";"))
       return;
     if (vBiomolecules == null) {
-      vBiomolecules = new  Lst<Map<String,Object>>();
+      vBiomolecules = new Lst<Map<String, Object>>();
     }
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("name", "biomolecule " + id);
-    info.put("molecule", iMolecule == Integer.MIN_VALUE ? id : Integer.valueOf(iMolecule));
+    info.put("molecule",
+        iMolecule == Integer.MIN_VALUE ? id : Integer.valueOf(iMolecule));
     info.put("assemblies", "$" + list.replace(',', '$'));
     info.put("operators", decodeAssemblyOperators(assem[ASSEM_OPERS]));
-    info.put("biomts", new  Lst<M4>());
+    info.put("biomts", new Lst<M4>());
     thisBiomolecule = info;
-    Logger.info("assembly " + id + " operators " + assem[ASSEM_OPERS] + " ASYM_IDs " + assem[ASSEM_LIST]);
+    Logger.info("assembly " + id + " operators " + assem[ASSEM_OPERS]
+        + " ASYM_IDs " + assem[ASSEM_LIST]);
     vBiomolecules.addLast(info);
     assem = null;
   }
 
   private String decodeAssemblyOperators(String ops) {
-    
-//    Identifies the operation of collection of operations 
-//    from category PDBX_STRUCT_OPER_LIST.  
-//
-//    Operation expressions may have the forms:
-//
-//     (1)        the single operation 1
-//     (1,2,5)    the operations 1, 2, 5
-//     (1-4)      the operations 1,2,3 and 4
-//     (1,2)(3,4) the combinations of operations
-//                3 and 4 followed by 1 and 2 (i.e.
-//                the cartesian product of parenthetical
-//                groups applied from right to left)
+
+    //    Identifies the operation of collection of operations 
+    //    from category PDBX_STRUCT_OPER_LIST.  
+    //
+    //    Operation expressions may have the forms:
+    //
+    //     (1)        the single operation 1
+    //     (1,2,5)    the operations 1, 2, 5
+    //     (1-4)      the operations 1,2,3 and 4
+    //     (1,2)(3,4) the combinations of operations
+    //                3 and 4 followed by 1 and 2 (i.e.
+    //                the cartesian product of parenthetical
+    //                groups applied from right to left)
     int pt = ops.indexOf(")(");
     if (pt >= 0)
-      return crossBinary(decodeAssemblyOperators(ops.substring(0, pt + 1)),decodeAssemblyOperators(ops.substring(pt + 1)));
+      return crossBinary(decodeAssemblyOperators(ops.substring(0, pt + 1)),
+          decodeAssemblyOperators(ops.substring(pt + 1)));
     if (ops.startsWith("(")) {
       if (ops.indexOf("-") >= 0)
-        ops = BS.unescape("({" + ops.substring(1, ops.length() - 1).replace('-', ':') + "})").toString();
+        ops = BS.unescape(
+            "({" + ops.substring(1, ops.length() - 1).replace('-', ':') + "})")
+            .toString();
       ops = PT.rep(ops, " ", "");
       ops = ops.substring(1, ops.length() - 1);
     }
     return ops;
   }
 
-  private String crossBinary(String ops1,
-                             String ops2) {
+  private String crossBinary(String ops1, String ops2) {
     SB sb = new SB();
     String[] opsLeft = PT.split(ops1, ",");
     String[] opsRight = PT.split(ops2, ",");
@@ -345,7 +353,7 @@ _pdbx_struct_oper_list.vector[3]
       for (int i = 0; i < n; ++i) {
         int p = fieldProperty(i);
         switch (p) {
-        case NONE :
+        case NONE:
           break;
         case OPER_ID:
           id = field;
@@ -376,7 +384,6 @@ _pdbx_struct_oper_list.vector[3]
     return true;
   }
 
-
   ////////////////////////////////////////////////////////////////
   // HETATM identity
   ////////////////////////////////////////////////////////////////
@@ -385,12 +392,10 @@ _pdbx_struct_oper_list.vector[3]
   final private static byte NONPOLY_NAME = 1;
   final private static byte NONPOLY_COMP_ID = 2;
 
-  final private static String[] nonpolyFields = { 
-      "_pdbx_entity_nonpoly_entity_id",
-      "_pdbx_entity_nonpoly_name", 
-      "_pdbx_entity_nonpoly_comp_id", 
-  };
-  
+  final private static String[] nonpolyFields = {
+      "_pdbx_entity_nonpoly_entity_id", "_pdbx_entity_nonpoly_name",
+      "_pdbx_entity_nonpoly_comp_id", };
+
   /**
    * 
    * optional nonloop format -- see 1jsa.cif
@@ -402,23 +407,20 @@ _pdbx_struct_oper_list.vector[3]
 
   private char firstChar;
 
-  
   ////////////////////////////////////////////////////////////////
   // HETATM identity
   ////////////////////////////////////////////////////////////////
-  
+
   final private static byte CHEM_COMP_ID = 0;
   final private static byte CHEM_COMP_NAME = 1;
 
-  final private static String[] chemCompFields = { 
-      "_chem_comp_id",
-      "_chem_comp_name",
-  };
-  
+  final private static String[] chemCompFields = { "_chem_comp_id",
+      "_chem_comp_name", };
 
   /**
    * 
    * a general name definition field. Not all hetero
+   * 
    * @return true if successful; false to skip
    * 
    * @throws Exception
@@ -450,7 +452,7 @@ _pdbx_struct_oper_list.vector[3]
   /**
    * 
    * a HETERO name definition field. Maybe not all hetero? nonpoly?
-
+   * 
    * @return true if successful; false to skip
    * 
    * @throws Exception
@@ -497,7 +499,7 @@ _pdbx_struct_oper_list.vector[3]
       Logger.debug("hetero: " + groupName + " = " + hetName);
     }
   }
-  
+
   ////////////////////////////////////////////////////////////////
   // helix and turn structure data
   ////////////////////////////////////////////////////////////////
@@ -513,19 +515,12 @@ _pdbx_struct_oper_list.vector[3]
   final private static byte SERIAL_NO = 8;
   final private static byte HELIX_CLASS = 9;
 
-
-  final private static String[] structConfFields = { 
-      "_struct_conf_conf_type_id",
-      "_struct_conf_beg_auth_asym_id", 
-      "_struct_conf_beg_auth_seq_id",
-      "_struct_conf_pdbx_beg_pdb_ins_code",
-      "_struct_conf_end_auth_asym_id", 
-      "_struct_conf_end_auth_seq_id",
-      "_struct_conf_pdbx_end_pdb_ins_code",
-      "_struct_conf_id", 
-      "_struct_conf_pdbx_pdb_helix_id", 
-      "_struct_conf_pdbx_pdb_helix_class"
-  };
+  final private static String[] structConfFields = {
+      "_struct_conf_conf_type_id", "_struct_conf_beg_auth_asym_id",
+      "_struct_conf_beg_auth_seq_id", "_struct_conf_pdbx_beg_pdb_ins_code",
+      "_struct_conf_end_auth_asym_id", "_struct_conf_end_auth_seq_id",
+      "_struct_conf_pdbx_end_pdb_ins_code", "_struct_conf_id",
+      "_struct_conf_pdbx_pdb_helix_id", "_struct_conf_pdbx_pdb_helix_class" };
 
   /**
    * identifies ranges for HELIX and TURN
@@ -571,7 +566,8 @@ _pdbx_struct_oper_list.vector[3]
           structure.endSequenceNumber = cr.parseIntStr(field);
           break;
         case HELIX_CLASS:
-          structure.substructureType = Structure.getHelixType(cr.parseIntStr(field));
+          structure.substructureType = Structure.getHelixType(cr
+              .parseIntStr(field));
           break;
         case END_INS_CODE:
           structure.endInsertionCode = firstChar;
@@ -588,6 +584,7 @@ _pdbx_struct_oper_list.vector[3]
     }
     return true;
   }
+
   ////////////////////////////////////////////////////////////////
   // sheet structure data
   ////////////////////////////////////////////////////////////////
@@ -596,19 +593,18 @@ _pdbx_struct_oper_list.vector[3]
   final private static byte STRAND_ID = 7;
 
   final private static String[] structSheetRangeFields = {
-    "_struct_sheet_range_sheet_id",  //unused placeholder
-    "_struct_sheet_range_beg_auth_asym_id",
-    "_struct_sheet_range_beg_auth_seq_id",
-    "_struct_sheet_range_pdbx_beg_pdb_ins_code",
-    "_struct_sheet_range_end_auth_asym_id",
-    "_struct_sheet_range_end_auth_seq_id",
-    "_struct_sheet_range_pdbx_end_pdb_ins_code", 
-    "_struct_sheet_range_id",
-  };
+      "_struct_sheet_range_sheet_id", //unused placeholder
+      "_struct_sheet_range_beg_auth_asym_id",
+      "_struct_sheet_range_beg_auth_seq_id",
+      "_struct_sheet_range_pdbx_beg_pdb_ins_code",
+      "_struct_sheet_range_end_auth_asym_id",
+      "_struct_sheet_range_end_auth_seq_id",
+      "_struct_sheet_range_pdbx_end_pdb_ins_code", "_struct_sheet_range_id", };
 
   /**
    * 
    * identifies sheet ranges
+   * 
    * @return true if successful; false to skip
    * 
    * @throws Exception
@@ -670,39 +666,36 @@ _pdbx_struct_oper_list.vector[3]
   final private static byte SITE_INS_CODE = 4; //???
 
   final private static String[] structSiteRangeFields = {
-    "_struct_site_gen_site_id",  
-    "_struct_site_gen_auth_comp_id", 
-    "_struct_site_gen_auth_asym_id", 
-    "_struct_site_gen_auth_seq_id",  
-    "_struct_site_gen_label_alt_id",  //should be an insertion code, not an alt ID? 
+      "_struct_site_gen_site_id", "_struct_site_gen_auth_comp_id",
+      "_struct_site_gen_auth_asym_id", "_struct_site_gen_auth_seq_id",
+      "_struct_site_gen_label_alt_id", //should be an insertion code, not an alt ID? 
   };
 
-  
-//  loop_
-//  _struct_site_gen.id 
-//  _struct_site_gen.site_id 
-//  _struct_site_gen.pdbx_num_res 
-//  _struct_site_gen.label_comp_id 
-//  _struct_site_gen.label_asym_id 
-//  _struct_site_gen.label_seq_id 
-//  _struct_site_gen.auth_comp_id 
-//  _struct_site_gen.auth_asym_id 
-//  _struct_site_gen.auth_seq_id 
-//  _struct_site_gen.label_atom_id 
-//  _struct_site_gen.label_alt_id 
-//  _struct_site_gen.symmetry 
-//  _struct_site_gen.details 
-//  1 CAT 5 GLN A 92  GLN A 92  . . ? ? 
-//  2 CAT 5 GLU A 58  GLU A 58  . . ? ? 
-//  3 CAT 5 HIS A 40  HIS A 40  . . ? ? 
-//  4 CAT 5 TYR A 38  TYR A 38  . . ? ? 
-//  5 CAT 5 PHE A 100 PHE A 100 . . ? ? 
-//  # 
-
+  //  loop_
+  //  _struct_site_gen.id 
+  //  _struct_site_gen.site_id 
+  //  _struct_site_gen.pdbx_num_res 
+  //  _struct_site_gen.label_comp_id 
+  //  _struct_site_gen.label_asym_id 
+  //  _struct_site_gen.label_seq_id 
+  //  _struct_site_gen.auth_comp_id 
+  //  _struct_site_gen.auth_asym_id 
+  //  _struct_site_gen.auth_seq_id 
+  //  _struct_site_gen.label_atom_id 
+  //  _struct_site_gen.label_alt_id 
+  //  _struct_site_gen.symmetry 
+  //  _struct_site_gen.details 
+  //  1 CAT 5 GLN A 92  GLN A 92  . . ? ? 
+  //  2 CAT 5 GLU A 58  GLU A 58  . . ? ? 
+  //  3 CAT 5 HIS A 40  HIS A 40  . . ? ? 
+  //  4 CAT 5 TYR A 38  TYR A 38  . . ? ? 
+  //  5 CAT 5 PHE A 100 PHE A 100 . . ? ? 
+  //  # 
 
   /**
    * 
    * identifies structure sites
+   * 
    * @return true if successful; false to skip
    * 
    * @throws Exception
@@ -761,9 +754,9 @@ _pdbx_struct_oper_list.vector[3]
         }
         if (seqNum != "" && resID != "")
           group = "[" + resID + "]" + seqNum
-            + (insCode.length() > 0 ?  "^" + insCode : "")
-            + (chainID.length() > 0 ? ":" + chainID : "");
-      }      
+              + (insCode.length() > 0 ? "^" + insCode : "")
+              + (chainID.length() > 0 ? ":" + chainID : "");
+      }
     }
     if (group != "") {
       String groups = (String) htSite.get("groups");
@@ -775,9 +768,8 @@ _pdbx_struct_oper_list.vector[3]
   }
 
   private int fieldProperty(int i) {
-    return ((field = cr.parser.getLoopData(i)).length() > 0 
-        && (firstChar = field.charAt(0)) != '\0' ? 
-            cr.propertyOf[i] : NONE);
+    return ((field = cr.parser.getLoopData(i)).length() > 0
+        && (firstChar = field.charAt(0)) != '\0' ? cr.propertyOf[i] : NONE);
   }
 
   private void setBiomolecules(Map<String, Object> biomolecule) {
@@ -800,27 +792,27 @@ _pdbx_struct_oper_list.vector[3]
     int nAtoms = 0;
     String[] ids = PT.split(assemblies, "$");
     for (int j = 1; j < ids.length; j++) {
-        String id = ids[j];
-        if (assemblyIdAtoms != null) {
-          BS bs = assemblyIdAtoms.get(id);
-          if (bs != null) {
-            //System.out.println(id + " " + bs.cardinality());
-            bsAll.or(bs);
-          }
-        } else if (isCourseGrained) {
-          P3 asum = chainAtomMap.get(id);
-          int c = chainAtomCounts.get(id)[0];
-          if (asum != null) {
-            if (bySymop) {
-              sum.add(asum);
-              count += c;
-            } else {
-              createParticle(id);
-              nAtoms++;
-            }
+      String id = ids[j];
+      if (assemblyIdAtoms != null) {
+        BS bs = assemblyIdAtoms.get(id);
+        if (bs != null) {
+          //System.out.println(id + " " + bs.cardinality());
+          bsAll.or(bs);
+        }
+      } else if (isCourseGrained) {
+        P3 asum = chainAtomMap.get(id);
+        int c = chainAtomCounts.get(id)[0];
+        if (asum != null) {
+          if (bySymop) {
+            sum.add(asum);
+            count += c;
+          } else {
+            createParticle(id);
+            nAtoms++;
           }
         }
       }
+    }
     if (isCourseGrained) {
       if (bySymop) {
         nAtoms = 1;
@@ -842,7 +834,7 @@ _pdbx_struct_oper_list.vector[3]
     int c = chainAtomCounts.get(id)[0];
     Atom a = new Atom();
     a.setT(asum);
-    a.scale(1f/c);
+    a.scale(1f / c);
     a.elementSymbol = "Pt";
     a.chainID = cr.vwr.getChainID(id);
     a.radius = 16;
@@ -855,12 +847,11 @@ _pdbx_struct_oper_list.vector[3]
     int pt = ops.indexOf("|");
     if (pt >= 0) {
       M4 m = M4.newM4(htBiomts.get(ops.substring(0, pt)));
-      m.mul(htBiomts.get(ops.substring(pt+1)));
+      m.mul(htBiomts.get(ops.substring(pt + 1)));
       return m;
     }
     return htBiomts.get(ops);
   }
-
 
   ////////////////////////////////////////////////////////////////
   // bond data
@@ -871,12 +862,9 @@ _pdbx_struct_oper_list.vector[3]
   final private static byte CHEM_COMP_BOND_VALUE_ORDER = 2;
   final private static byte CHEM_COMP_BOND_AROMATIC_FLAG = 3;
   final private static String[] chemCompBondFields = {
-    "_chem_comp_bond_atom_id_1",
-    "_chem_comp_bond_atom_id_2",
-    "_chem_comp_bond_value_order",
-    "_chem_comp_bond_pdbx_aromatic_flag", 
-  };
-  
+      "_chem_comp_bond_atom_id_1", "_chem_comp_bond_atom_id_2",
+      "_chem_comp_bond_value_order", "_chem_comp_bond_pdbx_aromatic_flag", };
+
   private boolean processLigandBondLoopBlock() throws Exception {
     parseLoopParameters(chemCompBondFields);
     for (int i = propertyCount; --i >= 0;)
@@ -957,8 +945,7 @@ _pdbx_struct_oper_list.vector[3]
     }
     if (atom.isHetero && htHetero != null) {
       cr.asc.setAtomSetAuxiliaryInfo("hetNames", htHetero);
-      cr.asc.setInfo("hetNames",
-          htHetero);
+      cr.asc.setInfo("hetNames", htHetero);
       htHetero = null;
     }
     return true;
@@ -984,11 +971,11 @@ _pdbx_struct_oper_list.vector[3]
       return processChemCompLoopBlock();
     if (key.startsWith("_pdbx_entity_nonpoly"))
       return processNonpolyLoopBlock();
-    if (key.startsWith("_struct_conf")
-        && !key.startsWith("_struct_conf_type"))
+    if (key.startsWith("_struct_conf") && !key.startsWith("_struct_conf_type"))
       return processStructConfLoopBlock();
     if (key.startsWith("_struct_sheet_range"))
       return processStructSheetRangeLoopBlock();
     return false;
   }
+
 }

@@ -604,18 +604,30 @@ public final class Resolver implements JmolBioResolver {
   }
 
   @Override
-  public String fixPropertyValue(BS bsAtoms, String data) {
-    String[] aData = PT.split(data, "\n");
+  public Object fixPropertyValue(BS bsAtoms, Object data) {
     Atom[] atoms = ms.at;
-    String[] newData = new String[bsAtoms.cardinality()];
-    String lastData = "";
+    if (data instanceof String) {
+      String[] sData = PT.split((String) data, "\n");
+      String[] newData = new String[bsAtoms.cardinality()];
+      String lastData = "";
+      for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i), iAtom++) {
+        if (atoms[i].getElementNumber() != 1)
+          lastData = sData[pt++];
+        newData[iAtom] = lastData;
+      }
+      return PT.join(newData, '\n', 0);
+    }
+    float[] fData = (float[]) data;
+    float[] newData = new float[bsAtoms.cardinality()];
+    float lastData = 0;
     for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
         .nextSetBit(i), iAtom++) {
       if (atoms[i].getElementNumber() != 1)
-        lastData = aData[pt++];
+        lastData = fData[pt++];
       newData[iAtom] = lastData;
     }
-    return PT.join(newData, '\n', 0);
+    return newData;
   }
 
   static BioPolymer allocateBioPolymer(Group[] groups, int firstGroupIndex,

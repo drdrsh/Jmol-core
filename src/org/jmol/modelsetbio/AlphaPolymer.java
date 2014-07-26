@@ -76,7 +76,7 @@ public class AlphaPolymer extends BioPolymer {
     if ((indexStart = getIndex(startChainID, startSeqcode, i0, i1)) == -1
         || (indexEnd = getIndex(endChainID, endSeqcode, i0, i1)) == -1)
       return;
-    if (type != STR.ANNOTATION && istart >= 0 && bsAssigned != null) {
+    if (/*type != STR.ANNOTATION &&*/ istart >= 0 && bsAssigned != null) {
       int pt = bsAssigned.nextSetBit(monomers[indexStart].firstAtomIndex);
       if (pt >= 0 && pt < monomers[indexEnd].lastAtomIndex)
         return;
@@ -99,12 +99,12 @@ public class AlphaPolymer extends BioPolymer {
     }
     int structureCount = indexEnd - indexStart + 1;
     ProteinStructure ps = null;
-    boolean isAnnotation = false;
+//    boolean isAnnotation = false;
     switch(type) {
-    case ANNOTATION:
-      ps = new Annotation(this, indexStart, structureCount, structureID);
-      isAnnotation = true;
-      break;
+//    case ANNOTATION:
+//      ps = new Annotation(this, indexStart, structureCount, structureID);
+//      isAnnotation = true;
+//      break;
     case HELIX:
     case HELIXALPHA:
     case HELIX310:
@@ -125,7 +125,7 @@ public class AlphaPolymer extends BioPolymer {
     ps.serialID = serialID;
     ps.strandCount = strandCount;
       for (int i = indexStart; i <= indexEnd; ++i) {
-        ((AlphaMonomer)monomers[i]).setStructure(ps, isAnnotation);
+        ((AlphaMonomer)monomers[i]).setStructure(ps);//, isAnnotation);
     }
     return true;
   }
@@ -133,7 +133,7 @@ public class AlphaPolymer extends BioPolymer {
   @Override
   public void clearStructures() {
     for (int i = 0; i < monomerCount; i++)
-      ((AlphaMonomer)monomers[i]).setStructure(null, false);
+      ((AlphaMonomer)monomers[i]).setStructure(null);//, false);
   }
 
   ///////////////////////////////////////////////////////////

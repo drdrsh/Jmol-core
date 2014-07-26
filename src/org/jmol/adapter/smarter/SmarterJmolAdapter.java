@@ -201,16 +201,13 @@ public class SmarterJmolAdapter extends JmolAdapter {
       String s = "";
       for (int i = 0; i < size; i++) {
         String f = vwr.getFileAsString(names[i], false);
-        if (f.startsWith("java.") && names[i].startsWith("http://ves-hx-89.ebi.ac.uk")) {
-          f = vwr.getFileAsString(names[i].substring(names[i].lastIndexOf("/") + 1)+ ".json", false);
-        }
-        if (i == 1 && size == 2 && f.startsWith("{")) {
-          // JSON annotations
-
+        if (i > 0 && size <= 3 && f.startsWith("{")) {
+          // JSON annotations and validations; could have both
+          // hack to determine type:
+          String type = (f.contains("\"value\":") ? "validations" : "annotations");
           SV x = vwr.evaluateExpressionAsVariable(f);
-          if (x != null && x.getMap() != null) {
-            htParams.put("annotations", x);
-          }
+          if (x != null && x.getMap() != null)
+            htParams.put(type, x);
           continue;
         }
         s += f;
