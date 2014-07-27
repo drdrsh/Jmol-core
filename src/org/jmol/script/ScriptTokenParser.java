@@ -685,6 +685,7 @@ abstract class ScriptTokenParser {
       case T.smiles:
       case T.substructure:
       case T.annotations:
+      case T.validation:
         addTokenToPostfix(T.string, theValue);
         if (!addNextTokenIf(T.comma))
           return false;

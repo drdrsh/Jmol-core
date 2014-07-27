@@ -413,6 +413,9 @@ public final class ModelLoader {
     for (int i = baseModelIndex; i < modelCount; i++) {
       Map<String, Object> atomProperties = (Map<String, Object>) ms.getInfo(i,
           "atomProperties");
+      // list of properties that are to be transfered to H atoms as well.
+      String groupList = (String) ms.getInfo(i,
+          "groupPropertyList");
       if (atomProperties == null)
         continue;
       for (Map.Entry<String, Object> entry : atomProperties.entrySet()) {
@@ -420,8 +423,10 @@ public final class ModelLoader {
         Object value = entry.getValue();
         // no deletions yet...
         BS bs = ms.getModelAtomBitSetIncludingDeleted(i, true);
-        if (doAddHydrogens)
-          value = jbr.fixPropertyValue(bs, value);
+        if (doAddHydrogens) {
+          boolean isGroup = (groupList != null && PT.isOneOf(key,  groupList));
+          value = jbr.fixPropertyValue(bs, value, isGroup);
+        }
         key = "property_" + key.toLowerCase();
         Logger.info("creating " + key + " for model " + ms.getModelName(i));
         vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE }, ms.ac, 0,

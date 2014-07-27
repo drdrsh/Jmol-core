@@ -167,7 +167,9 @@ public class PropertyManager implements JmolPropertyManager {
     "JSpecView"       , "<key>", "",
     "scriptQueueInfo" , "", "",
     "nmrInfo" , "<elementSymbol> or 'all' or 'shifts'", "all",
-    "variableInfo","<name>","all"
+    "variableInfo","<name>","all",
+    "annotationInfo"  , atomExpression, "{visible}",
+    "validationInfo"  , atomExpression, "{visible}"
   };
 
   private final static int PROP_APPLET_INFO = 0;
@@ -218,7 +220,9 @@ public class PropertyManager implements JmolPropertyManager {
   private final static int PROP_SCRIPT_QUEUE_INFO = 39;
   private final static int PROP_NMR_INFO = 40;
   private final static int PROP_VAR_INFO = 41;
-  private final static int PROP_COUNT = 42;
+  private final static int PROP_ANN_INFO = 42;
+  private final static int PROP_VAL_INFO = 43;
+  private final static int PROP_COUNT = 44;
 
   //// static methods used by Eval and Viewer ////
 
@@ -615,6 +619,10 @@ public class PropertyManager implements JmolPropertyManager {
       return vwr.getStateInfo3(myParam.toString(), 0, 0);
     case PROP_TRANSFORM_INFO:
       return vwr.tm.getMatrixRotate();
+    case PROP_ANN_INFO:
+      return getAnnotationInfo(myParam, T.annotations);
+    case PROP_VAL_INFO:
+      return getAnnotationInfo(myParam, T.validation);
     }
     String[] data = new String[PROP_COUNT];
     for (int i = 0; i < PROP_COUNT; i++) {
@@ -1604,6 +1612,20 @@ public class PropertyManager implements JmolPropertyManager {
   private Map<String, Object> getAuxiliaryInfo(Object atomExpression) {
     return vwr.ms.getAuxiliaryInfo(vwr.ms.getModelBS(
         vwr.getAtomBitSet(atomExpression), false));
+  }
+
+  private SV getAnnotationInfo(Object atomExpression, int type) {
+    BS bsAtoms = vwr.getAtomBitSet(atomExpression);
+    int iModel = vwr.ms.getModelBS(bsAtoms, false).nextSetBit(0);
+    if (iModel < 0)
+      return null;
+    Map<String, Object> modelinfo = vwr.ms.getModelAuxiliaryInfo(iModel);
+    SV objAnn = (SV) modelinfo.get(type == T.annotations ? "annotations"
+        : "validation");
+    if (objAnn == null || objAnn.tok != T.hash)
+      return null;
+    vwr.getAnnotationParser().initializeAnnotation(objAnn, type);
+    return objAnn.getMap().get("_list");    
   }
 
   @SuppressWarnings("unchecked")

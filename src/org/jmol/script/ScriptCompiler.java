@@ -1052,8 +1052,8 @@ public class ScriptCompiler extends ScriptTokenParser {
     }
     switch (tokCommand) {
     case T.show:
-      // allowing for show annotation to take up rest of line
-      if (nTokens != 2 || lastToken.tok != T.annotations)
+      // allowing for show annotations and validation to take up rest of line
+      if (nTokens != 2 || lastToken.tok != T.annotations && lastToken.tok != T.validation)
         return OK;
       //$FALL-THROUGH$
     case T.load:

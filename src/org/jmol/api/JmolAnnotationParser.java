@@ -28,7 +28,8 @@ public interface JmolAnnotationParser {
 
   Lst<Object> catalogValidations(Viewer vwr, SV validation, int[] modelAtomIndices,
                             Map<String, int[]> valResMap,
-                            Map<String, Integer> map);
+                            Map<String, Integer> map, Map<String, Integer> modelMap);
 
-
+  SV initializeAnnotation(SV objAnn, int type);
+  
 }

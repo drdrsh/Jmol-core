@@ -1172,7 +1172,7 @@ public class AnnotationParser implements JmolAnnotationParser {
    if (map.containsKey("_map"))
      map = map.get("_map").getMap();
    //    map = map.values().iterator().next().getMap();
-   String detailKey = (type == T.annotations ? "mappings" : "outliers");
+   String detailKey = getDataKey(type);
    if (showDetail && map.containsKey(detailKey)) {
      sb.append(map.get(detailKey).asString()).append("\n");
      return;
@@ -1204,13 +1204,27 @@ public class AnnotationParser implements JmolAnnotationParser {
    }
  }
 
- /**
-  * Returns a Lst<Object> of property data in the form 
-  * name(String), data(float[]), modelIndex (Integer);
-  * 
-  */
+  private String getDataKey(int type) {
+    switch (type) {
+    case T.annotations:
+      return "mappings";
+    case T.validation: 
+      return "outliers";
+    }
+  return null;
+}
+
+  /**
+   * Returns a Lst<Object> of property data in the form name(String),
+   * data(float[]), modelIndex (Integer), isGroup (Boolean);
+   * 
+   */
   @Override
-  public Lst<Object> catalogValidations(Viewer viewer, SV map0, int[] modelAtomIndices, Map<String, int[]> resMap, Map<String, Integer> atomMap) {
+  public Lst<Object> catalogValidations(Viewer viewer, SV map0,
+                                        int[] modelAtomIndices,
+                                        Map<String, int[]> resMap,
+                                        Map<String, Integer> atomMap,
+                                        Map<String, Integer> modelMap) {
     Map<String, SV> data = map0.getMap();
     if (data == null)
       return null;
@@ -1221,6 +1235,8 @@ public class AnnotationParser implements JmolAnnotationParser {
       data = data.entrySet().iterator().next().getValue().getMap();
       // add _map as a new top-level key pointing to the same thing
       map0.getMap().put("_map", SV.newV(T.hash, data));
+      Lst<SV> list = new Lst<SV>();
+      map0.getMap().put("_list", SV.newV(T.varray, list));
 
       //    {
       //      "1blu": {
@@ -1253,21 +1269,33 @@ public class AnnotationParser implements JmolAnnotationParser {
           boolean hasUnit = false;
           String key = e.getKey();
           SV svType = SV.newS(key);
+          boolean isRes = false;
           for (int j = outliers.size(); --j >= 0;) {
-            map = outliers.get(j).getMap();
+            SV out = outliers.get(j);
+            map = out.getMap();
             sv = map.get("units");
             SV svv = map.get("value");
-            BS bsAtoms = new BS();
-            map.put("_atoms", SV.getVariable(bsAtoms));
-            map.put("_type", svType);            
             float val = (svv == null ? 1 : SV.fValue(svv));
-            Lst<SV> units = (val == 0 || sv == null || sv.tok != T.varray ? null
-                : sv.getList());
-            if (units != null && units.size() > 0) {
-              hasUnit = true;
-              for (int k = units.size(); --k >= 0;)
-                catalogUnit(viewer, floats, units.get(k).asString(), val, bsAtoms,
-                    modelAtomIndices, resMap, atomMap);
+            Lst<SV> units = (val == 0 || sv == null || sv.tok == T.varray ? sv
+                .getList() : sv.tok == T.string ? new Lst<SV>() : null);
+            if (units != null) {
+              if (sv.tok == T.string) {
+                // optional string of unit ids
+                String[] svl = PT.split(sv.asString(),",");
+                for (int i = svl.length; --i >= 0;)
+                  units.addLast(SV.newS(svl[i].trim()));
+              }
+              if (units.size() > 0) {
+                BS bsAtoms = new BS();
+                map.put("_atoms", SV.getVariable(bsAtoms));
+                map.put("_type", svType);
+                hasUnit = true;
+                list.addLast(out);
+                for (int k = units.size(); --k >= 0;) {
+                  isRes |= catalogUnit(viewer, floats, units.get(k).asString(),
+                      val, bsAtoms, modelAtomIndices, resMap, atomMap, modelMap);
+                }
+              }
             }
           }
           if (hasUnit) {
@@ -1276,6 +1304,7 @@ public class AnnotationParser implements JmolAnnotationParser {
                 retProperties.addLast(key);
                 retProperties.addLast(floats[m]);
                 retProperties.addLast(Integer.valueOf(m));
+                retProperties.addLast(Boolean.valueOf(isRes));
               }
           }
         }
@@ -1291,11 +1320,17 @@ public class AnnotationParser implements JmolAnnotationParser {
    * We create a main list of mappings, where each mapping
    * has _atoms, _dbName, _domainName.
    * 
-   * @param map
+   * @param objAnn
    * @return  main map
    */
-  private SV initializeAnnotation(Map<String, SV> map) {
-    SV main = map.entrySet().iterator().next().getValue();
+  @Override
+  public SV initializeAnnotation(SV objAnn, int type) {
+    Map<String, SV> map = objAnn.getMap();
+    SV main = map.get("_map");
+    if (main != null)
+      return main;  
+    String dataKey = getDataKey(type);
+    main = map.entrySet().iterator().next().getValue();
     map.put("_map",  main);
     boolean noSingles = true; // different for validation
     Map<String, SV> _cat = new Hashtable<String, SV>();
@@ -1310,7 +1345,7 @@ public class AnnotationParser implements JmolAnnotationParser {
         String _domainName = e2.getKey();
         SV _domainMap = e2.getValue();
 
-        SV _domainList = _domainMap.mapGet("mappings");
+        SV _domainList = _domainMap.mapGet(dataKey);
         Lst<SV> _mapList = _domainList.getList();
         for (int i = _mapList.size(); --i >= 0;) {
           SV mapping = _mapList.get(i);
@@ -1355,21 +1390,26 @@ public class AnnotationParser implements JmolAnnotationParser {
    * @param key
    * @param bs
    */
+  @SuppressWarnings("unchecked")
   private void findAnnotationAtoms(Viewer vwr, String name,
-                                   Map<String, SV> map, String key, BS bs) {
+                                   SV map, String key, BS bs) {
     if (map == null)
       return;
     System.out.println("Checking " + name + " for " + key);
     Object data = vwr.extractProperty(map, "[" + key + "]", -1);
-    if (!(data instanceof SV))
-      return;
-    Lst<SV> list = ((SV) data).getList();
+    Lst<SV> list = null;
+    if (data instanceof Lst) {
+      list = (Lst<SV>) data;
+    } else  if (data instanceof SV) {
+      list = ((SV) data).getList();
+    }
     if (list == null)
       return;
 
     // go through all mappings
     for (int i = 0, n = list.size(); i < n; i++) {
-      Map<String, SV> mapping = list.get(i).getMap();
+      Object o = list.get(i);
+      Map<String, SV> mapping = (o instanceof SV ? ((SV)o).getMap() : (Map<String, SV>) o);
       if (mapping == null)
         return;
       SV _atoms = mapping.get("_atoms");
@@ -1436,22 +1476,29 @@ public class AnnotationParser implements JmolAnnotationParser {
 
   /**
    * Carried out for each unit
-   * @param viewer 
    * 
+   * @param viewer
    * @param vals
    *        model-based array of float values for a given validation type
    * @param unitID
    * @param val
-   * @param bsAtoms 
-   * @param modelAtomIndices 
-   * @param resMap 
-   * @param atomMap 
+   * @param bsAtoms
+   * @param modelAtomIndices
+   * @param resMap
+   * @param atomMap
+   * @param modelMap
+   *        TODO
+   * 
+   * @return true if this is residue-based validation (to be added to H atoms
+   *         when pdbAddHydrogens is set
    */
-  private static void catalogUnit(Viewer viewer, float[][] vals, String unitID, float val, BS bsAtoms, int[] modelAtomIndices,
-                                  Map<String, int[]> resMap, Map<String, Integer> atomMap
-                                  
-      
-      ) {
+  private boolean catalogUnit(Viewer viewer, float[][] vals, String unitID,
+                              float val, BS bsAtoms, int[] modelAtomIndices,
+                              Map<String, int[]> resMap,
+                              Map<String, Integer> atomMap,
+                              Map<String, Integer> modelMap
+
+  ) {
 
     // (pdbid)|model|chain|RESNAME|resno|ATOMNAME|altcode|inscode|(symmetry)
     //   0       1     2      3      4      5        6       7       8
@@ -1466,14 +1513,19 @@ public class AnnotationParser implements JmolAnnotationParser {
     // must have at least model, chain, resname, and resno
     if (s.length < 8 || s[1].length() == 0 || s[2].length() == 0
         || s[3].length() == 0 || s[4].length() == 0)
-      return;
-    int m = (s[1].length() == 0 ? 0 : PT.parseInt(s[1]) - 1);
+      return false;
+    String sm = (s[1].length() == 0 ? "1" : s[1]);
+    int m = (modelMap == null ? PT.parseInt(sm) - 1 : -1);
+    Integer im = (m >= 0 ? null : modelMap.get(sm));
+    if (im != null)
+      m = im.intValue();
+    if (m >= modelAtomIndices.length)
+      return false;
     String res = s[1] + "_" + viewer.getChainID(s[2]) + "_" + s[4] + "_"
         + s[7].toLowerCase();
-    if (m >= modelAtomIndices.length)
-      return;
     int i0 = modelAtomIndices[m];
-    if (atomMap == null || s[5].length() == 0 ) {
+    boolean isRes = (atomMap == null || s[5].length() == 0);
+    if (isRes) {
       int[] a2 = resMap.get(res);
       if (a2 != null)
         for (int j = a2[1], j0 = a2[0]; --j >= j0;) {
@@ -1489,6 +1541,7 @@ public class AnnotationParser implements JmolAnnotationParser {
         vals[m][j] += Math.abs(val);
       }
     }
+    return isRes;
   }
   
   ///////////////////// general post-load processing ////////////////
@@ -1530,23 +1583,20 @@ public class AnnotationParser implements JmolAnnotationParser {
       if (doCache)
         dssrCache.put(key, bs);
       Object data;
-      if (!isAnnotations) {
+      if (!isAnnotations && !isValidation) {
         Map<String, BS> htChains = new Hashtable<String, BS>();
         data = vwr.extractProperty(dbObj, key, -1);
         if (data instanceof Lst<?>)
           getBsAtoms(vwr, null, (Lst<SV>) data, bs, htChains);
         return bs;
       }
-
-      Map<String, SV> map = ((SV) dbObj).getMap();
-      SV main = map.get("_map");
-      if (main == null)
-        main = initializeAnnotation(map);
-      map = main.getMap();
+      
+      SV main = initializeAnnotation((SV) dbObj, type);
+      SV svMap = main;
+      Map<String, SV> map = svMap.getMap();
       // select within(annotations,"InterPro.* where identifier like '*-like'")
       int pt = s.indexOf(" where ");
       String tableName = PT.rep((pt < 0 ? key : key.substring(0, pt)), " ","");
-      String newKey = "select " + (isAnnotations ? "mappings" : "outliers") + (pt < 0 ? "" : key.substring(pt));
       if (tableName.indexOf(".") < 0)
         tableName += ".*";
       String[] keys = PT.split(tableName, ".");
@@ -1556,31 +1606,35 @@ public class AnnotationParser implements JmolAnnotationParser {
       for (; i < keys.length; i++) {
         tableName += (i == 0 ? "" : ".") + keys[i];
         if (keys[i].equals("*")) {
-          isWild = true;
+          isWild = !isValidation;
           break;
         }
-        SV svMap = map.get(keys[i]);
+        svMap = map.get(keys[i]);
         if (svMap == null) {
           Logger.info("Annotation database not found: '" + keys[i] + "' note that this is case-sensitive, for example SCOP Pfam, etc. Options include: " + main.getMapKeys(1,  true));
           return bs;
         }
         map = svMap.getMap();
+        if (map == null) {
+          break;
+        }
       }
+      String newKey = "select " + (map == null ? "*" : getDataKey(type)) + (pt < 0 ? "" : key.substring(pt));
       Logger.info("looking for " + newKey + " in " + tableName);
       // this is either the right map or we have a wildcard.
-      if (i == 0) {
+      if (i == 0 && map != null) {
         for (String b : main.getMap().keySet())
           for (String a : (map = main.getMap().get(b).getMap()).keySet())
-            findAnnotationAtoms(vwr, b + "." + a, map.get(a).getMap(), newKey, bs);
+            findAnnotationAtoms(vwr, b + "." + a, map.get(a), newKey, bs);
       } else if (isWild) {
         for (String a : map.keySet())
-          findAnnotationAtoms(vwr, a, map.get(a).getMap(), newKey, bs);
+          findAnnotationAtoms(vwr, a, map.get(a), newKey, bs);
       } else {
-        findAnnotationAtoms(vwr, tableName, map, newKey, bs);
+        findAnnotationAtoms(vwr, tableName, svMap, newKey, bs);
       }
       bs.and(bsModel);
     } catch (Exception e) {
-      System.out.println(e.toString() + " in DSSRParser");
+      System.out.println(e.toString() + " in AnnotationParser");
       bs.clearAll();
     }
     return bs;

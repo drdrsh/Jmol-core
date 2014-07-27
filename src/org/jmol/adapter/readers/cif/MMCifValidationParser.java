@@ -9,7 +9,7 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.script.SV;
 
-public class MMCifValidationParser implements CifValidationParser {
+public class MMCifValidationParser {
 
   private boolean asResidues;
   private AtomSetCollectionReader reader;
@@ -21,7 +21,6 @@ public class MMCifValidationParser implements CifValidationParser {
     //for reflection
   }
 
-  @Override
   public MMCifValidationParser set(AtomSetCollectionReader reader) {
     this.reader = reader;
     asResidues = reader.checkFilterKey("ASRES");
@@ -31,9 +30,9 @@ public class MMCifValidationParser implements CifValidationParser {
   /**
    * Create property_xxxx for each validation category.
    * @param modelMap 
+   * @return loading note
    * 
    */
-  @Override
   public String finalizeValidations(Map<String, Integer> modelMap) {
 
     mapAtomResIDs(modelMap);
@@ -113,17 +112,28 @@ public class MMCifValidationParser implements CifValidationParser {
     for (int i = 0, n = propList.size(); i < n;) {
       String key = (String) propList.get(i++);
       float[] f = (float[]) propList.get(i++);
+      int model = ((Integer) propList.get(i++)).intValue();
       boolean isGroup = ((Boolean) propList.get(i++)).booleanValue();
       int count = 0;
       float max = 0;
+      int reslast = -1;
+      int i0 = reader.asc.getAtomSetAtomIndex(model);
       for (int j = f.length; --j >= 0;)
         if (f[j] != 0) {
-          count++;
+          if (isGroup) {
+            int res = reader.asc.atoms[i0+j].sequenceNumber;
+            if (res != reslast) {
+              reslast = res;
+              count++;
+            }            
+          } else {
+            count++;
+          }
           max = Math.max(f[j], max);
         }
-      note += "\n  property_" + key + " (" + count + (max == 1 ? "" : "; max " + ((int)(max*100))/100f) +")";
-      reader.asc.setAtomProperties(key, f,
-          ((Integer) propList.get(i++)).intValue(), isGroup);
+      note += "\n  property_" + key + " (" + (isGroup ? "residues: ": "atoms: ") + count 
+          + (max == 1 ? "" : ", max: " + ((int) (max * 100)) / 100f) + ")";
+      reader.asc.setAtomProperties(key, f, model, isGroup);
     }
     return note;
   }

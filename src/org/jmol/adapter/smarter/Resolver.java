@@ -42,7 +42,7 @@ public class Resolver {
 
   private final static String classBase = "org.jmol.adapter.readers.";
   private final static String[] readerSets = new String[] {
-    "cif.", ";Cif;",
+    "cif.", ";Cif;MMCif;",
     "molxyz.", ";Mol3D;Mol;Xyz;",
     "more.", ";BinaryDcd;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
@@ -299,7 +299,7 @@ public class Resolver {
       String[] recordTags = lineStartsWithRecords[i];
       for (int j = 1; j < recordTags.length; ++j) {
         String recordTag = recordTags[j];
-        for (int k = 0; k < lines.length; ++k) {
+        for (int k = 0; k < lines.length; k++) {
           if (lines[k].startsWith(recordTag))
             return recordTags[0];
         }
@@ -717,6 +717,9 @@ public class Resolver {
   private final static String[] cifLineStartRecords =
   { "Cif", "data_", "_publ" };
 
+  private final static String[] mmcifLineStartRecords =
+  { "MMCif", "_database_PDB_" };
+
   private final static String[] ghemicalMMLineStartRecords =
   { "GhemicalMM", "!Header mm1gp", "!Header gpr" };
 
@@ -742,7 +745,7 @@ public class Resolver {
   { "VaspOutcar", " vasp.", " INCAR:" };
 
   private final static String[][] lineStartsWithRecords =
-  { cifLineStartRecords, pqrLineStartRecords, p2nLineStartRecords,
+  { mmcifLineStartRecords, cifLineStartRecords, pqrLineStartRecords, p2nLineStartRecords,
     pdbLineStartRecords, shelxLineStartRecords, 
     ghemicalMMLineStartRecords, jaguarLineStartRecords, 
     mdlLineStartRecords, spartanSmolLineStartRecords, csfLineStartRecords, 

@@ -1010,7 +1010,7 @@ public class AtomSetCollection {
       p.put(key.substring(1), value);
   }
 
-  public void setAtomProperties(String key, Object data, int atomSetIndex) {
+  public void setAtomProperties(String key, Object data, int atomSetIndex, boolean isGroup) {
     if (data instanceof String && !((String) data).endsWith("\n"))
       data = data + "\n";
     if (atomSetIndex < 0)
