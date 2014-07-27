@@ -793,7 +793,7 @@ abstract class OutputManager {
       value = null;
     } else {
       vwr.logFileName = path;
-      vwr.g.setS("_logFile", vwr.isApplet() ? value : path);
+      vwr.g.setO("_logFile", vwr.isApplet() ? value : path);
     }
     return value;
   }

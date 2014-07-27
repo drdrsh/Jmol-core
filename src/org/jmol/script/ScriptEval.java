@@ -802,7 +802,11 @@ public class ScriptEval extends ScriptExpr {
     } catch (ScriptException e1) {
       //ignore
     }
-    return (e.evaluate(expr, asVariable, compileOnly));
+    boolean exec0 = executing;
+    System.out.println(exec0 + "  " + this);
+    Object o = (e.evaluate(expr, asVariable, compileOnly));
+    executing = exec0;
+    return o;
   }
 
   private Object evaluate(Object expr, boolean asVariable, boolean compileOnly) {

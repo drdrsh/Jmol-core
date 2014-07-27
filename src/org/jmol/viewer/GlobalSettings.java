@@ -60,7 +60,7 @@ public class GlobalSettings {
       // PER-zap settings made
       setPicked(-1);
       setI("_atomhovered", -1);
-      setS("_pickinfo", "");
+      setO("_pickinfo", "");
       setB("selectionhalos", false);
       setB("hidenotselected", false); // to synchronize with selectionManager
       setB("measurementlabels", measurementLabels = true);
@@ -132,9 +132,9 @@ public class GlobalSettings {
       setI("depth", 0); // maintained by TransformManager
       setF("gestureSwipeFactor", ActionManager.DEFAULT_GESTURE_SWIPE_FACTOR);
       setB("hideNotSelected", false); //maintained by the selectionManager
-      setS("hoverLabel", ""); // maintained by the Hover shape
+      setO("hoverLabel", ""); // maintained by the Hover shape
       setB("isKiosk", vwr.isKiosk()); // maintained by Viewer
-      setS("logFile", vwr.getLogFileName()); // maintained by Viewer
+      setO("logFile", vwr.getLogFileName()); // maintained by Viewer
       setI("logLevel", Logger.getLogLevel());
       setF("mouseWheelFactor", ActionManager.DEFAULT_MOUSE_WHEEL_FACTOR);
       setF("mouseDragFactor", ActionManager.DEFAULT_MOUSE_DRAG_FACTOR);
@@ -144,10 +144,10 @@ public class GlobalSettings {
       setI("navX", 0); // maintained by TransformManager
       setI("navY", 0); // maintained by TransformManager
       setI("navZ", 0); // maintained by TransformManager
-      setS("pathForAllFiles", "");
+      setO("pathForAllFiles", "");
       setI("perspectiveModel", TransformManager.DEFAULT_PERSPECTIVE_MODEL);
-      setS("picking", "identify"); // maintained by ActionManager
-      setS("pickingStyle", "toggle"); // maintained by ActionManager
+      setO("picking", "identify"); // maintained by ActionManager
+      setO("pickingStyle", "toggle"); // maintained by ActionManager
       setB("refreshing", true); // maintained by Viewer
       setI("rotationRadius", 0); // maintained by TransformManager
       setI("scaleAngstromsPerInch", 0); // maintained by TransformManager
@@ -189,13 +189,13 @@ public class GlobalSettings {
       setB("axesUnitcell", false);
       setI("backgroundModel", 0);
       setB("colorRasmol", false);
-      setS("currentLocalPath", "");
-      setS("defaultLattice", "{0 0 0}");
-      setS("defaultColorScheme", "Jmol");
-      setS("defaultDirectoryLocal", "");
-      setS("defaults", "Jmol");
-      setS("defaultVDW", "Jmol");
-      setS("exportDrivers", JC.EXPORT_DRIVER_LIST);
+      setO("currentLocalPath", "");
+      setO("defaultLattice", "{0 0 0}");
+      setO("defaultColorScheme", "Jmol");
+      setO("defaultDirectoryLocal", "");
+      setO("defaults", "Jmol");
+      setO("defaultVDW", "Jmol");
+      setO("exportDrivers", JC.EXPORT_DRIVER_LIST);
       setI("propertyAtomNumberColumnCount", 0);
       setI("propertyAtomNumberField", 0);
       setI("propertyDataColumnCount", 0);
@@ -217,10 +217,10 @@ public class GlobalSettings {
       setB("antialiasDisplay", antialiasDisplay);
       setB("antialiasTranslucent", antialiasTranslucent);
       setB("appendNew", appendNew);
-      setS("appletProxy", appletProxy);
+      setO("appletProxy", appletProxy);
       setB("applySymmetryToBonds", applySymmetryToBonds);
       setB("atomPicking", atomPicking);
-      setS("atomTypes", atomTypes);
+      setO("atomTypes", atomTypes);
       setB("autoBond", autoBond);
       setB("autoFps", autoFps);
       //      setParameterValue("autoLoadOrientation", autoLoadOrientation);
@@ -242,19 +242,19 @@ public class GlobalSettings {
       setB("celShading", celShading);
       setI("celShadingPower", celShadingPower);
       setI("bondingVersion", bondingVersion);
-      setS("dataSeparator", dataSeparator);
+      setO("dataSeparator", dataSeparator);
       setB("debugScript", debugScript);
-      setS("defaultAngleLabel", defaultAngleLabel);
+      setO("defaultAngleLabel", defaultAngleLabel);
       setF("defaultDrawArrowScale", defaultDrawArrowScale);
-      setS("defaultDirectory", defaultDirectory);
-      setS("defaultDistanceLabel", defaultDistanceLabel);
-      setS("defaultDropScript", defaultDropScript);
-      setS("defaultLabelPDB", defaultLabelPDB);
-      setS("defaultLabelXYZ", defaultLabelXYZ);
-      setS("defaultLoadFilter", defaultLoadFilter);
-      setS("defaultLoadScript", defaultLoadScript);
+      setO("defaultDirectory", defaultDirectory);
+      setO("defaultDistanceLabel", defaultDistanceLabel);
+      setO("defaultDropScript", defaultDropScript);
+      setO("defaultLabelPDB", defaultLabelPDB);
+      setO("defaultLabelXYZ", defaultLabelXYZ);
+      setO("defaultLoadFilter", defaultLoadFilter);
+      setO("defaultLoadScript", defaultLoadScript);
       setB("defaultStructureDSSP", defaultStructureDSSP);
-      setS("defaultTorsionLabel", defaultTorsionLabel);
+      setO("defaultTorsionLabel", defaultTorsionLabel);
       setF("defaultTranslucent", defaultTranslucent);
       setI("delayMaximumMs", delayMaximumMs);
       setI("diffusePercent", diffusePercent);
@@ -270,9 +270,9 @@ public class GlobalSettings {
       setF("drawFontSize", drawFontSize);
       setB("drawPicking", drawPicking);
       setB("dsspCalculateHydrogenAlways", dsspCalcHydrogen);
-      setS("edsUrlFormat", edsUrlFormat);
+      setO("edsUrlFormat", edsUrlFormat);
       //setParameterValue("edsUrlOptions", edsUrlOptions);
-      setS("edsUrlCutoff", edsUrlCutoff);
+      setO("edsUrlCutoff", edsUrlCutoff);
       setB("ellipsoidArcs", ellipsoidArcs);
       setB("ellipsoidArrows", ellipsoidArrows);
       setB("ellipsoidAxes", ellipsoidAxes);
@@ -281,14 +281,14 @@ public class GlobalSettings {
       setI("ellipsoidDotCount", ellipsoidDotCount);
       setB("ellipsoidDots", ellipsoidDots);
       setB("ellipsoidFill", ellipsoidFill);
-      setS("energyUnits", energyUnits);
+      setO("energyUnits", energyUnits);
       //      setParameterValue("_fileCaching", _fileCaching);
       //      setParameterValue("_fileCache", _fileCache);
       setF("exportScale", exportScale);
       setB("fontScaling", fontScaling);
       setB("fontCaching", fontCaching);
       setB("forceAutoBond", forceAutoBond);
-      setS("forceField", forceField);
+      setO("forceField", forceField);
       setB("fractionalRelative", fractionalRelative);
       setF("particleRadius", particleRadius);
       setB("greyscaleRendering", greyscaleRendering);
@@ -298,7 +298,7 @@ public class GlobalSettings {
       setB("hbondsRasmol", hbondsRasmol);
       setB("hbondsSolid", hbondsSolid);
       setI("helixStep", helixStep);
-      setS("helpPath", helpPath);
+      setO("helpPath", helpPath);
       setI("hermiteLevel", hermiteLevel);
       setB("hideNameInPopup", hideNameInPopup);
       setB("hideNavigationPoint", hideNavigationPoint);
@@ -312,13 +312,13 @@ public class GlobalSettings {
       setB("legacyAutoBonding", legacyAutoBonding);
       setB("legacyHAddition", legacyHAddition);
       setF("loadAtomDataTolerance", loadAtomDataTolerance);
-      setS("loadFormat", loadFormat);
-      setS("loadLigandFormat", loadLigandFormat);
+      setO("loadFormat", loadFormat);
+      setO("loadLigandFormat", loadLigandFormat);
       setB("logCommands", logCommands);
       setB("logGestures", logGestures);
       setB("measureAllModels", measureAllModels);
       setB("measurementLabels", measurementLabels);
-      setS("measurementUnits", measureDistanceUnits);
+      setO("measurementUnits", measureDistanceUnits);
       setI("meshScale", meshScale);
       setB("messageStyleChime", messageStyleChime);
       setF("minBondDistance", minBondDistance);
@@ -337,8 +337,8 @@ public class GlobalSettings {
       //setParamB("navigateSurface", navigateSurface);
       setB("navigationPeriodic", navigationPeriodic);
       setF("navigationSpeed", navigationSpeed);
-      setS("nmrPredictFormat", nmrPredictFormat);
-      setS("nmrUrlFormat", nmrUrlFormat);
+      setO("nmrPredictFormat", nmrPredictFormat);
+      setO("nmrUrlFormat", nmrUrlFormat);
       setB("partialDots", partialDots);
       setB("pdbAddHydrogens", pdbAddHydrogens); // new 12.1.51
       setB("pdbGetHeader", pdbGetHeader); // new 11.5.39
@@ -347,13 +347,13 @@ public class GlobalSettings {
       setI("percentVdwAtom", percentVdwAtom);
       setI("phongExponent", phongExponent);
       setI("pickingSpinRate", pickingSpinRate);
-      setS("pickLabel", pickLabel);
+      setO("pickLabel", pickLabel);
       setI("platformSpeed", platformSpeed);
       setF("pointGroupLinearTolerance", pointGroupLinearTolerance);
       setF("pointGroupDistanceTolerance", pointGroupDistanceTolerance);
       setB("preserveState", preserveState);
-      setS("propertyColorScheme", propertyColorScheme);
-      setS("quaternionFrame", quaternionFrame);
+      setO("propertyColorScheme", propertyColorScheme);
+      setO("quaternionFrame", quaternionFrame);
       setB("rangeSelected", rangeSelected);
       setI("repaintWaitMs", repaintWaitMs);
       setI("ribbonAspectRatio", ribbonAspectRatio);
@@ -377,9 +377,9 @@ public class GlobalSettings {
       setB("slabByAtom", slabByAtom);
       setB("smartAromatic", smartAromatic);
       setI("smallMoleculeMaxAtoms", smallMoleculeMaxAtoms);
-      setS("smilesUrlFormat", smilesUrlFormat);
-      setS("nihResolverFormat", nihResolverFormat);
-      setS("pubChemFormat", pubChemFormat);
+      setO("smilesUrlFormat", smilesUrlFormat);
+      setO("nihResolverFormat", nihResolverFormat);
+      setO("pubChemFormat", pubChemFormat);
       setB("showUnitCellDetails", showUnitCellDetails);
       setB("showUnitCellInfo", showUnitCellInfo);
       setB("solventProbe", solventOn);
@@ -711,9 +711,9 @@ public class GlobalSettings {
       else if (units.equalsIgnoreCase("kcal"))
         energyUnits = "kcal";
       if (!mu.equalsIgnoreCase(measureDistanceUnits))
-        setS("measurementUnits", measureDistanceUnits);
+        setO("measurementUnits", measureDistanceUnits);
       else if (!eu.equalsIgnoreCase(energyUnits)) 
-        setS("energyUnits", energyUnits);
+        setO("energyUnits", energyUnits);
     }
 
     boolean isJmolVariable(String key) {
@@ -724,7 +724,7 @@ public class GlobalSettings {
     }
 
     private void resetValue(String name, GlobalSettings g) {
-      setS(name, g == null ? "" : (String) g.getParameter(name, true));
+      setO(name, g == null ? "" : (String) g.getParameter(name, true));
     }
     
     public void setB(String name, boolean value) {
@@ -735,22 +735,16 @@ public class GlobalSettings {
     }
 
     void setI(String name, int value) {
-      name = name.toLowerCase();
-      if (htBooleanParameterFlags.containsKey(name))
-        return; // don't allow setting numeric of a boolean
-      htNonbooleanParameterValues.put(name, Integer.valueOf(value));
+      if (value != Integer.MAX_VALUE)
+        setO(name, Integer.valueOf(value));
     }
 
     public void setF(String name, float value) {
-      if (Float.isNaN(value))
-        return;
-      name = name.toLowerCase();
-      if (htBooleanParameterFlags.containsKey(name))
-        return; // don't allow setting numeric of a boolean
-      htNonbooleanParameterValues.put(name, Float.valueOf(value));
+      if (!Float.isNaN(value))
+        setO(name, Float.valueOf(value));
     }
 
-    void setS(String name, String value) {
+    void setO(String name, Object value) {
       name = name.toLowerCase();
       if (value == null || htBooleanParameterFlags.containsKey(name))
         return; // don't allow setting string of a boolean
@@ -1053,7 +1047,7 @@ public class GlobalSettings {
       app(str, "set defaultLoadFilter " + PT.esc(defaultLoadFilter));
       app(str, "set defaultLoadScript \"\"");
       if (defaultLoadScript.length() > 0)
-        setS("defaultLoadScript", defaultLoadScript);
+        setO("defaultLoadScript", defaultLoadScript);
       app(str, "set defaultStructureDssp " + defaultStructureDSSP);
       String sMode = vwr.getDefaultVdwNameOrData(Integer.MIN_VALUE, null, null);
       app(str, "set defaultVDW " + sMode);

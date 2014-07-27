@@ -1429,9 +1429,9 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
       }
     }
 
-    vwr.g.setS("_slabPlane",
+    vwr.g.setO("_slabPlane",
         Escape.eP4(getSlabDepthPlane(false)));
-    vwr.g.setS("_depthPlane",
+    vwr.g.setO("_depthPlane",
         Escape.eP4(getSlabDepthPlane(true)));
     if (slabEnabled)
       return;

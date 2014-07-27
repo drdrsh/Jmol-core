@@ -629,7 +629,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
               + (isSignedApplet ? " (signed)" : "")));
     }
     zap(false, true, false); // here to allow echos
-    g.setS("language", GT.getLanguage());
+    g.setO("language", GT.getLanguage());
     stm.setJmolDefaults();
     // this code will be shared between Jmol 14.0 and 14.1
     Elements.covalentVersion = Elements.RAD_COV_BODR_2014_02_22;
@@ -1202,7 +1202,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   private void setDefaultColors(boolean isRasmol) {
     cm.setDefaultColors(isRasmol);
     g.setB("colorRasmol", isRasmol);
-    g.setS("defaultColorScheme", (isRasmol ? "rasmol" : "jmol"));
+    g.setO("defaultColorScheme", (isRasmol ? "rasmol" : "jmol"));
   }
 
   public int getColorArgbOrGray(short colix) {
@@ -1211,7 +1211,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   public void setElementArgb(int elementNumber, int argb) {
     // Eval
-    g.setS("=color " + Elements.elementNameFromNumber(elementNumber),
+    g.setO("=color " + Elements.elementNameFromNumber(elementNumber),
         Escape.escapeColor(argb));
     cm.setElementArgb(elementNumber, argb);
   }
@@ -1277,7 +1277,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       cm.setColixBackgroundContrast(argb);
       break;
     }
-    g.setS(name + "Color", Escape.escapeColor(argb));
+    g.setO(name + "Color", Escape.escapeColor(argb));
   }
 
   public void setBackgroundImage(String fileName, Object image) {
@@ -3425,14 +3425,14 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   public void setBackgroundModelIndex(int modelIndex) {
     am.setBackgroundModelIndex(modelIndex);
-    g.setS("backgroundModel", ms.getModelNumberDotted(modelIndex));
+    g.setO("backgroundModel", ms.getModelNumberDotted(modelIndex));
   }
 
   void setFrameVariables() {
-    g.setS("animationMode", am.animationReplayMode.name());
+    g.setO("animationMode", am.animationReplayMode.name());
     g.setI("animationFps", am.animationFps);
-    g.setS("_firstFrame", am.getModelSpecial(-1));
-    g.setS("_lastFrame", am.getModelSpecial(1));
+    g.setO("_firstFrame", am.getModelSpecial(-1));
+    g.setO("_lastFrame", am.getModelSpecial(1));
     g.setF("_animTimeSec", am.getAnimRunTimeSeconds());
     g.setB("_animMovie", am.isMovie);
   }
@@ -4324,7 +4324,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       refresh(3, "hover on atom");
       return;
     }
-    if (eval != null && isScriptExecuting() || atomIndex == hoverAtomIndex
+    if (eval != null && isScriptExecuting() 
+        || atomIndex == hoverAtomIndex
         || g.hoverDelayMs == 0)
       return;
     if (!slm.isInSelectionSubset(atomIndex))
@@ -4419,7 +4420,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (pickingMode < 0)
       pickingMode = ActionManager.PICKING_IDENTIFY;
     actionManager.setPickingMode(pickingMode);
-    g.setS("picking", ActionManager.getPickingModeName(actionManager
+    g.setO("picking", ActionManager.getPickingModeName(actionManager
         .getAtomPickingMode()));
     if (option == null || option.length() == 0)
       return;
@@ -4449,7 +4450,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (pickingStyle < 0)
       pickingStyle = ActionManager.PICKINGSTYLE_SELECT_JMOL;
     actionManager.setPickingStyle(pickingStyle);
-    g.setS("pickingStyle", ActionManager.getPickingStyleName(actionManager
+    g.setO("pickingStyle", ActionManager.getPickingStyleName(actionManager
         .getPickingStyle()));
   }
 
@@ -4652,13 +4653,13 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     g.setI("_morphCount", am.morphCount);
     g.setF("_currentMorphFrame", currentMorphModel);
     g.setI("_frameID", frameID);
-    g.setS("_modelNumber", strModelNo);
-    g.setS("_modelName", (modelIndex < 0 ? "" : getModelName(modelIndex)));
+    g.setO("_modelNumber", strModelNo);
+    g.setO("_modelName", (modelIndex < 0 ? "" : getModelName(modelIndex)));
     String title = (modelIndex < 0 ? "" : getModelTitle(modelIndex));
-    g.setS("_modelTitle", title == null ? "" : title);
-    g.setS("_modelFile", (modelIndex < 0 ? "" : ms
+    g.setO("_modelTitle", title == null ? "" : title);
+    g.setO("_modelFile", (modelIndex < 0 ? "" : ms
         .getModelFileName(modelIndex)));
-    g.setS("_modelType", (modelIndex < 0 ? "" : ms
+    g.setO("_modelType", (modelIndex < 0 ? "" : ms
         .getModelFileType(modelIndex)));
 
     if (currentFrame == prevFrame && currentMorphModel == prevMorphModel)
@@ -4795,7 +4796,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    */
   public void notifyError(String errType, String errMsg,
                           String errMsgUntranslated) {
-    g.setS("_errormessage", errMsgUntranslated);
+    g.setO("_errormessage", errMsgUntranslated);
     sm.notifyError(errType, errMsg, errMsgUntranslated);
   }
 
@@ -4826,11 +4827,12 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   private void setStatusAtomHovered(int atomIndex, String info) {
     g.setI("_atomhovered", atomIndex);
+    g.setO("hovered", BSUtil.newAndSetBit(atomIndex));
     sm.setStatusAtomHovered(atomIndex, info);
   }
 
   private void setStatusObjectHovered(String id, String info, T3 pt) {
-    g.setS("_objecthovered", id);
+    g.setO("_objecthovered", id);
     sm.setStatusObjectHovered(id, info, pt);
   }
 
@@ -5002,7 +5004,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
           g.messageStyleChime) : ms.getAtomInfo(atomIndex, info, ptTemp));
     }
     g.setPicked(atomIndex);
-    g.setS("_pickinfo", info);
+    g.setO("_pickinfo", info);
     sm.setStatusAtomPicked(atomIndex, info, map);
     if (atomIndex < 0)
       return;
@@ -5015,7 +5017,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   
   public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
     if (mode == 0) {
-      g.setS("_fileDropped", fileName);
+      g.setO("_fileDropped", fileName);
       g.setB("doDrop", true);
     }
     boolean handled = sm.setStatusDragDropped(mode, x, y, fileName);
@@ -5528,7 +5530,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (value == null)
       return;
     if (key.charAt(0) == '_') {
-      g.setS(key, value);
+      g.setO(key, value);
       return;
     }
     int tok = T.getTokFromName(key);
@@ -5739,7 +5741,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       // for example, defaultDirectoryLocal
       break;
     }
-    g.setS(key, value);
+    g.setO(key, value);
   }
 
   @Override
@@ -6790,7 +6792,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (s == null)
       g.removeParam("_smilesString");
     else
-      g.setS("_smilesString", s);
+      g.setO("_smilesString", s);
   }
 
   public void removeUserVariable(String key) {
@@ -7635,7 +7637,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     // Eval -- handled separately
       if (!Float.isNaN(p.x + p.y + p.z))
         g.ptDefaultLattice.setT(p);
-    g.setS("defaultLattice", Escape.eP(p));
+    g.setO("defaultLattice", Escape.eP(p));
   }
 
   public P3 getDefaultLattice() {
@@ -8329,7 +8331,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         && bsUserVdws == null)
       setUserVdw(defaultVdw);
     defaultVdw = type;    
-    g.setS("defaultVDW", type.getVdwLabel());
+    g.setO("defaultVDW", type.getVdwLabel());
   }
 
   BS bsUserVdws;
@@ -9578,7 +9580,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   public void setModulation(BS bs, boolean isOn, P3 t1, boolean isQ) {
       if (isQ)
-        g.setS("_modt", Escape.eP(t1));
+        g.setO("_modt", Escape.eP(t1));
       ms.setModulation(bs == null ? getAllAtoms() : bs, isOn, t1, isQ);
     refreshMeasures(true);
   }

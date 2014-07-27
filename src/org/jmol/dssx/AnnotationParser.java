@@ -1372,9 +1372,8 @@ public class AnnotationParser implements JmolAnnotationParser {
           // a pointer, not a copy.
           
           mmap.put("_atoms", _atoms);
-          mmap.put("_chain", _chain);
-          mmap.put("_dbName", SV.newS(_dbName));
-          mmap.put("_domainName", SV.newS(_domainName));
+          mmap.put("_type", SV.newS(_dbName));
+          mmap.put("_domain", SV.newS(_domainName));
         }        
       }
     }
