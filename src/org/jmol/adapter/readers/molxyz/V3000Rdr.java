@@ -171,7 +171,7 @@ public class V3000Rdr {
       float[] f = new float[a.length];
       for (int i = 0; i < a.length; i++)
         f[i] = (a[i] == null ? 0 : mr.parseFloatStr(a[i]));
-      mr.asc.setAtomProperties(key, f, -1);
+      mr.asc.setAtomProperties(key, f, -1, false);
     }
   }
 

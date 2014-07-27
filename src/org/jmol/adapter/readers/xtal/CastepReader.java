@@ -633,7 +633,7 @@ Species   Ion     s      p      d      f     Total  Charge (e)
         spins[index] = parseFloatStr(tokens[tokens.length - 1]);
     }
     if (haveSpin)
-      asc.setAtomProperties("spin", spins, -1);
+      asc.setAtomProperties("spin", spins, -1, false);
     
   }
 

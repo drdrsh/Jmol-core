@@ -1809,7 +1809,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
         }
       }
     }
-    asc.setAtomProperties("tlsGroup", data, iModel);
+    asc.setAtomProperties("tlsGroup", data, iModel, true);
     asc.setAtomSetAuxiliaryInfoForSet("TLS", tlsGroupInfo, iModel);
     asc.setTensors();
   }

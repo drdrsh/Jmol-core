@@ -32,7 +32,6 @@ import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.Structure;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
@@ -45,16 +44,10 @@ import org.jmol.util.SimpleUnitCell;
  * @author Bob Hanson (hansonr@stolaf.edu)
  * 
  */
-public class MMCifRdr {
-
-  public MMCifRdr() {
-    // for reflection
-  }
-
-  private CifReader cr;
+public class MMCifReader extends CifReader {
 
   private boolean isBiomolecule;
-  private boolean byChain, bySymop, isCourseGrained;
+  private boolean byChain, bySymop;
   private Map<String, P3> chainAtomMap;
   private Map<String, int[]> chainAtomCounts;
 
@@ -64,55 +57,55 @@ public class MMCifRdr {
   private Map<String, Map<String, Object>> htSites;
 
   private Map<String, BS> assemblyIdAtoms;
-  private final static int NONE = -1;
 
   private int thisChain = -1;
 
   private P3 chainSum;
   private int[] chainAtomCount;
 
-  public boolean initialize(CifReader r) {
-    cr = r;
-    byChain = r.checkFilterKey("BYCHAIN");
-    bySymop = r.checkFilterKey("BYSYMOP");
+  @Override
+  protected void initSubclass() {
+    setIsPDB();
+    isMMCIF = true;
+    byChain = checkFilterKey("BYCHAIN");
+    bySymop = checkFilterKey("BYSYMOP");
     isCourseGrained = byChain || bySymop;
     if (byChain) {
       chainAtomMap = new Hashtable<String, P3>();
       chainAtomCounts = new Hashtable<String, int[]>();
     }
-    if (cr.checkFilterKey("BIOMOLECULE")) // PDB format
-      cr.filter = PT.rep(cr.filter, "BIOMOLECULE", "ASSEMBLY");
-    isBiomolecule = cr.checkFilterKey("ASSEMBLY");
-    return isCourseGrained;
+    if (checkFilterKey("BIOMOLECULE")) // PDB format
+      filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
+    isBiomolecule = checkFilterKey("ASSEMBLY");
   }
 
-  public void finalizeReader(int nAtoms) throws Exception {
+  @Override
+  protected void finalizeSubclass() throws Exception {
     if (byChain && !isBiomolecule)
       for (String id : chainAtomMap.keySet())
         createParticle(id);
-    AtomSetCollection asc = cr.asc;
     if (!isCourseGrained && asc.ac == nAtoms) {
       asc.removeCurrentAtomSet();
     } else {
-      if (cr.validation != null) {
-        CifValidationParser vs = ((CifValidationParser) Interface.getInterface("org.jmol.adapter.readers.cif.ValidationParser")).set(cr);
-        String note = vs.finalizeValidations();
+      if (validation != null && !isCourseGrained) {
+        CifValidationParser vs = ((CifValidationParser) Interface.getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser")).set(this);
+        String note = vs.finalizeValidations(modelMap);
         if (note != null)
-          cr.appendLoadNote(note);
+          appendLoadNote(note);
       }
-      cr.applySymmetryAndSetTrajectory();
+      applySymmetryAndSetTrajectory();
     }
     if (htSites != null)
-      cr.addSites(htSites);
+      addSites(htSites);
     if (vBiomolecules != null && vBiomolecules.size() == 1
         && (isCourseGrained || asc.ac > 0)) {
       asc.setAtomSetAuxiliaryInfo("biomolecules", vBiomolecules);
       Map<String, Object> ht = vBiomolecules.get(0);
-      cr.appendLoadNote("Constructing " + ht.get("name"));
+      appendLoadNote("Constructing " + ht.get("name"));
       setBiomolecules(ht);
       if (thisBiomolecule != null) {
         asc.getXSymmetry().applySymmetryBio(thisBiomolecule,
-            cr.notionalUnitCell, cr.applySymmetryToBonds, cr.filter);
+            notionalUnitCell, applySymmetryToBonds, filter);
         asc.xtalSymmetry = null;
       }
     }
@@ -184,13 +177,11 @@ public class MMCifRdr {
 
   private String[] assem = null;
 
-  //private String data;
-  //private String key;
-
-  public void processEntry() throws Exception {
-    if (cr.key.startsWith("_pdbx_entity_nonpoly"))
+  @Override
+  protected void processSubclassEntry() throws Exception {
+    if (key.startsWith("_pdbx_entity_nonpoly"))
       processDataNonpoly();
-    else if (cr.key.startsWith("_pdbx_struct_assembly_gen"))
+    else if (key.startsWith("_pdbx_struct_assembly_gen"))
       processDataAssemblyGen();
   }
 
@@ -202,10 +193,10 @@ public class MMCifRdr {
 
   private boolean processSequence() throws Exception {
     parseLoopParameters(structRefFields);
-    while (cr.parser.getData()) {
+    while (parser.getData()) {
       String g1 = null;
       String g3 = null;
-      int n = cr.parser.getFieldCount();
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         switch (fieldProperty(i)) {
         case STRUCT_REF_G3:
@@ -217,10 +208,10 @@ public class MMCifRdr {
         }
       }
       if (g1 != null && g3 != null) {
-        if (cr.htGroup1 == null)
-          cr.asc.setInfo("htGroup1",
-              cr.htGroup1 = new Hashtable<String, String>());
-        cr.htGroup1.put(g3, g1);
+        if (htGroup1 == null)
+          asc.setInfo("htGroup1",
+              htGroup1 = new Hashtable<String, String>());
+        htGroup1.put(g3, g1);
       }
     }
     return true;
@@ -230,8 +221,8 @@ public class MMCifRdr {
     if (hetatmData == null)
       hetatmData = new String[3];
     for (int i = nonpolyFields.length; --i >= 0;)
-      if (cr.key.equals(nonpolyFields[i])) {
-        hetatmData[i] = cr.data;
+      if (key.equals(nonpolyFields[i])) {
+        hetatmData[i] = data;
         break;
       }
     if (hetatmData[NONPOLY_NAME] == null || hetatmData[NONPOLY_COMP_ID] == null)
@@ -243,23 +234,23 @@ public class MMCifRdr {
   private void processDataAssemblyGen() throws Exception {
     if (assem == null)
       assem = new String[3];
-    if (cr.key.indexOf("assembly_id") >= 0)
-      assem[ASSEM_ID] = cr.parser.fullTrim(cr.data);
-    else if (cr.key.indexOf("oper_expression") >= 0)
-      assem[ASSEM_OPERS] = cr.parser.fullTrim(cr.data);
-    else if (cr.key.indexOf("asym_id_list") >= 0)
-      assem[ASSEM_LIST] = cr.parser.fullTrim(cr.data);
+    if (key.indexOf("assembly_id") >= 0)
+      assem[ASSEM_ID] = parser.fullTrim(data);
+    else if (key.indexOf("oper_expression") >= 0)
+      assem[ASSEM_OPERS] = parser.fullTrim(data);
+    else if (key.indexOf("asym_id_list") >= 0)
+      assem[ASSEM_LIST] = parser.fullTrim(data);
     if (assem[0] != null && assem[1] != null && assem[2] != null)
       addAssembly();
   }
 
   private boolean processAssemblyGenBlock() throws Exception {
     parseLoopParameters(assemblyFields);
-    while (cr.parser.getData()) {
+    while (parser.getData()) {
       assem = new String[3];
       int count = 0;
       int p;
-      int n = cr.parser.getFieldCount();
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         switch (p = fieldProperty(i)) {
         case ASSEM_ID:
@@ -279,10 +270,10 @@ public class MMCifRdr {
 
   private void addAssembly() throws Exception {
     String id = assem[ASSEM_ID];
-    int iMolecule = cr.parseIntStr(id);
+    int iMolecule = parseIntStr(id);
     String list = assem[ASSEM_LIST];
-    cr.appendLoadNote("found biomolecule " + id + ": " + list);
-    if (!cr.checkFilterKey("ASSEMBLY " + id + ";"))
+    appendLoadNote("found biomolecule " + id + ": " + list);
+    if (!checkFilterKey("ASSEMBLY " + id + ";"))
       return;
     if (vBiomolecules == null) {
       vBiomolecules = new Lst<Map<String, Object>>();
@@ -345,11 +336,11 @@ public class MMCifRdr {
     parseLoopParameters(operFields);
     float[] m = new float[16];
     m[15] = 1;
-    while (cr.parser.getData()) {
+    while (parser.getData()) {
       int count = 0;
       String id = null;
       String xyz = null;
-      int n = cr.parser.getFieldCount();
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         int p = fieldProperty(i);
         switch (p) {
@@ -362,18 +353,18 @@ public class MMCifRdr {
           xyz = field;
           break;
         default:
-          m[p] = cr.parseFloatStr(field);
+          m[p] = parseFloatStr(field);
           ++count;
         }
       }
-      if (id != null && (count == 12 || xyz != null && cr.symmetry != null)) {
+      if (id != null && (count == 12 || xyz != null && symmetry != null)) {
         Logger.info("assembly operator " + id + " " + xyz);
         M4 m4 = new M4();
         if (count != 12) {
-          cr.symmetry.getMatrixFromString(xyz, m, false, 0);
-          m[3] *= cr.symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_A) / 12;
-          m[7] *= cr.symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_B) / 12;
-          m[11] *= cr.symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_C) / 12;
+          symmetry.getMatrixFromString(xyz, m, false, 0);
+          m[3] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_A) / 12;
+          m[7] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_B) / 12;
+          m[11] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_C) / 12;
         }
         m4.setA(m);
         if (htBiomts == null)
@@ -403,9 +394,6 @@ public class MMCifRdr {
    */
   private String[] hetatmData;
 
-  private String field;
-
-  private char firstChar;
 
   ////////////////////////////////////////////////////////////////
   // HETATM identity
@@ -427,10 +415,10 @@ public class MMCifRdr {
    */
   private boolean processChemCompLoopBlock() throws Exception {
     parseLoopParameters(chemCompFields);
-    while (cr.parser.getData()) {
+    while (parser.getData()) {
       String groupName = null;
       String hetName = null;
-      int n = cr.parser.getFieldCount();
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         switch (fieldProperty(i)) {
         case NONE:
@@ -459,10 +447,10 @@ public class MMCifRdr {
    */
   private boolean processNonpolyLoopBlock() throws Exception {
     parseLoopParameters(nonpolyFields);
-    while (cr.parser.getData()) {
+    while (parser.getData()) {
       String groupName = null;
       String hetName = null;
-      int n = cr.parser.getFieldCount();
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         switch (fieldProperty(i)) {
         case NONE:
@@ -484,10 +472,6 @@ public class MMCifRdr {
   }
 
   private Map<String, String> htHetero;
-
-  private int propertyCount;
-
-  private int[] fieldOf;
 
   private void addHetero(String groupName, String hetName) {
     if (!JmolAdapter.isHetero(groupName))
@@ -535,9 +519,9 @@ public class MMCifRdr {
         Logger.warn("?que? missing property: " + structConfFields[i]);
         return false;
       }
-    while (cr.parser.getData()) {
+    while (parser.getData()) {
       Structure structure = new Structure(-1, STR.HELIX, STR.HELIX, null, 0, 0);
-      int n = cr.parser.getFieldCount();
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         switch (fieldProperty(i)) {
         case NONE:
@@ -550,24 +534,23 @@ public class MMCifRdr {
           break;
         case BEG_ASYM_ID:
           structure.startChainStr = field;
-          structure.startChainID = cr.vwr.getChainID(field);
+          structure.startChainID = vwr.getChainID(field);
           break;
         case BEG_SEQ_ID:
-          structure.startSequenceNumber = cr.parseIntStr(field);
+          structure.startSequenceNumber = parseIntStr(field);
           break;
         case BEG_INS_CODE:
           structure.startInsertionCode = firstChar;
           break;
         case END_ASYM_ID:
           structure.endChainStr = field;
-          structure.endChainID = cr.vwr.getChainID(field);
+          structure.endChainID = vwr.getChainID(field);
           break;
         case END_SEQ_ID:
-          structure.endSequenceNumber = cr.parseIntStr(field);
+          structure.endSequenceNumber = parseIntStr(field);
           break;
         case HELIX_CLASS:
-          structure.substructureType = Structure.getHelixType(cr
-              .parseIntStr(field));
+          structure.substructureType = Structure.getHelixType(parseIntStr(field));
           break;
         case END_INS_CODE:
           structure.endInsertionCode = firstChar;
@@ -576,11 +559,11 @@ public class MMCifRdr {
           structure.structureID = field;
           break;
         case SERIAL_NO:
-          structure.serialID = cr.parseIntStr(field);
+          structure.serialID = parseIntStr(field);
           break;
         }
       }
-      cr.asc.addStructure(structure);
+      asc.addStructure(structure);
     }
     return true;
   }
@@ -616,25 +599,25 @@ public class MMCifRdr {
         Logger.warn("?que? missing property:" + structSheetRangeFields[i]);
         return false;
       }
-    while (cr.parser.getData()) {
+    while (parser.getData()) {
       Structure structure = new Structure(-1, STR.SHEET, STR.SHEET, null, 0, 0);
-      int n = cr.parser.getFieldCount();
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         switch (fieldProperty(i)) {
         case BEG_ASYM_ID:
-          structure.startChainID = cr.vwr.getChainID(field);
+          structure.startChainID = vwr.getChainID(field);
           break;
         case BEG_SEQ_ID:
-          structure.startSequenceNumber = cr.parseIntStr(field);
+          structure.startSequenceNumber = parseIntStr(field);
           break;
         case BEG_INS_CODE:
           structure.startInsertionCode = firstChar;
           break;
         case END_ASYM_ID:
-          structure.endChainID = cr.vwr.getChainID(field);
+          structure.endChainID = vwr.getChainID(field);
           break;
         case END_SEQ_ID:
-          structure.endSequenceNumber = cr.parseIntStr(field);
+          structure.endSequenceNumber = parseIntStr(field);
           break;
         case END_INS_CODE:
           structure.endInsertionCode = firstChar;
@@ -644,19 +627,18 @@ public class MMCifRdr {
           structure.structureID = field;
           break;
         case STRAND_ID:
-          structure.serialID = cr.parseIntStr(field);
+          structure.serialID = parseIntStr(field);
           break;
         }
       }
-      cr.asc.addStructure(structure);
+      asc.addStructure(structure);
     }
     return true;
   }
 
-  private void parseLoopParameters(String[] fields) throws Exception {
-    cr.parseLoopParameters(fields);
+  protected void parseSubclassLoopParameters(String[] fields) throws Exception {
+    parseLoopParameters(fields);
     propertyCount = fields.length;
-    fieldOf = cr.fieldOf;
   }
 
   final private static byte SITE_ID = 0;
@@ -715,8 +697,8 @@ public class MMCifRdr {
     String group = "";
     Map<String, Object> htSite = null;
     htSites = new Hashtable<String, Map<String, Object>>();
-    while (cr.parser.getData()) {
-      int n = cr.parser.getFieldCount();
+    while (parser.getData()) {
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         switch (fieldProperty(i)) {
         case SITE_ID:
@@ -765,11 +747,6 @@ public class MMCifRdr {
       htSite.put("groups", groups);
     }
     return true;
-  }
-
-  private int fieldProperty(int i) {
-    return ((field = cr.parser.getLoopData(i)).length() > 0
-        && (firstChar = field.charAt(0)) != '\0' ? cr.propertyOf[i] : NONE);
   }
 
   private void setBiomolecules(Map<String, Object> biomolecule) {
@@ -823,8 +800,8 @@ public class MMCifRdr {
       }
     } else {
       nAtoms = bsAll.cardinality();
-      if (nAtoms < cr.asc.ac)
-        cr.asc.bsAtoms = bsAll;
+      if (nAtoms < asc.ac)
+        asc.bsAtoms = bsAll;
     }
     biomolecule.put("atomCount", Integer.valueOf(nAtoms * ops.length));
   }
@@ -836,9 +813,9 @@ public class MMCifRdr {
     a.setT(asum);
     a.scale(1f / c);
     a.elementSymbol = "Pt";
-    a.chainID = cr.vwr.getChainID(id);
+    a.chainID = vwr.getChainID(id);
     a.radius = 16;
-    cr.asc.addAtom(a);
+    asc.addAtom(a);
   }
 
   private M4 getOpMatrix(String ops) {
@@ -874,25 +851,25 @@ public class MMCifRdr {
       }
     int order = 0;
     boolean isAromatic = false;
-    while (cr.parser.getData()) {
+    while (parser.getData()) {
       Atom atom1 = null;
       Atom atom2 = null;
       order = 0;
       isAromatic = false;
-      int n = cr.parser.getFieldCount();
+      int n = parser.getFieldCount();
       for (int i = 0; i < n; ++i) {
         switch (fieldProperty(i)) {
         case CHEM_COMP_BOND_ATOM_ID_1:
-          atom1 = cr.asc.getAtomFromName(field);
+          atom1 = asc.getAtomFromName(field);
           break;
         case CHEM_COMP_BOND_ATOM_ID_2:
-          atom2 = cr.asc.getAtomFromName(field);
+          atom2 = asc.getAtomFromName(field);
           break;
         case CHEM_COMP_BOND_AROMATIC_FLAG:
           isAromatic = (field.charAt(0) == 'Y');
           break;
         case CHEM_COMP_BOND_VALUE_ORDER:
-          order = cr.getBondOrder(field);
+          order = getBondOrder(field);
           break;
         }
       }
@@ -905,12 +882,13 @@ public class MMCifRdr {
           order = JmolAdapter.ORDER_AROMATIC_DOUBLE;
           break;
         }
-      cr.asc.addNewBondWithOrderA(atom1, atom2, order);
+      asc.addNewBondWithOrderA(atom1, atom2, order);
     }
     return true;
   }
 
-  public boolean checkAtom(Atom atom, String assemblyId, int index) {
+  @Override
+  public boolean processSubclassAtom(Atom atom, String assemblyId, String strChain) {    
     if (byChain && !isBiomolecule) {
       if (thisChain != atom.chainID) {
         thisChain = atom.chainID;
@@ -941,18 +919,38 @@ public class MMCifRdr {
       BS bs = assemblyIdAtoms.get(assemblyId);
       if (bs == null)
         assemblyIdAtoms.put(assemblyId, bs = new BS());
-      bs.set(index);
+      bs.set(ac);
     }
     if (atom.isHetero && htHetero != null) {
-      cr.asc.setAtomSetAuxiliaryInfo("hetNames", htHetero);
-      cr.asc.setInfo("hetNames", htHetero);
+      asc.setAtomSetAuxiliaryInfo("hetNames", htHetero);
+      asc.setInfo("hetNames", htHetero);
       htHetero = null;
     }
+//    if (assemblyId != null && strChain != null) {
+//      addAssemblyId(assemblyId, strChain);
+//    }
     return true;
   }
 
-  public boolean processLoopBlock() throws Exception {
-    String key = cr.key;
+//  /**
+//   * An idea that was not followed up.
+//   * 
+//   * @param assemblyId  
+//   * @param strChain 
+//   */
+//  private void addAssemblyId(String assemblyId, String strChain) {
+//    if (vCompnds == null) {
+//      vCompnds = new Lst<Map<String, String>>();
+//      htModels = new Hashtable<String, Map<String, String>>();
+//    }
+//    Map<String, String> ht = htModels.get(assemblyId);
+//    if (ht == null) {
+//      htModels.put("compoundSource", assemblyId, (ht = new Hashtable<String, String>());
+//    }
+//  }
+
+  @Override
+  protected boolean processSubclassLoopBlock() throws Exception {
     if (key.startsWith("_pdbx_struct_oper_list"))
       return processStructOperListBlock();
     if (key.startsWith("_pdbx_struct_assembly_gen"))

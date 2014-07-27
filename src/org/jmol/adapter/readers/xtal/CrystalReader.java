@@ -1065,7 +1065,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       if (iConv >= 0)
         f[iConv] = parseFloatStr(tokens[pt]);
     }
-    asc.setAtomProperties(name, f, -1);
+    asc.setAtomProperties(name, f, -1, false);
     return true;
   }
 

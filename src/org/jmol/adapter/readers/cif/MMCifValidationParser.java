@@ -9,20 +9,20 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.script.SV;
 
-public class ValidationParser implements CifValidationParser {
+public class MMCifValidationParser implements CifValidationParser {
 
   private boolean asResidues;
   private AtomSetCollectionReader reader;
 
-  private Map<String, int[]> valResMap;
-  private Map<String, Integer> valAtomMap;
+  private Map<String, int[]> resMap;
+  private Map<String, Integer> atomMap;
 
-  public ValidationParser() {
+  public MMCifValidationParser() {
     //for reflection
   }
 
   @Override
-  public ValidationParser set(AtomSetCollectionReader reader) {
+  public MMCifValidationParser set(AtomSetCollectionReader reader) {
     this.reader = reader;
     asResidues = reader.checkFilterKey("ASRES");
     return this;
@@ -30,16 +30,20 @@ public class ValidationParser implements CifValidationParser {
 
   /**
    * Create property_xxxx for each validation category.
+   * @param modelMap 
    * 
    */
   @Override
-  public String finalizeValidations() {
+  public String finalizeValidations(Map<String, Integer> modelMap) {
 
-    mapAtomResIDs();
+    mapAtomResIDs(modelMap);
+
+    // Returns a Lst<Object> of property data in the form 
+    // name(String), data(float[]), modelIndex (Integer), isGroup (Boolean);
 
     Lst<Object> retProps = reader.vwr.getAnnotationParser().catalogValidations(
-        reader.vwr, (SV) reader.validation, getModelAtomIndices(), valResMap,
-        (asResidues ? null : valAtomMap));
+        reader.vwr, (SV) reader.validation, getModelAtomIndices(), resMap,
+        (asResidues ? null : atomMap), modelMap);
 
     return (retProps == null || retProps.size() == 0 ? null
         : setProperties(retProps));
@@ -47,23 +51,25 @@ public class ValidationParser implements CifValidationParser {
 
   /**
    * Map all atom and residue unit ids to atom indexes
+   * @param modelMap 
    * 
    */
-  private void mapAtomResIDs() {
+  private void mapAtomResIDs(Map<String, Integer> modelMap) {
 
     // model_chainCode_resno_inscode
     // model_chainCode_resno_inscode_ATOMNAME_altcode
     //   
 
     Atom[] atoms = reader.asc.atoms;
-    valResMap = new Hashtable<String, int[]>();
-    valAtomMap = new Hashtable<String, Integer>();
+    resMap = new Hashtable<String, int[]>();
+    atomMap = new Hashtable<String, Integer>();
     int iresLast = -1;
     int[] resLast = null;
+    String smodel = "" + modelMap.get("_0");
     for (int i = 0, model = 1, i0 = 0, n = reader.asc.getAtomSetAtomCount(0); i < n; i++) {
       Atom a = atoms[i];
       int ires = a.sequenceNumber;
-      String res = model + "_" + a.chainID + "_" + ires + "_"
+      String res = smodel + "_" + a.chainID + "_" + ires + "_"
           + (a.insertionCode == '\0' ? "" : "" + a.insertionCode);
       String atom = res + "_" + a.atomName.toUpperCase() + "_"
           + (a.altLoc == '\0' ? "" : "" + Character.toLowerCase(a.altLoc));
@@ -72,9 +78,9 @@ public class ValidationParser implements CifValidationParser {
         iresLast = ires;
         if (resLast != null)
           resLast[1] = i - i0;
-        valResMap.put(res, resLast = new int[] { i - i0, n });
+        resMap.put(res, resLast = new int[] { i - i0, n });
       }
-      valAtomMap.put(atom, ia);
+      atomMap.put(atom, ia);
       if (i == n - 1) {
         i0 += n;
         n = reader.asc.getAtomSetAtomCount(model++);
@@ -107,6 +113,7 @@ public class ValidationParser implements CifValidationParser {
     for (int i = 0, n = propList.size(); i < n;) {
       String key = (String) propList.get(i++);
       float[] f = (float[]) propList.get(i++);
+      boolean isGroup = ((Boolean) propList.get(i++)).booleanValue();
       int count = 0;
       float max = 0;
       for (int j = f.length; --j >= 0;)
@@ -116,7 +123,7 @@ public class ValidationParser implements CifValidationParser {
         }
       note += "\n  property_" + key + " (" + count + (max == 1 ? "" : "; max " + ((int)(max*100))/100f) +")";
       reader.asc.setAtomProperties(key, f,
-          ((Integer) propList.get(i++)).intValue());
+          ((Integer) propList.get(i++)).intValue(), isGroup);
     }
     return note;
   }
