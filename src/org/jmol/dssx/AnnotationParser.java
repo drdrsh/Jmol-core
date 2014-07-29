@@ -38,6 +38,7 @@ import javajs.util.SB;
 
 import org.jmol.api.JmolAnnotationParser;
 import org.jmol.java.BS;
+import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.HBond;
 import org.jmol.modelset.ModelSet;
@@ -1692,6 +1693,41 @@ public class AnnotationParser implements JmolAnnotationParser {
       } catch (Exception e) {
         // ignore
       }
+    }
+  }
+
+  /**
+   * Get all validation values corresponding to a specific validation type. 
+   * Used by label %[validation.clashes]
+   * 
+   * @param vwr
+   * @param type  e.g. "clashes" 
+   * @param atom  
+   * @return a list of Float values associated with this atom and this type of validation
+   */
+  @Override
+  public Lst<Float> getAtomValidation(Viewer vwr, String type, Atom atom) {
+    int i = 0;
+    int n = 0;
+    
+    Lst<Float> l = null;
+    Map<String, SV>map = null;
+    Lst<SV> list = null;
+    try {
+      int ia = atom.i;
+      l = new Lst<Float>();
+      list = ((SV) vwr.ms.getModelAuxiliaryInfo(atom.mi).get("validation")).getMap().get("_list").getList();
+      
+      for (i = 0, n = list.size(); i < n; i++) {
+        map = list.get(i).getMap();
+        if (map.get("_type").value.equals(type) && ((BS) map.get("_atoms").value).get(ia)) {
+          SV v = map.get("value");
+          l.addLast(v.tok == T.decimal ? (Float) v.value : Float.valueOf(v.asFloat())); 
+        }
+      }
+      return l;
+    } catch (Exception e) {
+      return null;
     }
   }
 

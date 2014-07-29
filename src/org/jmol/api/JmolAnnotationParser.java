@@ -3,6 +3,7 @@ package org.jmol.api;
 import java.util.Map;
 
 import org.jmol.java.BS;
+import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
@@ -31,5 +32,7 @@ public interface JmolAnnotationParser {
                             Map<String, Integer> map, Map<String, Integer> modelMap);
 
   SV initializeAnnotation(SV objAnn, int type);
+
+  Lst<Float> getAtomValidation(Viewer vwr, String type, Atom atom);
   
 }

@@ -9688,4 +9688,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public String getAnnotationInfo(SV d, String match, int type) {
     return getAnnotationParser().getAnnotationInfo(d, match, type);
   }
+
+  public Lst<Float> getAtomValidation(String type, Atom atom) {
+    return getAnnotationParser().getAtomValidation(this, type, atom);
+  }
 }

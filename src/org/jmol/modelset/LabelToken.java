@@ -30,11 +30,13 @@ import java.util.Map;
 
 
 
+import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
 
+import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
 
@@ -401,6 +403,10 @@ public class LabelToken {
           lt.text = propertyName;
           lt.tok = T.data;
           lt.data = vwr.getDataFloat(lt.text);
+        } else if (propertyName.startsWith("validation.")) {
+          lt.text = propertyName.substring(11);
+          lt.tok = T.validation;
+          lt.data = vwr.getDataFloat("property_" + lt.text);
         } else {
           T token = T.getTokenFromName(propertyName);
           if (token != null && isLabelPropertyTok(token.tok))
@@ -458,9 +464,8 @@ public class LabelToken {
     return ich;
   }
 
-  private static void appendAtomTokenValue(Viewer vwr, Atom atom,
-                                           LabelToken t, SB strLabel,
-                                           int[] indices, P3 ptTemp) {
+  private static void appendAtomTokenValue(Viewer vwr, Atom atom, LabelToken t,
+                                           SB strLabel, int[] indices, P3 ptTemp) {
     String strT = null;
     float floatT = Float.NaN;
     T3 ptT = null;
@@ -476,8 +481,26 @@ public class LabelToken {
         ptT = Atom.atomPropertyTuple(atom, t.tok, ptTemp);
         break;
       case T.data:
+      case T.validation:
         if (t.data != null) {
           floatT = ((float[]) t.data)[atom.i];
+          if (t.tok == T.validation && floatT != 1 && floatT != 0) {
+            Lst<Float> o = vwr.getAtomValidation(
+                t.text.substring(13, t.text.length() - 1), atom);
+            if (o == null) {
+              System.out.println("?? o is null ??");
+            } else if (o.size() == 1) {
+              floatT = o.get(0).floatValue();
+            } else {
+              floatT = Float.NaN;
+              strT = "";
+              for (int i = 0, n = o.size(); i < n; i++) {
+                strT += "," + o.get(i);
+              }
+              if (strT.length() > 1)
+                strT = strT.substring(1);
+            }
+          }
         }
         break;
       case T.array:
@@ -527,8 +550,8 @@ public class LabelToken {
         break;
       case T.string:
         // label %{altName}
-        strT = vwr.ms.getAtomProp(atom, t.text.substring(2, t.text
-            .length() - 1));
+        strT = vwr.ms.getAtomProp(atom,
+            t.text.substring(2, t.text.length() - 1));
         break;
       case T.structure:
       case T.substructure:
