@@ -96,7 +96,7 @@ public class AppletWrapper extends Applet {
                        int preloadThreadCount,
                        String[] preloadClassNames) {
     this.preloadImageName = preloadImageName;
-    this.preloadTextMessage = GT._("Loading Jmol applet ...");
+    this.preloadTextMessage = "Loading Jmol applet ...";
     this.preloadThreadCount = preloadThreadCount;
     this.preloadClassNames = preloadClassNames;
     needToCompleteInitialization = true;
@@ -166,14 +166,14 @@ public class AppletWrapper extends Applet {
     long elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
     if (elapsedTime >= MINIMUM_ELAPSED_SECONDS) {
       int messageBaseline = imageBottom + fontAscent;
-      if (messageBaseline < dim.height/2)
+      if (messageBaseline < dim.height / 2)
         messageBaseline = dim.height / 2;
       else if (messageBaseline >= dim.height)
         messageBaseline = dim.height - 1;
       g.setFont(font);
       g.drawString(preloadTextMessage, 10, messageBaseline);
-      
-      String clockText = GT.o(GT._("  {0} seconds"), "" + elapsedTime);
+
+      String clockText = "  " + elapsedTime + " seconds";
       clockWidth = fontMetrics.stringWidth(clockText);
       clockX = dim.width - clockWidth - 5;
       if (clockX < 0)

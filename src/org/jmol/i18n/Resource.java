@@ -28,7 +28,7 @@ class Resource {
 
   static Resource getResource(String className, String name) {
     String poData = null;
-    if (GT.vwr.isApplet()) {
+    if (GT.vwr != null && GT.vwr.isApplet()) {
       // no longer using individual applet language JAR files
       String fname = Viewer.appletIdiomaBase + "/" + name + ".po";
       Logger.info("Loading language resource " + fname);
