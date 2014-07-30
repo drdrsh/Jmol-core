@@ -422,7 +422,8 @@ public class FileManager implements BytePoster {
             Logger.info("FileManager opening 1 " + name);
           // note that in the case of JS, this is a javajs.util.SB.
           ret = vwr.apiPlatform.getURLContents(url, outputBytes, post, false);
-          if (ret instanceof String && ((String) ret).startsWith("java.")
+          if ((ret instanceof SB && ((SB) ret).length() < 3
+                || ret instanceof String && ((String) ret).startsWith("java."))
               && name.startsWith("http://ves-hx-89.ebi.ac.uk")) {
             // temporary bypass for EBI firewalled development server
             // defaulting to current directory and JSON file

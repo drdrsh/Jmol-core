@@ -979,7 +979,7 @@ public class AnnotationParser implements JmolAnnotationParser {
     if (lst != null) {
       for (int i = lst.size(); --i >= 0;) {
         Map<String, Object> bpInfo = lst.get(i);
-        BasePair.add(bpInfo, setPhos(vwr, 1, bpInfo, bs, htChains), setPhos(
+        BasePair.add(bpInfo, setDSSRPhos(vwr, 1, bpInfo, bs, htChains), setDSSRPhos(
             vwr, 2, bpInfo, bs, htChains));
       }
     }
@@ -988,19 +988,19 @@ public class AnnotationParser implements JmolAnnotationParser {
         Map<String, Object> bp = lst1.get(i);
         Lst<Object> resnos = (Lst<Object>) bp.get("resnos");
         for (int j = resnos.size(); --j >= 0;)
-          setRes(vwr, (String) resnos.get(j), bs, htChains);
+          setDSSRRes(vwr, (String) resnos.get(j), bs, htChains);
       }
   }
 
-  private NucleicMonomer setPhos(Viewer vwr, int n, Map<String, Object> bp,
+  private NucleicMonomer setDSSRPhos(Viewer vwr, int n, Map<String, Object> bp,
                                  BS bs, Map<String, BS> htChains) {
-    return setRes(vwr, (String) bp.get("res" + n), bs, htChains);
+    return setDSSRRes(vwr, (String) bp.get("res" + n), bs, htChains);
   }
 
-  private NucleicMonomer setRes(Viewer vwr, String res, BS bs,
+  private NucleicMonomer setDSSRRes(Viewer vwr, String res, BS bs,
                                 Map<String, BS> htChains) {
     bs.clearAll();
-    getBsAtoms(vwr, res, null, bs, htChains);
+    getDSSRAtoms(vwr, res, null, bs, htChains);
     NucleicMonomer group = (NucleicMonomer) vwr.ms.at[bs.nextSetBit(0)]
         .getGroup();
     ((NucleicPolymer) group.bioPolymer).isDssrSet = true;
@@ -1392,10 +1392,12 @@ public class AnnotationParser implements JmolAnnotationParser {
    */
   @SuppressWarnings("unchecked")
   private void findAnnotationAtoms(Viewer vwr, String name,
-                                   SV map, String key, BS bs) {
+                                   SV map, String key, BS bs, String dataKey) {
     if (map == null)
       return;
     System.out.println("Checking " + name + " for " + key);
+    if (map.getMap().containsKey(dataKey)) 
+      map = map.getMap().get(dataKey);
     Object data = vwr.extractProperty(map, "[" + key + "]", -1);
     Lst<SV> list = null;
     if (data instanceof Lst) {
@@ -1563,42 +1565,33 @@ public class AnnotationParser implements JmolAnnotationParser {
     if (!doCache) {
       key = PT.rep(key, "NOCACHE","").trim();
     }
-    String s = key.toLowerCase();
-    if (!isAnnotations && !isValidation) {
-      // Check to see if we have already asked for pairs or the data type
-      // does not have the "basePairs" key
-      if (s.indexOf("pairs") < 0 && s.indexOf("kissingloops") < 0
-          && s.indexOf("linkedby") < 0 && s.indexOf("multiplets") < 0
-          && s.indexOf("singlestrand") < 0)
-        key += ".basePairs";
-      if (s.indexOf(".nt") < 0 && s.indexOf(".res") < 0
-          && s.indexOf("[select res") < 0 && s.indexOf("[select nt") < 0)
-        key += ".res*";
-    }
+    if (!isAnnotations && !isValidation)
+      key = fixKeyDSSR(key);
     BS bs = (doCache ? (BS) dssrCache.get(key) : null);
     if (bs != null)
       return bs;
     bs = new BS();
+    if (doCache)
+      dssrCache.put(key, bs);
     try {
-      if (doCache)
-        dssrCache.put(key, bs);
-      Object data;
       if (!isAnnotations && !isValidation) {
-        Map<String, BS> htChains = new Hashtable<String, BS>();
-        data = vwr.extractProperty(dbObj, key, -1);
-        if (data instanceof Lst<?>)
-          getBsAtoms(vwr, null, (Lst<SV>) data, bs, htChains);
+        Object data = vwr.extractProperty(dbObj, key, -1);
+        if (data instanceof Lst<?>) {
+          Map<String, BS> htChains = new Hashtable<String, BS>();
+          getDSSRAtoms(vwr, null, (Lst<SV>) data, bs, htChains);
+        }
         return bs;
-      }
-      
+      }      
       SV main = initializeAnnotation((SV) dbObj, type);
       SV svMap = main;
       Map<String, SV> map = svMap.getMap();
+      String dataKey = getDataKey(type);
       // select within(annotations,"InterPro.* where identifier like '*-like'")
-      int pt = s.indexOf(" where ");
+      int pt = key.toLowerCase().indexOf(" where ");
       String tableName = PT.rep((pt < 0 ? key : key.substring(0, pt)), " ","");
-      if (tableName.indexOf(".") < 0)
+      if (tableName.indexOf(".") < 0 && isAnnotations)
         tableName += ".*";
+        
       String[] keys = PT.split(tableName, ".");
       boolean isWild = false;
       int i = 0;
@@ -1619,18 +1612,18 @@ public class AnnotationParser implements JmolAnnotationParser {
           break;
         }
       }
-      String newKey = "select " + (map == null ? "*" : getDataKey(type)) + (pt < 0 ? "" : key.substring(pt));
+      String newKey = "select * " + (pt < 0 ? "" : key.substring(pt));
       Logger.info("looking for " + newKey + " in " + tableName);
       // this is either the right map or we have a wildcard.
       if (i == 0 && map != null) {
         for (String b : main.getMap().keySet())
           for (String a : (map = main.getMap().get(b).getMap()).keySet())
-            findAnnotationAtoms(vwr, b + "." + a, map.get(a), newKey, bs);
+            findAnnotationAtoms(vwr, b + "." + a, map.get(a), newKey, bs, dataKey);
       } else if (isWild) {
         for (String a : map.keySet())
-          findAnnotationAtoms(vwr, a, map.get(a), newKey, bs);
+          findAnnotationAtoms(vwr, a, map.get(a), newKey, bs, dataKey);
       } else {
-        findAnnotationAtoms(vwr, tableName, svMap, newKey, bs);
+        findAnnotationAtoms(vwr, tableName, svMap, newKey, bs, dataKey);
       }
       bs.and(bsModel);
     } catch (Exception e) {
@@ -1638,6 +1631,20 @@ public class AnnotationParser implements JmolAnnotationParser {
       bs.clearAll();
     }
     return bs;
+  }
+
+  private String fixKeyDSSR(String key) {
+    String s = key.toLowerCase();
+    // Check to see if we have already asked for pairs or the data type
+    // does not have the "basePairs" key
+    if (s.indexOf("pairs") < 0 && s.indexOf("kissingloops") < 0
+        && s.indexOf("linkedby") < 0 && s.indexOf("multiplets") < 0
+        && s.indexOf("singlestrand") < 0)
+      key += ".basePairs";
+    if (s.indexOf(".nt") < 0 && s.indexOf(".res") < 0
+        && s.indexOf("[select res") < 0 && s.indexOf("[select nt") < 0)
+      key += ".res*";
+    return key;
   }
 
   /**
@@ -1649,7 +1656,7 @@ public class AnnotationParser implements JmolAnnotationParser {
    * @param bs
    * @param htChains
    */
-  private void getBsAtoms(Viewer vwr, String res, Lst<?> lst, BS bs,
+  private void getDSSRAtoms(Viewer vwr, String res, Lst<?> lst, BS bs,
                           Map<String, BS> htChains) {
     String[] tokens;
     if (lst == null) {
@@ -1664,7 +1671,7 @@ public class AnnotationParser implements JmolAnnotationParser {
         if (o instanceof SV)
           o = ((SV) o).value;
         if (o instanceof Lst<?>) {
-          getBsAtoms(vwr, null, (Lst<?>) o, bs, htChains);
+          getDSSRAtoms(vwr, null, (Lst<?>) o, bs, htChains);
         } else {
           String s = (o instanceof SV ? ((SV) o).asString() : o.toString());
           tokens[i] = (s.startsWith("[") ? s.substring(s.indexOf("]") + 1) : s);

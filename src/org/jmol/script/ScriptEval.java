@@ -803,7 +803,6 @@ public class ScriptEval extends ScriptExpr {
       //ignore
     }
     boolean exec0 = executing;
-    System.out.println(exec0 + "  " + this);
     Object o = (e.evaluate(expr, asVariable, compileOnly));
     executing = exec0;
     return o;
