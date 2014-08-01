@@ -221,6 +221,7 @@ public class MoveToThread extends JmolThread {
       aaStepNavCenter.sub2(navCenter, transformManager.navigationCenter);
       aaStepNavCenter.scale(1f / totalSteps);
     }
+    iStep = 0;
     return totalSteps;
   }
 
