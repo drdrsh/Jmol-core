@@ -40,12 +40,15 @@ public class MMCifValidationParser {
     // Returns a Lst<Object> of property data in the form 
     // name(String), data(float[]), modelIndex (Integer), isGroup (Boolean);
 
+    SV svMap = (SV) reader.validation;
     Lst<Object> retProps = reader.vwr.getAnnotationParser().catalogValidations(
-        reader.vwr, (SV) reader.validation, getModelAtomIndices(), resMap,
+        reader.vwr, svMap, getModelAtomIndices(), resMap,
         (asResidues ? null : atomMap), modelMap);
 
-    return (retProps == null || retProps.size() == 0 ? null
+    String note = (retProps == null || retProps.size() == 0 ? null
         : setProperties(retProps));
+    svMap.getMap().put("_note", SV.newS(note));
+    return note;
   }
 
   /**

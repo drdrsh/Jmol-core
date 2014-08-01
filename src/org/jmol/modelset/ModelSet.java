@@ -2295,12 +2295,12 @@ import java.util.Properties;
     switch (tokType) {
     default:
       return getAtomBitsMDa(tokType, specInfo);
-    case T.annotations:
+    case T.domains:
       bs = new BS();
       JmolAnnotationParser pa = vwr.getAnnotationParser();
       Object ann;
       for (int i = mc; --i >= 0;)
-        if ((ann = getInfo(i, "annotations")) != null) {
+        if ((ann = getInfo(i, "domains")) != null) {
           Map<String, Object> cache = (am[i].dssrCache == null ? am[i].dssrCache = new Hashtable<String, Object>()
               : am[i].dssrCache);
           Object annotv = cache.get(" ANNOTV ");
@@ -2309,7 +2309,7 @@ import java.util.Properties;
                 : vwr.evaluateExpressionAsVariable(ann));
             cache.put(" ANNOTV ", annotv);
           }
-          bs.or(pa.getAtomBits(vwr, (String) specInfo, annotv, cache, am[i].bsAtoms, T.annotations));
+          bs.or(pa.getAtomBits(vwr, (String) specInfo, annotv, cache, T.domains, i, am[i].bsAtoms));
         }
       return bs;
     case T.validation:
@@ -2326,9 +2326,11 @@ import java.util.Properties;
                 : vwr.evaluateExpressionAsVariable(val));
             cache.put(" VALIDV ", validv);
           }
-          bs.or(pav.getAtomBits(vwr, (String) specInfo, validv, cache, am[i].bsAtoms, T.validation));
+          bs.or(pav.getAtomBits(vwr, (String) specInfo, validv, cache, T.validation, i, am[i].bsAtoms));
         }
       return bs;
+//    case T.annotations:
+//      TODO -- generalize this
     case T.dssr:
       bs = new BS();
       JmolAnnotationParser p = vwr.getAnnotationParser();
@@ -2340,7 +2342,7 @@ import java.util.Properties;
           Object dssrv = cache.get(" DSSRV ");
           if (dssrv == null)
             cache.put(" DSSRV ", dssrv = SV.getVariable(dssr));
-          bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache, null, T.dssr));
+          bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache, T.dssr, -1, null));
         }
       return bs;
     case T.bonds:

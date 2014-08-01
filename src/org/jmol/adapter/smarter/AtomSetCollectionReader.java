@@ -143,7 +143,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected String readerName;
   public Map<String, Object> htParams;
   public Lst<P3[]> trajectorySteps;
-  private Object annotations;
+  private Object domains;
   public Object validation;
 
   //protected String parameterData;
@@ -372,18 +372,23 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (doCentralize)
       asc.centralize();
     Map<String, Object>info = asc.getAtomSetAuxiliaryInfo(0);
-    if (annotations != null && info != null) {
-      asc.setGlobalBoolean(AtomSetCollection.GLOBAL_ANNOTATIONS); 
-      String s = ((SV) annotations).getMapKeys(2, true);
+    if (domains != null && info != null) {
+      asc.setGlobalBoolean(AtomSetCollection.GLOBAL_DOMAINS); 
+      String s = ((SV) domains).getMapKeys(2, true);
       int pt = s.indexOf("{ ", 2);
       if (pt >= 0)
         s = s.substring(pt + 2);
+      pt = s.indexOf("_metadata");
+      if (pt < 0)
+        pt = s.indexOf("metadata");
+      if (pt >= 0)
+        s = s.substring(0, pt);
       s = PT.rep(PT.replaceAllCharacters(s,"{}", "").trim(), "\n", "\n  ")
-          + "\nUse SHOW ANNOTATIONS for details.";
-      appendLoadNote("\nAnnotations loaded:\n   " + s);
+          + "\n\nUse SHOW DOMAINS for details.";
+      appendLoadNote("\nDomains loaded:\n   " + s);
       for (int i = asc.atomSetCount; --i >= 0;) {
         info = asc.getAtomSetAuxiliaryInfo(i);
-        info.put("annotations", annotations);
+        info.put("domains", domains);
       }
     }
     if (validation != null && info != null) {
@@ -598,8 +603,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         setFractionalCoordinates(false);
       // with appendNew == false and UNITCELL parameter, we assume fractional coordinates
     }
-    annotations = htParams.get("annotations");
-    validation = htParams.get("validations");
+    domains = htParams.get("domains");
+    validation = htParams.get("validation");
   }
 
   protected void initializeSymmetryOptions() {

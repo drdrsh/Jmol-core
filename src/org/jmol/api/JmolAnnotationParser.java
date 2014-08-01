@@ -17,7 +17,7 @@ public interface JmolAnnotationParser {
   String processDSSR(Map<String, Object> info, GenericLineReader reader, 
                  String line0, Map<String, String> htGroup1) throws Exception;
 
-  BS getAtomBits(Viewer vwr, String key, Object dssr, Map<String, Object> cache, BS bsModel, int type);
+  BS getAtomBits(Viewer vwr, String key, Object dssr, Map<String, Object> cache, int type, int modelIndex, BS bsModel);
 
   void setAllDSSRParametersForModel(Viewer vwr, int modelIndex);
 
@@ -25,13 +25,13 @@ public interface JmolAnnotationParser {
 
   String calculateDSSRStructure(Viewer vwr, BS bsAtoms);
 
-  String getAnnotationInfo(SV a, String match, int type);
+  String getAnnotationInfo(Viewer vwr, SV a, String match, int type, int modelIndex);
 
   Lst<Object> catalogValidations(Viewer vwr, SV validation, int[] modelAtomIndices,
                             Map<String, int[]> valResMap,
                             Map<String, Integer> map, Map<String, Integer> modelMap);
 
-  SV initializeAnnotation(SV objAnn, int type);
+  Lst<SV> initializeAnnotation(SV objAnn, int type, int modelIndex);
 
   Lst<Float> getAtomValidation(Viewer vwr, String type, Atom atom);
   

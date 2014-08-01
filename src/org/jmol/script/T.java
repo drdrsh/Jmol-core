@@ -1106,7 +1106,6 @@ public class T {
   public final static int allconnected  = misc  | 10;
   public final static int angstroms     = misc  | 12;
   public final static int anisotropy    = misc  | 13;
-  public final static int annotations   = misc  | 14;
   public final static int append        = misc  | 15;
   public final static int arc           = misc  | 16 | expression;
   public final static int area          = misc  | 18;
@@ -1162,6 +1161,7 @@ public class T {
   public final static int discrete       = misc  | 96;
   public final static int displacement   = misc  | 98;
   public final static int distancefactor = misc  | 100;
+  public final static int domains        = misc  | 101;
   public final static int dotted         = misc  | 102;
   public final static int downsample     = misc  | 104;
   public final static int drawing        = misc  | 105;
@@ -1859,7 +1859,6 @@ public class T {
         "ambientOcclusion",
         "amino",
         "angle",
-        "annotations",
         "array",
         "as",
         "atomID",
@@ -1916,6 +1915,7 @@ public class T {
         "distance",
         "div",
         "DNA",
+        "domains",
         "dotted",
         "DSSP",
         "DSSR",
@@ -2863,7 +2863,6 @@ public class T {
         ambientocclusion,                   // "ambientOcclusion"
         amino,                              // "amino"
         angle,                              // "angle"
-        annotations,                        // "annotations"
         array,                              // "array"
         as,                                 // "as"
         atomid,                             // "atomID"
@@ -2920,6 +2919,7 @@ public class T {
         distance,                           // "distance"
         div,                                // "div"
         dna,                                // "DNA"
+        domains,                            // "domains"
         dotted,                             // "dotted"
         dssp,                               // "DSSP"
         dssr,                               // "DSSR"

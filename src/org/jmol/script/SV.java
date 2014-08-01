@@ -648,7 +648,7 @@ public class SV extends T implements JSONEncodable {
         return (String) x.value; // just the command
       sb = new SB();
       sValueArray(sb, (SV) x, "", "", false, true, true, Integer.MAX_VALUE, false);
-      return sb.toString();
+      return PT.rep(sb.toString(), "\n\0", " "); // circular ref
     case string:
       String s = (String) x.value;
       i = x.intValue;
@@ -679,7 +679,7 @@ public class SV extends T implements JSONEncodable {
     case varray:
       String thiskey = ";" + vx.hashCode() + ";";
       if (path.indexOf(thiskey) >= 0) {
-        sb.append(isEscaped ? "{}" : vx.myName == null ? "<circular reference>"
+        sb.append(isEscaped ? "{}" : vx.myName == null ? "\0\"<circular reference>\""
             : "<" + vx.myName + ">");
         break;
       }
@@ -726,11 +726,15 @@ public class SV extends T implements JSONEncodable {
       String sep = "";
       for (int i = 0; i < keys.length; i++) {
         String key = keys[i];
+        SV val = ht.get(key);
+        if (skipEmpty && val.tok == T.varray && val.getList().size() == 0
+            || val.tok == T.hash && val.getMap().isEmpty())
+          continue;
         if (addValues)
           sb.append(sep).append(PT.esc(key)).append(":");
         else
            sb.appendC(' ').append(key);
-        sValueArray(sb, ht.get(key), path, tabs+"  ", true, false, addValues, maxLevels, skipEmpty);
+        sValueArray(sb, val, path, tabs+"  ", true, false, addValues, maxLevels, skipEmpty);
         sep = ",";
       }
       sb.append(" }");

@@ -202,9 +202,9 @@ public class SmarterJmolAdapter extends JmolAdapter {
       for (int i = 0; i < size; i++) {
         String f = vwr.getFileAsString(names[i], false);
         if (i > 0 && size <= 3 && f.startsWith("{")) {
-          // JSON annotations and validations; could have both
+          // JSON domains and validations; could have both
           // hack to determine type:
-          String type = (f.contains("\"value\":") ? "validations" : "annotations");
+          String type = (f.contains("/outliers/") ? "validation" : "domains");
           SV x = vwr.evaluateExpressionAsVariable(f);
           if (x != null && x.getMap() != null)
             htParams.put(type, x);

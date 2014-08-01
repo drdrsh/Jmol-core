@@ -2325,7 +2325,7 @@ public class MathExt implements JmolMathExtension {
       case T.basepair:
       case T.sequence:
       case T.dssr:
-      case T.annotations:
+      case T.domains:
       case T.validation:
         return mp.addXBs(vwr.ms.getAtoms(tok,
             SV.sValue(args[args.length - 1])));

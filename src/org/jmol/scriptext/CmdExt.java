@@ -6354,16 +6354,16 @@ public class CmdExt implements JmolCmdExtension {
       if (!chk)
         msg = ((SV) e.theToken).escape();
       break;
-    case T.annotations:
+    case T.domains:
       e.checkLength23();
       len = st.length;
       if (!chk) {
-        Object d = vwr.ms.getInfo(vwr.am.cmi, "annotations");
+        Object d = vwr.ms.getInfo(vwr.am.cmi, "domains");
         if (d instanceof SV)
           msg = vwr.getAnnotationInfo((SV) d, e.optParameterAsString(2),
-              T.annotations);
+              T.domains);
         else
-          msg = "no annotation information has been loaded";
+          msg = "domain information has not been loaded";
       }
       break;
     case T.validation:
@@ -6375,7 +6375,7 @@ public class CmdExt implements JmolCmdExtension {
           msg = vwr.getAnnotationInfo((SV) d, e.optParameterAsString(2),
               T.validation);
         else
-          msg = "no validation information has been loaded";
+          msg = "validation information has not been loaded";
       }
       break;
     case T.cache:

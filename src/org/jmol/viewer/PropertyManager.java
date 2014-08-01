@@ -168,7 +168,7 @@ public class PropertyManager implements JmolPropertyManager {
     "scriptQueueInfo" , "", "",
     "nmrInfo" , "<elementSymbol> or 'all' or 'shifts'", "all",
     "variableInfo","<name>","all",
-    "annotationInfo"  , atomExpression, "{visible}",
+    "domainInfo"  , atomExpression, "{visible}",
     "validationInfo"  , atomExpression, "{visible}"
   };
 
@@ -220,7 +220,7 @@ public class PropertyManager implements JmolPropertyManager {
   private final static int PROP_SCRIPT_QUEUE_INFO = 39;
   private final static int PROP_NMR_INFO = 40;
   private final static int PROP_VAR_INFO = 41;
-  private final static int PROP_ANN_INFO = 42;
+  private final static int PROP_DOM_INFO = 42;
   private final static int PROP_VAL_INFO = 43;
   private final static int PROP_COUNT = 44;
 
@@ -619,8 +619,8 @@ public class PropertyManager implements JmolPropertyManager {
       return vwr.getStateInfo3(myParam.toString(), 0, 0);
     case PROP_TRANSFORM_INFO:
       return vwr.tm.getMatrixRotate();
-    case PROP_ANN_INFO:
-      return getAnnotationInfo(myParam, T.annotations);
+    case PROP_DOM_INFO:
+      return getAnnotationInfo(myParam, T.domains);
     case PROP_VAL_INFO:
       return getAnnotationInfo(myParam, T.validation);
     }
@@ -1620,11 +1620,11 @@ public class PropertyManager implements JmolPropertyManager {
     if (iModel < 0)
       return null;
     Map<String, Object> modelinfo = vwr.ms.getModelAuxiliaryInfo(iModel);
-    SV objAnn = (SV) modelinfo.get(type == T.annotations ? "annotations"
+    SV objAnn = (SV) modelinfo.get(type == T.domains ? "domains"
         : "validation");
     if (objAnn == null || objAnn.tok != T.hash)
       return null;
-    vwr.getAnnotationParser().initializeAnnotation(objAnn, type);
+    vwr.getAnnotationParser().initializeAnnotation(objAnn, type, iModel);
     return objAnn.getMap().get("_list");    
   }
 

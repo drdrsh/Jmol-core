@@ -64,14 +64,14 @@ public class AtomSetCollection {
 
   private final static String[] globalBooleans = {
       "someModelsHaveFractionalCoordinates", "someModelsHaveSymmetry",
-      "someModelsHaveUnitcells", "someModelsHaveCONECT", "isPDB", "someModelsHaveAnnotations", "someModelsHaveValidations" };
+      "someModelsHaveUnitcells", "someModelsHaveCONECT", "isPDB", "someModelsHaveDomains", "someModelsHaveValidations" };
 
   public final static int GLOBAL_FRACTCOORD = 0;
   public final static int GLOBAL_SYMMETRY = 1;
   public final static int GLOBAL_UNITCELLS = 2;
   public final static int GLOBAL_CONECT = 3;
   public final static int GLOBAL_ISPDB = 4;
-  public final static int GLOBAL_ANNOTATIONS = 5;
+  public final static int GLOBAL_DOMAINS = 5;
   public final static int GLOBAL_VALIDATIONS = 6;
   
 

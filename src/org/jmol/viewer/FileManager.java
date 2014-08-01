@@ -422,17 +422,17 @@ public class FileManager implements BytePoster {
             Logger.info("FileManager opening 1 " + name);
           // note that in the case of JS, this is a javajs.util.SB.
           ret = vwr.apiPlatform.getURLContents(url, outputBytes, post, false);
-          if ((ret instanceof SB && ((SB) ret).length() < 3
-                || ret instanceof String && ((String) ret).startsWith("java."))
-              && name.startsWith("http://ves-hx-89.ebi.ac.uk")) {
-            // temporary bypass for EBI firewalled development server
-            // defaulting to current directory and JSON file
-            name = "http://chemapps.stolaf.edu/jmol/jsmol/data/" 
-            + name.substring(name.lastIndexOf("/") + 1) 
-            + (name.indexOf("/val") >= 0 ? ".val" : ".ann") + ".json";
-            ret = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
-                showMsg, checkOnly, outputBytes, allowReader, allowCached);
-          }
+//          if ((ret instanceof SB && ((SB) ret).length() < 3
+//                || ret instanceof String && ((String) ret).startsWith("java."))
+//              && name.startsWith("http://ves-hx-89.ebi.ac.uk")) {
+//            // temporary bypass for EBI firewalled development server
+//            // defaulting to current directory and JSON file
+//            name = "http://chemapps.stolaf.edu/jmol/jsmol/data/" 
+//            + name.substring(name.lastIndexOf("/") + 1) 
+//            + (name.indexOf("/val") >= 0 ? ".val" : ".ann") + ".json";
+//            ret = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
+//                showMsg, checkOnly, outputBytes, allowReader, allowCached);
+//          }
 
           byte[] bytes = null;
           if (ret instanceof SB) {

@@ -4155,13 +4155,13 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return Txt.formatStringS(s, "FILE", f);
     case '*':
       // European Bioinformatics Institute
-      if (name.startsWith("*ann/")) {
+      if (name.startsWith("*dom/")) {
         //  *ann/.../.../.../xxxx
         int pt = name.lastIndexOf("/");
         f = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "mappings");
         return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
-      } else       if (name.startsWith("*val/")) {
+      } else if (name.startsWith("*val/")) {
         //  *val/.../.../.../xxxx
         int ptv = name.lastIndexOf("/");
         f = name.substring(ptv + 1);
@@ -9686,7 +9686,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public String getAnnotationInfo(SV d, String match, int type) {
-    return getAnnotationParser().getAnnotationInfo(d, match, type);
+    return getAnnotationParser().getAnnotationInfo(this, d, match, type, am.cmi);
   }
 
   public Lst<Float> getAtomValidation(String type, Atom atom) {
