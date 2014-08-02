@@ -492,7 +492,7 @@ public class Mesh extends MeshSurface {
     info.put("haveQuads", Boolean.valueOf(haveQuads));
     info.put("haveValues", Boolean.valueOf(vvs != null));
     if (vc > 0 && isAll)
-      info.put("vertices", AU.arrayCopyPt((P3[]) vs, vc));
+      info.put("vertices", AU.arrayCopyPt((T3[]) vs, vc));
     if (vvs != null && isAll)
       info.put("vertexValues", AU.arrayCopyF(vvs, vc));
     if (pc > 0 && isAll)

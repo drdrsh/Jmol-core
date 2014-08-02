@@ -1646,6 +1646,8 @@ public class MathExt implements JmolMathExtension {
     case 2:
       // to/from screen coordinates
       P3 pt3 = SV.ptValue(args[0]);
+      if (pt3 == null)
+        return false;
       if (args[1].tok == T.off) {
         // these are screen coordinates
         vwr.tm.unTransformPoint(pt3, pt3);

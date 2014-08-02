@@ -210,10 +210,10 @@ final public class AU {
     return t;
   }
 
-  public static P3[] arrayCopyPt(P3[] array, int newLength) {
+  public static T3[] arrayCopyPt(T3[] array, int newLength) {
     if (newLength < 0)
       newLength = array.length;
-    P3[] t = new P3[newLength];
+    T3[] t = new T3[newLength];
     if (array != null) {
       int oldLength = array.length;
       System.arraycopy(array, 0, t, 0, oldLength < newLength ? oldLength
