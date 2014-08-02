@@ -18,7 +18,7 @@
   <property name="temp.dir"        value="build/release" />
   <property name="web.dir"         value="/home/frs/project/j/jm/jmol" />
   <property name="web.host"        value="frs.sourceforge.net" />
-  <property name="path.release"    value="Jmol-beta/Jmol 14.1" />
+  <property name="path.release"    value="Jmol-beta/Jmol 14.3" />
   <property name="prefix.release"  value="Jmol " />
 
   <property file="${dist.dir}/Jmol.properties" prefix="Jmol.properties" />
