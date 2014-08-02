@@ -221,7 +221,7 @@ public class SV extends T implements JSONEncodable {
            || x instanceof float[]
            || x instanceof double[] 
            || x instanceof String[]
-           || x instanceof P3[]
+           || x instanceof T3[]
            || x instanceof int[][] 
            || x instanceof float[][] 
            || x instanceof String[][] 
@@ -301,7 +301,7 @@ public class SV extends T implements JSONEncodable {
     if (PT.isAS(x))
       return getVariableAS((String[]) x);
     if (PT.isAP(x))
-      return getVariableAP((P3[]) x);
+      return getVariableAP((T3[]) x);
     if (PT.isAII(x))
       return getVariableAII((int[][]) x);
     if (PT.isAFF(x))
@@ -364,7 +364,7 @@ public class SV extends T implements JSONEncodable {
     return newV(varray, objects);
   }
 
-  static SV getVariableAP(P3[] p) {
+  static SV getVariableAP(T3[] p) {
     Lst<SV> objects = new  Lst<SV>();
     for (int i = 0; i < p.length; i++)
       objects.addLast(newV(point3f, p[i]));

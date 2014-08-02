@@ -442,9 +442,9 @@ public class Escape {
     }
     if (PT.isAP(info)) {
       sb.append("[");
-      int imax = ((P3[]) info).length;
+      int imax = ((T3[]) info).length;
       for (int i = 0; i < imax; i++) {
-        sb.append(sep).append(eP(((P3[])info)[i]));
+        sb.append(sep).append(eP(((T3[])info)[i]));
         sep = ",";
       }
       sb.append("]");

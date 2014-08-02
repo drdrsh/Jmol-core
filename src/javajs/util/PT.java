@@ -903,7 +903,7 @@ public class PT {
      *  return Clazz.isAP(x);
      */
     {
-    return x instanceof P3[];
+    return x instanceof T3[];
     }
   }
 

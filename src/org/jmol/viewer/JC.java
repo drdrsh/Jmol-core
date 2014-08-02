@@ -56,7 +56,7 @@ public final class JC {
     "ligand", "http://www.rcsb.org/pdb/files/ligand/%FILE.cif",
     "mp", "http://www.materialsproject.org/materials/%FILE/cif",
     "nci", "http://cactus.nci.nih.gov/chemical/structure/%FILE",
-    "nmr", "http://www.nmrdb.org/predictor?POST?molfile=",
+    "nmr", "http://www.nmrdb.org/new_predictor?POST?molfile=",
     "nmrdb", "http://www.nmrdb.org/service/predictor?POST?molfile=",
     "pdb", "http://www.rcsb.org/pdb/files/%FILE.pdb.gz",
     "pdbe", "http://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
