@@ -1632,9 +1632,9 @@ public class MathExt implements JmolMathExtension {
   }
 
   private boolean evaluatePoint(ScriptMathProcessor mp, SV[] args) {
-    if (args.length != 1 && args.length != 3 && args.length != 4)
-      return false;
     switch (args.length) {
+    default:
+      return false;
     case 1:
       if (args[0].tok == T.decimal || args[0].tok == T.integer)
         return mp.addXInt(args[0].asInt());
@@ -1642,9 +1642,18 @@ public class MathExt implements JmolMathExtension {
       if (args[0].tok == T.varray)
         s = "{" + s + "}";
       Object pt = Escape.uP(s);
-      if (pt instanceof P3)
-        return mp.addXPt((P3) pt);
-      return mp.addXStr("" + pt);
+      return (pt instanceof P3 ? mp.addXPt((P3) pt) : mp.addXStr("" + pt));
+    case 2:
+      // to/from screen coordinates
+      P3 pt3 = SV.ptValue(args[0]);
+      if (args[1].tok == T.off) {
+        // these are screen coordinates
+        vwr.tm.unTransformPoint(pt3, pt3);
+      } else {
+        // this is TO screen coordinates
+        vwr.tm.transformPt3f(pt3, pt3);
+      }
+      return mp.addXPt(pt3);      
     case 3:
       return mp.addXPt(P3.new3(args[0].asFloat(), args[1].asFloat(),
           args[2].asFloat()));
@@ -1652,7 +1661,6 @@ public class MathExt implements JmolMathExtension {
       return mp.addXPt4(P4.new4(args[0].asFloat(), args[1].asFloat(),
           args[2].asFloat(), args[3].asFloat()));
     }
-    return false;
   }
 
   private boolean evaluatePrompt(ScriptMathProcessor mp, SV[] args) {
