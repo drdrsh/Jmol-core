@@ -26,7 +26,6 @@ package org.jmol.modelset;
 
 import javajs.J2SRequireImport;
 
-import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.Quat;
 
@@ -83,7 +82,7 @@ public class Group {
     
     if (group3 == null)
       group3 = "";
-    groupID = getGroupIdFor(group3);
+    groupID = JC.getGroupIdFor(group3);
     isProtein = (groupID >= 1 && groupID < JC.GROUPID_AMINO_MAX); 
 
     this.firstAtomIndex = firstAtomIndex;
@@ -104,11 +103,7 @@ public class Group {
   }
 
   public final String getGroup3() {
-    return group3Names[groupID];
-  }
-
-  public static String getGroup3For(short groupID) {
-    return group3Names[groupID];
+    return JC.group3Names[groupID];
   }
 
   public final char getGroup1() {    
@@ -184,48 +179,6 @@ public class Group {
   public boolean isPyrimidine() { return false; }
   public boolean isCarbohydrate() { return false; }
 
-  ////////////////////////////////////////////////////////////////
-  // static stuff for group ids
-  ////////////////////////////////////////////////////////////////
-
-  private static Map<String, Short> htGroup = new Hashtable<String, Short>();
-
-  protected static String[] group3Names = new String[128];
-  private static short group3NameCount;
-  
-  static {
-    // this is acceptable for J2S compilation SPECIFICALLY 
-    // because even though this class is not final, 
-    // group3Names is a private field.
-    for (int i = 0; i < JC.predefinedGroup3Names.length; ++i) {
-      addGroup3Name(JC.predefinedGroup3Names[i]);
-    }
-  }
-  
-  private synchronized static short addGroup3Name(String group3) {
-    if (group3NameCount == group3Names.length)
-      group3Names = AU.doubleLengthS(group3Names);
-    short groupID = group3NameCount++;
-    group3Names[groupID] = group3;
-    htGroup.put(group3, Short.valueOf(groupID));
-    return groupID;
-  }
-
-  private static short getGroupIdFor(String group3) {
-    if (group3 == null)
-      return -1;
-    short groupID = lookupGroupID(group3);
-    return (groupID == -1 ? addGroup3Name(group3) : groupID);
-  }
-
-  public static short lookupGroupID(String group3) {
-    if (group3 != null) {
-      Short boxedGroupID = htGroup.get(group3);
-      if (boxedGroupID != null)
-        return boxedGroupID.shortValue();
-    }
-    return -1;
-  }
 
   ////////////////////////////////////////////////////////////////
   // seqcode stuff

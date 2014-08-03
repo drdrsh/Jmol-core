@@ -1706,7 +1706,7 @@ public class ScriptEval extends ScriptExpr {
         continue;
       case T.spec_resid:
         sb.appendC('[');
-        sb.append(Group.getGroup3For((short) token.intValue));
+        sb.append(JC.getGroup3For((short) token.intValue));
         sb.appendC(']');
         continue;
       case T.spec_name_pattern:

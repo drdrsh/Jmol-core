@@ -483,6 +483,8 @@ public class CifReader extends AtomSetCollectionReader {
       // note that there can be problems with multi-data mmCIF sets each with
       // multiple models; and we could be loading multiple files!
       asc.newAtomSet();
+      if (isMMCIF)
+        setModelPDB(true);
     } else {
       asc.setCollectionName(thisDataSetName);
     }
@@ -1288,6 +1290,8 @@ public class CifReader extends AtomSetCollectionReader {
         atom.vib = V3.new3(siteMult, 0, Float.NaN);
     }
     asc.setAtomSetAuxiliaryInfo("isCIF", Boolean.TRUE);
+    if (isMMCIF)
+      setModelPDB(true);
     if (isMMCIF && skipping)
       skipping = false;
     return true;

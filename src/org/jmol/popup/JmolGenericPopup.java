@@ -349,8 +349,8 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     thisPopup = popupMenu;
   }
 
-  private static boolean checkBoolean(Map<String, Object> info, String key) {
-    return (info != null && info.get(key) == Boolean.TRUE); // not "Boolean.TRUE.equals(...)" (not working in Java2Script yet)
+  private boolean checkBoolean(String key) {
+    return (modelSetInfo != null && modelSetInfo.get(key) == Boolean.TRUE); // not "Boolean.TRUE.equals(...)" (not working in Java2Script yet)
   }
 
   @SuppressWarnings("unchecked")
@@ -374,12 +374,11 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     modelInfo = vwr.getModelAuxiliaryInfo(modelIndex);
     if (modelInfo == null)
       modelInfo = new Hashtable<String, Object>();
-    isPDB = checkBoolean(modelSetInfo, "isPDB");
+    isPDB = checkBoolean("isPDB");
     isMultiFrame = (modelCount > 1);
-    isSymmetry = checkBoolean(modelInfo, "hasSymmetry");
+    isSymmetry = checkBoolean("hasSymmetry");
     isUnitCell = modelInfo.containsKey("notionalUnitcell");
-    fileHasUnitCell = (isPDB && isUnitCell || checkBoolean(modelInfo,
-        "fileHasUnitCell"));
+    fileHasUnitCell = (isPDB && isUnitCell || checkBoolean("fileHasUnitCell"));
     isLastFrame = (modelIndex == modelCount - 1);
     altlocs = vwr.getAltLocListInModel(modelIndex);
     isMultiConfiguration = (altlocs.length() > 0);

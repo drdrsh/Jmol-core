@@ -83,7 +83,7 @@ public final class BioModel extends Model{
 
   BioModel(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex, 
       String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
-    super(modelSet, modelIndex, trajectoryBaseIndex, jmolData, properties, auxiliaryInfo);
+    set(modelSet, modelIndex, trajectoryBaseIndex, jmolData, properties, auxiliaryInfo);
     isBioModel = true;
     clearBioPolymers();
   }

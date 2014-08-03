@@ -904,7 +904,7 @@ REMARK 290 REMARK: NULL
     else
       asc.addAtom(atom);
     if (ac++ == 0 && !isCourseGrained)
-      asc.setAtomSetAuxiliaryInfo("isPDB", Boolean.TRUE);
+      setModelPDB(true);
     // note that values are +1 in this serial map
     if (atom.isHetero) {
       if (htHetero != null) {
@@ -1279,7 +1279,7 @@ Polyproline 10
     sbConect = null;
     asc.newAtomSet();
     if (!isCourseGrained)
-      asc.setAtomSetAuxiliaryInfo("isPDB", Boolean.TRUE);
+      setModelPDB(true);
     asc.setCurrentAtomSetNumber(modelNumber);
     if (isCourseGrained)
       asc.setAtomSetAuxiliaryInfo("courseGrained", Boolean.TRUE);
@@ -1292,7 +1292,7 @@ Polyproline 10
     // be no center of symmetry, no rotation-inversions, 
     // no atom-centered rotation axes, and no mirror or glide planes. 
     asc.setCheckSpecial(!isPDB);
-    asc.setAtomSetAuxiliaryInfo("isPDB", isPDB ? Boolean.TRUE : Boolean.FALSE);
+    setModelPDB(isPDB);
     nUNK = nRes = 0;
     currentGroup3 = null;
   }

@@ -9143,19 +9143,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return;
     }
   }
-
-  Map<String, String[][]> htPdbBondInfo;
-
+  
   public String[][] getPdbBondInfo(String group3) {
-    if (htPdbBondInfo == null)
-      htPdbBondInfo = new Hashtable<String, String[][]>();
-    String[][] info = htPdbBondInfo.get(group3);
-    if (info != null)
-      return info;
-    info = JC.getPdbBondInfo(Group.lookupGroupID(group3),
-        g.legacyHAddition);
-    htPdbBondInfo.put(group3, info);
-    return info;
+    return JC.getPdbBondInfo(group3, g.legacyHAddition);
   }
 
   public void setPicked(int iAtom) {

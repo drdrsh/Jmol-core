@@ -60,6 +60,7 @@ public class MdTopReader extends ForceFieldReader {
 
   @Override
   protected void initializeReader() throws Exception {
+    setIsPDB();
     setUserAtomTypes();
   }
 
@@ -121,7 +122,7 @@ public class MdTopReader extends ForceFieldReader {
         asc.addAtom(atoms2[i]);
     }
     Logger.info("Total number of atoms used=" + nAtoms);
-    setIsPDB();
+    setModelPDB(true);
     htParams.put("defaultType", "mdcrd");
   }
 

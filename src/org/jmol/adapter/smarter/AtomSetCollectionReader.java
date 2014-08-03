@@ -411,12 +411,15 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   public void setIsPDB() {
     asc.setGlobalBoolean(AtomSetCollection.GLOBAL_ISPDB);
-    asc.setAtomSetAuxiliaryInfo("isPDB", Boolean.TRUE);
     if (htParams.get("pdbNoHydrogens") != null)
       asc.setInfo("pdbNoHydrogens",
           htParams.get("pdbNoHydrogens"));
     if (checkFilterKey("ADDHYDROGENS"))
       asc.setInfo("pdbAddHydrogens",Boolean.TRUE);      
+  }
+
+  protected void setModelPDB(boolean isPDB) {
+    asc.setAtomSetAuxiliaryInfo("isPDB", isPDB ? Boolean.TRUE : null);
   }
 
   private Object finish() {

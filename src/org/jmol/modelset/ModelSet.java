@@ -2296,55 +2296,13 @@ import java.util.Properties;
     default:
       return getAtomBitsMDa(tokType, specInfo);
     case T.domains:
-      bs = new BS();
-      JmolAnnotationParser pa = vwr.getAnnotationParser();
-      Object ann;
-      for (int i = mc; --i >= 0;)
-        if ((ann = getInfo(i, "domains")) != null) {
-          Map<String, Object> cache = (am[i].dssrCache == null ? am[i].dssrCache = new Hashtable<String, Object>()
-              : am[i].dssrCache);
-          Object annotv = cache.get(" ANNOTV ");
-          if (annotv == null) {
-            annotv = (ann instanceof SV ? ann 
-                : vwr.evaluateExpressionAsVariable(ann));
-            cache.put(" ANNOTV ", annotv);
-          }
-          bs.or(pa.getAtomBits(vwr, (String) specInfo, annotv, cache, T.domains, i, am[i].bsAtoms));
-        }
-      return bs;
+      return getAnnotationBits("domains", T.domains, (String) specInfo);
     case T.validation:
-      bs = new BS();
-      Object val;
-      JmolAnnotationParser pav = vwr.getAnnotationParser();
-      for (int i = mc; --i >= 0;)
-        if ((val = getInfo(i, "validation")) != null) {
-          Map<String, Object> cache = (am[i].dssrCache == null ? am[i].dssrCache = new Hashtable<String, Object>()
-              : am[i].dssrCache);
-          Object validv = cache.get(" VALIDV ");
-          if (validv == null) {
-            validv = (val instanceof SV ? val 
-                : vwr.evaluateExpressionAsVariable(val));
-            cache.put(" VALIDV ", validv);
-          }
-          bs.or(pav.getAtomBits(vwr, (String) specInfo, validv, cache, T.validation, i, am[i].bsAtoms));
-        }
-      return bs;
-//    case T.annotations:
-//      TODO -- generalize this
+      return getAnnotationBits("validation", T.validation, (String) specInfo);
+      //    case T.annotations:
+      //      TODO -- generalize this
     case T.dssr:
-      bs = new BS();
-      JmolAnnotationParser p = vwr.getAnnotationParser();
-      Object dssr;
-      for (int i = mc; --i >= 0;)
-        if ((dssr = getInfo(i, "dssr")) != null) {
-          Map<String, Object> cache = (am[i].dssrCache == null ? am[i].dssrCache = new Hashtable<String, Object>()
-              : am[i].dssrCache);
-          Object dssrv = cache.get(" DSSRV ");
-          if (dssrv == null)
-            cache.put(" DSSRV ", dssrv = SV.getVariable(dssr));
-          bs.or(p.getAtomBits(vwr, (String) specInfo, dssrv, cache, T.dssr, -1, null));
-        }
-      return bs;
+      return getAnnotationBits("dssr", T.dssr, (String) specInfo);
     case T.bonds:
     case T.isaromatic:
       return getAtomBitsMDb(tokType, specInfo);
@@ -2456,6 +2414,32 @@ import java.util.Properties;
           bs.set(i);
       return bs;
     }
+  }
+
+  private BS getAnnotationBits(String name, int tok, String specInfo) {
+    BS bs = new BS();
+    JmolAnnotationParser pa = vwr.getAnnotationParser();
+    Object ann;
+    for (int i = mc; --i >= 0;)
+      if ((ann = getInfo(i, name)) != null)
+        bs.or(pa.getAtomBits(vwr, specInfo,
+            getCachedAnnotationMap(i, name + " V ", ann), am[i].dssrCache, tok,
+            i, am[i].bsAtoms));
+    return bs;
+  }
+
+  public Object getCachedAnnotationMap(int i, String key, Object ann) {
+    Map<String, Object> cache = (am[i].dssrCache == null && ann != null ? am[i].dssrCache = new Hashtable<String, Object>()
+        : am[i].dssrCache);
+    if (cache == null)
+      return null;
+    Object annotv = cache.get(key);
+    if (annotv == null && ann != null) {
+      annotv = (ann instanceof SV ? ann 
+          : vwr.evaluateExpressionAsVariable(ann));
+      cache.put(key, annotv);
+    }
+    return (annotv instanceof SV ? annotv : null);
   }
 
   private boolean isInLatticeCell(int i, P3 cell, P3 ptTemp, boolean isAbsolute) {
@@ -3260,7 +3244,7 @@ import java.util.Properties;
     unitCells = (SymmetryInterface[]) AU.arrayCopyObject(unitCells,
         newModelCount);
     for (int i = mc; i < newModelCount; i++) {
-      newModels[i] = new Model(this, i, -1, null, null, null);
+      newModels[i] = new Model().set(this, i, -1, null, null, null);
       newModels[i].loadState = " model create #" + i + ";";
     }
     am = newModels;
@@ -3473,7 +3457,7 @@ import java.util.Properties;
 
   // atom addition //
 
-  void adjustAtomArrays(int[] map, int i0, int ac) {
+  public void adjustAtomArrays(int[] map, int i0, int ac) {
     // from ModelLoader, after hydrogen atom addition
     this.ac = ac;
     for (int i = i0; i < ac; i++) {
@@ -4202,6 +4186,10 @@ import java.util.Properties;
       Quat q = Quat.newVA(v, 180);
       moveAtoms(null, q.getMatrix(), null, bsAtoms, thisAtom, true, false);
     }
+  }
+
+  public void setMSInfo(String key, Object val) {
+    msInfo.put(key,  val);
   }
 
 }

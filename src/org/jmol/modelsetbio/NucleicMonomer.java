@@ -568,7 +568,7 @@ public boolean isCrossLinked(Group g) {
 
   @Override
   protected char getGroup1b () {
-    String g3 = group3Names[groupID];
+    String g3 = JC.group3Names[groupID];
     String g1 = (NucleicPolymer.htGroup1 == null ? null : NucleicPolymer.htGroup1.get(g3));
     return (g1 == null ? Character.toLowerCase(g3.charAt(g3.length() - 1)) : g1.charAt(0));
   }

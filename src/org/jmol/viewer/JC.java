@@ -31,6 +31,7 @@ import org.jmol.util.Logger;
 import javajs.J2SIgnoreImport;
 import javajs.J2SRequireImport;
 
+import javajs.util.AU;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
@@ -958,11 +959,67 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
   private final static String aaPlus = 
     "LYSN";
 
-  public static int getStandardPdbHydrogenCount(int pt) {
+  public static int getStandardPdbHydrogenCount(String group3) {
+    int pt = JC.knownPDBGroupID(group3);
     return (pt < 0 || pt >= pdbHydrogenCount.length ? -1 : pdbHydrogenCount[pt]);
   }
 
-  public static String[][] getPdbBondInfo(int pt, boolean isLegacy) {
+  ////////////////////////////////////////////////////////////////
+  // static stuff for group ids
+  ////////////////////////////////////////////////////////////////
+
+  private static Map<String, Short> htGroup = new Hashtable<String, Short>();
+
+  public static String[] group3Names = new String[128];
+  private static short group3NameCount;
+  
+  static {
+    // The following note was for when this code was part of Group.java:
+    //   This is acceptable for J2S compilation SPECIFICALLY 
+    //   because even though this class is not final, 
+    //   group3Names is a private field.
+    for (int i = 0; i < JC.predefinedGroup3Names.length; ++i) {
+      addGroup3Name(JC.predefinedGroup3Names[i]);
+    }
+  }
+  
+  private synchronized static short addGroup3Name(String group3) {
+    if (group3NameCount == group3Names.length)
+      group3Names = AU.doubleLengthS(group3Names);
+    short groupID = group3NameCount++;
+    group3Names[groupID] = group3;
+    htGroup.put(group3, Short.valueOf(groupID));
+    return groupID;
+  }
+
+  public static String getGroup3For(short groupID) {
+    return group3Names[groupID];
+  }
+
+  public static short getGroupIdFor(String group3) {
+    if (group3 == null)
+      return -1;
+    short groupID = knownPDBGroupID(group3);
+    return (groupID == -1 ? addGroup3Name(group3) : groupID);
+  }
+
+  public static short knownPDBGroupID(String group3) {
+    if (group3 != null) {
+      Short boxedGroupID = htGroup.get(group3);
+      if (boxedGroupID != null)
+        return boxedGroupID.shortValue();
+    }
+    return -1;
+  }
+
+  private static Map<String, String[][]> htPdbBondInfo;
+  public static String[][] getPdbBondInfo(String group3, boolean isLegacy) {
+    if (htPdbBondInfo == null)
+      htPdbBondInfo = new Hashtable<String, String[][]>();
+    String[][] info = htPdbBondInfo.get(group3);
+    if (info != null)
+      return info;
+    int pt = knownPDBGroupID(group3);
     if (pt < 0 || pt > pdbBondInfo.length)
       return null;
     String s = pdbBondInfo[pt];
@@ -970,7 +1027,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
     if (isLegacy && (pt = s.indexOf("O3'")) >= 0)
       s = s.substring(0, pt);
     String[] temp = PT.getTokens(s);
-    String[][] info = new String[temp.length / 2][];
+    info = new String[temp.length / 2][];
     for (int i = 0, p = 0; i < info.length; i++) {
       String source = temp[p++];
       String target = temp[p++];
@@ -1001,14 +1058,24 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
         target = source;
         source = s;
       }
-
       info[i] = new String[] { source, target,
           (target.startsWith("H") ? "1" : "2") };
     }
+    htPdbBondInfo.put(group3, info);
     return info;
   }
-  
-  private final static String[] pdbBondInfo = {
+
+/**
+   * pdbBondInfo describes in a compact way what the hydrogen atom
+   * names are for each standard amino acid. This list consists
+   * of pairs of attached atom/hydrogen atom names, with abbreviations
+   * N, C, O, B, D, G, 1, and 2 (for N, C, O, CB, CD, CG, C1', and C2', respectively)
+   * given in pdbHAttachments, above. Note that we never add HXT or NH3
+   * "?" here is for methyl groups with H1, H2, H3.
+   * "@" indicates a prochiral center, with the assignment order given here
+   * 
+   */
+  public final static String[] pdbBondInfo = {
     // added O3' HO3' O5' HO5' for nucleic and added 1 H atom for res 1 for 13.1.17
     // this could throw off states from previous versions
     "",

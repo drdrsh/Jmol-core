@@ -49,9 +49,11 @@ import org.jmol.modelsetbio.NucleicMonomer;
 import org.jmol.modelsetbio.NucleicPolymer;
 import org.jmol.script.SV;
 import org.jmol.script.T;
+import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 /** 
@@ -1316,8 +1318,11 @@ public class AnnotationParser implements JmolAnnotationParser {
                 hasUnit = true;
                 list.addLast(out);
                 for (int k = units.size(); --k >= 0;) {
-                  isRes |= catalogUnit(viewer, floats, units.get(k).asString(),
+                  boolean ret = catalogUnit(viewer, floats, units.get(k).asString(),
                       val, bsAtoms, modelAtomIndices, resMap, atomMap, modelMap);
+                  if (ret)
+                    map.put("_isres", SV.vT);
+                  isRes |= ret;
                 }
               }
             }
@@ -1573,7 +1578,9 @@ public class AnnotationParser implements JmolAnnotationParser {
           vals[m][j] += Math.abs(val);
         }
     } else {
-      String atom = res + "_" + s[5].toUpperCase() + "_" + s[6].toLowerCase();
+      if (s[5].charAt(0) == 'H')
+        s[5] = getAttachedAtomForPDBH(s[3], s[5]);
+      String atom = res + "_" + s[5] + "_" + s[6].toLowerCase();
       Integer ia = atomMap.get(atom);
       if (ia != null) {
         int j = ia.intValue();
@@ -1666,6 +1673,8 @@ public class AnnotationParser implements JmolAnnotationParser {
    */
   public BS getAtomBits(Viewer vwr, String key, Object dbObj,
                         Map<String, Object> annotationCache, int type, int modelIndex, BS bsModel) {
+    if (dbObj == null)
+      return new BS();
     boolean isDomains = (type == T.domains);
     boolean isValidation = (type == T.validation);
     boolean isDSSR = (type == T.dssr);
@@ -1789,6 +1798,76 @@ public class AnnotationParser implements JmolAnnotationParser {
       }
     }
     return sb.toString();
+  }
+
+  private static Map<String, String>pdbAtomForH;
+  
+  /**
+   * Finds the standard attached heavy atom for a PDB H  atom;
+   * used in EBI clash validation.
+   * 
+   * @param group3
+   * @param name
+   * @return name of attached atom or hName
+   */
+  public String getAttachedAtomForPDBH(String group3, String name) {
+    if (name.charAt(0) == 'H') {
+      if (pdbAtomForH == null) {
+        pdbAtomForH = new Hashtable<String, String>();
+        assignPDBH(
+            "",
+            "N H H1 H2 H3 CB HB2 HB3 CD HD2 HD3 CG HG2 HG3 C2' H2'' H2' C5' H5'' H5' OXT HXT");
+        for (int i = JC.pdbBondInfo.length; --i >= 1;) {
+          assignPDBH(JC.group3Names[i], JC.pdbBondInfo[i]);
+        }
+      }
+      String a = pdbAtomForH.get(name);
+      if (a == null)
+        a = pdbAtomForH.get(group3 + name);
+      if (a != null)
+        return a;
+    }
+    return name;
+  }
+  
+  private void assignPDBH(String group3, String sNames) {
+    String[] names = PT.getTokens(PT.rep(sNames, "@", " "));
+    String a = null;
+    for (int i = 0, n = names.length; i < n; i++) {
+      String s = names[i];
+      if (s.charAt(0) != 'H') {
+        // just assigning attached atom
+        a = s;
+        continue;
+      }
+      // this is an H
+      s = group3 + s;
+      if (s.indexOf("?") >= 0) {
+        // CH3 groups
+        s = s.substring(0, s.length() - 1);
+        pdbAtomForH.put(s + "1", a);
+        pdbAtomForH.put(s + "2", a);
+        pdbAtomForH.put(s + "3", a);
+      } else {
+        pdbAtomForH.put(s, a);
+      }
+    }
+  }
+
+  /**
+   * Adjusts _atoms bitset to account for added hydrogen atoms.
+   * A margin of 20 allows for 20 added H atoms per group
+   * 
+   */
+  @Override
+  public void fixAtoms(int modelIndex, SV dbObj, BS bsAddedMask, int type, int margin) {
+    Lst<SV> _list = initializeAnnotation(dbObj, type, modelIndex);
+    for (int i = _list.size(); --i >= 0;) {
+      Map<String, SV> m = _list.get(i).getMap();
+      SV _atoms = m.get("_atoms");
+      if (_atoms != null && _atoms.tok == T.bitset)
+        BSUtil.shiftBits((BS) _atoms.value, bsAddedMask, _list.get(i).getMap().containsKey("_isres"), ((BS) _atoms.value).length() + margin);
+    }
   }
 
 

@@ -28,6 +28,7 @@ import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.Atom;
 
 import org.jmol.api.JmolAdapter;
+import org.jmol.viewer.JC;
 
 /**
  * A minimal multi-file reader for TRIPOS SYBYL mol2 files.
@@ -148,8 +149,10 @@ public class Mol2Reader extends ForceFieldReader {
       rd();
     }
     nAtoms += ac;
-    if (isPDB)
+    if (isPDB) {
       setIsPDB();
+      setModelPDB(true);
+    }
     applySymmetryAndSetTrajectory();
     return true;
   }
@@ -171,7 +174,8 @@ public class Mol2Reader extends ForceFieldReader {
       atom.atomName = tokens[1] + '\0' + atomType;
       int pt = atomType.indexOf(".");
       // accepts "." for "no atom type"
-      atom.elementSymbol = (pt == 0 ? atom.atomName : pt > 0 ? atomType.substring(0, pt) : atomType);
+      atom.elementSymbol = (pt == 0 ? atom.atomName : pt > 0 ? atomType
+          .substring(0, pt) : atomType);
       atom.set(parseFloatStr(tokens[2]), parseFloatStr(tokens[3]),
           parseFloatStr(tokens[4]));
       // apparently "NO_CHARGES" is not strictly enforced
@@ -222,13 +226,14 @@ public class Mol2Reader extends ForceFieldReader {
       for (int i = asc.ac; --i >= i0;) {
         Atom atom = atoms[i];
         if (atom.group3.length() <= 3
-            && JmolAdapter.lookupGroupID(atom.group3) >= 0) {
+            && (JC.knownPDBGroupID(atom.group3) >= 0 
+                || JC.checkCarbohydrate(atom.group3))) {
           isPDB = this.isPDB = true;
           break;
         }
       }
     }
-    
+
     for (int i = asc.ac; --i >= i0;)
       if (isPDB)
         atoms[i].isHetero = JmolAdapter.isHetero(atoms[i].group3);

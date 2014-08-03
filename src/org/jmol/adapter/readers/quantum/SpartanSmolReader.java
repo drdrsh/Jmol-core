@@ -87,7 +87,7 @@ public class SpartanSmolReader extends SpartanInputReader {
       }
       Logger.info(title);
       asc.setAtomSetName(title);
-      asc.setAtomSetAuxiliaryInfo("isPDB", Boolean.FALSE);
+      setModelPDB(false);
       asc.setCurrentAtomSetNumber(modelNo);
       if (isCompoundDocument)
         readMyTransform();

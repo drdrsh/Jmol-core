@@ -115,8 +115,8 @@ public class Model {
   // set in ModelLoader phase:
   public int firstAtomIndex;
   public int ac = 0; // includes deleted atoms
-  protected final BS bsAtoms = new BS();
-  final BS bsAtomsDeleted = new BS();
+  public final BS bsAtoms = new BS();
+  public final BS bsAtomsDeleted = new BS();
 
   // this one is variable and calculated only if necessary:
   public int getTrueAtomCount() {
@@ -173,9 +173,13 @@ public class Model {
 
   public Orientation orientation;
 
-  public Model(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex,
+  public Model() {
+    
+  }
+  
+  public Model set(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex,
       String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
-    this.ms = modelSet;
+    ms = modelSet;
     dataSourceFrame = this.modelIndex = modelIndex;
     isTrajectory = (trajectoryBaseIndex >= 0);
     this.trajectoryBaseIndex = (isTrajectory ? trajectoryBaseIndex : modelIndex);
@@ -199,6 +203,7 @@ public class Model {
       jmolFrameType = (jmolData.indexOf("ramachandran") >= 0 ? "ramachandran"
           : jmolData.indexOf("quaternion") >= 0 ? "quaternion" : "data");
     }
+    return this;
   }
 
   void setNAltLocs(int nAltLocs) {

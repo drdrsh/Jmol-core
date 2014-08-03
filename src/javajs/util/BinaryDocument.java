@@ -315,6 +315,7 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
       } else {
         readByteArray(new byte[(int)offset], 0, (int) offset);
       }
+      nBytes += offset;
     } catch (Exception e) {
       System.out.println(e.toString());
     }

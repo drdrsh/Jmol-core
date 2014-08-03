@@ -172,7 +172,7 @@ public class CompoundDocument extends BinaryDocument{
     binaryFileList = "|" + binaryFileList + "|";
     for (int i = 0; i < directory.size(); i++) {
       CompoundDocDirEntry thisEntry = directory.get(i);
-      System.out.println("reading " + thisEntry.entryName);
+      //System.out.println("CompoundDocument reading " + thisEntry.entryName);
       if (!thisEntry.isEmpty && thisEntry.entryType != 5) {
         String name = thisEntry.entryName;
         if (name.endsWith(".gz"))
@@ -383,7 +383,7 @@ public class CompoundDocument extends BinaryDocument{
       }
     } catch (Exception e) {
       System.out.println(data.toString());
-      System.out.println(e.toString());
+      System.out.println("reader error in CompoundDocument " + e.toString());
     }
     if (gzipData.isEnabled)
       gzipData.addTo(data);

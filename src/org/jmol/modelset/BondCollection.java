@@ -56,7 +56,7 @@ abstract public class BondCollection extends AtomCollection {
   protected JmolMolecule[] molecules;
   protected int moleculeCount;
 
-  protected void resetMolecules() {
+  public void resetMolecules() {
     molecules = null;
     moleculeCount = 0;
   }

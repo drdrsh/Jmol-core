@@ -40,6 +40,8 @@ import org.jmol.modelset.Group;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelLoader;
 import org.jmol.modelset.ModelSet;
+import org.jmol.script.SV;
+import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
@@ -171,6 +173,7 @@ public final class Resolver implements JmolBioResolver {
   private ModelLoader ml;
   private ModelSet ms;
   private BS bsAddedHydrogens;
+  private BS bsAddedMask;
   private BS bsAtomsForHs;
   private Map<String, String>htBondMap;
   private Map<String, Boolean>htGroupBonds;
@@ -215,7 +218,7 @@ public final class Resolver implements JmolBioResolver {
     String group3 = ml.getGroup3(iGroup);
     int nH1;
     if (haveHsAlready || group3 == null
-        || (nH1 = JC.getStandardPdbHydrogenCount(Group.lookupGroupID(group3))) == 0)
+        || (nH1 = JC.getStandardPdbHydrogenCount(group3)) == 0)
       return;
     nH = (nH1 < 0 ? -1 : nH1 + nH);
     Object model = null;
@@ -239,9 +242,9 @@ public final class Resolver implements JmolBioResolver {
     P3 xyz = P3.new3(Float.NaN, Float.NaN, Float.NaN);
     Atom a = ms.at[iFirst];
     for (int i = 0; i < nH; i++)
-      ms.addAtom(a.mi, a.getGroup(), 1, 
-          "H", 0, a.getSeqID(), 0, xyz, Float.NaN, null, 0, 0, 1, 0,
-          null, isHetero, (byte) 0, null).deleteBonds(null);
+      ms.addAtom(a.mi, a.getGroup(), 1, "H", 0, a.getSeqID(), 0, xyz,
+          Float.NaN, null, 0, 0, 1, 0, null, isHetero, (byte) 0, null)
+          .deleteBonds(null);
   }
 
   public void getBondInfo(JmolAdapter adapter, String group3, Object model) {
@@ -364,6 +367,7 @@ public final class Resolver implements JmolBioResolver {
   private void addHydrogens() {
     if (bsAddedHydrogens.nextSetBit(0) < 0)
       return;
+    bsAddedMask = BSUtil.copy(bsAddedHydrogens);
     finalizePdbCharges();
     int[] nTotal = new int[1];
     P3[][] pts = ms.calculateHydrogens(bsAtomsForHs, nTotal, true, false,
@@ -509,7 +513,63 @@ public final class Resolver implements JmolBioResolver {
       }
     }
     ms.deleteBonds(bsBondsDeleted, true);
-    ml.deleteAtoms(bsAddedHydrogens);
+    deleteAtoms(bsAddedHydrogens);
+  }
+  
+  /**
+   * called from org.jmol.modelsetbio.resolver when adding hydrogens.
+   * 
+   * @param bsDeletedAtoms
+   */
+  private void deleteAtoms(BS bsDeletedAtoms) {
+    // get map
+    int[] mapOldToNew = new int[ms.ac];
+    int[] mapNewToOld = new int[ms.ac - bsDeletedAtoms.cardinality()];
+    int n = ml.baseAtomIndex;
+    Model[] models = ms.am;
+    Atom[] atoms = ms.at;
+    for (int i = ml.baseAtomIndex; i < ms.ac; i++) {
+      models[atoms[i].mi].bsAtoms.clear(i);
+      models[atoms[i].mi].bsAtomsDeleted.clear(i);
+      if (bsDeletedAtoms.get(i)) {
+        mapOldToNew[i] = n - 1;
+        models[atoms[i].mi].ac--;
+      } else {
+        mapNewToOld[n] = i;
+        mapOldToNew[i] = n++;
+      }
+    }
+    ms.setMSInfo("bsDeletedAtoms", bsDeletedAtoms);
+    // adjust group pointers
+    for (int i = ml.baseGroupIndex; i < ml.groups.length; i++) {
+      Group g = ml.groups[i];
+      if (g.firstAtomIndex >= ml.baseAtomIndex) {
+        g.firstAtomIndex = mapOldToNew[g.firstAtomIndex];
+        g.lastAtomIndex = mapOldToNew[g.lastAtomIndex];
+        if (g.leadAtomIndex >= 0)
+          g.leadAtomIndex = mapOldToNew[g.leadAtomIndex];
+      }
+    }
+    // adjust atom arrays
+    ms.adjustAtomArrays(mapNewToOld, ml.baseAtomIndex, n);
+    ms.calcBoundBoxDimensions(null, 1);
+    ms.resetMolecules();
+    ms.validateBspf(false);
+    bsAddedMask = BSUtil.deleteBits(bsAddedMask, bsDeletedAtoms);
+    System.out.println("res bsAddedMask = " + bsAddedMask);
+    for (int i = ml.baseModelIndex; i < ml.ms.mc; i++) {
+      fixAnnotations(i, "domains", T.domains);
+      fixAnnotations(i, "validation", T.validation);
+    }
+  }
+
+  private void fixAnnotations(int i, String name, int type) {
+    Object o = ml.ms.getInfo(i, name);
+    if (o != null) {
+      Object dbObj = ml.ms.getCachedAnnotationMap(i, name, o);
+      if (dbObj != null)
+        ml.ms.vwr.getAnnotationParser().fixAtoms(i, (SV) dbObj, bsAddedMask, type, 20);
+    }
   }
 
   private void finalizePdbCharges() {

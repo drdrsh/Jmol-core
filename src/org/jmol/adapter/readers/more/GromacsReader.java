@@ -37,8 +37,9 @@ public class GromacsReader extends AtomSetCollectionReader {
   
   @Override
   protected void initializeReader() {
-    asc.newAtomSet();
     setIsPDB();
+    asc.newAtomSet();
+    setModelPDB(true);
   }
   
   @Override

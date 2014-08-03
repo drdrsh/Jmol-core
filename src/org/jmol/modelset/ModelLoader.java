@@ -146,11 +146,10 @@ public final class ModelLoader {
   private boolean isPyMOLsession;
   private boolean doMinimize;
   private boolean doAddHydrogens;
-  private boolean doRemoveAddedHydrogens;
 
   private String fileHeader;
   private JmolBioResolver jbr;
-  private Group[] groups;
+  public Group[] groups;
   private int groupCount;
   
 
@@ -253,7 +252,7 @@ public final class ModelLoader {
   public int baseModelIndex = 0;
   private int baseModelCount = 0;
   public int baseAtomIndex = 0;
-  private int baseGroupIndex = 0;
+  public int baseGroupIndex = 0;
 
   private int baseTrajectoryCount = 0;
   private int adapterModelCount = 0;
@@ -586,7 +585,7 @@ public final class ModelLoader {
       ms.am[modelIndex] = (modelIsPDB ? 
           jbr.getBioModel(modelIndex, trajectoryBaseIndex,
           jmolData, modelProperties, modelAuxiliaryInfo)
-          : new Model(ms, modelIndex, trajectoryBaseIndex,
+          : new Model().set(ms, modelIndex, trajectoryBaseIndex,
               jmolData, modelProperties, modelAuxiliaryInfo));
       ms.modelNumbers[modelIndex] = modelNumber;
       ms.modelNames[modelIndex] = modelName;
@@ -1421,54 +1420,6 @@ public final class ModelLoader {
    */
   public void undeleteAtom(int iAtom) {
     ms.at[iAtom].valence = 0; 
-  }
-
-  /**
-   * called from org.jmol.modelsetbio.resolver when adding hydrogens.
-   * 
-   * @param bsDeletedAtoms
-   */
-  public void deleteAtoms(BS bsDeletedAtoms) {
-    doRemoveAddedHydrogens = true;
-    if (doRemoveAddedHydrogens) {
-      // get map
-      int[] mapOldToNew = new int[ms.ac];
-      int[] mapNewToOld = new int[ms.ac
-          - bsDeletedAtoms.cardinality()];
-      int n = baseAtomIndex;
-      Model[] models = ms.am;
-      Atom[] atoms = ms.at;
-      for (int i = baseAtomIndex; i < ms.ac; i++) {
-        models[atoms[i].mi].bsAtoms.clear(i);
-        models[atoms[i].mi].bsAtomsDeleted.clear(i);
-        if (bsDeletedAtoms.get(i)) {
-          mapOldToNew[i] = n - 1;
-          models[atoms[i].mi].ac--;
-        } else {
-          mapNewToOld[n] = i;
-          mapOldToNew[i] = n++;
-        }
-      }
-      ms.msInfo.put("bsDeletedAtoms", bsDeletedAtoms);
-      // adjust group pointers
-      for (int i = baseGroupIndex; i < groups.length; i++) {
-        Group g = groups[i];
-        if (g.firstAtomIndex >= baseAtomIndex) {
-          g.firstAtomIndex = mapOldToNew[g.firstAtomIndex];
-          g.lastAtomIndex = mapOldToNew[g.lastAtomIndex];
-          if (g.leadAtomIndex >= 0)
-            g.leadAtomIndex = mapOldToNew[g.leadAtomIndex];
-        }
-      }
-      // adjust atom arrays
-      ms.adjustAtomArrays(mapNewToOld, baseAtomIndex, n);
-    } else {
-      ms.vwr.deleteAtoms(bsDeletedAtoms, false);
-    }
-
-    ms.calcBoundBoxDimensions(null, 1);
-    ms.resetMolecules();
-    ms.validateBspf(false);
   }
 
   

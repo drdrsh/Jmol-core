@@ -30,7 +30,6 @@ import java.util.Map;
 
 import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.c.QS;
-import org.jmol.modelset.Group;
 import org.jmol.util.Elements;
 import org.jmol.util.Edge;
 import org.jmol.viewer.JC;
@@ -118,10 +117,6 @@ public abstract class JmolAdapter {
     return QS.getQuantumShellTagIDSpherical(tag);
   }
   
-  final public static short lookupGroupID(String group3) {
-    return Group.lookupGroupID(group3);
-  }
-
   public static float getBondingRadius(int atomicNumberWithIsotope, int charge) {
     return Elements.getBondingRadius(atomicNumberWithIsotope, charge);
   }

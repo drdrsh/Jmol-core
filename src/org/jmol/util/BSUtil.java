@@ -170,6 +170,46 @@ final public class BSUtil {
       bs.clearBits(ipt, len);
     return bs;
   }
+  
+  /**
+   * this one slides bits to higher positions based on a pattern.
+   * 
+   * shiftBits 101011b, 000011b --> 10101100b
+   * 
+   * @param bs
+   * @param bsAdded
+   * @param setIfFound 
+   * @param iLast
+   */
+  public static void shiftBits(BS bs, BS bsAdded, boolean setIfFound, int iLast) {
+    if (bs == null || bsAdded == null)
+      return;
+    int n = bsAdded.length();
+    BS bsNew = BS.newN(n);
+    boolean isFound = false;
+    boolean doSet = false;
+    boolean checkFound = setIfFound;
+    for (int j = 0, i = 0; j < n && i < iLast; j++) {
+      if (bsAdded.get(j)) {
+        if (doSet)
+          bsNew.set(j);
+        checkFound = setIfFound;
+        isFound = false;
+      } else if(bs.get(i++)) {
+        bsNew.set(j);
+        if(checkFound) {
+          checkFound = false;
+          isFound = true;
+          doSet = true;
+        }
+      } else if (checkFound && !isFound){
+        doSet = false;
+      }
+    }
+    bs.clearAll();
+    bs.or(bsNew);
+  }
+
 
   /**
    * offset the bitset in place by the specified number of bits
