@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
 
+import javajs.J2SIgnoreImport;
 import javajs.api.BytePoster;
 
 /**
@@ -43,6 +44,7 @@ import javajs.api.BytePoster;
  *  
  */
 
+@J2SIgnoreImport({ java.io.FileOutputStream.class })
 public class OC extends OutputStream {
  
   private BytePoster bytePoster; // only necessary for writing to http:// or https://
@@ -137,12 +139,19 @@ public class OC extends OutputStream {
   public void reset() {
     sb = null;
     try {
-      if (os instanceof FileOutputStream) {
+      /**
+       * @j2sNative
+       * 
+       *            this.os = null;
+       */
+      {
+        if (os instanceof FileOutputStream) {
           os.close();
           os = new FileOutputStream(fileName);
-      } else {
-        os = new ByteArrayOutputStream();
+        }
       }
+      if (os == null)
+        os = new ByteArrayOutputStream();
       if (bw != null) {
         bw.close();
         bw = new BufferedWriter(new OutputStreamWriter(os));
