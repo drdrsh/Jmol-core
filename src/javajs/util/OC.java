@@ -148,6 +148,8 @@ public class OC extends OutputStream {
         if (os instanceof FileOutputStream) {
           os.close();
           os = new FileOutputStream(fileName);
+        } else {
+          os = null;
         }
       }
       if (os == null)
