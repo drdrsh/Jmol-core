@@ -179,9 +179,9 @@ public class CifReader extends AtomSetCollectionReader {
 
   private boolean readAllData() throws Exception {
     if (key.startsWith("data_")) {
-      newModel(++modelNumber);
       if (iHaveDesiredModel)
         return false;
+      newModel(++modelNumber);
       haveCellWaveVector = false;
       if (auditBlockCode == null)
         modulated = false;
