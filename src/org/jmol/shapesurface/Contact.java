@@ -95,7 +95,8 @@ public class Contact extends Isosurface {
     RadiusData rd = (RadiusData) value[6];
     float saProbeRadius = ((Float) value[7]).floatValue();
     float[] parameters = (float[]) value[8];
-    String command = (String) value[9];
+    int modelIndex = ((Integer) value[9]).intValue();
+    String command = (String) value[10];
     if (Float.isNaN(saProbeRadius))
       saProbeRadius = 0;
     if (rd == null)
@@ -218,6 +219,8 @@ public class Contact extends Isosurface {
       break;
     }
     thisMesh.setMerged(false);
+    if (modelIndex != Integer.MIN_VALUE)
+      thisMesh.modelIndex = modelIndex;
     thisMesh.jvxlData.vertexDataOnly = true;
     thisMesh.reinitializeLightingAndColor(vwr);
     if (contactType != T.nci) {
@@ -367,11 +370,14 @@ public class Contact extends Isosurface {
     if (bs.isEmpty())
       return list;
     ad.bsSelected = bs;
-    boolean isMultiModel = (atoms[bs.nextSetBit(0)].mi != atoms[bs
-        .length() - 1].mi);
+    int iModel = atoms[bs.nextSetBit(0)].mi;
+    boolean isMultiModel = (iModel != atoms[bs.length() - 1].mi);
+    ad.modelIndex = (isMultiModel ? -1 : iModel);
+    //if (!isMultiModel)
+      //thisMesh.modelIndex = iModel;
     boolean isSelf = bsA.equals(bsB);
     vwr.fillAtomData(ad, AtomData.MODE_FILL_RADII
-        | (isMultiModel ? AtomData.MODE_FILL_MULTIMODEL : 0)
+        | (isMultiModel ? AtomData.MODE_FILL_MULTIMODEL : AtomData.MODE_FILL_MODEL)
         | AtomData.MODE_FILL_MOLECULES);
     float maxRadius = 0;
     for (int ib = bsB.nextSetBit(0); ib >= 0; ib = bsB.nextSetBit(ib + 1))

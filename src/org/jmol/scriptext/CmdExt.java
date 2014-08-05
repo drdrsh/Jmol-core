@@ -1666,6 +1666,7 @@ public class CmdExt implements JmolCmdExtension {
     int colorpt = 0;
     boolean colorByType = false;
     int tok;
+    int modelIndex = Integer.MIN_VALUE;
     boolean okNoAtoms = (eval.iToken > 1);
     for (int i = eval.iToken; i < slen; ++i) {
       switch (tok = getToken(i).tok) {
@@ -1741,6 +1742,12 @@ public class CmdExt implements JmolCmdExtension {
           setShapeProperty(JC.SHAPE_CONTACT, "resolution",
               Float.valueOf(resolution));
         }
+        break;
+      case T.model:
+      case T.modelindex:
+        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i) : eval
+            .modelNumberParameter(++i));
+        sbCommand.append(" modelIndex " + modelIndex);
         break;
       case T.within:
       case T.distance:
@@ -1860,7 +1867,7 @@ public class CmdExt implements JmolCmdExtension {
           new Object[] { Integer.valueOf(contactType),
               Integer.valueOf(displayType), Boolean.valueOf(colorDensity),
               Boolean.valueOf(colorByType), bsA, bsB, rd,
-              Float.valueOf(saProbeRadius), params, sbCommand.toString() });
+              Float.valueOf(saProbeRadius), params, Integer.valueOf(modelIndex), sbCommand.toString() });
       if (colorpt > 0)
         eval.setMeshDisplayProperty(JC.SHAPE_CONTACT, colorpt, 0);
     }
@@ -1872,19 +1879,22 @@ public class CmdExt implements JmolCmdExtension {
       setShapeProperty(JC.SHAPE_CONTACT, "slab", userSlabObject);
     if (bsA != null && (displayType == T.nci || localOnly)) {
       Object volume = getShapeProperty(JC.SHAPE_CONTACT, "volume");
+      double v;
       if (PT.isAD(volume)) {
         double[] vs = (double[]) volume;
-        double v = 0;
+        v = 0;
         for (int i = 0; i < vs.length; i++)
           v += Math.abs(vs[i]);
-        volume = Float.valueOf((float) v);
+      } else {
+        v = ((Float) volume).floatValue();
       }
-      int nsets = ((Integer) getShapeProperty(JC.SHAPE_CONTACT, "nSets"))
-          .intValue();
-
       if (colorDensity || displayType != T.trim) {
-        showString((nsets == 0 ? "" : nsets + " contacts with ")
-            + "net volume " + volume + " A^3");
+        int nsets = ((Integer) getShapeProperty(JC.SHAPE_CONTACT, "nSets"))
+            .intValue();
+        String s = "Contacts: " + nsets;
+        if (v != 0)
+          s += " with net volume " + v + " A^3";
+        showString(s);
       }
     }
     return true;

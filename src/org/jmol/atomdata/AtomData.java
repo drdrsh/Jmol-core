@@ -125,6 +125,8 @@ public class AtomData {
   public AtomData() {
   }
  
+  
+  public final static int MODE_FILL_MODEL = 0;
   public final static int MODE_FILL_COORDS = 1;
   public final static int MODE_FILL_RADII = 2;
   public final static int MODE_FILL_MOLECULES = 4;
