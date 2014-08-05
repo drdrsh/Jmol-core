@@ -367,34 +367,36 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   protected void finalizeReaderASCR() throws Exception {
-    applySymmetryAndSetTrajectory();
-    asc.finalizeStructures();
-    if (doCentralize)
-      asc.centralize();
-    Map<String, Object>info = asc.getAtomSetAuxiliaryInfo(0);
-    if (domains != null && info != null) {
-      asc.setGlobalBoolean(AtomSetCollection.GLOBAL_DOMAINS); 
-      String s = ((SV) domains).getMapKeys(2, true);
-      int pt = s.indexOf("{ ", 2);
-      if (pt >= 0)
-        s = s.substring(pt + 2);
-      pt = s.indexOf("_metadata");
-      if (pt < 0)
-        pt = s.indexOf("metadata");
-      if (pt >= 0)
-        s = s.substring(0, pt);
-      s = PT.rep(PT.replaceAllCharacters(s,"{}", "").trim(), "\n", "\n  ")
-          + "\n\nUse SHOW DOMAINS for details.";
-      appendLoadNote("\nDomains loaded:\n   " + s);
-      for (int i = asc.atomSetCount; --i >= 0;) {
-        info = asc.getAtomSetAuxiliaryInfo(i);
-        info.put("domains", domains);
+    if (asc.atomSetCount > 0) {
+      applySymmetryAndSetTrajectory();
+      asc.finalizeStructures();
+      if (doCentralize)
+        asc.centralize();
+      Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
+      if (domains != null && info != null) {
+        asc.setGlobalBoolean(AtomSetCollection.GLOBAL_DOMAINS);
+        String s = ((SV) domains).getMapKeys(2, true);
+        int pt = s.indexOf("{ ", 2);
+        if (pt >= 0)
+          s = s.substring(pt + 2);
+        pt = s.indexOf("_metadata");
+        if (pt < 0)
+          pt = s.indexOf("metadata");
+        if (pt >= 0)
+          s = s.substring(0, pt);
+        s = PT.rep(PT.replaceAllCharacters(s, "{}", "").trim(), "\n", "\n  ")
+            + "\n\nUse SHOW DOMAINS for details.";
+        appendLoadNote("\nDomains loaded:\n   " + s);
+        for (int i = asc.atomSetCount; --i >= 0;) {
+          info = asc.getAtomSetAuxiliaryInfo(i);
+          info.put("domains", domains);
+        }
       }
-    }
-    if (validation != null && info != null) {
-      for (int i = asc.atomSetCount; --i >= 0;) {
-        info = asc.getAtomSetAuxiliaryInfo(i);
-        info.put("validation", validation);
+      if (validation != null && info != null) {
+        for (int i = asc.atomSetCount; --i >= 0;) {
+          info = asc.getAtomSetAuxiliaryInfo(i);
+          info.put("validation", validation);
+        }
       }
     }
     setLoadNote();

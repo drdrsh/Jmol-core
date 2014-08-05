@@ -1014,7 +1014,7 @@ public class CifReader extends AtomSetCollectionReader {
           fieldProperty(modelField);
           int modelNo = parseIntStr(field);
           if (modelNo != currentModelNo) {
-            if (iHaveDesiredModel) {
+            if (iHaveDesiredModel && asc.atomSetCount > 0) {
               parser.skipLoop();
               // but only this atom loop
               skipping = false;
