@@ -484,62 +484,70 @@ class SymmetryOperation extends M4 {
   }
 
   private final static String xyzFraction(float n12ths, boolean allPositive, boolean halfOrLess) {
-    n12ths = Math.round(n12ths);
+    float n = n12ths;
     if (allPositive) {
-      while (n12ths < 0)
-        n12ths += 12f;
+      while (n < 0)
+        n += 12f;
     } else if (halfOrLess) {
-      while (n12ths > 6f)
-        n12ths -= 12f;
-      while (n12ths < -6f)
-        n12ths += 12f;
+      while (n > 6f)
+        n -= 12f;
+      while (n < -6f)
+        n += 12f;
     }
-    String s = twelfthsOf(n12ths);
-    return (s.charAt(0) == '0' ? "" : n12ths > 0 ? "+" + s : s);
+    String s = twelfthsOf(n);
+    return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
   }
 
   private final static String twelfthsOf(float n12ths) {
     String str = "";
-    int i12ths = Math.round(n12ths);
-    if (i12ths == 12)
-      return "1";
-    if (i12ths == -12)
-      return "-1";
-    if (i12ths < 0) {
-      i12ths = -i12ths;
-      if (i12ths % 12 != 0)
-        str = "-";
+    if (n12ths < 0) {
+      n12ths = -n12ths;
+      str = "-";
     }
-    int n = i12ths / 12;
-    if (n < 1)
-      return str + twelfths[i12ths % 12];
-    int m = 0;
-    switch (i12ths % 12) {
-    case 0:
-      return str + n;
-    case 1:
-    case 5:
-    case 7:
-    case 11:
-      m = 12;
-      break;
-    case 2:
-    case 10:
-      m = 6;
-      break;
-    case 3:
-    case 9:
-      m = 4;
-      break;
-    case 4:
-    case 8:
-      m = 3;
-      break;
-    case 6:
-      m = 2;
-      break;
+    int m = 12;
+    int n = Math.round(n12ths);
+    if (Math.abs(n - n12ths) > 0.01f) {
+      // fifths? sevenths? eigths? ninths? sixteenths?
+      // Juan Manuel suggests 10 is large enough here 
+      float f = n12ths / 12;
+      int max = 20;
+      for (m = 5; m < max; m++) {
+        float fm = f * m;
+        n = Math.round(fm);
+        if (Math.abs(n - fm) < 0.01f)
+          break;
+      }
+      if (m == max)
+        return str + f;
+    } else {
+      if (n == 12)
+        return str + "1";
+      if (n < 12)
+        return str + twelfths[n % 12];
+      switch (n % 12) {
+      case 0:
+        return "" + n / 12;
+      case 2:
+      case 10:
+        m = 6;
+        break;
+      case 3:
+      case 9:
+        m = 4;
+        break;
+      case 4:
+      case 8:
+        m = 3;
+        break;
+      case 6:
+        m = 2;
+        break;
+      default:
+        break;
+      }
+      n = (n * m / 12);
     }
-    return str + (i12ths * m / 12) + "/" + m;
+    return str + n + "/" + m;
   }
 
   private final static String[] twelfths = { "0", "1/12", "1/6", "1/4", "1/3",

@@ -150,7 +150,7 @@ public class Dialog extends JPanel implements JmolDialogInterface {
     }
     if (fileName.startsWith("/"))
       fileName = "file://" + fileName; // for Macs
-    boolean doCartoons = (allowAppend && openPreview != null && openPreview.isCartoonsSelected());
+    boolean doCartoons = (jmolApp == null || allowAppend && openPreview != null && openPreview.isCartoonsSelected());
     boolean doAppend = (allowAppend && !JC.isScriptType(fileName) 
         && openPreview != null && openPreview.isAppendSelected());
     closePreview();

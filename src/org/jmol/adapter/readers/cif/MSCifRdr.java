@@ -61,9 +61,9 @@ public class MSCifRdr extends MSRdr {
   private final static int FWV_X = 5;
   private final static int FWV_Y = 6;
   private final static int FWV_Z = 7;
-  private final static int FWV_Q1_COEF = 8;
-  private final static int FWV_Q2_COEF = 9;
-  private final static int FWV_Q3_COEF = 10;
+  private final static int JANA_FWV_Q1_COEF = 8;
+  private final static int JANA_FWV_Q2_COEF = 9;
+  private final static int JANA_FWV_Q3_COEF = 10;
   
   private final static int FWV_DISP_LABEL = 11;
   private final static int FWV_DISP_AXIS = 12;
@@ -321,7 +321,7 @@ public class MSCifRdr extends MSRdr {
         case DISP_SAW_AX:
           pt[0] = cr.parseFloatStr(field);
           break;
-        case FWV_Q1_COEF:
+        case JANA_FWV_Q1_COEF:
           id += "_coefs_";
           pt = new double[modDim];
           pt[0] = cr.parseFloatStr(field);
@@ -338,7 +338,7 @@ public class MSCifRdr extends MSRdr {
           //$FALL-THROUGH$
         case WV_Y:
         case FWV_Y:
-        case FWV_Q2_COEF:
+        case JANA_FWV_Q2_COEF:
         case FWV_DISP_PHASE:
         case FWV_OCC_PHASE:
         case FWV_U_PHASE:
@@ -355,7 +355,7 @@ public class MSCifRdr extends MSRdr {
           break;
         case WV_Z:
         case FWV_Z:
-        case FWV_Q3_COEF:
+        case JANA_FWV_Q3_COEF:
         case DISP_SAW_AZ:
           pt[2] = cr.parseFloatStr(field);
           break;
