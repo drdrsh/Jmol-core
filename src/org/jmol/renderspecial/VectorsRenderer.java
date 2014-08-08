@@ -76,6 +76,8 @@ public class VectorsRenderer extends ShapeRenderer {
     short[] colixes = vectors.colixes;
     boolean needTranslucent = false;
     vectorScale = vwr.getFloat(T.vectorscale);
+    if (vectorScale < 0)
+      vectorScale = 1;
     vectorSymmetry = vwr.getBoolean(T.vectorsymmetry);
     vectorsCentered = vwr.getBoolean(T.vectorscentered);
     vibrationOn = vwr.tm.vibrationOn;

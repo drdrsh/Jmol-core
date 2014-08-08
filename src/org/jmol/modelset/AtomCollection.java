@@ -2780,6 +2780,35 @@ abstract public class AtomCollection {
       list.addAll(e.getValue());
     return list;
   }
-  
+
+  public void scaleVectorsToMax(float max) {
+    if (vibrations == null || max == 0)
+      return;
+    float m = 0;
+    BS bsVib = BS.newN(ac);
+    for (int i = vibrations.length; --i >= 0;) {
+      Vibration v = vibrations[i];
+      if (v != null && v.modDim == Vibration.TYPE_VIBRATION
+          || v.modDim == Vibration.TYPE_SPIN) {
+        m = Math.max(m, v.length());
+        bsVib.set(i);
+      }
+    }
+    if (m == 0)
+      return;
+    m = max / m;
+    boolean ok = false;
+    for (int i = bsVib.nextSetBit(0); i >= 0; i = bsVib.nextSetBit(i + 1)) {
+      vibrations[i].scale(m);
+      if (!ok) {
+        taintAtom(i, TAINT_VIBRATION);
+        ok = true;
+      }
+    }
+    tainted[TAINT_VIBRATION].or(bsVib);
+    //{*}.vxyz = {*}.vxyz.all.mul(3.0/{*}.vxyz.all.max)
+  }
+
+
 }
 

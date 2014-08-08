@@ -7831,6 +7831,7 @@ public class ScriptEval extends ScriptExpr {
           setFloatProperty("vectorScale", value);
         return;
       }
+      break;
     }
     setShapeSize(JC.SHAPE_VECTORS, new RadiusData(null, value, type, null));
   }
@@ -7856,6 +7857,11 @@ public class ScriptEval extends ScriptExpr {
       if (!Float.isNaN(period = floatParameterRange(2, -100, 100)))
         setFloatProperty("vibrationScale", period);
       return;
+    case T.max:
+        float max = floatParameter(2);
+        if (!chk)
+          vwr.ms.scaleVectorsToMax(max);
+        break;
     case T.period:
       setFloatProperty("vibrationPeriod", floatParameter(2));
       return;
