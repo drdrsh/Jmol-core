@@ -171,7 +171,7 @@ public class VectorsRenderer extends ShapeRenderer {
       } else {
         if (vibrationOn)
           vwr.tm.getVibrationPoint(vib, pointVectorEnd, Float.NaN);
-        mod.addTo(pointVectorStart, -1);
+        mod.addTo(pointVectorStart, Float.NaN);
       }
       headOffsetVector.sub2(pointVectorEnd, pointVectorStart);
       float len = headOffsetVector.length();

@@ -293,7 +293,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public synchronized void setModTQ(T3 a, boolean isOn, T3 qtOffset, boolean isQ,
                        float scale) {
     if (enabled)
-      addTo(a, -1);
+      addTo(a, Float.NaN);
     enabled = false;
     this.scale = scale;
     if (qtOffset != null) {
@@ -311,19 +311,24 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public void addTo(T3 a, float scale) {
+    boolean isReset = (Float.isNaN(scale));
+    if (isReset)
+      scale = -1;
     ptTemp.setT(this);
     ptTemp.scale(this.scale * scale);
     symmetry.toCartesian(ptTemp, true);
     a.add(ptTemp);
-    
+
     // magnetic moment part
     if (vib == null || mxyz == null)
+      return;
+    vib.setT(v0);
+    if (isReset)
       return;
     ptTemp.setT(mxyz);
     ptTemp.scale(this.scale * scale);
     symmetry.toCartesian(ptTemp, true);
-    ptTemp.scale(mscale );
-    vib.setT(v0);
+    ptTemp.scale(mscale);
     vib.add(ptTemp);
   }
     
@@ -357,7 +362,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (!enabled)
       return;
     getModTemp();
-    addTo(a, -1);
+    addTo(a, Float.NaN);
     modTemp.calculate(t456, false).addTo(a, scale);
   }
     
