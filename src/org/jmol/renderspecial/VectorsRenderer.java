@@ -56,12 +56,13 @@ public class VectorsRenderer extends ShapeRenderer {
   private float vectorScale;
   private boolean vectorSymmetry;
   private float headScale;
-  private boolean doShaft;
+  private boolean drawShaft;
   private Vibration vibTemp;
   private boolean vectorsCentered;
   private boolean standardVector = true;
   private boolean vibrationOn;
   private boolean drawCap;
+  private boolean showModVecs;
 
 
   @Override
@@ -80,18 +81,31 @@ public class VectorsRenderer extends ShapeRenderer {
       vectorScale = 1;
     vectorSymmetry = vwr.getBoolean(T.vectorsymmetry);
     vectorsCentered = vwr.getBoolean(T.vectorscentered);
+    showModVecs = vwr.getBoolean(T.showmodvecs);
     vibrationOn = vwr.tm.vibrationOn;
     headScale = arrowHeadOffset;
     if (vectorScale < 0)
       headScale = -headScale;
+    boolean haveModulations = false;
     for (int i = ms.getAtomCount(); --i >= 0;) {
       Atom atom = atoms[i];
       if (!isVisibleForMe(atom))
         continue;
-      Vibration vibrationVector = ms.getVibration(i, false);
-      if (vibrationVector == null)
+      JmolModulationSet mod = ms.getModulation(i);
+      if (showModVecs && !haveModulations && mod != null)
+        haveModulations = true;
+      Vibration vib = ms.getVibration(i, false);
+      if (vib == null)
         continue;
-      if (!transform(mads[i], atom, vibrationVector))
+      // just the vibration, but if it is a spin, it might be modulated
+      // issue here is that the "vibration" for an atom may be one of:
+      // standard vibration
+      // magnetic spin
+      // displacement modulation
+      // modulated magnetic spin
+      // magnetic spin and displacement modulation
+      // modulated magnetic spin and displacement modulation
+      if (!transform(mads[i], atom, vib, mod))
         continue;
       if (!g3d.setC(Shape.getColix(colixes, i, atom))) {
         needTranslucent = true;
@@ -101,19 +115,39 @@ public class VectorsRenderer extends ShapeRenderer {
       if (vectorSymmetry) {
         if (vibTemp == null)
           vibTemp = new Vibration();
-        vibTemp.setT(vibrationVector);
+        vibTemp.setT(vib);
         vibTemp.scale(-1);
-        transform(mads[i], atom, vibTemp);
+        transform(mads[i], atom, vibTemp, null);
         renderVector(atom);
       }
     }
+    if (haveModulations)
+      for (int i = ms.getAtomCount(); --i >= 0;) {
+        Atom atom = atoms[i];
+        if (!isVisibleForMe(atom))
+          continue;
+        JmolModulationSet mod = ms.getModulation(i);
+        if (mod == null)
+          continue;
+        // now we focus on modulations 
+        // this may involve a modulated atom or a spin modulation
+        if (!transform(mads[i], atom, null, mod))
+          continue;
+        if (!g3d.setC(Shape.getColix(colixes, i, atom))) {
+          needTranslucent = true;
+          continue;
+        }
+        renderVector(atom);
+      }
+
     return needTranslucent;
   }
 
-  private boolean transform(short mad, Atom atom, Vibration vib) {
-    boolean isMod = (vib.modDim >= Vibration.TYPE_MODULATION);
-    //boolean isDisp = (vib.modDim == Vibration.TYPE_DISPLACEMENT);
+  private boolean transform(short mad, Atom atom, Vibration vib, JmolModulationSet mod2) {
+    boolean isMod = (vib.modDim >= 0);
     boolean isSpin = (vib.modDim == Vibration.TYPE_SPIN);
+    // Some modulations may also contain pointers to magnetic moments (spins).
+    // In that case, we are 
     drawCap = true;
     if (!isMod) {
       float len = vib.length();
@@ -121,16 +155,17 @@ public class VectorsRenderer extends ShapeRenderer {
       if (Math.abs(len * vectorScale) < 0.01)
         return false;
       standardVector = true;
-      doShaft = (0.1 + Math.abs(headScale / len) < Math.abs(vectorScale));
+      drawShaft = (0.1 + Math.abs(headScale / len) < Math.abs(vectorScale));
       headOffsetVector.setT(vib);
       headOffsetVector.scale(headScale / len);
     }
+    JmolModulationSet mod = null;
     if (isMod) {
       standardVector = false;
-      doShaft = true;
+      drawShaft = true;
       pointVectorStart.setT(atom);
       pointVectorEnd.setT(atom);
-      JmolModulationSet mod = (JmolModulationSet) vib;
+      mod = (JmolModulationSet) vib;
       if (!mod.isEnabled()) {
         mod.addTo(pointVectorEnd, 1);
       } else {
@@ -141,12 +176,21 @@ public class VectorsRenderer extends ShapeRenderer {
       headOffsetVector.sub2(pointVectorEnd, pointVectorStart);
       float len = headOffsetVector.length();
       drawCap = (len + arrowHeadOffset > 0.001f);
-      doShaft = (len > 0.01f);
+      drawShaft = (len > 0.01f);
       headOffsetVector.scale(headScale / headOffsetVector.length());
     } else if (vectorsCentered || isSpin) {
       standardVector = false;
-      pointVectorEnd.scaleAdd2(0.5f * vectorScale, vib, atom);
-      pointVectorStart.scaleAdd2(-0.5f * vectorScale, vib, atom);
+      Vibration v;
+      if (mod == null || !mod.isEnabled()) {
+        v = vib; 
+      } else {
+        v = vibTemp;
+        vibTemp.set(0,  0,  0);
+        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
+        vwr.tm.getVibrationPoint(vib, v, Float.NaN);
+      }
+      pointVectorEnd.scaleAdd2(0.5f * vectorScale, v, atom);
+      pointVectorStart.scaleAdd2(-0.5f * vectorScale, v, atom);
     } else {
       pointVectorEnd.scaleAdd2(vectorScale, vib, atom);
       screenVectorEnd.setT(vibrationOn? tm.transformPtVib(pointVectorEnd, vib) : tm.transformPt(pointVectorEnd));
@@ -173,7 +217,7 @@ public class VectorsRenderer extends ShapeRenderer {
   }
   
   private void renderVector(Atom atom) {
-    if (doShaft) {
+    if (drawShaft) {
       if (standardVector)
         g3d.fillCylinderScreen(GData.ENDCAPS_OPEN, diameter, atom.sX,
             atom.sY, atom.sZ, screenArrowHead.x, screenArrowHead.y,

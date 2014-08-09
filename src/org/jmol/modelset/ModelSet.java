@@ -3837,10 +3837,10 @@ import java.util.Properties;
     float scale = vwr.getFloat(T.modulation);
     boolean haveMods = false;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      Vibration v = getVibration(i, false);
-      if (!(v instanceof JmolModulationSet))
+      JmolModulationSet ms = getModulation(i);
+      if (ms == null)
         continue;
-      ((JmolModulationSet) v).setModTQ(at[i], isOn, qtOffset, isQ, scale);
+      ms.setModTQ(at[i], isOn, qtOffset, isQ, scale);
       if (bsModulated != null)
         bsModulated.setBitTo(i, isOn);
       haveMods = true;
@@ -3953,8 +3953,8 @@ import java.util.Properties;
     if (index < 0 || index > ac)
       return null;
     if (bsModulated != null) {
-      Vibration v = getVibration(index, false);
-      SymmetryInterface uc = (v == null ? null : v.getUnitCell());
+      JmolModulationSet ms = getModulation(index);
+      SymmetryInterface uc = (ms == null ? null : ms.getUnitCell());
       if (uc != null)
         return uc;  // subsystems
     }
@@ -4191,6 +4191,6 @@ import java.util.Properties;
   public void setMSInfo(String key, Object val) {
     msInfo.put(key,  val);
   }
-
+  
 }
 

@@ -1517,6 +1517,7 @@ abstract class ScriptExpr extends ScriptParam {
     case T.vibxyz:
     case T.fracxyz:
     case T.fuxyz:
+    case T.modxyz:
     case T.unitxyz:
     case T.color:
     case T.screenxyz:

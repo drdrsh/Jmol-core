@@ -23,6 +23,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.Modulation;
 import org.jmol.util.ModulationSet;
 import org.jmol.util.Tensor;
+import org.jmol.util.Vibration;
 
 /**
  * generalized modulated structure reader class for CIF and Jana
@@ -144,6 +145,7 @@ public class MSRdr implements MSInterface {
     switch (ch) {
     case 'O':
     case 'D':
+    case 'M':
     case 'U':
       if (modType != null && modType.indexOf(ch) < 0 || modSelected > 0
           && modSelected != 1)
@@ -332,10 +334,11 @@ public class MSRdr implements MSInterface {
       case 'O':
         haveOccupancy = true;
         //$FALL-THROUGH$
-      case 'U':
       case 'D':
+      case 'M':
+      case 'U':
         // fix modulus/phase option only for non-special modulations;
-        if (pt[2] == 1 && key.charAt(2) != 'S') {
+        if (pt[2] == 1 && key.charAt(2) != 'S' && key.charAt(2) != 'T') {
           int ipt = key.indexOf("?");
           if (ipt >= 0) {
             String s = key.substring(ipt + 1);
@@ -419,6 +422,7 @@ public class MSRdr implements MSInterface {
         //$FALL-THROUGH$
       case 'O':
       case 'D':
+      case 'M':
         if (modAverage)
           break;
         char axis = key.charAt(pt_);
@@ -464,10 +468,12 @@ public class MSRdr implements MSInterface {
     char type = key.charAt(0);
     char id = key.charAt(2);
     return  (id == 'S' ? Modulation.TYPE_DISP_SAWTOOTH
+        : id == 'T' ? Modulation.TYPE_SPIN_SAWTOOTH
         : id == '0' ? Modulation.TYPE_OCC_CRENEL
-            : type == 'O' ? Modulation.TYPE_OCC_FOURIER
-                : type == 'U' ? Modulation.TYPE_U_FOURIER
-                    : Modulation.TYPE_DISP_FOURIER);
+        : type == 'O' ? Modulation.TYPE_OCC_FOURIER
+        : type == 'U' ? Modulation.TYPE_U_FOURIER
+        : type == 'M' ? Modulation.TYPE_SPIN_FOURIER
+        : Modulation.TYPE_DISP_FOURIER);
   }
 
   private P3[] qs;
@@ -667,10 +673,12 @@ public class MSRdr implements MSInterface {
           + cr.symmetry.getSpaceGroupXyz(iop, false) + " " + a.bsSymmetry);
     }
 
-    // The magic happens here.
+    // The magic happens here. Note that we must preserve any spin "vibration"
+    // because we are going to repurpose that.
 
     ModulationSet ms = new ModulationSet().setMod(a.index + " " + a.atomName,
-        a, modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a));
+        a, modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a), 
+        a.vib instanceof Vibration ? (Vibration) a.vib : null);
     ms.calculate(null, false);
 
     // ms parameter values are used to set occupancies, 
@@ -746,6 +754,11 @@ public class MSRdr implements MSInterface {
     }
     if (Float.isNaN(ms.x))
       ms.set(0, 0, 0);
+    // notice that if we had a spin, it is REPLACED by its 
+    // modulation, which now refers to it. 
+    // This modulation may or may not be a modulation of 
+    // the vibration itself.
+    
     a.vib = ms;
 
     // BH: removed 7/2014; not documented and not useful
@@ -854,6 +867,7 @@ public class MSRdr implements MSInterface {
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       pt.setT(a);
+      // add in modulation
       if (a.vib != null)
         pt.add(a.vib);
       getSymmetry(a).toCartesian(pt, false);

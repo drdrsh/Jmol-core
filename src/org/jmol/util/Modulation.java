@@ -29,6 +29,8 @@ public class Modulation {
   private String utens;
 
   public static final char TYPE_DISP_FOURIER = 'f';
+  public static final char TYPE_SPIN_FOURIER = 'm';
+  public static final char TYPE_SPIN_SAWTOOTH = 't';
   public static final char TYPE_DISP_SAWTOOTH = 's';
   public static final char TYPE_OCC_FOURIER = 'o';
   public static final char TYPE_OCC_CRENEL = 'c';
@@ -67,11 +69,13 @@ public class Modulation {
     switch (type) {
     case TYPE_DISP_FOURIER:
     case TYPE_OCC_FOURIER:
+    case TYPE_SPIN_FOURIER:
     case TYPE_U_FOURIER:
       a1 = params[0]; // sin
       a2 = params[1]; // cos
       //System.out.println("ccos=" + a1 + " csin=" + a2);
       break;
+    case TYPE_SPIN_SAWTOOTH:
     case TYPE_DISP_SAWTOOTH:
     case TYPE_OCC_CRENEL:
       center = params[0];
@@ -97,16 +101,20 @@ public class Modulation {
    * 
    * @param ms
    * @param t
-   *        -- Vector of coordinates for [x4, x5, x6, ...] 
+   *        -- Vector of coordinates for [x4, x5, x6, ...]
    * 
    * 
    */
 
   void apply(ModulationSet ms, double[][] t) {
     double v = 0, nt = 0;
+    boolean isSpin = false;
     for (int i = qCoefs.length; --i >= 0;)
       nt += qCoefs[i] * t[i][0];
     switch (type) {
+    case TYPE_SPIN_FOURIER:
+      isSpin = true;
+      //$FALL-THROUGH$
     case TYPE_DISP_FOURIER:
     case TYPE_OCC_FOURIER:
     case TYPE_U_FOURIER:
@@ -132,6 +140,9 @@ public class Modulation {
       ms.vOcc0 = Float.NaN; // absolute
       //System.out.println("MOD " + ms.r + " " +  ms.delta + " " + ms.epsilon + " " + ms.id + " " + ms.v + " l=" + left + " x=" + x4 + " r=" + right);
       return;
+    case TYPE_SPIN_SAWTOOTH:
+      isSpin = true;
+      //$FALL-THROUGH$
     case TYPE_DISP_SAWTOOTH:
 
       //  _atom_site_displace_special_func_sawtooth_ items are the
@@ -210,23 +221,38 @@ public class Modulation {
       break;
     }
 
-    switch (axis) {
-    case 'x':
-      ms.x += v;
-      break;
-    case 'y':
-      ms.y += v;
-      break;
-    case 'z':
-      ms.z += v;
-      break;
-    case 'U':
-      ms.addUTens(utens, (float) v);
-      break;
-    default:
-      if (Float.isNaN(ms.vOcc))
-        ms.vOcc = 0;
-      ms.vOcc += (float) v;
+    if (isSpin) {
+      switch (axis) {
+      case 'x':
+        ms.mxyz.x += v;
+        break;
+      case 'y':
+        ms.mxyz.y += v;
+        break;
+      case 'z':
+        ms.mxyz.z += v;
+        break;
+      }
+
+    } else {
+      switch (axis) {
+      case 'x':
+        ms.x += v;
+        break;
+      case 'y':
+        ms.y += v;
+        break;
+      case 'z':
+        ms.z += v;
+        break;
+      case 'U':
+        ms.addUTens(utens, (float) v);
+        break;
+      default:
+        if (Float.isNaN(ms.vOcc))
+          ms.vOcc = 0;
+        ms.vOcc += (float) v;
+      }
     }
   }
 

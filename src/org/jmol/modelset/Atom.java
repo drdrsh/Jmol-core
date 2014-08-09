@@ -33,6 +33,7 @@ import javajs.util.P3;
 import javajs.util.T3;
 import javajs.util.V3;
 
+import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
@@ -47,6 +48,7 @@ import org.jmol.util.Point3fi;
 import org.jmol.util.Tensor;
 import org.jmol.util.Edge;
 import org.jmol.util.BNode;
+import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -1084,12 +1086,20 @@ public class Atom extends Point3fi implements BNode {
     return group.chain.model.ms.getSurfaceDistance100(i);
   }
 
-  public V3 getVibrationVector() {
+  public Vibration getVibrationVector() {
     return group.chain.model.ms.getVibration(i, false);
+  }
+
+  public JmolModulationSet getModulation() {
+    return group.chain.model.ms.getModulation(i);
   }
 
   public float getVibrationCoord(char ch) {
     return group.chain.model.ms.getVibrationCoord(i, ch);
+  }
+
+  public float getModulationCoord(char ch) {
+    return group.chain.model.ms.getModulationCoord(i, ch);
   }
 
 
@@ -1409,6 +1419,12 @@ public class Atom extends Point3fi implements BNode {
       return atom.getVibrationCoord('Y');
     case T.vibz:
       return atom.getVibrationCoord('Z');
+    case T.modx:
+      return atom.getModulationCoord('X');
+    case T.mody:
+      return atom.getModulationCoord('Y');
+    case T.modz:
+      return atom.getModulationCoord('Z');
     case T.volume:
       return atom.getVolume(vwr, VDW.AUTO);
     case T.fracxyz:
@@ -1416,6 +1432,7 @@ public class Atom extends Point3fi implements BNode {
     case T.unitxyz:
     case T.screenxyz:
     case T.vibxyz:
+    case T.modxyz:
     case T.xyz:
       return atomPropertyTuple(atom, tokWhat, ptTemp).length();
     }
@@ -1490,9 +1507,10 @@ public class Atom extends Point3fi implements BNode {
           - atom.sY, atom.sZ);
     case T.vibxyz:
       V3 v = atom.getVibrationVector();
-      if (v == null)
-        v = new V3();
-      return v;
+      return (v == null ? new V3() : v);
+    case T.modxyz:
+      JmolModulationSet ms = atom.getModulation();
+      return (ms == null ? new V3() : ms.getV3());
     case T.xyz:
       return atom;
     case T.color:

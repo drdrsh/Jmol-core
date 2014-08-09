@@ -2803,6 +2803,13 @@ public class ScriptEval extends ScriptExpr {
       setShapeProperty(JC.SHAPE_AXES, "origin", center);
       checkLast(iToken);
       return;
+    case T.type:
+      String s = stringParameter(index + 1);
+      if (!PT.isOneOf(s, ";a;b;c;ab;ac;bc;abc;"))
+        invArg();
+      setShapeProperty(JC.SHAPE_AXES, "type", s);
+      checkLast(iToken);
+      return;
     case T.scale:
       setFloatProperty("axesScale", floatParameter(checkLast(++index)));
       return;
@@ -7826,11 +7833,17 @@ public class ScriptEval extends ScriptExpr {
       }
       break;
     case 3:
-      if (tokAt(1) == T.scale) {
+      switch (tokAt(1)) {
+      case T.scale:
         if (!Float.isNaN(value = floatParameterRange(2, -100, 100)))
           setFloatProperty("vectorScale", value);
         return;
-      }
+      case T.max:
+        float max = floatParameter(2);
+        if (!chk)
+          vwr.ms.scaleVectorsToMax(max);
+        return;
+      }      
       break;
     }
     setShapeSize(JC.SHAPE_VECTORS, new RadiusData(null, value, type, null));

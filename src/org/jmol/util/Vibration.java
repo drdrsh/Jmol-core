@@ -9,7 +9,10 @@ import javajs.util.V3;
 
 /**
  * A class to allow for more complex vibrations and associated 
- * phenomena, such as modulated crystals.
+ * phenomena, such as modulated crystals. In the case of modulations,
+ * ModulationSet extends Vibration and is implemented that way, 
+ * and, as well, magnetic spin is also a form of Vibration that 
+ * may have an associated ModulationSet, as indicated here
  * 
  * @author Bob Hanson hansonr@stolaf.edu
  * 
@@ -19,13 +22,15 @@ public class Vibration extends V3 {
 
   protected final static double twoPI = 2 * Math.PI;
 
-  public static final int TYPE_MODULATION = 0; // or higher; really minimum is 1, not 0
   public static final int TYPE_VIBRATION = -1;
   public static final int TYPE_SPIN = -2;
-  public static final int TYPE_DISPLACEMENT = -3;
+ // public static final int TYPE_DISPLACEMENT = -3; // not used
 
-  public int modDim = -1; // -1 is vib, -2 is spin, -3 is displacement
-  
+  /**
+   * modDim will be > 0 for modulation
+   */
+  public int modDim = TYPE_VIBRATION; 
+
   /**
    * @param pt 
    * @param t456 
@@ -33,19 +38,24 @@ public class Vibration extends V3 {
    * @param modulationScale 
    */
   public void setTempPoint(T3 pt, T3 t456, float scale, float modulationScale) {
-    if (modDim >= TYPE_VIBRATION)
-      pt.scaleAdd2((float) (Math.cos(t456.x * twoPI) * scale), this, pt); 
+    switch (modDim) {
+//    case TYPE_DISPLACEMENT:
+//      break;
+    case TYPE_SPIN:
+      break;
+    default:
+      pt.scaleAdd2((float) (Math.cos(t456.x * twoPI) * scale), this, pt);    
+      break;
+    }
   }
 
   public void getInfo(Map<String, Object> info) {
     info.put("vibVector", V3.newV(this));
-    info.put("vibType", (modDim == TYPE_DISPLACEMENT ? "displacement" 
-        : modDim == TYPE_SPIN ? "spin" : modDim == TYPE_VIBRATION ? "vib" : "mod"));
-  }
-
-  public SymmetryInterface getUnitCell() {
-    // ModulationSet only
-    return null;
+    info.put("vibType", (
+      //  modDim == TYPE_DISPLACEMENT ? "displacement" 
+      modDim == TYPE_SPIN ? "spin" 
+      : modDim == TYPE_VIBRATION ? "vib" 
+      : "mod"));
   }
 
   @Override
@@ -54,6 +64,15 @@ public class Vibration extends V3 {
     v.setT(this);
     v.modDim = modDim;
     return v;
+  }
+
+  public void setXYZ(T3 vib) {
+    setT(vib);
+  }
+
+  public Vibration setType(int type) {
+    this.modDim = type;
+    return this;
   }
 
 }

@@ -369,6 +369,7 @@ public class GlobalSettings {
       setB("showHydrogens", showHydrogens);
       setB("showKeyStrokes", showKeyStrokes);
       setB("showMeasurements", showMeasurements);
+      setB("showModulationVectors", showModVecs);
       setB("showMultipleBonds", showMultipleBonds);
       setB("showNavigationPointAlways", showNavigationPointAlways);
       setI("showScript", scriptDelay);
@@ -618,7 +619,7 @@ public class GlobalSettings {
     boolean measurementLabels = true;
     boolean messageStyleChime = false;
     boolean monitorEnergy = false;
-    float modulationScale = 1;
+    public float modulationScale = 1;
     boolean multiProcessor = true;
     float particleRadius = 20;
     int pickingSpinRate = 10;
@@ -629,6 +630,7 @@ public class GlobalSettings {
     String propertyColorScheme = "roygb";
     String quaternionFrame = "p"; // was c prior to Jmol 11.7.47
     boolean saveProteinStructureState = true;
+    boolean showModVecs = false;
     boolean showUnitCellDetails = true;
     boolean showUnitCellInfo = true;
     float solventProbeRadius = 1.2f;

@@ -1,6 +1,9 @@
 package org.jmol.api;
 
+import org.jmol.util.Vibration;
+
 import javajs.util.T3;
+import javajs.util.V3;
 
 public interface JmolModulationSet {
 
@@ -17,5 +20,15 @@ public interface JmolModulationSet {
   void addTo(T3 a, float scale);
 
   T3 getModPoint(boolean asEnabled);
+
+  Vibration getVibration(boolean forceNew);
+
+  V3 getV3();
+
+  SymmetryInterface getUnitCell();
+
+  void scaleVibration(float m);
+
+  void setMoment();
 
 }

@@ -311,10 +311,4 @@ public class Atom extends P3 implements Cloneable {
     return isValidElementSymbolNoCaseSecondChar2(chFirst, chSecond);
   }
 
-  public void scaleVector(float vibScale) {
-    if (vib == null || Float.isNaN(vib.z))
-      return;
-    vib.scale(vibScale);
-  }
-
 }

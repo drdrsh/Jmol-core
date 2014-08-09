@@ -39,10 +39,12 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
+import org.jmol.util.ModulationSet;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
@@ -346,7 +348,7 @@ public class XtalSymmetry {
       bsAtoms = asc.bsAtoms;
       applyAllSymmetry(ms, null, false);
       doPackUnitCell = doPack0;
-      setVibVectors();
+      setSpinVectors();
 
       // 2) set all atom coordinates to Cartesians
 
@@ -1082,17 +1084,21 @@ public class XtalSymmetry {
 
   private int nVib;
 
-  public int setVibVectors() {
+  public int setSpinVectors() {
+    // return spin vectors to cartesians
     if (nVib > 0 || asc.iSet < 0 || !vibsFractional)
       return nVib; // already done
     int i0 = asc.getAtomSetAtomIndex(asc.iSet);
     for (int i = asc.ac; --i >= i0;) {
-      if (asc.atoms[i].vib != null) {
-        Vibration v = new Vibration();
-        v.setT(asc.atoms[i].vib);
-        v.modDim = Vibration.TYPE_SPIN;
-        symmetry.toCartesian(v, true);
-        asc.atoms[i].vib = v;
+      Vibration v = (Vibration) asc.atoms[i].vib;
+      if (v != null) {
+        if (v.modDim > 0) {
+          ((JmolModulationSet) v).setMoment();
+        } else {
+          v = (Vibration) v.clone(); // this could be a modulation set
+          symmetry.toCartesian(v, true);
+          asc.atoms[i].vib = v;
+        }
         nVib++;
       }
     }

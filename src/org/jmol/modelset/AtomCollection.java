@@ -36,6 +36,7 @@ import java.util.Map.Entry;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolEnvCalc;
+import org.jmol.api.JmolModulationSet;
 import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
@@ -693,8 +694,22 @@ abstract public class AtomCollection {
   }
 
   public float getVibrationCoord(int atomIndex, char c) {
-    Vibration v;
-    if (vibrations == null || (v = vibrations[atomIndex]) == null)
+    Vibration v = getVibration(atomIndex, false);
+    if (v == null)
+      return 0;
+    switch (c) {
+    case 'X':
+      return v.x;
+    case 'Y':
+      return v.y;
+    default:
+      return v.z;
+    }
+  }
+
+  public float getModulationCoord(int atomIndex, char c) {
+    Vibration v = (Vibration) getModulation(atomIndex);
+    if (v == null)
       return 0;
     switch (c) {
     case 'X':
@@ -708,7 +723,13 @@ abstract public class AtomCollection {
 
   public Vibration getVibration(int atomIndex, boolean forceNew) {
     Vibration v = (vibrations == null  ? null : (Vibration) vibrations[atomIndex]);
-    return (v == null && forceNew ? new Vibration() : v);
+    return (v instanceof JmolModulationSet ? ((JmolModulationSet) v).getVibration(forceNew)
+        : v == null && forceNew ? new Vibration() : v);
+  }
+
+  public JmolModulationSet getModulation(int iAtom) {
+    Vibration v = (vibrations == null  ? null : (Vibration) vibrations[iAtom]);
+    return (JmolModulationSet) (v != null && v.modDim > 0 ? v : null);
   }
 
   protected void setVibrationVector(int atomIndex, T3 vib) {
@@ -721,14 +742,16 @@ abstract public class AtomCollection {
     } else {
       if (vibrations[atomIndex] == null)
         vibrations[atomIndex] = new Vibration();
-      vibrations[atomIndex].setT(vib);
+      vibrations[atomIndex].setXYZ(vib);
     }
     at[atomIndex].setVibrationVector();
   }
 
   private void setVibrationVector2(int atomIndex, int tok, float fValue) {
     Vibration v = getVibration(atomIndex, true);
-    switch(tok) {
+    if (v == null)
+      return;
+    switch (tok) {
     case T.vibx:
       v.x = fValue;
       break;
@@ -2781,25 +2804,36 @@ abstract public class AtomCollection {
     return list;
   }
 
+  /**
+   * Scales vibrations and associated vectors such that the
+   * maximum length is the given value
+   * 
+   * @param max
+   */
   public void scaleVectorsToMax(float max) {
     if (vibrations == null || max == 0)
       return;
     float m = 0;
     BS bsVib = BS.newN(ac);
     for (int i = vibrations.length; --i >= 0;) {
-      Vibration v = vibrations[i];
-      if (v != null && v.modDim == Vibration.TYPE_VIBRATION
-          || v.modDim == Vibration.TYPE_SPIN) {
+      Vibration v = getVibration(i, false);
+      if (v != null && (v.modDim == Vibration.TYPE_VIBRATION
+          || v.modDim == Vibration.TYPE_SPIN)) {
         m = Math.max(m, v.length());
         bsVib.set(i);
       }
     }
-    if (m == 0)
+    if (m == 0 || m == max)
       return;
     m = max / m;
     boolean ok = false;
     for (int i = bsVib.nextSetBit(0); i >= 0; i = bsVib.nextSetBit(i + 1)) {
-      vibrations[i].scale(m);
+      Vibration v = getVibration(i, false);
+      JmolModulationSet mod = getModulation(i);
+      if (mod != null)
+        mod.scaleVibration(m);
+      else
+        v.scale(m);
       if (!ok) {
         taintAtom(i, TAINT_VIBRATION);
         ok = true;

@@ -220,8 +220,10 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
         Logger.info("JcampdxReader applying vibration scaling of " + vibScale + " to "
             + model.ac + " atoms");
         Atom[] atoms = model.atoms;
-        for (int i = model.ac; --i >= 0;)
-          atoms[i].scaleVector(vibScale);
+        for (int i = model.ac; --i >= 0;) {
+          if (atoms[i].vib != null && !Float.isNaN(atoms[i].vib.z))
+            atoms[i].vib.scale(vibScale);
+        }
       }
       if (!Float.isNaN(modelScale)) {
         Logger.info("JcampdxReader applying model scaling of " + modelScale + " to "

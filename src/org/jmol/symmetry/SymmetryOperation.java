@@ -314,7 +314,7 @@ class SymmetryOperation extends M4 {
           if (pt < offset.length)
             v += offset[pt++];
         }
-        v = normalizeTwelfths((v < 0 ? -1 : 1) * Math.round(Math.abs(v * 12))
+        v = normalizeTwelfths((v < 0 ? -1 : 1) * Math.abs(v * 12)
             / 12f, doNormalize);
         rowPt++;
       }

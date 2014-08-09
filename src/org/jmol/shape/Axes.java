@@ -47,6 +47,7 @@ public class Axes extends FontLineShape {
   final P3[] axisPoints = new P3[6];
   final static P3 pt0 = new P3();
   public String[] labels;
+  public String axisType; //a b c ab, ac, bc
   
   {
     for (int i = 6; --i >= 0; )
@@ -71,7 +72,9 @@ public class Axes extends FontLineShape {
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
     if ("position" == propertyName) {
+      boolean doSetScale = (axisXY.z == 0 && ((P3) value).z != 0);
       axisXY = (P3) value;
+      setScale(doSetScale ? 1 : scale); 
       // z = 0 for no set xy position (default)
       // z = -Float.MAX_VALUE for percent
       // z = Float.MAX_VALUE for positioned
@@ -99,6 +102,11 @@ public class Axes extends FontLineShape {
     if ("labelsOff" == propertyName) {
       labels = new String[] {"", "", ""};
       return;
+    }
+    if ("type" == propertyName) {
+      axisType = (String) value;
+      if (axisType.equals("abc"))
+        axisType = null;
     }
     
     setPropFLS(propertyName, value);
@@ -197,6 +205,9 @@ public String getShapeState() {
         if (labels[i] != null)
           sb.append(PT.esc(labels[i])).append(" ");
       sb.append(";\n");
+    }
+    if (axisType != null) {
+      sb.append("  axes type " + axisType);
     }
     return super.getShapeState() + sb;
   }

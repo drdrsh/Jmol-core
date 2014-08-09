@@ -36,7 +36,6 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
 
-import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
 
@@ -161,7 +160,8 @@ public class LabelToken {
       T.volume, T.unitxyz, T.fracxyz, T.xyz, T.fuxyz,
       T.fux, T.fuy, T.fuz, T.hydrophobicity, T.screenx, 
       T.screeny, T.screenz, T.screenxyz, // added in 12.3.30
-      T.magneticshielding, T.chemicalshift, T.chainno, T.seqid
+      T.magneticshielding, T.chemicalshift, T.chainno, T.seqid,
+      T.modx, T.mody, T.modz, T.modxyz
   };
 
   public LabelToken() {

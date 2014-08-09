@@ -5408,6 +5408,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return g.showHydrogens;
     case T.showmeasurements:
       return g.showMeasurements;
+    case T.showmodvecs:
+      return g.showModVecs;
     case T.showmultiplebonds:
       return g.showMultipleBonds;
     case T.showtiming:
@@ -6197,6 +6199,10 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   private void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.showmodvecs:
+      // 14.3.5
+      g.showModVecs = value;
+      break;
     case T.showunitcellinfo:
       // 14.1.17
       g.showUnitCellInfo = value;

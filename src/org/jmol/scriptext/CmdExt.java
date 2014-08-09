@@ -4965,7 +4965,8 @@ public class CmdExt implements JmolCmdExtension {
   private void modulation() throws ScriptException {
 
     // modulation on/off  (all atoms)
-    // moduation {atom set} on/off
+    // modulation vectors on/off
+    // modulation {atom set} on/off
     // modulation int  q-offset
     // modulation x.x  t-offset
     // modulation {t1 t2 t3} 

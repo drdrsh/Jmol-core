@@ -274,8 +274,9 @@ abstract public class BondCollection extends AtomCollection {
           || (formalChargeA > 0 && formalChargeB > 0))
         return false;
     }
+    // don't connect differing altloc unless there are modulations
     if (atomA.altloc != atomB.altloc
-        && atomA.altloc != '\0' && atomB.altloc != '\0' && getVibration(atomA.i, false) == null)
+        && atomA.altloc != '\0' && atomB.altloc != '\0' && getModulation(atomA.i) == null)
       return false;
     getOrAddBond(atomA, atomB, order, mad, bsBonds, 0, false);
     return true;

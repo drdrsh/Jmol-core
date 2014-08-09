@@ -27,7 +27,7 @@ package org.jmol.render;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.modelset.Atom;
+import org.jmol.api.JmolModulationSet;
 import org.jmol.modelset.Measurement;
 import org.jmol.modelset.MeasurementPending;
 import org.jmol.script.T;
@@ -135,16 +135,15 @@ public class MeasuresRenderer extends LabelsRenderer {
     Point3fi pt = mpts.get(ii);
     if (pt != null)
       ii = null;
-    Vibration v = ms.getVibration(i, false);
-    Atom a = ms.at[i];
+    JmolModulationSet v = ms.getModulation(i);
     if (v == null) {
-      pt = a;
+      pt = ms.at[i];
     } else {
       if (pt == null)
         pt = new Point3fi();
-      pt.setT(a);
+      pt.setT(ms.at[i]);
       if (vwr.tm.vibrationOn)
-        vwr.tm.getVibrationPoint(v, pt, Float.NaN);
+        vwr.tm.getVibrationPoint((Vibration) v, pt, Float.NaN);
       pt.sD = -1;
     }
     if (ii != null)

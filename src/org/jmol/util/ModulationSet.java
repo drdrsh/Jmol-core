@@ -11,6 +11,7 @@ import javajs.util.M3;
 import javajs.util.Matrix;
 import javajs.util.P3;
 import javajs.util.T3;
+import javajs.util.V3;
 
 /**
  * A class to group a set of modulations for an atom as a "vibration"
@@ -31,6 +32,14 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   private Lst<Modulation> mods;
   private int iop;
   private P3 r0;
+  /**
+   * vib is a spin vector when the model has modulation; 
+   * otherwise an unmodulated vibration.
+   * 
+   */
+  public Vibration vib;
+  public V3 mxyz;
+  private float mscale = 1;
   
   private SymmetryInterface symmetry;  
   private M3 gammaE;
@@ -62,7 +71,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public boolean isEnabled() {
     return enabled;
   }
-
 
   public ModulationSet() {
     
@@ -126,6 +134,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * @param factors   including sigma and tFactor
    * @param iop
    * @param symmetry
+   * @param v TODO
    * @return this
    * 
    * 
@@ -133,8 +142,11 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   public ModulationSet setMod(String id, P3 r0, int modDim,
                            Lst<Modulation> mods, M3 gammaE, Matrix[] factors,
-                           int iop, SymmetryInterface symmetry) {
-    this.r0 = P3.newP(r0); 
+                           int iop, SymmetryInterface symmetry, Vibration v) {
+    this.r0 = P3.newP(r0);
+    vib = v;
+    if (v != null)
+      mxyz = new V3();
     //Logger.info("ModulationSet atom " + id + " at " + r0);
     this.modDim = modDim;
     this.mods = mods;
@@ -220,6 +232,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   
   public synchronized ModulationSet calculate(T3 fracT, boolean isQ) {
     x = y = z = 0;
+    mxyz.set(0, 0, 0);
     htUij = null;
     vOcc = Float.NaN;
     double[][] a = t.getArray();
@@ -249,6 +262,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     for (int i = mods.size(); --i >= 0;)
       mods.get(i).apply(this, t.getArray());
     gammaE.rotate(this);
+    if (mxyz != null)
+      gammaE.rotate(mxyz);
     return this;
   }
   
@@ -261,7 +276,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if(f != null)
       v += f.floatValue();
     htUij.put(utens, Float.valueOf(v));
-
   }
 
   
@@ -301,6 +315,16 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.scale(this.scale * scale);
     symmetry.toCartesian(ptTemp, true);
     a.add(ptTemp);
+    
+    // magnetic moment part
+    if (vib == null || mxyz == null)
+      return;
+    ptTemp.setT(mxyz);
+    ptTemp.scale(this.scale * scale);
+    symmetry.toCartesian(ptTemp, true);
+    ptTemp.scale(mscale );
+    vib.setT(v0);
+    vib.add(ptTemp);
   }
     
   @Override
@@ -319,13 +343,14 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   @Override
   public T3 getModulation(String type, T3 t456) {
     getModTemp();
-    if (type.equals("D")) {
+    if (type.equals("D") || type.equals("M")) {
       return P3.newP(t456 == null ? r0 : modTemp.calculate(t456, false));
     }
     return null;
   }
 
   P3 ptTemp = new P3();
+  private V3 v0;
   
   @Override
   public void setTempPoint(T3 a, T3 t456, float vibScale, float scale) {
@@ -348,8 +373,13 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     modTemp.gammaIinv = gammaIinv;
     modTemp.sigma = sigma;
     modTemp.r0 = r0;
+    modTemp.vib = vib;
     modTemp.symmetry = symmetry;
     modTemp.t = t;
+    if (vib != null) {
+      modTemp.vib = vib;
+      modTemp.mxyz = new V3();
+    }
   }
 
   @Override
@@ -374,5 +404,44 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     info.put("modulation", modInfo);
   }
 
+  @Override
+  public void setXYZ(T3 v) {
+    // we do not allow setting of the modulation vector,
+    // but if there is an associated magnetic spin "vibration"
+    // or an associated simple vibration,
+    // then we allow setting of that.
+    // but this is temporary, since really we set these from v0.
+    if (vib == null || v.length() == 0 && vib.modDim == Vibration.TYPE_SPIN)
+      return;
+    mscale *= v.length() / vib.length();
+    vib.setT(v);
+  }
+
+  @Override
+  public Vibration getVibration(boolean forceNew) {
+    // ModulationSets can be place holders for standard vibrations
+    if (vib == null && forceNew)
+      vib = new Vibration();
+    return vib;
+  }
+
+  @Override
+  public V3 getV3() {
+    return this;
+  }
+
+  @Override
+  public void scaleVibration(float m) {
+    if (vib != null)
+      vib.scale(m);
+    mscale *= m;
+  }
+
+  @Override
+  public void setMoment() {
+    if (vib != null)
+      symmetry.toCartesian(vib, true);
+    v0 = V3.newV(vib);
+  }
 
 }

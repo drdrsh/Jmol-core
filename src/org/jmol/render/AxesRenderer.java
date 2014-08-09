@@ -51,6 +51,8 @@ public class AxesRenderer extends FontLineShapeRenderer {
   
   private short[] colixes = new short[3];
 
+  private final static String[] axesTypes = {"a", "b", "c"};
+
   @Override
   protected void initRenderer() {
     endcap = GData.ENDCAPS_FLAT; 
@@ -156,6 +158,8 @@ public class AxesRenderer extends FontLineShapeRenderer {
     colixes[1] = vwr.getObjectColix(StateManager.OBJ_AXIS2);
     colixes[2] = vwr.getObjectColix(StateManager.OBJ_AXIS3);
     for (int i = nPoints; --i >= 0;) {
+      if (isXY && axes.axisType != null && !axes.axisType.contains(axesTypes [i]))
+        continue;
       colix = colixes[i % 3];
       g3d.setC(colix);
       String label = (axes.labels == null ? axisLabels[i + labelPtr]

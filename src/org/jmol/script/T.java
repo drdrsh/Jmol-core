@@ -555,8 +555,9 @@ public class T {
   public final static int fuxyz     =13 | mathproperty | atomproperty | settable;
   public final static int unitxyz   =14 | mathproperty | atomproperty;
   public final static int vibxyz    =15 | mathproperty | atomproperty | settable;
-  public final static int w                =16 | mathproperty;
-  public final static int keys             =17 | mathproperty; 
+  public final static int modxyz    =16 | mathproperty | atomproperty;
+  public final static int w                =17 | mathproperty;
+  public final static int keys             =18 | mathproperty; 
   
   // occupancy, radius, and structure are odd, because they takes different meanings when compared
   
@@ -631,6 +632,9 @@ public class T {
   public final static int unitx           = floatproperty | 17;
   public final static int unity           = floatproperty | 18;
   public final static int unitz           = floatproperty | 19;
+  public final static int modx            = floatproperty | 20;
+  public final static int mody            = floatproperty | 21;
+  public final static int modz            = floatproperty | 22;
   public final static int vectorscale     = floatproperty | 1 | floatparam;
   public final static int atomx           = floatproperty | 1 | settable;
   public final static int atomy           = floatproperty | 2 | settable;
@@ -641,9 +645,9 @@ public class T {
   public final static int fux             = floatproperty | 7 | settable;
   public final static int fuy             = floatproperty | 8 | settable;
   public final static int fuz             = floatproperty | 9 | settable;
-  public final static int bondingradius           = floatproperty | 11 | settable;
-  public final static int partialcharge   = floatproperty | 12 | settable;
-  public final static int temperature     = floatproperty | 15 | settable;
+  public final static int bondingradius           = floatproperty | 10 | settable;
+  public final static int partialcharge   = floatproperty | 11 | settable;
+  public final static int temperature     = floatproperty | 12 | settable;
   public final static int vibx            = floatproperty | 18 | settable;
   public final static int viby            = floatproperty | 19 | settable;
   public final static int vibz            = floatproperty | 20 | settable;
@@ -1056,6 +1060,7 @@ public class T {
   public final static int showhydrogens                  = booleanparam | 146;
   public final static int showkeystrokes                 = booleanparam | 148;
   public final static int showmeasurements               = booleanparam | 150;
+  public final static int showmodvecs                    = booleanparam | 151;
   public final static int showmultiplebonds              = booleanparam | 152;
   public final static int shownavigationpointalways      = booleanparam | 154;
 // see intparam  public final static int showscript                     = booleanparam | 156;
@@ -1993,6 +1998,10 @@ public class T {
         "mode",
         "modify",
         "modifyOrCreate",
+        "modx",
+        "mody",
+        "modz",
+        "modxyz",
         "molecule",
         "molecules",
         "modelIndex",
@@ -2557,6 +2566,7 @@ public class T {
        "showHydrogens",
        "showKeyStrokes",
        "showMeasurements",
+       "showModulationVectors",
        "showMultipleBonds",
        "showNavigationPointAlways",
    // see intparam      "showScript",
@@ -2997,6 +3007,10 @@ public class T {
         mode,                               // "mode"
         modify,                             // "modify"
         modifyorcreate,                     // "modifyOrCreate"
+        modx,                               // "modx"
+        mody,                               // "mody"
+        modz,                               // "modz"
+        modxyz,                             // "vxyz"
         molecule,                           // "molecule"
         -1,                                 // "molecules"
         modelindex,                         // "modelIndex"
@@ -3561,6 +3575,7 @@ public class T {
         showhydrogens,                      //        "showHydrogens"
         showkeystrokes,                     //        "showKeyStrokes"
         showmeasurements,                   //        "showMeasurements"
+        showmodvecs,                        //        "showModulationVectors"
         showmultiplebonds,                  //        "showMultipleBonds"
         shownavigationpointalways,          //        "showNavigationPointAlways"
           // see intparam      "showScript"

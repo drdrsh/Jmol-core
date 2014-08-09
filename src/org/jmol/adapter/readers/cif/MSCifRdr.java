@@ -73,19 +73,19 @@ public class MSCifRdr extends MSRdr {
   private final static int FWV_DISP_MODULUS = 16;
   private final static int FWV_DISP_PHASE = 17;
   
-  private final static int FWV_OCC_LABEL = 18;
-  private final static int FWV_OCC_SEQ_ID = 19;
-  private final static int FWV_OCC_COS = 20;
-  private final static int FWV_OCC_SIN = 21;
-  private final static int FWV_OCC_MODULUS = 22;
-  private final static int FWV_OCC_PHASE = 23;
+  private final static int DISP_SPEC_LABEL = 18;
+  private final static int DISP_SAW_AX = 19; 
+  private final static int DISP_SAW_AY = 20;
+  private final static int DISP_SAW_AZ = 21;
+  private final static int DISP_SAW_C = 22;
+  private final static int DISP_SAW_W = 23;
   
-  private final static int DISP_SPEC_LABEL = 24;
-  private final static int DISP_SAW_AX = 25; 
-  private final static int DISP_SAW_AY = 26;
-  private final static int DISP_SAW_AZ = 27;
-  private final static int DISP_SAW_C = 28;
-  private final static int DISP_SAW_W = 29;
+  private final static int FWV_OCC_LABEL = 24;
+  private final static int FWV_OCC_SEQ_ID = 25;
+  private final static int FWV_OCC_COS = 26;
+  private final static int FWV_OCC_SIN = 27;
+  private final static int FWV_OCC_MODULUS = 28;
+  private final static int FWV_OCC_PHASE = 29;
   
   private final static int OCC_SPECIAL_LABEL = 30;
   private final static int OCC_CRENEL_C = 31;
@@ -107,15 +107,30 @@ public class MSCifRdr extends MSRdr {
   private final static int FOP_ID = 44;
   private final static int FUP_ID = 45;
   
-  private final static int JANA_OCC_ABS_LABEL = 46;
-  private final static int JANA_OCC_ABS_O_0 = 47;
+  private final static int JANA_OCC_ABS_LABEL = 46; // _jana
+  private final static int JANA_OCC_ABS_O_0 = 47;   // _jana
   
-  private final static int DEPR_FD_COS = 48;
-  private final static int DEPR_FD_SIN = 49;
-  private final static int DEPR_FO_COS = 50;
-  private final static int DEPR_FO_SIN = 51;
-  private final static int DEPR_FU_COS = 52;
-  private final static int DEPR_FU_SIN = 53;
+  private final static int FWV_SPIN_LABEL = 48;
+  private final static int FWV_SPIN_AXIS = 49;
+  private final static int FWV_SPIN_SEQ_ID = 50;
+  private final static int FWV_SPIN_COS = 51;
+  private final static int FWV_SPIN_SIN = 52;
+  private final static int FWV_SPIN_MODULUS = 53;
+  private final static int FWV_SPIN_PHASE = 54;
+  
+  private final static int SPIN_SPEC_LABEL = 55;
+  private final static int SPIN_SAW_AX = 56; 
+  private final static int SPIN_SAW_AY = 57;
+  private final static int SPIN_SAW_AZ = 58;
+  private final static int SPIN_SAW_C = 59;
+  private final static int SPIN_SAW_W = 60;
+    
+  private final static int DEPR_FD_COS = 61;
+  private final static int DEPR_FD_SIN = 62;
+  private final static int DEPR_FO_COS = 63;
+  private final static int DEPR_FO_SIN = 64;
+  private final static int DEPR_FU_COS = 65;
+  private final static int DEPR_FU_SIN = 66;
   
 
   final private static String[] modulationFields = {
@@ -127,9 +142,9 @@ public class MSCifRdr extends MSRdr {
       "_atom_site_fourier_wave_vector_x", // 5
       "_atom_site_fourier_wave_vector_y", 
       "_atom_site_fourier_wave_vector_z",
-      "_jana_atom_site_fourier_wave_vector_q1_coeff", 
-      "_jana_atom_site_fourier_wave_vector_q2_coeff",  
-      "_jana_atom_site_fourier_wave_vector_q3_coeff", // 10
+      "_atom_site_fourier_wave_vector_q1_coeff", //_jana 
+      "_atom_site_fourier_wave_vector_q2_coeff", // jana 
+      "_atom_site_fourier_wave_vector_q3_coeff", // jana
       "_atom_site_displace_fourier_atom_site_label", 
       "_atom_site_displace_fourier_axis", 
       "_atom_site_displace_fourier_wave_vector_seq_id", // 13 
@@ -137,18 +152,18 @@ public class MSCifRdr extends MSRdr {
       "_atom_site_displace_fourier_param_sin", // 15
       "_atom_site_displace_fourier_param_modulus", 
       "_atom_site_displace_fourier_param_phase", 
-      "_atom_site_occ_fourier_atom_site_label", 
-      "_atom_site_occ_fourier_wave_vector_seq_id", 
-      "_atom_site_occ_fourier_param_cos", // 20
-      "_atom_site_occ_fourier_param_sin",
-      "_atom_site_occ_fourier_param_modulus", 
-      "_atom_site_occ_fourier_param_phase", 
       "_atom_site_displace_special_func_atom_site_label", 
       "_atom_site_displace_special_func_sawtooth_ax", // 25 
       "_atom_site_displace_special_func_sawtooth_ay", 
       "_atom_site_displace_special_func_sawtooth_az", 
       "_atom_site_displace_special_func_sawtooth_c", 
       "_atom_site_displace_special_func_sawtooth_w", 
+      "_atom_site_occ_fourier_atom_site_label", 
+      "_atom_site_occ_fourier_wave_vector_seq_id", 
+      "_atom_site_occ_fourier_param_cos", // 20
+      "_atom_site_occ_fourier_param_sin",
+      "_atom_site_occ_fourier_param_modulus", 
+      "_atom_site_occ_fourier_param_phase", 
       "_atom_site_occ_special_func_atom_site_label", // 30
       "_atom_site_occ_special_func_crenel_c",
       "_atom_site_occ_special_func_crenel_w",
@@ -169,26 +184,45 @@ public class MSCifRdr extends MSRdr {
       "_atom_site_occ_fourier_param_id",
       "_atom_site_u_fourier_param_id",
       
-      "_jana_atom_site_occ_fourier_absolute_site_label", // 46
-      "_jana_atom_site_occ_fourier_absolute",
+      "_atom_site_occ_fourier_absolute_site_label", // 46 // _jana
+      "_atom_site_occ_fourier_absolute",  // _jana
+
+      "_atom_site_moment_fourier_atom_site_label", // 48 
+      "_atom_site_moment_fourier_axis", 
+      "_atom_site_moment_fourier_wave_vector_seq_id", // 50 
+      "_atom_site_moment_fourier_param_cos",  
+      "_atom_site_moment_fourier_param_sin", 
+      "_atom_site_moment_fourier_param_modulus", 
+      "_atom_site_moment_fourier_param_phase", 
+      "_atom_site_moment_special_func_atom_site_label",// 55 
+      "_atom_site_moment_special_func_sawtooth_ax",  
+      "_atom_site_moment_special_func_sawtooth_ay", 
+      "_atom_site_moment_special_func_sawtooth_az", 
+      "_atom_site_moment_special_func_sawtooth_c", 
+      "_atom_site_moment_special_func_sawtooth_w",  // 60
+
+      
       // deprecated:
-      "_atom_site_displace_fourier_cos", // 48
+      "_atom_site_displace_fourier_cos", 
       "_atom_site_displace_fourier_sin",
       "_atom_site_occ_fourier_cos",
       "_atom_site_occ_fourier_sin",
-      "_atom_site_u_fourier_cos",
+      "_atom_site_u_fourier_cos", // 65
       "_atom_site_u_fourier_sin"
   };
+  
   private static final int NONE = -1;
 
   private M3 comSSMat;
   public void processEntry() throws Exception {
+    //_jana? 
+    // TODO
     CifReader cr = (CifReader) this.cr;
-    if (cr.key.equals("_jana_cell_commen_t_section_1")) {
+    if (cr.key.equals("_cell_commen_t_section_1")) {
       isCommensurate = true;
       commensurateSection1 = cr.parseIntStr(cr.data);
     }
-    if (cr.key.startsWith("_jana_cell_commen_supercell_matrix")) {
+    if (cr.key.startsWith("_cell_commen_supercell_matrix")) {
       isCommensurate = true;
       if (comSSMat == null)
         comSSMat = M3.newM3(null);
@@ -217,8 +251,8 @@ public class MSCifRdr extends MSRdr {
     CifReader cr = (CifReader) this.cr;
     if (cr.key.equals("_cell_subsystem_code"))
       return processSubsystemLoopBlock();
-    if (cr.key.equals("_jana_cell_twin_matrix_id"))
-      return processTwinMatrixLoopBlock();
+    //if (cr.key.equals("_cell_twin_matrix_id")) // _jana
+      //return processTwinMatrixLoopBlock();
     if (!cr.key.startsWith("_cell_wave") && !cr.key.contains("fourier")
         && !cr.key.contains("_special_func"))
       return 0;
@@ -249,6 +283,7 @@ public class MSCifRdr extends MSRdr {
           //$FALL-THROUGH$
         case FWV_DISP_SEQ_ID:
         case FWV_OCC_SEQ_ID:
+        case FWV_SPIN_SEQ_ID:
         case FWV_U_SEQ_ID:
         case FDP_ID:
         case FOP_ID:
@@ -273,6 +308,7 @@ public class MSCifRdr extends MSRdr {
             //$FALL-THROUGH$
           case FWV_DISP_SEQ_ID:
           case FWV_OCC_SEQ_ID:
+          case FWV_SPIN_SEQ_ID:
           case FWV_U_SEQ_ID:
             id = Character.toUpperCase(modulationFields[tok].charAt(11))
                 + "_";
@@ -283,6 +319,10 @@ public class MSCifRdr extends MSRdr {
         case JANA_OCC_ABS_LABEL:
           id = "J_O";
           pt[0] = pt[2] = 1;
+          //$FALL-THROUGH$
+        case SPIN_SPEC_LABEL:
+          if (id == null)
+          id = "M_T";
           //$FALL-THROUGH$
         case DISP_SPEC_LABEL:
           if (id == null)
@@ -295,10 +335,12 @@ public class MSCifRdr extends MSRdr {
           //$FALL-THROUGH$
         case FWV_DISP_LABEL:
         case FWV_OCC_LABEL:
+        case FWV_SPIN_LABEL:
         case FWV_U_LABEL:
           atomLabel = field;
           break;
         case FWV_DISP_AXIS:
+        case FWV_SPIN_AXIS:
           axis = field;
           if (modAxes != null && modAxes.indexOf(axis.toUpperCase()) < 0)
             ignore = true;
@@ -310,6 +352,7 @@ public class MSCifRdr extends MSRdr {
         case FWV_OCC_SIN:
         case OCC_CRENEL_C:
         case FWV_DISP_SIN:
+        case FWV_SPIN_SIN:
         case FWV_U_SIN:
         case DEPR_FU_SIN:
         case DEPR_FD_SIN:
@@ -319,6 +362,7 @@ public class MSCifRdr extends MSRdr {
         case WV_X:
         case FWV_X:
         case DISP_SAW_AX:
+        case SPIN_SAW_AX:
           pt[0] = cr.parseFloatStr(field);
           break;
         case JANA_FWV_Q1_COEF:
@@ -328,6 +372,7 @@ public class MSCifRdr extends MSRdr {
           break;
         case FWV_DISP_MODULUS:
         case FWV_OCC_MODULUS:
+        case FWV_SPIN_MODULUS:
         case FWV_U_MODULUS:
           pt[0] = cr.parseFloatStr(field);
           pt[2] = 1;
@@ -341,28 +386,32 @@ public class MSCifRdr extends MSRdr {
         case JANA_FWV_Q2_COEF:
         case FWV_DISP_PHASE:
         case FWV_OCC_PHASE:
+        case FWV_SPIN_PHASE:
         case FWV_U_PHASE:
         case OCC_CRENEL_W:
         case DISP_SAW_AY:
-        case JANA_OCC_ABS_O_0:
-          
+        case SPIN_SAW_AY:
+        case JANA_OCC_ABS_O_0:          
         case FWV_DISP_COS:
+        case FWV_SPIN_COS:
         case FWV_U_COS:
         case DEPR_FD_COS:
         case DEPR_FU_COS:
-
           pt[1] = cr.parseFloatStr(field);
           break;
         case WV_Z:
         case FWV_Z:
         case JANA_FWV_Q3_COEF:
         case DISP_SAW_AZ:
+        case SPIN_SAW_AZ:
           pt[2] = cr.parseFloatStr(field);
           break;
         case DISP_SAW_C:
+        case SPIN_SAW_C:
           c = cr.parseFloatStr(field);
           break;
         case DISP_SAW_W:
+        case SPIN_SAW_W:
           w = cr.parseFloatStr(field);
           break;
         }
@@ -380,20 +429,21 @@ public class MSCifRdr extends MSRdr {
           break;
         case 'D':
         case 'O':
+        case 'M':
         case 'U':
         case 'J':
           if (atomLabel == null || axis == null)
             continue;
-          if (id.equals("D_S")) {
+          if (id.equals("D_S") || id.equals("M_T")) {
             // saw tooth displacement  center/width/Axyz
             if (Double.isNaN(c) || Double.isNaN(w))
               continue;
             if (pt[0] != 0)
-              addMod("D_S#x;" + atomLabel, fid, new double[] {c, w, pt[0]});
+              addMod(id + "#x;" + atomLabel, fid, new double[] {c, w, pt[0]});
             if (pt[1] != 0)
-              addMod("D_S#y;" + atomLabel, fid, new double[] {c, w, pt[1]});
+              addMod(id + "#y;" + atomLabel, fid, new double[] {c, w, pt[1]});
             if (pt[2] != 0)
-              addMod("D_S#z;" + atomLabel, fid, new double[] {c, w, pt[2]});
+              addMod(id + "#z;" + atomLabel, fid, new double[] {c, w, pt[2]});
             continue;
           }
           id += "#" + axis + ";" + atomLabel;
@@ -404,7 +454,6 @@ public class MSCifRdr extends MSRdr {
     }
     return 1;
   }
-    
   
   private void addMod(String id, String fid, double[] params) {
     if (fid != null)
@@ -446,21 +495,21 @@ public class MSCifRdr extends MSRdr {
     return 1;
   }
 
-  private int processTwinMatrixLoopBlock() throws Exception {
-    CifReader cr = (CifReader) this.cr;
-    cr.parseLoopParameters(null);
-    while (cr.parser.getData()) {
-      fieldProperty(cr, 0);
-      String id = field;
-      addTwin(id, getSparseMatrix(cr, "_matrix_", 1, 3));
-    }
-    return 1;
-  }
+//  private int processTwinMatrixLoopBlock() throws Exception {
+//    CifReader cr = (CifReader) this.cr;
+//    cr.parseLoopParameters(null);
+//    while (cr.parser.getData()) {
+//      fieldProperty(cr, 0);
+//      String id = field;
+//      addTwin(id, getSparseMatrix(cr, "_matrix_", 1, 3));
+//    }
+//    return 1;
+//  }
 
-  private void addTwin(String id, Matrix m) {
-    //TODO implement twinning
-    System.out.println("twin " + id + " = " + m);    
-  }
+//  private void addTwin(String id, Matrix m) {
+//    //TODO implement twinning
+//    System.out.println("twin " + id + " = " + m);    
+//  }
 
   private Matrix getSparseMatrix(CifReader cr, String term, int i, int dim) {
     Matrix m = new Matrix(null, dim, dim);

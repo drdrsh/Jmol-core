@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jmol.util.Logger;
-
+import org.jmol.util.Vibration;
 
 import javajs.util.Rdr;
 import javajs.util.CifDataParser;
@@ -95,7 +95,7 @@ public class CifReader extends AtomSetCollectionReader {
   private String thisFormula = "";
   private boolean iHaveDesiredModel;
   protected boolean isMMCIF;
-  private boolean isMagCIF;
+  boolean isMagCIF;
   private String molecularType = "GEOM_BOND default";
   private char lastAltLoc = '\0';
   private boolean haveAromatic;
@@ -261,8 +261,10 @@ public class CifReader extends AtomSetCollectionReader {
         readSingleAtom();
       } else if (key.startsWith("_symmetry_space_group_name_h-m")
           || key.startsWith("_symmetry_space_group_name_hall")
-          || key.startsWith("_space_group_name") || key.contains("_ssg_name")
-          || key.contains("_magn_name") || key.contains("_bns_name") // PRELIM
+          || key.startsWith("_space_group_name") 
+          || key.contains("_ssg_name")
+          || key.contains("_magn_name") 
+          || key.contains("_bns_name") // PRELIM
       ) {
         processSymmetrySpaceGroupName();
       } else if (key.startsWith("_space_group_transform")) {
@@ -398,6 +400,7 @@ public class CifReader extends AtomSetCollectionReader {
       getModulationReader().setModulation(false);
     if (isMagCIF) {
       vibsFractional = true;
+      // set fractional; note that this will be set to Cartesians later
       float[] params = asc.xtalSymmetry.symmetry.getNotionalUnitCell();
       P3 ptScale = P3.new3(1 / params[0], 1 / params[1], 1 / params[2]);
       for (int i = asc.ac; --i >= nAtoms0;)
@@ -439,7 +442,7 @@ public class CifReader extends AtomSetCollectionReader {
     }
     if (isMagCIF && sym != null) {
       addJmolScript("connect none;vectors on;vectors 0.15;");
-      int n = asc.getXSymmetry().setVibVectors();
+      int n = asc.getXSymmetry().setSpinVectors();
       appendLoadNote(n
           + " magnetic moments - use VECTORS ON/OFF or VECTOR SCALE x.x or SELECT VXYZ>0");
     }
@@ -513,8 +516,13 @@ public class CifReader extends AtomSetCollectionReader {
       Logger.debug(type + " = " + data);
     }
     return data;
-  }
+  }  
+  
+//  _space_group.magn_ssg_name_BNS "P2_1cn1'(0,0,g)000s"
+//  _space_group.magn_ssg_number_BNS 33.1.9.5.m145.?
+//  _space_group.magn_point_group "mm21'"
 
+      
   /**
    * done by AtomSetCollectionReader
    * 
@@ -528,9 +536,12 @@ public class CifReader extends AtomSetCollectionReader {
       return;
     }
     data = parser.toUnicode(data);
-    setSpaceGroupName(lastSpaceGroupName = (key.indexOf("h-m") > 0 ? "HM:"
-        : key.indexOf("bns") >= 0 ? "BNS:" : modulated ? "SSG:" : key
-            .indexOf("hall") >= 0 ? "Hall:" : "")
+    setSpaceGroupName(lastSpaceGroupName = (
+          key.indexOf("h-m") > 0 ? "HM:"
+        : modulated ? "SSG:" 
+        : key.indexOf("bns") >= 0 ? "BNS:" 
+        : key.indexOf("hall") >= 0 ? "Hall:" 
+        : "")
         + data);
   }
 
@@ -697,6 +708,7 @@ public class CifReader extends AtomSetCollectionReader {
       
       return;
     }
+    
     if (key.startsWith("_symmetry_equiv_pos")
         || key.startsWith("_space_group_symop")
         || key.startsWith("_symmetry_ssg_equiv")) {
@@ -1236,7 +1248,7 @@ public class CifReader extends AtomSetCollectionReader {
           isMagCIF = true;
           V3 pt = atom.vib;
           if (pt == null)
-            pt = asc.addVibrationVector(atom.index, 0, 0, 0);
+            atom.vib = pt = new Vibration().setType(Vibration.TYPE_SPIN);
           float v = parseFloatStr(field);
           switch (tok) {
           case MOMENT_PRELIM_X:
@@ -1371,13 +1383,21 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte SYM_SSG_OP = 3;
   final private static byte SYM_MAGN_OP = 4;
   final private static byte SYM_PRELIM_REV = 5;
+  final private static byte SYM_MAGN_SSG_XYZ = 6;
+  final private static byte SYM_MAGN_REV = 7;
+  final private static byte SYM_MAGN_SSG_REV = 8;
 
   final private static String[] symmetryOperationsFields = {
-      "_space_group_symop_operation_xyz", "_symmetry_equiv_pos_as_xyz",
+      "_space_group_symop_operation_xyz", 
+      "_symmetry_equiv_pos_as_xyz",
       "_symmetry_ssg_equiv_pos_as_xyz",
       "_space_group_symop_ssg_operation_algebraic",
       "_space_group_symop_magn_operation_xyz",
-      "_space_group_symop_operation_timereversal" };
+      "_space_group_symop_operation_timereversal", // preliminary only
+      "_space_group_symop_magn_ssg_operation_algebraic",
+      "_space_group_symop_magn_operation_timereversal",
+      "_space_group_symop_magn_ssg_operation_timereversal"
+  };
 
   /**
    * retrieves symmetry operations
@@ -1385,7 +1405,7 @@ public class CifReader extends AtomSetCollectionReader {
    * @throws Exception
    */
   private void processSymmetryOperationsLoopBlock() throws Exception {
-    if (key.endsWith("magn_centering_id")) {
+    if (key.endsWith("magn_centering_id") || key.endsWith("magn_ssg_centering_id")) {
       processMagCenteringLoopBlock();
       return;
     }
@@ -1405,7 +1425,10 @@ public class CifReader extends AtomSetCollectionReader {
     while (parser.getData()) {
       boolean ssgop = false;
       int nn = parser.getFieldCount();
-      int timeRev = (fieldProperty(fieldOf[SYM_PRELIM_REV]) == NONE ? 0 : field
+      int timeRev = (fieldProperty(fieldOf[SYM_PRELIM_REV]) == NONE
+          && fieldProperty(fieldOf[SYM_MAGN_REV]) == NONE
+              && fieldProperty(fieldOf[SYM_MAGN_SSG_REV]) == NONE
+          ? 0 : field
           .equals("-1") ? -1 : 1);
       for (int i = 0, tok; i < nn; ++i) {
         switch (tok = fieldProperty(i)) {
@@ -1415,6 +1438,7 @@ public class CifReader extends AtomSetCollectionReader {
             field = PT.rep(field, "~", "");
           //$FALL-THROUGH$
         case SYM_SSG_OP:
+        case SYM_MAGN_SSG_XYZ:
           modulated = true;
           ssgop = true;
           //$FALL-THROUGH$
@@ -1424,10 +1448,10 @@ public class CifReader extends AtomSetCollectionReader {
           if (allowRotations || timeRev != 0 || ++n == 1)
             if (!modulated || ssgop) {
               if (tok == SYM_MAGN_OP) {
-                timeRev = (field.endsWith(",+1") ? 1
+                timeRev = (field.endsWith(",+1") || field.endsWith(",1")? 1
                     : field.endsWith(",-1") ? -1 : 0);
                 if (timeRev != 0)
-                  field = field.substring(0, field.length() - 3);
+                  field = field.substring(0, field.lastIndexOf(','));
               }
               if (timeRev != 0)
                 field += ",m" + (timeRev == 1 ? "+1" : "-1");
@@ -1444,22 +1468,36 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   final static byte MAGN_CENTERING = 0;
+  final static byte MAGN_SSG_CENTERING = 1;
 
-  final private static String[] magnCenteringFields = { "_space_group_symop_magn_centering_xyz" };
+  final private static String[] magnCenteringFields = { 
+      "_space_group_symop_magn_centering_xyz",
+      "_space_group_symop_magn_ssg_centering_xyz"
+    };
 
   //loop_
   //_space_group_symop.magn_centering_id
   //_space_group_symop.magn_centering_xyz
-  //
+ 
+  
+  //_space_group_symop.magn_ssg_centering_id
+  //_space_group_symop.magn_ssg_centering_xyz
+
+//
   //1 x+2/3,y+1/3,z+1/3,+1 mx,my,mz
   //2 x+1/3,y+2/3,z+2/3,+1 mx,my,mz
   //3 x,y,z,+1 mx,my,mz
 
+  // 1 x1,x2,x3,x4,+1
+  // 2 x1,x2,x3,x4+1/2,-1 
+
+  
   private void processMagCenteringLoopBlock() throws Exception {
     parseLoopParameters(magnCenteringFields);
     centerings = new Lst<String>();
     while (parser.getData())
-      centerings.addLast(fieldProperty(fieldOf[MAGN_CENTERING]) == NONE ? null
+      centerings.addLast(fieldProperty(fieldOf[MAGN_CENTERING]) == NONE 
+      && fieldProperty(fieldOf[MAGN_SSG_CENTERING]) == NONE ? null
           : field);
   }
 

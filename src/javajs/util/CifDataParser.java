@@ -450,11 +450,14 @@ public class CifDataParser implements GenericCifDataParser {
      return propertyCount;
   }
 
-   private String fixKey(String key) {
-     if (key.startsWith("_magnetic")) // PRELIMINARY -- BilBao ONLY
-       key = key.substring(9);
-     return (PT.rep(key, ".", "_").toLowerCase());
-   }
+  private String fixKey(String key) {
+    // PRELIMINARY -- BilBao _magnetic
+    // PRELIMINARY -- Jana2006
+    return (PT.rep(
+        key.startsWith("_magnetic") ? key.substring(9) 
+            : key.startsWith("_jana") ? key.substring(5) 
+            : key, ".", "_").toLowerCase());
+  }
 
   //////////////////// private methods ////////////////////
   
