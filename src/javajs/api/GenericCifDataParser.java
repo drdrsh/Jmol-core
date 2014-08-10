@@ -40,4 +40,6 @@ public interface GenericCifDataParser {
 
   void skipLoop() throws Exception;
 
+  String fixKey(String key);
+
 }

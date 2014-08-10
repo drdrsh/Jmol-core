@@ -450,7 +450,8 @@ public class CifDataParser implements GenericCifDataParser {
      return propertyCount;
   }
 
-  private String fixKey(String key) {
+  @Override
+  public String fixKey(String key) {
     // PRELIMINARY -- BilBao _magnetic
     // PRELIMINARY -- Jana2006
     return (PT.rep(
