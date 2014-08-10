@@ -146,7 +146,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     this.r0 = P3.newP(r0);
     vib = v;
     if (v != null)
-      mxyz = new V3();
+      mxyz = new V3(); // modulations of spin
     //Logger.info("ModulationSet atom " + id + " at " + r0);
     this.modDim = modDim;
     this.mods = mods;
@@ -320,7 +320,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     a.add(ptTemp);
 
     // magnetic moment part
-    if (vib == null || mxyz == null)
+    if (mxyz == null)
       return;
     vib.setT(v0);
     if (isReset)
@@ -367,24 +367,25 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   }
     
   private void getModTemp() {
-    if (modTemp != null)
-      return;
-    modTemp = new ModulationSet();
-    modTemp.id = id;
-    modTemp.tau = tau;
-    modTemp.mods = mods;
-    modTemp.gammaE = gammaE;
-    modTemp.modDim = modDim;
-    modTemp.gammaIinv = gammaIinv;
-    modTemp.sigma = sigma;
-    modTemp.r0 = r0;
-    modTemp.vib = vib;
-    modTemp.symmetry = symmetry;
-    modTemp.t = t;
-    if (vib != null) {
+    if (modTemp == null) {
+      modTemp = new ModulationSet();
+      modTemp.id = id;
+      modTemp.tau = tau;
+      modTemp.mods = mods;
+      modTemp.gammaE = gammaE;
+      modTemp.modDim = modDim;
+      modTemp.gammaIinv = gammaIinv;
+      modTemp.sigma = sigma;
+      modTemp.r0 = r0;
+      modTemp.v0 = v0;
       modTemp.vib = vib;
-      modTemp.mxyz = new V3();
+      modTemp.symmetry = symmetry;
+      modTemp.t = t;
+      if (mxyz != null) {
+        modTemp.mxyz = new V3();
+      }
     }
+    modTemp.mscale = mscale;
   }
 
   @Override
@@ -444,9 +445,21 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public void setMoment() {
-    if (vib != null)
-      symmetry.toCartesian(vib, true);
+    if (mxyz == null)
+      return;
+    symmetry.toCartesian(vib, true);
     v0 = V3.newV(vib);
+  }
+
+  @Override
+  public boolean isNonzero() {
+    return x != 0 || y != 0 || z != 0 || 
+        mxyz != null && (mxyz.x != 0 || mxyz.y != 0 || mxyz.z != 0);
+  }
+
+  private float[] axesLengths;
+  float[] getAxesLengths() {
+    return (axesLengths == null ? (axesLengths = symmetry.getNotionalUnitCell()) : axesLengths);
   }
 
 }

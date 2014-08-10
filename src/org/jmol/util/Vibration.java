@@ -75,4 +75,8 @@ public class Vibration extends V3 {
     return this;
   }
 
+  public boolean isNonzero() {
+    return x != 0 || y != 0 || z != 0;
+  }
+
 }

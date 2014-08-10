@@ -67,15 +67,15 @@ public class Modulation {
     this.params = params;
     this.qCoefs = qCoefs;
     switch (type) {
+    case TYPE_SPIN_FOURIER:
     case TYPE_DISP_FOURIER:
     case TYPE_OCC_FOURIER:
-    case TYPE_SPIN_FOURIER:
     case TYPE_U_FOURIER:
       a1 = params[0]; // sin
       a2 = params[1]; // cos
       //System.out.println("ccos=" + a1 + " csin=" + a2);
       break;
-    case TYPE_SPIN_SAWTOOTH:
+    case TYPE_SPIN_SAWTOOTH:      
     case TYPE_DISP_SAWTOOTH:
     case TYPE_OCC_CRENEL:
       center = params[0];
@@ -222,18 +222,18 @@ public class Modulation {
     }
 
     if (isSpin) {
+      float[] f = ms.getAxesLengths();
       switch (axis) {
       case 'x':
-        ms.mxyz.x += v;
+        ms.mxyz.x += v / f[0];
         break;
       case 'y':
-        ms.mxyz.y += v;
+        ms.mxyz.y += v / f[1];
         break;
       case 'z':
-        ms.mxyz.z += v;
+        ms.mxyz.z += v / f[2];
         break;
       }
-
     } else {
       switch (axis) {
       case 'x':

@@ -2159,7 +2159,8 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
         return;
       period = -period;
     }
-    setVibrationOn(period > 0 && vwr.modelGetLastVibrationIndex(vwr.am.cmi, 0) >= 0);
+    setVibrationOn(period > 0 && (
+        vwr.ms.getLastVibrationVector(vwr.am.cmi, 0) >= 0));
   }
 
   public void setVibrationT(float t) {

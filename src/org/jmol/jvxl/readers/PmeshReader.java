@@ -59,7 +59,18 @@ import javajs.util.P3;
  *   4 (for triangles) or 5 (for quadrilaterals). The next p numbers specify 
  *   indexes into the list of data points (starting with 0). 
  *   The first and last of these numbers must be identical in order to 
- *   "close" the polygon.
+ *   "close" the polygon. 
+ *   
+ *   If the number of points in a set is negative, it indicates that a color follows:
+
+ -5
+ 0
+ 10
+ 11
+ 1
+ 0
+ 16776960 
+
  * 
  * Jmol does not care about lines. 
  * 
@@ -230,6 +241,9 @@ class PmeshReader extends PolygonFileReader {
     int[] vertices = new int[5];
     for (int iPoly = 0; iPoly < nPolygons; iPoly++) {
       int intCount = (fixedCount == 0 ? getInt() : fixedCount);
+      boolean haveColor = (intCount < 0);
+      if (haveColor)
+        intCount = -intCount;
       int vertexCount = intCount - (isClosedFace ? 1 : 0);
       // (we will ignore the redundant extra vertex when not binary and not msms)
       if (vertexCount < 1 || vertexCount > 4) {
@@ -254,6 +268,7 @@ class PmeshReader extends PolygonFileReader {
       if (vertexCount < 3)
         for (int i = vertexCount; i < 3; ++i)
           vertices[i] = vertices[i - 1];
+      int color = (haveColor ? getInt() : 0); 
       // check: 1 (ab) | 2(bc) | 4(ac)
       //    1
       //  a---b
@@ -267,11 +282,11 @@ class PmeshReader extends PolygonFileReader {
       //             2
       if (vertexCount == 4) {
         nTriangles += 2;
-        addTriangleCheck(vertices[0], vertices[1], vertices[3], 5, 0, false, 0);
-        addTriangleCheck(vertices[1], vertices[2], vertices[3], 3, 0, false, 0);
+        addTriangleCheck(vertices[0], vertices[1], vertices[3], 5, 0, false, color);
+        addTriangleCheck(vertices[1], vertices[2], vertices[3], 3, 0, false, color);
       } else {
         nTriangles++;
-        addTriangleCheck(vertices[0], vertices[1], vertices[2], 7, 0, false, 0);
+        addTriangleCheck(vertices[0], vertices[1], vertices[2], 7, 0, false, color);
       }
     }
     if (isBinary)

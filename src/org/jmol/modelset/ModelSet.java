@@ -1901,13 +1901,18 @@ import java.util.Properties;
   }
 
   public int getLastVibrationVector(int modelIndex, int tok) {
-    if (vibrations != null)
-      for (int i = ac; --i >= 0;)
+    if (vibrations != null) {
+      Vibration v;
+      int a1 = (modelIndex < 0 || modelIndex >= mc - 1 ? ac : am[modelIndex + 1].firstAtomIndex);
+      int a0 = (modelIndex <= 0 ? 0 : am[modelIndex].firstAtomIndex);
+      for (int i = a1; --i >= a0;) {
         if ((modelIndex < 0 || at[i].mi == modelIndex)
-            && vibrations[i] != null
-            && vibrations[i].length() > 0
-            && (tok == 0 || (tok == T.modulation) == (vibrations[i] instanceof JmolModulationSet)))
+            && ((tok == T.modulation || tok == 0)
+                && (v = (Vibration) getModulation(i)) != null || (tok == T.vibration || tok == 0)
+                && (v = getVibration(i, false)) != null) && v.isNonzero())
           return i;
+      }
+    }
     return -1;
   }
 

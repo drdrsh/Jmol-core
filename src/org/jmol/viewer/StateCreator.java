@@ -360,7 +360,7 @@ public class StateCreator extends JmolStateCreator {
             loadUC = true;
           }
           commands.append(";\n");
-          haveModulation |= (vwr.modelGetLastVibrationIndex(i, T.modulation) >= 0);
+          haveModulation |= (vwr.ms.getLastVibrationVector(i, T.modulation) >= 0);
         }
         if (loadUC)
           vwr.shm.loadShape(JC.SHAPE_UCCAGE); // just in case
@@ -373,7 +373,7 @@ public class StateCreator extends JmolStateCreator {
           Map<String, BS> temp = new Hashtable<String, BS>();
           int ivib;
           for (int i = modelCount; --i >= 0;) {
-            if ((ivib = vwr.modelGetLastVibrationIndex(i, T.modulation)) >= 0)
+            if ((ivib = vwr.ms.getLastVibrationVector(i, T.modulation)) >= 0)
               for (int j = models[i].firstAtomIndex; j <= ivib; j++) {
                 JmolModulationSet mset = ms.getModulation(j);
                 if (mset != null)
