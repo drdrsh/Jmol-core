@@ -1269,13 +1269,19 @@ public class PT {
   }
 
   /**
-   * sprintf emulation uses (almost) c++ standard string formats 's' string 'i'
-   * or 'd' integer 'f' float/decimal 'p' point3f 'q' quaternion/plane/axisangle
-   * ' with added "i" in addition to the insipid "d" (digits?)
+   * sprintf emulation uses (almost) c++ standard string formats
+   * 
+   * 's' string 'i' or 'd' integer, 'e' double, 'f' float, 'p' point3f 'q'
+   * quaternion/plane/axisangle with added "i" (equal to the insipid "d" --
+   * digits?)
    * 
    * @param strFormat
    * @param list
+   *        a listing of what sort of data will be found in Object[] values, in
+   *        order: s string, f float, i integer, d double, p point3f, q
+   *        quaternion/point4f, S String[], F float[], I int[], and D double[]
    * @param values
+   *        Object[] containing above types
    * @return formatted string
    */
   public static String sprintf(String strFormat, String list, Object[] values) {
