@@ -44,7 +44,7 @@ import java.util.Properties;
 
 
 @J2SIgnoreImport({java.util.Properties.class,java.io.BufferedInputStream.class})
-@J2SRequireImport({javajs.util.SB.class, org.jmol.util.Txt.class})
+@J2SRequireImport({javajs.util.SB.class})
 public final class JC {
 
   // axes mode constants --> org.jmol.constant.EnumAxesMode

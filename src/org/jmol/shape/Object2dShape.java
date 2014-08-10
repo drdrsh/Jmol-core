@@ -13,7 +13,7 @@ import org.jmol.util.Logger;
 import javajs.api.GenericPlatform;
 import javajs.awt.Font;
 import javajs.util.P3;
-import org.jmol.util.Txt;
+import javajs.util.PT;
 
 public abstract class Object2dShape extends Shape {
 
@@ -46,7 +46,7 @@ public abstract class Object2dShape extends Shape {
           while (e.hasNext()) {
             Text text = e.next();
             if (isAll
-                || Txt.isMatch(text.target.toUpperCase(), thisID, true,
+                || PT.isMatch(text.target.toUpperCase(), thisID, true,
                     true)) {
               e.remove();
             }
@@ -122,7 +122,7 @@ public abstract class Object2dShape extends Shape {
           while (e.hasNext()) {
             Text text = e.next();
             if (isAll
-                || Txt.isMatch(text.target.toUpperCase(), thisID, true,
+                || PT.isMatch(text.target.toUpperCase(), thisID, true,
                     true)) {
               text.setColixO(value);
             }

@@ -41,7 +41,6 @@ import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Quat;
 
-import org.jmol.util.Txt;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;
 import org.jmol.script.T;
@@ -878,14 +877,14 @@ public abstract class BioPolymer {
             continue;
           }
           strExtra = getQInfo(q)
-              + Txt.sprintf("  %10.5p %10.5p %10.5p",
+              + PT.sprintf("  %10.5p %10.5p %10.5p",
                   "p", new Object[] { ptCenter });
           if (qtype == 'n' && isAmino) {
-            strExtra += Txt.sprintf("  %10.5p %10.5p %10.5p",
+            strExtra += PT.sprintf("  %10.5p %10.5p %10.5p",
                 "p", new Object[] { ((AminoMonomer) monomer)
                     .getNitrogenHydrogenPoint() });
           } else if (derivType == 2 && !Float.isNaN(val1)) {
-            strExtra += Txt.sprintf(" %10.5f %10.5f",
+            strExtra += PT.sprintf(" %10.5f %10.5f",
                 "F", new Object[] { new float[] { val1, val2 } });
           }
         }
@@ -894,7 +893,7 @@ public abstract class BioPolymer {
         bsWritten.set(((Monomer) a.getGroup()).leadAtomIndex);
         pdbATOM.append(vwr.ms.getLabeler().formatLabelAtomArray(vwr, a, tokens, '\0',
             null, ptTemp));
-        pdbATOM.append(Txt
+        pdbATOM.append(PT
             .sprintf("%8.2f%8.2f%8.2f      %6.3f          %2s    %s\n",
                 "ssF", new Object[] {
                     a.getElementSymbolIso(false).toUpperCase(),
@@ -904,8 +903,8 @@ public abstract class BioPolymer {
         if (atomLast != null
             && atomLast.getPolymerIndexInModel() == a.getPolymerIndexInModel()) {
           pdbCONECT.append("CONECT").append(
-              Txt.formatStringI("%5i", "i", atomLast.getAtomNumber()))
-              .append(Txt.formatStringI("%5i", "i", a.getAtomNumber()))
+              PT.formatStringI("%5i", "i", atomLast.getAtomNumber()))
+              .append(PT.formatStringI("%5i", "i", a.getAtomNumber()))
               .appendC('\n');
         }
         atomLast = a;
@@ -928,7 +927,7 @@ public abstract class BioPolymer {
 
   private static String getQInfo(Quat q) {
     A4 axis = q.toAxisAngle4f();
-    return Txt.sprintf("%10.6f%10.6f%10.6f%10.6f  %6.2f  %10.5f %10.5f %10.5f",
+    return PT.sprintf("%10.6f%10.6f%10.6f%10.6f  %6.2f  %10.5f %10.5f %10.5f",
         "F", new Object[] { new float[] { q.q0, q.q1, q.q2, q.q3, 
             (float) (axis.angle * 180 / Math.PI), axis.x, axis.y, axis.z } });
   }

@@ -232,7 +232,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   
   public synchronized ModulationSet calculate(T3 fracT, boolean isQ) {
     x = y = z = 0;
-    mxyz.set(0, 0, 0);
+    if (mxyz != null)
+      mxyz.set(0, 0, 0);
     htUij = null;
     vOcc = Float.NaN;
     double[][] a = t.getArray();
@@ -259,8 +260,9 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
         t = tFactor.mul(t);
     }
     t = gammaIinv.mul(t).add(tau);
+    double[][] ta = t.getArray();
     for (int i = mods.size(); --i >= 0;)
-      mods.get(i).apply(this, t.getArray());
+      mods.get(i).apply(this, ta);
     gammaE.rotate(this);
     if (mxyz != null)
       gammaE.rotate(mxyz);
@@ -348,8 +350,18 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   @Override
   public T3 getModulation(String type, T3 t456) {
     getModTemp();
-    if (type.equals("D") || type.equals("M")) {
+    if (type.equals("D")) {
+      // return r0 if t456 is null, otherwise calculate dx,dy,dz for a given t4,5,6
       return P3.newP(t456 == null ? r0 : modTemp.calculate(t456, false));
+    }
+    if (type.equals("M")) {
+      // return r0 if t456 is null, otherwise calculate dx,dy,dz for a given t4,5,6
+      return P3.newP(t456 == null ? v0 : modTemp.calculate(t456, false).mxyz);
+    }
+    if (type.equals("T")) {
+      modTemp.calculate(t456, false);
+      double[][] ta = modTemp.t.getArray();
+      return P3.new3((float) ta[0][0], (modDim > 1 ? (float) ta[1][0] : 0), (modDim > 1 ? (float) ta[2][0] : 0));
     }
     return null;
   }
@@ -433,7 +445,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public V3 getV3() {
-    return this;
+    return (mxyz == null ? this : mxyz);
   }
 
   @Override

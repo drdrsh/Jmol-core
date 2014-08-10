@@ -34,7 +34,6 @@ import java.util.Map;
 
 import org.jmol.util.Elements;
 import org.jmol.util.Edge;
-import org.jmol.util.Txt;
 import org.jmol.util.Logger;
 
 /**
@@ -731,7 +730,7 @@ public class SmilesParser {
     }
     if (iptLast < 0)
       return pattern;
-    return Txt.replaceStrings(pattern.substring(iptLast), keys, values);
+    return PT.replaceStrings(pattern.substring(iptLast), keys, values);
   }
 
   /**

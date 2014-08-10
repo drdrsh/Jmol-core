@@ -25,6 +25,7 @@
 package org.jmol.symmetry;
 
 import javajs.util.Lst;
+import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
 
@@ -39,7 +40,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import javajs.util.P3;
-import org.jmol.util.Txt;
 import javajs.util.V3;
 
 /*
@@ -1022,19 +1022,19 @@ class PointGroup {
       sb.append("\n").append(name).append("\tCi\t  ").appendI(n).append("\t  ").appendI(n);
 
       sb.append("\n").append(name).append("\tCs\t");
-      Txt.rightJustify(sb, "    ", nAxes[0] + "\t");
-      Txt.rightJustify(sb, "    ", nAxes[0] + "\n");
+      PT.rightJustify(sb, "    ", nAxes[0] + "\t");
+      PT.rightJustify(sb, "    ", nAxes[0] + "\n");
 
       sb.append(name).append("\tCn\t");
-      Txt.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][0] + "\t");
-      Txt.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][1] + "\n");
+      PT.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][0] + "\t");
+      PT.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][1] + "\n");
 
       sb.append(name).append("\tSn\t");
-      Txt.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][0] + "\t");
-      Txt.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][1] + "\n");
+      PT.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][0] + "\t");
+      PT.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][1] + "\n");
 
       sb.append(name).append("\t\tTOTAL\t");
-      Txt.rightJustify(sb, "    ", nTotal + "\n");
+      PT.rightJustify(sb, "    ", nTotal + "\n");
       textInfo = sb.toString();
       return textInfo;
     }

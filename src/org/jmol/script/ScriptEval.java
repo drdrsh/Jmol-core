@@ -73,7 +73,6 @@ import javajs.util.P4;
 import javajs.util.Quat;
 import javajs.util.T3;
 
-import org.jmol.util.Txt;
 import javajs.util.V3;
 import org.jmol.modelset.TickInfo;
 import org.jmol.api.JmolParallelProcessor;
@@ -8890,7 +8889,7 @@ public class ScriptEval extends ScriptExpr {
       throws ScriptException {
     Object[] data = new Object[] { id, null };
     String s = "";
-    boolean isWild = Txt.isWild(id);
+    boolean isWild = PT.isWild(id);
     for (int iShape = JC.SHAPE_DIPOLES;;) {
       if (getShapePropertyData(iShape, "checkID", data)) {
         setShapeProperty(iShape, "thisID", id);

@@ -47,7 +47,6 @@ import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.util.Txt;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import org.jmol.java.BS;
@@ -1316,7 +1315,7 @@ protected void resetObjects() {
 
     SB sb = new SB();
     String key = (explicitID && previousMeshID != null
-        && Txt.isWild(previousMeshID) ? previousMeshID : null);
+        && PT.isWild(previousMeshID) ? previousMeshID : null);
     Lst<Mesh> list = getMeshList(key, false);
     // counting down on list will be up in order
     for (int i = list.size(); --i >= 0;) {

@@ -72,7 +72,6 @@ import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -1110,7 +1109,7 @@ public class MathExt implements JmolMathExtension {
     }
     BS bs = SV.getBitSet(x1, true);
     boolean asArray = T.tokAttr(intValue, T.minmaxmask); // "all"
-    return mp.addXObj(bs == null ? SV.sprintf(Txt.formatCheck(format), x1) : e
+    return mp.addXObj(bs == null ? SV.sprintf(PT.formatCheck(format), x1) : e
         .getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,
             asArray));
   }

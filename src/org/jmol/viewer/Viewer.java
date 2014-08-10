@@ -99,6 +99,8 @@ import org.jmol.util.Escape;
 import org.jmol.util.GData;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
+import org.jmol.util.Txt;
+
 import javajs.util.PT;
 import org.jmol.util.Parser;
 
@@ -118,7 +120,6 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.util.TempArray;
-import org.jmol.util.Txt;
 import org.jmol.viewer.binding.Binding;
 
 import javajs.util.Lst;
@@ -4152,7 +4153,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       String s = (type == '=' ? g.loadFormat : g.loadLigandFormat);
       if (f.indexOf(".") > 0 && s.indexOf("%FILE.") >= 0)
         s = s.substring(0, s.indexOf("%FILE") + 5);
-      return Txt.formatStringS(s, "FILE", f);
+      return PT.formatStringS(s, "FILE", f);
     case '*':
       // European Bioinformatics Institute
       if (name.startsWith("*dom/")) {
@@ -4201,7 +4202,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
           f = "name/" + PT.escapeUrl(f);
         }
       }
-      return Txt.formatStringS(format, "FILE", f);
+      return PT.formatStringS(format, "FILE", f);
     case '$':
       if (name.startsWith("$$")) {
         // 2D version
@@ -4209,7 +4210,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
         //http://cactus.nci.nih.gov/chemical/structure/C%28O%29CCC/file?format=sdf
         format = PT.rep(g.smilesUrlFormat, "&get3d=True", "");
-        return Txt.formatStringS(format, "FILE", PT.escapeUrl(f));
+        return PT.formatStringS(format, "FILE", PT.escapeUrl(f));
       }
       if (name.equals("$"))
         try {
@@ -4253,7 +4254,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         break;
       }
       return (withPrefix ? "MOL3D::" : "")
-          + Txt.formatStringS(format, "FILE", f);
+          + PT.formatStringS(format, "FILE", f);
     case '_': // isosurface "=...", but we code that type as '_'
       String server = FileManager.fixFileNameVariables(g.edsUrlFormat, f);
       String strCutoff = FileManager.fixFileNameVariables(g.edsUrlCutoff, f);
@@ -7245,41 +7246,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public String formatText(String text0) {
-    int i;
-    if ((i = text0.indexOf("@{")) < 0 && (i = text0.indexOf("%{")) < 0)
-      return text0;
-
-    // old style %{ now @{
-
-    String text = text0;
-    boolean isEscaped = (text.indexOf("\\") >= 0);
-    if (isEscaped) {
-      text = PT.rep(text, "\\%", "\1");
-      text = PT.rep(text, "\\@", "\2");
-      isEscaped = !text.equals(text0);
-    }
-    text = PT.rep(text, "%{", "@{");
-    String name;
-    while ((i = text.indexOf("@{")) >= 0) {
-      i++;
-      int i0 = i + 1;
-      int len = text.length();
-      i = Txt.ichMathTerminator(text, i, len);
-      if (i >= len)
-        return text;
-      name = text.substring(i0, i);
-      if (name.length() == 0)
-        return text;
-      Object v = evaluateExpression(name);
-      if (v instanceof P3)
-        v = Escape.eP((P3) v);
-      text = text.substring(0, i0 - 2) + v.toString() + text.substring(i + 1);
-    }
-    if (isEscaped) {
-      text = PT.rep(text, "\2", "@");
-      text = PT.rep(text, "\1", "%");
-    }
-    return text;
+    return Txt.formatText(this, text0);
   }
 
   // //////////////////////////////////////////////////////////////

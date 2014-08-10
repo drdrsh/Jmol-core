@@ -21,7 +21,6 @@ import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.util.Logger;
-import org.jmol.util.Txt;
 import org.jmol.viewer.Viewer.ACCESS;
 
 abstract class OutputManager {
@@ -885,7 +884,7 @@ abstract class OutputManager {
       newFileNames.addLast(name);
     }
     if (!sceneScriptOnly) {
-      script = Txt.replaceQuotedStrings(script, fileNames, newFileNames);
+      script = PT.replaceQuotedStrings(script, fileNames, newFileNames);
       v.addLast("state.spt");
       v.addLast(null);
       v.addLast(script.getBytes());
@@ -898,7 +897,7 @@ abstract class OutputManager {
       }
       v.addLast("scene.spt");
       v.addLast(null);
-      script = Txt.replaceQuotedStrings(scripts[1], fileNames, newFileNames);
+      script = PT.replaceQuotedStrings(scripts[1], fileNames, newFileNames);
       v.addLast(script.getBytes());
     }
     String sname = (haveSceneScript ? "scene.spt" : "state.spt");

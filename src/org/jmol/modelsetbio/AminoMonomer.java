@@ -35,9 +35,9 @@ import org.jmol.util.Logger;
 import javajs.util.A4;
 import javajs.util.M3;
 import javajs.util.P3;
+import javajs.util.PT;
 import javajs.util.Quat;
 
-import org.jmol.util.Txt;
 import javajs.util.V3;
 import org.jmol.viewer.JC;
 
@@ -392,10 +392,10 @@ public class AminoMonomer extends AlphaMonomer {
     if (proteinStructure == null || proteinStructure.structureID == null)
       return null;
     String tag = "%3N %3ID";
-    tag = Txt.formatStringI(tag, "N", proteinStructure.serialID);
-    tag = Txt.formatStringS(tag, "ID", proteinStructure.structureID);
+    tag = PT.formatStringI(tag, "N", proteinStructure.serialID);
+    tag = PT.formatStringS(tag, "ID", proteinStructure.structureID);
     if (proteinStructure.type == STR.SHEET)
-      tag += Txt.formatStringI("%2SC", "SC", proteinStructure.strandCount);
+      tag += PT.formatStringI("%2SC", "SC", proteinStructure.strandCount);
     return tag;
   }
 

@@ -21,7 +21,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.util.Txt;
 
 public class GlobalSettings {
 
@@ -950,7 +949,7 @@ public class GlobalSettings {
         else if (database.equals("nci"))
           id += "/file?format=sdf&get3d=True";
       }
-      return (format.indexOf("%FILE") < 0 ? format + id : Txt
+      return (format.indexOf("%FILE") < 0 ? format + id : PT
           .formatStringS(format, "FILE", id));
     }
 

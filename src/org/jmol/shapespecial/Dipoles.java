@@ -32,7 +32,6 @@ import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import javajs.util.P3;
-import org.jmol.util.Txt;
 import javajs.util.V3;
 import org.jmol.script.T;
 
@@ -43,6 +42,7 @@ import org.jmol.modelset.BondIterator;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.PT;
 import javajs.util.SB;
 
 import java.util.Hashtable;
@@ -98,7 +98,7 @@ public class Dipoles extends Shape {
     if ("thisID" == propertyName) {
       wildID = null;
       String thisID = (String) value;
-      if (thisID == null || Txt.isWild(thisID)) {
+      if (thisID == null || PT.isWild(thisID)) {
         currentDipole = null;
         if (thisID != null)
           wildID = thisID.toUpperCase();
@@ -356,7 +356,7 @@ public class Dipoles extends Shape {
       for (int i = dipoleCount; --i >= 0;)
         if (!bondOnly || isBondDipole(i))
           if (wildID == null
-              || Txt.isMatch(dipoles[i].thisID.toUpperCase(), wildID,
+              || PT.isMatch(dipoles[i].thisID.toUpperCase(), wildID,
                   true, true))
             setPropertyFor(tok, dipoles[i], iValue, fValue);
     }
@@ -412,11 +412,11 @@ public class Dipoles extends Shape {
     }
     if (property == "checkID") {
       String key = ((String) data[0]).toUpperCase();
-      boolean isWild = Txt.isWild(key);
+      boolean isWild = PT.isWild(key);
       for (int i = dipoleCount; --i >= 0;) {
         String id = dipoles[i].thisID;
         if (id.equalsIgnoreCase(key) || isWild
-            && Txt.isMatch(id.toUpperCase(), key, true, true)) {
+            && PT.isMatch(id.toUpperCase(), key, true, true)) {
           data[1] = id;
           return true;
         }

@@ -37,7 +37,6 @@ import org.jmol.shape.Shape;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
-import org.jmol.util.Txt;
 
 import javajs.util.Lst;
 import javajs.util.PT;
@@ -127,10 +126,10 @@ public class Ellipsoids extends Shape {
     if (thisID == null)
       return false;
     thisID = thisID.toLowerCase();
-    if (Txt.isWild(thisID)) {
+    if (PT.isWild(thisID)) {
       for (Entry<String, Ellipsoid> e : simpleEllipsoids.entrySet()) {
         String key = e.getKey().toLowerCase();
-        if (Txt.isMatch(key, thisID, true, true))
+        if (PT.isMatch(key, thisID, true, true))
           ellipsoidSet.addLast(e.getValue());
       }
     }

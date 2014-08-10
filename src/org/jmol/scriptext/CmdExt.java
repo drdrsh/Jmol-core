@@ -90,7 +90,6 @@ import javajs.util.V3;
 
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.TempArray;
-import org.jmol.util.Txt;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.ShapeManager;
@@ -5258,6 +5257,7 @@ public class CmdExt implements JmolCmdExtension {
     modelIndex = vwr.ms.getJmolDataSourceFrame(modelIndex);
     int pt = args.length - 1;
     boolean isReturnOnly = (args != st);
+    boolean pdbFormat = true;
     T[] statementSave = st;
     if (isReturnOnly)
       e.st = st = args;
@@ -5278,6 +5278,7 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.show:
       makeNewFrame = false;
+      pdbFormat = false;
       break;
     case T.write:
       makeNewFrame = false;
@@ -5306,6 +5307,7 @@ public class CmdExt implements JmolCmdExtension {
     String type = e.optParameterAsString(pt).toLowerCase();
     P3 minXYZ = null;
     P3 maxXYZ = null;
+    String format = null;
     int tok = tokAtArray(pt0, args);
     if (tok == T.string)
       tok = T.getTokFromName((String) args[pt0].value);
@@ -5321,13 +5323,16 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.property:
       e.iToken = pt0 + 1;
-      if (!T.tokAttr(propertyX = tokAt(e.iToken++), T.atomproperty)
-          || !T.tokAttr(propertyY = tokAt(e.iToken++), T.atomproperty))
+      propertyX = plotProp();
+      if (propertyX == 0)
         invArg();
-      if (T.tokAttr(propertyZ = tokAt(e.iToken), T.atomproperty))
+      propertyY = plotProp();
+      propertyZ = plotProp();
+      if (tokAt(e.iToken) == T.format) {
+        format = stringParameter(++e.iToken);
+        pdbFormat = false;
         e.iToken++;
-      else
-        propertyZ = 0;
+      }
       if (tokAt(e.iToken) == T.min) {
         minXYZ = getPoint3f(++e.iToken, false);
         e.iToken++;
@@ -5336,7 +5341,8 @@ public class CmdExt implements JmolCmdExtension {
         maxXYZ = getPoint3f(++e.iToken, false);
         e.iToken++;
       }
-      type = "property " + T.nameOf(propertyX) + " " + T.nameOf(propertyY)
+      type = "property " + T.nameOf(propertyX)
+          + (propertyY == 0 ? "" : " " + T.nameOf(propertyY))
           + (propertyZ == 0 ? "" : " " + T.nameOf(propertyZ));
       if (bs.nextSetBit(0) < 0)
         bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
@@ -5370,8 +5376,8 @@ public class CmdExt implements JmolCmdExtension {
         isDerivative = true;
         pt = -1;
       }
-      type = ((pt <= pt0 ? "" : e.optParameterAsString(pt)) + "w")
-          .substring(0, 1);
+      type = ((pt <= pt0 ? "" : e.optParameterAsString(pt)) + "w").substring(0,
+          1);
       if (type.equals("a") || type.equals("r"))
         isDerivative = true;
       if (!PT.isOneOf(type, ";w;x;y;z;r;a;")) // a absolute; r relative
@@ -5404,14 +5410,14 @@ public class CmdExt implements JmolCmdExtension {
     // prepare data for property plotting
 
     float[] dataX = null, dataY = null, dataZ = null;
-    P3 factors = P3.new3(1, 1, 1);
     if (tok == T.property) {
       dataX = e.getBitsetPropertyFloat(bs, propertyX | T.selectedfloat,
           (minXYZ == null ? Float.NaN : minXYZ.x), (maxXYZ == null ? Float.NaN
               : maxXYZ.x));
-      dataY = e.getBitsetPropertyFloat(bs, propertyY | T.selectedfloat,
-          (minXYZ == null ? Float.NaN : minXYZ.y), (maxXYZ == null ? Float.NaN
-              : maxXYZ.y));
+      if (propertyY != 0)
+        dataY = e.getBitsetPropertyFloat(bs, propertyY | T.selectedfloat,
+            (minXYZ == null ? Float.NaN : minXYZ.y),
+            (maxXYZ == null ? Float.NaN : maxXYZ.y));
       if (propertyZ != 0)
         dataZ = e.getBitsetPropertyFloat(bs, propertyZ | T.selectedfloat,
             (minXYZ == null ? Float.NaN : minXYZ.z),
@@ -5425,49 +5431,56 @@ public class CmdExt implements JmolCmdExtension {
             getPlotMinMax(dataY, true, propertyY),
             getPlotMinMax(dataZ, true, propertyZ));
       Logger.info("plot min/max: " + minXYZ + " " + maxXYZ);
-      P3 center = new P3();
-      center.ave(maxXYZ, minXYZ);
-      factors.sub2(maxXYZ, minXYZ);
-      factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
-      if (T.tokAttr(propertyX, T.intproperty)) {
-        factors.x = 1;
-        center.x = 0;
-      } else if (factors.x > 0.1 && factors.x <= 10) {
-        factors.x = 1;
+      P3 center = null;
+      P3 factors = null;
+
+      if (pdbFormat) {
+        factors = P3.new3(1, 1, 1);
+        center = new P3();
+        center.ave(maxXYZ, minXYZ);
+        factors.sub2(maxXYZ, minXYZ);
+        factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
+        if (T.tokAttr(propertyX, T.intproperty)) {
+          factors.x = 1;
+          center.x = 0;
+        } else if (factors.x > 0.1 && factors.x <= 10) {
+          factors.x = 1;
+        }
+        if (T.tokAttr(propertyY, T.intproperty)) {
+          factors.y = 1;
+          center.y = 0;
+        } else if (factors.y > 0.1 && factors.y <= 10) {
+          factors.y = 1;
+        }
+        if (T.tokAttr(propertyZ, T.intproperty)) {
+          factors.z = 1;
+          center.z = 0;
+        } else if (factors.z > 0.1 && factors.z <= 10) {
+          factors.z = 1;
+        }
+        if (propertyZ == 0 || propertyY == 0)
+          center.z = minXYZ.z = maxXYZ.z = factors.z = 0;
+        for (int i = 0; i < dataX.length; i++)
+          dataX[i] = (dataX[i] - center.x) / factors.x;
+        for (int i = 0; i < dataY.length; i++)
+          dataY[i] = (dataY[i] - center.y) / factors.y;
+        if (propertyZ != 0)
+          for (int i = 0; i < dataZ.length; i++)
+            dataZ[i] = (dataZ[i] - center.z) / factors.z;
       }
-      if (T.tokAttr(propertyY, T.intproperty)) {
-        factors.y = 1;
-        center.y = 0;
-      } else if (factors.y > 0.1 && factors.y <= 10) {
-        factors.y = 1;
-      }
-      if (T.tokAttr(propertyZ, T.intproperty)) {
-        factors.z = 1;
-        center.z = 0;
-      } else if (factors.z > 0.1 && factors.z <= 10) {
-        factors.z = 1;
-      }
-      if (propertyZ == 0)
-        center.z = minXYZ.z = maxXYZ.z = factors.z = 0;
-      for (int i = 0; i < dataX.length; i++)
-        dataX[i] = (dataX[i] - center.x) / factors.x;
-      for (int i = 0; i < dataY.length; i++)
-        dataY[i] = (dataY[i] - center.y) / factors.y;
-      if (propertyZ != 0)
-        for (int i = 0; i < dataZ.length; i++)
-          dataZ[i] = (dataZ[i] - center.z) / factors.z;
       parameters = new Object[] { bs, dataX, dataY, dataZ, minXYZ, maxXYZ,
-          factors, center };
+          factors, center, format};
     }
 
     // all set...
 
     if (tokCmd == T.write)
-      return vwr.writeFileData(filename, "PLOT_" + type, modelIndex,
-          parameters);
+      return vwr
+          .writeFileData(filename, "PLOT_" + type, modelIndex, parameters);
 
     String data = (type.equals("data") ? "1 0 H 0 0 0 # Jmol PDB-encoded data"
-        : vwr.getPdbData(modelIndex, type, null, parameters, null, true));
+        : vwr
+            .getPdbData(modelIndex, type, null, parameters, null, true));
 
     if (tokCmd == T.show)
       return data;
@@ -5522,8 +5535,8 @@ public class CmdExt implements JmolCmdExtension {
             + "\";";
       break;
     case T.ramachandran:
-      vwr.setFrameTitle(modelCount - 1, "ramachandran plot for model "
-          + vwr.getModelNumberDotted(modelIndex));
+      vwr.setFrameTitle(modelCount - 1,
+          "ramachandran plot for model " + vwr.getModelNumberDotted(modelIndex));
       script = "frame 0.0; frame last; reset;"
           + "select visible; color structure; spacefill 3.0; wireframe 0;"
           + "draw ramaAxisX" + modelCount + " {100 0 0} {-100 0 0} \"phi\";"
@@ -5557,6 +5570,21 @@ public class CmdExt implements JmolCmdExtension {
         + (type.length() > 0 ? " created: " + type
             + (isQuaternion ? qFrame : "") : ""));
     return "";
+  }
+
+  private int plotProp() {
+    int p = 0;
+    switch (tokAt(e.iToken)) {
+    case T.format:
+    case T.min:
+    case T.max:
+      break;
+    default:
+      if (T.tokAttr(p = tokAt(e.iToken), T.atomproperty))
+        e.iToken++;
+      break;
+    }
+    return p;
   }
 
   private boolean polyhedra() throws ScriptException {
@@ -6354,7 +6382,7 @@ public class CmdExt implements JmolCmdExtension {
       if (token != null)
         tok = token.tok;
     }
-    if (tok != T.symop && tok != T.state)
+    if (tok != T.symop && tok != T.state && tok != T.property)
       checkLength(-3);
     if (slen == 2 && str.indexOf("?") >= 0) {
       showString(vwr.getAllSettings(str.substring(0, str.indexOf("?"))));
@@ -6376,6 +6404,10 @@ public class CmdExt implements JmolCmdExtension {
         else
           msg = "domain information has not been loaded";
       }
+      break;
+    case T.property:
+      msg = plot(st);
+      len = st.length;
       break;
     case T.validation:
       e.checkLength23();
@@ -6856,7 +6888,6 @@ public class CmdExt implements JmolCmdExtension {
     // not implemented
     case T.echo:
     case T.fontsize:
-    case T.property: // huh? why?
     case T.help:
     case T.solvent:
       value = "?";
@@ -7829,7 +7860,7 @@ public class CmdExt implements JmolCmdExtension {
           str = labeler
               .formatLabelBond(vwr, bond, tokens, htValues, indices, ptTemp);
       }
-      str = Txt.formatStringI(str, "#", (n + 1));
+      str = PT.formatStringI(str, "#", (n + 1));
       sout[n++] = str;
       if (haveIndex)
         break;

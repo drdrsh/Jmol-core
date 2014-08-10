@@ -68,7 +68,6 @@ import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.util.Vibration;
 
-import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
@@ -708,17 +707,27 @@ abstract public class AtomCollection {
   }
 
   public float getModulationCoord(int atomIndex, char c) {
-    Vibration v = (Vibration) getModulation(atomIndex);
-    if (v == null)
+    JmolModulationSet ms = getModulation(atomIndex);
+    if (ms == null)
       return 0;
+    Vibration v = ms.getVibration(false);
+    if (v == null)
+      v = (Vibration) ms;
     switch (c) {
     case 'X':
       return v.x;
     case 'Y':
       return v.y;
-    default:
+    case 'Z':
       return v.z;
+    case '1':
+    case '2':
+    case '3':
+      T3 t = ms.getModulation("T", null);
+      float x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
+      return (float)(x - Math.floor(x));
     }
+    return 0;
   }
 
   public Vibration getVibration(int atomIndex, boolean forceNew) {
@@ -2475,7 +2484,7 @@ abstract public class AtomCollection {
     for (int i = ac; --i >= 0;) {
       String g3 = at[i].getGroup3(true);
       if (g3 != null && g3.length() > 0) {
-        if (Txt.isMatch(g3, name, checkStar, true)) {
+        if (PT.isMatch(g3, name, checkStar, true)) {
           if (bs == null)
             bs = BS.newN(i + 1);
           bs.set(i);
@@ -2498,7 +2507,7 @@ abstract public class AtomCollection {
     /// but not necessarily when coming from getIdentifierOrNull
     /// and NOT when coming from getAtomBits with Token.spec_atom
     /// because it is presumed that some names can include "*"
-    return Txt.isMatch(atom.getAtomName().toUpperCase(), strPattern,
+    return PT.isMatch(atom.getAtomName().toUpperCase(), strPattern,
         checkStar, allowInitialStar);
   }
   

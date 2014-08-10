@@ -56,7 +56,6 @@ import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.T3;
 
-import org.jmol.util.Txt;
 import javajs.util.V3;
 
 
@@ -1219,7 +1218,7 @@ public class SV extends T implements JSONEncodable {
       of[4]= var.value;
     if (getQ)
       of[5]= var.value;
-    return Txt.sprintf(strFormat, "IFDspq", of );
+    return PT.sprintf(strFormat, "IFDspq", of );
   }
 
   /**
@@ -1293,7 +1292,7 @@ public class SV extends T implements JSONEncodable {
     String[] format = PT.split(PT.rep(sValue(args[0]), "%%", "\1"), "%");
     sb.append(format[0]);
     for (int i = 1; i < format.length; i++) {
-      Object ret = sprintf(Txt.formatCheck("%" + format[i]),
+      Object ret = sprintf(PT.formatCheck("%" + format[i]),
           (i < args.length ? args[i] : null));
       if (PT.isAS(ret)) {
         String[] list = (String[]) ret;

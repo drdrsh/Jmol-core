@@ -26,6 +26,7 @@ package org.jmol.modelsetbio;
 import javajs.util.AU;
 import javajs.util.OC;
 import javajs.util.Lst;
+import javajs.util.PT;
 import javajs.util.SB;
 
 import java.util.Hashtable;
@@ -52,7 +53,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Edge;
 import javajs.util.P3;
-import org.jmol.util.Txt;
 
 
 import org.jmol.viewer.JC;
@@ -626,7 +626,7 @@ public final class BioModel extends Model{
                 case HELIX:
                   nx = ++nHelix;
                   if (sid == null || pdbFileMode)
-                    sid = Txt.formatStringI("%3N %3N", "N", nx);
+                    sid = PT.formatStringI("%3N %3N", "N", nx);
                   str = "HELIX  %ID %3GROUPA %1CA %4RESA  %3GROUPB %1CB %4RESB";
                   sb = sbHelix;
                   String stype = null;
@@ -648,8 +648,8 @@ public final class BioModel extends Model{
                 case SHEET:
                   nx = ++nSheet;
                   if (sid == null || pdbFileMode) {
-                    sid = Txt.formatStringI("%3N %3A 0", "N", nx);
-                    sid = Txt.formatStringS(sid, "A", "S" + nx);
+                    sid = PT.formatStringI("%3N %3A 0", "N", nx);
+                    sid = PT.formatStringS(sid, "A", "S" + nx);
                   }
                   str = "SHEET  %ID %3GROUPA %1CA%4RESA  %3GROUPB %1CB%4RESB";
                   sb = sbSheet;
@@ -658,18 +658,18 @@ public final class BioModel extends Model{
                 default:
                   nx = ++nTurn;
                   if (sid == null || pdbFileMode)
-                    sid = Txt.formatStringI("%3N %3N", "N", nx);
+                    sid = PT.formatStringI("%3N %3N", "N", nx);
                   str = "TURN   %ID %3GROUPA %1CA%4RESA  %3GROUPB %1CB%4RESB";
                   sb = sbTurn;
                   break;
                 }
-                str = Txt.formatStringS(str, "ID", sid);
-                str = Txt.formatStringS(str, "GROUPA", group1);
-                str = Txt.formatStringS(str, "CA", chain1);
-                str = Txt.formatStringI(str, "RESA", res1);
-                str = Txt.formatStringS(str, "GROUPB", group2);
-                str = Txt.formatStringS(str, "CB", chain2);
-                str = Txt.formatStringI(str, "RESB", res2);
+                str = PT.formatStringS(str, "ID", sid);
+                str = PT.formatStringS(str, "GROUPA", group1);
+                str = PT.formatStringS(str, "CA", chain1);
+                str = PT.formatStringI(str, "RESA", res1);
+                str = PT.formatStringS(str, "GROUPB", group2);
+                str = PT.formatStringS(str, "CB", chain2);
+                str = PT.formatStringI(str, "RESB", res2);
                 sb.append(str);
                 if (showMode)
                   sb.append(" strucno= ").appendI(lastId);

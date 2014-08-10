@@ -54,7 +54,6 @@ import org.jmol.io.JmolBinary;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
-import org.jmol.util.Txt;
 import org.jmol.viewer.Viewer.ACCESS;
 
 
@@ -1220,7 +1219,7 @@ public class FileManager implements BytePoster {
       oldFileNames.addLast("\"" + name0 + "\"");
       newFileNames.addLast("\1\"" + name + "\"");
     }
-    return Txt.replaceStrings(script, oldFileNames, newFileNames);
+    return PT.replaceStrings(script, oldFileNames, newFileNames);
   }
 
   public static String[] scriptFilePrefixes = new String[] { "/*file*/\"",

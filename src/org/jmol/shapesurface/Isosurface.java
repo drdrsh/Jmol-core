@@ -134,7 +134,6 @@ import javajs.util.P3i;
 import javajs.util.P4;
 import javajs.util.Quat;
 
-import org.jmol.util.Txt;
 import javajs.util.V3;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
@@ -322,7 +321,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       Object[] colors = (Object[]) value;
       short colix0 = C.getColix(((Integer) colors[0]).intValue());
       short colix1 = C.getColix(((Integer) colors[1]).intValue());
-      String id = (thisMesh != null ? thisMesh.thisID : Txt
+      String id = (thisMesh != null ? thisMesh.thisID : PT
           .isWild(previousMeshID) ? previousMeshID : null);
       Lst<Mesh> list = getMeshList(id, false);
       for (int i = list.size(); --i >= 0;)
@@ -334,7 +333,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (thisMesh != null) {
         setIsoMeshColor(thisMesh, color);
       } else {
-        Lst<Mesh> list = getMeshList(Txt.isWild(previousMeshID) ? previousMeshID : null, false);
+        Lst<Mesh> list = getMeshList(PT.isWild(previousMeshID) ? previousMeshID : null, false);
         for (int i = list.size(); --i >= 0;)
           setIsoMeshColor((IsosurfaceMesh) list.get(i), color);
       }

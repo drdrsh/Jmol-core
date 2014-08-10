@@ -47,7 +47,6 @@ import javajs.util.T3;
 
 import org.jmol.util.Logger;
 import javajs.util.P3;
-import org.jmol.util.Txt;
 
 public abstract class MeshCollection extends Shape {
 
@@ -81,7 +80,7 @@ public abstract class MeshCollection extends Shape {
 
   private Mesh setMesh(String thisID) {
     linkedMesh = null;
-    if (thisID == null || Txt.isWild(thisID)) {
+    if (thisID == null || PT.isWild(thisID)) {
       if (thisID != null)
         previousMeshID = thisID;
       currentMesh = null;
@@ -339,7 +338,7 @@ public abstract class MeshCollection extends Shape {
   
   protected void setTokenProperty(int tokProp, boolean bProp, boolean testD) {
     if (currentMesh == null) {
-      String key = (explicitID && Txt.isWild(previousMeshID) ? previousMeshID : null);
+      String key = (explicitID && PT.isWild(previousMeshID) ? previousMeshID : null);
       Lst<Mesh> list = getMeshList(key, false);
       for (int i = list.size(); --i >= 0;)
         setMeshTokenProperty(list.get(i), tokProp, bProp, testD);
@@ -432,14 +431,14 @@ public abstract class MeshCollection extends Shape {
     Lst<Mesh> list = new Lst<Mesh>();
     if (key != null)
       key = (key.length() == 0 ? null : key.toUpperCase());
-    boolean isWild = Txt.isWild(key);
+    boolean isWild = PT.isWild(key);
     String id;
     // important that this counts down because sometimes
     // we want just the MOST RECENT mesh.
     for (int i = meshCount; --i >= 0;)
       if (key == null
           || (id = meshes[i].thisID.toUpperCase()).equals(key) 
-          || isWild && Txt.isMatch(id, key, true, true)) {
+          || isWild && PT.isMatch(id, key, true, true)) {
         list.addLast(meshes[i]);
         if (justOne)
           break;
@@ -519,7 +518,7 @@ public abstract class MeshCollection extends Shape {
       deleteMeshI(currentMesh.index);
     else
       deleteMeshKey(explicitID && previousMeshID != null
-          && Txt.isWild(previousMeshID) ?  
+          && PT.isWild(previousMeshID) ?  
               previousMeshID : null);
     currentMesh = null;
   }
@@ -559,7 +558,7 @@ public abstract class MeshCollection extends Shape {
     if (MeshCollection.PREVIOUS_MESH_ID.equals(id))
       return (previousMeshID == null ? meshCount - 1
           : getIndexFromName(previousMeshID));
-    if (Txt.isWild(id)) {
+    if (PT.isWild(id)) {
       Lst<Mesh> list = getMeshList(id, true);
       return (list.size() == 0 ? -1 : list.get(0).index);
     }

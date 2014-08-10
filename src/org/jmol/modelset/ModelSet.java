@@ -35,7 +35,6 @@ import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
 import org.jmol.util.Tensor;
 import org.jmol.util.Triangulator;
-import org.jmol.util.Txt;
 import org.jmol.util.Vibration;
 
 import javajs.util.A4;
@@ -3353,11 +3352,11 @@ import java.util.Properties;
         }
         String energy = "" + mo.get("energy");
         if (Float.isNaN(PT.parseFloat(energy)))
-          sb.append(Txt.sprintf("model %-2s;  mo %-2i # %s\n", "sis",
+          sb.append(PT.sprintf("model %-2s;  mo %-2i # %s\n", "sis",
               new Object[] { getModelNumberDotted(m), Integer.valueOf(i + 1),
                   type }));
         else
-          sb.append(Txt.sprintf("model %-2s;  mo %-2i # energy %-8.3f %s %s\n",
+          sb.append(PT.sprintf("model %-2s;  mo %-2i # energy %-8.3f %s %s\n",
               "sifss",
               new Object[] { getModelNumberDotted(m), Integer.valueOf(i + 1),
                   mo.get("energy"), units, type }));

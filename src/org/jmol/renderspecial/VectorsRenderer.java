@@ -144,10 +144,10 @@ public class VectorsRenderer extends ShapeRenderer {
   }
 
   private boolean transform(short mad, Atom atom, Vibration vib, JmolModulationSet mod2) {
-    boolean isMod = (vib.modDim >= 0);
-    boolean isSpin = (vib.modDim == Vibration.TYPE_SPIN);
-    // Some modulations may also contain pointers to magnetic moments (spins).
-    // In that case, we are 
+    boolean isMod = (vib == null || vib.modDim >= 0);
+    boolean isSpin = (!isMod && vib.modDim == Vibration.TYPE_SPIN);
+    if (vib == null)
+      vib = (Vibration) mod2;
     drawCap = true;
     if (!isMod) {
       float len = vib.length();
@@ -166,12 +166,12 @@ public class VectorsRenderer extends ShapeRenderer {
       pointVectorStart.setT(atom);
       pointVectorEnd.setT(atom);
       mod = (JmolModulationSet) vib;
-      if (!mod.isEnabled()) {
-        mod.addTo(pointVectorEnd, 1);
-      } else {
+      if (mod.isEnabled()) {
         if (vibrationOn)
           vwr.tm.getVibrationPoint(vib, pointVectorEnd, Float.NaN);
         mod.addTo(pointVectorStart, Float.NaN);
+      } else {
+        mod.addTo(pointVectorEnd, 1);
       }
       headOffsetVector.sub2(pointVectorEnd, pointVectorStart);
       float len = headOffsetVector.length();
@@ -180,17 +180,17 @@ public class VectorsRenderer extends ShapeRenderer {
       headOffsetVector.scale(headScale / headOffsetVector.length());
     } else if (vectorsCentered || isSpin) {
       standardVector = false;
-      Vibration v;
-      if (mod == null || !mod.isEnabled()) {
-        v = vib; 
-      } else {
-        v = vibTemp;
-        vibTemp.set(0,  0,  0);
-        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
-        vwr.tm.getVibrationPoint(vib, v, Float.NaN);
-      }
-      pointVectorEnd.scaleAdd2(0.5f * vectorScale, v, atom);
-      pointVectorStart.scaleAdd2(-0.5f * vectorScale, v, atom);
+ //     Vibration v;
+ //     if (mod2 == null || !mod2.isEnabled()) {
+ //       v = vib; 
+//      } else {
+//        v = vibTemp;
+//        vibTemp.set(0,  0,  0);
+//        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
+//        vwr.tm.getVibrationPoint(vib, v, Float.NaN);
+//      }
+      pointVectorEnd.scaleAdd2(0.5f * vectorScale, vib, atom);
+      pointVectorStart.scaleAdd2(-0.5f * vectorScale, vib, atom);
     } else {
       pointVectorEnd.scaleAdd2(vectorScale, vib, atom);
       screenVectorEnd.setT(vibrationOn? tm.transformPtVib(pointVectorEnd, vib) : tm.transformPt(pointVectorEnd));

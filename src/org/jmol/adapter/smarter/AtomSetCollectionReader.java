@@ -421,6 +421,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   protected void setModelPDB(boolean isPDB) {
+    if (isPDB)
+      asc.setGlobalBoolean(AtomSetCollection.GLOBAL_ISPDB);
+    else  
+      asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_ISPDB);
     asc.setAtomSetAuxiliaryInfo("isPDB", isPDB ? Boolean.TRUE : null);
   }
 

@@ -32,11 +32,11 @@ import java.util.Random;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.Measure;
+import javajs.util.PT;
 import javajs.util.T3;
 
 import org.jmol.util.Logger;
 import javajs.util.P3;
-import org.jmol.util.Txt;
 import javajs.util.V3;
 import org.jmol.api.Interface;
 import org.jmol.api.MOCalculationInterface;
@@ -148,13 +148,13 @@ class IsoMOReader extends AtomDataReader {
       return;
     int rep = 0;
     if (line.indexOf("%F") >= 0)
-      line = Txt.formatStringS(line, "F", params.fileName);
+      line = PT.formatStringS(line, "F", params.fileName);
     if (line.indexOf("%I") >= 0)
-      line = Txt.formatStringS(line, "I",
+      line = PT.formatStringS(line, "I",
           params.qm_moLinearCombination == null ? "" + params.qm_moNumber
               : QS.getMOString(params.qm_moLinearCombination));
     if (line.indexOf("%N") >= 0)
-      line = Txt.formatStringS(line, "N", "" + params.qmOrbitalCount);
+      line = PT.formatStringS(line, "N", "" + params.qmOrbitalCount);
     Float energy = null;
     if (mo == null) {
       // check to see if all orbitals have the same energy
@@ -177,22 +177,22 @@ class IsoMOReader extends AtomDataReader {
     }
 
     if (line.indexOf("%E") >= 0)
-      line = Txt.formatStringS(line, "E",
+      line = PT.formatStringS(line, "E",
           energy != null && ++rep != 0 ? "" + energy : "");
     if (line.indexOf("%U") >= 0)
-      line = Txt.formatStringS(line, "U",
+      line = PT.formatStringS(line, "U",
           energy != null && params.moData.containsKey("energyUnits")
               && ++rep != 0 ? (String) params.moData.get("energyUnits") : "");
     if (line.indexOf("%S") >= 0)
-      line = Txt.formatStringS(line, "S", mo != null
+      line = PT.formatStringS(line, "S", mo != null
           && mo.containsKey("symmetry") && ++rep != 0 ? "" + mo.get("symmetry")
           : "");
     if (line.indexOf("%O") >= 0)
-      line = Txt.formatStringS(line, "O", mo != null
+      line = PT.formatStringS(line, "O", mo != null
           && mo.containsKey("occupancy") && ++rep != 0 ? ""
           + mo.get("occupancy") : "");
     if (line.indexOf("%T") >= 0)
-      line = Txt.formatStringS(line, "T", mo != null
+      line = PT.formatStringS(line, "T", mo != null
           && mo.containsKey("type") && ++rep != 0 ? "" + mo.get("type") : "");
     if (line.equals("string")) {
       params.title[iLine] = "";

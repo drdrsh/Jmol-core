@@ -632,9 +632,12 @@ public class T {
   public final static int unitx           = floatproperty | 17;
   public final static int unity           = floatproperty | 18;
   public final static int unitz           = floatproperty | 19;
-  public final static int modx            = floatproperty | 20;
-  public final static int mody            = floatproperty | 21;
-  public final static int modz            = floatproperty | 22;
+  public final static int modt1           = floatproperty | 20;
+  public final static int modt2           = floatproperty | 21;
+  public final static int modt3           = floatproperty | 22;
+  public final static int modx            = floatproperty | 23;
+  public final static int mody            = floatproperty | 24;
+  public final static int modz            = floatproperty | 25;
   public final static int vectorscale     = floatproperty | 1 | floatparam;
   public final static int atomx           = floatproperty | 1 | settable;
   public final static int atomy           = floatproperty | 2 | settable;
@@ -1998,6 +2001,10 @@ public class T {
         "mode",
         "modify",
         "modifyOrCreate",
+        "modt",
+        "modt1",
+        "modt2",
+        "modt3",
         "modx",
         "mody",
         "modz",
@@ -3007,6 +3014,10 @@ public class T {
         mode,                               // "mode"
         modify,                             // "modify"
         modifyorcreate,                     // "modifyOrCreate"
+        modt1,                              // "modt"
+        -1,                                 // "modt1"
+        modt2,
+        modt3,
         modx,                               // "modx"
         mody,                               // "mody"
         modz,                               // "modz"

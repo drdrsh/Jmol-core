@@ -30,13 +30,13 @@ import org.jmol.util.ContactPair;
 import org.jmol.util.Logger;
 
 import javajs.util.AU;
+import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.util.Txt;
 
 import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.RadiusData;
@@ -414,10 +414,10 @@ abstract class AtomDataReader extends VolumeDataReader {
       return false;
     String line = params.title[iLine];
     if (line.indexOf("%F") > 0)
-      line = params.title[iLine] = Txt.formatStringS(line, "F",
+      line = params.title[iLine] = PT.formatStringS(line, "F",
           atomData.fileName);
     if (line.indexOf("%M") > 0)
-      params.title[iLine] = Txt.formatStringS(line, "M", atomData.modelName);
+      params.title[iLine] = PT.formatStringS(line, "M", atomData.modelName);
     return true;
   }
 

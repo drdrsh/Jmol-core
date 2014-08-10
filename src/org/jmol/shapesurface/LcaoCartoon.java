@@ -31,7 +31,6 @@ import org.jmol.shape.Mesh;
 import org.jmol.shape.Shape;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
-import org.jmol.util.Txt;
 
 import javajs.util.Lst;
 import javajs.util.PT;
@@ -216,7 +215,7 @@ public class LcaoCartoon extends Isosurface {
   }
 
   private void setLcaoOn(boolean TF) {
-    if (Txt.isWild(lcaoID)) {
+    if (PT.isWild(lcaoID)) {
       Lst<Mesh> list = getMeshList(lcaoID, false);
       for (int i = list.size(); --i >= 0;)
         list.get(i).visible = TF;
@@ -238,7 +237,7 @@ public class LcaoCartoon extends Isosurface {
   }
 
   private void deleteLcaoCartoon() {
-    if (Txt.isWild(lcaoID)) {
+    if (PT.isWild(lcaoID)) {
       deleteMeshKey(lcaoID);
       return;
     }

@@ -69,7 +69,6 @@ import org.jmol.util.Escape;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
-import org.jmol.util.Txt;
 import org.jmol.viewer.binding.Binding;
 
 /**
@@ -934,11 +933,11 @@ public class PropertyManager implements JmolPropertyManager {
         cHH = c.get(Calendar.HOUR_OF_DAY);
         cmm = c.get(Calendar.MINUTE);
       }
-      Txt.rightJustify(mol, "_00", "" + (1 + cMM));
-      Txt.rightJustify(mol, "00", "" + cDD);
+      PT.rightJustify(mol, "_00", "" + (1 + cMM));
+      PT.rightJustify(mol, "00", "" + cDD);
       mol.append(("" + cYYYY).substring(2, 4));
-      Txt.rightJustify(mol, "00", "" + cHH);
-      Txt.rightJustify(mol, "00", "" + cmm);
+      PT.rightJustify(mol, "00", "" + cHH);
+      PT.rightJustify(mol, "00", "" + cmm);
       mol.append("3D 1   1.00000     0.00000     0");
       //       This line has the format:
       //  IIPPPPPPPPMMDDYYHHmmddSSssssssssssEEEEEEEEEEEERRRRRR
@@ -1034,8 +1033,8 @@ public class PropertyManager implements JmolPropertyManager {
     } else if (asJSON) {
        mol.append("{\"mol\":{\"createdBy\":\"Jmol "+ Viewer.getJmolVersion() + "\",\"a\":[");
     } else {
-      Txt.rightJustify(mol, "   ", "" + nAtoms);
-      Txt.rightJustify(mol, "   ", "" + nBonds);
+      PT.rightJustify(mol, "   ", "" + nAtoms);
+      PT.rightJustify(mol, "   ", "" + nBonds);
       mol.append("  0  0  0  0              1 V2000");
     }
     if (!asJSON)
@@ -1158,7 +1157,7 @@ public class PropertyManager implements JmolPropertyManager {
       mol.append("\"x\":").appendF(a.x).append(",\"y\":").appendF(a.y).append(
           ",\"z\":").appendF(a.z).append("}");
     } else {
-      mol.append(Txt.sprintf("%10.5p%10.5p%10.5p",
+      mol.append(PT.sprintf("%10.5p%10.5p%10.5p",
           "p", new Object[] {pTemp }));
       mol.append(" ").append(sym);
       if (sym.length() == 1)
@@ -1166,8 +1165,8 @@ public class PropertyManager implements JmolPropertyManager {
       if (iso > 0)
         iso -= Elements.getNaturalIsotope(a.getElementNumber());
       mol.append(" ");
-      Txt.rightJustify(mol, "  ", "" + iso);
-      Txt.rightJustify(mol, "   ", "" + (charge == 0 ? 0 : 4 - charge));
+      PT.rightJustify(mol, "  ", "" + iso);
+      PT.rightJustify(mol, "   ", "" + (charge == 0 ? 0 : 4 - charge));
       mol.append("  0  0  0  0\n");
     }
   }
@@ -1214,8 +1213,8 @@ public class PropertyManager implements JmolPropertyManager {
       }
       mol.append("}");
     } else {
-      Txt.rightJustify(mol, "   ", "" + a1);
-      Txt.rightJustify(mol, "   ", "" + a2);
+      PT.rightJustify(mol, "   ", "" + a1);
+      PT.rightJustify(mol, "   ", "" + a2);
       mol.append("  ").appendI(order).append("  0  0  0\n");
     }
   }
@@ -1295,7 +1294,7 @@ public class PropertyManager implements JmolPropertyManager {
               } else {
                 if ((n++) % 5 == 0 && n > 1)
                   info.appendC('\n');
-                Txt.leftJustify(info, "          ", "[" + a.getGroup3(false)
+                PT.leftJustify(info, "          ", "[" + a.getGroup3(false)
                     + "]" + a.getResno() + " ");
               }
             }
@@ -1758,9 +1757,9 @@ public class PropertyManager implements JmolPropertyManager {
               //$FALL-THROUGH$
             case 1:
               sbCONECT.append("CONECT").append(
-                  Txt.formatStringI("%5i", "i", iThis));
+                  PT.formatStringI("%5i", "i", iThis));
               for (int k = 0; k < n; k++)
-                sbCONECT.append(Txt.formatStringI("%5i", "i", iOther));
+                sbCONECT.append(PT.formatStringI("%5i", "i", iOther));
               sbCONECT.appendC('\n');
               break;
             }
@@ -1813,44 +1812,77 @@ public class PropertyManager implements JmolPropertyManager {
       float[] dataX = (float[]) parameters[1];
       float[] dataY = (float[]) parameters[2];
       float[] dataZ = (float[]) parameters[3];
+      boolean haveY = (dataY != null);
       boolean haveZ = (dataZ != null);
       P3 minXYZ = (P3) parameters[4];
       P3 maxXYZ = (P3) parameters[5];
       P3 factors = (P3) parameters[6];
       P3 center = (P3) parameters[7];
-      out.append("REMARK   6 Jmol PDB-encoded data: ").append(type)
-          .append(";\n");
-      out.append("REMARK   6 Jmol data").append(" min = ")
-          .append(Escape.eP(minXYZ)).append(" max = ")
-          .append(Escape.eP(maxXYZ)).append(" unScaledXyz = xyz * ")
-          .append(Escape.eP(factors)).append(" + ").append(Escape.eP(center))
-          .append(";\n");
+      String format = (String) parameters[8];
+      boolean isPDBFormat = (factors != null && format == null);
+      if (isPDBFormat) {
+        out.append("REMARK   6 Jmol PDB-encoded data: ").append(type)
+            .append(";\n");
+        out.append("REMARK   6 Jmol data").append(" min = ")
+            .append(Escape.eP(minXYZ)).append(" max = ")
+            .append(Escape.eP(maxXYZ)).append(" unScaledXyz = xyz * ")
+            .append(Escape.eP(factors)).append(" + ").append(Escape.eP(center))
+            .append(";\n");
+      }
       String strExtra = "";
       Atom atomLast = null;
       Atom[] atoms = vwr.ms.at;
       P3 ptTemp = new P3();
+      if (!isPDBFormat) {
+        if (format == null)
+          format = "%-5i %-10s %-13.5f "
+              + (haveZ ? "%-13.5f %-13.5f" : haveY ? "%-13.5f" : "");
+        format += "\n";
+
+      }
       for (int i = bsAtoms.nextSetBit(0), n = 0; i >= 0; i = bsAtoms
           .nextSetBit(i + 1), n++) {
         float x = dataX[n];
-        float y = dataY[n];
+        float y = (haveY ? dataY[n] : 0f);
         float z = (haveZ ? dataZ[n] : 0f);
         if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z))
           continue;
         Atom a = atoms[i];
-        out.append(LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0',
-            null, ptTemp));
-        if (isPDB)
-          bsWritten.set(i);
-        out.append(Txt.sprintf(
-            "%-8.2f%-8.2f%-10.2f    %6.3f          %2s    %s\n", "ssF",
-            new Object[] { a.getElementSymbolIso(false).toUpperCase(),
-                strExtra, new float[] { x, y, z, 0f } }));
-        if (atomLast != null
-            && atomLast.getPolymerIndexInModel() == a.getPolymerIndexInModel())
-          pdbCONECT.append("CONECT")
-              .append(Txt.formatStringI("%5i", "i", atomLast.getAtomNumber()))
-              .append(Txt.formatStringI("%5i", "i", a.getAtomNumber()))
-              .appendC('\n');
+        if (isPDBFormat) {
+          out.append(LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0',
+              null, ptTemp));
+          if (isPDB)
+            bsWritten.set(i);
+          out.append(PT.sprintf(
+              "%-8.2f%-8.2f%-10.2f    %6.3f          %2s    %s\n", "ssF",
+              new Object[] { a.getElementSymbolIso(false).toUpperCase(),
+                  strExtra, new float[] { x, y, z, 0f } }));
+          if (atomLast != null
+              && atomLast.getPolymerIndexInModel() == a
+                  .getPolymerIndexInModel())
+            pdbCONECT.append("CONECT")
+                .append(PT.formatStringI("%5i", "i", atomLast.getAtomNumber()))
+                .append(PT.formatStringI("%5i", "i", a.getAtomNumber()))
+                .appendC('\n');
+        } else if (haveZ) {
+          out.append(PT.sprintf(
+              format,
+              "isF",
+              new Object[] { Integer.valueOf(a.getAtomNumber()),
+                  a.getAtomName(), new float[] { x, y, z } }));
+        } else if (haveY) {
+          out.append(PT.sprintf(
+              format,
+              "isF",
+              new Object[] { Integer.valueOf(a.getAtomNumber()),
+                  a.getAtomName(), new float[] { x, y } }));
+        } else {
+          out.append(PT.sprintf(
+              format,
+              "isF",
+              new Object[] { Integer.valueOf(a.getAtomNumber()),
+                  a.getAtomName(), new float[] { x } }));
+        }
         atomLast = a;
       }
     }

@@ -9,7 +9,6 @@ import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.P3;
 
-import org.jmol.script.SV;
 import org.jmol.viewer.Viewer;
 
 public interface JmolPropertyManager {

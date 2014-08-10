@@ -27,7 +27,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.util.Txt;
 
 /**
  * The ScriptExpr class holds the main functions for 
@@ -1245,7 +1244,7 @@ abstract class ScriptExpr extends ScriptParam {
     switch (tokOperator) {
     case T.opEQ:
     case T.opNE:
-      return (Txt.isMatch(propertyValue, comparisonValue, true, true) == (tokOperator == T.opEQ));
+      return (PT.isMatch(propertyValue, comparisonValue, true, true) == (tokOperator == T.opEQ));
     case T.opLIKE:
       return PT.isLike(propertyValue, comparisonValue);
     default:

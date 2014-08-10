@@ -920,7 +920,7 @@ public class Atom extends Point3fi implements BNode {
   String getIdentity(boolean allInfo) {
     SB info = new SB();
     String group3 = getGroup3(true);
-    if (group3 != null && group3.length() > 0) {
+    if (group3 != null && group3.length() > 0 && !group3.equals("UNK")) {
       info.append("[");
       info.append(group3);
       info.append("]");
@@ -950,7 +950,7 @@ public class Atom extends Point3fi implements BNode {
       info.append("%");
       info.appendC(altloc);
     }
-    if (group.chain.model.ms.mc > 1) {
+    if (group.chain.model.ms.mc > 1 && !group.chain.model.isJmolDataFrame) {
       info.append("/");
       info.append(getModelNumberForLabel());
     }
@@ -1421,6 +1421,12 @@ public class Atom extends Point3fi implements BNode {
       return atom.getVibrationCoord('Z');
     case T.modx:
       return atom.getModulationCoord('X');
+    case T.modt1:
+      return atom.getModulationCoord('1');
+    case T.modt2:
+      return atom.getModulationCoord('2');
+    case T.modt3:
+      return atom.getModulationCoord('3');
     case T.mody:
       return atom.getModulationCoord('Y');
     case T.modz:
