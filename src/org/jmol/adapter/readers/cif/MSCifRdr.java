@@ -215,8 +215,6 @@ public class MSCifRdr extends MSRdr {
 
   private M3 comSSMat;
   public void processEntry() throws Exception {
-    //_jana? 
-    // TODO
     CifReader cr = (CifReader) this.cr;
     if (cr.key.equals("_cell_commen_t_section_1")) {
       isCommensurate = true;

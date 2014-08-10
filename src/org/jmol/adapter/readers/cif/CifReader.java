@@ -227,7 +227,7 @@ public class CifReader extends AtomSetCollectionReader {
     }
 
     if (!skipping) {
-      key = fixKey(key);
+      key = parser.fixKey(key);      
       if (key.startsWith("_chemical_name") || key.equals("_chem_comp_name")) {
         processChemicalInfo("name");
       } else if (key.startsWith("_chemical_formula_structural")) {
@@ -237,7 +237,7 @@ public class CifReader extends AtomSetCollectionReader {
         processChemicalInfo("formula");
       } else if (key.equals("_cell_modulation_dimension")) {
         modDim = parseIntStr(data);
-      } else if (key.startsWith("_cell_")) {
+      } else if (key.startsWith("_cell_") && key.indexOf("_commen_") < 0) {
         processCellParameter();
       } else if (key.startsWith("_atom_sites_fract_tran")) {
         processUnitCellTransformMatrix();
@@ -331,14 +331,6 @@ public class CifReader extends AtomSetCollectionReader {
       ms = mr = (MSCifRdr) Interface.getOption("adapter.readers.cif.MSCifRdr");
     modulated = (mr.initialize(this, modDim) > 0);
     return mr;
-  }
-
-  private String fixKey(String key) throws Exception {
-    key = PT.rep(key, ".", "_").toLowerCase();
-    if (key.startsWith("_magnetic")) { // PRELIMINARY Bilbao ONLY 
-      key = key.substring(9);
-    }
-    return key;
   }
 
   public Map<String, Integer> modelMap;
@@ -686,7 +678,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (key == null)
       return;
     boolean isLigand = false;
-    key = fixKey(key);
+    key = parser.fixKey(key);
     if (modDim > 0)
       switch (getModulationReader().processLoopBlock()) {
       case 0:

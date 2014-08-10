@@ -875,10 +875,12 @@ public class MSRdr implements MSInterface {
       if (!asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
           minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f)
           || isCommensurate && !modAverage && a.foccupancy < 0.5f) {
-        System.out.println(a.atomName + " " + a + " " + pt);
         bs.clear(i);
+//      } else {
+//        System.out.println(a.atomName + " " + a + pt);
       }
     }
+//    System.out.println("MSRdr bs " + bs.cardinality());
   }
 
   private SymmetryInterface getDefaultUnitCell() {
