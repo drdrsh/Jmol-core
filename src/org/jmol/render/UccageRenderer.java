@@ -92,7 +92,7 @@ public class UccageRenderer extends CageRenderer {
     offset.sub(offsetT);
 
     P3 fset = unitcell.getUnitCellMultiplier();
-    boolean haveMultiple = (fset != null);
+    boolean haveMultiple = (fset != null && fset.distanceSquared(fset0) != 0);
     if (!haveMultiple) 
       fset = fset0;
 
@@ -147,8 +147,8 @@ public class UccageRenderer extends CageRenderer {
       }
     }
 
-    if (vwr.getBoolean(T.displaycellparameters) && !vwr.isPreviewOnly()
-        && !unitcell.isPeriodic())
+    if (!isExport && vwr.getBoolean(T.displaycellparameters) && !vwr.isPreviewOnly()
+        && !unitcell.isPeriodic() && g3d.setC(vwr.getColixBackgroundContrast()))
       renderInfo(unitcell);
   }
   
@@ -157,10 +157,6 @@ public class UccageRenderer extends CageRenderer {
   }
 
   private void renderInfo(SymmetryInterface symmetry) {
-    if (isExport
-        || !g3d.setC(vwr.getColixBackgroundContrast())
-        || !vwr.getBoolean(T.showunitcellinfo))
-      return;
     fid = g3d.getFontFidFS("Monospaced", 14 * imageFontScaling);
 
 //    if (nf == null) {
