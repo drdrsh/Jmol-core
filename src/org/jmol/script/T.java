@@ -607,6 +607,7 @@ public class T {
   public final static int seqid         = intproperty | 20;
   public final static int site          = intproperty | 21;
   public final static int strucno       = intproperty | 22;
+  public final static int subsystem     = intproperty | 23;
   public final static int valence       = intproperty | 23 | settable;
 
   // float values must be multiplied by 100 prior to comparing to integer values
@@ -1070,7 +1071,6 @@ public class T {
   public final static int showtiming                     = booleanparam | 158;
   public final static int showunitcell                   = booleanparam | 160;
   public final static int showunitcelldetails            = booleanparam | 161;
-  public final static int showunitcellinfo               = booleanparam | 162;
   public final static int slabbyatom                     = booleanparam | 163;
   public final static int slabbymolecule                 = booleanparam | 164;
   public final static int slabenabled                    = booleanparam | 166;
@@ -1807,6 +1807,7 @@ public class T {
         "struts",
         "strut",
         "subset",
+        "subsystem",
         "synchronize",
         "sync",
         "trace",
@@ -2492,6 +2493,7 @@ public class T {
        "defaultStructureDssp",
        "disablePopupMenu",
        "displayCellParameters",
+       "showUnitcellInfo", // oops
        "dotsSelectedOnly",
        "dotSurface",
        "dragSelected",
@@ -2580,7 +2582,6 @@ public class T {
        "showTiming",
        "showUnitcell",
        "showUnitcellDetails",
-       "showUnitcellInfo",
        "slabByAtom",
        "slabByMolecule",
        "slabEnabled",
@@ -2820,6 +2821,7 @@ public class T {
         struts,                             // "struts"
         -1,                                 // "strut"
         subset,                             // "subset"
+        subsystem,                          // "subsystem"
         sync,                               // "synchronize"
         -1,                                 // "sync"
         trace,                              // "trace"
@@ -3505,6 +3507,7 @@ public class T {
         defaultstructuredssp,               //        "defaultStructureDssp"
         disablepopupmenu,                   //        "disablePopupMenu"
         displaycellparameters,              //        "displayCellParameters"
+        -1,                                 //        "showUnitCellInfo"
         dotsselectedonly,                   //        "dotsSelectedOnly"
         dotsurface,                         //        "dotSurface"
         dragselected,                       //        "dragSelected"
@@ -3593,7 +3596,6 @@ public class T {
         showtiming,                         //        "showTiming"
         showunitcell,                       //        "showUnitcell"
         showunitcelldetails,                //        "showUnitcellDetails"
-        showunitcellinfo,                   //        "showUnitcellInfo"
         slabbyatom,                         //        "slabByAtom"
         slabbymolecule,                     //        "slabByMolecule"
         slabenabled,                        //        "slabEnabled"

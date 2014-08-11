@@ -899,7 +899,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.opLIKE:
         int tok = instruction.tok;
         int tokWhat = instruction.intValue;
-        if (tokWhat == T.configuration && tok != T.opEQ)
+        if ((tokWhat == T.configuration) && tok != T.opEQ)
           invArg();
         float[] data = null;
         if (tokWhat == T.property) {
@@ -1310,6 +1310,7 @@ abstract class ScriptExpr extends ScriptParam {
       default:
         ia = Atom.atomPropertyInt(atom, tokWhat);
         break;
+      case T.subsystem:
       case T.configuration:
         // these are all-inclusive; no need to do a by-atom comparison
         return BSUtil.copy(vwr.getConformation(-1, ival - 1,

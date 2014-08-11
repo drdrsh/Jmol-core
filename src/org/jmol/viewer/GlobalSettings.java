@@ -381,7 +381,6 @@ public class GlobalSettings {
       setO("nihResolverFormat", nihResolverFormat);
       setO("pubChemFormat", pubChemFormat);
       setB("showUnitCellDetails", showUnitCellDetails);
-      setB("showUnitCellInfo", showUnitCellInfo);
       setB("solventProbe", solventOn);
       setF("solventProbeRadius", solventProbeRadius);
       setB("specular", specular);
@@ -631,7 +630,6 @@ public class GlobalSettings {
     boolean saveProteinStructureState = true;
     boolean showModVecs = false;
     boolean showUnitCellDetails = true;
-    boolean showUnitCellInfo = true;
     float solventProbeRadius = 1.2f;
     int scriptDelay = 0;
     boolean selectAllModels = true;

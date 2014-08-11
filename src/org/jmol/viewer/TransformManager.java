@@ -1157,10 +1157,10 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
     pt.sub(fixedRotationCenter);
     ptCamera.add(pt);
     
-        System.out.println("TM no " + navigationOffset + " rpo "
-            + referencePlaneOffset + " aa " + aperatureAngle + " sppa "
-            + scalePixelsPerAngstrom + " vr " + visualRange + " sw/vr "
-            + screenWidth / visualRange + " " + ptRef + " " + fixedRotationCenter);
+//        System.out.println("TM no " + navigationOffset + " rpo "
+//            + referencePlaneOffset + " aa " + aperatureAngle + " sppa "
+//            + scalePixelsPerAngstrom + " vr " + visualRange + " sw/vr "
+//            + screenWidth / visualRange + " " + ptRef + " " + fixedRotationCenter);
     
     return new P3[] {
         ptRef,

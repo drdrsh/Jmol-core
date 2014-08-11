@@ -241,7 +241,10 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       a[i][0] = 0;
     if (isQ && qtOffset != null) {
       Matrix q = new Matrix(null, 3, 1);
-      q.getArray()[0] = new double[] { qtOffset.x, qtOffset.y, qtOffset.z };
+      a = q.getArray();
+      a[0][0] = qtOffset.x;
+      a[1][0] = qtOffset.y;
+      a[2][0] = qtOffset.z;
       a = (t = sigma.mul(q)).getArray();
     }
     if (fracT != null) {
@@ -320,7 +323,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.scale(this.scale * scale);
     symmetry.toCartesian(ptTemp, true);
     a.add(ptTemp);
-
     // magnetic moment part
     if (mxyz == null)
       return;

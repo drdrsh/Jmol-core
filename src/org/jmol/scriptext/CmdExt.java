@@ -5462,8 +5462,9 @@ public class CmdExt implements JmolCmdExtension {
           center.z = minXYZ.z = maxXYZ.z = factors.z = 0;
         for (int i = 0; i < dataX.length; i++)
           dataX[i] = (dataX[i] - center.x) / factors.x;
-        for (int i = 0; i < dataY.length; i++)
-          dataY[i] = (dataY[i] - center.y) / factors.y;
+        if (propertyY != 0)
+          for (int i = 0; i < dataY.length; i++)
+            dataY[i] = (dataY[i] - center.y) / factors.y;
         if (propertyZ != 0)
           for (int i = 0; i < dataZ.length; i++)
             dataZ[i] = (dataZ[i] - center.z) / factors.z;

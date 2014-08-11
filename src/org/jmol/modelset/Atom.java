@@ -1229,6 +1229,8 @@ public class Atom extends Point3fi implements BNode {
       return atom.getSeqID();
     case T.atomid:
       return atom.atomID;
+    case T.subsystem:
+      return Math.max(0, atom.altloc - 32);
     case T.atomindex:
       return atom.i;
     case T.bondcount:

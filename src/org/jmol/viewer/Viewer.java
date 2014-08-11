@@ -5415,8 +5415,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return g.showMultipleBonds;
     case T.showtiming:
       return g.showTiming;
-    case T.showunitcellinfo:
-      return g.showUnitCellInfo;
     case T.showunitcelldetails:
       return g.showUnitCellDetails;
     case T.slabbyatom:
@@ -6203,10 +6201,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     case T.showmodvecs:
       // 14.3.5
       g.showModVecs = value;
-      break;
-    case T.showunitcellinfo:
-      // 14.1.17
-      g.showUnitCellInfo = value;
       break;
     case T.showunitcelldetails:
       // 14.1.16
