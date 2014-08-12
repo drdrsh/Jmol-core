@@ -793,9 +793,13 @@ public class Quat {
   public float[] getEulerZYZ() {
     // http://www.swarthmore.edu/NatSci/mzucker1/e27/diebel2006attitude.pdf
     double rA, rB, rG;
-    rA = Math.atan2(2 * (q2 * q3 - q0 * q1), 2 * (q1 * q3 + q0 * q2 ));
+    if (q1 == 0 && q2 == 0) {
+      // pure Z rotation - ambiguous
+      return new float[] { getTheta(), 0, 0 };
+    }
+    rA = Math.atan2(2 * (q2 * q3 + q0 * q1), 2 * (-q1 * q3 + q0 * q2 ));
     rB = Math.acos(q3 * q3 - q2 * q2 - q1 * q1 + q0 * q0);
-    rG = Math.atan2( 2 * (q2 * q3 + q0 * q1), 2 * (q0 * q2 - q1 * q3));
+    rG = Math.atan2( 2 * (q2 * q3 - q0 * q1), 2 * (q0 * q2 + q1 * q3));
     return new float[]  {(float) (rA / RAD_PER_DEG), (float) (rB / RAD_PER_DEG), (float) (rG / RAD_PER_DEG)};
   } 
 
@@ -803,9 +807,13 @@ public class Quat {
     // NOT http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
     // http://www.swarthmore.edu/NatSci/mzucker1/e27/diebel2006attitude.pdf
     double rA, rB, rG;
-    rA = Math.atan2(2 * (q1 * q3 + q0 * q2), 2 * (q0 * q1 - q2 * q3 ));
+    if (q1 == 0 && q2 == 0) {
+      // pure Z rotation - ambiguous
+      return new float[] { getTheta(), 0, 0 };
+    }
+    rA = Math.atan2(2 * (q1 * q3 - q0 * q2), 2 * (q0 * q1 + q2 * q3 ));
     rB = Math.acos(q3 * q3 - q2 * q2 - q1 * q1 + q0 * q0);
-    rG = Math.atan2( 2 * (q1 * q3 - q0 * q2), 2 * (q2 * q3 + q0 * q1));
+    rG = Math.atan2( 2 * (q1 * q3 + q0 * q2), 2 * (-q2 * q3 + q0 * q1));
     return new float[]  {(float) (rA / RAD_PER_DEG), (float) (rB / RAD_PER_DEG), (float) (rG / RAD_PER_DEG)};
   }
 
