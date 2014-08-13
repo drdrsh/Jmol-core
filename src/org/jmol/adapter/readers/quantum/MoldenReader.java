@@ -77,52 +77,82 @@ public class MoldenReader extends MopacSlaterReader {
       return (!loadVibrations || readFreqsAndModes());
     if (line.indexOf("[GEOCONV]") == 0)
       return (!loadGeometries || readGeometryOptimization());
-    checkOrbitalType(line);
+    if (checkOrbitalType(line))
+      return true;
+    if (checkSymmetry())
+      return false;
     return true;
   }
 
+  private boolean checkSymmetry() throws Exception {
+    // extension for symmetry
+    if (line.startsWith("[SPACEGROUP]")) {
+      setSpaceGroupName(rd());
+      rd();
+      return true;
+    }
+    if (line.startsWith("[OPERATORS]")) {
+      while (rd() != null && line.indexOf("[") < 0)
+        if (line.length() > 0) {
+          Logger.info("adding operator " + line);
+          setSymmetryOperator(line);
+        }
+      return true;
+    }
+    if (line.startsWith("[CELL]")) {
+      rd();
+      Logger.info("setting cell dimensions " + line);
+      // ANGS assumed here
+      next[0] = 0;
+      for (int i = 0; i < 6; i++)
+        setUnitCellItem(i, parseFloat());
+      rd();
+      return true;
+    }
+    return false;
+  }
+
   @Override
-  public void finalizeReader() {
+  public void finalizeReader() throws Exception {
     // a hack to make up for Molden's ** limitation in writing shell information
     // assumption is that there is an atom of the same type just prior to the missing one.
-    if (bsBadIndex.isEmpty())
-      return;
-    try {
-      int ilast = 0;
-      Atom[] atoms = asc.atoms;
-      int nAtoms = asc.ac;
-      bsAtomOK.set(nAtoms);
-      int n = shells.size();
-      for (int i = 0; i < n; i++) {
-        int iatom = shells.get(i)[0];
-        if (iatom != Integer.MAX_VALUE) {
-          ilast = atoms[iatom].elementNumber;
-          continue;
-        }
-        for (int j = bsAtomOK.nextClearBit(0); j >= 0; j = bsAtomOK
-            .nextClearBit(j + 1)) {
-          if (atoms[j].elementNumber == ilast) {
-            shells.get(i)[0] = j;
-            Logger.info("MoldenReader assigning shells starting with " + i
-                + " for ** to atom " + (j + 1) + " z " + ilast);
-            for (; ++i < n && !bsBadIndex.get(i)
-                && shells.get(i)[0] == Integer.MAX_VALUE;)
+    if (!bsBadIndex.isEmpty())
+      try {
+        int ilast = 0;
+        Atom[] atoms = asc.atoms;
+        int nAtoms = asc.ac;
+        bsAtomOK.set(nAtoms);
+        int n = shells.size();
+        for (int i = 0; i < n; i++) {
+          int iatom = shells.get(i)[0];
+          if (iatom != Integer.MAX_VALUE) {
+            ilast = atoms[iatom].elementNumber;
+            continue;
+          }
+          for (int j = bsAtomOK.nextClearBit(0); j >= 0; j = bsAtomOK
+              .nextClearBit(j + 1)) {
+            if (atoms[j].elementNumber == ilast) {
               shells.get(i)[0] = j;
-            i--;
-            bsAtomOK.set(j);
-            break;
+              Logger.info("MoldenReader assigning shells starting with " + i
+                  + " for ** to atom " + (j + 1) + " z " + ilast);
+              for (; ++i < n && !bsBadIndex.get(i)
+                  && shells.get(i)[0] == Integer.MAX_VALUE;)
+                shells.get(i)[0] = j;
+              i--;
+              bsAtomOK.set(j);
+              break;
+            }
           }
         }
+      } catch (Exception e) {
+        Logger.error("Molden reader could not assign shells -- abandoning MOs");
+        asc.setAtomSetAuxiliaryInfo("moData", null);
       }
-    } catch (Exception e) {
-      Logger.error("Molden reader could not assign shells -- abandoning MOs");
-      asc.setAtomSetAuxiliaryInfo("moData", null);
-    }
-
+    finalizeReaderASCR();
   }
   private void readAtoms() throws Exception {
     /* 
-     [Atoms] {Angs|AU}
+     [Atoms] {Angs|AU|Fractional}
      C     1    6         0.0076928100       -0.0109376700        0.0000000000
      H     2    1         0.0779745600        1.0936027600        0.0000000000
      H     3    1         0.9365572000       -0.7393011000        0.0000000000
@@ -132,11 +162,11 @@ public class MoldenReader extends MopacSlaterReader {
      */
     String coordUnit = getTokensStr(line.replace(']', ' '))[1];
     
-    boolean isAU = (coordUnit.indexOf("ANGS") < 0); 
-    if (isAU && coordUnit.indexOf("AU") < 0) {
-      throw new Exception("invalid coordinate unit " + coordUnit + " in [Atoms]"); 
-    }
-    
+    boolean isFractional = (coordUnit.indexOf("FRACTIONAL") >= 0);
+    boolean isAU = (!isFractional && coordUnit.indexOf("ANGS") < 0);
+    if (isAU && coordUnit.indexOf("AU") < 0)
+      Logger.error("Molden atom line does not indicate units ANGS, AU, or FRACTIONAL -- AU assumed: " + line); 
+    setFractionalCoordinates(isFractional);
     float f = (isAU ? ANGSTROMS_PER_BOHR : 1);
     while (rd() != null && line.indexOf('[') < 0) {    
       String [] tokens = getTokens();
