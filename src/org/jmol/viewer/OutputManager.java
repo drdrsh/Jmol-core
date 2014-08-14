@@ -935,7 +935,7 @@ abstract class OutputManager {
        if (isSparDir)
          newName = newName.replace('.', '_');
        if (crcMap.containsKey(newName)) {
-         // now we have a conflict. To different files with the same name
+         // now we have a conflict. Two different files with the same name
          // append "[iFile]" to the new file name to ensure it's unique
          int pt = newName.lastIndexOf(".");
          if (pt > ptSlash) // is a file extension, probably
