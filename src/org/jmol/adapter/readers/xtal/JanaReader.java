@@ -176,7 +176,7 @@ public class JanaReader extends AtomSetCollectionReader {
   }
 
   @Override
-  public void finalizeReader() throws Exception {
+  public void finalizeSubclassReader() throws Exception {
     if (!haveM40Data)
       readM40Data(false);
     if (lattvecs != null && lattvecs.size() > 0)

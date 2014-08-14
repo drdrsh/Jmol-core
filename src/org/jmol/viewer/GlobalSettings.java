@@ -85,6 +85,7 @@ public class GlobalSettings {
         allowKeyStrokes = g.allowKeyStrokes;
         legacyAutoBonding = g.legacyAutoBonding;
         legacyHAddition = g.legacyHAddition;
+        legacyJavaFloat = g.legacyJavaFloat;
         bondingVersion = g.bondingVersion;
         platformSpeed = g.platformSpeed;
         useScriptQueue = g.useScriptQueue;
@@ -310,6 +311,7 @@ public class GlobalSettings {
       setB("justifyMeasurements", justifyMeasurements);
       setB("legacyAutoBonding", legacyAutoBonding);
       setB("legacyHAddition", legacyHAddition);
+      setB("legacyJavaFloat", legacyJavaFloat);
       setF("loadAtomDataTolerance", loadAtomDataTolerance);
       setO("loadFormat", loadFormat);
       setO("loadLigandFormat", loadLigandFormat);
@@ -480,6 +482,7 @@ public class GlobalSettings {
     boolean zeroBasedXyzRasmol = false;
     public boolean legacyAutoBonding = false;
     public boolean legacyHAddition = false;
+    public boolean legacyJavaFloat = false;
 
     //centering and perspective
 
@@ -981,7 +984,7 @@ public class GlobalSettings {
           + ";bondingversion;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;"
           + ";exportdrivers;exportscale"
           + ";_filecaching;_filecache;fontcaching;fontscaling;forcefield;language"
-          + ";legacyautobonding;legacyhaddition"
+          + ";legacyautobonding;legacyhaddition;legacyjavafloat"
           + ";loglevel;logfile;loggestures;logcommands;measurestylechime"
           + ";loadformat;loadligandformat;smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;"
           + ";pathforallfiles;perspectivedepth;phongexponent;perspectivemodel;platformspeed"
@@ -1067,6 +1070,7 @@ public class GlobalSettings {
       app(str, "set bondingVersion " + bondingVersion);
       app(str, "set legacyAutoBonding " + legacyAutoBonding);
       app(str, "set legacyHAddition " + legacyHAddition);
+      app(str, "set legacyJavaFloat " + legacyJavaFloat);
       app(str, "set minBondDistance " + minBondDistance);
       // these next two might be part of a 2D->3D operation
       app(str, "set minimizationCriterion  " + minimizationCriterion);

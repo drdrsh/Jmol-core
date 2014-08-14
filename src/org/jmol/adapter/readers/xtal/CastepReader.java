@@ -380,7 +380,7 @@ public class CastepReader extends AtomSetCollectionReader {
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     if (isPhonon || isOutput) {
       isTrajectory = false;
     } else {

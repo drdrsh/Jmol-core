@@ -7,6 +7,8 @@ import java.util.Map;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.SymmetryInterface;
+
+import javajs.util.PT;
 import javajs.util.V3;
 
 /**
@@ -47,7 +49,7 @@ public class GulpReader extends AtomSetCollectionReader {
   }
 
   @Override
-  protected void finalizeReader() {
+  protected void finalizeSubclassReader() {
     if (atomCharges == null)
       return;
     Atom[] atoms = asc.atoms;
@@ -315,6 +317,8 @@ public class GulpReader extends AtomSetCollectionReader {
         Atom atom = atoms[i];
         symmetry.toCartesian(atom, true);
         symFull.toFractional(atom, true);
+        if (fixJavaFloat)
+          PT.fixPtFloats(atom, PT.FRACTIONAL_PRECISION);
       }
       setModelParameters(false);
     }

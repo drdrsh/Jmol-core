@@ -1543,4 +1543,30 @@ public class PT {
     return s;
   }
 
+  public static final float FRACTIONAL_PRECISION = 100000f;
+  public static final float CARTESIAN_PRECISION =  10000f;
+
+  public static void fixPtFloats(T3 pt, float f) {
+    //this will equate float and double as long as -256 <= x <= 256
+    pt.x = Math.round(pt.x * f) / f;
+    pt.y = Math.round(pt.y * f) / f;
+    pt.z = Math.round(pt.z * f) / f;
+  }
+
+//static {
+//    
+//  double d = 790.8999998888;
+//  float x  = 790.8999998888f;
+//  for (int i = 0; i < 50; i++) {
+//  System.out.println(x + " " + d);
+//  System.out.println(Math.round(x * 100000) / 100000f);
+//  System.out.println(Math.round(d * 100000) / 100000.);
+//  System.out.println(Math.round(x * 10000) / 10000f);
+//  System.out.println(Math.round(d * 10000) / 10000.);
+//  x+=1; 
+//  d+=1;
+//  }
+//  System.out.println(100.123456789f);
+//}
+
 }

@@ -1737,7 +1737,7 @@ abstract class ScriptExpr extends ScriptParam {
           }
           break;
         case 3: // isPt
-          T3 t = Atom.atomPropertyTuple(atom, tok, ptTemp);
+          T3 t = Atom.atomPropertyTuple(vwr, atom, tok, ptTemp);
           if (t == null)
             errorStr(ERROR_unrecognizedAtomProperty, T.nameOf(tok));
           switch (minmaxtype) {

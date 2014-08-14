@@ -92,7 +92,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     setSymmetry();
   }
 

@@ -93,7 +93,7 @@ public class WebMOReader extends MopacSlaterReader {
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     finalizeReaderASCR();
     if (nOrbitals > 0)
       setMOs("eV");

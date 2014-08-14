@@ -38,7 +38,6 @@ import java.net.URL;
 
 import javajs.util.PT;
 
-import org.jmol.i18n.GT;
 import org.jmol.util.Logger;
 import org.jmol.util.GenericApplet;
 

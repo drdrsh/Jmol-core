@@ -113,7 +113,7 @@ public class MolReader extends AtomSetCollectionReader {
   }
 
   @Override
-  public void finalizeReader() throws Exception {
+  public void finalizeSubclassReader() throws Exception {
     finalizeReaderMR();
   }
 

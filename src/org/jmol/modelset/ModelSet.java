@@ -2475,6 +2475,7 @@ import java.util.Properties;
     AtomIndexIterator iter = getSelectedAtomIterator(null, false, false, false,
         false);
     if (withinAllModels) {
+      boolean fixJavaFloat = !vwr.g.legacyJavaFloat;
       P3 ptTemp = new P3();
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
         for (int iModel = mc; --iModel >= 0;) {
@@ -2482,7 +2483,7 @@ import java.util.Properties;
             continue;
           if (distance < 0) {
             getAtomsWithin(distance,
-                at[i].getFractionalUnitCoordPt(true, ptTemp), bsResult, -1);
+                at[i].getFractionalUnitCoordPt(fixJavaFloat, true, ptTemp), bsResult, -1);
             continue;
           }
           setIteratorForAtom(iter, iModel, i, distance, rd);
@@ -2732,6 +2733,10 @@ import java.util.Properties;
     // unfortunately, 11.9.24 changed the order with which atoms were processed
     // for autobonding. This means that state script prior to that that use
     // select BOND will be misread by later version.
+    // In addition, prior to Jmol 14.2.6, the difference between double (JavaScript) and 
+    // float (Java) was not accounted for. However, this would only affect
+    // very borderline cases -- where we are just at the edge of the bond tolerance. 
+    // Is it worth it to fix? This is the question.
     if (preJmol11_9_24)
       return autoBond_Pre_11_9_24(bsA, bsB, bsExclude, bsBonds, mad);
     if (ac == 0)
@@ -2802,7 +2807,7 @@ import java.util.Properties;
             || !(isAtomInSetA && isNearInSetB || isAtomInSetB && isNearInSetA)
             || isFirstExcluded && bsExclude.get(j)
             || useOccupation && occupancies != null && (occupancies[i] < 50) != (occupancies[j] < 50))
-          continue;
+          continue;        
         short order = getBondOrderFull(myBondingRadius,
             atomNear.getBondingRadius(), iter.foundDistance2(),
             minBondDistance2, bondTolerance);

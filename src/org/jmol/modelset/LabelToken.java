@@ -478,7 +478,7 @@ public class LabelToken {
         strT = "" + (indices == null ? atom.i : indices[atom.i]);
         break;
       case T.color:
-        ptT = Atom.atomPropertyTuple(atom, t.tok, ptTemp);
+        ptT = Atom.atomPropertyTuple(vwr, atom, t.tok, ptTemp);
         break;
       case T.data:
       case T.validation:
@@ -578,7 +578,7 @@ public class LabelToken {
           strT = Atom.atomPropertyString(vwr, atom, t.tok);
           break;
         case T.atomproperty:
-          ptT = Atom.atomPropertyTuple(atom, t.tok, ptTemp);
+          ptT = Atom.atomPropertyTuple(vwr, atom, t.tok, ptTemp);
           break;
         default:
           // any dual case would be here -- must handle specially

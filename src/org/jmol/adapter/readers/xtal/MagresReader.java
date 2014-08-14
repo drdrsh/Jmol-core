@@ -56,7 +56,7 @@ public class MagresReader extends AtomSetCollectionReader {
    * 
    */
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     //doApplySymmetry = true;
     asc.setInfo("fileHeader",
         header.toString());

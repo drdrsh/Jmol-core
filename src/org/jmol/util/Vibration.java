@@ -2,8 +2,6 @@ package org.jmol.util;
 
 import java.util.Map;
 
-import org.jmol.api.SymmetryInterface;
-
 import javajs.util.T3;
 import javajs.util.V3;
 

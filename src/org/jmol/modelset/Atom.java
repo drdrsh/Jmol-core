@@ -755,12 +755,12 @@ public class Atom extends Point3fi implements BNode {
     return (group.chain.model.ms.getMoleculeIndex(i, inModel) + 1);
   }
    
-  private float getFractionalCoord(char ch, boolean asAbsolute, P3 pt) {
-    pt = getFractionalCoordPt(asAbsolute, pt);
+  private float getFractionalCoord(boolean fixJavaFloat, char ch, boolean asAbsolute, P3 pt) {
+    pt = getFractionalCoordPt(fixJavaFloat, asAbsolute, pt);
     return (ch == 'X' ? pt.x : ch == 'Y' ? pt.y : pt.z);
   }
     
-  private P3 getFractionalCoordPt(boolean asAbsolute, P3 pt) {
+  private P3 getFractionalCoordPt(boolean fixJavaFloat, boolean asAbsolute, P3 pt) {
     // asAbsolute TRUE uses the original unshifted matrix
     SymmetryInterface c = getUnitCell();
     if (c == null) 
@@ -770,6 +770,8 @@ public class Atom extends Point3fi implements BNode {
     else
       pt.setT(this);
     c.toFractional(pt, asAbsolute);
+    if (fixJavaFloat)
+      PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     return pt;
   }
   
@@ -777,12 +779,12 @@ public class Atom extends Point3fi implements BNode {
     return group.chain.model.ms.getUnitCellForAtom(this.i);
   }
   
-  private float getFractionalUnitCoord(char ch, P3 pt) {
-    pt = getFractionalUnitCoordPt(false, pt);
+  private float getFractionalUnitCoord(boolean fixJavaFloat, char ch, P3 pt) {
+    pt = getFractionalUnitCoordPt(fixJavaFloat, false, pt);
     return (ch == 'X' ? pt.x : ch == 'Y' ? pt.y : pt.z);
   }
 
-  P3 getFractionalUnitCoordPt(boolean asCartesian, P3 pt) {
+  P3 getFractionalUnitCoordPt(boolean fixJavaFloat, boolean asCartesian, P3 pt) {
     SymmetryInterface c = getUnitCell();
     if (c == null)
       return this;
@@ -799,6 +801,8 @@ public class Atom extends Point3fi implements BNode {
       if (!asCartesian)
         c.toFractional(pt, false);
     }
+    if (fixJavaFloat)
+      PT.fixPtFloats(pt, asCartesian ? PT.CARTESIAN_PRECISION : PT.FRACTIONAL_PRECISION);      
     return pt;
   }
   
@@ -894,12 +898,12 @@ public class Atom extends Point3fi implements BNode {
     return getIdentity(true);
   } 
 
-  String getInfoXYZ(boolean useChimeFormat, P3 pt) {
+  String getInfoXYZ(boolean fixJavaFloat, boolean useChimeFormat, P3 pt) {
     // for atom picking
     if (useChimeFormat) {
       String group3 = getGroup3(true);
       int chainID = getChainID();
-      pt = getFractionalCoordPt(true, pt);
+      pt = getFractionalCoordPt(fixJavaFloat, true, pt);
       return "Atom: " + (group3 == null ? getElementSymbol() : getAtomName()) + " " + getAtomNumber() 
           + (group3 != null && group3.length() > 0 ? 
               (isHetero() ? " Hetero: " : " Group: ") + group3 + " " + getResno() 
@@ -913,7 +917,7 @@ public class Atom extends Point3fi implements BNode {
   }
 
   String getIdentityXYZ(boolean allInfo, P3 pt) {
-    pt = (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(false, pt) : this);
+    pt = (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!group.chain.model.ms.vwr.g.legacyJavaFloat, false, pt) : this);
     return getIdentity(allInfo) + " " + pt.x + " " + pt.y + " " + pt.z;  
   }
   
@@ -1346,17 +1350,17 @@ public class Atom extends Point3fi implements BNode {
     case T.straightness:
       return atom.getGroupParameter(tokWhat);
     case T.fracx:
-      return atom.getFractionalCoord('X', true, ptTemp);
+      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', true, ptTemp);
     case T.fracy:
-      return atom.getFractionalCoord('Y', true, ptTemp);
+      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', true, ptTemp);
     case T.fracz:
-      return atom.getFractionalCoord('Z', true, ptTemp);
+      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', true, ptTemp);
     case T.fux:
-      return atom.getFractionalCoord('X', false, ptTemp);
+      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', false, ptTemp);
     case T.fuy:
-      return atom.getFractionalCoord('Y', false, ptTemp);
+      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', false, ptTemp);
     case T.fuz:
-      return atom.getFractionalCoord('Z', false, ptTemp);
+      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp);
     case T.hydrophobicity:
       return atom.getHydrophobicity();
     case T.magneticshielding:
@@ -1375,14 +1379,14 @@ public class Atom extends Point3fi implements BNode {
               .startsWith("plot ramachandran")) {
         switch (tokWhat) {
         case T.phi:
-          return atom.getFractionalCoord('X', false, ptTemp);
+          return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', false, ptTemp);
         case T.psi:
-          return atom.getFractionalCoord('Y', false, ptTemp);
+          return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', false, ptTemp);
         case T.omega:
           if (atom.group.chain.model.isJmolDataFrame
               && atom.group.chain.model.jmolFrameType
                   .equals("plot ramachandran")) {
-            float omega = atom.getFractionalCoord('Z', false, ptTemp) - 180;
+            float omega = atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp) - 180;
             return (omega < -180 ? 360 + omega : omega);
           }
         }
@@ -1405,11 +1409,11 @@ public class Atom extends Point3fi implements BNode {
     case T.temperature: // 0 - 9999
       return atom.getBfactor100() / 100f;
     case T.unitx:
-      return atom.getFractionalUnitCoord('X', ptTemp);
+      return atom.getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'X', ptTemp);
     case T.unity:
-      return atom.getFractionalUnitCoord('Y', ptTemp);
+      return atom.getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'Y', ptTemp);
     case T.unitz:
-      return atom.getFractionalUnitCoord('Z', ptTemp);
+      return atom.getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'Z', ptTemp);
     case T.vanderwaals:
       return atom.getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
     case T.vectorscale:
@@ -1442,7 +1446,7 @@ public class Atom extends Point3fi implements BNode {
     case T.vibxyz:
     case T.modxyz:
     case T.xyz:
-      return atomPropertyTuple(atom, tokWhat, ptTemp).length();
+      return atomPropertyTuple(vwr, atom, tokWhat, ptTemp).length();
     }
     return atomPropertyInt(atom, tokWhat);
   }
@@ -1499,17 +1503,17 @@ public class Atom extends Point3fi implements BNode {
     return ""; 
   }
 
-  public static T3 atomPropertyTuple(Atom atom, int tok, P3 ptTemp) {
+  public static T3 atomPropertyTuple(Viewer vwr, Atom atom, int tok, P3 ptTemp) {
     switch (tok) {
     case T.fracxyz:
-      return atom.getFractionalCoordPt(!atom.group.chain.model.isJmolDataFrame,
+      return atom.getFractionalCoordPt(!vwr.g.legacyJavaFloat, !atom.group.chain.model.isJmolDataFrame,
           ptTemp);
     case T.fuxyz:
-      return atom.getFractionalCoordPt(false, ptTemp);
+      return atom.getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp);
     case T.unitxyz:
       return (atom.group.chain.model.isJmolDataFrame ? atom
-          .getFractionalCoordPt(false, ptTemp) : atom.getFractionalUnitCoordPt(
-          false, ptTemp));
+          .getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp) 
+          : atom.getFractionalUnitCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp));
     case T.screenxyz:
       return P3.new3(atom.sX, atom.group.chain.model.ms.vwr.getScreenHeight()
           - atom.sY, atom.sZ);

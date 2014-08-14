@@ -1020,14 +1020,15 @@ public class T {
   public final static int hidenotselected                = booleanparam | 86;
   public final static int highresolution                 = booleanparam | 88;
 // see predefinedset  public final static int hydrogen                       = booleanparam | 90;
-  public final static int imagestate                     = booleanparam | 92;
-  public static final int iskiosk                        = booleanparam | 93; // 11.9.29
-  public final static int isosurfacekey                  = booleanparam | 94;
-  public final static int isosurfacepropertysmoothing    = booleanparam | 95;
-  public final static int justifymeasurements            = booleanparam | 96;
-  public final static int languagetranslation            = booleanparam | 97;
-  public final static int legacyautobonding              = booleanparam | 98;
-  public final static int legacyhaddition                = booleanparam | 99;
+  public final static int imagestate                     = booleanparam | 91;
+  public static final int iskiosk                        = booleanparam | 92; // 11.9.29
+  public final static int isosurfacekey                  = booleanparam | 93;
+  public final static int isosurfacepropertysmoothing    = booleanparam | 94;
+  public final static int justifymeasurements            = booleanparam | 95;
+  public final static int languagetranslation            = booleanparam | 96;
+  public final static int legacyautobonding              = booleanparam | 97;
+  public final static int legacyhaddition                = booleanparam | 98;
+  public final static int legacyjavafloat                = booleanparam | 99;
   public final static int logcommands                    = booleanparam | 100;
   public final static int loggestures                    = booleanparam | 101;
   public final static int measureallmodels               = booleanparam | 102;
@@ -2534,6 +2535,7 @@ public class T {
        "leadAtoms",
        "legacyAutoBonding",
        "legacyHAddition",
+       "legacyJavaFloat",
        "logCommands",
        "logGestures",
        "measureAllModels",
@@ -3548,6 +3550,7 @@ public class T {
         -1,                                 //        "leadAtoms"
         legacyautobonding,                  //        "legacyAutoBonding"
         legacyhaddition,                    //        "legacyHAddition"
+        legacyjavafloat,                   //        "legacyRangeCheck"
         logcommands,                        //        "logCommands"
         loggestures,                        //        "logGestures"
         measureallmodels,                   //        "measureAllModels"

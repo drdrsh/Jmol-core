@@ -145,6 +145,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Lst<P3[]> trajectorySteps;
   private Object domains;
   public Object validation;
+  public boolean fixJavaFloat = true;
 
   //protected String parameterData;
 
@@ -190,7 +191,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean mustFinalizeModelSet;
   protected boolean forcePacked;
   public float packingError = 0.02f;
-
 
   // private state variables
 
@@ -254,7 +254,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         binaryDoc.setOutputChannel(out);
         processBinaryDocument();
       }
-      finalizeReader(); // upstairs
+      finalizeSubclassReader(); // upstairs
+      if (!isFinalized)
+        finalizeReaderASCR();
     } catch (Throwable e) {
       Logger.info("Reader error: " + e);
       if (!vwr.isJS)
@@ -362,11 +364,14 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * optional reader-specific method run first.  
    * @throws Exception
    */
-  protected void finalizeReader() throws Exception {
-    finalizeReaderASCR();
+  protected void finalizeSubclassReader() throws Exception {
+    // can be customized
   }
 
+  private boolean isFinalized;
+
   protected void finalizeReaderASCR() throws Exception {
+    isFinalized = true;
     if (asc.atomSetCount > 0) {
       applySymmetryAndSetTrajectory();
       asc.finalizeStructures();
@@ -399,6 +404,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         }
       }
     }
+    if (!fixJavaFloat)
+      asc.setInfo("legacyJavaFloat", Boolean.TRUE);
     setLoadNote();
   }
 
@@ -498,13 +505,19 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       strSupercell = (String) o;
     else
       ptSupercell = (P3) o;
-    if ((o = htParams.get("packingError")) != null)
-      packingError = ((Float) o).floatValue();
     initializeSymmetry();
     vwr = (Viewer) htParams.remove("vwr"); // don't pass this on to user
     if (htParams.containsKey("stateScriptVersionInt"))
       stateScriptVersionInt = ((Integer) htParams.get("stateScriptVersionInt"))
           .intValue();
+    if ((o = htParams.get("packingError")) != null)
+      packingError = ((Float) o).floatValue();
+    else if (htParams.get("legacyJavaFloat") != null) {
+      // earlier versions were not fully JavaScript compatible
+      // becuase XtalSymmetry.isWithinUnitCell was giving different answers
+      // for floats (Java) as for doubles (JavaScript).
+      fixJavaFloat = false;
+    }
     merging = htParams.containsKey("merging");
     getHeader = htParams.containsKey("getHeader");
     isSequential = htParams.containsKey("isSequential");
@@ -723,7 +736,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public int setSymmetryOperator(String xyz) {
     if (ignoreFileSymmetryOperators)
       return -1;
-    int isym = asc.getXSymmetry().addSpaceGroupOperation(this, xyz);
+    int isym = asc.getXSymmetry().addSpaceGroupOperation(xyz, true);
     if (isym < 0)
       Logger.warn("Skippings symmetry operation " + xyz);
     iHaveSymmetryOperators = true;
@@ -1134,6 +1147,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       symmetry.toFractional(atom, false);
       iHaveFractionalCoordinates = true;
     }
+    if (fixJavaFloat && fileCoordinatesAreFractional) 
+      PT.fixPtFloats(atom, PT.FRACTIONAL_PRECISION);
     doCheckUnitCell = true;
   }
 
@@ -1170,7 +1185,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (forcePacked)
       initializeSymmetryOptions();
     SymmetryInterface sym = (iHaveUnitCell && doCheckUnitCell ? asc
-        .getXSymmetry().applySymmetryFromReader(this, getSymmetry()) : null);
+        .getXSymmetry().applySymmetryFromReader(getSymmetry()) : null);
     if (sym == null)
       asc.setTensors();
     if (isTrajectory)

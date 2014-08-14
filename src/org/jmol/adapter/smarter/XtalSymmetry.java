@@ -44,7 +44,6 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
-import org.jmol.util.ModulationSet;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
@@ -59,12 +58,15 @@ public class XtalSymmetry {
 
   private AtomSetCollection asc;
 
+  private AtomSetCollectionReader acr;
+
   public XtalSymmetry() {
     // for reflection
   }
 
-  public XtalSymmetry set(AtomSetCollection asc) {
-    this.asc = asc;
+  public XtalSymmetry set(AtomSetCollectionReader reader) {
+    this.acr = reader;
+    this.asc = reader.asc;
     getSymmetry();
     return this;
   }
@@ -97,7 +99,7 @@ public class XtalSymmetry {
 
   private int[] latticeCells;
 
-  private void setLatticeCells(AtomSetCollectionReader acr) {
+  private void setLatticeCells() {
 
     //    int[] latticeCells, boolean applySymmetryToBonds,
     //  }
@@ -193,9 +195,9 @@ public class XtalSymmetry {
     }
   }
 
-  int addSpaceGroupOperation(AtomSetCollectionReader acr, String xyz) {
-    if (acr != null)
-      setLatticeCells(acr);
+  int addSpaceGroupOperation(String xyz, boolean andSetLattice) {
+    if (andSetLattice)
+      setLatticeCells();
     symmetry.setSpaceGroup(doNormalize);
     return symmetry.addSpaceGroupOperation(xyz, 0);
   }
@@ -210,8 +212,7 @@ public class XtalSymmetry {
 
   private boolean vibsFractional;
 
-  SymmetryInterface applySymmetryFromReader(AtomSetCollectionReader acr,
-                                            SymmetryInterface readerSymmetry)
+  SymmetryInterface applySymmetryFromReader(SymmetryInterface readerSymmetry)
       throws Exception {
     asc.setCoordinatesAreFractional(acr.iHaveFractionalCoordinates);
     setNotionalUnitCell(acr.notionalUnitCell, acr.matUnitCellOrientation,
@@ -219,7 +220,7 @@ public class XtalSymmetry {
     asc.setAtomSetSpaceGroupName(acr.sgName);
     setSymmetryRange(acr.symmetryRange);
     if (acr.doConvertToFractional || acr.fileCoordinatesAreFractional) {
-      setLatticeCells(acr);
+      setLatticeCells();
       boolean doApplySymmetry = true;
       if (acr.ignoreFileSpaceGroupName || !acr.iHaveSymmetryOperators) {
         if (!acr.merging || readerSymmetry == null)
@@ -232,11 +233,11 @@ public class XtalSymmetry {
         vibsFractional = acr.vibsFractional; // MCIF only
         readerSymmetry = null;
       }
+      packingError = acr.packingError;
       if (doApplySymmetry) {
         if (readerSymmetry != null)
           symmetry.setSpaceGroupFrom(readerSymmetry);
         //parameters are counts of unit cells as [a b c]
-        packingError = acr.packingError;
         applySymmetryLattice(acr.ms, acr.altCell);
         if (readerSymmetry != null && filterSymop == null)
           asc.setAtomSetSpaceGroupName(readerSymmetry.getSpaceGroupName());
@@ -438,10 +439,49 @@ public class XtalSymmetry {
                               float minY, float maxY, float minZ, float maxZ,
                               float slop) {
     return (pt.x > minX - slop && pt.x < maxX + slop
-        && (dtype < 2 || pt.y > minY - slop && pt.y < maxY + slop) && (dtype < 3 || pt.z > minZ
-        - slop
-        && pt.z < maxZ + slop));
+        && (dtype < 2 || pt.y > minY - slop && pt.y < maxY + slop) 
+        && (dtype < 3 || pt.z > minZ - slop && pt.z < maxZ + slop));
+    //    System.out.println(pt + " " + minX + " " + maxX + " " + slop + " " + xxx);
+    //    return xxx;
   }
+  
+//  /**
+//   * A problem arises when converting to JavaScript, because JavaScript numbers are all
+//   * doubles, while here we have floats. So what we do is to multiply by a number that
+//   * is beyond the precision of our data but within the range of floats -- namely, 100000,
+//   * and then integerize. This ensures that both doubles and floats compare the same number.
+//   * Unfortunately, it will break Java reading of older files, so we check for legacy versions. 
+//   * 
+//   * @param dtype
+//   * @param pt
+//   * @param minX
+//   * @param maxX
+//   * @param minY
+//   * @param maxY
+//   * @param minZ
+//   * @param maxZ
+//   * @param slop
+//   * @return  true if within range
+//   */
+//  private boolean xxxisWithinCellInt(int dtype, P3 pt, float minX, float maxX,
+//                              float minY, float maxY, float minZ, float maxZ,
+//                              int slop) {
+//    switch (dtype) {
+//    case 3:
+//      if (Math.round((minZ - pt.z) * 100000) >= slop || Math.round((pt.z - maxZ) * 100000) >= slop)
+//        return false;
+//      //$FALL-THROUGH$
+//    case 2:
+//      if (Math.round((minY - pt.y) * 100000) >= slop || Math.round((pt.y - maxY) * 100000) >= slop)
+//        return false;
+//      //$FALL-THROUGH$
+//    case 1:
+//      if (Math.round((minX - pt.x) * 100000) >= slop || Math.round((pt.x - maxX) * 100000) >= slop)
+//        return false;
+//      break;
+//    }
+//    return true;
+//  }
 
   /**
    * @param ms
@@ -586,6 +626,8 @@ public class XtalSymmetry {
               symmetry.toUnitCell(c, ptOffset);
               pttemp.setT(c);
               symmetry.toFractional(pttemp, false);
+              if (acr.fixJavaFloat)
+                PT.fixPtFloats(pttemp, PT.FRACTIONAL_PRECISION);
               // when bsAtoms != null, we are
               // setting it to be correct for a 
               // second unit cell -- the supercell
@@ -732,6 +774,8 @@ public class XtalSymmetry {
               finalizeSymmetry(symmetry);
           }
         }
+        if (acr.fixJavaFloat)
+          PT.fixPtFloats(ptAtom, PT.FRACTIONAL_PRECISION);
         P3 cartesian = P3.newP(ptAtom);
         symmetry.toCartesian(cartesian, false);
         if (doPackUnitCell) {
@@ -740,8 +784,13 @@ public class XtalSymmetry {
           symmetry.toUnitCell(cartesian, ptOffset);
           ptAtom.setT(cartesian);
           symmetry.toFractional(ptAtom, false);
-          if (!isWithinCell(dtype, ptAtom, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
-              maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingError))
+          if (acr.fixJavaFloat)
+            PT.fixPtFloats(ptAtom, PT.FRACTIONAL_PRECISION);
+          if (!isWithinCell(dtype, ptAtom, minXYZ0.x, maxXYZ0.x,
+              minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingError))
+//          if (legacyJavaFloat ? 
+//              : !isWithinCellInt(dtype, ptAtom, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
+//                  maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingErrorInt))
             continue;
         }
         if (checkSymmetryMinMax)
@@ -912,7 +961,7 @@ public class XtalSymmetry {
       setNotionalUnitCell(notionalUnitCell, null, unitCellOffset);
     getSymmetry().setSpaceGroup(doNormalize);
     //symmetry.setUnitCell(null);
-    addSpaceGroupOperation(null, "x,y,z");
+    addSpaceGroupOperation("x,y,z", false);
     String name = (String) thisBiomolecule.get("name");
     asc.setAtomSetSpaceGroupName(name);
     int len = biomts.size();
@@ -1112,10 +1161,26 @@ public class XtalSymmetry {
     if (bs == null)
       bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      if (!isWithinCell(dtype, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y, maxXYZ.y,
-          minXYZ.z, maxXYZ.z, packingError)) {
+      if (!isWithinCell(dtype, atoms[i], minXYZ.x, maxXYZ.x,
+          minXYZ.y, maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
+//      if (legacyJavaFloat ? 
+//          : !isWithinCellInt(dtype, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
+//              maxXYZ.y, minXYZ.z, maxXYZ.z, packingErrorInt)) {
         bs.clear(i);
-      }
+//      }
     }
   }
+  
+//  static {
+//    System.out.println(.01999998f);
+//    System.out.println(1.01999998f);
+//    System.out.println(2.01999998f);
+//    System.out.println(9910.01999998f);
+//    System.out.println(Math.round(100000*.01999998f));
+//    System.out.println(Math.round(100000*.020000000000015));
+//    System.out.println(Math.round(100000*-.01999998f));
+//    System.out.println(Math.round(100000*-.020000000000015));
+//    System.out.println(.01999998f+ Integer.MAX_VALUE);
+//  }
+
 }

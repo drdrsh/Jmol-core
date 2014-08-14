@@ -10,7 +10,6 @@ import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
-import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.java.BS;

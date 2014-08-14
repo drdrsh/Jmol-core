@@ -1600,6 +1600,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       htParams.put("getHeader", Boolean.TRUE);
     if (g.pdbSequential)
       htParams.put("isSequential", Boolean.TRUE);
+    if (g.legacyJavaFloat)
+      htParams.put("legacyJavaFloat", Boolean.TRUE);
     htParams.put("stateScriptVersionInt", Integer
         .valueOf(stateScriptVersionInt));
     if (!htParams.containsKey("filter")) {
@@ -2640,6 +2642,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       definedAtomSets.clear();
       if (dm != null)
         dm.clear();
+      setBooleanProperty("legacyjavafloat", false);
       if (resetUndo) {
         if (zapModelKit && g.modelKitMode) {
           openStringInlineParamsAppend(JC.MODELKIT_ZAP_STRING, null, true);
@@ -2982,10 +2985,13 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    * @param ignoreOffset
    *        TODO
    */
-  public void toCartesian(P3 pt, boolean ignoreOffset) {
+  public void toCartesian(T3 pt, boolean ignoreOffset) {
     SymmetryInterface unitCell = getCurrentUnitCell();
-    if (unitCell != null)
+    if (unitCell != null) {
       unitCell.toCartesian(pt, ignoreOffset);
+      if (!g.legacyJavaFloat)
+        PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
+    }
   }
 
   /**
@@ -2997,8 +3003,12 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    */
   public void toFractional(T3 pt, boolean asAbsolute) {
     SymmetryInterface unitCell = getCurrentUnitCell();
-    if (unitCell != null)
+    if (unitCell != null) {
       unitCell.toFractional(pt, asAbsolute);
+      if (!g.legacyJavaFloat)
+        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+    }
+
   }
 
   /**
@@ -5377,6 +5387,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     case T.legacyhaddition:
       // aargh -- Some atoms missed before Jmol 13.1.17
       return g.legacyHAddition;
+    case T.legacyjavafloat:
+      // float/double issue with crystallographic symmetry before Jmol 14.2.5
+      return g.legacyJavaFloat;
     case T.loggestures:
       return g.logGestures;
     case T.measureallmodels:
@@ -6198,6 +6211,10 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   private void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.legacyjavafloat:
+      // 14.3.5
+      g.legacyJavaFloat = value;
+      break;
     case T.showmodvecs:
       // 14.3.5
       g.showModVecs = value;

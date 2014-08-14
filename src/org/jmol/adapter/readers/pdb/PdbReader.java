@@ -415,7 +415,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     finalizeReaderPDB();
   }
   

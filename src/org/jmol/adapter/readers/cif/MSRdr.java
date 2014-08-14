@@ -8,6 +8,7 @@ import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.Matrix;
 import javajs.util.P3;
+import javajs.util.PT;
 //import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
@@ -866,21 +867,31 @@ public class MSRdr implements MSInterface {
       bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      pt.setT(a);
-      // add in modulation
-      if (a.vib != null)
-        pt.add(a.vib);
-      getSymmetry(a).toCartesian(pt, false);
-      sym.toFractional(pt, false);
-      if (!asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
-          minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f)
-          || isCommensurate && !modAverage && a.foccupancy < 0.5f) {
+      boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5f);
+      if (isOK) {
+        pt.setT(a);
+        // add in modulation
+        if (a.vib != null)
+          pt.add(a.vib);
+        getSymmetry(a).toCartesian(pt, false);
+        sym.toFractional(pt, false);
+        if (cr.fixJavaFloat)
+          PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+        isOK = asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
+            minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f);
+        //          || (cr.legacyJavaFloat ? !asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
+        //          minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f) 
+        //          : !asc.xtalSymmetry.isWithinCellInt(3, pt, minXYZ0.x, maxXYZ0.x,
+        //              minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 100))) {
+        //              }
+      }
+      if (isOK) {
+        if (cr.fixJavaFloat)
+          PT.fixPtFloats(a, PT.FRACTIONAL_PRECISION);
+      } else {
         bs.clear(i);
-//      } else {
-//        System.out.println(a.atomName + " " + a + pt);
       }
     }
-//    System.out.println("MSRdr bs " + bs.cardinality());
   }
 
   private SymmetryInterface getDefaultUnitCell() {

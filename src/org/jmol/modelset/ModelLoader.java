@@ -185,6 +185,10 @@ public final class ModelLoader {
       info.remove("trajectorySteps");
       if (isTrajectory)
         ms.vibrationSteps = (Lst<V3[]>) info.remove("vibrationSteps");
+      if (info.containsKey("legacyJavaFloat")) {
+        // we must RESET this, because 'ZAP' has unset it in the script
+        vwr.setBooleanProperty("legacyJavaFloat", true);
+      }
     }
     htGroup1 = (Map<String, String>) ms.getInfoM("htGroup1");
     modulationOn = ms.getMSInfoB("modulationOn");
@@ -1040,14 +1044,21 @@ public final class ModelLoader {
       Atom[] atoms = ms.at;
       int modelIndex = -1;
       SymmetryInterface c = null;
+      boolean isFractional = false;
+      boolean roundCoords = !vwr.getBoolean(T.legacyjavafloat);
       for (int i = baseAtomIndex; i < ms.ac; i++) {
         if (atoms[i].mi != modelIndex) {
           modelIndex = atoms[i].mi;
           c = ms.getUnitCell(modelIndex);
+          isFractional = (c != null && c.getCoordinatesAreFractional());
         }
-        if (c != null && c.getCoordinatesAreFractional()) {
+        if (isFractional) {
+          // it is possible for atoms to have specific unit cells, not just models
+          // this happens for commensurately modulated composite compounds
           c = atoms[i].getUnitCell();
           c.toCartesian(c.toSupercell(atoms[i]), false);
+          if (roundCoords)
+            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);          
         }
       }
       for (int imodel = baseModelIndex; imodel < ms.mc; imodel++) {

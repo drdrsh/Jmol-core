@@ -85,7 +85,7 @@ public class AimsReader extends AtomSetCollectionReader {
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     doApplySymmetry = globalDoApplySymmetry;
     if (nLatticeVectors == 1 || nLatticeVectors == 2) {
       Logger.warn("ignoring translation symmetry for more or less than 3 dimensions"

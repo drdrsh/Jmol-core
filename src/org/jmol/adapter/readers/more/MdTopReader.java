@@ -87,7 +87,7 @@ public class MdTopReader extends ForceFieldReader {
   }
   
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     finalizeReaderASCR();
     Atom[] atoms = asc.atoms;
     Atom atom;

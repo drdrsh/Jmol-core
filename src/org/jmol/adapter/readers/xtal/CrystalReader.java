@@ -297,7 +297,7 @@ public class CrystalReader extends AtomSetCollectionReader {
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     createAtomsFromCoordLines();
     if (energy != null)
       setEnergy();

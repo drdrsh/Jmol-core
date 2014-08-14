@@ -188,7 +188,7 @@ public class NWChemReader extends MOReader {
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     checkMOs();
     finalizeReaderASCR();
   }

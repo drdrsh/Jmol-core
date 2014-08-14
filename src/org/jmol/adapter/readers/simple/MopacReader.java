@@ -38,7 +38,6 @@ import org.jmol.util.Logger;
  */
 public class MopacReader extends AtomSetCollectionReader {
     
-  private int baseAtomIndex;  
   private boolean chargesFound = false;
   private boolean haveHeader;
   private int mopacVersion;

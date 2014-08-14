@@ -133,7 +133,6 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
   private Hashtable<Integer, Lst<Object>> uniqueSettings;
   private Atom[] atoms;
   private boolean haveScenes;
-  private int baseAtomIndex; // preliminary only; may be revised later if load FILES
   private int baseModelIndex; // preliminary only; may be revised later if load FILES
 
   private Lst<Object> sceneOrder;
@@ -202,7 +201,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     finalizeReaderPDB();
     asc.setTensors();
   }

@@ -365,7 +365,7 @@ public class ScriptManager implements JmolScriptManager {
       vwr.setScriptStatus("Jmol script terminated", strErrorMessage, 1,
           strErrorMessageUntranslated);
       if (eval.isStateScript())
-      setStateScriptVersion(vwr, null); // set by compiler
+        setStateScriptVersion(vwr, null); // set by compiler
     }
     if (strErrorMessage != null && vwr.autoExit)
       vwr.exitJmol();
@@ -639,8 +639,9 @@ public class ScriptManager implements JmolScriptManager {
         if (main != Integer.MIN_VALUE && sub != Integer.MIN_VALUE) {
           int ver = vwr.stateScriptVersionInt = main * 10000 + sub * 100
               + minor;
-          vwr.g.legacyAutoBonding = (ver < 110924);
+          vwr.setBooleanProperty("legacyautobonding", (ver < 110924));
           vwr.g.legacyHAddition = (ver < 130117);
+          vwr.setBooleanProperty("legacyjavafloat", (ver < 140206 || ver >= 140300 && ver < 140306));
           vwr.setIntProperty("bondingVersion", ver < 140111 ? 0 : 1);
           return;
         }

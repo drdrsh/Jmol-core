@@ -744,7 +744,7 @@ public class AtomSetCollection {
   public XtalSymmetry getXSymmetry() {
     if (xtalSymmetry == null)
       xtalSymmetry = ((XtalSymmetry) Interface
-          .getOption("adapter.smarter.XtalSymmetry")).set(this);
+          .getOption("adapter.smarter.XtalSymmetry")).set(reader);
     return xtalSymmetry;
   }
 
@@ -1010,6 +1010,12 @@ public class AtomSetCollection {
       p.put(key.substring(1), value);
   }
 
+  /**
+   * @param key 
+   * @param data 
+   * @param atomSetIndex 
+   * @param isGroup  
+   */
   public void setAtomProperties(String key, Object data, int atomSetIndex, boolean isGroup) {
     if (data instanceof String && !((String) data).endsWith("\n"))
       data = data + "\n";

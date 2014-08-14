@@ -235,7 +235,7 @@ No distinction between "Variable:" and "Constant:" is made by Jmol.
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     int firstLine = 0;
     for (int i = firstLine; i < lineBuffer.size(); i++)
       if ((tokens = lineBuffer.get(i)).length > 0)

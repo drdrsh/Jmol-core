@@ -27,8 +27,6 @@ package org.jmol.adapter.readers.molxyz;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.SB;
-
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
 /**

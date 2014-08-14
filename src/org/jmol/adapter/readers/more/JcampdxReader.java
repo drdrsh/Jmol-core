@@ -176,7 +176,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
   }
 
   @Override
-  public void finalizeReader() throws Exception {
+  public void finalizeSubclassReader() throws Exception {
     if (mpr != null)
       processPeakData();
     finalizeReaderMR();

@@ -113,7 +113,7 @@ public class MoldenReader extends MopacSlaterReader {
   }
 
   @Override
-  public void finalizeReader() throws Exception {
+  public void finalizeSubclassReader() throws Exception {
     // a hack to make up for Molden's ** limitation in writing shell information
     // assumption is that there is an atom of the same type just prior to the missing one.
     if (!bsBadIndex.isEmpty())

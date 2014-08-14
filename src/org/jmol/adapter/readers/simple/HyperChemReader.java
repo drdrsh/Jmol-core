@@ -71,7 +71,6 @@ public class HyperChemReader extends AtomSetCollectionReader {
   }
   
   private int atomIndex;
-  private int baseAtomIndex;
 
   private void processMol() throws Exception {
     asc.newAtomSet();

@@ -223,7 +223,7 @@ abstract public class AtomCollection {
   }
 
   public String getAtomInfoXYZ(int i, boolean useChimeFormat, P3 ptTemp) {
-    return at[i].getInfoXYZ(useChimeFormat, ptTemp);
+    return at[i].getInfoXYZ(!vwr.g.legacyJavaFloat, useChimeFormat, ptTemp);
   }
 
   public String getElementSymbol(int i) {

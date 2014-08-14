@@ -136,7 +136,7 @@ public class SpartanSmolReader extends SpartanInputReader {
   }
 
   @Override
-  protected void finalizeReader() throws Exception {
+  protected void finalizeSubclassReader() throws Exception {
     finalizeReaderASCR();
     // info out of order -- still a chance, at least for first model
     if (ac > 0 && spartanArchive != null
