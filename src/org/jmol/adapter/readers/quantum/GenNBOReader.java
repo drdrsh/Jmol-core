@@ -31,6 +31,7 @@ import org.jmol.util.Logger;
 import java.io.BufferedReader;
 
 import javajs.util.AU;
+import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.Lst;
 import javajs.util.SB;
@@ -379,7 +380,7 @@ public class GenNBOReader extends MOReader {
           i++;
         break;
       case ' ':
-        if (Character.isDigit(data.charAt(i + 1)) || data.charAt(i + 1) == '(')
+        if (PT.isDigit(data.charAt(i + 1)) || data.charAt(i + 1) == '(')
           continue;
         break;
       }

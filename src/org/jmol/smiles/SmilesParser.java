@@ -504,9 +504,9 @@ public class SmilesParser {
         }
         if (ch == '\0' && bond.order == SmilesBond.TYPE_NONE)
           return;
-        boolean isRing = (Character.isDigit(ch) || ch == '%');
-        boolean isAtom = (!isRing && (ch == '_' || ch == '[' || ch == '*' || Character
-            .isLetter(ch)));
+        boolean isRing = (PT.isDigit(ch) || ch == '%');
+        boolean isAtom = (!isRing && (ch == '_' || ch == '[' || ch == '*' 
+            || PT.isLetter(ch)));
         if (isRing) {
           int ringNumber;
           switch (ch) {
@@ -551,10 +551,10 @@ public class SmilesParser {
             break;
           default:
             // [atomType]
-            char ch2 = (!isBioSequence && Character.isUpperCase(ch) ? getChar(
+            char ch2 = (!isBioSequence && PT.isUpperCase(ch) ? getChar(
                 pattern, index + 1) : '\0');
             if (ch != 'X' || ch2 != 'x')
-              if (!Character.isLowerCase(ch2)
+              if (!PT.isLowerCase(ch2)
                   || Elements.elementNumberFromSymbol(pattern.substring(index,
                       index + 2), true) == 0)
                 ch2 = '\0';
@@ -565,7 +565,7 @@ public class SmilesParser {
               //System.out.println("Note: " + ch + ch2 + " NOT interpreted as an element");
               ch2 = '\0';
             }
-            int size = (Character.isUpperCase(ch) && Character.isLowerCase(ch2) ? 2
+            int size = (PT.isUpperCase(ch) && PT.isLowerCase(ch2) ? 2
                 : 1);
             currentAtom = parseAtom(molecule, null, pattern.substring(index,
                 index + size), currentAtom, bond, false, false, isBranchAtom);
@@ -596,7 +596,7 @@ public class SmilesParser {
       bioType = '*';
       char ch = getChar(pattern, 2);
       if (ch == '~'
-          && ((ch = pattern.charAt(1)) == '*' || Character.isLowerCase(ch))) {
+          && ((ch = pattern.charAt(1)) == '*' || PT.isLowerCase(ch))) {
         bioType = ch;
         index = 3;
       }
@@ -808,7 +808,7 @@ public class SmilesParser {
       newAtom.setBioAtom(bioType);
       while (ch != '\0') {
         newAtom.setAtomName(isBioSequence ? "0" : "");
-        if (Character.isDigit(ch)) {
+        if (PT.isDigit(ch)) {
           index = getDigits(pattern, index, ret);
           int mass = ret[0];
           if (mass == Integer.MIN_VALUE)
@@ -868,13 +868,12 @@ public class SmilesParser {
             // as a symbol, AND the next character is not a digit, then it WILL be interpreted as a symbol
             char nextChar = getChar(pattern, index + 1);
             String sym2 = pattern.substring(index + 1, index
-                + (Character.isLowerCase(nextChar)
-                    && (!isBracketed || !Character.isDigit(getChar(pattern,
+                + (PT.isLowerCase(nextChar)
+                    && (!isBracketed || !PT.isDigit(getChar(pattern,
                         index + 2))) ? 2 : 1));
             String symbol = Character.toUpperCase(ch) + sym2;
             boolean mustBeSymbol = true;
-            boolean checkForPrimitive = (isBracketed && Character
-                .isLetter(ch));
+            boolean checkForPrimitive = (isBracketed && PT.isLetter(ch));
             if (checkForPrimitive) {
               if (!isNot && (isPrimitive ? atomSet : newAtom).hasSymbol) {
                 // if we already have a symbol, and we aren't negating,
@@ -885,10 +884,10 @@ public class SmilesParser {
               } else if (ch == 'H') {
                 // only H if not H<n> or H1? 
                 // 
-                mustBeSymbol = !Character.isDigit(nextChar)
+                mustBeSymbol = !PT.isDigit(nextChar)
                     || getChar(pattern, index + 2) == '?';
               } else if ("DdhRrvXx".indexOf(ch) >= 0
-                  && Character.isDigit(nextChar)) {
+                  && PT.isDigit(nextChar)) {
                 // not a symbol if any of these are followed by a number 
                 mustBeSymbol = false;
               } else if (!symbol.equals("A") && !symbol.equals("Xx")) {
@@ -1083,7 +1082,7 @@ public class SmilesParser {
     ++index;
     if (index < len) {
       char nextChar = pattern.charAt(index);
-      if (Character.isDigit(nextChar)) {
+      if (PT.isDigit(nextChar)) {
         int[] ret = new int[1];
         index = getDigits(pattern, index, ret);
         count = ret[0];
@@ -1127,11 +1126,11 @@ public class SmilesParser {
         index += 2;
         break;
       default:
-        order = (Character.isDigit(ch) ? 1 : -1);
+        order = (PT.isDigit(ch) ? 1 : -1);
       }
       int pt = index;
       if (order == 1) {
-        while (pt < len && Character.isDigit(pattern.charAt(pt)))
+        while (pt < len && PT.isDigit(pattern.charAt(pt)))
           pt++;
         if (pt > index) {
           try {
@@ -1352,7 +1351,7 @@ public class SmilesParser {
   private static int getDigits(String pattern, int index, int[] ret) {
     int pt = index;
     int len = pattern.length();
-    while (pt < len && Character.isDigit(pattern.charAt(pt)))
+    while (pt < len && PT.isDigit(pattern.charAt(pt)))
       pt++;
     try {
       ret[0] = Integer.parseInt(pattern.substring(index, pt));

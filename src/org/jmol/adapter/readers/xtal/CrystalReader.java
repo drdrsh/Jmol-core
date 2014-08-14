@@ -693,7 +693,7 @@ public class CrystalReader extends AtomSetCollectionReader {
    * @return fixed atom name
    */
   private static String fixAtomName(String s) {
-    return (s.length() > 1 && Character.isLetter(s.charAt(1)) ? 
+    return (s.length() > 1 && PT.isLetter(s.charAt(1)) ? 
         s.substring(0, 1) + Character.toLowerCase(s.charAt(1)) + s.substring(2) 
         : s);
   }
@@ -1056,7 +1056,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     for (int i = 0; i < ac; i++)
       f[i] = 0;
     String data = "";
-    while (rd() != null && (line.length() < 4 || Character.isDigit(line.charAt(3))))
+    while (rd() != null && (line.length() < 4 || PT.isDigit(line.charAt(3))))
       data += line;
     data = PT.rep(data, "-", " -");
     String[] tokens = getTokensStr(data);

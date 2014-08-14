@@ -365,7 +365,7 @@ public class Resolver {
         return "VaspPoscar";
     } else {
       if (nLines == 1 && lines[0].length() > 0
-          && Character.isDigit(lines[0].charAt(0)))
+          && PT.isDigit(lines[0].charAt(0)))
         return "Jme"; //only one line, and that line starts with a number 
       
       if (checkMopacGraphf(lines))

@@ -638,7 +638,7 @@ public class IsosurfaceMesh extends Mesh {
     if (colorCommand == null)
       return;
     colorCommand = "color $"
-        + (Character.isLetter(thisID.charAt(0)) && thisID.indexOf(" ") < 0 ? thisID : "\"" + thisID + "\"")
+        + (PT.isLetter(thisID.charAt(0)) && thisID.indexOf(" ") < 0 ? thisID : "\"" + thisID + "\"")
         + " \""
         + colorCommand
         + "\" range "

@@ -813,7 +813,7 @@ public class MMCifReader extends CifReader {
     a.setT(asum);
     a.scale(1f / c);
     a.elementSymbol = "Pt";
-    a.chainID = vwr.getChainID(id);
+    setChainID(a, id); 
     a.radius = 16;
     asc.addAtom(a);
   }

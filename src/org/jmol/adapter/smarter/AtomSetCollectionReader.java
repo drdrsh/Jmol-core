@@ -1160,7 +1160,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       Map<String, Object> htSite = entry.getValue();
       char ch;
       for (int i = name.length(); --i >= 0;)
-        if (!Character.isLetterOrDigit(ch = name.charAt(i)) && ch != '\'')
+        if (!PT.isLetterOrDigit(ch = name.charAt(i)) && ch != '\'')
           name = name.substring(0, i) + "_" + name.substring(i + 1);
       //String seqNum = (String) htSite.get("seqNum");
       String groups = (String) htSite.get("groups");
@@ -1650,13 +1650,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         continue;
 
       }
-      boolean isDigit = Character.isDigit(ch);
+      boolean isDigit = PT.isDigit(ch);
       if (isDigit) {
         if (inN)
           n = n * 10 + ch - '0';
         else if (inCount)
           c = c * 10 + ch - '0';
-      } else if (Character.isLetter(ch)) {
+      } else if (PT.isLetter(ch)) {
         n = 0;
         inN = true;
         inCount = false;
@@ -1718,8 +1718,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // PyMOL reader only
   }
 
-  public void setChainID(Atom atom, char ch) {
-    atom.chainID = vwr.getChainID("" + ch);    
+  public void setChainID(Atom atom, String label) {
+    atom.chainID = vwr.getChainID(label);    
   }
 
   @Override

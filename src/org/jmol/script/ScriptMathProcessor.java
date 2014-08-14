@@ -1049,7 +1049,7 @@ public class ScriptMathProcessor {
     }
     for(Entry<String, SV> e: map.entrySet()) {
       String k = e.getKey();
-      if (isAll && (k.length() == 0 || !Character.isLetter(k.charAt(0)))) {
+      if (isAll && (k.length() == 0 || !PT.isLetter(k.charAt(0)))) {
         if (prefix.endsWith("."))
           prefix = prefix.substring(0, prefix.length() - 1);
         k = "[" + PT.esc(k) + "]";

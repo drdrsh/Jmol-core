@@ -26,6 +26,8 @@ package org.jmol.adapter.readers.more;
 
 import java.util.Properties;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 
@@ -96,22 +98,22 @@ public abstract class ForceFieldReader extends AtomSetCollectionReader {
     } else {
       char ch0 = atomType.charAt(0);
       char ch1 = atomType.charAt(1);
-      boolean isXx = (Character.isUpperCase(ch0) && Character.isLowerCase(ch1));
+      boolean isXx = (PT.isUpperCase(ch0) && PT.isLowerCase(ch1));
       if (specialTypes.indexOf(atomType) >= 0) {
         // zeolite Si or Al, ions IM, IP
         if (ch0 == 'I') {
           elementSymbol = atom.atomName.substring(0,2);
-          if (!Character.isLowerCase(elementSymbol.charAt(1)))
+          if (!PT.isLowerCase(elementSymbol.charAt(1)))
             elementSymbol = elementSymbol.substring(0,1);
         } else {
           elementSymbol = (ch0 == 's' ? "Si" : "Al");
         }
       } else if (nChar == 2 && isXx) {
         // Generic Xx
-      } else if (Character.isLetter(ch0) && !Character.isLetter(ch1)) {
+      } else if (PT.isLetter(ch0) && !PT.isLetter(ch1)) {
         // Xn... or xn...
         elementSymbol = "" + Character.toUpperCase(ch0);
-      } else if (nChar > 2 && isXx && !Character.isLetter(atomType.charAt(2))) {
+      } else if (nChar > 2 && isXx && !PT.isLetter(atomType.charAt(2))) {
         // Xxn.... (but not XXn... or xxn....)
         elementSymbol = "" + ch0 + ch1;
       } else {

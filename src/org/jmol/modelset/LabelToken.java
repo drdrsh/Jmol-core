@@ -364,7 +364,7 @@ public class LabelToken {
       lt.zeroPad = true;
       ++ich;
     }
-    while (ich < cch && Character.isDigit(ch = strFormat.charAt(ich))) {
+    while (ich < cch && PT.isDigit(ch = strFormat.charAt(ich))) {
       lt.width = (10 * lt.width) + (ch - '0');
       ++ich;
     }
@@ -376,7 +376,7 @@ public class LabelToken {
         isNegative = true;
         ++ich;
       }
-      if (ich < cch && Character.isDigit(ch = strFormat.charAt(ich))) {
+      if (ich < cch && PT.isDigit(ch = strFormat.charAt(ich))) {
         lt.precision = ch - '0';
         if (isNegative)
           lt.precision = -1 - lt.precision;
@@ -455,7 +455,7 @@ public class LabelToken {
       }
     lt.text = strFormat.substring(lt.pt, ich);
     if (ich < cch && chAtom != '\0'
-        && Character.isDigit(ch = strFormat.charAt(ich))) {
+        && PT.isDigit(ch = strFormat.charAt(ich))) {
       ich++;
       lt.ch1 = ch;
       if (ch != chAtom && chAtom != '\1')

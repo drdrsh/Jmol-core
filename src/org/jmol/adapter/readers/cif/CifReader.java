@@ -88,6 +88,7 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean checkSpecial = true;
   private boolean readIdeal = true;
   private int configurationPtr = Integer.MIN_VALUE;
+  private boolean useAuthorChainID = true;
 
   private String thisDataSetName = "";
   private String chemicalName = "";
@@ -130,6 +131,7 @@ public class CifReader extends AtomSetCollectionReader {
     isMolecular = checkFilterKey("MOLECUL") && !checkFilterKey("BIOMOLECULE"); // molecular; molecule
     readIdeal = !checkFilterKey("NOIDEAL");
     filterAssembly = checkFilterKey("$");
+    useAuthorChainID = !checkFilterKey("NOAUTHORCHAINS");
     if (isMolecular) {
       if (!doApplySymmetry) {
         doApplySymmetry = true;
@@ -1148,9 +1150,12 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case ASYM_ID:
           assemblyId = field;
+          if (!useAuthorChainID)
+            setChainID(atom, strChain = field);            
           break;
         case AUTH_ASYM_ID:
-          atom.chainID = vwr.getChainID(strChain = field);
+          if (useAuthorChainID)
+            setChainID(atom, strChain = field);            
           break;
         case AUTH_SEQ_ID:
           maxSerial = Math.max(maxSerial,
@@ -1273,7 +1278,7 @@ public class CifReader extends AtomSetCollectionReader {
       if (atom.elementSymbol == null && atom.atomName != null) {
         String sym = atom.atomName;
         int pt = 0;
-        while (pt < sym.length() && Character.isLetter(sym.charAt(pt)))
+        while (pt < sym.length() && PT.isLetter(sym.charAt(pt)))
           pt++;
         atom.elementSymbol = (pt == 0 || pt > 2 ? "Xx" : sym.substring(0, pt));
       }

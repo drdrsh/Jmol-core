@@ -936,7 +936,7 @@ public class AnnotationParser implements JmolAnnotationParser {
     String chain = nt.substring(0, pt1);
     int pt = nt.length();
     char ch;
-    while (Character.isDigit(ch = nt.charAt(--pt))) {
+    while (PT.isDigit(ch = nt.charAt(--pt))) {
     }
     int ptn = chain.indexOf("@");
     if (ptn >= 0)

@@ -9508,7 +9508,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (iboxed != null)
       return iboxed.intValue();
     int i = id.charAt(0);
-    if (id.length() > 1) {
+    if (id.length() > 1 || id.toLowerCase().equals(id)) {
+      //this will force chainCaseSensitive when it is necessary
       i = 256 + chainList.size();
       chainList.addLast(id);
     }

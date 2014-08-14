@@ -356,9 +356,9 @@ public class CifDataParser implements GenericCifDataParser {
   public String fullTrim(String str) {
     int pt0 = -1;
     int pt1 = str.length();
-    while (++pt0 < pt1 && Character.isWhitespace(str.charAt(pt0))) {
+    while (++pt0 < pt1 && PT.isWhitespace(str.charAt(pt0))) {
     }
-    while (--pt1 > pt0 && Character.isWhitespace(str.charAt(pt1))) {      
+    while (--pt1 > pt0 && PT.isWhitespace(str.charAt(pt1))) {      
     }
     return str.substring(pt0, pt1 + 1);
   }

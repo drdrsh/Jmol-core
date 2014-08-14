@@ -482,14 +482,14 @@ public class JvxlCoder {
     char c2 = ' ';
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       int[] vertexIndexes = polygonIndexes[i];
-      while (pt < nBuf && !Character.isDigit(c1 = fData.charAt(pt++))) {
+      while (pt < nBuf && !PT.isDigit(c1 = fData.charAt(pt++))) {
         // skip non-digit data
       }
       type = c1 - 48;
-      while (pt < nBuf && Character.isWhitespace(c1 = fData.charAt(pt++))) {
+      while (pt < nBuf && PT.isWhitespace(c1 = fData.charAt(pt++))) {
         // skip whitespace
       }
-      while (pt < nBuf && Character.isWhitespace(c2 = fData.charAt(pt++))) {
+      while (pt < nBuf && PT.isWhitespace(c2 = fData.charAt(pt++))) {
         // skip whitespace
       }
       float f1 = jvxlFractionFromCharacter(c1, defaultEdgeFractionBase, defaultEdgeFractionRange, 0);
@@ -1048,7 +1048,7 @@ public class JvxlCoder {
     int ichMax = str.length();
     if (ich < 0)
       return Integer.MIN_VALUE;
-    while (ich < ichMax && Character.isWhitespace(str.charAt(ich)))
+    while (ich < ichMax && PT.isWhitespace(str.charAt(ich)))
       ++ich;
     if (ich >= ichMax)
       return Integer.MIN_VALUE;
@@ -1056,7 +1056,7 @@ public class JvxlCoder {
     boolean isLong = (str.charAt(ich) == (offset + base));
     if (isLong)
       ich++;
-    while (ich < ichMax && !Character.isWhitespace(str.charAt(ich))) {
+    while (ich < ichMax && !PT.isWhitespace(str.charAt(ich))) {
       int i = str.charAt(ich);
       if (i < offset)
         i = 92;   // ! --> \ 

@@ -26,6 +26,7 @@
 package org.jmol.java;
 
 import javajs.api.JSONEncodable;
+import javajs.util.PT;
 import javajs.util.SB;
 
 
@@ -1016,11 +1017,11 @@ public class BS implements Cloneable, JSONEncodable {
       return null;
     len -= 2;
     for (int i = len; --i >= 2;)
-      if (!Character.isDigit(ch = str.charAt(i)) && ch != ' ' && ch != '\t'
+      if (!PT.isDigit(ch = str.charAt(i)) && ch != ' ' && ch != '\t'
           && ch != ':')
         return null;
     int lastN = len;
-    while (Character.isDigit(str.charAt(--lastN))) {
+    while (PT.isDigit(str.charAt(--lastN))) {
       // loop
     }
     if (++lastN == len)
@@ -1056,7 +1057,7 @@ public class BS implements Cloneable, JSONEncodable {
         iThis = -2;
         break;
       default:
-        if (Character.isDigit(ch)) {
+        if (PT.isDigit(ch)) {
           if (iThis < 0)
             iThis = 0;
           iThis = (iThis * 10) + (ch - 48);

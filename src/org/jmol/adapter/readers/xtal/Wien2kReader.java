@@ -152,7 +152,7 @@ public class Wien2kReader extends AtomSetCollectionReader {
       
       String atomName = line.substring(0, 10);
       String sym = atomName.substring(0,2).trim();
-      if (sym.length() == 2 && Character.isDigit(sym.charAt(1)))
+      if (sym.length() == 2 && PT.isDigit(sym.charAt(1)))
         sym = sym.substring(0, 1);
       atomName = PT.rep(atomName, " ", "");
       int n = 0;

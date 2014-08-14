@@ -214,9 +214,9 @@ public class Elements {
     Integer boxedAtomicNumber = htElementMap.get(elementSymbol);
     if (boxedAtomicNumber != null)
       return boxedAtomicNumber.intValue();
-    if (Character.isDigit(elementSymbol.charAt(0))) {
+    if (PT.isDigit(elementSymbol.charAt(0))) {
       int pt = elementSymbol.length() - 2;
-      if (pt >= 0 && Character.isDigit(elementSymbol.charAt(pt)))
+      if (pt >= 0 && PT.isDigit(elementSymbol.charAt(pt)))
         pt++;
       int isotope = (pt > 0 ? PT.parseInt(elementSymbol.substring(0, pt)) : 0);
       if (isotope > 0) {

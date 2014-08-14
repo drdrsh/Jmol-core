@@ -1709,7 +1709,7 @@ public class PropertyManager implements JmolPropertyManager {
       }
       String sa = a.getAtomName();
       boolean leftJustify = (a.getElementSymbol().length() == 2
-          || sa.length() >= 4 || Character.isDigit(sa.charAt(0)));
+          || sa.length() >= 4 || PT.isDigit(sa.charAt(0)));
       boolean isBiomodel = models[a.mi].isBioModel;
       boolean isHetero = a.isHetero();
       if (!isBiomodel)

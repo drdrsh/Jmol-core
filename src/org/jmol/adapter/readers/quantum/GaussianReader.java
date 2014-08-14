@@ -523,7 +523,7 @@ public class GaussianReader extends MOReader {
         }
         continue;
       } else if (line.length() < 21
-          || (line.charAt(5) != ' ' && !Character.isDigit(line.charAt(5)))) {
+          || (line.charAt(5) != ' ' && !PT.isDigit(line.charAt(5)))) {
         continue;
       }
       try {
@@ -531,7 +531,7 @@ public class GaussianReader extends MOReader {
         line = PT.rep(line, " 0 ", "0  ");
         tokens = getTokens();
         String type = tokens[tokens.length - nThisLine - 1].substring(1);
-        if (Character.isDigit(type.charAt(0)))
+        if (PT.isDigit(type.charAt(0)))
           type = type.substring(1); // "11XX"
         if (!isQuantumBasisSupported(type.charAt(0))
             && "XYZ".indexOf(type.charAt(0)) >= 0)

@@ -40,6 +40,7 @@ import org.jmol.util.Logger;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
+import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.V3;
 
@@ -256,7 +257,7 @@ No distinction between "Variable:" and "Constant:" is made by Jmol.
     Atom atom = new Atom();
     String element = tokens[0];
     int i = element.length();
-    while (--i >= 0 && Character.isDigit(element.charAt(i))) {
+    while (--i >= 0 && PT.isDigit(element.charAt(i))) {
       //continue;
     }
     if (++i == 0)
@@ -378,7 +379,7 @@ No distinction between "Variable:" and "Constant:" is made by Jmol.
     String name;
     if (i >= tokens.length 
         || (name = tokens[i]).indexOf(".") >= 0
-        || !Character.isLetterOrDigit(name.charAt(0)))
+        || !PT.isLetterOrDigit(name.charAt(0)))
       return -1;
     int ia = parseIntStr(name);
     if (ia <= 0 || name.length() != ("" + ia).length()) {
@@ -391,7 +392,7 @@ No distinction between "Variable:" and "Constant:" is made by Jmol.
           Atom atom = vAtoms.get(i);
           if (atom.atomName.startsWith(name) 
               && atom.atomName.length() > name.length()
-              && Character.isDigit(atom.atomName.charAt(name.length()))) {
+              && PT.isDigit(atom.atomName.charAt(name.length()))) {
             I = atomMap.get(atom.atomName);
             break;
           }  

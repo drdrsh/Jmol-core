@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 
 import org.jmol.util.Escape;
 
+import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.P3;
 import javajs.util.XmlUtil;
@@ -136,7 +137,7 @@ public class XmlReader {
     }
     if (pt1 >= pt2)
       return "";
-    while (Character.isWhitespace(data.charAt(++pt1))) {
+    while (PT.isWhitespace(data.charAt(++pt1))) {
     }
     return XmlUtil.unwrapCdata(data.substring(pt1, pt2));
   }

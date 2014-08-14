@@ -1469,7 +1469,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       }
       break;
     case T.leftsquare:
-      if (ichToken > 0 && Character.isWhitespace(script.charAt(ichToken - 1)))
+      if (ichToken > 0 && PT.isWhitespace(script.charAt(ichToken - 1)))
         addTokenToPrefix(T.tokenSpaceBeforeSquare);
       bracketCount++;
       break;
@@ -1756,7 +1756,7 @@ public class ScriptCompiler extends ScriptTokenParser {
           break;
         } else if (ident.equals(",")) {
           return CONTINUE;
-        } else if (!Character.isLetter(ident.charAt(0))) {
+        } else if (!PT.isLetter(ident.charAt(0))) {
           if (nTokens != 2)
             return ERROR(ERROR_badArgumentCount);
           replaceCommand(T.tokenSet);
@@ -1904,7 +1904,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     int ichT = ichToken;
     char ch;
     while (++ichT < cchScript
-        && !Character.isWhitespace(ch = script.charAt(ichT)) && ch != '#'
+        && !PT.isWhitespace(ch = script.charAt(ichT)) && ch != '#'
         && ch != ';' && ch != '}') {
     }
     String name = script.substring(ichToken, ichT).replace('\\', '/');
@@ -2373,9 +2373,9 @@ public class ScriptCompiler extends ScriptTokenParser {
     // old load formats are simple unneeded words like PDB or XYZ -- no numbers
     int ichT = ichToken;
     char ch;
-    while ((Character.isLetterOrDigit(ch = charAt(ichT))
-        && (allchar || Character.isLetter(ch)) || allchar
-        && (!eol(ch) && !Character.isWhitespace(ch))))
+    while ((PT.isLetterOrDigit(ch = charAt(ichT))
+        && (allchar || PT.isLetter(ch)) || allchar
+        && (!eol(ch) && !PT.isWhitespace(ch))))
       ++ichT;
     if (!allchar && ichT == ichToken || !isSpaceOrTab(ch))
       return false;
@@ -2459,7 +2459,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         }
         //$FALL-THROUGH$
       default:
-        if (Character.isWhitespace(ch)) {
+        if (PT.isWhitespace(ch)) {
           if (ptSpace < 0)
             ptSpace = ichT;
         } else {
@@ -2495,13 +2495,13 @@ public class ScriptCompiler extends ScriptTokenParser {
       ++ichT;
     boolean isOK = false;
     char ch = 'X';
-    while (Character.isDigit(ch = charAt(ichT))) {
+    while (PT.isDigit(ch = charAt(ichT))) {
       ++ichT;
       isOK = true;
     }
     if (ichT < cchScript && ch == '.')
       ++ichT;
-    while (Character.isDigit(ch = charAt(ichT))) {
+    while (PT.isDigit(ch = charAt(ichT))) {
       ++ichT;
       isOK = true;
     }
@@ -2518,7 +2518,7 @@ public class ScriptCompiler extends ScriptTokenParser {
 
     if (ch == '-' || ch == '+')
       ichT++;
-    while (Character.isDigit(charAt(ichT))) {
+    while (PT.isDigit(charAt(ichT))) {
       ichT++;
       isOK = true;
     }
@@ -2536,7 +2536,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       ++ichT;
     boolean digitSeen = false;
     char ch;
-    while (Character.isDigit(ch = charAt(ichT++)))
+    while (PT.isDigit(ch = charAt(ichT++)))
       digitSeen = true;
     if (ch != '.')
       return false;
@@ -2546,14 +2546,14 @@ public class ScriptCompiler extends ScriptTokenParser {
     // to determine if it is an alpha
     char ch1;
     if (!eol(ch1 = charAt(ichT))) {
-      if (Character.isLetter(ch1) || ch1 == '?' || ch1 == '*')
+      if (PT.isLetter(ch1) || ch1 == '?' || ch1 == '*')
         return false;
       //well, guess what? we also have to look for 86.1Na, so...
       //watch out for moveto..... 56.;refresh...
-      if (Character.isLetter(ch1 = charAt(ichT + 1)) || ch1 == '?')
+      if (PT.isLetter(ch1 = charAt(ichT + 1)) || ch1 == '?')
         return false;
     }
-    while (Character.isDigit(charAt(ichT))) {
+    while (PT.isDigit(charAt(ichT))) {
       ++ichT;
       digitSeen = true;
     }
@@ -2570,7 +2570,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     } else {
       if (script.charAt(ichT) == '-')
         ++ichT;
-      while (Character.isDigit(ch = charAt(ichT)))
+      while (PT.isDigit(ch = charAt(ichT)))
         ++ichT;
     }
     if (ch != '^')
@@ -2580,7 +2580,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       ch = ' ';
     else
       ch = script.charAt(ichT++);
-    if (ch != ' ' && ch != '*' && ch != '?' && !Character.isLetter(ch))
+    if (ch != ' ' && ch != '*' && ch != '?' && !PT.isLetter(ch))
       return false;
     cchToken = ichT - ichToken;
     return true;
@@ -2593,7 +2593,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     if (script.charAt(ichToken) == '-')
       ++ichT;
     int ichBeginDigits = ichT;
-    while (Character.isDigit(charAt(ichT)))
+    while (PT.isDigit(charAt(ichT)))
       ++ichT;
     if (ichBeginDigits == ichT)
       return Integer.MAX_VALUE;
@@ -2646,12 +2646,12 @@ public class ScriptCompiler extends ScriptTokenParser {
       return false;
     while (ichT < cchScript) {
       char ch;
-      if (Character.isWhitespace(ch = script.charAt(ichT))) {
+      if (PT.isWhitespace(ch = script.charAt(ichT))) {
         if (ichT == ichToken + 1)
           return false;
         break;
       }
-      if (!Character.isLetterOrDigit(ch)) {
+      if (!PT.isLetterOrDigit(ch)) {
         switch (ch) {
         default:
           return false;
@@ -2737,7 +2737,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       tokLastMath = 1;
       break;
     default:
-      if (!Character.isLetter(ch) && !isDotDot)
+      if (!PT.isLetter(ch) && !isDotDot)
         return false;
       //$FALL-THROUGH$
     case '~':
@@ -2748,10 +2748,10 @@ public class ScriptCompiler extends ScriptTokenParser {
         tokLastMath = 1;
       // last is hack for insertion codes embedded in an atom expression :-(
       // select c3^a
-      while (Character.isLetterOrDigit(ch = charAt(ichT)) || ch == '_'
+      while (PT.isLetterOrDigit(ch = charAt(ichT)) || ch == '_'
           || ch == '*' && charAt(ichT - 1) == '?' || ch == '?' || ch == '~'
           || ch == '\'' || ch == '\\' && charAt(ichT + 1) == '?' || ch == '^'
-          && ichT > ichT0 && Character.isDigit(charAt(ichT - 1)))
+          && ichT > ichT0 && PT.isDigit(charAt(ichT - 1)))
         ++ichT;
       break;
     }

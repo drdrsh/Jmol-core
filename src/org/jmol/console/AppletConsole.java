@@ -34,6 +34,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
+import javajs.util.PT;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -195,7 +197,7 @@ public class AppletConsole extends JmolConsole {
     int n = 20;
     for (int i = 0; i < commands.length; i++) {
       String cmd = commands[i];
-      if (!Character.isLetter(cmd.charAt(0)))
+      if (!PT.isLetter(cmd.charAt(0)))
         continue;
       JMenuItem item = new JMenuItem(cmd);
       item.addActionListener(this);

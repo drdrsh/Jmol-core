@@ -90,7 +90,7 @@ public class XmlXsdReader extends XmlReader {
       atom.atomName = atts.get("ID");
       atom.atomSerial = ++iAtom;
       if (iChain >= 0)
-        parent.setChainID(atom, (char) ((iChain - 1)%26 + 'A'));
+        parent.setChainID(atom, "" + (char) ((iChain - 1)%26 + 'A'));
       atom.group3 = "UNK";
       if (iGroup == 0)
         iGroup = 1;

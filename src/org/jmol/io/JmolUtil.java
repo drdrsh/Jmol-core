@@ -203,7 +203,7 @@ public class JmolUtil implements JmolZipUtilities {
     String sep = (name.endsWith(".zip") ? "|" : "/");
     for (int i = 0; i < dirNums.length; i++) {
       String path = name + sep;
-      path += (Character.isDigit(dirNums[i].charAt(0)) ? "Profile." + dirNums[i]
+      path += (PT.isDigit(dirNums[i].charAt(0)) ? "Profile." + dirNums[i]
               : dirNums[i]) + "/";
       files[pt++] = path + "#JMOL_MODEL " + dirNums[i];
       files[pt++] = path + "input";

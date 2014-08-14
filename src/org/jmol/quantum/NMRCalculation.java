@@ -351,12 +351,12 @@ public class NMRCalculation implements JmolNMRInterface {
       map.put("shiftRefsPPM", shiftRefsPPM);
       return map;
     }
-    if (Character.isDigit(what.charAt(0)))
+    if (PT.isDigit(what.charAt(0)))
       return isotopeData.get(what);
     Lst<Object> info = new Lst<Object>();
     for (Entry<String, double[]> e: isotopeData.entrySet()) {
       String key = e.getKey();
-      if (Character.isDigit(key.charAt(0)) && key.endsWith(what))
+      if (PT.isDigit(key.charAt(0)) && key.endsWith(what))
         info.addLast(e.getValue());
     }
     return info;

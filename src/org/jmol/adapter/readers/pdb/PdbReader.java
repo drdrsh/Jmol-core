@@ -131,7 +131,7 @@ public class PdbReader extends AtomSetCollectionReader {
   private  Lst<Map<String, Object>> vTlsModels;
   private SB sbTlsErrors;
 
-  protected int[] chainAtomCounts;  
+  protected int[] biomtChainAtomCounts;  
   
   private SB sbIgnored, sbSelected, sbConect, sb;
 
@@ -600,12 +600,12 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
   private void setBiomoleculeAtomCounts() {
     for (int i = vBiomolecules.size(); --i >= 0;) {
       Map<String, Object> biomolecule = vBiomolecules.get(i);
-      String chain = (String) biomolecule.get("chains");
+      String chains = (String) biomolecule.get("chains");
       int nTransforms = ((Lst<M4>) biomolecule.get("biomts")).size();
       int nAtoms = 0;
-      for (int j = chain.length() - 1; --j >= 0;)
-        if (chain.charAt(j) == ':')
-          nAtoms += chainAtomCounts[chain.charAt(j + 1)];
+      for (int j = chains.length() - 1; --j >= 0;)
+        if (chains.charAt(j) == ':')
+          nAtoms += biomtChainAtomCounts[0 + chains.charAt(j + 1)];
       biomolecule.put("atomCount", Integer.valueOf(nAtoms * nTransforms));
     }
   }
@@ -647,7 +647,7 @@ REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
   private void remark350() throws Exception {
      Lst<M4> biomts = null;
     vBiomolecules = new  Lst<Map<String,Object>>();
-    chainAtomCounts = new int[255];
+    biomtChainAtomCounts = new int[255];
     String title = "";
     String chainlist = "";
     String id = "";
@@ -793,15 +793,15 @@ REMARK 290 REMARK: NULL
       try {
         return serial = Integer.parseInt(line.substring(i, j));
       } catch (Exception e) {
-        serMode = (Character.isDigit(c) ? MODE_HEX : MODE_HYBRID36);
+        serMode = (PT.isDigit(c) ? MODE_HEX : MODE_HYBRID36);
         return getSerial(i, j);
       }
     case MODE_HYBRID36:
       // -16696160 = Integer.parseInt("100000", 10) - Integer.parseInt("A0000",36)
       //  26973856 = Integer.parseInt("100000", 10) - Integer.parseInt("A0000",36) 
       //           + (Integer.parseInt("100000",36) - Integer.parseInt("A0000",36))
-      return (isBase10 || Character.isDigit(c) ? parseIntRange(line, i, j)
-          : PT.parseIntRadix(line.substring(i, j), 36) + (Character.isUpperCase(c) ? -16696160 : 26973856));
+      return (isBase10 || PT.isDigit(c) ? parseIntRange(line, i, j)
+          : PT.parseIntRadix(line.substring(i, j), 36) + (PT.isUpperCase(c) ? -16696160 : 26973856));
     case MODE_HEX:
       if (!isBase10)
         return serial = PT.parseIntRadix(line.substring(i, j), 16);
@@ -822,16 +822,16 @@ REMARK 290 REMARK: NULL
       try {
         return Integer.parseInt(line.substring(i, j));
       } catch (Exception e) {
-        seqMode = (Character.isDigit(c) ? MODE_HEX : MODE_HYBRID36);
+        seqMode = (PT.isDigit(c) ? MODE_HEX : MODE_HYBRID36);
         return getSeqNo(i, j);
       }
     case MODE_HYBRID36:
       // -456560 = Integer.parseInt("10000", 10) - Integer.parseInt("A000",36)
       //  756496 = Integer.parseInt("10000", 10) - Integer.parseInt("A000",36) 
       //         + (Integer.parseInt("10000",36) - Integer.parseInt("A000",36)) 
-      return (isBase10 || Character.isDigit(c) ? parseIntRange(line, i, j)
+      return (isBase10 || PT.isDigit(c) ? parseIntRange(line, i, j)
           : PT.parseIntRadix(line.substring(i, j), 36)
-              + (Character.isUpperCase(c) ? -456560 : 756496));
+              + (PT.isUpperCase(c) ? -456560 : 756496));
     case MODE_HEX:
       if (!isBase10)
         return PT.parseIntRadix(line.substring(i, j), 16);
@@ -855,21 +855,19 @@ REMARK 290 REMARK: NULL
         String name, 
         char altID, 
         String group3, 
-        int chain, 
+        int chainID, 
         int seqNo,
         char insCode,
         boolean isHetero,
         String sym
         ) {
     atom.atomName = name;
-    char ch = altID;
-    if (ch != ' ')
-      atom.altLoc = ch;
+    if (altID != ' ')
+      atom.altLoc = altID;
     atom.group3 = group3;
-    ch = chain < 256 ? (char) chain : 0;
-    if (chainAtomCounts != null)
-      chainAtomCounts[ch]++;
-    setChainID(atom, ch);
+    atom.chainID = chainID;
+    if (biomtChainAtomCounts != null)
+      biomtChainAtomCounts[chainID % 256]++;
     atom.sequenceNumber = seqNo;
     atom.insertionCode = JmolAdapter.canonizeInsertionCode(insCode);
     atom.isHetero = isHetero;    
@@ -921,7 +919,7 @@ REMARK 290 REMARK: NULL
         line.substring(12, 16).trim(), 
         line.charAt(16),
         parseTokenRange(line, 17, 20),
-        line.charAt(21),
+        vwr.getChainID(line.substring(21, 22)),
         getSeqNo(22, 26),
         line.charAt(26),
         isHetero,

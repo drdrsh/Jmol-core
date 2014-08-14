@@ -2416,7 +2416,7 @@ abstract public class AtomCollection {
     
     int len = identifier.length();
     int pt = 0;
-    while (pt < len && Character.isLetter(identifier.charAt(pt)))
+    while (pt < len && PT.isLetter(identifier.charAt(pt)))
       ++pt;
     bs = getSpecNameOrNull(identifier.substring(0, pt), false);
     if (pt == len)
@@ -2427,7 +2427,7 @@ abstract public class AtomCollection {
     // look for a sequence number or sequence number ^ insertion code
     //
     int pt0 = pt;
-    while (pt < len && Character.isDigit(identifier.charAt(pt)))
+    while (pt < len && PT.isDigit(identifier.charAt(pt)))
       ++pt;
     int seqNumber = 0;
     try {

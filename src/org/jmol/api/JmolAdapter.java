@@ -28,6 +28,8 @@ import java.io.BufferedReader;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.PT;
+
 import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.c.QS;
 import org.jmol.util.Elements;
@@ -379,8 +381,7 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
   /////////////////////////////////////////////////////////////////
 
   private final static char canonizeAlphaDigit(char ch) {
-    return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')
-        || (ch >= '0' && ch <= '9') ? ch : '\0');
+    return (PT.isLetterOrDigit(ch) ? ch : '\0');
   }
 
 //  public final static char canonizeChainID(char chainID) {

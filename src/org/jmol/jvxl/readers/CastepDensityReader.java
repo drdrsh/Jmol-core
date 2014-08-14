@@ -26,6 +26,7 @@ package org.jmol.jvxl.readers;
 import java.io.BufferedReader;
 
 
+import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
 
@@ -154,10 +155,10 @@ class CastepDensityReader extends VolumeFileReader {
   private void skipPoints(int n) {
     int pt = next[0];
     for (int i = 0; i < n; i++) {
-      while (pt < line.length() && Character.isWhitespace(line.charAt(pt++))) {
+      while (pt < line.length() && PT.isWhitespace(line.charAt(pt++))) {
         // skip white space
       }
-      while (pt < line.length() && !Character.isWhitespace(line.charAt(pt++))) {
+      while (pt < line.length() && !PT.isWhitespace(line.charAt(pt++))) {
         // skip not white space
       }
     }

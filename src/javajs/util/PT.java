@@ -220,7 +220,7 @@ public class PT {
   public static boolean checkTrailingText(String str, int ich, int ichMax) {
     //number must be pure -- no additional characters other than white space or ;
     char ch;
-    while (ich < ichMax && (Character.isWhitespace(ch = str.charAt(ich)) || ch == ';'))
+    while (ich < ichMax && (isWhitespace(ch = str.charAt(ich)) || ch == ';'))
       ++ich;
     return (ich == ichMax);
   }
@@ -1138,7 +1138,7 @@ public class PT {
     char ch;
     int count = 0;
     for (int i = pt; --i >= 1; ) {
-      if (Character.isDigit(ch = f.charAt(i)))
+      if (isDigit(ch = f.charAt(i)))
         continue;
       switch (ch) {
       case '.':
@@ -1543,6 +1543,39 @@ public class PT {
     return s;
   }
 
+  public static boolean isDigit(char ch) {
+    // just way simpler code than  Character.isDigit(ch);
+    int c = ch;
+    return (48 <= c && c <= 57);
+  }
+
+  public static boolean isUpperCase(char ch) {
+    int c = ch;
+    return (65 <= c && c <= 90);
+  }
+
+  public static boolean isLowerCase(char ch) {
+    int c = ch;
+    return (97 <= c && c <= 122);
+  }
+
+  public static boolean isLetter(char ch) {
+    // just way simpler code than     Character.isLetter(ch);
+    int c = ch;
+    return (65 <= c && c <= 90 || 97 <= c && c <= 122);
+  }
+
+  public static boolean isLetterOrDigit(char ch) {
+    // just way simpler code than     Character.isLetterOrDigit(ch);
+    int c = ch;
+    return (65 <= c && c <= 90 || 97 <= c && c <= 122 || 48 <= c && c <= 57);
+  }
+
+  public static boolean isWhitespace(char ch) {
+    int c = ch;
+    return (c >= 0x1c && c <= 0x20 || c >= 0x9 && c <= 0xd);
+  }
+
   public static final float FRACTIONAL_PRECISION = 100000f;
   public static final float CARTESIAN_PRECISION =  10000f;
 
@@ -1569,4 +1602,27 @@ public class PT {
 //  System.out.println(100.123456789f);
 //}
 
+//  static {
+//    long t;
+//    char c = '0';
+//    t = System.currentTimeMillis();
+//    for (int i = 0; i < 10000000; i++) {
+//      boolean b = PT.isUpperCase(c);
+//    }
+//    System.out.println(System.currentTimeMillis() - t);
+//
+//    t = System.currentTimeMillis();
+//    for (int i = 0; i < 10000000; i++) {
+//      boolean b = Character.isUpperCase(c);
+//    }
+//    System.out.println(System.currentTimeMillis() - t);
+//    
+//    t = System.currentTimeMillis();
+//    for (int i = 0; i < 10000000; i++) {
+//      boolean b = PT.isUpperCase(c);
+//    }
+//    System.out.println(System.currentTimeMillis() - t);
+//
+//    System.out.println("PT test");
+//  }
 }

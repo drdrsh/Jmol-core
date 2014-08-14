@@ -23,6 +23,8 @@ import java.util.List;
 
 import java.util.regex.Pattern;
 
+import javajs.util.PT;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -378,10 +380,10 @@ public class ChimePanel extends JPanel implements ItemListener, ActionListener {
         if (stopDQuote || stopSQuote)
           i1++;
         if (stopSpace) 
-          while(i1 < data.length() && Character.isWhitespace(data.charAt(i1)))
+          while(i1 < data.length() && PT.isWhitespace(data.charAt(i1)))
             i1++;
         out: for (; i1 < data.length(); i1++) {
-          if (stopSpace && Character.isWhitespace(data.charAt(i1)))
+          if (stopSpace && PT.isWhitespace(data.charAt(i1)))
             break;
           switch (data.charAt(i1)) {
           case '"':

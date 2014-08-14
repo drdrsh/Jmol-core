@@ -24,6 +24,7 @@ import javajs.awt.Font;
 import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.Lst;
+import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.util.Logger;
@@ -1126,7 +1127,7 @@ class PyMOLScene implements JmolSceneGenerator {
   private static String fixName(String name) {
     char[] chars = name.toLowerCase().toCharArray();
     for (int i = chars.length; --i >= 0;)
-      if (!Character.isLetterOrDigit(chars[i]))
+      if (!PT.isLetterOrDigit(chars[i]))
         chars[i] = '_';
     return String.valueOf(chars); 
   }
