@@ -499,7 +499,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   @SuppressWarnings("unchecked")
   private void initialize() {
-    baseAtomIndex = ((Integer) htParams.get("baseAtomIndex")).intValue();
+    if (htParams.containsKey("baseAtomIndex"))
+      baseAtomIndex = ((Integer) htParams.get("baseAtomIndex")).intValue();
     Object o = htParams.get("supercell");
     if (o instanceof String)
       strSupercell = (String) o;

@@ -648,8 +648,11 @@ public class Resolver {
 
   private final static int LEADER_CHAR_MAX = 64;
   
-  private final static String[] sptContainsRecords = 
+  private final static String[] sptRecords = 
   { "spt", "# Jmol state", "# Jmol script", "JmolManifest" };
+  
+  private final static String[] m3dStartRecords = 
+  { "Alchemy", "STRUCTURE  1.00     1" }; // M3D reader is very similar to Alchemy
   
   private final static String[] cubeFileStartRecords =
   {"Cube", "JVXL", "#JVXL"};
@@ -684,17 +687,22 @@ public class Resolver {
   private final static String[] jsonStartRecords = 
   { "JSON", "{\"mol\":" };
   
-  private final static String[] m3dStartRecords = 
-  { "Alchemy", "STRUCTURE  1.00     1" }; // M3D reader is very similar to Alchemy
-  
   private final static String[][] fileStartsWithRecords =
-  { sptContainsRecords, m3dStartRecords, cubeFileStartRecords, mol2Records, webmoFileStartRecords, 
+  { sptRecords, m3dStartRecords, cubeFileStartRecords, 
+    mol2Records, webmoFileStartRecords, 
     moldenFileStartRecords, dcdFileStartRecords, tlsDataOnlyFileStartRecords,
-    zMatrixFileStartRecords, magresFileStartRecords, pymolStartRecords, janaStartRecords, jsonStartRecords };
+    zMatrixFileStartRecords, magresFileStartRecords, pymolStartRecords, 
+    janaStartRecords, jsonStartRecords };
 
   ////////////////////////////////////////////////////////////////
-  // these test lines that startWith one of these strings
+  // these test if one of the first 16 lines starts with one of these strings
   ////////////////////////////////////////////////////////////////
+
+  private final static String[] mmcifLineStartRecords =
+  { "MMCif", "_entry.id", "_database_PDB_", "_pdbx_", "_audit_author.name" };
+
+  private final static String[] cifLineStartRecords =
+  { "Cif", "data_", "_publ" };
 
   private final static String[] pqrLineStartRecords = 
   { "Pqr", "REMARK   1 PQR" };
@@ -713,12 +721,6 @@ public class Resolver {
 
   private final static String[] shelxLineStartRecords =
   { "Shelx", "TITL ", "ZERR ", "LATT ", "SYMM ", "CELL " };
-
-  private final static String[] cifLineStartRecords =
-  { "Cif", "data_", "_publ" };
-
-  private final static String[] mmcifLineStartRecords =
-  { "MMCif", "_database_PDB_" };
 
   private final static String[] ghemicalMMLineStartRecords =
   { "GhemicalMM", "!Header mm1gp", "!Header gpr" };
@@ -758,23 +760,15 @@ public class Resolver {
   // contains formats
   ////////////////////////////////////////////////////////////////
 
+  private final static String[] bilbaoContainsRecords =
+  { "Bilbao", ">Bilbao Crystallographic Server<" };
+
   private final static String[] xmlContainsRecords = 
   { "Xml", "<?xml", "<atom", "<molecule", "<reaction", "<cml", "<bond", ".dtd\"",
     "<list>", "<entry", "<identifier", "http://www.xml-cml.org/schema/cml2/core" };
 
   private final static String[] gaussianContainsRecords =
   { "Gaussian", "Entering Gaussian System", "Entering Link 1", "1998 Gaussian, Inc." };
-
-  private final static String[] bilbaoContainsRecords =
-  { "Bilbao", ">Bilbao Crystallographic Server<" };
-
-  /*
-  private final static String[] gaussianWfnRecords =
-  { "GaussianWfn", "MO ORBITALS" };
-  */
-
-  private final static String[] gaussianFchkContainsRecords =
-  { "GaussianFchk", "Number of point charges in /Mol/" };
 
   private final static String[] ampacContainsRecords =
   { "Ampac", "AMPAC Version" };
@@ -802,15 +796,6 @@ public class Resolver {
   private final static String[] adfContainsRecords =
   { "Adf", "Amsterdam Density Functional" };
   
-  private final static String[] dgridContainsRecords =
-  { "Dgrid", "BASISFILE   created by DGrid" };
-  
-  private final static String[] dmolContainsRecords =
-  { "Dmol", "DMol^3" };
-
-  private final static String[] gulpContainsRecords =
-  { "Gulp", "GENERAL UTILITY LATTICE PROGRAM" };
-  
   private final static String[] psiContainsRecords =
   { "Psi", "    PSI  3", "PSI3:"};
  
@@ -820,10 +805,19 @@ public class Resolver {
   private final static String[] uicrcifContainsRecords =
   { "Cif", "Crystallographic Information File"};
   
+  private final static String[] dgridContainsRecords =
+  { "Dgrid", "BASISFILE   created by DGrid" };
+  
   private final static String[] crystalContainsRecords =
- { "Crystal",
+  { "Crystal",
       "*                                CRYSTAL", "TORINO", "DOVESI" };
 
+  private final static String[] dmolContainsRecords =
+  { "Dmol", "DMol^3" };
+
+  private final static String[] gulpContainsRecords =
+  { "Gulp", "GENERAL UTILITY LATTICE PROGRAM" };
+  
   private final static String[] espressoContainsRecords =
   { "Espresso", "Program PWSCF", "Program PHONON" }; 
 
@@ -838,18 +832,28 @@ public class Resolver {
   { "MopacArchive", "SUMMARY OF PM" };
   
   private final static String[] abinitContainsRecords = { "Abinit",
-    "http://www.abinit.org", "Catholique", "Louvain" };
+    "http://www.abinit.org", "Catholique", "Louvain" };  
   
-  
+  /*
+  private final static String[] gaussianWfnRecords =
+  { "GaussianWfn", "MO ORBITALS" };
+  */
+
+  private final static String[] gaussianFchkContainsRecords =
+  { "GaussianFchk", "Number of point charges in /Mol/" };
+
   
   
   private final static String[][] headerContainsRecords =
-  { sptContainsRecords, bilbaoContainsRecords, xmlContainsRecords, gaussianContainsRecords, 
+  { sptRecords, bilbaoContainsRecords, xmlContainsRecords, gaussianContainsRecords, 
     ampacContainsRecords, mopacContainsRecords, qchemContainsRecords, 
     gamessUKContainsRecords, gamessUSContainsRecords,
-    spartanBinaryContainsRecords, spartanContainsRecords, mol2Records, adfContainsRecords, psiContainsRecords,
-    nwchemContainsRecords, uicrcifContainsRecords, dgridContainsRecords, crystalContainsRecords, 
-    dmolContainsRecords, gulpContainsRecords, espressoContainsRecords, siestaContainsRecords,xcrysDenContainsRecords,
+    spartanBinaryContainsRecords, spartanContainsRecords, 
+    mol2Records, adfContainsRecords, psiContainsRecords,
+    nwchemContainsRecords, uicrcifContainsRecords, 
+    dgridContainsRecords, crystalContainsRecords, 
+    dmolContainsRecords, gulpContainsRecords, 
+    espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
     
   };

@@ -68,6 +68,7 @@ public class TestSmarterJmolAdapter extends TestSuite {
     result.addDirectory("animations", "xyz", "Xyz");
     result.addDirectory("castep", "cell;phonon", "Castep");
     result.addDirectory("cif", "cif", "Cif");
+    result.addDirectory("cif", "mmcif", "MMCif");
     result.addDirectory("c3xml", "c3xml", "XmlChem3d");
     result.addDirectory("cml", "cml", "XmlCml");
     result.addDirectory("crystal", "out;outp", "Crystal");
@@ -87,7 +88,7 @@ public class TestSmarterJmolAdapter extends TestSuite {
     result.addDirectory("gulp", "gout;got", "Gulp");
     result.addDirectory("hin", "hin", "HyperChem");
     result.addDirectory("jaguar", "out", "Jaguar");
-    result.addDirectory("modifiedGroups", "cif", "Cif");
+    result.addDirectory("modifiedGroups", "cif", "MMCif");
     result.addDirectory("modifiedGroups", "pdb", "Pdb");
     result.addDirectory("mol", "v3000;mol;sdf", "Mol");
     result.addDirectory("mol2", "mol2", "Mol2");
