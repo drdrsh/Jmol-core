@@ -1005,6 +1005,8 @@ public class GlobalSettings {
           + ";spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;" + CBK.getNameList()
           + ";undo;atompicking;drawpicking;bondpicking;pickspinrate;picklabel"
           + ";modelkitmode;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
+          //  oops
+          + ";dodrop"
           + ";").toLowerCase();
 
     Object getAllVariables() {

@@ -296,6 +296,8 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
 System.out.println("StatusListener notifyFileLoaded: " + fileName);
     // this code presumes only ptLoad = -1 (error), 0 (zap), or 3 (completed)
     String title = "Jmol";
+    if (fileName != null && fileName.startsWith("DROP_"))
+      fileName = fileName.substring(5);
     if (modelName != null && fileName != null)
       title = (fileName.contains("&") ? "" : fileName + " - ") + modelName;
     else if (fileName != null)

@@ -5029,7 +5029,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
     if (mode == 0) {
       g.setO("_fileDropped", fileName);
-      g.setB("doDrop", true);
+      g.setUserVariable("doDrop", SV.vT);
     }
     boolean handled = sm.setStatusDragDropped(mode, x, y, fileName);
     return (!handled || getP("doDrop").toString().equals("true"));
