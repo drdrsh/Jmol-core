@@ -106,13 +106,13 @@ class HallRotation {
       , new HallRotation("2x"   , "+00 0-0 00-")
       , new HallRotation("2y"   , "-00 0+0 00-")
       , new HallRotation("2z"   , "-00 0-0 00+")
-      , new HallRotation("2\'"  , "0-0 -00 00-") //z implied
+      , new HallRotation("2'"   , "0-0 -00 00-") //z implied
       , new HallRotation("2\""  , "0+0 +00 00-") //z implied
-      , new HallRotation("2x\'" , "-00 00- 0-0")
+      , new HallRotation("2x'"  , "-00 00- 0-0")
       , new HallRotation("2x\"" , "-00 00+ 0+0")
-      , new HallRotation("2y\'" , "00- 0-0 -00")
+      , new HallRotation("2y'"  , "00- 0-0 -00")
       , new HallRotation("2y\"" , "00+ 0-0 +00")
-      , new HallRotation("2z\'" , "0-0 -00 00-")
+      , new HallRotation("2z'"  , "0-0 -00 00-")
       , new HallRotation("2z\"" , "0+0 +00 00-")
       , new HallRotation("3x"   , "+00 00- 0+-")
       , new HallRotation("3y"   , "-0+ 0+0 -00")
@@ -126,4 +126,4 @@ class HallRotation {
       , new HallRotation("6z"   , "+-0 +00 00+")
     } : hallRotationTerms);
   }
-}  
+}

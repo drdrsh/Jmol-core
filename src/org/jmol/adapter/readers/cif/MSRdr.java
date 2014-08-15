@@ -29,17 +29,155 @@ import org.jmol.util.Vibration;
 /**
  * generalized modulated structure reader class for CIF and Jana
  * 
- * Current status:
+ * -- includes Fourier, Crenel, Sawtooth; displacement, occupancy, and Uij
  * 
- * -- includes Fourier, Crenel, Sawtooth; displacement, occupancy, and Uiso --
- * reading composite subsystem files such as ms-fit-1.cif but not handling
- * matrix yet
+ * -- handles up to 6 modulation wave vectors
  * 
- * TODO: Uij, d > 1
+ * -- commensurate and incommensurate, including composites
  * 
- * @author Bob Hanson hansonr@stolaf.edu 8/7/13
+ * -- not handling _cell_commen_t_section_1
+ * 
+ * 
+ * @author Bob Hanson hansonr@stolaf.edu
  * 
  */
+
+
+//  Basic strategy:
+//  
+//  1) CIF or Jana reader compiles all data in the form 
+//  of a Hashtable<String,double[]> with keys that identify 
+//  model, atom, and type of modulation. This is done so that
+//  the data can be collected in any order. Hashtable keys are of the form:
+//  
+//    type_id#axis;atomLabel@model
+//  
+//  where 
+//  
+//  type = W|F|D|J|M|O|U (wave vector, Fourier index, displacement, magnetic moment, occupancy, anisotropy);
+//  
+//  id = n|S|T|"_coefs_" 
+//
+//  where 
+//
+//    n=0 is Crenel, 
+//    n>0 is a specific Fourier or cell wave index, (W_1, F_1, F_2, etc.)
+//    S indicates displacement sawtooth (D_S)
+//    T indicates magnetic moment sawtooth (M_T)
+//    "_coefs" used only in F_1_coefs_ indicates coefficients of W_i for a Fourier vector 
+//  
+//  axis (optional) = 0|x|y|z|Uij 
+//
+//  where 0 indicates irrelevant, Uij indicates a specific anisotropic parameter U11, U12, etc.
+//  
+//  atomLabel is only for D, M, and O
+//
+//  model is the model number, starting with 0.
+//
+//  double[] data are typically two or three parameters, such as
+//  [cos,sin], [width,center], [sigma1,sigma2,sigma3], etc.
+// 
+//  for example, the following abbreviated CIF code generates
+//  the accompaning modulation data:
+//
+//
+//
+//  loop_
+//  _cell_wave_vector_seq_id
+//  _cell_wave_vector_x
+//  _cell_wave_vector_y
+//  _cell_wave_vector_z
+//  1 0.293(2) 0 0.915(9)
+//  
+//W_1@0 [0.2930000126361847,0.0,0.9150000214576721]
+//  
+//  
+//  loop_
+//  _atom_site_Fourier_wave_vector_seq_id
+//  _atom_site_Fourier_wave_vector_x
+//  _atom_site_Fourier_wave_vector_y
+//  _atom_site_Fourier_wave_vector_z
+//  1 0.293(2) 0 0.915(9)
+//  2 0.586 0 1.83
+//  
+//F_1@0 [0.2930000126361847,0.0,0.9150000214576721]
+//F_2@0 [0.5860000252723694,0.0,1.8299999237060547]
+//  
+//  loop_
+//  _atom_site_displace_Fourier_atom_site_label
+//  _atom_site_displace_Fourier_axis
+//  _atom_site_displace_Fourier_wave_vector_seq_id
+//  _atom_site_displace_Fourier_param_phase
+//  _atom_site_displace_Fourier_param_modulus
+//  _atom_site_displace_Fourier_param_sin
+//  _atom_site_displace_Fourier_param_cos
+//  Bi x 1 ? ? 0.0062(4) -0.002(3)
+//  Bi x 2 ? ? 0 0
+//  Sr x 1 ? ? -0.0025(2) 0.0043(2)
+//  Sr x 2 ? ? ? ?
+//  Bi y 1 ? ? -0.001(4) 0.0004(3)
+//  Bi y 2 ? ? 0 -0.0052(5)
+//  Sr y 1 ? ? 0 0
+//  Sr y 2 ? ? ? ?
+//  Bi z 1 ? ? 0.00018(2) ?
+//  Bi z 2 ? ? 0 0
+//  Sr z 1 ? ? 0.00132(4) 0.0073(4)
+//  Sr z 2 ? ? ? ?
+
+//D_1#x;Bi@0 [0.006199999712407589,-0.0020000000949949026,0.0]
+//D_1#x;Sr@0 [-0.0024999999441206455,0.004299999680370092,0.0]
+//D_1#y;Bi@0 [-0.0010000000474974513,4.000000189989805E-4,0.0]
+//D_2#y;Bi@0 [0.0,-0.005199999548494816,0.0]
+//D_1#z;Sr@0 [0.0013199999229982495,0.007299999240785837,0.0]
+
+// (note that Bi z 1 ? ? 0.00018(2) ? was ignored because the
+//  cos term is undefined)
+
+//  loop_
+//  _atom_site_occ_Fourier_atom_site_label
+//  _atom_site_occ_Fourier_wave_vector_seq_id
+//  _atom_site_occ_Fourier_param_phase
+//  _atom_site_occ_Fourier_param_modulus
+//  _atom_site_occ_Fourier_param_sin
+//  _atom_site_occ_Fourier_param_cos
+//  Bi 1 ? ? -0.082(2) -0.208(2)
+//  Bi 2 ? ? -0.098(3) -0.116(3)
+
+//O_1#0;Bi@0 [-0.0820000022649765,-0.20800000429153442,0.0]
+//O_2#0;Bi@0 [-0.09799999743700027,-0.11600000411272049,0.0]
+
+//  loop_
+//  _atom_site_U_Fourier_atom_site_label
+//  _atom_site_U_Fourier_tens_elem
+//  _atom_site_U_Fourier_wave_vector_seq_id
+//  _atom_site_U_Fourier_param_phase
+//  _atom_site_U_Fourier_param_modulus
+//  _atom_site_U_Fourier_param_sin
+//  _atom_site_U_Fourier_param_cos
+//  Bi U33 1 ? ? 0.001(3) 0.0004(3)
+//  Bi U33 2 ? ? ? ?
+//  Bi U11 1 ? ? 0.0027(3) 0.0069(4)
+//  Bi U11 2 ? ? ? ?
+//  Bi U12 1 ? ? -0.0028(3) 0
+//  Bi U12 2 ? ? ? ?
+//  Bi U13 1 ? ? 0.0006(2) -0.0005(3)
+//  Bi U13 2 ? ? ? ?
+//  Bi U22 1 ? ? 0.0027(3) 0.0057(4)
+//  Bi U22 2 ? ? ? ?
+//  Bi U23 1 ? ? 0.0013(4) 0.0047(9)
+//  Bi U23 2 ? ? ? ?
+
+//U_1#U33;Bi@0 [0.0010000000474974513,4.000000189989805E-4,0.0]
+//U_1#U11;Bi@0 [0.002699999837204814,0.006899999920278788,0.0]
+//U_1#U12;Bi@0 [-0.00279999990016222,0.0,0.0]
+//U_1#U13;Bi@0 [6.000000284984708E-4,-5.000000237487257E-4,0.0]
+//U_1#U22;Bi@0 [0.002699999837204814,0.005699999630451202,0.0]
+//U_1#U23;Bi@0 [0.001299999887123704,0.004699999932199717,0.0]
+
+//
+// 2) The modulations are bundled into ModulationSets, one per atom.
+//
+// 3) ModulationSets are calculated for each atom. 
 
 public class MSRdr implements MSInterface {
 
@@ -119,19 +257,13 @@ public class MSRdr implements MSInterface {
   protected void setModDim(int ndim) {
     htModulation = new Hashtable<String, double[]>();
     modDim = ndim;
-//    if (modDim > 3) {
-//      cr.appendLoadNote("Too high modulation dimension (" + modDim
-//          + ") -- reading average structure");
-//      modDim = 0;
-//      modAverage = true;
-//    } else {
-      cr.appendLoadNote("Modulation dimension = " + modDim);
-//    }
+    cr.appendLoadNote("Modulation dimension = " + modDim);
   }
 
   /**
-   * Types include O (occupation) D (displacement) U (anisotropy) _coefs_
-   * indicates this is a wave description
+   * Types include O (occupation) D (displacement) U (anisotropy) M (magnetic moment)
+   * 
+   *  _coefs_ indicates this is a wave description
    * 
    * 
    * @param map
@@ -263,6 +395,7 @@ public class MSRdr implements MSInterface {
     }
 
     // check to see we have not already done this.
+    // X_ is just a dummy flag specifically for this purpose.
 
     htModulation.put("X_" + atModel, new double[0]);
 
@@ -279,10 +412,8 @@ public class MSRdr implements MSInterface {
       nOps = cr.symmetry.getSpaceGroupOperationCount();
     iopLast = -1;
     int i0 = cr.asc.getLastAtomSetAtomIndex();
-    //float[] modT = new float[n - i0];
     for (int i = i0; i < n; i++)
       modulateAtom(atoms[i]);
-    //cr.asc.setProperty_Type("modt", sb.toString(), -1);
     htAtomMods = null;
     if (minXYZ0 != null)
       trimAtomSet();
@@ -292,7 +423,7 @@ public class MSRdr implements MSInterface {
   private void initModForStructure(int iModel) throws Exception {
     String key;
 
-    // we allow for up to three wave vectors in the form of a matrix
+    // we allow an unlimited number of wave vectors in the form of a matrix
     // along with their lengths as an array.
 
     sigma = new Matrix(null, modDim, 3);
@@ -312,11 +443,6 @@ public class MSRdr implements MSInterface {
       cr.appendUunitCellInfo("q" + (i + 1) + "=" + fixPt(pt[0]) + " " + fixPt(pt[1]) + " " + fixPt(pt[2]));
       sigma.getArray()[i] = new double[] { pt[0], pt[1], pt[2] };
     }
-    //q1 = sigma.getArray()[0];
-
-    // q1Norm is used specifically for occupancy modulation, where dim = 1 only
-
-    //q1Norm = P3.new3(q1[0] == 0 ? 0 : 1, q1[1] == 0 ? 0 : 1, q1[2] == 0 ? 0 : 1);
     double[] pt;
 
     // Take care of loose ends.
@@ -825,6 +951,10 @@ public class MSRdr implements MSInterface {
     symmetry.toCartesian(pt0, true);
     symmetry.toCartesian(pt1, true);
     P3[] pts = BoxInfo.unitCubePoints;
+    if (sigma == null) {
+      Logger.error("Why are we in MSRdr.setMinMax0 without modulation init?");
+      return;
+    }
     for (Entry<String, Subsystem> e : htSubsystems.entrySet()) {
       SymmetryInterface sym = e.getValue().getSymmetry();
       for (int i = 8; --i >= 0;) {

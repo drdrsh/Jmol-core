@@ -123,6 +123,8 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
     case LOADSTRUCT:
       notifyFileLoaded(strInfo, (String) data[2], (String) data[3],
           (String) data[4], (Boolean) data[8]);
+      if (jmol.gaussianDialog != null)
+        jmol.gaussianDialog.updateModel(-2); 
       return;
     case ANIMFRAME:
       int[] iData = (int[]) data[1];
@@ -171,6 +173,8 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
     //      break;
     case PICK:
       notifyAtomPicked(strInfo);
+      if (jmol.gaussianDialog != null)
+        jmol.gaussianDialog.updateModel(((Integer) data[2]).intValue()); 
       break;
     case STRUCTUREMODIFIED:
       // 0 DONE; 1 in process
@@ -178,6 +182,8 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       int atomIndex = ((Integer) data[2]).intValue();
       int modelIndexx = ((Integer) data[3]).intValue();
       notifyStructureModified(atomIndex, modelIndexx, mode);
+      if (jmol.gaussianDialog != null)
+        jmol.gaussianDialog.updateModel(-1); 
       break;
     case SYNC:
       if (strInfo != null && strInfo.toLowerCase().startsWith("jspecview")) {

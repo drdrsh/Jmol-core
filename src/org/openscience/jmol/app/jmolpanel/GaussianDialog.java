@@ -31,8 +31,8 @@ import java.io.File;
 import java.io.Writer;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
-import java.io.IOException;
 
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -40,8 +40,9 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javajs.util.PT;
+
 import javax.swing.JDialog;
-import javax.swing.JTabbedPane;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -50,14 +51,16 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.border.TitledBorder;
 import javax.swing.BorderFactory;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
-import javax.swing.JTextArea;
 import javax.swing.JSpinner;
+import javax.swing.JTextPane;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 
 public class GaussianDialog extends JDialog implements ActionListener,
                                                        ChangeListener {
@@ -73,11 +76,15 @@ public class GaussianDialog extends JDialog implements ActionListener,
   private JTextField checkField, optsField, fileField, selectField;
   private JComboBox<String> memBox, methBox, basisBox, dfBox;
   private JSpinner procSpinner, chargeSpinner, multSpinner;
-  private JButton fileButton, saveButton, cancelButton;
+  private JButton fileButton, saveButton, closeButton, refreshButton;
   private JFileChooser fileChooser;
-  private JTextArea editArea;
-  private JTabbedPane inputTabs;
+  private JTextPane editArea;
+  //private JTabbedPane inputTabs;
   private String check, mem, proc, file, meth, route, charge, mult, select;
+
+  protected JScrollPane editPane;
+
+  protected int iscroll;
   
   private static final String DEFAULT_METHOD = "HF";
   private static final String DEFAULT_BASIS = "3-21G**";
@@ -188,19 +195,18 @@ public class GaussianDialog extends JDialog implements ActionListener,
 
     container = new JPanel();
     container.setLayout(new BorderLayout());
-    inputTabs = new JTabbedPane();
+    //inputTabs = new JTabbedPane();
 
     JPanel basicPanel = buildBasicPanel();
-    inputTabs.addTab(GT._("Basic"), null, basicPanel);
+    //inputTabs.addTab(GT._("Basic"), null, basicPanel);
     JPanel advancedPanel = buildAdvancedPanel();
-    inputTabs.addTab(GT._("Advanced"), null, advancedPanel);
-    
-    inputTabs.addChangeListener(this);
+    //inputTabs.addTab(GT._("Advanced"), null, advancedPanel);
     
     JPanel filePanel = buildFilePanel();
     JPanel buttonPanel = buildButtonPanel();
-    
-    container.add(inputTabs, BorderLayout.NORTH);
+    JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+        basicPanel, advancedPanel);
+    container.add(splitPane, BorderLayout.NORTH);
     container.add(filePanel, BorderLayout.CENTER);
     container.add(buttonPanel, BorderLayout.SOUTH);
     getContentPane().add(container);
@@ -225,12 +231,14 @@ public class GaussianDialog extends JDialog implements ActionListener,
     linkLabels.add(checkLabel);
     checkField = new JTextField(20);
     linkControls.add(checkField);
+    checkField.addActionListener(this);
     
     JLabel memLabel = new JLabel(GT._("Amount of Memory:"));
     linkLabels.add(memLabel);
     memBox = new JComboBox<String>(MEMORY_LIST);
     linkControls.add(memBox);
     memBox.setSelectedIndex(0);
+    memBox.addActionListener(this);
     
     JLabel procLabel = new JLabel(GT._("Number of Processors:"));
     linkLabels.add(procLabel);
@@ -238,6 +246,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     procSpinner = new JSpinner(procModel);
     procSpinner.setEditor(new JSpinner.NumberEditor(procSpinner, "#"));
     linkControls.add(procSpinner);
+    procSpinner.addChangeListener(this);
     
     linkPanel.add(linkLabels, BorderLayout.LINE_START);
     linkPanel.add(linkControls, BorderLayout.CENTER);
@@ -263,6 +272,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     basisBox = new JComboBox<String>(BASIS_LIST);
     routeControls.add(basisBox);
     basisBox.setSelectedIndex(3);
+    basisBox.addActionListener(this);
    
     
     JLabel dfLabel = 
@@ -271,12 +281,14 @@ public class GaussianDialog extends JDialog implements ActionListener,
     dfBox = new JComboBox<String>(DF_LIST);
     routeControls.add(dfBox);
     dfBox.setSelectedIndex(0);
+    dfBox.addActionListener(this);
     
     JLabel optsLabel = new JLabel(GT._("Job Options: "));
     routeLabels.add(optsLabel);
     optsField = new JTextField(20);
     routeControls.add(optsField);
     optsField.setText("opt");
+    optsField.addActionListener(this);
     
     routePanel.add(routeLabels, BorderLayout.LINE_START);
     routePanel.add(routeControls, BorderLayout.CENTER);
@@ -297,6 +309,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     chargeSpinner = new JSpinner(chargeModel);
     chargeSpinner.setEditor(new JSpinner.NumberEditor(chargeSpinner, "#"));
     molControls.add(chargeSpinner);
+    chargeSpinner.addChangeListener(this);
     
     JLabel multLabel = new JLabel(GT._("Multiplicity: "));
     molLabels.add(multLabel);
@@ -304,12 +317,14 @@ public class GaussianDialog extends JDialog implements ActionListener,
     multSpinner = new JSpinner(multModel);
     multSpinner.setEditor(new JSpinner.NumberEditor(multSpinner, "#"));
     molControls.add(multSpinner);
+    multSpinner.addChangeListener(this);
     
     JLabel selectLabel = new JLabel(GT._("Selection: "));
     molLabels.add(selectLabel);
     selectField = new JTextField(20);
     selectField.setText("visible");
     molControls.add(selectField);
+    selectField.addActionListener(this);
    
     molPanel.add(molLabels, BorderLayout.LINE_START);
     molPanel.add(molControls, BorderLayout.CENTER);
@@ -326,8 +341,10 @@ public class GaussianDialog extends JDialog implements ActionListener,
 	    BorderFactory.createTitledBorder("Edit Gaussian Input File");
 	  editPanel.setBorder(editTitle);
 	
-	  editArea = new JTextArea();
-	  JScrollPane editPane = new JScrollPane(editArea);
+	  editArea = new JTextPane();
+	  editArea.setContentType("text/html");
+	  editArea.setFont(new Font("Monospaced", Font.PLAIN, 8));
+	  editPane = new JScrollPane(editArea);
 	  editPane.setPreferredSize(new Dimension(150,100));
 	
 	  editPanel.add(editPane, BorderLayout.CENTER);
@@ -357,13 +374,17 @@ public class GaussianDialog extends JDialog implements ActionListener,
     JPanel buttonPanel = new JPanel();
     buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
+    refreshButton = new JButton(GT._("Refresh"));
+    refreshButton.addActionListener(this);
+    buttonPanel.add(refreshButton);
+
     saveButton = new JButton(GT._("Save"));
     saveButton.addActionListener(this);
     buttonPanel.add(saveButton);
     
-    cancelButton = new JButton(GT._("Cancel"));
-    cancelButton.addActionListener(this);
-    buttonPanel.add(cancelButton);
+    closeButton = new JButton(GT._("Close"));
+    closeButton.addActionListener(this);
+    buttonPanel.add(closeButton);
   
     getRootPane().setDefaultButton(saveButton);
     return buttonPanel;
@@ -431,24 +452,30 @@ public class GaussianDialog extends JDialog implements ActionListener,
     } else {
       dfBox.setEnabled(false);
     }
+	  getCommand(-2);
     return;
   }
   
   private void save() {
 
-    if (inputTabs.getSelectedIndex() == 0)
-      getCommand();
+    //    if (inputTabs.getSelectedIndex() == 0)
+    //      getCommand(-1);
     Writer output = null;
     try {
+      String s = editArea.getText();
+      if (s.indexOf("<pre>") < 0) {
+        getCommand(-1);
+        s = editArea.getText();
+      }
       File outputFile = new File(fileField.getText());
       fileField.setText(outputFile.getAbsolutePath());
       output = new BufferedWriter(new FileWriter(outputFile));
-      output.write(editArea.getText());
+      output.write(asHTML(s, false));
       output.close();
-    } catch (IOException err) {
+    } catch (Exception err) {
       return;
     }
-    dispose();
+    //dispose();
   }
 
   private void cancel() {
@@ -466,54 +493,105 @@ public class GaussianDialog extends JDialog implements ActionListener,
     }
   }
   
-  private void tabSwitched() {
-	  if (inputTabs.getSelectedIndex() == 1) {
-      getCommand();
-	  }
-  }
+//  private void tabSwitched() {
+//	  if (inputTabs.getSelectedIndex() == 1) {
+//      getCommand(-1);
+//	  }
+//  }
   
-  protected void getCommand() {
+  protected void getCommand(int iAtom) {
     updateVars();
     String c = check;
-    if (! c.equals("")) c = "%chk=" + c + "\n";
+    if (!c.equals(""))
+      c = "%chk=" + c + "\n";
     String m = mem;
-    if (! m.equals("Default")) { 
+    if (!m.equals("Default")) {
       m = "%mem=" + m + "\n";
     } else {
       m = "";
     }
     String p = proc;
-    if (! p.equals("1")) {
+    if (!p.equals("1")) {
       p = "%nproc=" + p + "\n";
     } else {
       p = "";
     }
-  
-    String data = vwr.getData(select,"USER:%-2e %10.5x %10.5y %10.5z");
-  
-    editArea.setText(c + m + p + route + "\n\n" + 
-      "Title: Created by Jmol version " + Viewer.getJmolVersion() + "\n\n" + charge + " " + mult +
-      "\n" + data + "\n");
+    String format = "USER:%-2e %10.5x %10.5y %10.5z";
+    String data = vwr.getData(select, format);
+    iscroll = 0;
+    if (iAtom >= 0) {
+      String a = vwr.getData("atomIndex=" + iAtom, format);
+      iscroll = data.indexOf(a);
+      if (iscroll >= 0) {
+        data = PT.rep(data, a, "<b>" + PT.rep(a, "\n", "")
+            + "&#160;&#160;&lt;&lt;&lt;</b>\n");
+      }
+      int mm = editPane.getVerticalScrollBar().getMaximum();
+      iscroll = (int) (iscroll * 1.0 / data.length() * mm);
+    } else if (iAtom == -1) {
+      iscroll = -1;
+    }
+
+    editArea.setText(asHTML(c + m + p + route + "\n\n"
+        + "Title: <b>Created by Jmol</b> version " + Viewer.getJmolVersion()
+        + "\n\n" + charge + " " + mult + "\n" + data + "\n", true));
+    if (iscroll >= 0)
+      SwingUtilities.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            editPane.getVerticalScrollBar().setValue(iscroll);
+          } catch (Exception e) {
+            editPane.getVerticalScrollBar().setValue(0);
+          }
+        }
+      });
+  }
+
+  private String asHTML(String s, boolean toHTML) {
+    if (toHTML)
+      return "<html><small><pre>" + s + "</pre></small></html>";
+    if (s.indexOf("<pre>") >= 0) {
+      s = PT.rep(s, "<b>", "");
+      s = PT.rep(s, "</b>", "");
+      s = PT.rep(s, "&lt;", "");
+      s = PT.rep(s, "&#160;", "");
+      s = PT.split(s, "<pre>")[1];
+      s = PT.split(s, "</pre>")[0];
+    }
+    return s.trim();
   }
 
   @Override
   public void actionPerformed(ActionEvent event) {
-	  if (event.getSource() == saveButton) {
+    Object c = event.getSource();
+	  if (c == saveButton) {
 	    save();
-	  } else if (event.getSource() == cancelButton) {
+	  } else if (c == closeButton) {
 	    cancel();
-	  } else if (event.getSource() == fileButton) {
+	  } else if (c == fileButton) {
 	    setFile();
-	  } else if (event.getSource() == methBox) {
-	    updateUI();
+	  } else if (c == refreshButton) {
+      getCommand(-2);
+	  } else {
+      updateUI();
 	  }
   }
   
+//  @Override
+//  public void stateChanged(ChangeEvent event) {
+//	  if (event.getSource() == inputTabs) {
+//	    tabSwitched();
+//	  }
+//  }
+
+  public void updateModel(int iAtom) {
+    getCommand(iAtom);
+  }
+
   @Override
-  public void stateChanged(ChangeEvent event) {
-	  if (event.getSource() == inputTabs) {
-	    tabSwitched();
-	  }
+  public void stateChanged(ChangeEvent e) {
+    getCommand(-2);
   }
 
 }

@@ -235,7 +235,7 @@ public class MSCifRdr extends MSRdr {
   /**
    * creates entries in htModulation with a key of the form:
    * 
-   * type_id_axis;atomLabel
+   * type_id_axis;atomLabel@model
    * 
    * where type = W|F|D|O (wave vector, Fourier index, displacement, occupancy);
    * id = 1|2|3|0|S (Fourier index, Crenel(0), sawtooth); axis (optional) =
