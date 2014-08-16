@@ -39,6 +39,8 @@ import java.awt.FlowLayout;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javajs.util.PT;
 
@@ -63,7 +65,8 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 public class GaussianDialog extends JDialog implements ActionListener,
-                                                       ChangeListener {
+                                                       ChangeListener,
+                                                       MouseListener {
 
   /*
    * By Andy Turner, atrog@sourceforge.net
@@ -78,7 +81,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
   private JSpinner procSpinner, chargeSpinner, multSpinner;
   private JButton fileButton, saveButton, closeButton, refreshButton;
   private JFileChooser fileChooser;
-  private JTextPane editArea;
+  protected JTextPane editArea;
   //private JTabbedPane inputTabs;
   private String check, mem, proc, file, meth, route, charge, mult, select;
 
@@ -233,14 +236,14 @@ public class GaussianDialog extends JDialog implements ActionListener,
     linkControls.add(checkField);
     checkField.addActionListener(this);
     
-    JLabel memLabel = new JLabel(GT._("Amount of Memory:"));
+    JLabel memLabel = new JLabel(GT._("Memory:"));
     linkLabels.add(memLabel);
     memBox = new JComboBox<String>(MEMORY_LIST);
     linkControls.add(memBox);
     memBox.setSelectedIndex(0);
     memBox.addActionListener(this);
     
-    JLabel procLabel = new JLabel(GT._("Number of Processors:"));
+    JLabel procLabel = new JLabel(GT._("Processors:"));
     linkLabels.add(procLabel);
     SpinnerModel procModel = new SpinnerNumberModel(1, 1, 16, 1);
     procSpinner = new JSpinner(procModel);
@@ -276,7 +279,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
    
     
     JLabel dfLabel = 
-      new JLabel(GT._("Density Fitting Basis Set (DFT Only): "));
+      new JLabel(GT._("DFT Density Fit: "));
     routeLabels.add(dfLabel);
     dfBox = new JComboBox<String>(DF_LIST);
     routeControls.add(dfBox);
@@ -318,17 +321,10 @@ public class GaussianDialog extends JDialog implements ActionListener,
     multSpinner.setEditor(new JSpinner.NumberEditor(multSpinner, "#"));
     molControls.add(multSpinner);
     multSpinner.addChangeListener(this);
-    
-    JLabel selectLabel = new JLabel(GT._("Selection: "));
-    molLabels.add(selectLabel);
-    selectField = new JTextField(20);
-    selectField.setText("visible");
-    molControls.add(selectField);
-    selectField.addActionListener(this);
-   
+        
     molPanel.add(molLabels, BorderLayout.LINE_START);
     molPanel.add(molControls, BorderLayout.CENTER);
-    
+
     showPanel.add(molPanel, BorderLayout.SOUTH);
     
     return showPanel;
@@ -344,6 +340,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
 	  editArea = new JTextPane();
 	  editArea.setContentType("text/html");
 	  editArea.setFont(new Font("Monospaced", Font.PLAIN, 8));
+	  editArea.addMouseListener(this);
 	  editPane = new JScrollPane(editArea);
 	  editPane.setPreferredSize(new Dimension(150,100));
 	
@@ -374,6 +371,13 @@ public class GaussianDialog extends JDialog implements ActionListener,
     JPanel buttonPanel = new JPanel();
     buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
+    JLabel selectLabel = new JLabel(GT._("Selection: "));
+    buttonPanel.add(selectLabel);
+    selectField = new JTextField(20);
+    selectField.setText("visible");
+    buttonPanel.add(selectField);
+    selectField.addActionListener(this);
+   
     refreshButton = new JButton(GT._("Refresh"));
     refreshButton.addActionListener(this);
     buttonPanel.add(refreshButton);
@@ -452,7 +456,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     } else {
       dfBox.setEnabled(false);
     }
-	  getCommand(-2);
+	  getCommand(-2, true);
     return;
   }
   
@@ -464,7 +468,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     try {
       String s = editArea.getText();
       if (s.indexOf("<pre>") < 0) {
-        getCommand(-1);
+        getCommand(-1, true);
         s = editArea.getText();
       }
       File outputFile = new File(fileField.getText());
@@ -482,6 +486,12 @@ public class GaussianDialog extends JDialog implements ActionListener,
     dispose();
   }
   
+  @Override
+  public void dispose() {
+    vwr.script("select off");
+    super.dispose();
+  }
+  
   private void setFile() {
 	  fileChooser = new JFileChooser();
     String fname = fileField.getText();
@@ -493,13 +503,13 @@ public class GaussianDialog extends JDialog implements ActionListener,
     }
   }
   
-//  private void tabSwitched() {
-//	  if (inputTabs.getSelectedIndex() == 1) {
-//      getCommand(-1);
-//	  }
-//  }
-  
-  protected void getCommand(int iAtom) {
+  //  private void tabSwitched() {
+  //	  if (inputTabs.getSelectedIndex() == 1) {
+  //      getCommand(-1);
+  //	  }
+  //  }
+
+  protected void getCommand(int iAtom, boolean doScroll) {
     updateVars();
     String c = check;
     if (!c.equals(""))
@@ -523,8 +533,8 @@ public class GaussianDialog extends JDialog implements ActionListener,
       String a = vwr.getData("atomIndex=" + iAtom, format);
       iscroll = data.indexOf(a);
       if (iscroll >= 0) {
-        data = PT.rep(data, a, "<b>" + PT.rep(a, "\n", "")
-            + "&#160;&#160;&lt;&lt;&lt;</b>\n");
+        data = PT.rep(data, a, "<b><font color=\"red\">" + PT.rep(a, "\n", "")
+            + "&#160;&#160;&lt;&lt;&lt;</font></b>\n");
       }
       int mm = editPane.getVerticalScrollBar().getMaximum();
       iscroll = (int) (iscroll * 1.0 / data.length() * mm);
@@ -532,6 +542,8 @@ public class GaussianDialog extends JDialog implements ActionListener,
       iscroll = -1;
     }
 
+    if (!doScroll)
+      iscroll = editPane.getVerticalScrollBar().getValue();
     editArea.setText(asHTML(c + m + p + route + "\n\n"
         + "Title: <b>Created by Jmol</b> version " + Viewer.getJmolVersion()
         + "\n\n" + charge + " " + mult + "\n" + data + "\n", true));
@@ -548,12 +560,14 @@ public class GaussianDialog extends JDialog implements ActionListener,
       });
   }
 
-  private String asHTML(String s, boolean toHTML) {
+  protected String asHTML(String s, boolean toHTML) {
     if (toHTML)
       return "<html><small><pre>" + s + "</pre></small></html>";
     if (s.indexOf("<pre>") >= 0) {
       s = PT.rep(s, "<b>", "");
       s = PT.rep(s, "</b>", "");
+      s = PT.rep(s, "<font color=\"red\">", "");
+      s = PT.rep(s, "</font>", "");
       s = PT.rep(s, "&lt;", "");
       s = PT.rep(s, "&#160;", "");
       s = PT.split(s, "<pre>")[1];
@@ -572,7 +586,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
 	  } else if (c == fileButton) {
 	    setFile();
 	  } else if (c == refreshButton) {
-      getCommand(-2);
+      getCommand(-2, true);
 	  } else {
       updateUI();
 	  }
@@ -586,12 +600,55 @@ public class GaussianDialog extends JDialog implements ActionListener,
 //  }
 
   public void updateModel(int iAtom) {
-    getCommand(iAtom);
+    getCommand(iAtom, true);
+    if (iAtom >= 0)
+      vwr.script("select on atomindex=" + iAtom);
   }
 
   @Override
   public void stateChanged(ChangeEvent e) {
-    getCommand(-2);
+    getCommand(-2, true);
+  }
+
+  @Override
+  public void mouseClicked(MouseEvent e) {
+    if (e.getSource() == editArea) {
+      SwingUtilities.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            String s = asHTML(editArea.getText(), false);
+            int pt = editArea.getCaretPosition();
+            int i0 = s.lastIndexOf("\n", pt) + 5;
+            int i1 = s.indexOf("\n", pt);
+            String coord = s.substring(i0, i1);
+            if (Float.isNaN(PT.parseFloat(coord)))
+              return;
+            vwr.scriptWait("select on within(0.1,{" + coord + "})");
+            getCommand(vwr.getSelectedAtoms().nextSetBit(0), false);
+          } catch (Exception e) {
+            // 
+          }
+        }
+    });
+
+    }
+  }
+
+  @Override
+  public void mouseEntered(MouseEvent arg0) {
+  }
+
+  @Override
+  public void mouseExited(MouseEvent arg0) {
+   }
+
+  @Override
+  public void mousePressed(MouseEvent arg0) {
+  }
+
+  @Override
+  public void mouseReleased(MouseEvent arg0) {
   }
 
 }
