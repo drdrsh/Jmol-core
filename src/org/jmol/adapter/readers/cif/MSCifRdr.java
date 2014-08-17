@@ -249,8 +249,6 @@ public class MSCifRdr extends MSRdr {
     CifReader cr = (CifReader) this.cr;
     if (cr.key.equals("_cell_subsystem_code"))
       return processSubsystemLoopBlock();
-    //if (cr.key.equals("_cell_twin_matrix_id")) // _jana
-      //return processTwinMatrixLoopBlock();
     if (!cr.key.startsWith("_cell_wave") && !cr.key.contains("fourier")
         && !cr.key.contains("_special_func"))
       return 0;
@@ -258,6 +256,10 @@ public class MSCifRdr extends MSRdr {
       cr.asc.newAtomSet();
     cr.parseLoopParameters(modulationFields);
     int tok;
+    if (cr.fieldOf[JANA_FWV_Q1_COEF] != NONE) {
+      // disable x y z for atom_site_fourier if we have coefficients
+      cr.fieldOf[FWV_X] = cr.fieldOf[FWV_Y] = cr.fieldOf[FWV_Z] = NONE;
+    }
     while (cr.parser.getData()) {
       boolean ignore = false;
       String id = null;
@@ -308,8 +310,7 @@ public class MSCifRdr extends MSRdr {
           case FWV_OCC_SEQ_ID:
           case FWV_SPIN_SEQ_ID:
           case FWV_U_SEQ_ID:
-            id = Character.toUpperCase(modulationFields[tok].charAt(11))
-                + "_";
+            id = Character.toUpperCase(modulationFields[tok].charAt(11)) + "_";
             break;
           }
           id += field;
@@ -320,11 +321,11 @@ public class MSCifRdr extends MSRdr {
           //$FALL-THROUGH$
         case SPIN_SPEC_LABEL:
           if (id == null)
-          id = "M_T";
+            id = "M_T";
           //$FALL-THROUGH$
         case DISP_SPEC_LABEL:
           if (id == null)
-          id = "D_S";
+            id = "D_S";
           //$FALL-THROUGH$
         case OCC_SPECIAL_LABEL:
           if (id == null)
@@ -346,76 +347,80 @@ public class MSCifRdr extends MSRdr {
         case FWV_U_TENS:
           axis = field.toUpperCase();
           break;
-          
-        case FWV_OCC_SIN:
-        case OCC_CRENEL_C:
-        case FWV_DISP_SIN:
-        case FWV_SPIN_SIN:
-        case FWV_U_SIN:
-        case DEPR_FU_SIN:
-        case DEPR_FD_SIN:
-        case DEPR_FO_SIN:
-          pt[2] = 0;
-          //$FALL-THROUGH$
-        case WV_X:
-        case FWV_X:
-        case DISP_SAW_AX:
-        case SPIN_SAW_AX:
-          pt[0] = cr.parseFloatStr(field);
-          break;
-        case JANA_FWV_Q1_COEF:
-          id += "_coefs_";
-          pt = new double[modDim];
-          pt[0] = cr.parseFloatStr(field);
-          break;
-        case FWV_DISP_MODULUS:
-        case FWV_OCC_MODULUS:
-        case FWV_SPIN_MODULUS:
-        case FWV_U_MODULUS:
-          pt[0] = cr.parseFloatStr(field);
-          pt[2] = 1;
-          break;
-        case DEPR_FO_COS:
-        case FWV_OCC_COS:
-          axis = "0";
-          //$FALL-THROUGH$
-        case WV_Y:
-        case FWV_Y:
-        case JANA_FWV_Q2_COEF:
-        case FWV_DISP_PHASE:
-        case FWV_OCC_PHASE:
-        case FWV_SPIN_PHASE:
-        case FWV_U_PHASE:
-        case OCC_CRENEL_W:
-        case DISP_SAW_AY:
-        case SPIN_SAW_AY:
-        case JANA_OCC_ABS_O_0:          
-        case FWV_DISP_COS:
-        case FWV_SPIN_COS:
-        case FWV_U_COS:
-        case DEPR_FD_COS:
-        case DEPR_FU_COS:
-          pt[1] = cr.parseFloatStr(field);
-          break;
-        case WV_Z:
-        case FWV_Z:
-        case JANA_FWV_Q3_COEF:
-        case DISP_SAW_AZ:
-        case SPIN_SAW_AZ:
-          pt[2] = cr.parseFloatStr(field);
-          break;
-        case DISP_SAW_C:
-        case SPIN_SAW_C:
-          c = cr.parseFloatStr(field);
-          break;
-        case DISP_SAW_W:
-        case SPIN_SAW_W:
-          w = cr.parseFloatStr(field);
+        default:
+          float f = cr.parseFloatStr(field);
+          switch (tok) {
+          case FWV_OCC_SIN:
+          case OCC_CRENEL_C:
+          case FWV_DISP_SIN:
+          case FWV_SPIN_SIN:
+          case FWV_U_SIN:
+          case DEPR_FU_SIN:
+          case DEPR_FD_SIN:
+          case DEPR_FO_SIN:
+            pt[2] = 0;
+            //$FALL-THROUGH$
+          case WV_X:
+          case FWV_X:
+          case DISP_SAW_AX:
+          case SPIN_SAW_AX:
+            pt[0] = f;
+            break;
+          case JANA_FWV_Q1_COEF:
+            id += "_coefs_";
+            pt = new double[modDim];
+            pt[0] = f;
+            break;
+          case FWV_DISP_MODULUS:
+          case FWV_OCC_MODULUS:
+          case FWV_SPIN_MODULUS:
+          case FWV_U_MODULUS:
+            pt[0] = f;
+            pt[2] = 1;
+            break;
+          case DEPR_FO_COS:
+          case FWV_OCC_COS:
+            axis = "0";
+            //$FALL-THROUGH$
+          case WV_Y:
+          case FWV_Y:
+          case JANA_FWV_Q2_COEF:
+          case FWV_DISP_PHASE:
+          case FWV_OCC_PHASE:
+          case FWV_SPIN_PHASE:
+          case FWV_U_PHASE:
+          case OCC_CRENEL_W:
+          case DISP_SAW_AY:
+          case SPIN_SAW_AY:
+          case JANA_OCC_ABS_O_0:
+          case FWV_DISP_COS:
+          case FWV_SPIN_COS:
+          case FWV_U_COS:
+          case DEPR_FD_COS:
+          case DEPR_FU_COS:
+            pt[1] = f;
+            break;
+          case WV_Z:
+          case FWV_Z:
+          case JANA_FWV_Q3_COEF:
+          case DISP_SAW_AZ:
+          case SPIN_SAW_AZ:
+            pt[2] = f;
+            break;
+          case DISP_SAW_C:
+          case SPIN_SAW_C:
+            c = f;
+            break;
+          case DISP_SAW_W:
+          case SPIN_SAW_W:
+            w = f;
+            break;
+          }
           break;
         }
       }
-      if (ignore || id == null || atomLabel != null
-          && !atomLabel.equals("*") && cr.rejectAtomName(atomLabel))
+      if (ignore || id == null || atomLabel != null && !atomLabel.equals("*")
+          && cr.rejectAtomName(atomLabel))
         continue;
       double d = 0;
       for (int j = 0; j < pt.length; j++)
@@ -435,11 +440,11 @@ public class MSCifRdr extends MSRdr {
           if (Double.isNaN(c) || Double.isNaN(w))
             continue;
           if (pt[0] != 0)
-            addMod(id + "#x;" + atomLabel, fid, new double[] {c, w, pt[0]});
+            addMod(id + "#x;" + atomLabel, fid, new double[] { c, w, pt[0] });
           if (pt[1] != 0)
-            addMod(id + "#y;" + atomLabel, fid, new double[] {c, w, pt[1]});
+            addMod(id + "#y;" + atomLabel, fid, new double[] { c, w, pt[1] });
           if (pt[2] != 0)
-            addMod(id + "#z;" + atomLabel, fid, new double[] {c, w, pt[2]});
+            addMod(id + "#z;" + atomLabel, fid, new double[] { c, w, pt[2] });
           continue;
         }
         id += "#" + axis + ";" + atomLabel;

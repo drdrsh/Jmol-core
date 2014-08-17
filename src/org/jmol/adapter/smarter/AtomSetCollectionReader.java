@@ -187,6 +187,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean iHaveFractionalCoordinates;
   public boolean doPackUnitCell;
   protected String strSupercell;
+  protected P3 ptSupercell;
   protected boolean mustFinalizeModelSet;
   protected boolean forcePacked;
   public float packingError = 0.02f;
@@ -500,14 +501,17 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private void initialize() {
     if (htParams.containsKey("baseAtomIndex"))
       baseAtomIndex = ((Integer) htParams.get("baseAtomIndex")).intValue();
-    strSupercell = (String) htParams.get("supercell");
+    Object o = htParams.get("supercell");
+    if (o instanceof String)
+      strSupercell = (String) o;
+    else
+      ptSupercell = (P3) o;
     initializeSymmetry();
     vwr = (Viewer) htParams.remove("vwr"); // don't pass this on to user
     if (htParams.containsKey("stateScriptVersionInt"))
       stateScriptVersionInt = ((Integer) htParams.get("stateScriptVersionInt"))
           .intValue();
-    Object o = htParams.get("packingError");
-    if (o != null)
+    if ((o = htParams.get("packingError")) != null)
       packingError = ((Float) o).floatValue();
     else if (htParams.get("legacyJavaFloat") != null) {
       // earlier versions were not fully JavaScript compatible
@@ -688,11 +692,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       //22-24 supercell.x supercell.y supercell.z
       for (int i = 25; --i >= 0;)
         notionalUnitCell[i] = Float.NaN;
-//      if (ptSupercell != null) {
-//        notionalUnitCell[22] = Math.max(1, (int) ptSupercell.x);
-//        notionalUnitCell[23] = Math.max(1, (int) ptSupercell.y);
-//        notionalUnitCell[24] = Math.max(1, (int) ptSupercell.z);
-//      }
       symmetry = null;
     }
     if (!ignoreFileSpaceGroupName)
@@ -1193,6 +1192,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       moreUnitCellInfo = null;
     }
     finalizeSubclassSymmetry(sym != null);
+    if (sym != null && ptSupercell != null) {
+      asc.getXSymmetry().finalizeUnitCell(ptSupercell);
+    }
     initializeSymmetry();
     return sym;
   }

@@ -323,6 +323,9 @@ public class Symmetry implements SymmetryInterface {
     return (symmetryInfo == null ? false : symmetryInfo.isPeriodic());
   }
 
+  /**
+   * Set the symmetry in  the  
+   */
   @SuppressWarnings("unchecked")
   @Override
   public void setSymmetryInfo(int modelIndex,

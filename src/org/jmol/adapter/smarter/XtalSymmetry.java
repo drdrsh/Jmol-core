@@ -82,7 +82,8 @@ public class XtalSymmetry {
   }
 
   private float[] notionalUnitCell = new float[6];
-  // expands to 22 for cartesianToFractional matrix as array (PDB)
+  private float[] baseUnitCell;
+  // expands to 26 for cartesianToFractional matrix as array (PDB) and supercell
 
   private float symmetryRange;
   private boolean doCentroidUnitCell;
@@ -126,13 +127,30 @@ public class XtalSymmetry {
     doCentroidUnitCell = acr.doCentroidUnitCell;
     centroidPacked = acr.centroidPacked;
     filterSymop = acr.filterSymop;
-    if (matSupercell == null && acr.strSupercell != null) 
+    if (acr.strSupercell == null)
+      setSupercellFromPoint(acr.ptSupercell);
+    else
       setSuperCellFromString(acr.strSupercell);
   }
 
-  public float[] fmatSupercell;
+  private P3 ptSupercell;
+  private float[] fmatSupercell;
   private M4 matSupercell;
 
+  public void setSupercellFromPoint(P3 pt) {
+    ptSupercell = pt;
+    if (pt == null) {
+      matSupercell = null;
+      return;
+    }
+    matSupercell = new M4();
+    matSupercell.m00 = pt.x;
+    matSupercell.m11 = pt.y;
+    matSupercell.m22 = pt.z;
+    matSupercell.m33 = 1;
+    Logger.info("Using supercell \n" + matSupercell);
+  }
+  
   public void setSuperCellFromString(String supercell) {
     if (fmatSupercell != null)
       return;
@@ -254,6 +272,7 @@ public class XtalSymmetry {
     P3 pt0 = null;
     nVib = 0;
     T3 va = null, vb = null, vc = null;
+    baseSymmetry = symmetry;
     if (altCell != null && altCell.indexOf(",") >= 0) {
       // expand range to accommodate this alternative cell
       oabc = symmetry.getV0abc(altCell);
@@ -298,9 +317,7 @@ public class XtalSymmetry {
       }
     } else if (fmatSupercell != null) {
 
-      baseSymmetry = symmetry;
-
-      // supercell of the form (nx,ny,nz) or "x-y,x+y,..."
+      // supercell of the form {nx,ny,nz} or "x-y,x+y,..."
 
       // 1) get all atoms for cells necessary
 
@@ -490,25 +507,25 @@ public class XtalSymmetry {
     if (doCentroidUnitCell)
       asc.setInfo("centroidMinMax", new int[] { minXYZ.x, minXYZ.y, minXYZ.z,
           maxXYZ.x, maxXYZ.y, maxXYZ.z, (centroidPacked ? 1 : 0) });
-//    if (ptSupercell != null) {
-//      asc.setAtomSetAuxiliaryInfo("supercell", ptSupercell);
-//      switch (dtype) {
-//      case 3:
-//        // standard
-//        minXYZ.z *= (int) Math.abs(ptSupercell.z);
-//        maxXYZ.z *= (int) Math.abs(ptSupercell.z);
-//        //$FALL-THROUGH$;
-//      case 2:
-//        // slab or standard
-//        minXYZ.y *= (int) Math.abs(ptSupercell.y);
-//        maxXYZ.y *= (int) Math.abs(ptSupercell.y);
-//        //$FALL-THROUGH$;
-//      case 1:
-//        // slab, polymer, or standard
-//        minXYZ.x *= (int) Math.abs(ptSupercell.x);
-//        maxXYZ.x *= (int) Math.abs(ptSupercell.x);
-//      }
-//    }
+    if (ptSupercell != null) {
+      asc.setAtomSetAuxiliaryInfo("supercell", ptSupercell);
+      switch (dtype) {
+      case 3:
+        // standard
+        minXYZ.z *= (int) Math.abs(ptSupercell.z);
+        maxXYZ.z *= (int) Math.abs(ptSupercell.z);
+        //$FALL-THROUGH$;
+      case 2:
+        // slab or standard
+        minXYZ.y *= (int) Math.abs(ptSupercell.y);
+        maxXYZ.y *= (int) Math.abs(ptSupercell.y);
+        //$FALL-THROUGH$;
+      case 1:
+        // slab, polymer, or standard
+        minXYZ.x *= (int) Math.abs(ptSupercell.x);
+        maxXYZ.x *= (int) Math.abs(ptSupercell.x);
+      }
+    }
     if (doCentroidUnitCell || doPackUnitCell || symmetryRange != 0
         && maxXYZ.x - minXYZ.x == 1 && maxXYZ.y - minXYZ.y == 1
         && maxXYZ.z - minXYZ.z == 1) {
@@ -673,6 +690,7 @@ public class XtalSymmetry {
         symmetry.getLatticeDesignation());
     asc.setAtomSetAuxiliaryInfo("unitCellRange", unitCells);
     asc.setAtomSetAuxiliaryInfo("unitCellTranslations", unitCellTranslations);
+    baseUnitCell = notionalUnitCell;
     notionalUnitCell = new float[6];
     reset();
   }
@@ -1182,6 +1200,19 @@ public class XtalSymmetry {
    */
   public SymmetryInterface getBaseSymmetry() {
     return (baseSymmetry == null ? symmetry : baseSymmetry);
+  }
+  
+  /**
+   * Ensure that ModelLoader sets up the supercell unit cell.
+   * 
+   * @param ptSupercell
+   */
+  public void finalizeUnitCell(P3 ptSupercell) {
+    if (ptSupercell != null && baseUnitCell != null) {
+      baseUnitCell[22] = Math.max(1, (int) ptSupercell.x);
+      baseUnitCell[23] = Math.max(1, (int) ptSupercell.y);
+      baseUnitCell[24] = Math.max(1, (int) ptSupercell.z);
+    }
   }
   
 //  static {
