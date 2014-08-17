@@ -728,11 +728,11 @@ Species   Ion     s      p      d      f     Total  Charge (e)
     boolean isGammaPoint = (qvec.length() == 0);
     float nx = 1, ny = 1, nz = 1;
     XtalSymmetry xSym = asc.getXSymmetry();
-    if (ptSupercell != null && !isOK && !isSecond) {
-      xSym.setSupercellFromPoint(ptSupercell);
-      nx = ptSupercell.x;
-      ny = ptSupercell.y;
-      nz = ptSupercell.z;
+    if (strSupercell != null && !isOK && !isSecond) {
+      xSym.setSuperCellFromString(strSupercell);
+      nx = xSym.fmatSupercell[0];
+      ny = xSym.fmatSupercell[5];
+      nz = xSym.fmatSupercell[10];
       // only select corresponding phonon vector 
       // relating to this supercell -- one that has integral dot product
       float dx = (qvec.x == 0 ? 1 : qvec.x) * nx;
@@ -743,11 +743,11 @@ Species   Ion     s      p      d      f     Total  Charge (e)
         return;
       isOK = true;
     }
-    if (ptSupercell == null || !havePhonons)
+    if (strSupercell == null || !havePhonons)
       appendLoadNote(line);
     if (!isOK && isSecond)
       return;
-    if (!isOK && (ptSupercell == null) == !isGammaPoint)
+    if (!isOK && (strSupercell == null) == !isGammaPoint)
       return;
     if (havePhonons && !isAllQ)
       return;

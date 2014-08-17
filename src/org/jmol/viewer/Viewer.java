@@ -4838,7 +4838,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   private void setStatusAtomHovered(int atomIndex, String info) {
     g.setI("_atomhovered", atomIndex);
-    g.setO("hovered", BSUtil.newAndSetBit(atomIndex));
+    g.setUserVariable("hovered", SV.getVariable(BSUtil.newAndSetBit(atomIndex)));
     sm.setStatusAtomHovered(atomIndex, info);
   }
 

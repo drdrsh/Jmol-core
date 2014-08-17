@@ -176,9 +176,9 @@ public interface SymmetryInterface {
 
   public void initializeOrientation(M3 matUnitCellOrientation);
 
-  public void toCartesian(T3 pt, boolean asAbsolue);
+  public void toCartesian(T3 pt, boolean asAbsolute);
 
-  public void toFractional(T3 pt, boolean isAbsolute);
+  public void toFractional(T3 pt, boolean asAbsolute);
 
   public P3 toSupercell(P3 fpt);
 

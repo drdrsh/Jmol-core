@@ -172,7 +172,7 @@ public class JanaReader extends AtomSetCollectionReader {
   @Override
   public void doPreSymmetry() throws Exception {
     if (ms != null)
-      ms.setModulation(false);
+      ms.setModulation(false, null);
   }
 
   @Override
@@ -182,14 +182,23 @@ public class JanaReader extends AtomSetCollectionReader {
     if (lattvecs != null && lattvecs.size() > 0)
       asc.getSymmetry().addLatticeVectors(lattvecs);
     applySymmetryAndSetTrajectory();
-    adjustM40Occupancies();
-    if (ms != null) {
-      ms.setModulation(true);
-      ms.finalizeModulation();
-    }
     finalizeReaderASCR();
   }
-  
+
+  @Override
+  protected void finalizeSubclassSymmetry(boolean haveSymmetry) throws Exception {
+    // called by applySymTrajASCR();
+    adjustM40Occupancies();
+    if (ms != null && haveSymmetry) {
+      ms.setModulation(true, asc.getXSymmetry().getBaseSymmetry());
+      ms.finalizeModulation();
+    }
+    // when M40 can store magnetic moments
+    if (haveSymmetry && vibsFractional)
+      asc.getXSymmetry().scaleFractionalVibs();
+  }
+
+
   private void cell() throws Exception {
     for (int ipt = 0; ipt < 6; ipt++)
       setUnitCellItem(ipt, parseFloat());

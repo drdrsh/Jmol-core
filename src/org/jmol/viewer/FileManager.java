@@ -182,9 +182,8 @@ public class FileManager implements BytePoster {
   Object createAtomSetCollectionFromFile(String name,
                                          Map<String, Object> htParams,
                                          boolean isAppend) {
-    if (htParams.get("atomDataOnly") == null) {
+    if (htParams.get("atomDataOnly") == null)
       setLoadState(htParams);
-    }
     name = vwr.resolveDatabaseFormat(name);
     int pt = name.indexOf("::");
     String nameAsGiven = (pt >= 0 ? name.substring(pt + 2) : name);

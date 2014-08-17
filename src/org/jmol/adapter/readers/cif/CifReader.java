@@ -391,16 +391,10 @@ public class CifReader extends AtomSetCollectionReader {
     if (centerings != null)
       addLatticeVectors();
     if (modDim > 0)
-      getModulationReader().setModulation(false);
+      getModulationReader().setModulation(false, null);
     if (isMagCIF) {
-      vibsFractional = true;
       // set fractional; note that this will be set to Cartesians later
-      float[] params = asc.xtalSymmetry.symmetry.getNotionalUnitCell();
-      P3 ptScale = P3.new3(1 / params[0], 1 / params[1], 1 / params[2]);
-      for (int i = asc.ac; --i >= nAtoms0;)
-        if (asc.atoms[i].vib != null) {
-          asc.atoms[i].vib.scaleT(ptScale);
-        }
+      vibsFractional = true;
     }
   }
 
@@ -427,13 +421,25 @@ public class CifReader extends AtomSetCollectionReader {
     }
     if (!haveCellWaveVector)
       modDim = 0;
-    SymmetryInterface sym = applySymTrajASCR();
-    if (modDim > 0) {
+    applySymTrajASCR();
+    if (doCheckBonding && (bondTypes.size() > 0 || isMolecular))
+      setBondingAndMolecules();
+    asc.setAtomSetAuxiliaryInfo("fileHasUnitCell", Boolean.TRUE);
+    asc.xtalSymmetry = null;
+  }
+
+  @Override
+  protected void finalizeSubclassSymmetry(boolean haveSymmetry) throws Exception {
+    // called by applySymTrajASCR();
+    SymmetryInterface sym = (haveSymmetry ? asc.getXSymmetry().getBaseSymmetry() : null);
+    if (modDim > 0 && sym != null) {
       addLatticeVectors();
       asc.setTensors();
-      getModulationReader().setModulation(true);
+      getModulationReader().setModulation(true, sym);
       mr.finalizeModulation();
     }
+    if (sym != null && vibsFractional)
+      asc.getXSymmetry().scaleFractionalVibs();
     if (isMagCIF)
       asc.setNoAutoBond();
       //addJmolScript("connect none;");
@@ -443,18 +449,13 @@ public class CifReader extends AtomSetCollectionReader {
       appendLoadNote(n
           + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
     }
-
-    if (auditBlockCode != null && auditBlockCode.contains("REFRNCE")
-        && sym != null) {
+    if (sym != null && auditBlockCode != null && auditBlockCode.contains("REFRNCE")) {
       if (htAudit == null)
         htAudit = new Hashtable<String, Object>();
       htAudit.put(auditBlockCode, sym);
     }
-    if (doCheckBonding && (bondTypes.size() > 0 || isMolecular))
-      setBondingAndMolecules();
-    asc.setAtomSetAuxiliaryInfo("fileHasUnitCell", Boolean.TRUE);
-    asc.xtalSymmetry = null;
   }
+
 
   ////////////////////////////////////////////////////////////////
   // processing methods

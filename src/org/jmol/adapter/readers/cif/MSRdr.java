@@ -220,6 +220,8 @@ public class MSRdr implements MSInterface {
 
   private boolean finalized;
 
+  private SymmetryInterface symmetry, supercellSymmetry;
+
   public MSRdr() {
     // for reflection from Jana
   }
@@ -311,12 +313,13 @@ public class MSRdr implements MSInterface {
    * 
    */
   @Override
-  public void setModulation(boolean isPost) throws Exception {
+  public void setModulation(boolean isPost, SymmetryInterface symmetry) throws Exception {
     if (modDim == 0 || htModulation == null)
       return;
     if (modDebug)
       Logger.debugging = Logger.debuggingHigh = true;
     cr.asc.setInfo("someModelsAreModulated", Boolean.TRUE);
+    this.symmetry = symmetry;
     setModulationForStructure(cr.asc.iSet, isPost);
     if (modDebug)
       Logger.debugging = Logger.debuggingHigh = false;
@@ -407,9 +410,12 @@ public class MSRdr implements MSInterface {
 
     int n = cr.asc.ac;
     atoms = cr.asc.atoms;
-    cr.symmetry = cr.asc.getSymmetry();
-    if (cr.symmetry != null)
-      nOps = cr.symmetry.getSpaceGroupOperationCount();
+    //cr.symmetry = cr.asc.getSymmetry();
+    if (symmetry != null)
+      nOps = symmetry.getSpaceGroupOperationCount();
+    supercellSymmetry = cr.asc.getXSymmetry().symmetry;
+    if (supercellSymmetry  == symmetry)
+      supercellSymmetry = null;
     iopLast = -1;
     int i0 = cr.asc.getLastAtomSetAtomIndex();
     for (int i = i0; i < n; i++)
@@ -439,8 +445,9 @@ public class MSRdr implements MSInterface {
         Logger.info("Not enough cell wave vectors for d=" + modDim);
         return;
       }
+      fixDouble(pt);
       cr.appendLoadNote("W_" + (i + 1) + " = " + Escape.e(pt));
-      cr.appendUunitCellInfo("q" + (i + 1) + "=" + fixPt(pt[0]) + " " + fixPt(pt[1]) + " " + fixPt(pt[2]));
+      cr.appendUunitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " " + pt[2]);
       sigma.getArray()[i] = new double[] { pt[0], pt[1], pt[2] };
     }
     double[] pt;
@@ -569,12 +576,10 @@ public class MSRdr implements MSInterface {
     }
   }
 
-  private String fixPt(double d) {
-    int i = (int) (d * 100000);
-    return (i == 0 ? "0" 
-        : Math.abs(i) % 100 == 0 ? "" + i / 100000f
-        : Math.abs(i+1) % 100 == 0 ? "" + (i + 1) / 100000f
-        : "" + (float) d);
+  private void fixDouble(double[] pt) {
+    if (cr.fixJavaFloat)
+      for (int i = pt.length; --i >= 0;)
+        pt[i] = PT.fixDouble(pt[i], PT.FRACTIONAL_PRECISION);
   }
 
   @Override
@@ -777,7 +782,7 @@ public class MSRdr implements MSInterface {
       // force treatment if a subsystem
       list = new Lst<Modulation>();
     }
-    if (list == null || cr.symmetry == null || a.bsSymmetry == null)
+    if (list == null || symmetry == null || a.bsSymmetry == null)
       return;// 0;
 
     int iop = Math.max(a.bsSymmetry.nextSetBit(0), 0);
@@ -797,14 +802,14 @@ public class MSRdr implements MSInterface {
     }
     if (Logger.debugging) {
       Logger.debug("setModulation iop = " + iop + " "
-          + cr.symmetry.getSpaceGroupXyz(iop, false) + " " + a.bsSymmetry);
+          + symmetry.getSpaceGroupXyz(iop, false) + " " + a.bsSymmetry);
     }
 
     // The magic happens here. Note that we must preserve any spin "vibration"
     // because we are going to repurpose that.
-
+    P3 r0 = getAtomR0(a);
     ModulationSet ms = new ModulationSet().setMod(a.index + " " + a.atomName,
-        a, modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a), 
+        r0, modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a), 
         a.vib instanceof Vibration ? (Vibration) a.vib : null);
     ms.calculate(null, false);
 
@@ -862,9 +867,9 @@ public class MSRdr implements MSInterface {
         for (Entry<String, Float> e : ms.htUij.entrySet())
           addUStr(a, e.getKey(), e.getValue().floatValue());
 
-        SymmetryInterface symmetry = getAtomSymmetry(a, cr.symmetry);
+        SymmetryInterface sym = getAtomSymmetry(a, symmetry);
         t = cr.asc.getXSymmetry().addRotatedTensor(a,
-            symmetry.getTensor(a.anisoBorU), iop, false, symmetry);
+            sym.getTensor(a.anisoBorU), iop, false, sym);
         t.isModulated = true;
         t.id = Escape.e(a.anisoBorU);
         // note that a.bFactor will be modulated value
@@ -899,6 +904,15 @@ public class MSRdr implements MSInterface {
 //    return (int) t;
   }
 
+  private P3 getAtomR0(Atom atom) {
+    P3 r0 = P3.newP(atom);
+    if (supercellSymmetry != null) {
+      supercellSymmetry.toCartesian(r0, true);
+      symmetry.toFractional(r0, true);
+    }
+    return r0;
+  }
+
   /**
    * When applying symmetry, this method allows us to use a set of symmetry
    * operators unique to this particular atom -- or in this case, to its
@@ -929,7 +943,7 @@ public class MSRdr implements MSInterface {
 
   private SymmetryInterface getSymmetry(Atom a) {
     Subsystem ss = getSubsystem(a);
-    return (ss == null ? cr.symmetry : ss.getSymmetry());
+    return (ss == null ? symmetry : ss.getSymmetry());
   }
 
   private Subsystem getSubsystem(Atom a) {

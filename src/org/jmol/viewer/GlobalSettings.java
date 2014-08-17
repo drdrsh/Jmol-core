@@ -772,13 +772,13 @@ public class GlobalSettings {
         htNonbooleanParameterValues.remove(key);
     }
 
-    public SV setUserVariable(String key, SV var) {
-      if (var == null) 
-        return null;
+  public SV setUserVariable(String key, SV var) {
+    if (var != null) {
       key = key.toLowerCase();
       htUserVariables.put(key, var.setName(key));
-      return var;
     }
+    return var;
+  }
 
     void unsetUserVariable(String key) {
       if (key.equals("all") || key.equals("variables")) {
@@ -1005,8 +1005,8 @@ public class GlobalSettings {
           + ";spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;" + CBK.getNameList()
           + ";undo;atompicking;drawpicking;bondpicking;pickspinrate;picklabel"
           + ";modelkitmode;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
-          //  oops
-          + ";dodrop"
+          //  oops these were 
+          + ";dodrop;hovered"
           + ";").toLowerCase();
 
     Object getAllVariables() {

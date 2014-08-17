@@ -10,6 +10,7 @@ import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.Matrix;
 import javajs.util.P3;
+import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -127,7 +128,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * GammaIinv and tau.
    * 
    * @param id
-   * @param r0        unmodulated (average) position
+   * @param atom        unmodulated (average) position
    * @param modDim
    * @param mods
    * @param gammaE
@@ -143,7 +144,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public ModulationSet setMod(String id, P3 r0, int modDim,
                            Lst<Modulation> mods, M3 gammaE, Matrix[] factors,
                            int iop, SymmetryInterface symmetry, Vibration v) {
-    this.r0 = P3.newP(r0);
+    this.r0 = r0;
     vib = v;
     if (v != null)
       mxyz = new V3(); // modulations of spin
@@ -182,7 +183,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   }
 
   @Override
-  public SymmetryInterface getUnitCell() {
+  public SymmetryInterface getSubSystemUnitCell() {
     return (isSubsystem ? symmetry : null);
   }
   /**
@@ -332,6 +333,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.setT(mxyz);
     ptTemp.scale(this.scale * scale);
     symmetry.toCartesian(ptTemp, true);
+    PT.fixPtFloats(ptTemp, PT.CARTESIAN_PRECISION);
     ptTemp.scale(mscale);
     vib.add(ptTemp);
   }

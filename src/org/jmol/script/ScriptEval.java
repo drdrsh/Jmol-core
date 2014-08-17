@@ -4455,6 +4455,8 @@ public class ScriptEval extends ScriptExpr {
     boolean timeMsg = vwr.getBoolean(T.showtiming);
     if (timeMsg)
       Logger.startTimer("load");
+    if (!isStateScript && !isAppend)
+      vwr.setBooleanProperty("legacyJavaFloat", false);
     errMsg = vwr.loadModelFromFile(null, filename, filenames, null, isAppend,
         htParams, loadScript, sOptions, tokType, isConcat);
     if (timeMsg)
@@ -4666,30 +4668,17 @@ public class ScriptEval extends ScriptExpr {
 
       // {i j k} PACKED, CENTROID -- either or both; either order
 
-      if (tokAt(i) == T.packed) {
-        htParams.put("packed", Boolean.TRUE);
-        sOptions.append(" PACKED");
-        if (isFloatParameter(++i)) {
-          float f = floatParameter(i++);
-          htParams.put("packingError", Float.valueOf(f));
-          sOptions.append(" " + f);
-        }
-      }
+      i = checkPacked(i, htParams, sOptions);
       if (tokAt(i) == T.centroid) {
         htParams.put("centroid", Boolean.TRUE);
         sOptions.append(" CENTROID");
-        i++;
-        if (tokAt(i) == T.packed && !htParams.containsKey("packed")) {
-          htParams.put("packed", Boolean.TRUE);
-          sOptions.append( " PACKED");
-          i++;
-        }
+        i = checkPacked(++i, htParams, sOptions);
       }
 
       // {i j k} ... SUPERCELL {i' j' k'}
 
       if (tokAt(i) == T.supercell) {
-        Object supercell;
+        String supercell;
         sOptions.append(" SUPERCELL ");
         if (isPoint3f(++i)) {
           P3 pt = getPoint3f(i, false);
@@ -4698,13 +4687,14 @@ public class ScriptEval extends ScriptExpr {
             iToken = i;
             invArg();
           }
-          supercell = pt;
-          i = iToken + 1;
+          supercell = Math.round(pt.x) + "x," + Math.round(pt.y) + "y," + Math.round(pt.z) + "z";
+          i = iToken;
         } else {
-          supercell = stringParameter(i++);
+          supercell = stringParameter(i);
         }
-        sOptions.append(Escape.e(supercell));
+        sOptions.append(PT.esc(supercell));
         htParams.put("supercell", supercell);
+        i = checkPacked(++i, htParams, sOptions);
       }
 
       // {i j k} ... RANGE x.y  (from full unit cell set)
@@ -4813,6 +4803,19 @@ public class ScriptEval extends ScriptExpr {
       }
       htParams.put("unitCellOffset", offset);
       i = iToken + 1;
+    }
+    return i;
+  }
+
+  private int checkPacked(int i, Map<String, Object> htParams, SB sOptions) throws ScriptException {
+    if (tokAt(i) == T.packed) {
+      htParams.put("packed", Boolean.TRUE);
+      sOptions.append(" PACKED");
+      if (isFloatParameter(++i)) {
+        float f = floatParameter(i++);
+        htParams.put("packingError", Float.valueOf(f));
+        sOptions.append(" " + f);
+      }
     }
     return i;
   }

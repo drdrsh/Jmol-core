@@ -273,10 +273,10 @@ public class MSCifRdr extends MSRdr {
         case WV_ID:
           cr.haveCellWaveVector = true;
           //$FALL-THROUGH$
+        case FWV_ID:
         case FD_ID:
         case FO_ID:
         case FU_ID:
-        case FWV_ID:
           pt[0] = pt[1] = pt[2] = 0;
           //$FALL-THROUGH$
         case FWV_DISP_SEQ_ID:
@@ -413,42 +413,39 @@ public class MSCifRdr extends MSRdr {
           w = cr.parseFloatStr(field);
           break;
         }
-        if (ignore || id == null || atomLabel != null
-            && !atomLabel.equals("*") && cr.rejectAtomName(atomLabel))
-          continue;
-        double d = 0;
-        for (int j = 0; j < pt.length; j++)
-          d += pt[j];
-        if (Double.isNaN(d) || d > 1e10 || d == 0)
-          continue;
-        switch (id.charAt(0)) {
-        case 'W':
-        case 'F':
-          break;
-        case 'D':
-        case 'O':
-        case 'M':
-        case 'U':
-        case 'J':
-          if (atomLabel == null || axis == null)
-            continue;
-          if (id.equals("D_S") || id.equals("M_T")) {
-            // saw tooth displacement  center/width/Axyz
-            if (Double.isNaN(c) || Double.isNaN(w))
-              continue;
-            if (pt[0] != 0)
-              addMod(id + "#x;" + atomLabel, fid, new double[] {c, w, pt[0]});
-            if (pt[1] != 0)
-              addMod(id + "#y;" + atomLabel, fid, new double[] {c, w, pt[1]});
-            if (pt[2] != 0)
-              addMod(id + "#z;" + atomLabel, fid, new double[] {c, w, pt[2]});
-            continue;
-          }
-          id += "#" + axis + ";" + atomLabel;
-          break;
-        }
-        addMod(id, fid, pt);
       }
+      if (ignore || id == null || atomLabel != null
+          && !atomLabel.equals("*") && cr.rejectAtomName(atomLabel))
+        continue;
+      double d = 0;
+      for (int j = 0; j < pt.length; j++)
+        d += pt[j];
+      if (Double.isNaN(d) || d > 1e10 || d == 0)
+        continue;
+      switch (id.charAt(0)) {
+      case 'D':
+      case 'O':
+      case 'M':
+      case 'U':
+      case 'J':
+        if (atomLabel == null || axis == null)
+          continue;
+        if (id.equals("D_S") || id.equals("M_T")) {
+          // saw tooth displacement  center/width/Axyz
+          if (Double.isNaN(c) || Double.isNaN(w))
+            continue;
+          if (pt[0] != 0)
+            addMod(id + "#x;" + atomLabel, fid, new double[] {c, w, pt[0]});
+          if (pt[1] != 0)
+            addMod(id + "#y;" + atomLabel, fid, new double[] {c, w, pt[1]});
+          if (pt[2] != 0)
+            addMod(id + "#z;" + atomLabel, fid, new double[] {c, w, pt[2]});
+          continue;
+        }
+        id += "#" + axis + ";" + atomLabel;
+        break;
+      }
+      addMod(id, fid, pt);
     }
     return 1;
   }

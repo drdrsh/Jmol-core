@@ -25,7 +25,7 @@ public interface JmolModulationSet {
 
   V3 getV3();
 
-  SymmetryInterface getUnitCell();
+  SymmetryInterface getSubSystemUnitCell();
 
   void scaleVibration(float m);
 

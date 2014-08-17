@@ -27,7 +27,7 @@ public interface MSInterface {
 
   int initialize(AtomSetCollectionReader r, int modDim) throws Exception;
 
-  void setModulation(boolean isPost) throws Exception;
+  void setModulation(boolean isPost, SymmetryInterface symmetry) throws Exception;
 
   SymmetryInterface getAtomSymmetry(Atom a, SymmetryInterface symmetry);
 

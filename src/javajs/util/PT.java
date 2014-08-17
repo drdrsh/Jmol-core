@@ -1585,6 +1585,10 @@ public class PT {
     pt.y = Math.round(pt.y * f) / f;
     pt.z = Math.round(pt.z * f) / f;
   }
+  
+  public static double fixDouble(double d, double f) {
+    return Math.round(d * f) / f;
+  }
 
 //static {
 //    

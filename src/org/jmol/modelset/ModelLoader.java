@@ -1135,9 +1135,9 @@ public final class ModelLoader {
             bs.or(models[i].bsAtoms);
         }
       }
+    if (modulationOn)
+      ms.setModulation(null, true, null, false);
     if (autoBonding) {
-      if (modulationOn)
-        ms.setModulation(null, true, null, false);
       ms.autoBondBs4(bs, bs, bsExclude, null,
           ms.defaultCovalentMad, vwr.getBoolean(T.legacyautobonding));
       Logger

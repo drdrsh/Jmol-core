@@ -3963,7 +3963,7 @@ import java.util.Properties;
       return null;
     if (bsModulated != null) {
       JmolModulationSet ms = getModulation(index);
-      SymmetryInterface uc = (ms == null ? null : ms.getUnitCell());
+      SymmetryInterface uc = (ms == null ? null : ms.getSubSystemUnitCell());
       if (uc != null)
         return uc;  // subsystems
     }
