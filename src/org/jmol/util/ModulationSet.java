@@ -322,11 +322,16 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       scale = -1;
     ptTemp.setT(this);
     ptTemp.scale(this.scale * scale);
-    symmetry.toCartesian(ptTemp, true);
-    a.add(ptTemp);
+    if (a != null) {
+      symmetry.toCartesian(ptTemp, true);
+      a.add(ptTemp);
+    }
     // magnetic moment part
-    if (mxyz == null)
-      return;
+    if (mxyz != null)
+      setVib(isReset);
+  }
+    
+  private void setVib(boolean isReset) {
     vib.setT(v0);
     if (isReset)
       return;
@@ -337,7 +342,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.scale(mscale);
     vib.add(ptTemp);
   }
-    
+
   @Override
   public String getState() {
     String s = "";
@@ -433,9 +438,21 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     // or an associated simple vibration,
     // then we allow setting of that.
     // but this is temporary, since really we set these from v0.
-    if (vib == null || v.length() == 0 && vib.modDim == Vibration.TYPE_SPIN)
+    if (vib == null) 
       return;
-    mscale *= v.length() / vib.length();
+    if (vib.modDim == Vibration.TYPE_SPIN) {
+      if (v.x == PT.FLOAT_MIN_SAFE) {
+        // allows for a 0 vibration due to modulation
+        mscale = v.z;
+      } else {
+        getModTemp();
+        mscale = 1;
+        addTo(null, 1);
+        vib.sub(v0);
+        mscale = (vib.lengthSquared() == 0 || v.lengthSquared() == 0 ? 1 : v.length() / vib.length());
+      }
+      System.out.println(id + " " + mscale);
+    }
     vib.setT(v);
   }
 
@@ -457,6 +474,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (vib != null)
       vib.scale(m);
     mscale *= m;
+    System.out.println(id + " " + mscale);
   }
 
   @Override
@@ -476,6 +494,11 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   private float[] axesLengths;
   float[] getAxesLengths() {
     return (axesLengths == null ? (axesLengths = symmetry.getNotionalUnitCell()) : axesLengths);
+  }
+
+  @Override
+  public V3 getMagScale() {
+    return V3.new3(PT.FLOAT_MIN_SAFE,  PT.FLOAT_MIN_SAFE, mscale);
   }
 
 }

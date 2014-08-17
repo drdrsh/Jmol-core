@@ -70,6 +70,8 @@ import org.jmol.util.Escape;
 import org.jmol.util.GData;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
+import org.jmol.util.Vibration;
+
 import javajs.util.P3;
 import javajs.util.V3;
 
@@ -1564,6 +1566,11 @@ public class StateCreator extends JmolStateCreator {
           V3 v = atoms[i].getVibrationVector();
           if (v == null)
             v = new V3();
+          if (((Vibration) v).modDim == Vibration.TYPE_SPIN) {
+            JmolModulationSet ms = atoms[i].getModulation();
+            if (ms != null)
+              v = ms.getMagScale();
+          }
           s.appendF(v.x).append(" ").appendF(v.y).append(" ").appendF(v.z);
           break;
         case AtomCollection.TAINT_ELEMENT:
