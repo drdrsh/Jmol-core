@@ -73,7 +73,6 @@ import org.jmol.util.Logger;
 import org.jmol.util.Vibration;
 
 import javajs.util.P3;
-import javajs.util.V3;
 
 /**
  * StateCreator handles all aspects of working with the "state" as
@@ -1563,15 +1562,13 @@ public class StateCreator extends JmolStateCreator {
               .appendF(atoms[i].z);
           break;
         case AtomCollection.TAINT_VIBRATION:
-          V3 v = atoms[i].getVibrationVector();
+          Vibration v = atoms[i].getVibrationVector();
           if (v == null)
-            v = new V3();
-          if (((Vibration) v).modDim == Vibration.TYPE_SPIN) {
-            JmolModulationSet ms = atoms[i].getModulation();
-            if (ms != null)
-              v = ms.getMagScale();
-          }
-          s.appendF(v.x).append(" ").appendF(v.y).append(" ").appendF(v.z);
+            s.append("0 0 0");
+          else if (Float.isNaN(v.modScale))
+            s.appendF(v.x).append(" ").appendF(v.y).append(" ").appendF(v.z);
+          else
+            s.appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(v.modScale);
           break;
         case AtomCollection.TAINT_ELEMENT:
           s.appendI(atoms[i].getAtomicAndIsotopeNumber());

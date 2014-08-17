@@ -31,6 +31,4 @@ public interface JmolModulationSet {
 
   void setMoment();
 
-  V3 getMagScale();
-
 }

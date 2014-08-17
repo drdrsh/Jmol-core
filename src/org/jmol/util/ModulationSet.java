@@ -40,7 +40,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    */
   public Vibration vib;
   public V3 mxyz;
-  private float vibscale = 1;
   
   private SymmetryInterface symmetry;  
   private M3 gammaE;
@@ -146,8 +145,10 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
                            int iop, SymmetryInterface symmetry, Vibration v) {
     this.r0 = r0;
     vib = v;
-    if (v != null)
+    if (v != null) {
       mxyz = new V3(); // modulations of spin
+      vib.modScale = 1;
+    }
     //Logger.info("ModulationSet atom " + id + " at " + r0);
     this.modDim = modDim;
     this.mods = mods;
@@ -339,7 +340,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.scale(this.scale * scale);
     symmetry.toCartesian(ptTemp, true);
     PT.fixPtFloats(ptTemp, PT.CARTESIAN_PRECISION);
-    ptTemp.scale(vibscale);
+    ptTemp.scale(vib.modScale);
     vib.add(ptTemp);
   }
 
@@ -406,7 +407,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
         modTemp.mxyz = new V3();
       }
     }
-    modTemp.vibscale = vibscale;
   }
 
   @Override
@@ -444,7 +444,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       if (v.x == PT.FLOAT_MIN_SAFE && v.y == PT.FLOAT_MIN_SAFE) {
         // written by StateCreator -- for modulated magnetic moments
         // 957 Fe Fe_1_#957 1.4E-45 1.4E-45 0.3734652 ;
-        vibscale = v.z;
+        vib.modScale = v.z;
         return;
       }
     }
@@ -468,7 +468,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public void scaleVibration(float m) {
     if (vib != null)
       vib.scale(m);
-    vibscale *= m;
+    vib.modScale *= m;
   }
 
   @Override
@@ -488,11 +488,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   private float[] axesLengths;
   float[] getAxesLengths() {
     return (axesLengths == null ? (axesLengths = symmetry.getNotionalUnitCell()) : axesLengths);
-  }
-
-  @Override
-  public V3 getMagScale() {
-    return V3.new3(PT.FLOAT_MIN_SAFE,  PT.FLOAT_MIN_SAFE, vibscale);
   }
 
 }

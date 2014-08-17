@@ -27,7 +27,8 @@ public class Vibration extends V3 {
   /**
    * modDim will be > 0 for modulation
    */
-  public int modDim = TYPE_VIBRATION; 
+  public int modDim = TYPE_VIBRATION;
+  public float modScale = Float.NaN; // modulation only
 
   /**
    * @param pt 
