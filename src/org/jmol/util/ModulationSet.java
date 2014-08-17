@@ -40,7 +40,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    */
   public Vibration vib;
   public V3 mxyz;
-  private float mscale = 1;
+  private float vibscale = 1;
   
   private SymmetryInterface symmetry;  
   private M3 gammaE;
@@ -128,7 +128,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * GammaIinv and tau.
    * 
    * @param id
-   * @param atom        unmodulated (average) position
+   * @param r0        unmodulated (average) position
    * @param modDim
    * @param mods
    * @param gammaE
@@ -339,7 +339,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.scale(this.scale * scale);
     symmetry.toCartesian(ptTemp, true);
     PT.fixPtFloats(ptTemp, PT.CARTESIAN_PRECISION);
-    ptTemp.scale(mscale);
+    ptTemp.scale(vibscale);
     vib.add(ptTemp);
   }
 
@@ -406,7 +406,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
         modTemp.mxyz = new V3();
       }
     }
-    modTemp.mscale = mscale;
+    modTemp.vibscale = vibscale;
   }
 
   @Override
@@ -441,17 +441,12 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (vib == null) 
       return;
     if (vib.modDim == Vibration.TYPE_SPIN) {
-      if (v.x == PT.FLOAT_MIN_SAFE) {
-        // allows for a 0 vibration due to modulation
-        mscale = v.z;
-      } else {
-        getModTemp();
-        mscale = 1;
-        addTo(null, 1);
-        vib.sub(v0);
-        mscale = (vib.lengthSquared() == 0 || v.lengthSquared() == 0 ? 1 : v.length() / vib.length());
+      if (v.x == PT.FLOAT_MIN_SAFE && v.y == PT.FLOAT_MIN_SAFE) {
+        // written by StateCreator -- for modulated magnetic moments
+        // 957 Fe Fe_1_#957 1.4E-45 1.4E-45 0.3734652 ;
+        vibscale = v.z;
+        return;
       }
-      System.out.println(id + " " + mscale);
     }
     vib.setT(v);
   }
@@ -473,8 +468,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public void scaleVibration(float m) {
     if (vib != null)
       vib.scale(m);
-    mscale *= m;
-    System.out.println(id + " " + mscale);
+    vibscale *= m;
   }
 
   @Override
@@ -498,7 +492,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public V3 getMagScale() {
-    return V3.new3(PT.FLOAT_MIN_SAFE,  PT.FLOAT_MIN_SAFE, mscale);
+    return V3.new3(PT.FLOAT_MIN_SAFE,  PT.FLOAT_MIN_SAFE, vibscale);
   }
 
 }
