@@ -161,6 +161,7 @@ public class XtalSymmetry {
       return;
     }
     matSupercell = M4.newA16(fmatSupercell);
+    matSupercell.transpose();
     Logger.info("Using supercell \n" + matSupercell);
   }
 
@@ -384,8 +385,7 @@ public class XtalSymmetry {
 
       // ?? TODO
       asc.setAtomSetAuxiliaryInfo("matUnitCellOrientation", null);
-      doPackUnitCell = false; // already done that.
-      
+
     }
     minXYZ = new P3i();
     maxXYZ = P3i.new3(maxX, maxY, maxZ);
