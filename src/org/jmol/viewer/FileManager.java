@@ -1339,5 +1339,9 @@ public class FileManager implements BytePoster {
     return (ret == null ? "" : Rdr.fixUTF((byte[]) ret));
   }
 
+  public void recachePngjBytes(String fname, byte[] bytes) {
+    jmb.recachePngjBytes(fname, bytes);
+  }
+
 
 }

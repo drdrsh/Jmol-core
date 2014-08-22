@@ -115,12 +115,17 @@ public class JmolBinary {
   }
   
   public void clearPngjCache(String fileName) {
-    if (pngjCache == null)
-      return;
-    if (fileName != null && !pngjCache.containsKey(fileName))
+    if (pngjCache == null || fileName != null && !pngjCache.containsKey(fileName))
       return;
     pngjCache = null;
     Logger.info("PNGJ cache cleared");
+  }
+  
+  public void recachePngjBytes(String fileName, byte[] bytes) {
+    if (pngjCache == null || !pngjCache.containsKey(fileName))
+      return;
+    pngjCache.put(fileName, bytes);
+    Logger.info("PNGJ recaching " + fileName + " (" + bytes.length + ")");
   }
 
   /**

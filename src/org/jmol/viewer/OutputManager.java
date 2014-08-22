@@ -214,31 +214,27 @@ abstract class OutputManager {
   }
 
   /**
-   * @param fileName
+   * @param pngjName
    * @param scripts
    * @param objImage
-   * @param out
+   * @param pgjOut
    * @return either byte[] (a full ZIP file) or String (just an embedded state
    *         script)
    * 
    */
 
-  Object getWrappedState(String fileName, String[] scripts, Object objImage,
-                         OC out) {
+  Object getWrappedState(String pngjName, String[] scripts, Object objImage,
+                         OC pgjOut) {
     int width = vwr.apiPlatform.getImageWidth(objImage);
     int height = vwr.apiPlatform.getImageHeight(objImage);
-    if (width > 0 && !vwr.g.imageState && out == null
+    if (width > 0 && !vwr.g.imageState && pgjOut == null
         || !vwr.g.preserveState)
       return "";
     String s = vwr.getStateInfo3(null, width, height);
-    if (out != null) {
+    if (pgjOut != null) {
       // when writing a file, we need to make sure
-      // the pngj cache for that file is cleared
-      // UNLESS
-      Object o = createZipSet(s, scripts, true, out);
-      if (fileName != null)
-        vwr.fm.clearPngjCache(fileName);
-      return o; 
+      // the pngj cache for that file is updated
+      return createZipSet(s, scripts, true, pgjOut, pngjName);
     }
     // we remove local file references in the embedded states for images
     try {
@@ -271,7 +267,7 @@ abstract class OutputManager {
         v.remove(0);
         params.put("pngImgData", v.remove(0));
         OC oz = getOutputChannel(null, null);
-        errRet[0] = writeZipFile(oz, v, "OK JMOL");
+        errRet[0] = writeZipFile(oz, v, "OK JMOL", null);
         params.put("type", "PNGJ");
         type = "Png";
         params.put("pngAppPrefix", "Jmol Type");
@@ -281,7 +277,7 @@ abstract class OutputManager {
         out.write(b, 0, b.length);
         return true;
       } else {
-        errRet[0] = writeZipFile(out, v, "OK JMOL");
+        errRet[0] = writeZipFile(out, v, "OK JMOL", null);
         return true;
       }
     }
@@ -655,7 +651,7 @@ abstract class OutputManager {
         if (scripts != null && type.equals("ZIP"))
           type = "ZIPALL";
         OC out = getOutputChannel(fileName, null);
-        sret = createZipSet(text, scripts, type.equals("ZIPALL"), out);
+        sret = createZipSet(text, scripts, type.equals("ZIPALL"), out, null);
       } else if (type.equals("SCENE")) {
         sret = createSceneSet(fileName, text, width, height);
       } else {
@@ -831,7 +827,7 @@ abstract class OutputManager {
   protected final static String SCENE_TAG = "###scene.spt###";
 
   private String createZipSet(String script, String[] scripts,
-                              boolean includeRemoteFiles, OC out) {
+                              boolean includeRemoteFiles, OC out, String pngjName) {
     Lst<Object> v = new Lst<Object>();
     FileManager fm = vwr.fm;
     Lst<String> fileNames = new Lst<String>();
@@ -921,7 +917,7 @@ abstract class OutputManager {
         v.addLast(bytes);
       }
     }
-    return writeZipFile(out, v, "OK JMOL");
+    return writeZipFile(out, v, "OK JMOL", pngjName);
   }
 
   private String addPngFileBytes(String name, byte[] ret, int iFile,
@@ -962,15 +958,19 @@ abstract class OutputManager {
    * @param fileNamesAndByteArrays
    *        Vector of [filename1, bytes|null, filename2, bytes|null, ...]
    * @param msg
+   * @param pngjName TODO
    * @return msg bytes filename or errorMessage or byte[]
    */
 
   private String writeZipFile(OC out, Lst<Object> fileNamesAndByteArrays,
-                              String msg) {
+                              String msg, String pngjName) {
     byte[] buf = new byte[1024];
     long nBytesOut = 0;
     long nBytes = 0;
     String outFileName = out.getFileName();
+    if (pngjName != null && pngjName.startsWith("//"))
+      pngjName = "file:" + pngjName.substring(1); // a bug?
+
     Logger.info("creating zip file " + (outFileName == null ? "" : outFileName)
         + "...");
     String fileList = "";
@@ -1030,6 +1030,8 @@ abstract class OutputManager {
         } else {
           // data are already in byte form
           zos.write(bytes, 0, bytes.length);
+          if (pngjName != null) 
+            vwr.fm.recachePngjBytes(pngjName + "|" + fnameShort, bytes);
           nOut += bytes.length;
         }
         nBytesOut += nOut;
