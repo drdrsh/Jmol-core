@@ -207,7 +207,7 @@ public String getShapeState() {
       sb.append(";\n");
     }
     if (axisType != null) {
-      sb.append("  axes type " + axisType);
+      sb.append("  axes type " + PT.esc(axisType));
     }
     return super.getShapeState() + sb;
   }
