@@ -266,9 +266,11 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     }
     t = gammaIinv.mul(t).add(tau);
     double[][] ta = t.getArray();
+    //System.out.println("this1 =" + this + " " + ta[0][0] + " " + ta[1][0]);
     for (int i = mods.size(); --i >= 0;)
       mods.get(i).apply(this, ta);
     gammaE.rotate(this);
+    //System.out.println("this2 =" + this);
     if (mxyz != null)
       gammaE.rotate(mxyz);
     return this;
@@ -324,6 +326,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.setT(this);
     ptTemp.scale(this.scale * scale);
     if (a != null) {
+      //if (!isReset)
+        //System.out.println(a + " ms " + ptTemp);
       symmetry.toCartesian(ptTemp, true);
       a.add(ptTemp);
     }

@@ -1182,9 +1182,15 @@ public class XtalSymmetry {
     for (int i = asc.ac; --i >= i0;) {
       Vibration v = (Vibration) asc.atoms[i].vib;
       if (v != null) {
+        JmolModulationSet mod = (v instanceof JmolModulationSet ? (JmolModulationSet) v : null);
         pt = ptScale;
-        if (v instanceof JmolModulationSet) {
-          SymmetryInterface subsym = ((JmolModulationSet) v).getSubSystemUnitCell();
+        if (mod != null) {
+          // if there are modulations, then a fractional vib would be
+          // a vib within a modulation set.
+          v = mod.getVibration(false);
+          if (v == null)
+            continue;
+          SymmetryInterface subsym = mod.getSubSystemUnitCell();
           if (subsym != null) {
             params = subsym.getNotionalUnitCell();
             pt.set(1 / params[0], 1 / params[1], 1 / params[2]);

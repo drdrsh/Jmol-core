@@ -43,12 +43,14 @@ public class VectorsRenderer extends ShapeRenderer {
 
   private final static float arrowHeadOffset = -0.2f;
   private final P3 pointVectorStart = new P3();
+  private final P3 ptTemp = new P3();
   private final P3 pointVectorEnd = new P3();
   private final P3 pointArrowHead = new P3();
   private final P3i screenVectorStart = new P3i();
   private final P3i screenVectorEnd = new P3i();
   private final P3i screenArrowHead = new P3i();
   private final V3 headOffsetVector = new V3();
+  
   
   private int diameter;
   //float headWidthAngstroms;
@@ -159,16 +161,20 @@ public class VectorsRenderer extends ShapeRenderer {
       headOffsetVector.setT(vib);
       headOffsetVector.scale(headScale / len);
     }
-    JmolModulationSet mod = null;
+    ptTemp.setT(atom);
+    JmolModulationSet mod = atom.getModulation();
+    if (vibrationOn && mod != null)
+      vwr.tm.getVibrationPoint((Vibration) mod, ptTemp, 1);
     if (isMod) {
       standardVector = false;
       drawShaft = true;
-      pointVectorStart.setT(atom);
-      pointVectorEnd.setT(atom);
       mod = (JmolModulationSet) vib;
+      pointVectorStart.setT(ptTemp);
+      pointVectorEnd.setT(ptTemp);
       if (mod.isEnabled()) {
-        if (vibrationOn)
+        if (vibrationOn) {
           vwr.tm.getVibrationPoint(vib, pointVectorEnd, Float.NaN);
+        }
         mod.addTo(pointVectorStart, Float.NaN);
       } else {
         mod.addTo(pointVectorEnd, 1);
@@ -189,14 +195,12 @@ public class VectorsRenderer extends ShapeRenderer {
 //        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
 //        vwr.tm.getVibrationPoint(vib, v, Float.NaN);
 //      }
-      pointVectorEnd.scaleAdd2(0.5f * vectorScale, vib, atom);
-      pointVectorStart.scaleAdd2(-0.5f * vectorScale, vib, atom);
+      pointVectorEnd.scaleAdd2(0.5f * vectorScale, vib, ptTemp);
+      pointVectorStart.scaleAdd2(-0.5f * vectorScale, vib, ptTemp);
     } else {
-      pointVectorEnd.scaleAdd2(vectorScale, vib, atom);
+      pointVectorEnd.scaleAdd2(vectorScale, vib, ptTemp);
       screenVectorEnd.setT(vibrationOn? tm.transformPtVib(pointVectorEnd, vib) : tm.transformPt(pointVectorEnd));
       pointArrowHead.add2(pointVectorEnd, headOffsetVector);
-      if (atom.getAtomNumber() == 16)
-        System.out.println("vecrend " + vib + atom.x + " " + atom.y + " " + atom.z + " ptH=" + pointVectorEnd);
       screenArrowHead.setT(vibrationOn ? tm.transformPtVib(pointArrowHead, vib) : tm.transformPt(pointArrowHead));
     }
     if (!standardVector) {
