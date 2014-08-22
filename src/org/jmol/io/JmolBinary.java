@@ -105,12 +105,7 @@ public class JmolBinary {
 
   public boolean clearAndCachePngjFile(String[] data) {
       pngjCache = new Hashtable<String, Object>();
-      if (data == null)
-        return false;
-      data[1] = null;
-      if (data[0] == null)
-        return false;
-    return getJzu().cachePngjFile(this, data);
+      return (data == null || data[0] == null ? false : getJzu().cachePngjFile(this, data));
   }
   
   public void spardirPut(String name, byte[] bytes) {

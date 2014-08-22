@@ -144,8 +144,8 @@ public class CifReader extends AtomSetCollectionReader {
     checkSpecial = !checkFilterKey("NOSPECIAL");
     asc.setCheckSpecial(checkSpecial);
     allowRotations = !checkFilterKey("NOSYM");
-    if (altCell != null && altCell.indexOf(",") >= 0)
-      addCellType("conventional", altCell, true);
+    if (strSupercell != null && strSupercell.indexOf(",") >= 0)
+      addCellType("conventional", strSupercell, true);
     readCifData();
     continuing = false;
   }
@@ -172,7 +172,7 @@ public class CifReader extends AtomSetCollectionReader {
       if (!readAllData())
         break;
     if (appendedData != null) {
-      parser = Rdr.getCifParser().set(null, Rdr.getBR(appendedData));
+      parser = ((GenericCifDataParser) Interface.getInterface("javajs.util.CifDataParser")).set(null, Rdr.getBR(appendedData));
       while ((key = parser.peekToken()) != null)
         if (!readAllData())
           break;
@@ -305,8 +305,8 @@ public class CifReader extends AtomSetCollectionReader {
     }
     String cell = (isFrom ? "!" : "") + data;
     htCellTypes.put(type, cell);
-    if (type.equalsIgnoreCase(altCell)) {
-      altCell = cell;
+    if (type.equalsIgnoreCase(strSupercell)) {
+      strSupercell = cell;
       htCellTypes.put("conventional", (isFrom ? "" : "!") + data);
     }
   }

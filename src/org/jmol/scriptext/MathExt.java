@@ -1272,19 +1272,34 @@ public class MathExt implements JmolMathExtension {
 
   private boolean evaluateLoad(ScriptMathProcessor mp, SV[] args, boolean isFile)
       throws ScriptException {
-    // load()
     // file("myfile.xyz")
-    
-    if (args.length > 2 || args.length < 1)
+    // load("myfile.png",true)
+    // load("myfile.txt",1000)
+    // load("myfil.xyz",0,true)
+
+    if (args.length > 3 || args.length < 1)
       return false;
+    int nBytesMax = -1;
+    boolean asBytes = false;
+    boolean async = false;
+    switch (args.length) {
+    case 3:
+      async = SV.bValue(args[2]);
+      //$FALL-THROUGH$
+    case 2:
+      nBytesMax = (args[1].tok == T.integer ? args[1].asInt() : -1);
+      asBytes = args[1].tok == T.on;
+      break;
+    default:
+      return false;
+    }
     String file = SV.sValue(args[0]);
     file = file.replace('\\', '/');
-    int nBytesMax = (args.length == 2 ? args[1].asInt() : -1);
-    boolean asBytes = (args.length == 2 && args[1].tok == T.on);
     if (asBytes)
       return mp.addXMap(vwr.getFileAsMap(file));
-    if (vwr.isJS && file.startsWith("?")) {
-      if (isFile)
+    boolean isQues = file.startsWith("?");
+    if (vwr.isJS && (isQues || async)) {
+      if (isFile && isQues)
         return mp.addXStr("");
       file = e.loadFileAsync("load()_", file, mp.oPt, true);
       // A ScriptInterrupt will be thrown, and an asynchronous
@@ -1294,8 +1309,8 @@ public class MathExt implements JmolMathExtension {
       // The evaluation will be repeated up to this point, so for example,
       // x = (i++) + load("?") would increment i twice.
     }
-    return mp.addXStr(isFile ? vwr.getFilePath(file, false) : vwr.getFileAsString4(file, nBytesMax,
-        false, false, true));
+    return mp.addXStr(isFile ? vwr.getFilePath(file, false) : vwr
+        .getFileAsString4(file, nBytesMax, false, false, true));
   }
 
   private boolean evaluateMath(ScriptMathProcessor mp, SV[] args, int tok) {

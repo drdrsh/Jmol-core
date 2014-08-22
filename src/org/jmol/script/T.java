@@ -2155,6 +2155,7 @@ public class T {
        "area",
        "aromatic",
        "arrow",
+       "async",
        "auto",
        "barb",
        "binary",
@@ -3170,6 +3171,7 @@ public class T {
         area,                               //        "area"
         aromatic,                           //        "aromatic"
         arrow,                              //        "arrow"
+        async,                              //        "async"
         auto,                               //        "auto"
         barb,                               //        "barb"
         binary,                             //        "binary"

@@ -1610,18 +1610,6 @@ public class StateCreator extends JmolStateCreator {
   }
 
   
-  @Override
-  String getAtomDefs(Map<String, Object> names) {
-    SB sb = new SB();
-    for (Map.Entry<String, ?> e : names.entrySet()) {
-      if (e.getValue() instanceof BS)
-        sb.append("{" + e.getKey() + "} <" + ((BS) e.getValue()).cardinality()
-            + " atoms>\n");
-    }
-    return sb.append("\n").toString();
-  }
-
-
   /////////////////////////////////  undo/redo functions /////////////////////
   
   

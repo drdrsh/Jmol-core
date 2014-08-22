@@ -543,8 +543,6 @@ abstract public class JmolViewer {
 
   abstract public Dimension resizeInnerPanel(int width, int height);
 
-  abstract public String getAtomDefs(Map<String, Object> names);
-
   /**
    * run a script immediately and return output buffer string
    * Jmol 13.1.15

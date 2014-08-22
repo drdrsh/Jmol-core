@@ -964,7 +964,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     float min = Float.MAX_VALUE;
     float max = -Float.MAX_VALUE;
     if (params.usePropertyForColorRange && params.theProperty != null) {
-      for (int i = 0; i < params.theProperty.length; i++) {
+      for (int i = params.theProperty.length; --i >= 0;) {
         if (params.rangeSelected && !params.bsSelected.get(i))
           continue;
         float p = params.theProperty[i];

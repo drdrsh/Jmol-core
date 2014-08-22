@@ -186,7 +186,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected OC out;
   protected boolean iHaveFractionalCoordinates;
   public boolean doPackUnitCell;
-  protected String strSupercell;
   protected P3 ptSupercell;
   protected boolean mustFinalizeModelSet;
   protected boolean forcePacked;
@@ -501,17 +500,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private void initialize() {
     if (htParams.containsKey("baseAtomIndex"))
       baseAtomIndex = ((Integer) htParams.get("baseAtomIndex")).intValue();
-    Object o = htParams.get("supercell");
-    if (o instanceof String)
-      strSupercell = (String) o;
-    else
-      ptSupercell = (P3) o;
     initializeSymmetry();
     vwr = (Viewer) htParams.remove("vwr"); // don't pass this on to user
     if (htParams.containsKey("stateScriptVersionInt"))
       stateScriptVersionInt = ((Integer) htParams.get("stateScriptVersionInt"))
           .intValue();
-    if ((o = htParams.get("packingError")) != null)
+    Object o = htParams.get("packingError");
+    if (o != null)
       packingError = ((Float) o).floatValue();
     else if (htParams.get("legacyJavaFloat") != null) {
       // earlier versions were not fully JavaScript compatible
@@ -534,10 +529,16 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     applySymmetryToBonds = htParams.containsKey("applySymmetryToBonds");
     bsFilter = (BS) htParams.get("bsFilter");
     setFilter(null);
-    if (altCell != null) {
+    if (strSupercell != null) {
       if (!checkFilterKey("NOPACK"))
         forcePacked = true;
     }
+    o = htParams.get("supercell");
+    if (o instanceof String)
+      strSupercell = (String) o;
+    else
+      ptSupercell = (P3) o;
+
     // ptFile < 0 indicates just one file being read
     // ptFile >= 0 indicates multiple files are being loaded
     // if the file is not the first read in the LOAD command, then
@@ -635,7 +636,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     doApplySymmetry = false;
     P3 pt = (P3) htParams.get("lattice");
     if (pt == null || pt.length() == 0) {
-      if (!forcePacked)
+      if (!forcePacked && strSupercell == null)
         return;
       pt = P3.new3(1, 1, 1);
     }
@@ -882,7 +883,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private String nameRequired;
   boolean doCentroidUnitCell;
   boolean centroidPacked;
-  public String altCell;
+  public String strSupercell;
 
 
   // ALL:  "CENTER" "REVERSEMODELS"
@@ -939,7 +940,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // can't use getFilter() here because form includes a semicolon:
     // cell=a+b,a-b,c;0,1/2,1/2 
     if (checkFilterKey("CELL="))  
-      altCell = filter.substring(filter.indexOf("CELL=") + 5).toLowerCase(); // must be last filter option
+      strSupercell = filter.substring(filter.indexOf("CELL=") + 5).toLowerCase(); // must be last filter option
     nameRequired = PT.getQuotedAttribute(filter, "NAME");
     if (nameRequired != null) {
       if (nameRequired.startsWith("'"))

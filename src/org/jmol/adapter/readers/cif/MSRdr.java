@@ -531,7 +531,7 @@ public class MSRdr implements MSInterface {
     if (htSubsystems == null) {
       haveAtomMods = false;
     } else {
-      cr.altCell = null; // disallow setting unit cell
+      cr.strSupercell = null; // disallow setting unit cell
       haveAtomMods = true;
       htAtomMods = new Hashtable<String, Lst<Modulation>>();
     }

@@ -820,6 +820,8 @@ public class CmdExt implements JmolCmdExtension {
     doAnimate = (nSeconds != 0);
 
     boolean isAtoms = (!isQuaternion && strSmiles == null || coordTo != null);
+    if (isAtoms)
+      Interface.getInterface("javajs.util.Eigen"); // preload interface
     if (vAtomSets == null && vQuatSets == null) {
       if (bsSubset == null) {
         bsAtoms1 = (isAtoms ? vwr.getAtomBitSet("spine") : new BS());

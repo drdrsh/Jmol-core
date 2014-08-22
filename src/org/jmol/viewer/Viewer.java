@@ -9444,10 +9444,14 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return (getScriptManager() == null ? null : eval.getScriptContext(why));
   }
 
-  @Override
   public String getAtomDefs(Map<String, Object> names) {
-    return getStateCreator().getAtomDefs(names);
-
+    SB sb = new SB();
+    for (Map.Entry<String, ?> e : names.entrySet()) {
+      if (e.getValue() instanceof BS)
+        sb.append("{" + e.getKey() + "} <" + ((BS) e.getValue()).cardinality()
+            + " atoms>\n");
+    }
+    return sb.append("\n").toString();
   }
 
   public void setCGO(Lst<Object> info) {

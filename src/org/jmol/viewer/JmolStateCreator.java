@@ -67,8 +67,6 @@ public abstract class JmolStateCreator {
 
   abstract void mouseScript(String script);
 
-  abstract String getAtomDefs(Map<String, Object> names);
-
   abstract void getInlineData(SB loadScript, String strModel, boolean isAppend,
                      String defaultLoadFilter);
 }

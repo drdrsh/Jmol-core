@@ -129,12 +129,10 @@ public class XtalSymmetry {
     filterSymop = acr.filterSymop;
     if (acr.strSupercell == null)
       setSupercellFromPoint(acr.ptSupercell);
-    else
-      setSuperCellFromString(acr.strSupercell);
   }
 
   private P3 ptSupercell;
-  private float[] fmatSupercell;
+  //private float[] fmatSupercell;
   private M4 matSupercell;
 
   public void setSupercellFromPoint(P3 pt) {
@@ -151,20 +149,6 @@ public class XtalSymmetry {
     Logger.info("Using supercell \n" + matSupercell);
   }
   
-  public void setSuperCellFromString(String supercell) {
-    if (fmatSupercell != null)
-      return;
-    fmatSupercell = new float[16];
-    if (symmetry.getMatrixFromString(supercell, fmatSupercell, true, 0) == null) {
-      fmatSupercell = null;
-      matSupercell = null;
-      return;
-    }
-    matSupercell = M4.newA16(fmatSupercell);
-    matSupercell.transpose();
-    Logger.info("Using supercell \n" + matSupercell);
-  }
-
   private Lst<float[]> trajectoryUnitCells;
   
   private void setNotionalUnitCell(float[] info, M3 matUnitCellOrientation,
@@ -239,7 +223,7 @@ public class XtalSymmetry {
         if (readerSymmetry != null)
           symmetry.setSpaceGroupFrom(readerSymmetry);
         //parameters are counts of unit cells as [a b c]
-        applySymmetryLattice(acr.ms, acr.altCell);
+        applySymmetryLattice(acr.ms, acr.strSupercell);
         if (readerSymmetry != null && filterSymop == null)
           asc.setAtomSetSpaceGroupName(readerSymmetry.getSpaceGroupName());
       }
@@ -255,7 +239,7 @@ public class XtalSymmetry {
     return symmetry;
   }
 
-  private void applySymmetryLattice(MSInterface ms, String altCell)
+  private void applySymmetryLattice(MSInterface ms, String supercell)
       throws Exception {
 
     if (!asc.coordinatesAreFractional || symmetry.getSpaceGroup() == null)
@@ -274,28 +258,63 @@ public class XtalSymmetry {
     nVib = 0;
     T3 va = null, vb = null, vc = null;
     baseSymmetry = symmetry;
-    if (altCell != null && altCell.indexOf(",") >= 0) {
+    if (supercell != null && supercell.indexOf(",") >= 0) {
       // expand range to accommodate this alternative cell
-      oabc = symmetry.getV0abc(altCell);
+      // oabc will be cartesian
+      oabc = symmetry.getV0abc(supercell);
       if (oabc != null) {
+        // set the bounds for atoms in the new unit cell
+        // in terms of the old unit cell
         minXYZ = new P3i();
         maxXYZ = P3i.new3(maxX, maxY, maxZ);
         symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
 
+        // base origin for new unit cell
         pt0 = P3.newP(oabc[0]);
-        symmetry.toFractional(pt0, true);
+
+        // base vectors for new unit cell
         va = P3.newP(oabc[1]);
         vb = P3.newP(oabc[2]);
         vc = P3.newP(oabc[3]);
+        
+        // be sure to add in packing error adjustments 
+        // so that we include all needed atoms
+        // load "" packed x.x supercell...
+        P3 pa = new P3();
+        P3 pb = new P3();
+        P3 pc = new P3();
+        if (acr.forcePacked) {
+          pa.setT(va);
+          pb.setT(vb);
+          pc.setT(vc);
+          pa.scale(packingError);
+          pb.scale(packingError);
+          pc.scale(packingError);
+        }
+        
+        // account for lattice specification
+        // load "" {x y z} supercell...
         oabc[0].scaleAdd2(minXYZ.x, va, oabc[0]);
         oabc[0].scaleAdd2(minXYZ.y, vb, oabc[0]);
         oabc[0].scaleAdd2(minXYZ.z, vc, oabc[0]);
+        // add in packing adjustment
+        oabc[0].sub(pa);
+        oabc[0].sub(pb);
+        oabc[0].sub(pc);
+        // fractionalize and adjust min/max
         P3 pt = P3.newP(oabc[0]);
         symmetry.toFractional(pt, true);
         setSymmetryMinMax(pt);
+        
+        // account for lattice specification
         oabc[1].scale(maxXYZ.x - minXYZ.x);
         oabc[2].scale(maxXYZ.y - minXYZ.y);
         oabc[3].scale(maxXYZ.z - minXYZ.z);
+        // add in packing adjustment
+        oabc[1].scaleAdd2(2,  pa,  oabc[1]);
+        oabc[2].scaleAdd2(2,  pb,  oabc[2]);
+        oabc[3].scaleAdd2(2,  pc,  oabc[3]);
+        // run through six of the corners -- a, b, c, ab, ac, bc
         for (int i = 0; i < 3; i++) {
           for (int j = i + 1; j < 4; j++) {
             pt.add2(oabc[i], oabc[j]);
@@ -305,7 +324,7 @@ public class XtalSymmetry {
             setSymmetryMinMax(pt);
           }
         }
-        // 0bc in the end, so we need 0abc
+        // bc in the end, so we need abc
         symmetry.toCartesian(pt, false);
         pt.add(oabc[1]);
         symmetry.toFractional(pt, false);
@@ -316,40 +335,40 @@ public class XtalSymmetry {
         maxXYZ = P3i.new3((int) Math.ceil(rmaxx - 0.001f), (int) Math.ceil(rmaxy - 0.001f),
             (int) Math.ceil(rmaxz - 0.001f));
       }
-    } else if (fmatSupercell != null) {
-
-      // supercell of the form {nx,ny,nz} or "x-y,x+y,..."
-
-      // 1) get all atoms for cells necessary
-
-      P3 pt = new P3();
-      for (int i = 0; i <= 1; i++)
-        for (int j = 0; j <= 1; j++)
-          for (int k = 0; k <= 1; k++) {
-            pt.set(i, j, k);
-            setSym(pt);
-          }
-      offset = (P3) asc.getAtomSetAuxiliaryInfoValue(-1, "unitCellOffset");
-      minXYZ = P3i.new3((int) rminx, (int) rminy, (int) rminz);
-      maxXYZ = P3i.new3((int) rmaxx, (int) rmaxy, (int) rmaxz);
-      va = setSym(P3.new3(1, 0, 0));
-      vb = setSym(P3.new3(0, 1, 0));
-      vc = setSym(P3.new3(0, 0, 1));      
+//    } else if (fmatSupercell != null) {
+//
+//      // supercell of the form {nx,ny,nz} or "x-y,x+y,..."
+//
+//      // 1) get all atoms for cells necessary
+//
+//      P3 pt = new P3();
+//      for (int i = 0; i <= 1; i++)
+//        for (int j = 0; j <= 1; j++)
+//          for (int k = 0; k <= 1; k++) {
+//            pt.set(i, j, k);
+//            setSym(pt);
+//          }
+//      offset = (P3) asc.getAtomSetAuxiliaryInfoValue(-1, "unitCellOffset");
+//      minXYZ = P3i.new3((int) rminx, (int) rminy, (int) rminz);
+//      maxXYZ = P3i.new3((int) rmaxx, (int) rmaxy, (int) rmaxz);
+//      va = setSym(P3.new3(1, 0, 0));
+//      vb = setSym(P3.new3(0, 1, 0));
+//      vc = setSym(P3.new3(0, 0, 1));      
     }
     if (rminx == Float.MAX_VALUE) {
-      fmatSupercell = null;
+//      fmatSupercell = null;
       matSupercell = null;
-      altCell = null;
+      supercell = null;
       oabc = null;
     } else {
       Logger.info("setting min/max for original lattice to " + minXYZ + " and "
           + maxXYZ);
       boolean doPack0 = doPackUnitCell;
-      doPackUnitCell = (doPack0 || oabc != null);
+      doPackUnitCell = doPack0;//(doPack0 || oabc != null && acr.forcePacked);
       if (asc.bsAtoms == null)
         asc.bsAtoms = BSUtil.setAll(asc.ac);
       bsAtoms = asc.bsAtoms;
-      applyAllSymmetry(ms, null, false);
+      applyAllSymmetry(ms, null);
       doPackUnitCell = doPack0;
 
       
@@ -367,12 +386,14 @@ public class XtalSymmetry {
       symmetry = getSymmetry();
       setNotionalUnitCell(new float[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z,
           vb.x, vb.y, vb.z, vc.x, vc.y, vc.z }, null, offset);
-      asc.setAtomSetSpaceGroupName(oabc == null ? "P1" : "cell=" + altCell);
+      asc.setAtomSetSpaceGroupName(oabc == null ? "P1" : "cell=" + supercell);
       symmetry.setSpaceGroup(doNormalize);
       symmetry.addSpaceGroupOperation("x,y,z", 0);
 
       // 4) reset atoms to fractional values in this new system
 
+      if (pt0 != null)
+        symmetry.toFractional(pt0, true);
       for (int i = iAtomFirst; i < atomCount; i++) {
         symmetry.toFractional(atoms[i], true);
         if (pt0 != null)
@@ -390,20 +411,24 @@ public class XtalSymmetry {
     minXYZ = new P3i();
     maxXYZ = P3i.new3(maxX, maxY, maxZ);
     if (oabc == null) {
-      applyAllSymmetry(ms, bsAtoms, fmatSupercell != null);      
-      fmatSupercell = null;
-    } else {
-      trimAtomSet();
+      minXYZ = new P3i();
+      maxXYZ = P3i.new3(maxX, maxY, maxZ);
+      applyAllSymmetry(ms, bsAtoms);      
+    } else if (acr.forcePacked || doPackUnitCell) {
+      // trim atom set based on original unit cell
+      symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+      BS bs = asc.bsAtoms;
+      Atom[] atoms = asc.atoms;
+      if (bs == null)
+        bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        if (!isWithinCell(dtype, atoms[i], minXYZ.x, maxXYZ.x,
+            minXYZ.y, maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
+          bs.clear(i);
+      }
     }
     
     // but we leave matSupercell, because we might need it for vibrations in CASTEP
-  }
-
-  private P3 setSym(P3 pt) {
-    matSupercell.rotate(pt);
-    setSymmetryMinMax(pt);
-    symmetry.toCartesian(pt, false);
-    return pt;
   }
 
   private float rminx, rminy, rminz, rmaxx, rmaxy, rmaxz;
@@ -488,12 +513,9 @@ public class XtalSymmetry {
    *        modulated structure interface
    * @param bsAtoms
    *        relating to supercells
-   * @param disableSymmetry
-   *        for supercells
    * @throws Exception
    */
-  private void applyAllSymmetry(MSInterface ms, BS bsAtoms,
-                                boolean disableSymmetry) throws Exception {
+  private void applyAllSymmetry(MSInterface ms, BS bsAtoms) throws Exception {
     if (asc.ac == 0)
       return;
     noSymmetryCount = (asc.baseSymmetryAtomCount == 0 ? asc
@@ -589,7 +611,7 @@ public class XtalSymmetry {
     SymmetryInterface symmetry = this.symmetry;
     SymmetryInterface lastSymmetry = symmetry;
     latticeOp = symmetry.getLatticeOp();
-    checkAll = (disableSymmetry || asc.atomSetCount == 1 && asc.checkSpecial
+    checkAll = (asc.atomSetCount == 1 && asc.checkSpecial
         && latticeOp >= 0);
     latticeOnly = (asc.checkLatticeOnly && latticeOp >= 0); // CrystalReader
     P3 pttemp = null;
@@ -658,7 +680,7 @@ public class XtalSymmetry {
             rmaxz += absRange;
           }
           cell555Count = pt = symmetryAddAtoms(0, 0, 0, 0, pt, iCell
-              * operationCount, cartesians, ms, false);
+              * operationCount, cartesians, ms);
         }
     if (checkRange111) {
       rminx -= absRange;
@@ -677,7 +699,7 @@ public class XtalSymmetry {
           iCell++;
           if (tx != 0 || ty != 0 || tz != 0)
             pt = symmetryAddAtoms(tx, ty, tz, cell555Count, pt, iCell
-                * operationCount, cartesians, ms, disableSymmetry);
+                * operationCount, cartesians, ms);
         }
     if (iCell * noSymmetryCount == asc.ac - firstSymmetryAtom)
       duplicateAtomProperties(iCell);
@@ -700,8 +722,7 @@ public class XtalSymmetry {
 
   private int symmetryAddAtoms(int transX, int transY, int transZ,
                                int baseCount, int pt, int iCellOpPt,
-                               P3[] cartesians, MSInterface ms,
-                               boolean disableSymmetry) throws Exception {
+                               P3[] cartesians, MSInterface ms) throws Exception {
     boolean isBaseCell = (baseCount == 0);
     boolean addBonds = (bondCount0 > asc.bondIndex0 && applySymmetryToBonds);
     int[] atomMap = (addBonds ? new int[noSymmetryCount] : null);
@@ -749,9 +770,9 @@ public class XtalSymmetry {
        *    
        */
 
-      int pt0 = (disableSymmetry ? 0 : checkSpecial ? pt
+      int pt0 = (checkSpecial ? pt
           : checkRange111 ? baseCount : 0);
-      float spinOp = (disableSymmetry ? 0 : asc.vibScale == 0 ? symmetry.getSpinOp(iSym)
+      float spinOp = (asc.vibScale == 0 ? symmetry.getSpinOp(iSym)
           : asc.vibScale);
       for (int i = firstSymmetryAtom; i < atomMax; i++) {
         Atom a = asc.atoms[i];
@@ -789,9 +810,6 @@ public class XtalSymmetry {
             PT.fixPtFloats(ptAtom, PT.FRACTIONAL_PRECISION);
           if (!isWithinCell(dtype, ptAtom, minXYZ0.x, maxXYZ0.x,
               minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingError))
-//          if (legacyJavaFloat ? 
-//              : !isWithinCellInt(dtype, ptAtom, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
-//                  maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingErrorInt))
             continue;
         }
         if (checkSymmetryMinMax)
@@ -842,7 +860,7 @@ public class XtalSymmetry {
           if (spinOp != 0 && atom1.vib != null) {
             symmetry.getSpaceGroupOperation(iSym).rotate(atom1.vib);
             atom1.vib.scale(spinOp);
-            System.out.println("vib for iSym " + iSym + " " + atom1 + " " +  atom1.vib);
+            //System.out.println("vib for iSym " + iSym + " " + atom1 + " " +  atom1.vib);
           }
           atom1.atomSite = atomSite;
           if (code != null)
@@ -1129,7 +1147,7 @@ public class XtalSymmetry {
 
   public void rotateToSuperCell(V3 t) {
     if (matSupercell != null)
-      matSupercell.rotate(t);
+      matSupercell.rotTrans(t);
   }
 
   private int nVib;
@@ -1154,23 +1172,6 @@ public class XtalSymmetry {
       }
     }
     return nVib;
-  }
-
-  private void trimAtomSet() {
-    symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
-    BS bs = asc.bsAtoms;
-    Atom[] atoms = asc.atoms;
-    if (bs == null)
-      bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      if (!isWithinCell(dtype, atoms[i], minXYZ.x, maxXYZ.x,
-          minXYZ.y, maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
-//      if (legacyJavaFloat ? 
-//          : !isWithinCellInt(dtype, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
-//              maxXYZ.y, minXYZ.z, maxXYZ.z, packingErrorInt)) {
-        bs.clear(i);
-//      }
-    }
   }
 
   public void scaleFractionalVibs() {
