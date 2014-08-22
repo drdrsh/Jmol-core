@@ -232,11 +232,13 @@ abstract class OutputManager {
       return "";
     String s = vwr.getStateInfo3(null, width, height);
     if (out != null) {
-      if (fileName != null)
-        vwr.fm.clearPngjCache(fileName);
       // when writing a file, we need to make sure
       // the pngj cache for that file is cleared
-      return createZipSet(s, scripts, true, out);
+      // UNLESS
+      Object o = createZipSet(s, scripts, true, out);
+      if (fileName != null)
+        vwr.fm.clearPngjCache(fileName);
+      return o; 
     }
     // we remove local file references in the embedded states for images
     try {
