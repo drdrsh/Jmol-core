@@ -184,6 +184,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   static {
     /**
+     * allows customization of Viewer -- not implemented in JSmol. 
+     * 
      * @j2sNative
      * 
      * self.Jmol && Jmol.extend && Jmol.extend("vwr", org.jmol.viewer.Viewer.prototype);

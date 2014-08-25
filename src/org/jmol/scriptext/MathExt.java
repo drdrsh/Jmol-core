@@ -1277,8 +1277,7 @@ public class MathExt implements JmolMathExtension {
     // load("myfile.txt",1000)
     // load("myfil.xyz",0,true)
 
-    if (args.length > 3 || args.length < 1)
-      return false;
+    String file;
     int nBytesMax = -1;
     boolean asBytes = false;
     boolean async = false;
@@ -1289,12 +1288,14 @@ public class MathExt implements JmolMathExtension {
     case 2:
       nBytesMax = (args[1].tok == T.integer ? args[1].asInt() : -1);
       asBytes = args[1].tok == T.on;
+      //$FALL-THROUGH$
+    case 1:
+      file = SV.sValue(args[0]);
+      file = file.replace('\\', '/');
       break;
     default:
       return false;
     }
-    String file = SV.sValue(args[0]);
-    file = file.replace('\\', '/');
     if (asBytes)
       return mp.addXMap(vwr.getFileAsMap(file));
     boolean isQues = file.startsWith("?");

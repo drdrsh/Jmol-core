@@ -57,6 +57,7 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
    */
   @Override
   public void setViewer(Viewer vwr, String commandOptions) {
+    isMultiTouch = true;
     super.setViewer(vwr, commandOptions);
     mouseWheelFactor = 1.02f;
     boolean isSparsh = (commandOptions.indexOf("-multitouch-sparshui") >= 0);
@@ -364,14 +365,6 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
     }
     if (!haveMultiTouchInput)
       super.mouseAction(mode, time, x, y, count, modifiers);
-  }
-
-  @Override
-  protected float getExitRate() {
-    long dt = dragGesture.getTimeDifference(2);
-    System.out.println("ActionManMT getExitRate " + dt + " " + MININUM_GESTURE_DELAY_MILLISECONDS );
-    return (dt > (MININUM_GESTURE_DELAY_MILLISECONDS << 3) ? 0 :
-        dragGesture.getSpeedPixelsPerMillisecond(2, 1));
   }
 
   @Override

@@ -324,24 +324,7 @@ public class StateManager {
   public boolean restoreScene(String saveName, float timeSeconds) {
     Scene o = (Scene) getNoCase(saved, (saveName.length() > 0 ? "Scene_"
         + saveName : lastScene));
-    return (o != null && o.restore(timeSeconds));
-  }
-
-  private class Scene {
-    protected String  saveName;
-    private Map<String, Object> scene;
-    
-    protected Scene(Map<String, Object> scene) {
-      this.scene = scene;
-    }
-
-    protected boolean restore(float timeSeconds) {
-      JmolSceneGenerator gen = (JmolSceneGenerator) scene.get("generator");
-      if (gen != null)
-        gen.generateScene(scene);
-      float[] pv = (float[]) scene.get("pymolView");
-      return (pv != null && vwr.tm.moveToPyMOL(vwr.eval, timeSeconds, pv));
-    }
+    return (o != null && o.restore(vwr, timeSeconds));
   }
 
   public void saveOrientation(String saveName, float[] pymolView) {
@@ -382,7 +365,7 @@ public class StateManager {
       deleteSavedType("Bonds_");
       return;
     }
-    Connections b = new Connections();
+    Connections b = new Connections(vwr);
     b.saveName = lastConnections = "Bonds_" + saveName;
     saved.put(b.saveName, b);
   }
@@ -395,69 +378,6 @@ public class StateManager {
     return (c != null && c.restore());
   }
 
-  private class Connections {
-
-    protected String saveName;
-    protected int bondCount;
-    protected Connection[] connections;
-
-    protected Connections() {
-      ModelSet modelSet = vwr.ms;
-      if (modelSet == null)
-        return;
-      bondCount = modelSet.bondCount;
-      connections = new Connection[bondCount + 1];
-      Bond[] bonds = modelSet.bo;
-      for (int i = bondCount; --i >= 0;) {
-        Bond b = bonds[i];
-        connections[i] = new Connection(b.getAtomIndex1(), b.getAtomIndex2(), b
-            .mad, b.colix, b.order, b.getEnergy(), b.getShapeVisibilityFlags());
-      }
-    }
-
-    protected boolean restore() {
-      ModelSet modelSet = vwr.ms;
-      if (modelSet == null)
-        return false;
-      modelSet.deleteAllBonds();
-      for (int i = bondCount; --i >= 0;) {
-        Connection c = connections[i];
-        int ac = modelSet.getAtomCount();
-        if (c.atomIndex1 >= ac || c.atomIndex2 >= ac)
-          continue;
-        Bond b = modelSet.bondAtoms(modelSet.at[c.atomIndex1],
-            modelSet.at[c.atomIndex2], c.order, c.mad, null, c.energy, false, true);
-        b.setColix(c.colix);
-        b.setShapeVisibilityFlags(c.shapeVisibilityFlags);
-      }
-      for (int i = bondCount; --i >= 0;)
-        modelSet.getBondAt(i).setIndex(i);
-      vwr.setShapeProperty(JC.SHAPE_STICKS, "reportAll", null);
-      return true;
-    }
-  }
-
-  private class Connection {
-    protected int atomIndex1;
-    protected int atomIndex2;
-    protected short mad;
-    protected short colix;
-    protected int order;
-    protected float energy;
-    protected int shapeVisibilityFlags;
-
-    protected Connection(int atom1, int atom2, short mad, short colix, int order, float energy,
-        int shapeVisibilityFlags) {
-      atomIndex1 = atom1;
-      atomIndex2 = atom2;
-      this.mad = mad;
-      this.colix = colix;
-      this.order = order;
-      this.energy = energy;
-      this.shapeVisibilityFlags = shapeVisibilityFlags;
-    }
-  }
-
   public static String varClip(String name, String sv, int nMax) {
     if (nMax > 0 && sv.length() > nMax)
       sv = sv.substring(0, nMax) + " #...more (" + sv.length()
@@ -465,6 +385,88 @@ public class StateManager {
           + " to view)";
     return sv;
   }
-
-
 }
+
+class Scene {
+  protected String  saveName;
+  private Map<String, Object> scene;
+  
+  protected Scene(Map<String, Object> scene) {
+    this.scene = scene;
+  }
+
+  protected boolean restore(Viewer vwr, float timeSeconds) {
+    JmolSceneGenerator gen = (JmolSceneGenerator) scene.get("generator");
+    if (gen != null)
+      gen.generateScene(scene);
+    float[] pv = (float[]) scene.get("pymolView");
+    return (pv != null && vwr.tm.moveToPyMOL(vwr.eval, timeSeconds, pv));
+  }
+}
+
+class Connections {
+
+  protected String saveName;
+  protected int bondCount;
+  protected Connection[] connections;
+  private Viewer vwr;
+
+  protected Connections(Viewer vwr) {
+    ModelSet modelSet = vwr.ms;
+    if (modelSet == null)
+      return;
+    this.vwr = vwr;
+    bondCount = modelSet.bondCount;
+    connections = new Connection[bondCount + 1];
+    Bond[] bonds = modelSet.bo;
+    for (int i = bondCount; --i >= 0;) {
+      Bond b = bonds[i];
+      connections[i] = new Connection(b.getAtomIndex1(), b.getAtomIndex2(), b
+          .mad, b.colix, b.order, b.getEnergy(), b.getShapeVisibilityFlags());
+    }
+  }
+
+  protected boolean restore() {
+    ModelSet modelSet = vwr.ms;
+    if (modelSet == null)
+      return false;
+    modelSet.deleteAllBonds();
+    for (int i = bondCount; --i >= 0;) {
+      Connection c = connections[i];
+      int ac = modelSet.getAtomCount();
+      if (c.atomIndex1 >= ac || c.atomIndex2 >= ac)
+        continue;
+      Bond b = modelSet.bondAtoms(modelSet.at[c.atomIndex1],
+          modelSet.at[c.atomIndex2], c.order, c.mad, null, c.energy, false, true);
+      b.setColix(c.colix);
+      b.setShapeVisibilityFlags(c.shapeVisibilityFlags);
+    }
+    for (int i = bondCount; --i >= 0;)
+      modelSet.getBondAt(i).setIndex(i);
+    vwr.setShapeProperty(JC.SHAPE_STICKS, "reportAll", null);
+    return true;
+  }
+}
+
+class Connection {
+  protected int atomIndex1;
+  protected int atomIndex2;
+  protected short mad;
+  protected short colix;
+  protected int order;
+  protected float energy;
+  protected int shapeVisibilityFlags;
+
+  protected Connection(int atom1, int atom2, short mad, short colix, int order, float energy,
+      int shapeVisibilityFlags) {
+    atomIndex1 = atom1;
+    atomIndex2 = atom2;
+    this.mad = mad;
+    this.colix = colix;
+    this.order = order;
+    this.energy = energy;
+    this.shapeVisibilityFlags = shapeVisibilityFlags;
+  }
+}
+
+

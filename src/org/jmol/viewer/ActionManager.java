@@ -52,7 +52,8 @@ import org.jmol.viewer.binding.JmolBinding;
 public class ActionManager implements EventManager {
 
   protected Viewer vwr;
-  protected boolean haveMultiTouchInput = false;
+  protected boolean haveMultiTouchInput;  
+  protected boolean isMultiTouch;
   
   public Binding b;
 
@@ -74,6 +75,7 @@ public class ActionManager implements EventManager {
     setBinding(jmolBinding = new JmolBinding());
     LEFT_CLICKED = Binding.getMouseAction(1, Binding.LEFT, Event.CLICKED);
     LEFT_DRAGGED = Binding.getMouseAction(1, Binding.LEFT, Event.DRAGGED);
+    dragGesture = new Gesture(20, vwr);
   }
 
   protected Thread hoverWatcherThread;
@@ -153,118 +155,7 @@ public class ActionManager implements EventManager {
 
   //// Gestures
   
-  protected class MotionPoint {
-    int index;
-    int x;
-    int y;
-    long time;
-
-    void set(int index, int x, int y, long time) {
-      this.index = index;
-      this.x = x;
-      this.y = y;
-      this.time = time;
-    }
-
-    @Override
-    public String toString() {
-      return "[x = " + x + " y = " + y + " time = " + time + " ]";
-    }
-  }
-
-  protected Gesture dragGesture = new Gesture(20);
-
-  public class Gesture {
-    private int action;
-    MotionPoint[] nodes;
-    private int ptNext;
-    private long time0;
-
-    Gesture(int nPoints) {
-      nodes = new MotionPoint[nPoints];
-      for (int i = 0; i < nPoints; i++)
-        nodes[i] = new MotionPoint();
-    }
-
-    void setAction(int action, long time) {
-      this.action = action;
-      ptNext = 0;
-      time0 = time;
-      for (int i = 0; i < nodes.length; i++)
-        nodes[i].index = -1;
-    }
-
-    int add(int action, int x, int y, long time) {
-      this.action = action;
-      getNode(ptNext).set(ptNext, x, y, time - time0);
-      ptNext++;
-      return ptNext;
-    }
-
-    public long getTimeDifference(int nPoints) {
-      nPoints = getPointCount2(nPoints, 0);
-      if (nPoints < 2)
-        return 0;
-      MotionPoint mp1 = getNode(ptNext - 1);
-      MotionPoint mp0 = getNode(ptNext - nPoints);
-      return mp1.time - mp0.time;
-    }
-
-    public float getSpeedPixelsPerMillisecond(int nPoints, int nPointsPrevious) {
-      nPoints = getPointCount2(nPoints, nPointsPrevious);
-      if (nPoints < 2)
-        return 0;
-      MotionPoint mp1 = getNode(ptNext - 1 - nPointsPrevious);
-      MotionPoint mp0 = getNode(ptNext - nPoints - nPointsPrevious);
-      float dx = ((float) (mp1.x - mp0.x)) / vwr.getScreenWidth() * 360;
-      float dy = ((float) (mp1.y - mp0.y)) / vwr.getScreenHeight() * 360;
-      return (float) Math.sqrt(dx * dx + dy * dy) / (mp1.time - mp0.time);
-    }
-
-    int getDX(int nPoints, int nPointsPrevious) {
-      nPoints = getPointCount2(nPoints, nPointsPrevious);
-      if (nPoints < 2)
-        return 0;
-      MotionPoint mp1 = getNode(ptNext - 1 - nPointsPrevious);
-      MotionPoint mp0 = getNode(ptNext - nPoints - nPointsPrevious);
-      return mp1.x - mp0.x;
-    }
-
-    int getDY(int nPoints, int nPointsPrevious) {
-      nPoints = getPointCount2(nPoints, nPointsPrevious);
-      if (nPoints < 2)
-        return 0;
-      MotionPoint mp1 = getNode(ptNext - 1 - nPointsPrevious);
-      MotionPoint mp0 = getNode(ptNext - nPoints - nPointsPrevious);
-      return mp1.y - mp0.y;
-    }
-
-    int getPointCount() {
-      return ptNext;
-    }
-
-    private int getPointCount2(int nPoints, int nPointsPrevious) {
-      if (nPoints > nodes.length - nPointsPrevious)
-        nPoints = nodes.length - nPointsPrevious;
-      int n = nPoints + 1;
-      for (; --n >= 0;)
-        if (getNode(ptNext - n - nPointsPrevious).index >= 0)
-          break;
-      return n;
-    }
-
-    MotionPoint getNode(int i) {
-      return nodes[(i + nodes.length + nodes.length) % nodes.length];
-    }
-
-    @Override
-    public String toString() {
-      if (nodes.length == 0)
-        return "" + this;
-      return Binding.getMouseActionName(action, false) + " nPoints = " + ptNext
-          + " " + nodes[0];
-    }
-  }
+  private Gesture dragGesture;
 
   /*
    * a "Jmol action" is one of these:
@@ -1591,10 +1482,12 @@ public class ActionManager implements EventManager {
     return (isZoom || isSlideZoom);
   }
 
-  protected float getExitRate() {
+  private float getExitRate() {
     long dt = dragGesture.getTimeDifference(2);
-    return (dt > MININUM_GESTURE_DELAY_MILLISECONDS ? 0 : dragGesture
-        .getSpeedPixelsPerMillisecond(4, 2));
+    return (isMultiTouch ? (dt > (MININUM_GESTURE_DELAY_MILLISECONDS << 3) ? 0 :
+      dragGesture.getSpeedPixelsPerMillisecond(2, 1)) 
+      : (dt > MININUM_GESTURE_DELAY_MILLISECONDS ? 0 : dragGesture
+        .getSpeedPixelsPerMillisecond(4, 2)));
   }
 
   private boolean isRubberBandSelect(int action) {
@@ -2155,3 +2048,117 @@ public class ActionManager implements EventManager {
   }
 
 }
+
+class MotionPoint {
+  int index;
+  int x;
+  int y;
+  long time;
+
+  void set(int index, int x, int y, long time) {
+    this.index = index;
+    this.x = x;
+    this.y = y;
+    this.time = time;
+  }
+
+  @Override
+  public String toString() {
+    return "[x = " + x + " y = " + y + " time = " + time + " ]";
+  }
+}
+
+class Gesture {
+  private int action;
+  MotionPoint[] nodes;
+  private int ptNext;
+  private long time0;
+  private Viewer vwr;
+
+  public Gesture(int nPoints, Viewer vwr) {
+    this.vwr = vwr;
+    nodes = new MotionPoint[nPoints];
+    for (int i = 0; i < nPoints; i++)
+      nodes[i] = new MotionPoint();
+  }
+
+  void setAction(int action, long time) {
+    this.action = action;
+    ptNext = 0;
+    time0 = time;
+    for (int i = 0; i < nodes.length; i++)
+      nodes[i].index = -1;
+  }
+
+  int add(int action, int x, int y, long time) {
+    this.action = action;
+    getNode(ptNext).set(ptNext, x, y, time - time0);
+    ptNext++;
+    return ptNext;
+  }
+
+  public long getTimeDifference(int nPoints) {
+    nPoints = getPointCount2(nPoints, 0);
+    if (nPoints < 2)
+      return 0;
+    MotionPoint mp1 = getNode(ptNext - 1);
+    MotionPoint mp0 = getNode(ptNext - nPoints);
+    return mp1.time - mp0.time;
+  }
+
+  public float getSpeedPixelsPerMillisecond(int nPoints, int nPointsPrevious) {
+    nPoints = getPointCount2(nPoints, nPointsPrevious);
+    if (nPoints < 2)
+      return 0;
+    MotionPoint mp1 = getNode(ptNext - 1 - nPointsPrevious);
+    MotionPoint mp0 = getNode(ptNext - nPoints - nPointsPrevious);
+    float dx = ((float) (mp1.x - mp0.x)) / vwr.getScreenWidth() * 360;
+    float dy = ((float) (mp1.y - mp0.y)) / vwr.getScreenHeight() * 360;
+    return (float) Math.sqrt(dx * dx + dy * dy) / (mp1.time - mp0.time);
+  }
+
+  int getDX(int nPoints, int nPointsPrevious) {
+    nPoints = getPointCount2(nPoints, nPointsPrevious);
+    if (nPoints < 2)
+      return 0;
+    MotionPoint mp1 = getNode(ptNext - 1 - nPointsPrevious);
+    MotionPoint mp0 = getNode(ptNext - nPoints - nPointsPrevious);
+    return mp1.x - mp0.x;
+  }
+
+  int getDY(int nPoints, int nPointsPrevious) {
+    nPoints = getPointCount2(nPoints, nPointsPrevious);
+    if (nPoints < 2)
+      return 0;
+    MotionPoint mp1 = getNode(ptNext - 1 - nPointsPrevious);
+    MotionPoint mp0 = getNode(ptNext - nPoints - nPointsPrevious);
+    return mp1.y - mp0.y;
+  }
+
+  int getPointCount() {
+    return ptNext;
+  }
+
+  private int getPointCount2(int nPoints, int nPointsPrevious) {
+    if (nPoints > nodes.length - nPointsPrevious)
+      nPoints = nodes.length - nPointsPrevious;
+    int n = nPoints + 1;
+    for (; --n >= 0;)
+      if (getNode(ptNext - n - nPointsPrevious).index >= 0)
+        break;
+    return n;
+  }
+
+  MotionPoint getNode(int i) {
+    return nodes[(i + nodes.length + nodes.length) % nodes.length];
+  }
+
+  @Override
+  public String toString() {
+    if (nodes.length == 0)
+      return "" + this;
+    return Binding.getMouseActionName(action, false) + " nPoints = " + ptNext
+        + " " + nodes[0];
+  }
+}
+

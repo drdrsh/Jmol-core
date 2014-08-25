@@ -26,27 +26,26 @@ package org.jmol.util;
 
 public class Int2IntHash {
   int entryCount;
-  Entry[] entries;
+  Int2IntHashEntry[] entries;
   
-
   public Int2IntHash(int initialCapacity) {
-    entries = new Entry[initialCapacity];
+    entries = new Int2IntHashEntry[initialCapacity];
   }
 
   public synchronized int get(int key) {
-    Entry[] entries = this.entries;
+    Int2IntHashEntry[] entries = this.entries;
     int hash = (key & 0x7FFFFFFF) % entries.length;
-    for (Entry e = entries[hash]; e != null; e = e.next)
+    for (Int2IntHashEntry e = entries[hash]; e != null; e = e.next)
       if (e.key == key)
         return e.value;
     return Integer.MIN_VALUE;
   }
 
   public synchronized void put(int key, int value) {
-    Entry[] entries = this.entries;
+    Int2IntHashEntry[] entries = this.entries;
     int n = entries.length;
     int hash = (key & 0x7FFFFFFF) % n;
-    for (Entry e = entries[hash]; e != null; e = e.next)
+    for (Int2IntHashEntry e = entries[hash]; e != null; e = e.next)
       if (e.key == key) {
         e.value = value;
         return;
@@ -54,10 +53,10 @@ public class Int2IntHash {
     if (entryCount > n) {
       int oldSize = n;
       n += n + 1;
-      Entry[] newEntries = new Entry[n];
+      Int2IntHashEntry[] newEntries = new Int2IntHashEntry[n];
       for (int i = oldSize; --i >= 0;) {
-        for (Entry e = entries[i]; e != null;) {
-          Entry t = e;
+        for (Int2IntHashEntry e = entries[i]; e != null;) {
+          Int2IntHashEntry t = e;
           e = e.next;
           hash = (t.key & 0x7FFFFFFF) % n;
           t.next = newEntries[hash];
@@ -67,21 +66,19 @@ public class Int2IntHash {
       entries = this.entries = newEntries;
       hash = (key & 0x7FFFFFFF) % n;
     }
-    entries[hash] = new Entry(key, value, entries[hash]);
+    entries[hash] = new Int2IntHashEntry(key, value, entries[hash]);
     ++entryCount;
-  }
-
-  private class Entry {
-    protected int key;
-    protected int value;
-    protected Entry next;
-    
-    Entry(int key, int value, Entry next) {
-      this.key = key;
-      this.value = value;
-      this.next = next;
-    }
   }
 }
 
-
+class Int2IntHashEntry {
+  int key;
+  int value;
+  Int2IntHashEntry next;
+  
+  Int2IntHashEntry(int key, int value, Int2IntHashEntry next) {
+    this.key = key;
+    this.value = value;
+    this.next = next;
+  }
+}
