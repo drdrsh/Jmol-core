@@ -318,8 +318,6 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     vwr.fillAtomData(atomData, AtomData.MODE_FILL_COORDS
         | (mads == null ? AtomData.MODE_FILL_RADII : 0));
     ac = atomData.ac;
-    checkNewDotsArray();
-      
     if (mads != null)
       for (int i = 0; i < ac; i++)
         atomData.atomRadius[i] = mads[i] / 1000f;
@@ -336,6 +334,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     AtomIndexIterator iter = vwr.getSelectedAtomIterator(bsMySelected,
         false, modelZeroBased, false);
     //true ==> only atom index > this atom accepted
+    checkNewDotsArray();  // possible that atoms have been added
     int i0 = (isAll ? ac - 1 : bsSelected.nextSetBit(0));
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsSelected.nextSetBit(i + 1)))
       if (bsIgnore == null || !bsIgnore.get(i)) {
@@ -424,8 +423,69 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
   }
   
   private void calcConvexMap(boolean isSurface) {
-    checkNewDotsArray();
-    calcConvexBits();
+    geodesicMap.setBits(0, geodesicCount);
+    float combinedRadii = radiusI + radiusP;
+    if (neighborCount == 0)
+      return;
+    int faceTest;
+    int p1, p2, p3;
+    short[] faces = Geodesic.getFaceVertexes(JC.ENV_CALC_MAX_LEVEL);
+    
+    int p4 = power4[JC.ENV_CALC_MAX_LEVEL - 1];
+    boolean ok1, ok2, ok3;
+    mapT.clearAll();
+    for (int i = 0; i < 12; i++) {
+      vertexTest[i].scaleAdd2(combinedRadii, Geodesic.getVertexVector(i), centerI);      
+    }    
+    for (int f = 0; f < 20; f++) {
+      faceTest = 0;
+      p1 = faces[3 * p4 * (4 * f + 0)];
+      p2 = faces[3 * p4 * (4 * f + 1)];
+      p3 = faces[3 * p4 * (4 * f + 2)];
+      for (int j = 0; j < neighborCount; j++) {
+        float maxDist = neighborPlusProbeRadii2[j];
+        centerT = neighborCenters[j];
+        ok1 = vertexTest[p1].distanceSquared(centerT) >= maxDist;
+        ok2 = vertexTest[p2].distanceSquared(centerT) >= maxDist;
+        ok3 = vertexTest[p3].distanceSquared(centerT) >= maxDist;
+        if (!ok1)
+          geodesicMap.clear(p1);
+        if (!ok2)
+          geodesicMap.clear(p2);
+        if (!ok3)
+          geodesicMap.clear(p3);
+        if (!ok1 && !ok2 && !ok3) {
+          faceTest = -1;
+          break;
+        }
+      }
+      int kFirst = f * 12 * p4;
+      int kLast = kFirst + 12 * p4;
+      for (int k = kFirst; k < kLast; k++) {
+        int vect = faces[k];
+        if (mapT.get(vect) || !geodesicMap.get(vect))
+            continue;
+        switch (faceTest) {
+        case -1:
+          //face full occluded
+          geodesicMap.clear(vect);
+          break;
+        case 0:
+          //face partially occluded
+          for (int j = 0; j < neighborCount; j++) {
+            float maxDist = neighborPlusProbeRadii2[j];
+            centerT = neighborCenters[j];
+            pointT.scaleAdd2(combinedRadii, Geodesic.getVertexVector(vect), centerI);
+            if (pointT.distanceSquared(centerT) < maxDist)
+              geodesicMap.clear(vect);
+          }
+          break;
+        case 1:
+          //face is fully surface
+        }
+        mapT.set(vect);
+      }
+    }
     BS map;
     if (geodesicMap.isEmpty())
       map = EMPTY_SET;
@@ -500,72 +560,6 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
 
   private static int[] power4 = {1, 4, 16, 64, 256};
   
-  private void calcConvexBits() {
-    geodesicMap.setBits(0, geodesicCount);
-    float combinedRadii = radiusI + radiusP;
-    if (neighborCount == 0)
-      return;
-    int faceTest;
-    int p1, p2, p3;
-    short[] faces = Geodesic.getFaceVertexes(JC.ENV_CALC_MAX_LEVEL);
-    
-    int p4 = power4[JC.ENV_CALC_MAX_LEVEL - 1];
-    boolean ok1, ok2, ok3;
-    mapT.clearAll();
-    for (int i = 0; i < 12; i++) {
-      vertexTest[i].scaleAdd2(combinedRadii, Geodesic.getVertexVector(i), centerI);      
-    }    
-    for (int f = 0; f < 20; f++) {
-      faceTest = 0;
-      p1 = faces[3 * p4 * (4 * f + 0)];
-      p2 = faces[3 * p4 * (4 * f + 1)];
-      p3 = faces[3 * p4 * (4 * f + 2)];
-      for (int j = 0; j < neighborCount; j++) {
-        float maxDist = neighborPlusProbeRadii2[j];
-        centerT = neighborCenters[j];
-        ok1 = vertexTest[p1].distanceSquared(centerT) >= maxDist;
-        ok2 = vertexTest[p2].distanceSquared(centerT) >= maxDist;
-        ok3 = vertexTest[p3].distanceSquared(centerT) >= maxDist;
-        if (!ok1)
-          geodesicMap.clear(p1);
-        if (!ok2)
-          geodesicMap.clear(p2);
-        if (!ok3)
-          geodesicMap.clear(p3);
-        if (!ok1 && !ok2 && !ok3) {
-          faceTest = -1;
-          break;
-        }
-      }
-      int kFirst = f * 12 * p4;
-      int kLast = kFirst + 12 * p4;
-      for (int k = kFirst; k < kLast; k++) {
-        int vect = faces[k];
-        if (mapT.get(vect) || !geodesicMap.get(vect))
-            continue;
-        switch (faceTest) {
-        case -1:
-          //face full occluded
-          geodesicMap.clear(vect);
-          break;
-        case 0:
-          //face partially occluded
-          for (int j = 0; j < neighborCount; j++) {
-            float maxDist = neighborPlusProbeRadii2[j];
-            centerT = neighborCenters[j];
-            pointT.scaleAdd2(combinedRadii, Geodesic.getVertexVector(vect), centerI);
-            if (pointT.distanceSquared(centerT) < maxDist)
-              geodesicMap.clear(vect);
-          }
-          break;
-        case 1:
-          //face is fully surface
-        }
-        mapT.set(vect);
-      }
-    }
-  }
-
   private int neighborCount;
   private int[] neighborIndices = new int[16];
   private P3[] neighborCenters = new P3[16];
