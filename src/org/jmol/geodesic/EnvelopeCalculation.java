@@ -318,6 +318,8 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     vwr.fillAtomData(atomData, AtomData.MODE_FILL_COORDS
         | (mads == null ? AtomData.MODE_FILL_RADII : 0));
     ac = atomData.ac;
+    checkNewDotsArray();
+      
     if (mads != null)
       for (int i = 0; i < ac; i++)
         atomData.atomRadius[i] = mads[i] / 1000f;
@@ -422,8 +424,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
   }
   
   private void calcConvexMap(boolean isSurface) {
-    if (dotsConvexMaps == null)
-      dotsConvexMaps = new BS[ac];
+    checkNewDotsArray();
     calcConvexBits();
     BS map;
     if (geodesicMap.isEmpty())
@@ -439,6 +440,17 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     dotsConvexMaps[indexI] = map;
   }
   
+  private void checkNewDotsArray() {
+    if (dotsConvexMaps == null) {
+      dotsConvexMaps = new BS[ac];
+    } else if (dotsConvexMaps.length != ac) {
+      BS[] a = new BS[ac];
+      for (int i = 0; i < ac && i < dotsConvexMaps.length; i++)
+        a[i] = dotsConvexMaps[i];
+      dotsConvexMaps = a;
+    }
+  }
+
   private void addIncompleteFaces(BS points) {
     mapT.clearAll();
     short[] faces = Geodesic.getFaceVertexes(JC.ENV_CALC_MAX_LEVEL);
