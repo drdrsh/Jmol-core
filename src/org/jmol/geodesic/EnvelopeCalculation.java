@@ -42,8 +42,6 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.java.BS;
 
-
-
 /* ***************************************************************
  * 
  * 3/20/07 -- consolidation -- Bob Hanson
@@ -139,7 +137,6 @@ import org.jmol.java.BS;
 
 public final class EnvelopeCalculation implements JmolEnvCalc {
 
-  
   private BS geodesicMap;
   private BS mapT;
 
@@ -149,10 +146,10 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
   private AtomDataServer vwr;
   private int ac;
   private static BS EMPTY_SET;
-  
+
   public EnvelopeCalculation() {
   }
-  
+
   /**
    * 
    * @param vwr
@@ -165,49 +162,49 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     this.vwr = vwr;
     this.ac = ac; //preliminary, for setFromBits()
     this.mads = mads;
-    geodesicCount = Geodesic.getVertexCount(JC.ENV_CALC_MAX_LEVEL);    
+    geodesicCount = Geodesic.getVertexCount(JC.ENV_CALC_MAX_LEVEL);
     geodesicMap = BS.newN(geodesicCount);
     mapT = BS.newN(geodesicCount);
     EMPTY_SET = BSUtil.emptySet;
     return this;
   }
-   
+
   private float maxRadius = 0;
   private boolean modelZeroBased;
   private boolean disregardNeighbors = false;
   private BS bsMySelected;
-  
 
   private BS[] dotsConvexMaps;
+
   public BS[] getDotsConvexMaps() {
     return dotsConvexMaps;
   }
-  
+
   private int dotsConvexMax; // the Max == the highest atomIndex with dots + 1
-  
+
   public int getDotsConvexMax() {
     return dotsConvexMax;
   }
-  
+
   public void allocDotsConvexMaps(int max) {
     if (dotsConvexMax >= max)
       return;
     dotsConvexMax = max;
     dotsConvexMaps = new BS[max];
   }
-  
+
   private int geodesicCount;
   private BS bsSurface;
-  
+
   @Override
   public BS getBsSurfaceClone() {
     return BSUtil.copy(bsSurface);
   }
-  
+
   public void setMads(short[] mads) {
     this.mads = mads;
   }
-  
+
   public void setFromBits(int index, BS bs) {
     geodesicMap.setBits(0, geodesicCount);
     for (int iDot = geodesicCount; --iDot >= 0;)
@@ -225,7 +222,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     dotsConvexMaps[index] = map;
     dotsConvexMax = Math.max(dotsConvexMax, index);
   }
-  
+
   private float radiusP, diameterP;
 
   public void newSet() {
@@ -236,18 +233,19 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
   }
 
   private BS bsTemp;
-  
+
   /**
-   * problem prior to 12.3.18 was that dots once on the deodesic were not being moved.
-   * this isn't perfect, but it's reasonably good. Mostly, you should recreate dots
-   * after rotateSelected. This isn't a problem until after a state is saved and
-   * reloaded, since only then with atomData.radiusData be null.
+   * problem prior to 12.3.18 was that dots once on the deodesic were not being
+   * moved. this isn't perfect, but it's reasonably good. Mostly, you should
+   * recreate dots after rotateSelected. This isn't a problem until after a
+   * state is saved and reloaded, since only then with atomData.radiusData be
+   * null.
    * 
    * @param bs
    * @param m
    */
   public void reCalculate(BS bs, M3 m) {
-    if (atomData.radiusData != null) {    
+    if (atomData.radiusData != null) {
       calculate(null, maxRadius, bs, bsIgnore, disregardNeighbors,
           onlySelectedDots, isSurface, multiModel);
       return;
@@ -268,19 +266,17 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
         pt.setT(Geodesic.getVertexVector(j));
         m.rotate(pt);
         bsNew.set(Normix.getNormixV(pt, bsTemp));
-      }         
+      }
       dotsConvexMaps[i] = bsNew;
     }
-    
-  }  
 
-  
+  }
+
   private BS bsIgnore;
   private boolean onlySelectedDots;
   private boolean isSurface;
   private boolean multiModel;
-  
-  
+
   /**
    * @param rd
    * @param maxRadius
@@ -323,18 +319,17 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
         atomData.atomRadius[i] = mads[i] / 1000f;
 
     bsMySelected = (onlySelectedDots && bsSelected != null ? BSUtil
-        .copy(bsSelected) : bsIgnore != null ? BSUtil.setAll(ac)
-        : null);
+        .copy(bsSelected) : bsIgnore != null ? BSUtil.setAll(ac) : null);
     BSUtil.andNot(bsMySelected, bsIgnore);
     this.disregardNeighbors = disregardNeighbors;
     this.maxRadius = maxRadius;
     bsSurface = new BS();
     // now, calculate surface for selected atoms
     boolean isAll = (bsSelected == null);
-    AtomIndexIterator iter = vwr.getSelectedAtomIterator(bsMySelected,
-        false, modelZeroBased, false);
+    AtomIndexIterator iter = vwr.getSelectedAtomIterator(bsMySelected, false,
+        modelZeroBased, false);
     //true ==> only atom index > this atom accepted
-    checkNewDotsArray();  // possible that atoms have been added
+    checkNewDotsArray(); // possible that atoms have been added
     int i0 = (isAll ? ac - 1 : bsSelected.nextSetBit(0));
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsSelected.nextSetBit(i + 1)))
       if (bsIgnore == null || !bsIgnore.get(i)) {
@@ -346,18 +341,19 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     currentPoints = null;
     setDotsConvexMax();
   }
-  
+
   public float getRadius(int atomIndex) {
     return atomData.atomRadius[atomIndex];
   }
-    
+
   private P3[] currentPoints;
-  
+
   @Override
   public P3[] getPoints() {
     if (dotsConvexMaps == null) {
-      calculate(new RadiusData(null, JC.ENC_CALC_MAX_DIST, EnumType.ABSOLUTE, null),
-          Float.MAX_VALUE, bsMySelected, null, false, false, false, false);
+      calculate(new RadiusData(null, JC.ENC_CALC_MAX_DIST, EnumType.ABSOLUTE,
+          null), Float.MAX_VALUE, bsMySelected, null, false, false, false,
+          false);
     }
     if (currentPoints != null)
       return currentPoints;
@@ -378,16 +374,17 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
         while (--iDot >= 0)
           if (dotsConvexMaps[i].get(iDot)) {
             P3 pt = new P3();
-            pt.scaleAdd2(atomData.atomRadius[i], Geodesic.getVertexVector(iDot), atomData.atomXyz[i]);
+            pt.scaleAdd2(atomData.atomRadius[i],
+                Geodesic.getVertexVector(iDot), atomData.atomXyz[i]);
             points[nPoints++] = pt;
           }
       }
     currentPoints = points;
     return points;
-  }  
-  
+  }
+
   ///////////////// private methods ///////////////////
-  
+
   private void setDotsConvexMax() {
     if (dotsConvexMaps == null)
       dotsConvexMax = 0;
@@ -398,14 +395,15 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
       dotsConvexMax = i + 1;
     }
   }
-/*
-  BitSet getSurfaceAtoms() {
-    return bsSurface;
-  }
-*/  
+
+  /*
+    BitSet getSurfaceAtoms() {
+      return bsSurface;
+    }
+  */
   public float getAppropriateRadius(int atomIndex) {
-    return (mads != null ? (atomIndex >= mads.length ? 0 : mads[atomIndex]/1000f) 
-        : atomData.atomRadius[atomIndex]);
+    return (mads != null ? (atomIndex >= mads.length ? 0
+        : mads[atomIndex] / 1000f) : atomData.atomRadius[atomIndex]);
   }
 
   private int indexI;
@@ -421,8 +419,73 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     radiiIP2 = radiusI + radiusP;
     radiiIP2 *= radiiIP2;
   }
-  
+
   private void calcConvexMap(boolean isSurface) {
+    calcConvexBits();
+    BS map;
+    if (geodesicMap.isEmpty())
+      map = EMPTY_SET;
+    else {
+      bsSurface.set(indexI);
+      if (isSurface) {
+        addIncompleteFaces(geodesicMap);
+        addIncompleteFaces(geodesicMap);
+      }
+      map = BSUtil.copy(geodesicMap);
+    }
+    dotsConvexMaps[indexI] = map;
+  }
+
+  private void addIncompleteFaces(BS points) {
+    mapT.clearAll();
+    short[] faces = Geodesic.getFaceVertexes(JC.ENV_CALC_MAX_LEVEL);
+    int len = faces.length;
+    int maxPt = -1;
+    for (int f = 0; f < len;) {
+      short p1 = faces[f++];
+      short p2 = faces[f++];
+      short p3 = faces[f++];
+      boolean ok1 = points.get(p1);
+      boolean ok2 = points.get(p2);
+      boolean ok3 = points.get(p3);
+      if (!(ok1 || ok2 || ok3) || ok1 && ok2 && ok3)
+        continue;
+
+      // trick: DO show faces if ANY ONE vertex is missing
+      if (!ok1) {
+        mapT.set(p1);
+        if (maxPt < p1)
+          maxPt = p1;
+      }
+      if (!ok2) {
+        mapT.set(p2);
+        if (maxPt < p2)
+          maxPt = p2;
+      }
+      if (!ok3) {
+        mapT.set(p3);
+        if (maxPt < p3)
+          maxPt = p3;
+      }
+    }
+    for (int i = 0; i <= maxPt; i++) {
+      if (mapT.get(i))
+        points.set(i);
+    }
+  }
+
+  private P3 centerT;
+
+  //level = 3 for both
+  private final P3[] vertexTest = new P3[12];
+  {
+    for (int i = 0; i < 12; i++)
+      vertexTest[i] = new P3();
+  }
+
+  private static int[] power4 = { 1, 4, 16, 64, 256 };
+
+  private void calcConvexBits() {
     geodesicMap.setBits(0, geodesicCount);
     float combinedRadii = radiusI + radiusP;
     if (neighborCount == 0)
@@ -430,13 +493,13 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     int faceTest;
     int p1, p2, p3;
     short[] faces = Geodesic.getFaceVertexes(JC.ENV_CALC_MAX_LEVEL);
-    
     int p4 = power4[JC.ENV_CALC_MAX_LEVEL - 1];
     boolean ok1, ok2, ok3;
     mapT.clearAll();
     for (int i = 0; i < 12; i++) {
-      vertexTest[i].scaleAdd2(combinedRadii, Geodesic.getVertexVector(i), centerI);      
-    }    
+      vertexTest[i].scaleAdd2(combinedRadii, Geodesic.getVertexVector(i),
+          centerI);
+    }
     for (int f = 0; f < 20; f++) {
       faceTest = 0;
       p1 = faces[3 * p4 * (4 * f + 0)];
@@ -464,7 +527,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
       for (int k = kFirst; k < kLast; k++) {
         int vect = faces[k];
         if (mapT.get(vect) || !geodesicMap.get(vect))
-            continue;
+          continue;
         switch (faceTest) {
         case -1:
           //face full occluded
@@ -475,7 +538,8 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
           for (int j = 0; j < neighborCount; j++) {
             float maxDist = neighborPlusProbeRadii2[j];
             centerT = neighborCenters[j];
-            pointT.scaleAdd2(combinedRadii, Geodesic.getVertexVector(vect), centerI);
+            pointT.scaleAdd2(combinedRadii, Geodesic.getVertexVector(vect),
+                centerI);
             if (pointT.distanceSquared(centerT) < maxDist)
               geodesicMap.clear(vect);
           }
@@ -486,20 +550,8 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
         mapT.set(vect);
       }
     }
-    BS map;
-    if (geodesicMap.isEmpty())
-      map = EMPTY_SET;
-    else {
-      bsSurface.set(indexI);
-      if (isSurface) {
-        addIncompleteFaces(geodesicMap);
-        addIncompleteFaces(geodesicMap);
-      }
-      map = BSUtil.copy(geodesicMap);
-    }
-    dotsConvexMaps[indexI] = map;
   }
-  
+
   private void checkNewDotsArray() {
     if (dotsConvexMaps == null) {
       dotsConvexMaps = new BS[ac];
@@ -511,77 +563,27 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     }
   }
 
-  private void addIncompleteFaces(BS points) {
-    mapT.clearAll();
-    short[] faces = Geodesic.getFaceVertexes(JC.ENV_CALC_MAX_LEVEL);
-    int len = faces.length;
-    int maxPt = -1;
-    for (int f = 0; f < len;) {
-      short p1 = faces[f++];
-      short p2 = faces[f++];
-      short p3 = faces[f++];
-      boolean ok1 = points.get(p1); 
-      boolean ok2 = points.get(p2); 
-      boolean ok3 = points.get(p3);
-      if (! (ok1 || ok2 || ok3) || ok1 && ok2 && ok3)
-        continue;
-      
-      // trick: DO show faces if ANY ONE vertex is missing
-      if (!ok1) {
-        mapT.set(p1);
-        if (maxPt < p1)
-          maxPt = p1;
-      }
-      if (!ok2) {
-        mapT.set(p2);
-        if (maxPt < p2)
-          maxPt = p2;
-      }
-      if (!ok3) {
-        mapT.set(p3);
-        if (maxPt < p3)
-          maxPt = p3;
-      }
-    }
-    for (int i=0; i <= maxPt; i++) {
-      if (mapT.get(i))
-        points.set(i);
-    }
-  }
-
-  private P3 centerT;
-  
-  //level = 3 for both
-  private final P3[] vertexTest = new P3[12];
-  {
-    for(int i = 0; i < 12; i++)
-      vertexTest[i] = new P3();
-  }
-
-  private static int[] power4 = {1, 4, 16, 64, 256};
-  
   private int neighborCount;
   private int[] neighborIndices = new int[16];
   private P3[] neighborCenters = new P3[16];
   private float[] neighborPlusProbeRadii2 = new float[16];
   private float[] neighborRadii2 = new float[16];
-  
+
   private AtomIndexIterator getNeighbors(AtomIndexIterator iter) {
     neighborCount = 0;
     if (disregardNeighbors)
       return null;
-    vwr.setIteratorForAtom(iter, indexI, radiusI + diameterP + maxRadius);    
+    vwr.setIteratorForAtom(iter, indexI, radiusI + diameterP + maxRadius);
     while (iter.hasNext()) {
       int indexN = iter.next();
       float neighborRadius = atomData.atomRadius[indexN];
-      if (centerI.distance(atomData.atomXyz[indexN]) > radiusI + radiusP + radiusP
-          + neighborRadius)
+      if (centerI.distance(atomData.atomXyz[indexN]) > radiusI + radiusP
+          + radiusP + neighborRadius)
         continue;
       if (neighborCount == neighborIndices.length) {
         neighborIndices = AU.doubleLengthI(neighborIndices);
         neighborCenters = (P3[]) AU.doubleLength(neighborCenters);
-        neighborPlusProbeRadii2 = AU
-            .doubleLengthF(neighborPlusProbeRadii2);
+        neighborPlusProbeRadii2 = AU.doubleLengthF(neighborPlusProbeRadii2);
         neighborRadii2 = AU.doubleLengthF(neighborRadii2);
       }
       neighborCenters[neighborCount] = atomData.atomXyz[indexN];
@@ -593,22 +595,25 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     }
     return iter;
   }
-  
+
   /**
    * 
    * @param firstAtomDeleted
    * @param nAtomsDeleted
    */
   public void deleteAtoms(int firstAtomDeleted, int nAtomsDeleted) {
-    dotsConvexMaps = (BS[]) AU.deleteElements(dotsConvexMaps, firstAtomDeleted, nAtomsDeleted);
+    dotsConvexMaps = (BS[]) AU.deleteElements(dotsConvexMaps, firstAtomDeleted,
+        nAtomsDeleted);
     dotsConvexMax = dotsConvexMaps.length;
     if (mads != null)
       mads = (short[]) AU.deleteElements(mads, firstAtomDeleted, nAtomsDeleted);
-    atomData.atomRadius = (float[]) AU.deleteElements(atomData.atomRadius, firstAtomDeleted, nAtomsDeleted);
-    atomData.atomXyz = (P3[]) AU.deleteElements(atomData.atomXyz, firstAtomDeleted, nAtomsDeleted);
+    atomData.atomRadius = (float[]) AU.deleteElements(atomData.atomRadius,
+        firstAtomDeleted, nAtomsDeleted);
+    atomData.atomXyz = (P3[]) AU.deleteElements(atomData.atomXyz,
+        firstAtomDeleted, nAtomsDeleted);
     atomData.ac -= nAtomsDeleted;
     ac = atomData.ac;
-    
+
   }
 
 }
