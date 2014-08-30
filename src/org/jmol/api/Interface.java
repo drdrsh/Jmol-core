@@ -31,23 +31,27 @@ import org.jmol.viewer.Viewer;
 public class Interface {
 
   /**
-   * @param name 
-   * @param vwr  
-   * @param state 
-   * @return   instance
+   * @param name
+   * @param vwr
+   * @param state
+   * @return instance
    */
   public static Object getInterface(String name, Viewer vwr, String state) {
     try {
       Class<?> x = null;
       /**
-       * @j2sNative
+       * @j2sNative 
+       * 
        * x = Clazz._4Name (name, vwr && vwr.html5Applet, state);
        * 
        */
-      x = Class.forName(name);
+      {
+        x = Class.forName(name);
+      }
       return (x == null ? null : x.newInstance());
     } catch (Exception e) {
-      Logger.error("Interface.java Error creating instance for " + name + ": \n" + e);
+      Logger.error("Interface.java Error creating instance for " + name
+          + ": \n" + e);
       return null;
     }
   }

@@ -25,14 +25,12 @@
 
 package org.jmol.shapespecial;
 
-import org.jmol.api.Interface;
 import org.jmol.util.C;
 
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
 import org.jmol.util.Tensor;
-import org.jmol.viewer.Viewer;
 
 import javajs.util.V3;
 

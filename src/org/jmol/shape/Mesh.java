@@ -505,6 +505,10 @@ public class Mesh extends MeshSurface {
     return null;
   }
 
+  /**
+   * @param vwr  
+   * @return unitcell
+   */
   public SymmetryInterface getUnitCell(Viewer vwr) {
     // isosurface only
     return null;
