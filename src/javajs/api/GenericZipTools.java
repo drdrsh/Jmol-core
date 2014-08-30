@@ -40,4 +40,6 @@ public interface GenericZipTools {
 
   public String cacheZipContents(BufferedInputStream bis, String shortName,
                                  Map<String, Object> cache, boolean asByteArray);
+
+  BufferedInputStream getUnGzippedInputStream(byte[] bytes);
 }

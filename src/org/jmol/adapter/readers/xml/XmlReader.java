@@ -149,7 +149,7 @@ public class XmlReader extends AtomSetCollectionReader {
     int pt = readerName.indexOf("(");
     String name = (pt < 0 ? readerName : readerName.substring(0, pt));
     className = Resolver.getReaderClassBase(name);
-    if ((thisReader = (XmlReader) Interface.getInterface(className, vwr, "file")) == null)
+    if ((thisReader = (XmlReader) getInterface(className)) == null)
       return "File reader was not found: " + className;
     try {
       thisReader.processXml(this, saxReader);

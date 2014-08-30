@@ -33,6 +33,7 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
 import org.jmol.script.SV;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
@@ -847,7 +848,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   protected SymmetryInterface getNewSymmetry() {
-    return (symmetry = Interface.getSymmetry(vwr, "file"));
+    return symmetry = (Symmetry) getInterface("org.jmol.symmetry.Symmetry");
   }
 
   public void setFractionalCoordinates(boolean TF) {
@@ -1753,5 +1754,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     moreUnitCellInfo.addLast(info);
     appendLoadNote(info);
   }
+
+  public Object getInterface(String className) {
+    Object o = Interface.getInterface(className, vwr, "file");
+    if (o == null)
+      throw new NullPointerException("Interface");
+    return o;
+}
+
 
 }

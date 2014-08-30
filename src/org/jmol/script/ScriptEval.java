@@ -4498,17 +4498,10 @@ public class ScriptEval extends ScriptExpr {
         return;
       }
       if (vwr.async && errMsg.startsWith(JC.READER_NOT_FOUND)) {
-        String rdrName = errMsg.substring(JC.READER_NOT_FOUND.length());
-        @SuppressWarnings("unused")
-        Object rdr = new FileLoadThread(this, vwr, rdrName, null, null);
-        /**
-         * @j2sNative
-         * 
-         * Jmol._asyncCallbacks[rdrName] = rdr;
-         *         
-         */
-        {}
-        errMsg = "asynchronous load for " + rdrName + " initiated";
+        //TODO: other errors can occur due to missing files 
+        //String rdrName = errMsg.substring(JC.READER_NOT_FOUND.length());
+        throw  new ScriptInterruption(this, "async", 1);
+        //errMsg = "asynchronous load for " + rdrName + " initiated";
       }
       evalError(errMsg, null);
     }

@@ -62,7 +62,7 @@ public class ZipData {
 
   static String getGzippedBytesAsString(GenericZipTools jzt, byte[] bytes) {
     try {
-      BufferedInputStream bis = ZipTools.getUnGzippedInputStream(jzt, bytes);
+      BufferedInputStream bis = jzt.getUnGzippedInputStream(bytes);
       String s = ZipTools.getStreamAsString(bis);
       bis.close();
       return s;

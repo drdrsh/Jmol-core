@@ -28,10 +28,10 @@ import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Structure;
-import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.c.STR;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.util.Escape;
 
 import javajs.util.Lst;
@@ -435,7 +435,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
       }
     }
     if (vTlsModels != null) {
-      symmetry = Interface.getSymmetry(vwr, "file");
+      symmetry = ((Symmetry) getInterface("org.jmol.symmetry.Symmetry"));
       int n = asc.atomSetCount;
       if (n == vTlsModels.size()) {
         for (int i = n; --i >= 0;)

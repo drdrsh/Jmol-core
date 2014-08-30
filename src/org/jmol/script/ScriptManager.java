@@ -37,7 +37,6 @@ import javajs.util.SB;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.api.JmolScriptManager;
-import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.thread.JmolThread;
@@ -558,7 +557,7 @@ public class ScriptManager implements JmolScriptManager {
       if (!fileName.toLowerCase().endsWith(".spt")) {
         String type = getDragDropFileTypeName(fileName);
         if (type == null) {
-          type = JmolBinary.determineSurfaceTypeIs(vwr, vwr
+          type = vwr.fm.jmb.determineSurfaceTypeIs(vwr
               .getBufferedInputStream(fileName));
           if (type != null)
             cmd = "if (_filetype == 'Pdb') { isosurface sigma 1.0 within 2.0 {*} "

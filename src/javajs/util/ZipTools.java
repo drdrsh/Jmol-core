@@ -145,62 +145,61 @@ public class ZipTools implements GenericZipTools {
    * @return directory listing or subfile contents
    */
   @Override
-  public Object getZipFileDirectory(GenericZipTools jzt, BufferedInputStream bis, String[] list,
+  public Object getZipFileDirectory(GenericZipTools jzt,
+                                    BufferedInputStream bis, String[] list,
                                     int listPtr, boolean asBufferedInputStream) {
-     SB ret;
-     if (list == null || listPtr >= list.length)
-       return getZipDirectoryAsStringAndClose(bis);
-     bis = Rdr.getPngZipStream(bis, true);
-     String fileName = list[listPtr];
-     ZipInputStream zis = new ZipInputStream(bis);
-     ZipEntry ze;
-     //System.out.println("fname=" + fileName);
-     try {
-       boolean isAll = (fileName.equals("."));
-       if (isAll || fileName.lastIndexOf("/") == fileName.length() - 1) {
-         ret = new SB();
-         while ((ze = zis.getNextEntry()) != null) {
-           String name = ze.getName();
-           if (isAll || name.startsWith(fileName))
-             ret.append(name).appendC('\n');
-         }
-         String str = ret.toString();
-         return (asBufferedInputStream ? Rdr.getBIS(str
-             .getBytes()) : str);
-       }
-       int pt = fileName.indexOf(":asBinaryString");
-       boolean asBinaryString = (pt > 0);
-       if (asBinaryString)
-         fileName = fileName.substring(0, pt);
-       fileName = fileName.replace('\\', '/');
-       while ((ze = zis.getNextEntry()) != null
-           && !fileName.equals(ze.getName())) {
-       }
-       byte[] bytes = (ze == null ? null : Rdr.getLimitedStreamBytes(zis,
-           ze.getSize()));
-       ze = null;
-       zis.close();
-       if (bytes == null)
-         return "";
-       if (Rdr.isZipB(bytes) || Rdr.isPngZipB(bytes))
-         return getZipFileDirectory(jzt, Rdr.getBIS(bytes), list,
-             ++listPtr, asBufferedInputStream);
-       if (asBufferedInputStream)
-         return Rdr.getBIS(bytes);
-       if (asBinaryString) {
-         ret = new SB();
-         for (int i = 0; i < bytes.length; i++)
-           ret.append(Integer.toHexString(bytes[i] & 0xFF)).appendC(' ');
-         return ret.toString();
-       }
-       if (Rdr.isGzipB(bytes))
-         bytes = Rdr.getLimitedStreamBytes(
-             getUnGzippedInputStream(jzt, bytes), -1);
-       return Rdr.fixUTF(bytes);
-     } catch (Exception e) {
-       return "";
-     }
-   }
+    SB ret;
+    if (list == null || listPtr >= list.length)
+      return getZipDirectoryAsStringAndClose(bis);
+    bis = Rdr.getPngZipStream(bis, true);
+    String fileName = list[listPtr];
+    ZipInputStream zis = new ZipInputStream(bis);
+    ZipEntry ze;
+    //System.out.println("fname=" + fileName);
+    try {
+      boolean isAll = (fileName.equals("."));
+      if (isAll || fileName.lastIndexOf("/") == fileName.length() - 1) {
+        ret = new SB();
+        while ((ze = zis.getNextEntry()) != null) {
+          String name = ze.getName();
+          if (isAll || name.startsWith(fileName))
+            ret.append(name).appendC('\n');
+        }
+        String str = ret.toString();
+        return (asBufferedInputStream ? Rdr.getBIS(str.getBytes()) : str);
+      }
+      int pt = fileName.indexOf(":asBinaryString");
+      boolean asBinaryString = (pt > 0);
+      if (asBinaryString)
+        fileName = fileName.substring(0, pt);
+      fileName = fileName.replace('\\', '/');
+      while ((ze = zis.getNextEntry()) != null
+          && !fileName.equals(ze.getName())) {
+      }
+      byte[] bytes = (ze == null ? null : Rdr.getLimitedStreamBytes(zis,
+          ze.getSize()));
+      ze = null;
+      zis.close();
+      if (bytes == null)
+        return "";
+      if (Rdr.isZipB(bytes) || Rdr.isPngZipB(bytes))
+        return getZipFileDirectory(jzt, Rdr.getBIS(bytes), list, ++listPtr,
+            asBufferedInputStream);
+      if (asBufferedInputStream)
+        return Rdr.getBIS(bytes);
+      if (asBinaryString) {
+        ret = new SB();
+        for (int i = 0; i < bytes.length; i++)
+          ret.append(Integer.toHexString(bytes[i] & 0xFF)).appendC(' ');
+        return ret.toString();
+      }
+      if (Rdr.isGzipB(bytes))
+        bytes = Rdr.getLimitedStreamBytes(getUnGzippedInputStream(bytes), -1);
+      return Rdr.fixUTF(bytes);
+    } catch (Exception e) {
+      return "";
+    }
+  }
 
   @Override
   public byte[] getZipFileContentsAsBytes(BufferedInputStream bis,
@@ -283,9 +282,10 @@ public class ZipTools implements GenericZipTools {
     return new BufferedInputStream(new GZIPInputStream(is, 512));
   }
 
-  public static BufferedInputStream getUnGzippedInputStream(GenericZipTools jzt, byte[] bytes) {
+  @Override
+  public BufferedInputStream getUnGzippedInputStream(byte[] bytes) {
     try {
-      return Rdr.getUnzippedInputStream(jzt, Rdr.getBIS(bytes));
+      return Rdr.getUnzippedInputStream(this, Rdr.getBIS(bytes));
     } catch (Exception e) {
       return null;
     }

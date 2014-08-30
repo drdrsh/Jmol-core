@@ -9,6 +9,7 @@ import javajs.util.V3;
 
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.util.Logger;
 
 
@@ -96,7 +97,7 @@ class Subsystem {
     for (int i = 0; i < 3; i++)
       uc_nu[i + 1] = V3.new3((float) a[i][0], (float) a[i][1], (float) a[i][2]);    
     uc_nu = reciprocalsOf(uc_nu);
-    symmetry = Interface.getSymmetry(msRdr.cr.vwr, "file").getUnitCell(uc_nu, false, null);
+    symmetry = ((Symmetry) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCell(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)
       return;

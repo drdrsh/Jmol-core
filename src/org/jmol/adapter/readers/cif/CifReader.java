@@ -172,7 +172,7 @@ public class CifReader extends AtomSetCollectionReader {
       if (!readAllData())
         break;
     if (appendedData != null) {
-      parser = ((GenericCifDataParser) Interface.getInterface("javajs.util.CifDataParser", vwr, "eval")).set(null, Rdr.getBR(appendedData));
+      parser = ((GenericCifDataParser) getInterface("javajs.util.CifDataParser")).set(null, Rdr.getBR(appendedData));
       while ((key = parser.peekToken()) != null)
         if (!readAllData())
           break;
@@ -330,7 +330,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   private MSCifRdr initializeMSCIF() throws Exception {
     if (mr == null)
-      ms = mr = (MSCifRdr) Interface.getOption("adapter.readers.cif.MSCifRdr", vwr, "file");
+      ms = mr = (MSCifRdr) getInterface("org.jmol.adapter.readers.cif.MSCifRdr");
     modulated = (mr.initialize(this, modDim) > 0);
     return mr;
   }

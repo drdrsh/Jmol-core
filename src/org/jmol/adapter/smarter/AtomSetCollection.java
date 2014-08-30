@@ -751,7 +751,7 @@ public class AtomSetCollection {
   }
 
   public SymmetryInterface getSymmetry(Viewer vwr) {
-    return getXSymmetry().getSymmetry(vwr);
+    return getXSymmetry().getSymmetry();
   }
 
   public SymmetryInterface setSymmetry(SymmetryInterface symmetry) {

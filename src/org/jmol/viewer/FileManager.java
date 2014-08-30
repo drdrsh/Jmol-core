@@ -63,7 +63,7 @@ public class FileManager implements BytePoster {
 
   public Viewer vwr;
 
-  private JmolBinary jmb;
+  public JmolBinary jmb;
 
   FileManager(Viewer vwr) {
     this.vwr = vwr;
@@ -372,7 +372,7 @@ public class FileManager implements BytePoster {
     byte[] cacheBytes = null;
     if (allowCached && outputBytes == null) {
       cacheBytes = (fullName == null || jmb.pngjCache == null ? null
-          : getCachedPngjBytes(fullName));
+          : jmb.getCachedPngjBytes(fullName));
       if (cacheBytes == null)
         cacheBytes = (byte[]) cacheGet(name, true);
     }
@@ -407,7 +407,7 @@ public class FileManager implements BytePoster {
         boolean isApplet = (appletDocumentBaseURL != null);
         if (allowCached && name.indexOf(".png") >= 0 && jmb.pngjCache == null
             && vwr.cachePngFiles())
-          jmb.clearAndCachePngjFile(vwr, null);
+          jmb.clearAndCachePngjFile(null);
         if (isApplet || isURL) {
           if (isApplet && isURL && appletProxy != null)
             name = appletProxy + "?url=" + urlEncode(name);
@@ -562,12 +562,12 @@ public class FileManager implements BytePoster {
           // we need information from the output file, info[2]
           String name0 = getObjectAsSections(info[2], header, fileData);
           fileData.put("OUTPUT", name0);
-          info = JmolBinary.spartanFileList(vwr, name, fileData.get(name0));
+          info = jmb.spartanFileList(name, fileData.get(name0));
           if (info.length == 3) {
             // might have a second option
             name0 = getObjectAsSections(info[2], header, fileData);
             fileData.put("OUTPUT", name0);
-            info = JmolBinary.spartanFileList(vwr, info[1], fileData.get(name0));
+            info = jmb.spartanFileList(info[1], fileData.get(name0));
           }
         }
         // load each file individually, but return files IN ORDER
@@ -594,7 +594,7 @@ public class FileManager implements BytePoster {
     }
 
     if (bytes == null && jmb.pngjCache != null) {
-      bytes = getCachedPngjBytes(name);
+      bytes = jmb.getCachedPngjBytes(name);
       if (bytes != null && htParams != null)
         htParams.put("sourcePNGJ", Boolean.TRUE);
     }
@@ -613,7 +613,9 @@ public class FileManager implements BytePoster {
         return t;
       if (t instanceof BufferedReader)
         return t;
-      BufferedInputStream bis = Rdr.getUnzippedInputStream(vwr.getJzt(), (BufferedInputStream) t);
+      BufferedInputStream bis = (BufferedInputStream) t;
+      if (Rdr.isGzipS(bis))
+          Rdr.getUnzippedInputStream(vwr.getJzt(), bis);
       if (Rdr.isCompoundDocumentS(bis)) {
         GenericBinaryDocument doc = (GenericBinaryDocument) Interface
             .getInterface("javajs.util.CompoundDocument", vwr, "file");
@@ -1251,13 +1253,9 @@ public class FileManager implements BytePoster {
       return;
     }
     cache.put(key, data);
-    getCachedPngjBytes(key);
+    jmb.getCachedPngjBytes(key);
   }
   
-  private byte[] getCachedPngjBytes(String key) {
-    return jmb.getCachedPngjBytes(key, vwr);
-  }
-
   public Object cacheGet(String key, boolean bytesOnly) {
     key = key.replace('\\', '/');
     // in the case of JavaScript local file reader, 

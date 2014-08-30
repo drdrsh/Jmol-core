@@ -42,12 +42,12 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
-import org.jmol.viewer.Viewer;
 
 /**
  * 
@@ -68,14 +68,14 @@ public class XtalSymmetry {
   public XtalSymmetry set(AtomSetCollectionReader reader) {
     this.acr = reader;
     this.asc = reader.asc;
-    getSymmetry(reader.vwr);
+    getSymmetry();
     return this;
   }
 
   public SymmetryInterface symmetry;
 
-  SymmetryInterface getSymmetry(Viewer vwr) {
-    return (symmetry == null ? (symmetry = Interface.getSymmetry(vwr, "file")) : symmetry);
+  SymmetryInterface getSymmetry() {
+    return (symmetry == null ?(Symmetry) acr.getInterface("org.jmol.symmetry.Symmetry") : symmetry);
   }
 
   SymmetryInterface setSymmetry(SymmetryInterface symmetry) {
@@ -168,7 +168,7 @@ public class XtalSymmetry {
       trajectoryUnitCells.addLast(notionalUnitCell);
     }
     asc.setGlobalBoolean(AtomSetCollection.GLOBAL_UNITCELLS);
-    getSymmetry(acr.vwr).setUnitCell(notionalUnitCell, false);
+    getSymmetry().setUnitCell(notionalUnitCell, false);
     // we need to set the auxiliary info as well, because 
     // ModelLoader creates a new symmetry object.
     if (unitCellOffset != null) {
@@ -384,7 +384,7 @@ public class XtalSymmetry {
       // 3) create the supercell unit cell
 
       symmetry = null;
-      symmetry = getSymmetry(acr.vwr);
+      symmetry = getSymmetry();
       setNotionalUnitCell(new float[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z,
           vb.x, vb.y, vb.z, vc.x, vc.y, vc.z }, null, offset);
       asc.setAtomSetSpaceGroupName(oabc == null ? "P1" : "cell=" + supercell);
@@ -979,7 +979,7 @@ public class XtalSymmetry {
     symmetry = null;
     if (!Float.isNaN(notionalUnitCell[0])) // PDB can do this; 
       setNotionalUnitCell(notionalUnitCell, null, unitCellOffset);
-    getSymmetry(acr.vwr).setSpaceGroup(doNormalize);
+    getSymmetry().setSpaceGroup(doNormalize);
     //symmetry.setUnitCell(null);
     addSpaceGroupOperation("x,y,z", false);
     String name = (String) thisBiomolecule.get("name");
@@ -1120,7 +1120,7 @@ public class XtalSymmetry {
       ptTemp = new P3();
       mTemp = new M3();
     }
-    return a.addTensor(((Tensor) Interface.getUtil("Tensor", acr.vwr, "file"))
+    return a.addTensor(((Tensor) acr.getInterface("org.jmol.util.Tensor"))
         .setFromEigenVectors(
             symmetry.rotateAxes(iSym, t.eigenVectors, ptTemp, mTemp),
             t.eigenValues, t.isIsotropic ? "iso" : t.type, t.id, t), null,

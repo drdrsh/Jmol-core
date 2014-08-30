@@ -3860,6 +3860,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       gdata.getScreenImage(isImageWrite);
       handleError(er, false);
       setErrorMessage("Error during rendering: " + er, null);
+    } catch (Exception e) {
+      System.out.println("render error");
     }
     return image;
   }

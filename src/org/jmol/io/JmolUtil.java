@@ -38,7 +38,6 @@ import javajs.util.Rdr;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.ZipTools;
 
 import java.util.Hashtable;
 
@@ -380,7 +379,6 @@ public class JmolUtil implements JmolZipUtilities {
 
   @Override
   public Object getAtomSetCollectionOrBufferedReaderFromZip(Viewer vwr,
-                                                            GenericZipTools zpt,
                                                             JmolAdapter adapter,
                                                             InputStream is,
                                                             String fileName,
@@ -439,6 +437,7 @@ public class JmolUtil implements JmolZipUtilities {
     // this code is a hack that should be replaced with the sort of code
     // running in FileManager now.
 
+    GenericZipTools zpt = vwr.getJzt();
     Object ret = checkSpecialData(zpt, is, zipDirectory);
     if (ret instanceof String)
       return ret;
@@ -488,14 +487,14 @@ public class JmolUtil implements JmolZipUtilities {
         //        System.out.println("ziputil " + s.substring(0, 100));
         if (Rdr.isGzipB(bytes))
           bytes = Rdr.getLimitedStreamBytes(
-              ZipTools.getUnGzippedInputStream(vwr.getJzt(), bytes), -1);
+              zpt.getUnGzippedInputStream(bytes), -1);
         if (Rdr.isZipB(bytes) || Rdr.isPngZipB(bytes)) {
           BufferedInputStream bis = Rdr.getBIS(bytes);
           String[] zipDir2 = Rdr
               .getZipDirectoryAndClose(zpt, bis, "JmolManifest");
           bis = Rdr.getBIS(bytes);
           Object atomSetCollections = getAtomSetCollectionOrBufferedReaderFromZip(
-              vwr, zpt, adapter, bis, fileName + "|" + thisEntry, zipDir2,
+              vwr, adapter, bis, fileName + "|" + thisEntry, zipDir2,
               htParams, ++subFilePtr, asBufferedReader);
           if (atomSetCollections instanceof String) {
             if (ignoreErrors)
@@ -528,7 +527,7 @@ public class JmolUtil implements JmolZipUtilities {
           if (Rdr.isCompoundDocumentB(bytes)) {
             GenericBinaryDocument jd = (GenericBinaryDocument) Interface
                 .getInterface("javajs.util.CompoundDocument", vwr, "file");
-            jd.setStream(vwr.getJzt(), Rdr.getBIS(bytes), true);
+            jd.setStream(zpt, Rdr.getBIS(bytes), true);
             sData = jd.getAllDataFiles("Molecule", "Input").toString();
           } else {
             // could be a PNGJ file with an internal pdb.gz entry, for instance
@@ -611,19 +610,19 @@ public class JmolUtil implements JmolZipUtilities {
   }
 
   @Override
-  public byte[] getCachedPngjBytes(Viewer vwr, JmolBinary jmb, String pathName) {
+  public byte[] getCachedPngjBytes(JmolBinary jmb, String pathName) {
     if (pathName.startsWith("file:///"))
       pathName = "file:" +pathName.substring(7);
     Logger.info("JmolUtil checking PNGJ cache for " + pathName);
     String shortName = shortSceneFilename(pathName);
     if (jmb.pngjCache == null
-        && !jmb.clearAndCachePngjFile(vwr, new String[] { pathName, null }))
+        && !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
       return null;
     boolean isMin = (pathName.indexOf(".min.") >= 0);
     if (!isMin) {
       String cName = jmb.fm.getCanonicalName(Rdr.getZipRoot(pathName));
       if (!jmb.pngjCache.containsKey(cName)
-          && !jmb.clearAndCachePngjFile(vwr, new String[] { pathName, null }))
+          && !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
         return null;
       if (pathName.indexOf("|") < 0)
         shortName = cName;
@@ -636,7 +635,7 @@ public class JmolUtil implements JmolZipUtilities {
     //    System.out.println(" key=" + key);
     //System.out.println("FileManager memory cache size=" + pngjCache.size()
     //  + " did not find " + pathName + " as " + shortName);
-    if (!isMin || !jmb.clearAndCachePngjFile(vwr, new String[] { pathName, null }))
+    if (!isMin || !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
       return null;
     Logger.info("FileManager using memory cache " + shortName);
     return (byte[]) jmb.pngjCache.get(shortName);

@@ -88,7 +88,7 @@ public class MMCifReader extends CifReader {
       asc.removeCurrentAtomSet();
     } else {
       if (validation != null && !isCourseGrained) {
-        MMCifValidationParser vs = ((MMCifValidationParser) Interface.getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser", vwr, "file")).set(this);
+        MMCifValidationParser vs = (MMCifValidationParser) getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser");
         String note = vs.finalizeValidations(modelMap);
         if (note != null)
           appendLoadNote(note);
