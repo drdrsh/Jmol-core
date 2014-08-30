@@ -847,7 +847,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   protected SymmetryInterface getNewSymmetry() {
-    return (symmetry = Interface.getSymmetry());
+    return (symmetry = Interface.getSymmetry(vwr, "file"));
   }
 
   public void setFractionalCoordinates(boolean TF) {

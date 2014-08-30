@@ -136,7 +136,7 @@ public class ShapeManager {
       return null;
     String className = JC.getShapeClassName(shapeID, false);
     Shape shape;
-    if ((shape = (Shape) Interface.getInterface(className)) == null)
+    if ((shape = (Shape) Interface.getInterface(className, vwr, "shape")) == null)
       return null;
     vwr.setShapeErrorState(shapeID, "allocate");
     shape.initializeShape(vwr, gdata, ms, shapeID);

@@ -14,6 +14,7 @@ import javajs.util.V3;
 import org.jmol.api.JmolGraphicsInterface;
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.c.STER;
+import org.jmol.viewer.Viewer;
 
 public class GData implements JmolGraphicsInterface {
 
@@ -55,6 +56,8 @@ public class GData implements JmolGraphicsInterface {
 
   public Shader shader;
 
+  protected Viewer vwr;
+
   public final static byte ENDCAPS_NONE = 0;
   public final static byte ENDCAPS_OPEN = 1;
   public final static byte ENDCAPS_FLAT = 2;
@@ -65,7 +68,8 @@ public class GData implements JmolGraphicsInterface {
     shader = new Shader();
   }
   
-  public void initialize(GenericPlatform apiPlatform) {
+  public void initialize(Viewer vwr, GenericPlatform apiPlatform) {
+    this.vwr = vwr;
     this.apiPlatform = apiPlatform;
   }
 

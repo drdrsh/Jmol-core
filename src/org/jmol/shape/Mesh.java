@@ -41,6 +41,7 @@ import javajs.util.SB;
 
 import org.jmol.util.MeshSurface;
 import org.jmol.util.Normix;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.M3;
 import javajs.util.M4;
@@ -504,7 +505,7 @@ public class Mesh extends MeshSurface {
     return null;
   }
 
-  public SymmetryInterface getUnitCell() {
+  public SymmetryInterface getUnitCell(Viewer vwr) {
     // isosurface only
     return null;
   }

@@ -31,6 +31,7 @@ import javajs.util.OC;
 import javajs.util.PT;
 
 import org.jmol.api.Interface;
+import org.jmol.viewer.Viewer;
 
 /**
  * PolygonFileReader or VolumeFileReader
@@ -42,6 +43,12 @@ abstract class SurfaceFileReader extends SurfaceReader {
   protected OC out;
   
   SurfaceFileReader() {
+  }
+
+  protected void setStream(String fileName, boolean isBigEndian) {
+    binarydoc.setStream(((Viewer) sg.getAtomDataServer()).getJzt(),
+        fileName == null ? null : sg.getAtomDataServer()
+            .getBufferedInputStream(fileName), isBigEndian);
   }
 
   @Override
@@ -59,7 +66,8 @@ abstract class SurfaceFileReader extends SurfaceReader {
   }
 
   GenericBinaryDocument newBinaryDocument() {
-    return (GenericBinaryDocument) Interface.getInterface("javajs.util.BinaryDocument");
+    return (GenericBinaryDocument) Interface.getInterface("javajs.util.BinaryDocument", 
+        (Viewer) sg.getAtomDataServer(), "file");
   }
   
   @Override

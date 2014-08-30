@@ -1072,7 +1072,7 @@ public class AnnotationParser implements JmolAnnotationParser {
         name = PT.rep(name, "%20", " ");
         Logger.info("fetching " + name + "[pdb data]");
         String data = vwr.getPdbAtomData(bs, null);
-        data = vwr.getFileAsString(name + data, false);
+        data = vwr.getFileAsString3(name + data, false, null);
         processDSSR(info, new Rdr(Rdr.getBR(data)), null, null);
       } catch (Exception e) {
         info = null;

@@ -1799,4 +1799,6 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
         .indexOf(script.substring(0, 7).toUpperCase()));
   }
 
+  public static String READER_NOT_FOUND = "File reader was not found:";
+
 }

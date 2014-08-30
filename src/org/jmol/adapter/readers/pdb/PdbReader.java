@@ -435,7 +435,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
       }
     }
     if (vTlsModels != null) {
-      symmetry = Interface.getSymmetry();
+      symmetry = Interface.getSymmetry(vwr, "file");
       int n = asc.atomSetCount;
       if (n == vTlsModels.size()) {
         for (int i = n; --i >= 0;)
@@ -499,7 +499,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
        anisou[0] += resid;
        anisou[1] += resid;
        anisou[2] += resid;
-       entry.getKey().addTensor(symmetry.getTensor(anisou).setType(null), "TLS-R", false);
+       entry.getKey().addTensor(symmetry.getTensor(vwr, anisou).setType(null), "TLS-R", false);
        
        // check for equal: 
        
@@ -1902,7 +1902,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
 
     // symmetry is set to [1 1 1 90 90 90] -- Cartesians, not actual unit cell
 
-    atom.addTensor(symmetry.getTensor(dataT).setType(null), "TLS-U", false);
+    atom.addTensor(symmetry.getTensor(vwr, dataT).setType(null), "TLS-U", false);
   }
 
   private void tlsAddError(String error) {

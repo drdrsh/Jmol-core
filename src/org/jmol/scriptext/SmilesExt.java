@@ -24,6 +24,7 @@
 
 package org.jmol.scriptext;
 
+import org.jmol.api.Interface;
 import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
@@ -120,6 +121,7 @@ public class SmilesExt implements JmolSmilesExtension {
           ptsB.clear();
           for (int j = 0; j < maps[i].length; j++)
             ptsB.addLast(atoms[maps[i][j]]);
+          Interface.getInterface("javajs.util.Eigen", e.vwr, "script");
           float stddev = Measure.getTransformMatrix4(ptsA, ptsB, m, c);
           Logger.info("getSmilesCorrelation stddev=" + stddev);
           if (vReturn != null) {

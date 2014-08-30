@@ -69,7 +69,7 @@ class DelPhiBinaryReader extends VolumeFileReader {
     String fileName = (String) ((Object[]) sg.getReaderData())[0];
     init2VFR(sg, br);
     binarydoc = newBinaryDocument();
-    binarydoc.setStream(sg.getAtomDataServer().getBufferedInputStream(fileName), false);
+    setStream(fileName, false);
     // data are HIGH on the inside and LOW on the outside
     nSurfaces = 1; 
     if (params.thePlane == null)

@@ -41,6 +41,8 @@ import javajs.util.P3;
 import org.jmol.util.Tensor;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.Matrix;
@@ -432,12 +434,12 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Tensor getTensor(float[] parBorU) {
+  public Tensor getTensor(Viewer vwr, float[] parBorU) {
     if (parBorU == null)
       return null;
     if (unitCell == null)
       unitCell = UnitCell.newA(new float[] { 1, 1, 1, 90, 90, 90 }, true);
-    return unitCell.getTensor(parBorU);
+    return unitCell.getTensor(vwr, parBorU);
   }
 
   @Override

@@ -318,7 +318,6 @@ abstract public class JmolViewer {
   abstract public String getModelSetName();
   abstract public String getModelSetFileName();
   abstract public String getModelSetPathName();
-  abstract public String getFileAsString(String filename, boolean checkProtected);
   abstract public Properties getModelSetProperties();
   abstract public Map<String, Object> getModelSetAuxiliaryInfo();
   abstract public int getModelNumber(int modelIndex);
@@ -474,6 +473,7 @@ abstract public class JmolViewer {
     openFileAsyncSpecial(fileName, 0);    
   }
   
+  abstract public String getFileAsString(String name, boolean checkProtected);
   abstract public Object getFileAsBytes(String fullPathName, OC out);
 
   abstract public String getErrorMessage();

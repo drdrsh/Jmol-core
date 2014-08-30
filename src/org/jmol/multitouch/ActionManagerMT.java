@@ -75,7 +75,7 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
     if (isTablet)
       return;
     String className = (isSparsh ? "multitouch.sparshui.JmolSparshClientAdapter" : "multitouch.jni.JmolJniClientAdapter");
-    adapter = (JmolMultiTouchAdapter) Interface.getOption(className);
+    adapter = (JmolMultiTouchAdapter) Interface.getOption(className, null, null);
     Logger.info("ActionManagerMT SparshUI groupID=" + groupID);
     Logger.info("ActionManagerMT adapter = " + adapter);
     if (isSparsh) {
@@ -102,7 +102,7 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
     isMultiTouchServer = adapter.isServer();
     if (isSimulated) {
       simulator = (JmolTouchSimulatorInterface) Interface
-      .getInterface("com.sparshui.inputdevice.JmolTouchSimulator");
+      .getInterface("com.sparshui.inputdevice.JmolTouchSimulator", null, null);
       if (simulator != null) {
         Logger.info("ActionManagerMT simulating SparshUI");
         simulator.startSimulator(vwr.getDisplay());

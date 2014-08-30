@@ -137,6 +137,7 @@ import javajs.api.GenericBinaryDocument;
 import javajs.util.AU;
 import javajs.util.Lst;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.Measure;
 import javajs.util.Rdr;
@@ -1004,7 +1005,7 @@ public class SurfaceGenerator {
     }
 
     if ("readFile" == propertyName) {
-      if ((surfaceReader = setFileData(value)) == null) {
+      if ((surfaceReader = setFileData((Viewer) atomDataServer, value)) == null) {
         Logger.error("Could not set the surface data");
         return true;
       }
@@ -1019,7 +1020,7 @@ public class SurfaceGenerator {
     }
 
     if ("mapColor" == propertyName) {
-      if ((surfaceReader = setFileData(value)) == null) {
+      if ((surfaceReader = setFileData((Viewer) atomDataServer, value)) == null) {
         Logger.error("Could not set the mapping data");
         return true;
       }
@@ -1249,7 +1250,7 @@ public class SurfaceGenerator {
   }
 
   @SuppressWarnings("unchecked")
-  private SurfaceReader setFileData(Object value) {
+  private SurfaceReader setFileData(Viewer vwr, Object value) {
     String fileType = this.fileType;
     this.fileType = null;
     if (value instanceof VolumeData) {
@@ -1275,7 +1276,7 @@ public class SurfaceGenerator {
     }
     BufferedReader br = (BufferedReader) value;
     if (fileType == null)
-      fileType = JmolBinary.determineSurfaceFileType(br);
+      fileType = JmolBinary.determineSurfaceFileType(vwr, br);
     if (fileType != null && fileType.startsWith("UPPSALA")) {
       //"http://eds.bmc.uu.se/cgi-bin/eds/gen_maps_zip.pl?POST?pdbCode=1blu&mapformat=ccp4&maptype=2fofc&page=generate"
       // -- ah, but this does not work, because it is asynchronous!
@@ -1297,7 +1298,7 @@ public class SurfaceGenerator {
       } catch (Exception e) {
         // TODO
       }
-      fileType = JmolBinary.determineSurfaceFileType(br);
+      fileType = JmolBinary.determineSurfaceFileType(vwr, br);
     }
     if (fileType == null)
       fileType = "UNKNOWN";

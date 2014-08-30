@@ -282,7 +282,7 @@ abstract class OutputManager {
       }
     }
     GenericImageEncoder ie = (GenericImageEncoder) Interface
-        .getInterface("javajs.img." + type + "Encoder");
+        .getInterface("javajs.img." + type + "Encoder", vwr, "file");
     if (ie == null) {
       errRet[0] = "Image encoder type " + type + " not available";
       return false;
@@ -552,7 +552,7 @@ abstract class OutputManager {
     String msg = (type.equals("PDB") || type.equals("PQR") ? vwr
         .getPdbAtomData(null, out) : type.startsWith("PLOT") ? vwr
         .getPdbData(modelIndex, type.substring(5), null, parameters, out, true) : getCurrentFile ? out
-        .append(vwr.getCurrentFileAsString()).toString() : (String) vwr
+        .append(vwr.getCurrentFileAsString("write")).toString() : (String) vwr
         .getFileAsBytes(pathName, out));
     out.closeChannel();
     if (msg != null)
@@ -924,7 +924,7 @@ abstract class OutputManager {
                                  Hashtable<Object, String> crcMap,
                                  boolean isSparDir, String newName, int ptSlash,
                                  Lst<Object> v) {
-     Integer crcValue = Integer.valueOf(Rdr.getCrcValue(ret));
+     Integer crcValue = Integer.valueOf(Rdr.getCrcValue(vwr.getJzt(), ret));
      // only add to the data list v when the data in the file is new
      if (crcMap.containsKey(crcValue)) {
        // let newName point to the already added data
@@ -989,7 +989,7 @@ abstract class OutputManager {
         bos = new BufferedOutputStream(out);
       }
       FileManager fm = vwr.fm;
-      OutputStream zos = (OutputStream) Rdr.getZipOutputStream(bos);
+      OutputStream zos = (OutputStream) Rdr.getZipOutputStream(vwr.getJzt(), bos);
       for (int i = 0; i < fileNamesAndByteArrays.size(); i += 3) {
         String fname = (String) fileNamesAndByteArrays.get(i);
         byte[] bytes = null;
@@ -1016,7 +1016,7 @@ abstract class OutputManager {
           continue;
         }
         fileList += key;
-        Rdr.addZipEntry(zos, fnameShort);
+        Rdr.addZipEntry(vwr.getJzt(), zos, fnameShort);
         int nOut = 0;
         if (bytes == null) {
           // get data from disk
@@ -1035,7 +1035,7 @@ abstract class OutputManager {
           nOut += bytes.length;
         }
         nBytesOut += nOut;
-        Rdr.closeZipEntry(zos);
+        Rdr.closeZipEntry(vwr.getJzt(), zos);
         Logger.info("...added " + fname + " (" + nOut + " bytes)");
       }
       zos.flush();

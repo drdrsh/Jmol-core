@@ -821,7 +821,7 @@ public class CmdExt implements JmolCmdExtension {
 
     boolean isAtoms = (!isQuaternion && strSmiles == null || coordTo != null);
     if (isAtoms)
-      Interface.getInterface("javajs.util.Eigen"); // preload interface
+      Interface.getInterface("javajs.util.Eigen", vwr, "script"); // preload interface
     if (vAtomSets == null && vQuatSets == null) {
       if (bsSubset == null) {
         bsAtoms1 = (isAtoms ? vwr.getAtomBitSet("spine") : new BS());
@@ -1314,7 +1314,7 @@ public class CmdExt implements JmolCmdExtension {
         tokAction = T.define;
       Text text = null;
       if (font != null)
-        text = ((Text) Interface.getInterface("org.jmol.modelset.Text")).newLabel(
+        text = ((Text) Interface.getInterface("org.jmol.modelset.Text", vwr, "script")).newLabel(
             vwr.gdata, font, "", colix, (short) 0, 0, 0, null);
       if (text != null)
         text.pymolOffset = offset;
@@ -4097,7 +4097,7 @@ public class CmdExt implements JmolCmdExtension {
           if (strCutoff != null && !chk) {
             cutoff = Float.NaN;
             try {
-            String sfdat = vwr.getFileAsString(strCutoff, false);
+            String sfdat = vwr.getFileAsString3(strCutoff, false, null);
             Logger.info(sfdat);
             sfdat = PT.split(sfdat,  "MAP_SIGMA_DENS")[1];
             cutoff = PT.parseFloat(sfdat);
@@ -6178,7 +6178,7 @@ public class CmdExt implements JmolCmdExtension {
           }
         } else if (data == "FILE") {
           if (isShow)
-            data = vwr.getCurrentFileAsString();
+            data = vwr.getCurrentFileAsString("script");
           else
             doDefer = true;
           if ("?".equals(fileName))
@@ -6762,7 +6762,7 @@ public class CmdExt implements JmolCmdExtension {
         vwr.sm.clearConsole();
       if (slen == 2) {
         if (!chk)
-          msg = vwr.getCurrentFileAsString();
+          msg = vwr.getCurrentFileAsString("script");
         if (msg == null)
           msg = "<unavailable>";
         break;
@@ -6770,7 +6770,7 @@ public class CmdExt implements JmolCmdExtension {
       len = 3;
       value = paramAsStr(2);
       if (!chk)
-        msg = vwr.getFileAsString(value, true);
+        msg = vwr.getFileAsString3(value, true, null);
       break;
     case T.frame:
       if (tokAt(2) == T.all && (len = 3) > 0)
@@ -7163,10 +7163,10 @@ public class CmdExt implements JmolCmdExtension {
                                       String fileName) throws Exception {
     float[] potentials = new float[vwr.getAtomCount()];
     MepCalculationInterface m = (MepCalculationInterface) Interface
-        .getOption("quantum.MlpCalculation");
+        .getOption("quantum.MlpCalculation", vwr, "script");
     m.set(vwr);
-    String data = (fileName == null ? null : vwr.getFileAsString(fileName,
-        false));
+    String data = (fileName == null ? null : vwr.getFileAsString3(fileName,
+        false, null));
     m.assignPotentials(vwr.ms.at, potentials, vwr
         .getSmartsMatch("a", bsSelected), vwr.getSmartsMatch(
         "/noAromatic/[$(C=O),$(O=C),$(NC=O)]", bsSelected), bsIgnore, data);

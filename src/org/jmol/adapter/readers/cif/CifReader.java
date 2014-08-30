@@ -172,7 +172,7 @@ public class CifReader extends AtomSetCollectionReader {
       if (!readAllData())
         break;
     if (appendedData != null) {
-      parser = ((GenericCifDataParser) Interface.getInterface("javajs.util.CifDataParser")).set(null, Rdr.getBR(appendedData));
+      parser = ((GenericCifDataParser) Interface.getInterface("javajs.util.CifDataParser", vwr, "eval")).set(null, Rdr.getBR(appendedData));
       while ((key = parser.peekToken()) != null)
         if (!readAllData())
           break;
@@ -249,7 +249,7 @@ public class CifReader extends AtomSetCollectionReader {
         if (htAudit != null && auditBlockCode.contains("_MOD_")) {
           String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
           if (asc.setSymmetry((SymmetryInterface) htAudit.get(key)) != null) {
-            notionalUnitCell = asc.getSymmetry().getNotionalUnitCell();
+            notionalUnitCell = asc.getSymmetry(vwr).getNotionalUnitCell();
             iHaveUnitCell = true;
           }
         } else if (htAudit != null) {
@@ -330,7 +330,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   private MSCifRdr initializeMSCIF() throws Exception {
     if (mr == null)
-      ms = mr = (MSCifRdr) Interface.getOption("adapter.readers.cif.MSCifRdr");
+      ms = mr = (MSCifRdr) Interface.getOption("adapter.readers.cif.MSCifRdr", vwr, "file");
     modulated = (mr.initialize(this, modDim) > 0);
     return mr;
   }
@@ -584,7 +584,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
     }
     if (lattvecs != null && lattvecs.size() > 0
-        && asc.getSymmetry().addLatticeVectors(lattvecs))
+        && asc.getSymmetry(vwr).addLatticeVectors(lattvecs))
       appendLoadNote("Note! Symmetry operators added for lattice centering "
           + latticeType);
     latticeType = null;
@@ -1652,7 +1652,7 @@ public class CifReader extends AtomSetCollectionReader {
     // get list of sites based on atom names
 
     bsSets = new BS[nat];
-    symmetry = asc.getSymmetry();
+    symmetry = asc.getSymmetry(vwr);
     for (int i = firstAtom; i < ac; i++) {
       int ipt = asc.getAtomFromName(atoms[i].atomName).index - firstAtom;
       if (bsSets[ipt] == null)

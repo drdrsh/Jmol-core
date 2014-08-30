@@ -61,7 +61,7 @@ public class FileManager implements BytePoster {
 
   public static String SIMULATION_PROTOCOL = "http://SIMULATION/";
 
-  private Viewer vwr;
+  public Viewer vwr;
 
   private JmolBinary jmb;
 
@@ -276,7 +276,7 @@ public class FileManager implements BytePoster {
     DataReader[] readers = new DataReader[arrayModels.length];
     for (int i = 0; i < arrayModels.length; i++) {
       fullPathNames[i] = "string[" + i + "]";
-      readers[i] = newDataReader(arrayModels[i]);
+      readers[i] = newDataReader(vwr, arrayModels[i]);
     }
     JmolFilesReaderInterface filesReader = newFilesReader(fullPathNames, fullPathNames,
         null, readers, htParams, isAppend);
@@ -294,7 +294,7 @@ public class FileManager implements BytePoster {
     DataReader[] readers = new DataReader[nModels];
     for (int i = 0; i < nModels; i++) {
       fullPathNames[i] = "String[" + i + "]";
-      readers[i] = newDataReader(arrayData.get(i));
+      readers[i] = newDataReader(vwr, arrayData.get(i));
     }
     JmolFilesReaderInterface filesReader = newFilesReader(fullPathNames, fullPathNames,
         null, readers, htParams, isAppend);
@@ -302,13 +302,13 @@ public class FileManager implements BytePoster {
     return filesReader.getAtomSetCollection();
   }
 
-  static DataReader newDataReader(Object data) {
+  static DataReader newDataReader(Viewer vwr, Object data) {
     String reader = (data instanceof String ? "String"
         : PT.isAS(data) ? "Array" 
         : data instanceof Lst<?> ? "List" : null);
     if (reader == null)
       return null;
-    DataReader dr = (DataReader) Interface.getInterface("javajs.util." + reader + "DataReader");
+    DataReader dr = (DataReader) Interface.getInterface("javajs.util." + reader + "DataReader", vwr, "file");
     return dr.setData(data);
   }
 
@@ -319,7 +319,7 @@ public class FileManager implements BytePoster {
                                                   Map<String, Object> htParams,
                                                   boolean isAppend) {
     JmolFilesReaderInterface fr = (JmolFilesReaderInterface) Interface
-        .getOption("io.FilesReader");
+        .getOption("io.FilesReader", vwr, "file");
     fr.set(this, vwr, fullPathNames, namesAsGiven, fileTypes, readers, htParams,
         isAppend);
     return fr;
@@ -327,7 +327,7 @@ public class FileManager implements BytePoster {
 
   Object createAtomSetCollectionFromDOM(Object DOMNode,
                                         Map<String, Object> htParams) {
-    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReadaer");
+    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReadaer", vwr, "file");
     aDOMReader.set(this, vwr, DOMNode, htParams);
     aDOMReader.run();
     return aDOMReader.getAtomSetCollection();
@@ -407,7 +407,7 @@ public class FileManager implements BytePoster {
         boolean isApplet = (appletDocumentBaseURL != null);
         if (allowCached && name.indexOf(".png") >= 0 && jmb.pngjCache == null
             && vwr.cachePngFiles())
-          jmb.clearAndCachePngjFile(null);
+          jmb.clearAndCachePngjFile(vwr, null);
         if (isApplet || isURL) {
           if (isApplet && isURL && appletProxy != null)
             name = appletProxy + "?url=" + urlEncode(name);
@@ -482,7 +482,7 @@ public class FileManager implements BytePoster {
     String[] dir = null;
     dir = getZipDirectory(fileName, false, allowCached);
     if (dir.length == 0) {
-      String state = vwr.getFileAsString4(fileName, -1, false, true, false);
+      String state = vwr.getFileAsString4(fileName, -1, false, true, false, "file");
       return (state.indexOf(JC.EMBEDDED_SCRIPT_TAG) < 0 ? ""
           : JmolBinary.getEmbeddedScript(state));
     }
@@ -562,12 +562,12 @@ public class FileManager implements BytePoster {
           // we need information from the output file, info[2]
           String name0 = getObjectAsSections(info[2], header, fileData);
           fileData.put("OUTPUT", name0);
-          info = JmolBinary.spartanFileList(name, fileData.get(name0));
+          info = JmolBinary.spartanFileList(vwr, name, fileData.get(name0));
           if (info.length == 3) {
             // might have a second option
             name0 = getObjectAsSections(info[2], header, fileData);
             fileData.put("OUTPUT", name0);
-            info = JmolBinary.spartanFileList(info[1], fileData.get(name0));
+            info = JmolBinary.spartanFileList(vwr, info[1], fileData.get(name0));
           }
         }
         // load each file individually, but return files IN ORDER
@@ -613,11 +613,11 @@ public class FileManager implements BytePoster {
         return t;
       if (t instanceof BufferedReader)
         return t;
-      BufferedInputStream bis = Rdr.getUnzippedInputStream((BufferedInputStream) t);
+      BufferedInputStream bis = Rdr.getUnzippedInputStream(vwr.getJzt(), (BufferedInputStream) t);
       if (Rdr.isCompoundDocumentS(bis)) {
         GenericBinaryDocument doc = (GenericBinaryDocument) Interface
-            .getInterface("javajs.util.CompoundDocument");
-        doc.setStream(bis, true);
+            .getInterface("javajs.util.CompoundDocument", vwr, "file");
+        doc.setStream(vwr.getJzt(), bis, true);
         return Rdr.getBR(doc.getAllDataFiles(
             "Molecule", "Input").toString());
       }
@@ -626,8 +626,8 @@ public class FileManager implements BytePoster {
       bis = Rdr.getPngZipStream(bis, true);
       if (Rdr.isZipS(bis)) {
         if (allowZipStream)
-          return Rdr.newZipInputStream(bis);
-        Object o = Rdr.getZipFileDirectory(bis, subFileList, 1, forceInputStream);
+          return Rdr.newZipInputStream(vwr.getJzt(), bis);
+        Object o = Rdr.getZipFileDirectory(vwr.getJzt(), bis, subFileList, 1, forceInputStream);
         return (o instanceof String ? Rdr.getBR((String) o) : o);
       }
       return (forceInputStream ? bis : Rdr.getBufferedReader(bis, null));
@@ -701,17 +701,17 @@ public class FileManager implements BytePoster {
       bis = (BufferedInputStream) t;
       if (Rdr.isCompoundDocumentS(bis)) {
         GenericBinaryDocument doc = (GenericBinaryDocument) Interface
-            .getInterface("javajs.util.CompoundDocument");
-        doc.setStream(bis, true);
+            .getInterface("javajs.util.CompoundDocument", vwr, "file");
+        doc.setStream(vwr.getJzt(), bis, true);
         doc.getAllDataMapped(name.replace('\\', '/'), "Molecule", fileData);
       } else if (Rdr.isZipS(bis)) {
-        Rdr.getAllZipData(bis, subFileList, name.replace('\\', '/'), "Molecule",
+        Rdr.getAllZipData(vwr.getJzt(), bis, subFileList, name.replace('\\', '/'), "Molecule",
             fileData);
       } else if (asBinaryString) {
         // used for Spartan binary file reading
         GenericBinaryDocument bd = (GenericBinaryDocument) Interface
-            .getInterface("javajs.util.BinaryDocument");
-        bd.setStream(bis, false);
+            .getInterface("javajs.util.BinaryDocument", vwr, "file");
+        bd.setStream(vwr.getJzt(), bis, false);
         sb = new SB();
         //note -- these headers must match those in ZipUtil.getAllData and CompoundDocument.getAllData
         if (header != null)
@@ -727,7 +727,7 @@ public class FileManager implements BytePoster {
         fileData.put(name0, sb.toString());
       } else {
         BufferedReader br = Rdr.getBufferedReader(
-            Rdr.isGzipS(bis) ? new BufferedInputStream(Rdr.newGZIPInputStream(bis)) : bis, null);
+            Rdr.isGzipS(bis) ? new BufferedInputStream(Rdr.newGZIPInputStream(vwr.getJzt(), bis)) : bis, null);
         String line;
         sb = new SB();
         if (header != null)
@@ -765,7 +765,7 @@ public class FileManager implements BytePoster {
   public String[] getZipDirectory(String fileName, boolean addManifest, boolean allowCached) {
     Object t = getBufferedInputStreamOrErrorMessageFromName(fileName, fileName,
         false, false, null, false, allowCached);
-    return Rdr.getZipDirectoryAndClose((BufferedInputStream) t, addManifest ? "JmolManifest" : null);
+    return Rdr.getZipDirectoryAndClose(vwr.getJzt(), (BufferedInputStream) t, addManifest ? "JmolManifest" : null);
   }
 
   public Object getFileAsBytes(String name, OC out,
@@ -793,7 +793,7 @@ public class FileManager implements BytePoster {
           || subFileList.length <= 1 
           || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) 
               ? Rdr.getStreamAsBytes(bis,out) 
-          : Rdr.getZipFileContentsAsBytes(bis, subFileList, 1));
+          : Rdr.getZipFileContentsAsBytes(vwr.getJzt(), bis, subFileList, 1));
       bis.close();
       return bytes;
     } catch (Exception ioe) {
@@ -827,7 +827,7 @@ public class FileManager implements BytePoster {
       }
     }
     try {
-      Rdr.readFileAsMap((BufferedInputStream) t, bdata, name);
+      Rdr.readFileAsMap(vwr.getJzt(), (BufferedInputStream) t, bdata, name);
       
     } catch (Exception e) {
       bdata.clear();
@@ -1255,7 +1255,7 @@ public class FileManager implements BytePoster {
   }
   
   private byte[] getCachedPngjBytes(String key) {
-    return jmb.getCachedPngjBytes(key);
+    return jmb.getCachedPngjBytes(key, vwr);
   }
 
   public Object cacheGet(String key, boolean bytesOnly) {

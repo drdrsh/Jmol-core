@@ -61,7 +61,7 @@ public class JmolBinary {
   
   public final static String PMESH_BINARY_MAGIC_NUMBER = "PM\1\0";
 
-  public static String determineSurfaceTypeIs(InputStream is) {
+  public static String determineSurfaceTypeIs(Viewer vwr, InputStream is) {
     // drag-drop only
     BufferedReader br;
     try {
@@ -69,7 +69,7 @@ public class JmolBinary {
     } catch (IOException e) {
       return null;
     }
-    return determineSurfaceFileType(br);
+    return determineSurfaceFileType(vwr, br);
   }
   
   public static String getEmbeddedScript(String script) {
@@ -95,17 +95,17 @@ public class JmolBinary {
 
   static JmolZipUtilities jzu;
   
-  static JmolZipUtilities getJzu() {
-    return (jzu == null ? jzu = (JmolZipUtilities) Interface.getOption("io.JmolUtil") : jzu);
+  static JmolZipUtilities getJzu(Viewer vwr) {
+    return (jzu == null ? jzu = (JmolZipUtilities) Interface.getOption("io.JmolUtil", vwr, "file") : jzu);
   }
 
-  public byte[] getCachedPngjBytes(String pathName) {
-    return (pathName.indexOf(".png") < 0 ? null : getJzu().getCachedPngjBytes(this, pathName));
+  public byte[] getCachedPngjBytes(String pathName, Viewer vwr) {
+    return (pathName.indexOf(".png") < 0 ? null : getJzu(vwr).getCachedPngjBytes(vwr, this, pathName));
   }
 
-  public boolean clearAndCachePngjFile(String[] data) {
+  public boolean clearAndCachePngjFile(Viewer vwr, String[] data) {
       pngjCache = new Hashtable<String, Object>();
-      return (data == null || data[0] == null ? false : getJzu().cachePngjFile(this, data));
+      return (data == null || data[0] == null ? false : getJzu(vwr).cachePngjFile(this, data));
   }
   
   public void spardirPut(String name, byte[] bytes) {
@@ -132,6 +132,7 @@ public class JmolBinary {
    * A rather complicated means of reading a ZIP file, which could be a 
    * single file, or it could be a manifest-organized file, or it could be
    * a Spartan directory.
+   * @param vwr 
    * 
    * @param adapter 
    * 
@@ -143,21 +144,21 @@ public class JmolBinary {
    * @return a single atomSetCollection
    * 
    */
-  public static Object getAtomSetCollectionOrBufferedReaderFromZip(JmolAdapter adapter, InputStream is, String fileName, String[] zipDirectory,
+  public static Object getAtomSetCollectionOrBufferedReaderFromZip(Viewer vwr, JmolAdapter adapter, InputStream is, String fileName, String[] zipDirectory,
                              Map<String, Object> htParams, boolean asBufferedReader) {
-    return getJzu().getAtomSetCollectionOrBufferedReaderFromZip(Rdr.getJzt(), adapter, is, fileName, zipDirectory, htParams, 1, asBufferedReader);
+    return getJzu((Viewer) htParams.get("vwr")).getAtomSetCollectionOrBufferedReaderFromZip(vwr, vwr.getJzt(), adapter, is, fileName, zipDirectory, htParams, 1, asBufferedReader);
   }
 
-  public static String[] spartanFileList(String name, String zipDirectory) {
-    return getJzu().spartanFileList(Rdr.getJzt(), name, zipDirectory);
+  public static String[] spartanFileList(Viewer vwr, String name, String zipDirectory) {
+    return getJzu(vwr).spartanFileList(vwr.getJzt(), name, zipDirectory);
   }
 
-  public static String determineSurfaceFileType(BufferedReader br) {
-    return getJzu().determineSurfaceFileType(br);
+  public static String determineSurfaceFileType(Viewer vwr, BufferedReader br) {
+    return getJzu(vwr).determineSurfaceFileType(br);
   }
 
   public Object getImage(Viewer vwr, Object fullPathNameOrBytes, String echoName) {
-    return getJzu().getImage(vwr, fullPathNameOrBytes, echoName);
+    return getJzu(vwr).getImage(vwr, fullPathNameOrBytes, echoName);
   }
 
   public static void getFileReferences(String script, Lst<String> fileList) {

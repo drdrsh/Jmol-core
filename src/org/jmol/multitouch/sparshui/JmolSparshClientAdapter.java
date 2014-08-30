@@ -108,7 +108,7 @@ public class JmolSparshClientAdapter extends JmolMultiTouchClientAdapter impleme
     super.setMultiTouchClient(vwr, client, isSimulation);
     String err;
     gestureServer = (JmolGestureServerInterface) Interface
-        .getInterface("com.sparshui.server.GestureServer");
+        .getInterface("com.sparshui.server.GestureServer", null, null);
     gestureServer.startGestureServer();
     try {
       Thread.sleep(1000);

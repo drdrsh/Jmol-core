@@ -66,7 +66,7 @@ class Subsystem {
     
     // Part 2: Get the new unit cell and symmetry operators
 
-    SymmetryInterface s0 = msRdr.cr.asc.getSymmetry();
+    SymmetryInterface s0 = msRdr.cr.asc.getSymmetry(msRdr.cr.vwr);
     V3[] vu43 = s0.getUnitCellVectors();
     V3[] vr43 = reciprocalsOf(vu43);
 
@@ -96,7 +96,7 @@ class Subsystem {
     for (int i = 0; i < 3; i++)
       uc_nu[i + 1] = V3.new3((float) a[i][0], (float) a[i][1], (float) a[i][2]);    
     uc_nu = reciprocalsOf(uc_nu);
-    symmetry = Interface.getSymmetry().getUnitCell(uc_nu, false, null);
+    symmetry = Interface.getSymmetry(msRdr.cr.vwr, "file").getUnitCell(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)
       return;

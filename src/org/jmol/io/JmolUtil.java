@@ -235,7 +235,7 @@ public class JmolUtil implements JmolZipUtilities {
     data[0] = Rdr.getZipRoot(data[0]);
     String shortName = shortSceneFilename(data[0]);
     try {
-      data[1] = Rdr.getJzt().cacheZipContents( 
+      data[1] = jmb.fm.vwr.getJzt().cacheZipContents( 
           Rdr.getPngZipStream((BufferedInputStream) jmb.fm
               .getBufferedInputStreamOrErrorMessageFromName(data[0], null,
                   false, false, null, false, true), true), shortName, jmb.pngjCache, false);
@@ -379,14 +379,14 @@ public class JmolUtil implements JmolZipUtilities {
   }
 
   @Override
-  public Object getAtomSetCollectionOrBufferedReaderFromZip(GenericZipTools zpt,
+  public Object getAtomSetCollectionOrBufferedReaderFromZip(Viewer vwr,
+                                                            GenericZipTools zpt,
                                                             JmolAdapter adapter,
                                                             InputStream is,
                                                             String fileName,
                                                             String[] zipDirectory,
                                                             Map<String, Object> htParams,
-                                                            int subFilePtr,
-                                                            boolean asBufferedReader) {
+                                                            int subFilePtr, boolean asBufferedReader) {
 
     // we're here because user is using | in a load file name
     // or we are opening a zip file.
@@ -467,7 +467,7 @@ public class JmolUtil implements JmolZipUtilities {
       }
       if (is instanceof BufferedInputStream)
         is = Rdr.getPngZipStream((BufferedInputStream) is, true);
-      ZipInputStream zis = (ZipInputStream) Rdr.newZipInputStream(is);
+      ZipInputStream zis = (ZipInputStream) Rdr.newZipInputStream(zpt, is);
       ZipEntry ze;
       if (haveManifest)
         manifest = '|' + manifest.replace('\r', '|').replace('\n', '|') + '|';
@@ -488,15 +488,15 @@ public class JmolUtil implements JmolZipUtilities {
         //        System.out.println("ziputil " + s.substring(0, 100));
         if (Rdr.isGzipB(bytes))
           bytes = Rdr.getLimitedStreamBytes(
-              ZipTools.getUnGzippedInputStream(bytes), -1);
+              ZipTools.getUnGzippedInputStream(vwr.getJzt(), bytes), -1);
         if (Rdr.isZipB(bytes) || Rdr.isPngZipB(bytes)) {
           BufferedInputStream bis = Rdr.getBIS(bytes);
           String[] zipDir2 = Rdr
-              .getZipDirectoryAndClose(bis, "JmolManifest");
+              .getZipDirectoryAndClose(zpt, bis, "JmolManifest");
           bis = Rdr.getBIS(bytes);
           Object atomSetCollections = getAtomSetCollectionOrBufferedReaderFromZip(
-              zpt, adapter, bis, fileName + "|" + thisEntry, zipDir2, htParams,
-              ++subFilePtr, asBufferedReader);
+              vwr, zpt, adapter, bis, fileName + "|" + thisEntry, zipDir2,
+              htParams, ++subFilePtr, asBufferedReader);
           if (atomSetCollections instanceof String) {
             if (ignoreErrors)
               continue;
@@ -527,8 +527,8 @@ public class JmolUtil implements JmolZipUtilities {
           String sData;
           if (Rdr.isCompoundDocumentB(bytes)) {
             GenericBinaryDocument jd = (GenericBinaryDocument) Interface
-                .getInterface("javajs.util.CompoundDocument");
-            jd.setStream(Rdr.getBIS(bytes), true);
+                .getInterface("javajs.util.CompoundDocument", vwr, "file");
+            jd.setStream(vwr.getJzt(), Rdr.getBIS(bytes), true);
             sData = jd.getAllDataFiles("Molecule", "Input").toString();
           } else {
             // could be a PNGJ file with an internal pdb.gz entry, for instance
@@ -611,19 +611,19 @@ public class JmolUtil implements JmolZipUtilities {
   }
 
   @Override
-  public byte[] getCachedPngjBytes(JmolBinary jmb, String pathName) {
+  public byte[] getCachedPngjBytes(Viewer vwr, JmolBinary jmb, String pathName) {
     if (pathName.startsWith("file:///"))
       pathName = "file:" +pathName.substring(7);
     Logger.info("JmolUtil checking PNGJ cache for " + pathName);
     String shortName = shortSceneFilename(pathName);
     if (jmb.pngjCache == null
-        && !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
+        && !jmb.clearAndCachePngjFile(vwr, new String[] { pathName, null }))
       return null;
     boolean isMin = (pathName.indexOf(".min.") >= 0);
     if (!isMin) {
       String cName = jmb.fm.getCanonicalName(Rdr.getZipRoot(pathName));
       if (!jmb.pngjCache.containsKey(cName)
-          && !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
+          && !jmb.clearAndCachePngjFile(vwr, new String[] { pathName, null }))
         return null;
       if (pathName.indexOf("|") < 0)
         shortName = cName;
@@ -636,7 +636,7 @@ public class JmolUtil implements JmolZipUtilities {
     //    System.out.println(" key=" + key);
     //System.out.println("FileManager memory cache size=" + pngjCache.size()
     //  + " did not find " + pathName + " as " + shortName);
-    if (!isMin || !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
+    if (!isMin || !jmb.clearAndCachePngjFile(vwr, new String[] { pathName, null }))
       return null;
     Logger.info("FileManager using memory cache " + shortName);
     return (byte[]) jmb.pngjCache.get(shortName);

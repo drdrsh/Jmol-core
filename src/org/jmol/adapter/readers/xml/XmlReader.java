@@ -149,7 +149,7 @@ public class XmlReader extends AtomSetCollectionReader {
     int pt = readerName.indexOf("(");
     String name = (pt < 0 ? readerName : readerName.substring(0, pt));
     className = Resolver.getReaderClassBase(name);
-    if ((thisReader = (XmlReader) Interface.getInterface(className)) == null)
+    if ((thisReader = (XmlReader) Interface.getInterface(className, vwr, "file")) == null)
       return "File reader was not found: " + className;
     try {
       thisReader.processXml(this, saxReader);
@@ -197,9 +197,9 @@ public class XmlReader extends AtomSetCollectionReader {
        * @j2sNative
        * 
        *            this.domObj[0] =
-       *            parent.vwr.html5Applet._createDomNode("xmlReader",o);
+       *            parent.vwr._createDomNode("xmlReader",o);
        *            this.walkDOMTree();
-       *            parent.vwr.html5Applet._createDomNode("xmlReader",null);
+       *            parent.vwr._createDomNode("xmlReader",null);
        * 
        */
       {
@@ -207,7 +207,7 @@ public class XmlReader extends AtomSetCollectionReader {
       }
     } else {
       JmolXmlHandler saxHandler = (JmolXmlHandler) Interface
-          .getOption("adapter.readers.xml.XmlHandler");
+          .getOption("adapter.readers.xml.XmlHandler", vwr, "file");
       saxHandler.parseXML(this, saxReader, reader);
     }
   }

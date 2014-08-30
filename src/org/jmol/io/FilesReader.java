@@ -103,13 +103,13 @@ public class FilesReader implements JmolFilesReaderInterface {
       String[] zipDirectory = fm.getZipDirectory(name, true, true);
       t = fm.getBufferedInputStreamOrErrorMessageFromName(name,
           fullPathNamesIn[i], false, false, null, false, true);
-      t = JmolBinary.getAtomSetCollectionOrBufferedReaderFromZip(vwr.getModelAdapter(),
+      t = JmolBinary.getAtomSetCollectionOrBufferedReaderFromZip(vwr, vwr.getModelAdapter(),
           (BufferedInputStream) t, name, zipDirectory, htParams, true);
     }
     if (t instanceof BufferedInputStream) {
       GenericBinaryDocument jd = (GenericBinaryDocument) Interface
-          .getInterface("javajs.util.BinaryDocument");
-      jd.setStream((BufferedInputStream) t, true);
+          .getInterface("javajs.util.BinaryDocument", vwr, "file");
+      jd.setStream(vwr.getJzt(), (BufferedInputStream) t, true);
       return jd;
     }
     return (t instanceof BufferedReader || t instanceof GenericBinaryDocument ? t :

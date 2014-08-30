@@ -1,4 +1,4 @@
-/* $RCSfile$
+  /* $RCSfile$
  * $Author$
  * $Date$
  * $Revision$
@@ -26,12 +26,25 @@
 package org.jmol.api;
 
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 public class Interface {
 
-  public static Object getInterface(String name) {
+  /**
+   * @param name 
+   * @param vwr  
+   * @param state 
+   * @return   instance
+   */
+  public static Object getInterface(String name, Viewer vwr, String state) {
     try {
-      Class<?> x = Class.forName(name);
+      Class<?> x = null;
+      /**
+       * @j2sNative
+       * x = Clazz._4Name (name, vwr && vwr.html5Applet, state);
+       * 
+       */
+      x = Class.forName(name);
       return (x == null ? null : x.newInstance());
     } catch (Exception e) {
       Logger.error("Interface.java Error creating instance for " + name + ": \n" + e);
@@ -45,18 +58,20 @@ public class Interface {
    * are condensed to "JU" and "JV"  (javajs.util is also JU)
    * 
    * @param className
+   * @param vwr
+   * @param state
    * @return class instance
    */
-  public static Object getOption(String className) {
-    return getInterface("org.jmol." + className);
+  public static Object getOption(String className, Viewer vwr, String state) {
+    return getInterface("org.jmol." + className, vwr, state);
   }
 
-  public static Object getUtil(String name) {
-    return getInterface("org.jmol.util." + name);
+  public static Object getUtil(String name, Viewer vwr, String state) {
+    return getInterface("org.jmol.util." + name, vwr, state);
   }
 
-  public static SymmetryInterface getSymmetry() {
-    return (SymmetryInterface) getInterface("org.jmol.symmetry.Symmetry");
+  public static SymmetryInterface getSymmetry(Viewer vwr, String state) {
+    return (SymmetryInterface) getInterface("org.jmol.symmetry.Symmetry", vwr, state);
   }
 
 }

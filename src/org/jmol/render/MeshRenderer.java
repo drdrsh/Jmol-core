@@ -108,7 +108,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       if ((unitcell = mesh.unitCell) == null
           && (unitcell = vwr.ms.am[mesh.modelIndex].biosymmetry) == null
           && (unitcell = vwr.getModelUnitCell(mesh.modelIndex)) == null)
-        unitcell = mesh.getUnitCell();
+        unitcell = mesh.getUnitCell(vwr);
       if (mesh.symops != null) {
         if (mesh.symopNormixes == null)
           mesh.symopNormixes = AU.newShort2(mesh.symops.length);

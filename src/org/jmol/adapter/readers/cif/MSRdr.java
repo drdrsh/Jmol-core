@@ -869,7 +869,7 @@ public class MSRdr implements MSInterface {
 
         SymmetryInterface sym = getAtomSymmetry(a, symmetry);
         t = cr.asc.getXSymmetry().addRotatedTensor(a,
-            sym.getTensor(a.anisoBorU), iop, false, sym);
+            sym.getTensor(cr.vwr, a.anisoBorU), iop, false, sym);
         t.isModulated = true;
         t.id = Escape.e(a.anisoBorU);
         // note that a.bFactor will be modulated value
@@ -1040,7 +1040,7 @@ public class MSRdr implements MSInterface {
 
   private SymmetryInterface getDefaultUnitCell() {
     return (modCell != null && htSubsystems.containsKey(modCell) ? htSubsystems
-        .get(modCell).getSymmetry() : cr.asc.getSymmetry());
+        .get(modCell).getSymmetry() : cr.asc.getSymmetry(cr.vwr));
   }
 
   @Override

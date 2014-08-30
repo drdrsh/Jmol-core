@@ -331,7 +331,7 @@ public class AnimationManager {
     animationPaused = false;
     if (animationThread == null) {
       intAnimThread++;
-      animationThread = (JmolThread) Interface.getOption("thread.AnimationThread");
+      animationThread = (JmolThread) Interface.getOption("thread.AnimationThread", vwr, "script");
       animationThread.setManager(this, vwr, new int[] {firstFrameIndex, lastFrameIndex, intAnimThread} );
       animationThread.start();
     }

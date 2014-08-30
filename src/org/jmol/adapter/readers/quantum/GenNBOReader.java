@@ -156,7 +156,7 @@ public class GenNBOReader extends MOReader {
     if (pt < 0)
       pt = fileName.length();
     fileName = fileName.substring(0, pt) + ext;
-    String data = vwr.getFileAsString(fileName, false);
+    String data = vwr.getFileAsString3(fileName, false, null);
     if (data.length() == 0 || data.indexOf("java.io.FileNotFound") >= 0)
       throw new Exception(" supplemental file " + fileName + " was not found");
     return data;

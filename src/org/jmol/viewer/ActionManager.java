@@ -551,18 +551,18 @@ public class ActionManager implements EventManager {
     case PICKINGSTYLE_SELECT_PFAAT:
       if (!b.name.equals("extendedSelect"))
         setBinding(pfaatBinding == null ? pfaatBinding = Binding
-            .newBinding("Pfaat") : pfaatBinding);
+            .newBinding(vwr, "Pfaat") : pfaatBinding);
       break;
     case PICKINGSTYLE_SELECT_DRAG:
       if (!b.name.equals("drag"))
         setBinding(dragBinding == null ? dragBinding = Binding
-            .newBinding("Drag") : dragBinding);
+            .newBinding(vwr, "Drag") : dragBinding);
       rubberbandSelectionMode = true;
       break;
     case PICKINGSTYLE_SELECT_RASMOL:
       if (!b.name.equals("selectOrToggle"))
         setBinding(rasmolBinding == null ? rasmolBinding = Binding
-            .newBinding("Rasmol") : rasmolBinding);
+            .newBinding(vwr, "Rasmol") : rasmolBinding);
       break;
     default:
       if (b != jmolBinding)
@@ -1590,7 +1590,7 @@ public class ActionManager implements EventManager {
 
   private MeasurementPending getMP() {
     return ((MeasurementPending) Interface
-        .getInterface("org.jmol.modelset.MeasurementPending")).set(vwr.ms);
+        .getInterface("org.jmol.modelset.MeasurementPending", vwr, "mouse")).set(vwr.ms);
   }
 
   private int addToMeasurement(int atomIndex, Point3fi nearestPoint,

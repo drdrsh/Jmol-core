@@ -29,8 +29,8 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.J2SRequireImport;
+import javajs.util.PT;
 
-import org.jmol.api.JmolViewer;
 import org.jmol.api.Translator;
 import org.jmol.util.Logger; 
 import org.jmol.viewer.Viewer;
@@ -43,7 +43,7 @@ import org.jmol.viewer.Viewer;
  * 
  */
 
-@J2SRequireImport({org.jmol.i18n.Resource.class, org.jmol.i18n.Language.class})
+@J2SRequireImport({java.text.MessageFormat.class, org.jmol.i18n.Resource.class, org.jmol.i18n.Language.class})
 public class GT implements Translator {
 
   private static boolean ignoreApplicationBundle = false;
@@ -69,8 +69,7 @@ public class GT implements Translator {
     return _(s);
   }
   
-  public GT(JmolViewer vwr, String langCode) {
-    GT.vwr = (Viewer) vwr;
+  public GT(Viewer vwr, String langCode) {
     /**
      * @j2sIgnore
      * 
@@ -163,8 +162,8 @@ public class GT implements Translator {
           + " using files for language:" + la + " country:" + la_co
           + " variant:" + la_co_va);
     if (!ignoreApplicationBundle)
-      addBundles("Jmol", la_co_va, la_co, la);
-    addBundles("JmolApplet", la_co_va, la_co, la);
+      addBundles(vwr, "Jmol", la_co_va, la_co, la);
+    addBundles(vwr, "JmolApplet", la_co_va, la_co, la);
   }
 
   public static Language[] getLanguageList(GT gt) {
@@ -205,13 +204,16 @@ public class GT implements Translator {
   }
 
   public static String o(String s, Object o) {
-    if (!(o instanceof Object[]))
-      o = new Object[] { o };
-    return MessageFormat.format(s, (Object[]) o);
+    if (o instanceof Object[]) {
+      if (((Object[]) o).length != 1)
+        return MessageFormat.format(s, (Object[]) o);
+      o = ((Object[]) o)[0];
+    }
+    return PT.rep(s, "{0}", o.toString());
   }
 
   public static String i(String s, int n) {
-    return o(s, "" + n);
+    return PT.rep(s, "{0}", "" + n);
   }
 
   public static String escapeHTML(String msg) {
@@ -249,15 +251,15 @@ public class GT implements Translator {
     return s;
   }
 
-  private void addBundles(String type, String la_co_va, String la_co, String la) {
+  private void addBundles(Viewer vwr, String type, String la_co_va, String la_co, String la) {
     try {
       String className = "org.jmol.translation." + type + ".";
       if (la_co_va != null)
-        addBundle(className, la_co_va);
+        addBundle(vwr, className, la_co_va);
       if (la_co != null)
-        addBundle(className, la_co);
+        addBundle(vwr, className, la_co);
       if (la != null)
-        addBundle(className, la);
+        addBundle(vwr, className, la);
     } catch (Exception exception) {
       if (allowDebug)
         Logger.errorEx("Some exception occurred!", exception);
@@ -266,8 +268,8 @@ public class GT implements Translator {
     }
   }
 
-  private void addBundle(String className, String name) {
-    Resource resource = Resource.getResource(className, name);    
+  private void addBundle(Viewer vwr, String className, String name) {
+    Resource resource = Resource.getResource(vwr, className, name);    
     if (resource != null) {
       if (resources == null) {
         resources = new Resource[8];

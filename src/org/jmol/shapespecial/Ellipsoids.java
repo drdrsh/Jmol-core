@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.jmol.api.Interface;
 import org.jmol.c.PAL;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
@@ -312,7 +313,7 @@ public class Ellipsoids extends Shape {
     //  0  1  2  3  4  5  6  7  8  9
     switch (mode) {
     case 0: // axes
-      e.setAxes((V3[]) value);
+      e.setTensor(((Tensor) Interface.getUtil("Tensor", vwr, "script")).setFromAxes((V3[]) value));
       return;
     case 1: // center
       e.setCenter((P3) value);
@@ -324,7 +325,7 @@ public class Ellipsoids extends Shape {
       simpleEllipsoids.remove(e.id);
       return;
     case 4: // equation
-      e.setEquation((double[]) value);
+      e.setTensor(((Tensor) Interface.getUtil("Tensor", vwr, "script")).setFromThermalEquation((double[]) value, null));
       return;
     case 5: // modelindex
       e.tensor.modelIndex = ((Integer) value).intValue();

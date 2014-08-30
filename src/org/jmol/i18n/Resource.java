@@ -26,17 +26,17 @@ class Resource {
       this.resource = (ResourceBundle) resource;
   }
 
-  static Resource getResource(String className, String name) {
+  static Resource getResource(Viewer vwr, String className, String name) {
     String poData = null;
-    if (GT.vwr != null && GT.vwr.isApplet()) {
+    if (vwr != null && vwr.isApplet()) {
       // no longer using individual applet language JAR files
       String fname = Viewer.appletIdiomaBase + "/" + name + ".po";
       Logger.info("Loading language resource " + fname);
-      poData = GT.vwr.getFileAsString(fname, false);
+      poData = vwr.getFileAsString3(fname, false, "gt");
       return getResourceFromPO(poData);
     }
     className += name + ".Messages_" + name;
-    Object o = Interface.getInterface(className);
+    Object o = Interface.getInterface(className, vwr, "gt");
     return (o == null ? null : new Resource(o, className));
   }
 

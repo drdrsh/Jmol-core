@@ -41,6 +41,7 @@ import javajs.util.T3;
 import javajs.util.T4;
 import javajs.util.V3;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 /**
  * a class private to the org.jmol.symmetry package
@@ -253,7 +254,7 @@ class UnitCell extends SimpleUnitCell {
   private final static V3[] unitVectors = {
     JC.axisX, JC.axisY, JC.axisZ};
   
-  Tensor getTensor(float[] parBorU) {
+  Tensor getTensor(Viewer vwr, float[] parBorU) {
     /*
      * 
      * returns {Vector3f[3] unitVectors, float[3] lengths} from J.W. Jeffery,
@@ -321,7 +322,7 @@ class UnitCell extends SimpleUnitCell {
      * and the betaij should be entered as Type 0.
      */
 
-    Tensor t = ((Tensor) Interface.getUtil("Tensor"));
+    Tensor t = ((Tensor) Interface.getUtil("Tensor", vwr, "file"));
     if (parBorU[0] == 0 && parBorU[1] == 0 && parBorU[2] == 0) { // this is iso
       float f = parBorU[7];
       float[] eigenValues = new float[] {f, f, f};

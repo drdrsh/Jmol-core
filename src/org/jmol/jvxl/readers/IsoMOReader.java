@@ -36,6 +36,8 @@ import javajs.util.PT;
 import javajs.util.T3;
 
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.P3;
 import javajs.util.V3;
 import org.jmol.api.Interface;
@@ -94,7 +96,8 @@ class IsoMOReader extends AtomDataReader {
       for (int i = params.title.length; --i >= 0;)
         fixTitleLine2(i, mo);
     } else {
-      q = (MOCalculationInterface) Interface.getOption(className);
+      q = (MOCalculationInterface) Interface.getOption(className, 
+          (Viewer) sg.getAtomDataServer(), "file");
       if (isNci) {
         qpc = (QuantumPlaneCalculationInterface) q;
       } else if (linearCombination == null) {

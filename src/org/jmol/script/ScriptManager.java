@@ -85,7 +85,7 @@ public class ScriptManager implements JmolScriptManager {
  
   private ScriptEval newScriptEvaluator() {
     return ((ScriptEval) Interface
-        .getInterface("org.jmol.script.ScriptEval")).setViewer(vwr);
+        .getInterface("org.jmol.script.ScriptEval", vwr, "setOptions")).setViewer(vwr);
   }
 
   @Override
@@ -225,7 +225,7 @@ public class ScriptManager implements JmolScriptManager {
       if (commandWatcherThread != null)
         return;
       commandWatcherThread = (JmolThread) Interface
-      .getInterface("org.jmol.script.CommandWatcherThread");
+      .getInterface("org.jmol.script.CommandWatcherThread", vwr, "setOptions");
       commandWatcherThread.setManager(this, vwr, null);
       commandWatcherThread.start();
     } else {
@@ -558,7 +558,7 @@ public class ScriptManager implements JmolScriptManager {
       if (!fileName.toLowerCase().endsWith(".spt")) {
         String type = getDragDropFileTypeName(fileName);
         if (type == null) {
-          type = JmolBinary.determineSurfaceTypeIs(vwr
+          type = JmolBinary.determineSurfaceTypeIs(vwr, vwr
               .getBufferedInputStream(fileName));
           if (type != null)
             cmd = "if (_filetype == 'Pdb') { isosurface sigma 1.0 within 2.0 {*} "
@@ -585,7 +585,7 @@ public class ScriptManager implements JmolScriptManager {
       }
       if (!noScript && vwr.scriptEditorVisible && cmd == null)
         vwr.showEditor(new String[] { fileName,
-            vwr.getFileAsString(fileName, true) });
+            vwr.getFileAsString3(fileName, true, null) });
       else
         cmd = (cmd == null ? "script " : cmd) + PT.esc(fileName);
     } finally {
@@ -620,7 +620,7 @@ public class ScriptManager implements JmolScriptManager {
   private String getZipDirectoryAsString(String fileName) {
     Object t = vwr.fm.getBufferedInputStreamOrErrorMessageFromName(
         fileName, fileName, false, false, null, false, true);
-    return Rdr.getZipDirectoryAsStringAndClose((BufferedInputStream) t);
+    return Rdr.getZipDirectoryAsStringAndClose(vwr.getJzt(), (BufferedInputStream) t);
   }
 
   private static int prevCovalentVersion = 1;

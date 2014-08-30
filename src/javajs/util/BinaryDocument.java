@@ -30,6 +30,7 @@ import java.util.Map;
 
 
 import javajs.api.GenericBinaryDocument;
+import javajs.api.GenericZipTools;
 
 
 //import java.io.RandomAccessFile;
@@ -61,6 +62,7 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
   protected DataInputStream stream;
   protected boolean isRandom = false;
   protected boolean isBigEndian = true;
+  protected GenericZipTools jzt;
 
   @Override
   public void close() {
@@ -75,7 +77,8 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
   }
   
   @Override
-  public void setStream(BufferedInputStream bis, boolean isBigEndian) {
+  public void setStream(GenericZipTools jzt, BufferedInputStream bis, boolean isBigEndian) {
+    this.jzt = jzt;
     if (bis != null)
       stream = new DataInputStream(bis);
     this.isBigEndian = isBigEndian;

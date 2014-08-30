@@ -468,7 +468,7 @@ import java.util.Properties;
     Object obj = vwr.shm.getShapePropertyIndex(JC.SHAPE_VECTORS, "mad", iAtom);
     boolean haveVibration = (obj != null && ((Integer) obj).intValue() != 0 || vwr
         .tm.vibrationOn);
-    SymmetryInterface symmetry = Interface.getSymmetry();
+    SymmetryInterface symmetry = Interface.getSymmetry(vwr, "ms");
     pointGroup = symmetry.setPointGroup(pointGroup, at, bs, haveVibration,
         vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance));
     if (!doAll && !asInfo)
@@ -3222,7 +3222,7 @@ import java.util.Properties;
   public Hashtable<String, BS> htPeaks;
 
   public SymmetryInterface getSymTemp(boolean forceNew) {
-    return (symTemp == null || forceNew ? (symTemp = Interface.getSymmetry()) : symTemp);
+    return (symTemp == null || forceNew ? (symTemp = Interface.getSymmetry(vwr, "ms")) : symTemp);
   }
 
   public void createModels(int n) {
@@ -3955,7 +3955,7 @@ import java.util.Properties;
 
   public Lst<Object> intersectPlane(P4 plane, Lst<Object> v, int i) {
     return (triangulator == null ? (triangulator = (Triangulator) Interface
-        .getUtil("TriangleData")) : triangulator).intersectPlane(plane, v, i);
+        .getUtil("TriangleData", vwr, "ms")) : triangulator).intersectPlane(plane, v, i);
   }
 
   public SymmetryInterface getUnitCellForAtom(int index) {

@@ -32,6 +32,7 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
+import org.jmol.api.Interface;
 import org.jmol.api.JmolScriptFunction;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
@@ -548,7 +549,9 @@ public class ScriptEval extends ScriptExpr {
     if (sc.scriptLevel > 0)
       scriptLevel = sc.scriptLevel - 1;
     restoreScriptContext(sc, true, false, false);
+    pcResume = sc.pc;
     executeCommands(sc.isTryCatch, scriptLevel <= 0);
+    pcResume = -1;
   }
 
   private void resumeViewer(String why) {
@@ -1001,6 +1004,8 @@ public class ScriptEval extends ScriptExpr {
   // ///////////// Jmol function support  // ///////////////
 
   private JmolParallelProcessor parallelProcessor;
+
+  private int pcResume = -1;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -1952,10 +1957,10 @@ public class ScriptEval extends ScriptExpr {
                               boolean doClear) throws ScriptException {
     // note that we will never know the actual file name
     // so we construct one and point to it in the scriptContext
-    // with a key to this point in the script. Note that this 
-    // could in principle allow more than one file load for a 
-    // given script command, but actually we are not allowing that
-    //
+    // with a key to this point in the script. 
+    
+    if (vwr.cacheGet(filename) != null)
+      return filename;
     prefix = "cache://local" + prefix;
     String key = pc + "_" + i;
     String cacheName;
@@ -2219,6 +2224,9 @@ public class ScriptEval extends ScriptExpr {
     }
   }
 
+  public void terminateAfterStep() {
+    pc = pcEnd;
+  }
   private void processCommand(int tok) throws ScriptException {
     if (T.tokAttr(theToken.tok, T.shapeCommand)) {
       processShapeCommand(tok);
@@ -4015,7 +4023,7 @@ public class ScriptEval extends ScriptExpr {
     boolean isInline = false;
     boolean isSmiles = false;
     boolean isData = false;
-    boolean isAsync = false;
+    boolean isAsync = vwr.async;
     boolean isConcat = false;
     boolean doOrient = false;
     boolean appendNew = vwr.getBoolean(T.appendnew);
@@ -4371,7 +4379,7 @@ public class ScriptEval extends ScriptExpr {
       } else if (vwr.isJS && (isAsync || filename.startsWith("?"))) {
         localName = null;
         filename = loadFileAsync("LOAD" + (isAppend ? "_APPEND_" : "_"),
-            filename, i, !isAppend);
+            filename, i, !isAppend && pc != this.pcResume );
         // on first pass, a ScriptInterruption will be thrown; 
         // on the second pass, we will have the file name, which will be cache://localLoad_n__m
       }
@@ -4488,6 +4496,19 @@ public class ScriptEval extends ScriptExpr {
         filename = errMsg.substring(JC.NOTE_SCRIPT_FILE.length()).trim();
         cmdScript(0, filename, null);
         return;
+      }
+      if (vwr.async && errMsg.startsWith(JC.READER_NOT_FOUND)) {
+        String rdrName = errMsg.substring(JC.READER_NOT_FOUND.length());
+        @SuppressWarnings("unused")
+        Object rdr = new FileLoadThread(this, vwr, rdrName, null, null);
+        /**
+         * @j2sNative
+         * 
+         * Jmol._asyncCallbacks[rdrName] = rdr;
+         *         
+         */
+        {}
+        errMsg = "asynchronous load for " + rdrName + " initiated";
       }
       evalError(errMsg, null);
     }
@@ -5847,6 +5868,7 @@ public class ScriptEval extends ScriptExpr {
           m4 = new M4();
           points[0] = new P3();
           nPoints = 1;
+          Interface.getInterface("javajs.util.Eigen", vwr, "script");
           float stddev = (chk ? 0 : Measure.getTransformMatrix4(ptsA, ptsB, m4,
               points[0]));
           // if the standard deviation is very small, we leave ptsB
@@ -6026,7 +6048,7 @@ public class ScriptEval extends ScriptExpr {
       switch (tok) {
       case T.unitcell:
         if (!chk)
-          vwr.setCurrentCagePts(null, null);
+          setCurrentCagePts(null, null);
         return;
       case T.orientation:
       case T.rotation:
@@ -6169,7 +6191,7 @@ public class ScriptEval extends ScriptExpr {
         vwr.jsEval(paramAsStr(1));
       return;
     }
-    boolean isAsync = false;
+    boolean isAsync = vwr.async;
     if (filename == null && theScript == null) {
       tok = tokAt(i);
       if (tok != T.string)
@@ -7694,11 +7716,11 @@ public class ScriptEval extends ScriptExpr {
       ucname = s;
       if (s.indexOf(",") < 0 && !chk) {
         // parent, standard, conventional
-        vwr.setCurrentCagePts(null, null);
+        setCurrentCagePts(null, null);
         if (PT.isOneOf(s, ";parent;standard;primitive;")) {
           newUC = vwr.getModelAuxiliaryInfoValue(vwr.am.cmi, "unitcell_conventional");
           if (newUC != null)
-            vwr.setCurrentCagePts(vwr.getV0abc(newUC), "" + newUC);
+            setCurrentCagePts(vwr.getV0abc(newUC), "" + newUC);
         }
         s = (String) vwr.getModelAuxiliaryInfoValue(vwr.am.cmi, "unitcell_" + s);
         showString(s);
@@ -7795,13 +7817,26 @@ public class ScriptEval extends ScriptExpr {
     else if (id != null)
       vwr.setCurrentCage(id);
     else if (isReset || oabc != null)
-      vwr.setCurrentCagePts(oabc, ucname);
+      setCurrentCagePts(oabc, ucname);
     setObjectMad(JC.SHAPE_UCCAGE, "unitCell", mad);
     if (pt != null)
       vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
   }
+
+  private void setCurrentCagePts(T3[] originABC, String name) {
+    SymmetryInterface sym = Interface.getSymmetry(vwr, "eval");
+    if (sym == null && vwr.async)
+      throw new NullPointerException();
+    try {
+      vwr.ms.setModelCage(vwr.am.cmi,
+          originABC == null ? null : sym.getUnitCell(originABC, false, name));
+    } catch (Exception e) {
+      //
+    }
+  }
+
 
   private void cmdVector() throws ScriptException {
     EnumType type = EnumType.SCREEN;

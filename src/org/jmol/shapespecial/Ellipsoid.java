@@ -32,6 +32,8 @@ import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
 import org.jmol.util.Tensor;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.V3;
 
 public class Ellipsoid {
@@ -128,16 +130,10 @@ public class Ellipsoid {
     return crtval[prob < 1 ? 0 : prob > 99 ? 98 : prob - 1];
   }
 
-  protected void setEquation(double[] coef) {
+  protected void setTensor(Tensor tensor) {
     isValid = false;
-    tensor = ((Tensor) Interface.getUtil("Tensor")).setFromThermalEquation(coef, null);
-    validate(true);
-  }
-
-  protected void setAxes(V3[] axes) {
-    isValid = false;
-    tensor = ((Tensor) Interface.getUtil("Tensor")).setFromAxes(axes);
-    validate((tensor != null));
+    this.tensor = tensor;
+    validate(tensor != null);
   }
 
   private void validate(boolean andSetLengths) {

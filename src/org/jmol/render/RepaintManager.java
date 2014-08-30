@@ -93,6 +93,7 @@ public class RepaintManager implements JmolRepaintManager {
      *  if (typeof Jmol != "undefined" && Jmol._repaint) 
      *    Jmol._repaint(this.vwr.html5Applet, false);
      *  this.repaintDone();
+     *  
      */
     {
       //System.out.println("RM requestRepaintAndWait() " + (test++));
@@ -143,6 +144,7 @@ public class RepaintManager implements JmolRepaintManager {
     /**
      * @j2sNative
      * 
+     * 
      */
     {
       //System.out.println("repaintManager repaintDone thread=" + Thread.currentThread().getName());
@@ -171,7 +173,7 @@ public class RepaintManager implements JmolRepaintManager {
       return renderers[shapeID];
     String className = JC.getShapeClassName(shapeID, true) + "Renderer";
     ShapeRenderer renderer;
-    if ((renderer = (ShapeRenderer) Interface.getInterface(className)) == null)
+    if ((renderer = (ShapeRenderer) Interface.getInterface(className, vwr, "render")) == null)
       return null;
     renderer.setViewerG3dShapeID(vwr, shapeID);
     return renderers[shapeID] = renderer;
@@ -181,8 +183,11 @@ public class RepaintManager implements JmolRepaintManager {
   
   @Override
   public void render(GData gdata, ModelSet modelSet, boolean isFirstPass, int[] minMax) {
-    boolean logTime = vwr.getBoolean(T.showtiming);
+    if (renderers == null)
+      renderers = new ShapeRenderer[JC.SHAPE_MAX];
+    getAllRenderers();
     try {
+      boolean logTime = vwr.getBoolean(T.showtiming);
       JmolRendererInterface g3d = (JmolRendererInterface) gdata;
       g3d.renderBackground(null);
       if (isFirstPass)  {
@@ -194,8 +199,6 @@ public class RepaintManager implements JmolRepaintManager {
           if (band != null && g3d.setC(vwr.cm.colixRubberband))
             g3d.drawRect(band.x, band.y, 0, 0, band.width, band.height);
       }
-      if (renderers == null)
-        renderers = new ShapeRenderer[JC.SHAPE_MAX];
       String msg = null;
       for (int i = 0; i < JC.SHAPE_MAX && g3d.currentlyRendering(); ++i) {
         Shape shape = shapeManager.getShape(i);
@@ -215,14 +218,27 @@ public class RepaintManager implements JmolRepaintManager {
     } catch (Exception e) {
       if (!vwr.isJS)
         e.printStackTrace();
+      if (vwr.async && "Interface".equals(e.getMessage()))
+        throw new NullPointerException();
       Logger.error("rendering error? " + e);
     }
   }
   
+  private void getAllRenderers() {
+    boolean isOK = true;
+    for (int i = 0; i < JC.SHAPE_MAX; ++i) {
+      if (shapeManager.getShape(i) == null || getRenderer(i) != null)
+        continue;
+      isOK = repaintPending = !vwr.async;
+    }
+    if (!isOK)
+      throw new NullPointerException();
+  }
+
   @Override
-  public String renderExport(GData gdata, ModelSet modelSet, Map<String, Object> params) {
+  public String renderExport(GData gdata, ModelSet modelSet,
+                             Map<String, Object> params) {
     boolean isOK;
-    boolean logTime = vwr.getBoolean(T.showtiming);
     vwr.finalizeTransformParameters();
     shapeManager.finalizeAtoms(null, null);
     JmolRendererInterface exporter3D = vwr.initializeExporter(params);
@@ -231,14 +247,17 @@ public class RepaintManager implements JmolRepaintManager {
       Logger.error("Cannot export " + params.get("type"));
       return null;
     }
-    exporter3D.renderBackground(exporter3D);
     if (renderers == null)
       renderers = new ShapeRenderer[JC.SHAPE_MAX];
+    getAllRenderers();
     String msg = null;
-    for (int i = 0; i < JC.SHAPE_MAX; ++i) {
-      Shape shape = shapeManager.getShape(i);
-      if (shape == null)
-        continue;
+    try {
+      boolean logTime = vwr.getBoolean(T.showtiming);
+      exporter3D.renderBackground(exporter3D);
+      for (int i = 0; i < JC.SHAPE_MAX; ++i) {
+        Shape shape = shapeManager.getShape(i);
+        if (shape == null)
+          continue;
         if (logTime) {
           msg = "rendering " + JC.getShapeClassName(i, false);
           Logger.startTimer(msg);
@@ -246,9 +265,15 @@ public class RepaintManager implements JmolRepaintManager {
         getRenderer(i).renderShape(exporter3D, modelSet, shape);
         if (logTime)
           Logger.checkTimer(msg, false);
+      }
+      exporter3D.renderAllStrings(exporter3D);
+      msg = exporter3D.finalizeOutput();
+    } catch (Exception e) {
+      if (!vwr.isJS)
+        e.printStackTrace();
+      Logger.error("rendering error? " + e);
     }
-    exporter3D.renderAllStrings(exporter3D);
-    return exporter3D.finalizeOutput();
+    return msg;
   }
 
 }

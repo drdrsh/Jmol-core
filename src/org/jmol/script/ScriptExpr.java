@@ -55,7 +55,7 @@ abstract class ScriptExpr extends ScriptParam {
   }
 
   public Object getExt(String type) {
-    return Interface.getInterface("org.jmol.scriptext." + type + "Ext");
+    return Interface.getInterface("org.jmol.scriptext." + type + "Ext", vwr, "script");
   }
 
   @Override

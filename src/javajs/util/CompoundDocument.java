@@ -30,6 +30,8 @@ import java.io.BufferedInputStream;
 
 import java.util.Map;
 
+import javajs.api.GenericZipTools;
+
 
 
 /* a simple compound document reader. 
@@ -69,7 +71,7 @@ public class CompoundDocument extends BinaryDocument{
   }
   
   @Override
-  public void setStream(BufferedInputStream bis, boolean isBigEndian) {
+  public void setStream(GenericZipTools jzt, BufferedInputStream bis, boolean isBigEndian) {
     // isBigEndian is ignored here; it must be true
     /*    try {
      file = new RandomAccessFile(fileName, "r");
@@ -78,6 +80,7 @@ public class CompoundDocument extends BinaryDocument{
      // probably an applet
      }
      */
+    this.jzt = jzt;
     if (!isRandom) {
       stream = new DataInputStream(bis);
     }
@@ -330,7 +333,7 @@ public class CompoundDocument extends BinaryDocument{
       System.out.println(e.toString());
     }
     if (gzipData.isEnabled)
-      gzipData.addTo(data);
+      gzipData.addTo(jzt, data);
     return data;
   }
 
@@ -386,7 +389,7 @@ public class CompoundDocument extends BinaryDocument{
       System.out.println("reader error in CompoundDocument " + e.toString());
     }
     if (gzipData.isEnabled)
-      gzipData.addTo(data);
+      gzipData.addTo(jzt, data);
     return data;
   }  
 }

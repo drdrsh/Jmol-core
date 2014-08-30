@@ -39,6 +39,7 @@ import org.jmol.api.JmolJDXMOLParser;
 import org.jmol.api.JmolJDXMOLReader;
 import org.jmol.java.BS;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 /**
  * A preliminary reader for JCAMP-DX files having ##$MODELS= and ##$PEAKS=
@@ -136,7 +137,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
       return true;
     if (mpr == null)
       mpr = ((JmolJDXMOLParser) Interface
-          .getOption("jsv.JDXMOLParser")).set(this, filePath,
+          .getOption("jsv.JDXMOLParser", vwr, "file")).set(this, filePath,
           htParams);
     String value = line.substring(i + 1).trim();
     mpr.setLine(value);
@@ -151,6 +152,10 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     case 36:// $MOLFILE
       acdMolFile = mpr.readACDMolFile();
       processModelData(acdMolFile, title + " (assigned)", "MOL", "mol", "", 0.01f, Float.NaN, true);
+      if (asc.errorMessage != null) {
+        continuing = false;
+        return false;
+      }
       break;
     case 48:// NPOINTS
       nPeaks = PT.parseInt(value);
@@ -193,6 +198,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
           filePath, type, Rdr.getBR(data), htParams);
       if (ret instanceof String) {
         Logger.warn("" + ret);
+        if (((String) ret).startsWith(JC.READER_NOT_FOUND))
+          asc.errorMessage = (String) ret;
         break;
       }
       ret = SmarterJmolAdapter

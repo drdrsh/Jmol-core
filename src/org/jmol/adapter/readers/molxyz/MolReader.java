@@ -182,7 +182,7 @@ public class MolReader extends AtomSetCollectionReader {
       return;
     if (line.indexOf("V3000") >= 0) {
       is2D = (dimension.equals("2D"));
-      vr = ((V3000Rdr) Interface.getInterface("org.jmol.adapter.readers.molxyz.V3000Rdr")).set(this);
+      vr = ((V3000Rdr) Interface.getInterface("org.jmol.adapter.readers.molxyz.V3000Rdr", vwr, "file")).set(this);
       discardLinesUntilContains("COUNTS");
       vr.readAtomsAndBonds(getTokens());
     } else {

@@ -88,7 +88,7 @@ public class TransformManager {
   static TransformManager getTransformManager(Viewer vwr, int width,
                                               int height, boolean is4D) {
     TransformManager me = (is4D ? (TransformManager) Interface
-        .getInterface("org.jmol.viewer.TransformManager4D")
+        .getInterface("org.jmol.viewer.TransformManager4D", vwr, "tm")
         : new TransformManager());
     me.vwr = vwr;
     me.setScreenParameters(width, height, true, false, true, true);
@@ -1653,7 +1653,7 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
             float dSlab, float floatSecondsTotal, int fps) {
 
     movetoThread = (JmolThread) Interface
-        .getOption("thread.MoveToThread");
+        .getOption("thread.MoveToThread", vwr, "tm");
     movetoThread.setManager(this, vwr, new Object[] { dRot, dTrans,
         new float[] { dZoom, dSlab, floatSecondsTotal, fps } });
     if (floatSecondsTotal > 0)
@@ -1806,7 +1806,7 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
     try {
       if (movetoThread == null)
         movetoThread = (JmolThread) Interface
-            .getOption("thread.MoveToThread");
+            .getOption("thread.MoveToThread", vwr, "tm");
       int nSteps = movetoThread.setManager(this, vwr, new Object[] {
           center,
           matrixEnd,
@@ -2078,7 +2078,7 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
     if (spinOn) {
       if (spinThread == null) {
         spinThread = (JmolThread) Interface
-        .getOption("thread.SpinThread");
+        .getOption("thread.SpinThread", vwr, "tm");
         spinThread.setManager(this, vwr, new Object[] {
             Float.valueOf(endDegrees), endPositions, dihedralList,
             bsAtoms, isGesture ? Boolean.TRUE : null } );
@@ -2113,7 +2113,7 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
         navFps = 10;
       if (spinThread == null) {
         spinThread = (JmolThread) Interface
-            .getOption("thread.SpinThread");
+            .getOption("thread.SpinThread", vwr, "tm");
         spinThread.setManager(this, vwr, null);
         spinThread.start();
       }
@@ -2190,7 +2190,7 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
     }
     if (vibrationThread == null) {
       vibrationThread = (JmolThread) Interface
-          .getOption("thread.VibrationThread");
+          .getOption("thread.VibrationThread", vwr, "tm");
       vibrationThread.setManager(this, vwr, null);
       vibrationThread.start();
     }
@@ -2642,7 +2642,7 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
     if (nav != null)
       return true;
     nav = (JmolNavigatorInterface) Interface
-        .getOption("navigate.Navigator");
+        .getOption("navigate.Navigator", vwr, "tm");
     if (nav == null)
       return false;
     nav.set(this, vwr);

@@ -25,6 +25,8 @@ package org.jmol.jvxl.readers;
 
 
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.P3;
 import javajs.util.T3;
 
@@ -82,7 +84,7 @@ class AtomPropertyMapper extends AtomDataReader {
       if (params.mep_calcType >= 0)
         calcType = params.mep_calcType;
       mepCalc = (MepCalculationInterface) Interface.getOption("quantum."
-          + mepType + "Calculation");
+          + mepType + "Calculation", (Viewer) sg.getAtomDataServer(), "file");
     }
     if (!doSmoothProperty && maxDistance == Integer.MAX_VALUE)
       maxDistance = 5; // usually just local to a group

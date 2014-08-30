@@ -27,6 +27,7 @@ package org.jmol.jvxl.readers;
 import java.io.DataInputStream;
 import java.io.BufferedReader;
 
+import org.jmol.viewer.Viewer;
 import org.jmol.util.Logger;
 
 import javajs.util.Rdr;
@@ -57,7 +58,7 @@ class Dsn6BinaryReader extends MapFileReader {
     String fileName = (String) o2[0];
     String data = (String) o2[1];
     if (data == null)
-      binarydoc.setStream(sg.getAtomDataServer().getBufferedInputStream(fileName), true);
+      binarydoc.setStream(((Viewer)sg.getAtomDataServer()).getJzt(), sg.getAtomDataServer().getBufferedInputStream(fileName), true);
     else 
       binarydoc.setStreamData(new DataInputStream(Rdr.getBIS(data.getBytes())), true);
     // data are HIGH on the inside and LOW on the outside
@@ -81,7 +82,7 @@ class Dsn6BinaryReader extends MapFileReader {
     for (int i = 0; i < 19; i++)
       header[i] = binarydoc.readShort();
     if (header[18] != 100) {
-      binarydoc.setStream(null, false);
+      binarydoc.setStream(((Viewer)sg.getAtomDataServer()).getJzt(), null, false);
       for (int i = 0; i < 19; i++)
         header[i] = binarydoc.swapBytesS(header[i]);
     }

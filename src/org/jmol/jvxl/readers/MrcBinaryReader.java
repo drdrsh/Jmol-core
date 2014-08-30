@@ -55,7 +55,7 @@ class MrcBinaryReader extends MapFileReader {
     String fileName = (String) ((Object[]) sg.getReaderData())[0];
     init2MFR(sg, br);
     binarydoc = newBinaryDocument();
-    binarydoc.setStream(sg.getAtomDataServer().getBufferedInputStream(fileName), true);
+    setStream(fileName, true);
     // data are HIGH on the inside and LOW on the outside
     nSurfaces = 1; 
     if (params.thePlane == null)
@@ -119,7 +119,7 @@ class MrcBinaryReader extends MapFileReader {
 
     nx = binarydoc.readInt(); // CCP4 "extent[0-2]"
     if (nx < 0 || nx > 1<<8) {
-      binarydoc.setStream(null, false);
+      setStream(null, false);
       nx = binarydoc.swapBytesI(nx);
       if (params.thePlane == null)
         params.insideOut = !params.insideOut;
@@ -135,7 +135,7 @@ class MrcBinaryReader extends MapFileReader {
     mode = binarydoc.readInt();
 
     if (mode < 0 || mode > 6) {
-      binarydoc.setStream(null, false);
+      setStream(null, false);
       nx = binarydoc.swapBytesI(nx);
       ny = binarydoc.swapBytesI(ny);
       nz = binarydoc.swapBytesI(nz);

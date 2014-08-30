@@ -241,7 +241,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
   
   @Override
-  public void initialize(GenericPlatform apiPlatform) {
+  public void initialize(Viewer vwr, GenericPlatform apiPlatform) {
+    this.vwr = vwr;
     this.apiPlatform = apiPlatform;
     platform = new Platform3D(apiPlatform);
     graphicsForMetrics = platform.getGraphicsForMetrics();
@@ -275,7 +276,12 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
   
   private G3DRenderer getRenderer(String type) {
-    return ((G3DRenderer) Interface.getOption("g3d." + type + "Renderer")).set(this);
+    G3DRenderer r = ((G3DRenderer) Interface.getOption("g3d." + type
+        + "Renderer", vwr, "render"));
+    if (r == null)
+      throw new NullPointerException("Interface");
+    r.set(this);
+    return r;
   }
 
   @Override

@@ -166,7 +166,7 @@ public final class ModelLoader {
     isPDB = ms.isPDB = ms.getMSInfoB("isPDB");
     if (isPDB) {
       jbr = (JmolBioResolver) Interface
-          .getInterface("org.jmol.modelsetbio.Resolver");
+          .getInterface("org.jmol.modelsetbio.Resolver", vwr, "file");
       jbr.initialize(this);
     }
     jmolData = (String) ms.getInfoM("jmolData");
@@ -1012,7 +1012,7 @@ public final class ModelLoader {
         if (haveMergeCells && i < baseModelCount) {
           ms.unitCells[i] = mergeModelSet.unitCells[i];
         } else {
-          ms.unitCells[i] = Interface.getSymmetry();
+          ms.unitCells[i] = Interface.getSymmetry(vwr, "file");
           float[] notionalCell = null;
           if (isTrajectory) {
             @SuppressWarnings("unchecked")

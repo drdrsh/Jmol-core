@@ -31,6 +31,7 @@ import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolViewer;
 import org.jmol.c.CBK;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
 import org.openscience.jmol.app.jsonkiosk.BannerFrame;
 import org.openscience.jmol.app.jsonkiosk.JsonNioClient;
@@ -112,7 +113,7 @@ version=12.3.3_dev
  */
 public class MPJmolApp implements JsonNioClient {
 
-  protected JmolViewer jmolViewer;
+  protected Viewer viewer;
 
   private static int MP_VERSION = 1; // SET TO 2 if using Version 2 (AW 12/2011) 
   
@@ -141,7 +142,7 @@ public class MPJmolApp implements JsonNioClient {
       setBannerLabel("click below and type exitJmol[enter] to quit");
       String defaultScript = "set allowgestures;set allowKeyStrokes;set zoomLarge false;set frank off;set antialiasdisplay off;";
       
-      String script = "cd \"\"; " + jmolViewer.getFileAsString("MPJmolAppConfig.spt", false) + ";";
+      String script = "cd \"\"; " + viewer.getFileAsString3("MPJmolAppConfig.spt", false, null) + ";";
       Logger.info("startJsonNioKiosk on port " + port);
       Logger.info(script);
       if (script.indexOf("java.io") >= 0)
@@ -170,8 +171,8 @@ public class MPJmolApp implements JsonNioClient {
         script += "NIOmotionDisabled=false;";
       }
       Logger.info("startJsonNioKiosk: " + defaultScript + script);
-      jmolViewer.scriptWait(defaultScript + script);
-      contentDisabled = JmolViewer.getJmolValueAsString(jmolViewer, "NIOcontentDisabled").equals("true");
+      viewer.scriptWait(defaultScript + script);
+      contentDisabled = JmolViewer.getJmolValueAsString(viewer, "NIOcontentDisabled").equals("true");
       Logger.info("startJsonNioKiosk: contentDisabled=" + contentDisabled);
       
       service = JmolPanel.getJsonNioServer();
@@ -179,10 +180,10 @@ public class MPJmolApp implements JsonNioClient {
         Logger.info("Cannot start JsonNioServer");
         System.exit(1);
       }
-      service.startService(port, this, jmolViewer, "-MP", MP_VERSION);
+      service.startService(port, this, viewer, "-MP", MP_VERSION);
 
       // Bob's demo model -- verifies that system is working and networked properly
-      jmolViewer.script("load $caffeine");
+      viewer.script("load $caffeine");
 
     } catch (Throwable e) {
       e.printStackTrace();
@@ -200,11 +201,11 @@ public class MPJmolApp implements JsonNioClient {
   public synchronized void nioRunContent(JsonNioServer jns) {
     if (contentDisabled && (jns == null || !haveStarted)) {
       // needs to be run from the NIO thread, just once.
-      String script = (jns == null ? "; message testing nioRun2; cd \"\"; script \"" + JmolViewer.getJmolValueAsString(jmolViewer, "NIOcontentScript") + "\"" : "");
+      String script = (jns == null ? "; message testing nioRun2; cd \"\"; script \"" + JmolViewer.getJmolValueAsString(viewer, "NIOcontentScript") + "\"" : "");
       haveStarted = true;
-      script += ";cd \"\";cd;script \"" + JmolViewer.getJmolValueAsString(jmolViewer, "NIOcontentScript") + "\"";
+      script += ";cd \"\";cd;script \"" + JmolViewer.getJmolValueAsString(viewer, "NIOcontentScript") + "\"";
       System.out.println("nioRunContent " + Thread.currentThread() + " " + script);
-      jmolViewer.script(script);
+      viewer.script(script);
       System.out.println("nioRunContent done");
     }
   }
@@ -217,7 +218,7 @@ public class MPJmolApp implements JsonNioClient {
   @Override
   public void nioClosed(JsonNioServer jns) {
     try {
-      jmolViewer.dispose();
+      viewer.dispose();
       bannerFrame.dispose();
       kioskFrame.dispose();
     } catch (Throwable e) {
@@ -234,17 +235,17 @@ public class MPJmolApp implements JsonNioClient {
     private final Dimension currentSize = new Dimension();
 
     KioskPanel() {
-      jmolViewer = JmolViewer.allocateViewer(this, new SmarterJmolAdapter(),
+      viewer = (Viewer) JmolViewer.allocateViewer(this, new SmarterJmolAdapter(),
           null, null, null, ""/*-multitouch-mp"*/, null);
-      jmolViewer.setJmolCallbackListener(this);
+      viewer.setJmolCallbackListener(this);
       // turn off all file-writing capabilities
-      jmolViewer.setBooleanProperty("isKiosk", true);
+      viewer.setBooleanProperty("isKiosk", true);
     }
 
     @Override
     public void paint(Graphics g) {
       getSize(currentSize);
-      jmolViewer.renderScreenImage(g, currentSize.width, currentSize.height);
+      viewer.renderScreenImage(g, currentSize.width, currentSize.height);
     }
 
     // / JmolCallbackListener interface ///
@@ -277,7 +278,7 @@ public class MPJmolApp implements JsonNioClient {
 
     @Override
     public void notifyCallback(CBK type, Object[] data) {
-      if (service == null || jmolViewer == null)
+      if (service == null || viewer == null)
         return;
       String strInfo = (data == null || data[1] == null ? null : data[1]
           .toString());
@@ -287,7 +288,7 @@ public class MPJmolApp implements JsonNioClient {
       case ECHO:
         // could be terminator or message banner:...
         service.scriptCallback(strInfo);
-        JmolCallbackListener appConsole = (JmolCallbackListener) jmolViewer
+        JmolCallbackListener appConsole = (JmolCallbackListener) viewer
             .getProperty("DATA_API", "getAppConsole", null);
         if (appConsole != null)
           appConsole.notifyCallback(type, data);

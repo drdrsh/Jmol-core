@@ -36,6 +36,8 @@ import javajs.util.PT;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 
 public class Resolver {
@@ -55,6 +57,7 @@ public class Resolver {
              "VaspPoscar;Wien2k;Xcrysden;",
     "xml.",  ";XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
+  
 
   // Tinker is only as explicit Tinker::fileName.xyz
   
@@ -143,8 +146,8 @@ public class Resolver {
     String className = null;
     String err = null;
     className = getReaderClassBase(readerName);
-    if ((rdr = (AtomSetCollectionReader) Interface.getInterface(className)) == null) {
-      err = "File reader was not found:" + className;
+    if ((rdr = (AtomSetCollectionReader) Interface.getInterface(className, (Viewer) htParams.get("vwr"), "reader")) == null) {
+      err = JC.READER_NOT_FOUND  + className;
       Logger.error(err);
       return err;
     }
@@ -190,7 +193,7 @@ public class Resolver {
     htParams.put("readerName", rdrName);
     className = classBase + "xml.XmlReader";
     if ((rdr = (AtomSetCollectionReader) Interface
-        .getInterface(className)) != null)
+        .getInterface(className, (Viewer) htParams.get("vwr"), "file")) != null)
       return rdr;
     String err = "File reader was not found:" + className;
     Logger.error(err);

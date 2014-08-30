@@ -152,7 +152,6 @@ public abstract class JmolAdapter {
  * If the return value is <code>instanceof String</code> then it is
  * considered an error condition and the returned String is the error
  * message. 
- *
  * @param name File name, String or URL acting as the source of the reader
  * @param type File type, if known, or null
  * @param bufferedReader The BufferedReader
@@ -398,7 +397,6 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
   }
 
   abstract public Object getAtomSetCollectionFromReader(String fname,
-                                            Object reader,
-                                            Map<String, Object> htParams) throws Exception;
+                                            Object reader, Map<String, Object> htParams) throws Exception;
   
 }

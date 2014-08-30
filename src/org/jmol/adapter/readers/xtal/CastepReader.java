@@ -778,7 +778,7 @@ Species   Ion     s      p      d      f     Total  Charge (e)
           applySymmetryAndSetTrajectory();
         }
       }
-      symmetry = asc.getSymmetry();
+      symmetry = asc.getSymmetry(vwr);
       int iatom = asc.getLastAtomSetAtomIndex();
       float freq = freqs.get(i).floatValue();
       Atom[] atoms = asc.atoms;

@@ -14,6 +14,7 @@ import java.util.Map;
 import org.jmol.api.Interface;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 
 abstract public class Binding {
@@ -356,7 +357,7 @@ abstract public class Binding {
     return ((mouseAction & mod) == mod);
   }
   
-  public static Binding newBinding(String name) {
-    return (Binding) Interface.getInterface("org.jmol.viewer.binding." + name + "Binding");
+  public static Binding newBinding(Viewer vwr, String name) {
+    return (Binding) Interface.getInterface("org.jmol.viewer.binding." + name + "Binding", vwr, "script");
   }
 }

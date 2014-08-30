@@ -40,6 +40,8 @@ import org.jmol.java.BS;
 import javajs.util.P3;
 
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.V3;
 
 @SuppressWarnings("unchecked")
@@ -744,12 +746,12 @@ public class AtomSetCollection {
   public XtalSymmetry getXSymmetry() {
     if (xtalSymmetry == null)
       xtalSymmetry = ((XtalSymmetry) Interface
-          .getOption("adapter.smarter.XtalSymmetry")).set(reader);
+          .getOption("adapter.smarter.XtalSymmetry", reader.vwr, "file")).set(reader);
     return xtalSymmetry;
   }
 
-  public SymmetryInterface getSymmetry() {
-    return getXSymmetry().getSymmetry();
+  public SymmetryInterface getSymmetry(Viewer vwr) {
+    return getXSymmetry().getSymmetry(vwr);
   }
 
   public SymmetryInterface setSymmetry(SymmetryInterface symmetry) {

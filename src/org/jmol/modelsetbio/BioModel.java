@@ -137,7 +137,7 @@ public final class BioModel extends Model{
     
     String s = "";
     if (haveProt)
-      s += ((DSSPInterface) Interface.getOption("dssx.DSSP"))
+      s += ((DSSPInterface) Interface.getOption("dssx.DSSP", ms.vwr, "ms"))
         .calculateDssp(bioPolymers, bioPolymerCount, vHBonds, doReport,
             dsspIgnoreHydrogen, setStructure);
     if (haveNucl && auxiliaryInfo.containsKey("dssr") && vHBonds != null)
@@ -723,7 +723,7 @@ public final class BioModel extends Model{
     String info = (String) auxiliaryInfo.get("fileHeader");
     if (info != null)
       return info;
-    info = ms.vwr.getCurrentFileAsString();
+    info = ms.vwr.getCurrentFileAsString("biomodel");
     int ichMin = info.length();
     for (int i = pdbRecords.length; --i >= 0;) {
       int ichFound;

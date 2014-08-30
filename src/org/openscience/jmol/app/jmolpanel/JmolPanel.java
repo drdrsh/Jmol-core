@@ -1694,7 +1694,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   public static JsonNioServer getJsonNioServer() {
     return (JsonNioServer) Interface
-        .getInterface("org.openscience.jmol.app.jsonkiosk.JsonNioService");
+        .getInterface("org.openscience.jmol.app.jsonkiosk.JsonNioService", null, null);
   }
 
   private class AnimButton extends JmolButton implements MouseListener {

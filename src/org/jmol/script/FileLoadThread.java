@@ -85,15 +85,19 @@ class FileLoadThread extends JmolThread {
    * to set the file name.
    * 
    * @param fileName
+   * @param fileName0 
    * @param data
    * @param myData unused in Jmol
    * @throws InterruptedException
    */
-  void setData(String fileName, Object data, Object myData) throws InterruptedException {
+  void setData(String fileName, String fileName0, Object data, Object myData) throws InterruptedException {
     if (fileName != null)
       sc.parentContext.htFileCache.put(key, cacheName = cacheName.substring(0, 
           cacheName.lastIndexOf("_") + 1) + fileName);
     vwr.cachePut(cacheName, data);
+    if (fileName0 != null)
+      vwr.cachePut(fileName, data);
     run1(FINISH);
-  }   
+  }
+  
 }

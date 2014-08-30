@@ -103,7 +103,7 @@ public class FileReader {
         InputStream zis = (InputStream) t;
         String[] zipDirectory = fm.getZipDirectory(name, true, true);
         atomSetCollection = t = JmolBinary
-            .getAtomSetCollectionOrBufferedReaderFromZip(vwr
+            .getAtomSetCollectionOrBufferedReaderFromZip(vwr, vwr
                 .getModelAdapter(), zis, name, zipDirectory, htParams, false);
         try {
           zis.close();
@@ -114,8 +114,8 @@ public class FileReader {
     }
     if (t instanceof BufferedInputStream) {
       GenericBinaryDocument bd = (GenericBinaryDocument) Interface
-          .getInterface("javajs.util.BinaryDocument");
-      bd.setStream((BufferedInputStream) t, true);
+          .getInterface("javajs.util.BinaryDocument", vwr, "file");
+      bd.setStream(vwr.getJzt(), (BufferedInputStream) t, true);
       reader = bd;
     }
     if (reader != null) {

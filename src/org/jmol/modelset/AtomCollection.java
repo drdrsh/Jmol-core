@@ -214,7 +214,7 @@ abstract public class AtomCollection {
   public LabelToken getLabeler() {
     // prevents JavaScript from requiring LabelToken upon core load
     // will be abbreviated to JM., so don't use getOption here.
-    return (labeler == null ? labeler = (LabelToken) Interface.getInterface("org.jmol.modelset.LabelToken") : labeler);
+    return (labeler == null ? labeler = (LabelToken) Interface.getInterface("org.jmol.modelset.LabelToken", vwr, "ms") : labeler);
   }
 
   public String getAtomInfo(int i, String format, P3 ptTemp) {
@@ -411,7 +411,7 @@ abstract public class AtomCollection {
     if (envelopeRadius < 0)
       envelopeRadius = JC.ENC_CALC_MAX_DIST;
     
-    JmolEnvCalc ec = ((JmolEnvCalc) Interface.getOption("geodesic.EnvelopeCalculation"))
+    JmolEnvCalc ec = ((JmolEnvCalc) Interface.getOption("geodesic.EnvelopeCalculation", vwr, "ms"))
     .set(vwr, ac, null);
     ec.calculate(new RadiusData(null, envelopeRadius, EnumType.ABSOLUTE, null), 
         Float.MAX_VALUE, 

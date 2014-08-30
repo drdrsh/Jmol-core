@@ -10,7 +10,7 @@ import javajs.util.SB;
 
 public interface GenericBinaryDocument {
 
-  void setStream(BufferedInputStream bis, boolean isBigEndian);
+  void setStream(GenericZipTools jzt, BufferedInputStream bis, boolean isBigEndian);
 
   void setStreamData(DataInputStream dataInputStream, boolean isBigEndian);
 

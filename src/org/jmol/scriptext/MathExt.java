@@ -517,8 +517,10 @@ public class MathExt implements JmolMathExtension {
       } else {
         ptsA = e.getPointVector(args[0], 0);
         ptsB = e.getPointVector(args[1], 0);
-        if (ptsA != null && ptsB != null)
+        if (ptsA != null && ptsB != null) {
+          Interface.getInterface("javajs.util.Eigen", vwr, "script");
           stddev = Measure.getTransformMatrix4(ptsA, ptsB, m, null);
+        }
       }
       return (isStdDev || Float.isNaN(stddev) ? mp.addXFloat(stddev) : mp
           .addXM4(m));
@@ -1280,7 +1282,7 @@ public class MathExt implements JmolMathExtension {
     String file;
     int nBytesMax = -1;
     boolean asBytes = false;
-    boolean async = false;
+    boolean async = vwr.async;
     switch (args.length) {
     case 3:
       async = SV.bValue(args[2]);
@@ -1311,7 +1313,7 @@ public class MathExt implements JmolMathExtension {
       // x = (i++) + load("?") would increment i twice.
     }
     return mp.addXStr(isFile ? vwr.getFilePath(file, false) : vwr
-        .getFileAsString4(file, nBytesMax, false, false, true));
+        .getFileAsString4(file, nBytesMax, false, false, true, "script"));
   }
 
   private boolean evaluateMath(ScriptMathProcessor mp, SV[] args, int tok) {
@@ -2651,7 +2653,7 @@ public class MathExt implements JmolMathExtension {
 
   private JmolPatternMatcher getPatternMatcher() {
     return (pm == null ? pm = (JmolPatternMatcher) Interface
-        .getUtil("PatternMatcher") : pm);
+        .getUtil("PatternMatcher", e.vwr, "script") : pm);
   }
 
   private T opTokenFor(int tok) {

@@ -145,7 +145,7 @@ public class ZipTools implements GenericZipTools {
    * @return directory listing or subfile contents
    */
   @Override
-  public Object getZipFileDirectory(BufferedInputStream bis, String[] list,
+  public Object getZipFileDirectory(GenericZipTools jzt, BufferedInputStream bis, String[] list,
                                     int listPtr, boolean asBufferedInputStream) {
      SB ret;
      if (list == null || listPtr >= list.length)
@@ -183,7 +183,7 @@ public class ZipTools implements GenericZipTools {
        if (bytes == null)
          return "";
        if (Rdr.isZipB(bytes) || Rdr.isPngZipB(bytes))
-         return getZipFileDirectory(Rdr.getBIS(bytes), list,
+         return getZipFileDirectory(jzt, Rdr.getBIS(bytes), list,
              ++listPtr, asBufferedInputStream);
        if (asBufferedInputStream)
          return Rdr.getBIS(bytes);
@@ -195,7 +195,7 @@ public class ZipTools implements GenericZipTools {
        }
        if (Rdr.isGzipB(bytes))
          bytes = Rdr.getLimitedStreamBytes(
-             getUnGzippedInputStream(bytes), -1);
+             getUnGzippedInputStream(jzt, bytes), -1);
        return Rdr.fixUTF(bytes);
      } catch (Exception e) {
        return "";
@@ -283,10 +283,9 @@ public class ZipTools implements GenericZipTools {
     return new BufferedInputStream(new GZIPInputStream(is, 512));
   }
 
-  public static BufferedInputStream getUnGzippedInputStream(byte[] bytes) {
+  public static BufferedInputStream getUnGzippedInputStream(GenericZipTools jzt, byte[] bytes) {
     try {
-      return Rdr
-          .getUnzippedInputStream(Rdr.getBIS(bytes));
+      return Rdr.getUnzippedInputStream(jzt, Rdr.getBIS(bytes));
     } catch (Exception e) {
       return null;
     }

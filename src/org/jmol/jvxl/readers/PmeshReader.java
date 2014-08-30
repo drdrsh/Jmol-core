@@ -140,8 +140,7 @@ class PmeshReader extends PolygonFileReader {
       if ((new String(buf)).startsWith(JmolBinary.PMESH_BINARY_MAGIC_NUMBER)) {
         br.close();
         binarydoc = newBinaryDocument();
-        binarydoc.setStream(sg.getAtomDataServer().getBufferedInputStream(
-            fileName), (buf[4] == '\0'));
+        setStream(fileName, (buf[4] == '\0'));
         return true;
       }
       br.reset();

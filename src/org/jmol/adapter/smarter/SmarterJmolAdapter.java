@@ -119,8 +119,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
 
   @Override
   public Object getAtomSetCollectionFromReader(String fname,
-                                            Object reader,
-                                            Map<String, Object> htParams) throws Exception {
+                                            Object reader, Map<String, Object> htParams) throws Exception {
     Object ret = Resolver.getAtomCollectionReader(fname, null, reader,
         htParams, -1);
     if (ret instanceof AtomSetCollectionReader) {
@@ -200,7 +199,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
     if (htParams.containsKey("concatenate")) {
       String s = "";
       for (int i = 0; i < size; i++) {
-        String f = vwr.getFileAsString(names[i], false);
+        String f = vwr.getFileAsString3(names[i], false, null);
         if (i > 0 && size <= 3 && f.startsWith("{")) {
           // JSON domains and validations; could have both
           // hack to determine type:

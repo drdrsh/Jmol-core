@@ -16,15 +16,15 @@ public interface JmolZipUtilities {
 
   public String determineSurfaceFileType(BufferedReader br);
 
-  public Object getAtomSetCollectionOrBufferedReaderFromZip(GenericZipTools zpt, JmolAdapter adapter,
+  public Object getAtomSetCollectionOrBufferedReaderFromZip(Viewer vwr, GenericZipTools zpt,
+                                                            JmolAdapter adapter,
                                                             InputStream is,
                                                             String fileName,
                                                             String[] zipDirectory,
                                                             Map<String, Object> htParams,
-                                                            int i,
-                                                            boolean asBufferedReader);
+                                                            int i, boolean asBufferedReader);
 
-  public byte[] getCachedPngjBytes(JmolBinary jmb, String pathName);
+  public byte[] getCachedPngjBytes(Viewer vwr, JmolBinary jmb, String pathName);
 
   public String[] spartanFileList(GenericZipTools zpt, String name, String zipDirectory);
 

@@ -118,7 +118,7 @@ ICNTRL(20)=VERNUM ! version number
     // read DCD header
     
     int n = binaryDoc.readInt(); 
-    binaryDoc.setStream(null, n != 0x54);
+    binaryDoc.setStream(vwr.getJzt(), null, n != 0x54);
     n = binaryDoc.readInt(); // "CORD"
     nModels = binaryDoc.readInt();
     /* int nPriv = */ binaryDoc.readInt();

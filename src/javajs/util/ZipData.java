@@ -27,6 +27,8 @@ package javajs.util;
 
 import java.io.BufferedInputStream;
 
+import javajs.api.GenericZipTools;
+
 
 
 
@@ -54,13 +56,13 @@ public class ZipData {
     return nBytesRemaining - nToAdd;
   }    
 
-  public void addTo(SB data) {
-    data.append(getGzippedBytesAsString(buf));
+  public void addTo(GenericZipTools jzt, SB data) {
+    data.append(getGzippedBytesAsString(jzt, buf));
   }
 
-  static String getGzippedBytesAsString(byte[] bytes) {
+  static String getGzippedBytesAsString(GenericZipTools jzt, byte[] bytes) {
     try {
-      BufferedInputStream bis = ZipTools.getUnGzippedInputStream(bytes);
+      BufferedInputStream bis = ZipTools.getUnGzippedInputStream(jzt, bytes);
       String s = ZipTools.getStreamAsString(bis);
       bis.close();
       return s;

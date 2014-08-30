@@ -904,9 +904,9 @@ public class IsosurfaceMesh extends Mesh {
   }
 
   @Override
-  public SymmetryInterface getUnitCell() {
+  public SymmetryInterface getUnitCell(Viewer vwr) {
     return (spanningVectors == null ? null :
-    Interface.getSymmetry().getUnitCell(spanningVectors, true, null));
+    Interface.getSymmetry(vwr, "symmetry").getUnitCell(spanningVectors, true, null));
   }
 
   /**

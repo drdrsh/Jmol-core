@@ -67,7 +67,7 @@ public class Export3D implements JmolRendererInterface {
                                    GData gdata, Map<String, Object> params) {
     exportName = (String) params.get("type");
     isWebGL = exportName.equals("JS");
-    if ((exporter = (___Exporter) Interface.getOption("export." + (isWebGL ? "" : "_") + exportName + "Exporter")) == null)
+    if ((exporter = (___Exporter) Interface.getOption("export." + (isWebGL ? "" : "_") + exportName + "Exporter", vwr, "export")) == null)
       return null;
     g3d = gdata;
     exporter.setRenderer(this);

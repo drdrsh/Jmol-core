@@ -567,8 +567,8 @@ public class PropertyManager implements JmolPropertyManager {
       return vwr.getFileHeader();
     case PROP_FILECONTENTS:
     case PROP_FILECONTENTS_PATH:
-      return (iHaveParameter ? vwr.getFileAsString(myParam.toString(), true)
-          : vwr.getCurrentFileAsString());
+      return (iHaveParameter ? vwr.getFileAsString3(myParam.toString(), true, null)
+          : vwr.getCurrentFileAsString("prop"));
     case PROP_IMAGE:
       String params = myParam.toString().toLowerCase();
       return getImage(params,
@@ -1921,7 +1921,7 @@ public class PropertyManager implements JmolPropertyManager {
     if (nAtoms == 0)
       return "";
     // creating an instance prevents pre-loading by JavaScript
-    Interface.getInterface("javajs.util.XmlUtil");
+    Interface.getInterface("javajs.util.XmlUtil", vwr, "file");
     XmlUtil.openTag(sb, "molecule");
     XmlUtil.openTag(sb, "atomArray");
     BS bsAtoms = new BS();

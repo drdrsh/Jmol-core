@@ -10,6 +10,7 @@ import javajs.util.Lst;
 import javajs.util.P3;
 
 import org.jmol.util.Tensor;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.M3;
 import javajs.util.M4;
@@ -98,8 +99,6 @@ public interface SymmetryInterface {
   public String getSymmetryInfoStr();
 
   public M4[] getSymmetryOperations();
-
-  public Tensor getTensor(float[] parBorU);
 
   public float getSpinOp(int op);
 
@@ -191,5 +190,7 @@ public interface SymmetryInterface {
   public T3[] getV0abc(Object def);
 
   public Quat getQuaternionRotation(String abc);
+
+  public Tensor getTensor(Viewer vwr, float[] anisoBorU);
 
 }

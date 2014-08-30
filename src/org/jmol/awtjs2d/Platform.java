@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.net.URL;
 
 import org.jmol.api.Interface;
+import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericPlatform;
 import javajs.api.GenericFileInterface;
@@ -105,7 +106,7 @@ public class Platform implements GenericPlatform {
                                          char type) {
     String c = (type == 'j' ? "awtjs2d.JmolJSPopup" : "awtjs2d.JSModelKitPopup");
     GenericMenuInterface jmolpopup = (GenericMenuInterface) Interface
-        .getOption(c);
+        .getOption(c, (Viewer) vwr, "popup");
     try {
       if (jmolpopup != null)
         jmolpopup.jpiInitialize(vwr, menuStructure);
