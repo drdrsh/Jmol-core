@@ -38,7 +38,6 @@ import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
-import org.jmol.api.Interface;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
