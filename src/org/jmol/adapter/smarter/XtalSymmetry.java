@@ -75,7 +75,7 @@ public class XtalSymmetry {
   public SymmetryInterface symmetry;
 
   SymmetryInterface getSymmetry() {
-    return (symmetry == null ?(Symmetry) acr.getInterface("org.jmol.symmetry.Symmetry") : symmetry);
+    return (symmetry == null ?(symmetry = (Symmetry) acr.getInterface("org.jmol.symmetry.Symmetry")) : symmetry);
   }
 
   SymmetryInterface setSymmetry(SymmetryInterface symmetry) {

@@ -7,7 +7,6 @@ import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.V3;
 
-import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.util.Logger;

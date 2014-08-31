@@ -435,7 +435,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
       }
     }
     if (vTlsModels != null) {
-      symmetry = ((Symmetry) getInterface("org.jmol.symmetry.Symmetry"));
+      symmetry = (Symmetry) getInterface("org.jmol.symmetry.Symmetry");
       int n = asc.atomSetCount;
       if (n == vTlsModels.size()) {
         for (int i = n; --i >= 0;)
