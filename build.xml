@@ -81,12 +81,12 @@ Bob Hanson hansonr@stolaf.edu 11/26/2013
 	      <comment value="#" />
 	    </striplinecomments>
 	    <linecontains>
-	      <contains value="___" />
+	      <contains value="Jmol.___" />
 	    </linecontains>
 	  </filterchain>
 	</copy>
   <property file="Jmol.properties" prefix="Jmol.properties" />
-  <property name="version" value="${Jmol.properties.___JmolVersion}" />
+  <property name="version" value="${Jmol.properties.Jmol.___JmolVersion}" />
   <propertyregex property="version"
   			  override = "true"
 	          input="${version}"
