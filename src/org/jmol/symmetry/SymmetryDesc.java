@@ -189,9 +189,7 @@ public class SymmetryDesc {
     // axis, and the
     // symop(sym,{0 0 0}) function will return the overall translation.
 
-    T3[] info = Measure.computeHelicalAxis(
-        pta00,
-        pt0,
+    T3[] info = Measure.computeHelicalAxis(pta00, pt0,
         Quat.getQuaternionFrame(pt0, pt1, pt2).div(
             Quat.getQuaternionFrame(pta00, pta01, pta02)));
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
@@ -473,8 +471,6 @@ public class SymmetryDesc {
 
     // check for drawing
 
-    SB draw1 = new SB();
-
     if (id != null) {
 
       String drawid;
@@ -483,7 +479,8 @@ public class SymmetryDesc {
 
       // delete previous elements of this user-settable ID
 
-      draw1 = new SB();
+      SB draw1 = new SB();
+
       draw1
           .append(
               ("// " + op.xyzOriginal + "|" + xyzNew + "|" + info1).replace(
@@ -504,7 +501,7 @@ public class SymmetryDesc {
         color = "red";
 
         ang = ang1;
-        float scale = 1.0f;
+        float scale = 1f; 
         vtemp.setT(ax1);
 
         // draw the lines associated with a rotation
@@ -563,7 +560,7 @@ public class SymmetryDesc {
               .append(Escape.eP(pt0)).append(" color red");
         }
         draw1.append(drawid)
-            .append("rotRotArrow arrow width 0.10 scale " + scale + " arc ")
+            .append("rotRotArrow arrow width 0.10 scale " + PT.escF(scale) + " arc ")
             .append(Escape.eP(ptr)).append(Escape.eP(ptemp));
         ptemp.setT(haveInversion ? ptinv : pta00);
         if (ptemp.distance(pt0) < 0.1f)
@@ -720,7 +717,7 @@ public class SymmetryDesc {
           .append(Escape.eP(vt3)).append("*0.9} color purple");
       draw1.append("\n}\n");
       cmds = draw1.toString();
-      draw1 = null;
+      draw1 = null; 
       drawid = null;
     }
     if (trans == null)

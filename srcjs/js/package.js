@@ -19,7 +19,7 @@ if (!window["java.registered"])
   if (Jmol._debugCode)
     return;
 
-	var	base = ClazzLoader.fastGetJ2SLibBase() + "core/";
+	var	base = ClazzLoader.getJ2SLibBase() + "core/";
 
 
 // note - we don't need to list ALL the classes -- only the ones that are entry points.
