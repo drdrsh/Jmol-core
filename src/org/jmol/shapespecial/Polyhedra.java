@@ -570,8 +570,12 @@ public class Polyhedra extends AtomShape {
      */
     for (int i = polyhedronCount; --i >= 0;) {
       Polyhedron p = polyhedrons[i];
-      p.visibilityFlags = (p.visible && bsModels.get(p.modelIndex)
-          && !ms.isAtomHidden(p.centralAtom.i) ? vf
+      if (ms.at[p.centralAtom.i].isDeleted())
+        p.isValid = false;
+      p.visibilityFlags = (p.visible 
+          && bsModels.get(p.modelIndex)
+          && !ms.isAtomHidden(p.centralAtom.i) 
+          && !ms.at[p.centralAtom.i].isDeleted() ? vf
           : 0);
     }
   }
@@ -582,7 +586,8 @@ public class Polyhedra extends AtomShape {
       return "";
     SB s = new SB();
     for (int i = 0; i < polyhedronCount; i++)
-      s.append(polyhedrons[i].getState());
+      if (polyhedrons[i].isValid)
+        s.append(polyhedrons[i].getState());
     if (drawEdges == EDGES_FRONT)
       appendCmd(s, "polyhedra frontedges");
     else if (drawEdges == EDGES_ALL)

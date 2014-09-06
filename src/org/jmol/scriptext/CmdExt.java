@@ -2235,8 +2235,10 @@ public class CmdExt implements JmolCmdExtension {
         }
         eval.checkLast(eval.iToken);
         if (!chk) {
-          String s = (String) vwr.getSymmetryInfo(bsAtoms, xyz, iSym,
+          String s = (String) vwr.getSymmetryInfoAtom(bsAtoms, xyz, iSym,
               center, target, thisId, T.draw);
+          if (Logger.debugging)
+            Logger.debug(s);
           eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId + "*\" delete");
         }
         return false;
@@ -5774,7 +5776,7 @@ public class CmdExt implements JmolCmdExtension {
       //       within a TRY/CATCH block in JavaScript, and
       //       the code will block. 
       se.allowJSThreads = false;
-      se.dispatchCommands(false, false);
+      se.dispatchCommands(false, false, false);
     } catch (Exception ex) {
       e.vwr.setStringProperty("_errormessage", "" + ex);
       if (se.thisContext == null) {
@@ -6508,7 +6510,8 @@ public class CmdExt implements JmolCmdExtension {
           : null);
       checkLength(len = ++e.iToken);
       if (!chk)
-        msg = vwr.getSymmetryOperation(iop, pt1, pt2, type);
+        msg = vwr.ms.getSymTemp(true).getSymmetryInfoString(vwr.ms, vwr.am.cmi,
+          iop, pt1, pt2, null, type);
       break;
     case T.vanderwaals:
       VDW vdwType = null;

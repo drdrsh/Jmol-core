@@ -331,7 +331,7 @@ public class NucleicMonomer extends PhosphorusMonomer {
   
   public void setModelClickability() {
     Atom atom;
-    if (isAtomHidden(leadAtomIndex))
+    if (chain.model.ms.isAtomHidden(leadAtomIndex))
       return;
     for (int i = 6; --i >= 0;) {
       atom = getAtomFromOffsetIndex(ring6OffsetIndexes[i]);

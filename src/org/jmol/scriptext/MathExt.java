@@ -2165,7 +2165,7 @@ public class MathExt implements JmolMathExtension {
     int iOp = (xyz == null ? args[0].asInt() : 0);
     P3 pt = (args.length > 1 ? mp.ptValue(args[1], true) : null);
     if (args.length == 2 && !Float.isNaN(pt.x))
-      return mp.addXObj(vwr.getSymmetryInfo(bs, xyz, iOp, pt, null, null,
+      return mp.addXObj(vwr.getSymmetryInfoAtom(bs, xyz, iOp, pt, null, null,
           T.point));
     String desc = (args.length == 1 ? "" : SV.sValue(args[args.length - 1]))
         .toLowerCase();
@@ -2192,7 +2192,7 @@ public class MathExt implements JmolMathExtension {
       tok = T.center;
     }
     return mp
-        .addXObj(vwr.getSymmetryInfo(bs, xyz, iOp, pt, null, desc, tok));
+        .addXObj(vwr.getSymmetryInfoAtom(bs, xyz, iOp, pt, null, desc, tok));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

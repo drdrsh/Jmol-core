@@ -49,7 +49,6 @@ import java.util.Properties;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolPropertyManager;
-import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
@@ -876,30 +875,6 @@ public class PropertyManager implements JmolPropertyManager {
     return info;
   }
 
-  @Override
-  public Object getSymmetryInfo(BS bsAtoms, String xyz, int op, P3 pt,
-                                P3 pt2, String id, int type) {
-    int iModel = -1;
-    if (bsAtoms == null) {
-      iModel = vwr.am.cmi;
-      if (iModel < 0)
-        return "";
-      bsAtoms = vwr.getModelUndeletedAtomsBitSet(iModel);
-    }
-    int iAtom = bsAtoms.nextSetBit(0);
-    if (iAtom < 0)
-      return "";
-    iModel = vwr.ms.at[iAtom].mi;
-    SymmetryInterface uc = vwr.ms.am[iModel].biosymmetry;
-    if (uc == null)
-      uc = vwr.ms.getUnitCell(iModel);
-    if (uc == null)
-      return "";
-    return uc.getSymmetryInfo(vwr.ms, iModel, iAtom, uc, xyz, op, pt,
-        pt2, id, type);
-  }
-
-  
   @Override
   public String getModelExtract(BS bs, boolean doTransform,
                                 boolean isModelKit, String type) {

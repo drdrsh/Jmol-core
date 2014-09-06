@@ -104,8 +104,6 @@ final public class Measure {
    */
   public static T3[] computeHelicalAxis(P3 a, P3 b, Quat dq) {
     
-    // TODO: Needs double checking after refactoring of 7/9/2014
-    
     //                b
     //           |   /|
     //           |  / |
@@ -138,10 +136,9 @@ final public class Measure {
       va_prime_d.normalize();
     V3 vda = new V3();
     V3 vcb = V3.newV(n);
-    if (v_dot_n == 0) {
+    if (v_dot_n == 0)
       v_dot_n = PT.FLOAT_MIN_SAFE; // allow for perpendicular axis to vab
-      vcb.scale(v_dot_n);
-    }
+    vcb.scale(v_dot_n);
     vda.sub2(vcb, vab);
     vda.scale(0.5f);
     va_prime_d.scale(theta == 0 ? 0 : (float) (vda.length() / Math.tan(theta
@@ -151,9 +148,9 @@ final public class Measure {
       r.add(vda);
     P3 pt_a_prime = P3.newP(a);
     pt_a_prime.sub(r);
-    // already done this.
-    //if (v_dot_n != PT.FLOAT_MIN_SAFE)
-      //n.scale(v_dot_n);
+    // already done this. ??
+    if (v_dot_n != PT.FLOAT_MIN_SAFE)
+      n.scale(v_dot_n);
     // must calculate directed angle:
     P3 pt_b_prime = P3.newP(pt_a_prime);
     pt_b_prime.add(n);

@@ -23,6 +23,7 @@ public class Polyhedron {
   boolean collapsed = false;
   float faceCenterOffset, distanceFactor;
   boolean isFullyLit;
+  public boolean isValid = true;
 
   Polyhedron(Atom centralAtom, int ptCenter, int nPoints, int planeCount,
       P3[] otherAtoms, short[] normixes, byte[] planes, boolean collapsed, float faceCenterOffset, float distanceFactor) {

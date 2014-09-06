@@ -283,10 +283,6 @@ public class Group {
     return chain.model.ms.isCursorOnTopOf(atom , x, y, radius, champ);
   }
   
-  protected boolean isAtomHidden(int atomIndex) {
-    return chain.model.ms.isAtomHidden(atomIndex);
-  }
-
   /**
    * BE CAREFUL: FAILURE TO NULL REFERENCES TO model WILL PREVENT FINALIZATION
    * AND CREATE A MEMORY LEAK.

@@ -2439,11 +2439,11 @@ import java.util.Properties;
       return null;
     Object annotv = cache.get(key);
     if (annotv == null && ann != null) {
-      annotv = (ann instanceof SV ? ann 
-          : vwr.evaluateExpressionAsVariable(ann));
+      annotv = (ann instanceof SV || ann instanceof Hashtable ? ann
+              : vwr.evaluateExpressionAsVariable(ann));
       cache.put(key, annotv);
     }
-    return (annotv instanceof SV ? annotv : null);
+    return (annotv instanceof SV || annotv instanceof Hashtable ? annotv : null);
   }
 
   private boolean isInLatticeCell(int i, P3 cell, P3 ptTemp, boolean isAbsolute) {

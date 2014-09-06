@@ -73,10 +73,7 @@ public interface SymmetryInterface {
 
   public Object getSpaceGroup();
 
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, int modelIndex,
-                                               String spaceGroup, int symOp,
-                                               P3 pt1, P3 pt2,
-                                               String drawID, String type);
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup);
 
   public String getSpaceGroupInfoStr(String name, SymmetryInterface cellInfo);
 
@@ -168,6 +165,9 @@ public interface SymmetryInterface {
   public void setSpaceGroupFrom(SymmetryInterface symmetry);
 
   public void setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, float[] notionalCell);
+
+  public Object getSymmetryInfoAtom(ModelSet ms, BS bsAtoms, String xyz, int op,
+                                    P3 pt, P3 pt2, String id, int type);
 
   public void setTimeReversal(int op, int val);
 

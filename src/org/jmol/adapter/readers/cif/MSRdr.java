@@ -222,6 +222,8 @@ public class MSRdr implements MSInterface {
 
   private SymmetryInterface symmetry, supercellSymmetry;
 
+  private Lst<String> legendres;
+
   public MSRdr() {
     // for reflection from Jana
   }
@@ -302,6 +304,11 @@ public class MSRdr implements MSInterface {
       map = htModulation;
     if (id.indexOf("@") < 0)
       id += "@" + (iModel >= 0 ? iModel : cr.asc.iSet);
+    if (id.startsWith("D_L#")) {
+      if (legendres == null)
+        legendres = new Lst<String>();
+      legendres.addLast(id);
+    }
     Logger.info("Adding " + id + " " + Escape.e(pt));
     map.put(id, pt);
   }
@@ -432,6 +439,9 @@ public class MSRdr implements MSInterface {
     // we allow an unlimited number of wave vectors in the form of a matrix
     // along with their lengths as an array.
 
+    if (legendres != null)
+      fixLegendre();
+
     sigma = new Matrix(null, modDim, 3);
     qs = null;
 
@@ -439,18 +449,19 @@ public class MSRdr implements MSInterface {
 
     // we should have W_1, W_2, W_3 up to the modulation dimension
 
+    double[] pt;
     for (int i = 0; i < modDim; i++) {
-      double[] pt = getMod("W_" + (i + 1));
+      pt = getMod("W_" + (i + 1));
       if (pt == null) {
         Logger.info("Not enough cell wave vectors for d=" + modDim);
         return;
       }
       fixDouble(pt);
       cr.appendLoadNote("W_" + (i + 1) + " = " + Escape.e(pt));
-      cr.appendUunitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " " + pt[2]);
+      cr.appendUunitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " "
+          + pt[2]);
       sigma.getArray()[i] = new double[] { pt[0], pt[1], pt[2] };
     }
-    double[] pt;
 
     // Take care of loose ends.
     // O: occupation   (set haveOccupancy; set a cos(theta) + b sin(theta) format)
@@ -458,7 +469,6 @@ public class MSRdr implements MSInterface {
     // U: anisotropy   (no issues)
     // W: primary wave vector (see F if dim > 1)
     // F: Jana-type wave vector, referencing W vectors (set pt to coefficients, including harmonics)
-
     Map<String, double[]> map = new Hashtable<String, double[]>();
     for (Entry<String, double[]> e : htModulation.entrySet()) {
       if ((key = checkKey(e.getKey(), false)) == null)
@@ -472,7 +482,7 @@ public class MSRdr implements MSInterface {
       case 'M':
       case 'U':
         // fix modulus/phase option only for non-special modulations;
-        if (pt[2] == 1 && key.charAt(2) != 'S' && key.charAt(2) != 'T') {
+        if (pt[2] == 1 && key.charAt(2) != 'S' && key.charAt(2) != 'T' && key.charAt(2) != 'L') {
           int ipt = key.indexOf("?");
           if (ipt >= 0) {
             String s = key.substring(ipt + 1);
@@ -568,14 +578,39 @@ public class MSRdr implements MSInterface {
           p[i] = params[i];
         double[] qcoefs = getQCoefs(key);
         if (qcoefs == null)
-            throw new Exception("Missing cell wave vector for atom wave vector for " + key + " " + Escape.e(params));
+          throw new Exception(
+              "Missing cell wave vector for atom wave vector for " + key + " "
+                  + Escape.e(params));
         addAtomModulation(atomName, axis, type, p, utens, qcoefs);
         haveAtomMods = true;
         break;
       }
     }
   }
+  
+  /*
+   * find Legendre parameters and merge with corresponding Crenel methods 
+   */
 
+  private void fixLegendre() {
+    for (int i = legendres.size(); --i >= 0;) {
+      String key = legendres.get(i);
+      double[] pt = htModulation.get(key);
+      if (pt != null) {
+        // look for corresponding crenel so that we can combine them.
+        String key1 = "O_0#0" + key.substring(5);
+        double[] pt1 = htModulation.get(key1);
+        if (pt1 == null) {
+          Logger.error("Crenel " + key1 + " not found for legendre modulation " + key);
+          pt[2] = Float.NaN;
+        } else {
+          htModulation.put(key, new double[] { pt1[0], pt1[1], pt[0], pt[1] });
+        }
+      }
+      break;
+    }
+  }
+        
   private void fixDouble(double[] pt) {
     if (cr.fixJavaFloat)
       for (int i = pt.length; --i >= 0;)
@@ -597,15 +632,19 @@ public class MSRdr implements MSInterface {
 
   @Override
   public char getModType(String key) {
+    // key = "type_id"
     char type = key.charAt(0);
     char id = key.charAt(2);
     return  (id == 'S' ? Modulation.TYPE_DISP_SAWTOOTH
         : id == 'T' ? Modulation.TYPE_SPIN_SAWTOOTH
+        : id == 'L' ? (type == 'D' ? Modulation.TYPE_DISP_LEGENDRE
+            : Modulation.TYPE_U_LEGENDRE)
         : id == '0' ? Modulation.TYPE_OCC_CRENEL
+        : type == 'D' ? Modulation.TYPE_DISP_FOURIER
         : type == 'O' ? Modulation.TYPE_OCC_FOURIER
-        : type == 'U' ? Modulation.TYPE_U_FOURIER
         : type == 'M' ? Modulation.TYPE_SPIN_FOURIER
-        : Modulation.TYPE_DISP_FOURIER);
+        : type == 'U' ? Modulation.TYPE_U_FOURIER
+        : '?');
   }
 
   private P3[] qs;

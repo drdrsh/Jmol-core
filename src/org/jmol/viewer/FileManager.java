@@ -615,7 +615,7 @@ public class FileManager implements BytePoster {
         return t;
       BufferedInputStream bis = (BufferedInputStream) t;
       if (Rdr.isGzipS(bis))
-          Rdr.getUnzippedInputStream(vwr.getJzt(), bis);
+        bis = Rdr.getUnzippedInputStream(vwr.getJzt(), bis);
       if (Rdr.isCompoundDocumentS(bis)) {
         GenericBinaryDocument doc = (GenericBinaryDocument) Interface
             .getInterface("javajs.util.CompoundDocument", vwr, "file");

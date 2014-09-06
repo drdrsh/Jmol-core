@@ -229,7 +229,6 @@ public class ScriptEval extends ScriptExpr {
       "bonds? context? coordinates? orientation? rotation? selection? state? structure?";
   
   private static int iProcess;
-  private static int tryPt;
 
   private JmolMathExtension mathExt;
   private JmolSmilesExtension smilesExt;
@@ -410,7 +409,7 @@ public class ScriptEval extends ScriptExpr {
   private void executeCommands(boolean isTry, boolean reportCompletion) {
     boolean haveError = false;
     try {
-      if (!dispatchCommands(false, false))
+      if (!dispatchCommands(false, false, isTry))
         return;
     } catch (Error er) {
       vwr.handleError(er, false);
@@ -582,7 +581,7 @@ public class ScriptEval extends ScriptExpr {
     allowJSThreads = false;
     if (compileScript(null, script + JC.SCRIPT_EDITOR_IGNORE
         + JC.REPAINT_IGNORE, false))
-      dispatchCommands(false, false);
+      dispatchCommands(false, false, false);
     popContext(false, false);
   }
 
@@ -605,7 +604,7 @@ public class ScriptEval extends ScriptExpr {
     isCmdLine_c_or_C_Option = isCmdLine_C_Option = false;
     pc = 0;
     try {
-      dispatchCommands(false, false);
+      dispatchCommands(false, false, false);
     } catch (ScriptException e) {
       setErrorMessage(e.toString());
       sc = getScriptContext("checkScriptSilent");
@@ -1053,7 +1052,7 @@ public class ScriptEval extends ScriptExpr {
       // "try"; not from evalFunctionFloat
       contextPath += " >> " + name;
     }
-    pushContext(null, "runFunctinoAndRet");
+    pushContext(null, "runFunctionAndRet ");
     if (allowJSThreads)
       allowJSThreads = allowThreads;
     boolean isTry = (function.getTok() == T.trycmd);
@@ -1063,7 +1062,7 @@ public class ScriptEval extends ScriptExpr {
     if (isTry) {
       vwr.resetError();
       thisContext.displayLoadErrorsSave = vwr.displayLoadErrors;
-      thisContext.tryPt = ++tryPt;
+      thisContext.tryPt = ++vwr.tryPt;
       vwr.displayLoadErrors = false;
       restoreFunction(function, params, tokenAtom);
       contextVariables.put("_breakval", SV.newI(Integer.MAX_VALUE));
@@ -1071,7 +1070,7 @@ public class ScriptEval extends ScriptExpr {
       Map<String, SV> cv = contextVariables;
       executeCommands(true, false);
       //JavaScript will not return here after DELAY
-      while (thisContext.tryPt > tryPt)
+      while (thisContext.tryPt > vwr.tryPt)
         popContext(false, false);
       processTry(cv);
       return null;
@@ -1080,12 +1079,12 @@ public class ScriptEval extends ScriptExpr {
       {
         parallelProcessor = (JmolParallelProcessor) function;
         restoreFunction(function, params, tokenAtom);
-        dispatchCommands(false, true); // to load the processes
+        dispatchCommands(false, true, false); // to load the processes
         ((JmolParallelProcessor) function).runAllProcesses(vwr);
       }
     } else {
       restoreFunction(function, params, tokenAtom);
-      dispatchCommands(false, true);
+      dispatchCommands(false, true, false);
       //JavaScript will not return here after DELAY or after what???
     }
     SV v = (getReturn ? getContextVariableAsVariable("_retval") : null);
@@ -1417,14 +1416,14 @@ public class ScriptEval extends ScriptExpr {
           + " "
           + token
           + " "
-          + thisContext.id);
+          + thisContext.id + " " + why + " path=" + thisContext.contextPath);
   }
 
   @Override
   public ScriptContext getScriptContext(String why) {
     ScriptContext context = new ScriptContext();
     if (debugHigh)
-      Logger.info("creating context " + context.id + " for " + why);
+      Logger.info("creating context " + context.id + " for " + why + " path=" + contextPath);
     context.scriptLevel = scriptLevel;
     context.parentContext = thisContext;
     context.contextPath = contextPath;
@@ -1482,7 +1481,7 @@ public class ScriptEval extends ScriptExpr {
           + isFlowCommand
           + " thisContext="
           + (thisContext == null ? "" : "" + thisContext.id)
-          + " pc=" + pc);
+          + " pc=" + pc + "-->" + pc + " path=" + (thisContext == null ? "" : thisContext.contextPath));
   }
 
   public void restoreScriptContext(ScriptContext context, boolean isPopContext,
@@ -1491,18 +1490,6 @@ public class ScriptEval extends ScriptExpr {
     executing = !chk;
     if (context == null)
       return;
-    if (debugHigh || isCmdLine_c_or_C_Option)
-      Logger.info("--r------------".substring(0,
-          Math.min(15, scriptLevel + 5))
-          + scriptLevel
-          + " "
-          + scriptFileName
-          + " isPop "
-          + isPopContext
-          + " isFlow "
-          + isFlowCommand
-          + " context.id="
-          + context.id + " pc=" + pc + "-->" + context.pc);
     if (!isFlowCommand) {
       st = context.statement;
       slen = context.statementLength;
@@ -1536,6 +1523,18 @@ public class ScriptEval extends ScriptExpr {
       isStateScript = context.isStateScript;
       thisContext = context.parentContext;
       allowJSThreads = context.allowJSThreads;
+      if (debugHigh || isCmdLine_c_or_C_Option)
+        Logger.info("--r------------".substring(0,
+            Math.min(15, scriptLevel + 5))
+            + scriptLevel
+            + " "
+            + scriptFileName
+            + " isPop "
+            + isPopContext
+            + " isFlow "
+            + isFlowCommand
+            + " context.id="
+            + context.id + " pc=" + pc + "-->" + context.pc + " " + contextPath);
     } else {
       error = (context.errorType != null);
       //isComplete = context.isComplete;
@@ -2071,10 +2070,11 @@ public class ScriptEval extends ScriptExpr {
    * 
    * @param isSpt
    * @param fromFunc
+   * @param isTry 
    * @return false only when still working through resumeEval
    * @throws ScriptException
    */
-  public boolean dispatchCommands(boolean isSpt, boolean fromFunc)
+  public boolean dispatchCommands(boolean isSpt, boolean fromFunc, boolean isTry)
       throws ScriptException {
     if (sm == null)
       sm = vwr.shm;
@@ -2100,7 +2100,7 @@ public class ScriptEval extends ScriptExpr {
     }
     if (!mustResumeEval && !allowJSInterrupt || fromFunc)
       return true;
-    if (mustResumeEval || thisContext == null) {
+    if (!isTry && mustResumeEval || thisContext == null) {
       boolean done = (thisContext == null);
       resumeEval(thisContext);
       mustResumeEval = false;
@@ -2145,7 +2145,7 @@ public class ScriptEval extends ScriptExpr {
       }
 
       if (debugScript && !chk)
-        Logger.info("Command " + pc);
+        Logger.info("Command " + pc + (thisContext == null ? "" : " path=" + thisContext.contextPath));
       theToken = (aatoken[pc].length == 0 ? null : aatoken[pc][0]);
       // when checking scripts, we can't check statments
       // containing @{...}
@@ -2204,6 +2204,7 @@ public class ScriptEval extends ScriptExpr {
       }
       if (theToken == null)
         continue;
+      //System.out.println(pc + " thetoken = " + theToken);
       int tok = theToken.tok;
       if (T.tokAttr(tok, T.flowCommand)) {
         isForCheck = cmdFlow(tok, isForCheck, vProcess);
@@ -6307,7 +6308,7 @@ public class ScriptEval extends ScriptExpr {
       boolean timeMsg = vwr.getBoolean(T.showtiming);
       if (timeMsg)
         Logger.startTimer("script");
-      dispatchCommands(false, false);
+      dispatchCommands(false, false, false);
       if (isStateScript)
         ScriptManager.setStateScriptVersion(vwr,  null);
       if (timeMsg)

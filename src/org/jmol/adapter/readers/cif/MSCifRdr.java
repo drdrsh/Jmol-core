@@ -125,14 +125,26 @@ public class MSCifRdr extends MSRdr {
   private final static int SPIN_SAW_C = 59;
   private final static int SPIN_SAW_W = 60;
     
-  private final static int DEPR_FD_COS = 61;
-  private final static int DEPR_FD_SIN = 62;
-  private final static int DEPR_FO_COS = 63;
-  private final static int DEPR_FO_SIN = 64;
-  private final static int DEPR_FU_COS = 65;
-  private final static int DEPR_FU_SIN = 66;
-  
+  private final static int LEG_DISP_LABEL = 61;
+  private final static int LEG_DISP_AXIS = 62;
+  private final static int LEG_DISP_ORDER = 63;
+  private final static int LEG_DISP_COEF = 64;
 
+  private final static int LEG_OCC_LABEL = 65;
+  private final static int LEG_OCC_ORDER = 66;
+  private final static int LEG_OCC_COEF = 67;
+
+  private final static int LEG_U_LABEL = 68;
+  private final static int LEG_U_ORDER = 69;
+  private final static int LEG_U_COEF = 70;
+
+  private final static int DEPR_FD_COS = 71;
+  private final static int DEPR_FD_SIN = 72;
+  private final static int DEPR_FO_COS = 73;
+  private final static int DEPR_FO_SIN = 74;
+  private final static int DEPR_FU_COS = 75;
+  private final static int DEPR_FU_SIN = 76;
+  
   final private static String[] modulationFields = {
       "_cell_wave_vector_seq_id", 
       "_cell_wave_vector_x", 
@@ -200,15 +212,27 @@ public class MSCifRdr extends MSRdr {
       "_atom_site_moment_special_func_sawtooth_az", 
       "_atom_site_moment_special_func_sawtooth_c", 
       "_atom_site_moment_special_func_sawtooth_w",  // 60
+      
+      //_jana:
+      "_atom_site_displace_legendre_atom_site_label", // 61 
+      "_atom_site_displace_legendre_axis", 
+      "_atom_site_displace_legendre_param_order", 
+      "_atom_site_displace_legendre_param_coeff",
+      "_atom_site_u_legendre_atom_site_label", // 65  
+      "_atom_site_u_legendre_param_order", 
+      "_atom_site_u_legendre_param_coeff",
+      "_atom_site_occ_legendre_atom_site_label", 
+      "_atom_site_occ_legendre_param_order",
+      "_atom_site_occ_legendre_param_coeff", // 70
 
       
       // deprecated:
-      "_atom_site_displace_fourier_cos", 
+      "_atom_site_displace_fourier_cos", // 71
       "_atom_site_displace_fourier_sin",
       "_atom_site_occ_fourier_cos",
       "_atom_site_occ_fourier_sin",
-      "_atom_site_u_fourier_cos", // 65
-      "_atom_site_u_fourier_sin"
+      "_atom_site_u_fourier_cos",
+      "_atom_site_u_fourier_sin" //76
   };
   
   private static final int NONE = -1;
@@ -249,7 +273,9 @@ public class MSCifRdr extends MSRdr {
     CifReader cr = (CifReader) this.cr;
     if (cr.key.equals("_cell_subsystem_code"))
       return processSubsystemLoopBlock();
-    if (!cr.key.startsWith("_cell_wave") && !cr.key.contains("fourier")
+    if (!cr.key.startsWith("_cell_wave") 
+        && !cr.key.contains("fourier")
+        && !cr.key.contains("legendre")
         && !cr.key.contains("_special_func"))
       return 0;
     if (cr.asc.iSet < 0)
@@ -262,7 +288,7 @@ public class MSCifRdr extends MSRdr {
     }
     while (cr.parser.getData()) {
       boolean ignore = false;
-      String id = null;
+      String type_id = null;
       String atomLabel = null;
       String axis = null;
       double[] pt = new double[] { Double.NaN, Double.NaN, Double.NaN };
@@ -290,10 +316,10 @@ public class MSCifRdr extends MSRdr {
         case FUP_ID:
           switch (tok) {
           case WV_ID:
-            id = "W_";
+            type_id = "W_";
             break;
           case FWV_ID:
-            id = "F_";
+            type_id = "F_";
             break;
           case FD_ID:
           case FO_ID:
@@ -310,27 +336,36 @@ public class MSCifRdr extends MSRdr {
           case FWV_OCC_SEQ_ID:
           case FWV_SPIN_SEQ_ID:
           case FWV_U_SEQ_ID:
-            id = Character.toUpperCase(modulationFields[tok].charAt(11)) + "_";
+            type_id = Character.toUpperCase(modulationFields[tok].charAt(11)) + "_";
             break;
           }
-          id += field;
+          type_id += field;
           break;
         case JANA_OCC_ABS_LABEL:
-          id = "J_O";
+          if (type_id == null)
+            type_id = "J_O";
           pt[0] = pt[2] = 1;
           //$FALL-THROUGH$
-        case SPIN_SPEC_LABEL:
-          if (id == null)
-            id = "M_T";
+        case OCC_SPECIAL_LABEL:
+          if (type_id == null)
+            type_id = "O_0";
+          axis = "0";
           //$FALL-THROUGH$
         case DISP_SPEC_LABEL:
-          if (id == null)
-            id = "D_S";
+          if (type_id == null)
+            type_id = "D_S";
           //$FALL-THROUGH$
-        case OCC_SPECIAL_LABEL:
-          if (id == null)
-            id = "O_0";
-          axis = "0";
+        case LEG_DISP_LABEL:
+          if (type_id == null)
+            type_id = "D_L";
+          //$FALL-THROUGH$
+        case LEG_OCC_LABEL:
+          if (type_id == null)
+            type_id = "O_L";
+          //$FALL-THROUGH$
+        case SPIN_SPEC_LABEL:
+          if (type_id == null)
+            type_id = "M_T";
           //$FALL-THROUGH$
         case FWV_DISP_LABEL:
         case FWV_OCC_LABEL:
@@ -340,6 +375,7 @@ public class MSCifRdr extends MSRdr {
           break;
         case FWV_DISP_AXIS:
         case FWV_SPIN_AXIS:
+        case LEG_DISP_AXIS:
           axis = field;
           if (modAxes != null && modAxes.indexOf(axis.toUpperCase()) < 0)
             ignore = true;
@@ -350,6 +386,13 @@ public class MSCifRdr extends MSRdr {
         default:
           float f = cr.parseFloatStr(field);
           switch (tok) {
+          case LEG_DISP_COEF:
+          case LEG_OCC_COEF:
+          case LEG_U_COEF:
+            pt[0] = f;
+            if (f != 0)
+              pt[2] = 0;
+            break;
           case FWV_OCC_SIN:
           case OCC_CRENEL_C:
           case FWV_DISP_SIN:
@@ -367,7 +410,7 @@ public class MSCifRdr extends MSRdr {
             pt[0] = f;
             break;
           case JANA_FWV_Q1_COEF:
-            id += "_coefs_";
+            type_id += "_coefs_";
             pt = new double[modDim];
             pt[0] = f;
             break;
@@ -380,6 +423,7 @@ public class MSCifRdr extends MSRdr {
             break;
           case DEPR_FO_COS:
           case FWV_OCC_COS:
+          case LEG_OCC_ORDER:
             axis = "0";
             //$FALL-THROUGH$
           case WV_Y:
@@ -398,6 +442,8 @@ public class MSCifRdr extends MSRdr {
           case FWV_U_COS:
           case DEPR_FD_COS:
           case DEPR_FU_COS:
+          case LEG_DISP_ORDER:
+          case LEG_U_ORDER:
             pt[1] = f;
             break;
           case WV_Z:
@@ -419,7 +465,7 @@ public class MSCifRdr extends MSRdr {
           break;
         }
       }
-      if (ignore || id == null || atomLabel != null && !atomLabel.equals("*")
+      if (ignore || type_id == null || atomLabel != null && !atomLabel.equals("*")
           && cr.rejectAtomName(atomLabel))
         continue;
       double d = 0;
@@ -427,7 +473,7 @@ public class MSCifRdr extends MSRdr {
         d += pt[j];
       if (Double.isNaN(d) || d > 1e10 || d == 0)
         continue;
-      switch (id.charAt(0)) {
+      switch (type_id.charAt(0)) {
       case 'D':
       case 'O':
       case 'M':
@@ -435,22 +481,22 @@ public class MSCifRdr extends MSRdr {
       case 'J':
         if (atomLabel == null || axis == null)
           continue;
-        if (id.equals("D_S") || id.equals("M_T")) {
+        if (type_id.equals("D_S") || type_id.equals("M_T")) {
           // saw tooth displacement  center/width/Axyz
           if (Double.isNaN(c) || Double.isNaN(w))
             continue;
           if (pt[0] != 0)
-            addMod(id + "#x;" + atomLabel, fid, new double[] { c, w, pt[0] });
+            addMod(type_id + "#x;" + atomLabel, fid, new double[] { c, w, pt[0] });
           if (pt[1] != 0)
-            addMod(id + "#y;" + atomLabel, fid, new double[] { c, w, pt[1] });
+            addMod(type_id + "#y;" + atomLabel, fid, new double[] { c, w, pt[1] });
           if (pt[2] != 0)
-            addMod(id + "#z;" + atomLabel, fid, new double[] { c, w, pt[2] });
+            addMod(type_id + "#z;" + atomLabel, fid, new double[] { c, w, pt[2] });
           continue;
         }
-        id += "#" + axis + ";" + atomLabel;
+        type_id += "#" + axis + ";" + atomLabel;
         break;
       }
-      addMod(id, fid, pt);
+      addMod(type_id, fid, pt);
     }
     return 1;
   }

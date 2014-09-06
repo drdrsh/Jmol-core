@@ -61,7 +61,7 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
   
   protected DataInputStream stream;
   protected boolean isRandom = false;
-  protected boolean isBigEndian = true;
+  public boolean isBigEndian = true;
   protected GenericZipTools jzt;
 
   @Override
@@ -78,7 +78,8 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
   
   @Override
   public void setStream(GenericZipTools jzt, BufferedInputStream bis, boolean isBigEndian) {
-    this.jzt = jzt;
+    if (jzt != null)
+      this.jzt = jzt;
     if (bis != null)
       stream = new DataInputStream(bis);
     this.isBigEndian = isBigEndian;

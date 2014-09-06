@@ -81,7 +81,7 @@ public final class JC {
      * 
      * @j2sNative
      * 
-     *            tmpVersion = ___JmolVersion; tmpDate = ___JmolDate;
+     *            tmpVersion = Jmol.___JmolVersion; tmpDate = Jmol.___JmolDate;
      */
     {
       BufferedInputStream bis = null;
@@ -93,9 +93,9 @@ public final class JC {
         bis = new BufferedInputStream(is);
         Properties props = new Properties();
         props.load(bis);
-        tmpVersion = PT.trimQuotes(props.getProperty("___JmolVersion",
+        tmpVersion = PT.trimQuotes(props.getProperty("Jmol.___JmolVersion",
             tmpVersion));
-        tmpDate = PT.trimQuotes(props.getProperty("___JmolDate", tmpDate));
+        tmpDate = PT.trimQuotes(props.getProperty("Jmol.___JmolDate", tmpDate));
       } catch (Exception e) {
         // Nothing to do
       } finally {
@@ -1499,12 +1499,12 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
 
   public final static int SHAPE_MAX_SIZE_ZERO_ON_RESTRICT = 21; //////////
   
-    public final static int SHAPE_POLYHEDRA  = 21;  // for restrict, uses setProperty(), not setSize()
+  public final static int SHAPE_POLYHEDRA  = 21;  // for restrict, uses setProperty(), not setSize()
 
   public final static int SHAPE_MIN_HAS_ID          = 22; //////////
   public final static int SHAPE_MIN_MESH_COLLECTION = 22; //////////
   
-    public final static int SHAPE_DRAW        = 22;
+  public final static int SHAPE_DRAW        = 22;
   
   public final static int SHAPE_MAX_SPECIAL = 23; //////////
 

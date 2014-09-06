@@ -21,12 +21,15 @@ public class Modulation {
   private double a2;
   private double center;
   private double left, right;
+  private int order;
 
   private char axis;
   private final char type;
   private double[] params;
 
   private String utens;
+
+  private double delta2;
 
   public static final char TYPE_DISP_FOURIER = 'f';
   public static final char TYPE_SPIN_FOURIER = 'm';
@@ -36,16 +39,22 @@ public class Modulation {
   public static final char TYPE_OCC_CRENEL = 'c';
   public static final char TYPE_U_FOURIER = 'u';
 
+  public static final char TYPE_DISP_LEGENDRE = 'l';
+  public static final char TYPE_U_LEGENDRE = 'L'; // not implemented
+
+
   /**
    * Each atomic modulation involves a fractional coordinate wave vector q, a
    * Fourier power n, a modulation axis (x, y, or, z), and specified parameters
-   * that depend upon the type of function.
+   * that depend upon the type of function. Types supported:
    * 
-   * Types supported:
+   * Fourier [csin, ccos] 
    * 
-   * Fourier    [csin, ccos]
-   * Crenel     [center, width, amplitude]
-   * Sawtooth   [center, width, amplitude]
+   * Legendre [center, width, coeff, order]
+   * 
+   * Crenel [center, width, amplitude] 
+   * 
+   * Sawtooth [center, width, amplitude]
    * 
    * 
    * @param axis
@@ -57,9 +66,9 @@ public class Modulation {
    */
   public Modulation(char axis, char type, double[] params, String utens,
       double[] qCoefs) {
-    if (Logger.debuggingHigh)
+    //if (Logger.debuggingHigh)
       Logger
-          .debug("MOD create " + Escape.e(qCoefs) + " axis=" + axis + " type="
+          .info("MOD create " + Escape.e(qCoefs) + " axis=" + axis + " type="
               + type + " params=" + Escape.e(params) + " utens=" + utens);
     this.axis = axis;
     this.type = type;
@@ -73,24 +82,33 @@ public class Modulation {
     case TYPE_U_FOURIER:
       a1 = params[0]; // sin
       a2 = params[1]; // cos
-      //System.out.println("ccos=" + a1 + " csin=" + a2);
       break;
-    case TYPE_SPIN_SAWTOOTH:      
+    case TYPE_DISP_LEGENDRE:
+    case TYPE_U_LEGENDRE:
+      a1= params[2]; // coeff
+      order = (int) params[3];
+      calcLegendre(order);
+      //$FALL-THROUGH$
+    case TYPE_SPIN_SAWTOOTH:
     case TYPE_DISP_SAWTOOTH:
     case TYPE_OCC_CRENEL:
       center = params[0];
-      double width = params[1];
-      if (width > 1)
-        width = 1; // http://b-incstrdb.ehu.es/incstrdb/CIFFile.php?RefCode=Bi-Sr-Ca-Cu-O_rNdCbetq
-      left = center - width / 2;
-      right = center + width / 2;
+      delta2 = params[1] / 2;
+      if (delta2 > 0.5)
+        delta2 = 0.5; // http://b-incstrdb.ehu.es/incstrdb/CIFFile.php?RefCode=Bi-Sr-Ca-Cu-O_rNdCbetq
+      left = center - delta2;
+      right = center + delta2;
       if (left < 0)
         left += 1;
       if (right > 1)
         right -= 1;
       if (left >= right && left - right < 0.01f)
         left = right + 0.01f;
-      a1 = 2 * params[2] / params[1];
+      if (a1 == 0) {
+        // not Legendre
+        // sawtooth only, actually
+        a1 = params[2] / delta2;
+      }
       break;
     }
   }
@@ -127,6 +145,27 @@ public class Modulation {
         Logger.info("MOD " + ms.id + " " + Escape.e(qCoefs) + " axis=" + axis
             + " v=" + v + " csin,ccos=" + a1 + "," + a2 + " / theta=" + theta);
       break;
+    case TYPE_DISP_LEGENDRE:
+    case TYPE_U_LEGENDRE:
+      ms.vOcc0 = Float.NaN; // absolute
+      nt -= Math.floor(nt);
+      if (!range(nt))
+        return;
+      ms.vOcc = 1;
+      // normalize to [-1,1]
+      double x = (nt - center) / delta2;
+      // shift into [-1,1]
+      x = ((x + 1) % 2) + (x < -1 ? 1 : -1);
+      // calc a1*P{i}(x)
+      double xp = 1;
+      double[] p = legendre[order];
+      double xv = 0;
+      for (int i = 0, n = p.length; i < n; i++) {
+        xv += p[i] * xp;
+        xp *= x;
+      }
+      v += xv * a1;
+      break;
     case TYPE_OCC_CRENEL:
 
       //  An occupational crenel function along the internal space is
@@ -135,8 +174,7 @@ public class Modulation {
       //           p(x4)=1   if x4 belongs to the interval [c-w/2,c+w/2]
       //           p(x4)=0   if x4 is outside the interval [c-w/2,c+w/2],
 
-      nt -= Math.floor(nt);
-      ms.vOcc = (range(nt) ? 1 : 0);
+      ms.vOcc = (range(nt - Math.floor(nt)) ? 1 : 0);
       ms.vOcc0 = Float.NaN; // absolute
       //System.out.println("MOD " + ms.r + " " +  ms.delta + " " + ms.epsilon + " " + ms.id + " " + ms.v + " l=" + left + " x=" + x4 + " r=" + right);
       return;
@@ -278,4 +316,32 @@ public class Modulation {
     return info;
   }
 
+  static double[][] legendre;
+
+  synchronized void calcLegendre(int m) {
+    if (legendre != null && legendre.length > m)
+      return;
+    legendre = new double[m + 5][];
+    double[] pn_1 = legendre[0] = new double[] { 1 };
+    double[] pn = legendre[1] = new double[] { 0, 1 };
+    //(n+1) P_{n+1}(x) = (2n+1) x P_n(x) - n P_{n-1}(x)
+    for (int n = 1; n < m + 3; n++) {
+      double[] p = legendre[n + 1] = new double[n + 2];
+      for (int i = 0; i <= n; i++) {
+        p[i + 1] = (2 * n + 1) * pn[i] / (n + 1);
+        if (i < n)
+          p[i] += -n * pn_1[i] / (n + 1);
+      }
+      pn_1 = pn;
+      pn = p;
+    }
+  }
+//  static {
+//    for (double n = -5; n < 5; n+=0.2 ){
+//      double fact = (n < -1 ? 1 : -1);
+//      double nt = n;
+//    System.out.println(nt + "\t" + (((nt + 1)%2) + (fact)) + "\t");
+//    }
+//    System.out.println("ok" + (-4.35%2));
+//  }
 }

@@ -53,6 +53,8 @@ public class PolyhedraRenderer extends ShapeRenderer {
     short[] colixes = polyhedra.colixes;
     boolean needTranslucent = false;
     for (int i = polyhedra.polyhedronCount; --i >= 0;) {
+      if (!polyhedrons[i].isValid)
+        continue;
       int iAtom = polyhedrons[i].centralAtom.i;
       short colix = (colixes == null || iAtom >= colixes.length ? 
           C.INHERIT_ALL : polyhedra.colixes[iAtom]);

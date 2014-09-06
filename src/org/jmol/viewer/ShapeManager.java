@@ -381,6 +381,7 @@ public class ShapeManager {
     
     // now check ATOM_IN_FRAME, and ATOM_NOTHIDDEN, VIS_BALLS_FLAG 
     
+//    todo: deleted atoms not showing up in state
     boolean showHydrogens = vwr.getBoolean(T.showhydrogens);
     BS bsDeleted = vwr.getDeletedAtoms();
     Atom[] atoms = ms.at;

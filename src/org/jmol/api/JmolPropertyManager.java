@@ -7,7 +7,6 @@ import org.jmol.java.BS;
 
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3;
 
 import org.jmol.viewer.Viewer;
 
@@ -28,9 +27,6 @@ public interface JmolPropertyManager {
   Map<String, Object> getModelInfo(Object atomExpression);
 
   Map<String, Object> getLigandInfo(Object atomExpression);
-
-  Object getSymmetryInfo(BS bsAtoms, String xyz, int op, P3 pt,
-                         P3 pt2, String id, int type);
 
   String getModelFileInfo(BS visibleFramesBitSet);
 

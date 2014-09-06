@@ -250,6 +250,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public String htmlName = "";
   public String appletName = "";
 
+  public int tryPt;
 
   private String insertedCommand = "";
 
@@ -391,12 +392,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (modelAdapter == null)
       modelAdapter = new SmarterJmolAdapter();
     return modelAdapter;
-  }
-
-  public Object getSymmetryInfo(BS bsAtoms, String xyz, int op, P3 pt, P3 pt2,
-                                String id, int type) {
-    return getPropertyManager().getSymmetryInfo(bsAtoms, xyz, op, pt, pt2, id,
-        type);
   }
 
   @Override
@@ -2760,15 +2755,14 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return (uc == null ? null : uc.getV0abc(def));
   }
 
-  public String getSymmetryOperation(int symop, P3 pt1,
-                                     P3 pt2, String type) {
-    return ms.getSymTemp(true).getSymmetryInfoString(ms, am.cmi,
-        symop, pt1, pt2, null, type);
+  public Object getSymmetryInfoAtom(BS bsAtoms, String xyz, int op, P3 pt,
+                                    P3 pt2, String id, int type) {
+    return ms.getSymTemp(false).getSymmetryInfoAtom(ms, bsAtoms, xyz, op, pt,
+        pt2, id, type);
   }
 
   public Map<String, Object> getSpaceGroupInfo(String spaceGroup) {
-    return ms.getSymTemp(true).getSpaceGroupInfo(ms, -1,
-        spaceGroup, 0, null, null, null, null);
+    return ms.getSymTemp(true).getSpaceGroupInfo(ms, spaceGroup);
   }
 
   public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList) {
