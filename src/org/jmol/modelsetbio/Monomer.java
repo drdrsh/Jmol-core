@@ -47,6 +47,13 @@ import java.util.Map;
 
 public abstract class Monomer extends Group {
 
+  /**
+   * @j2sIngore
+   */
+
+  public Monomer() {  
+  }
+  
   public BioPolymer bioPolymer;
 
   protected byte[] offsets;

@@ -34,21 +34,33 @@ import org.jmol.viewer.Viewer;
 
 public class MoveToThread extends JmolThread {
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   public MoveToThread() {
+    aaStepCenter = new V3();
+    aaStepNavCenter = new V3();
+    aaStep = new A4();
+    aaTotal = new A4();
+    matrixStart = new M3();
+    matrixStartInv = new M3();
+    matrixStep = new M3();
+    matrixEnd = new M3();
   }
 
   private boolean isMove;
 
   ///// MOVETO command parameters:
 
-  private final V3 aaStepCenter = new V3();
-  private final V3 aaStepNavCenter = new V3();
-  private final A4 aaStep = new A4();
-  private final A4 aaTotal = new A4();
-  private final M3 matrixStart = new M3();
-  private final M3 matrixStartInv = new M3();
-  private M3 matrixStep = new M3();
-  private final M3 matrixEnd = new M3();
+  private final V3 aaStepCenter;
+  private final V3 aaStepNavCenter;
+  private final A4 aaStep;
+  private final A4 aaTotal;
+  private final M3 matrixStart;
+  private final M3 matrixStartInv;
+  private M3 matrixStep;
+  private final M3 matrixEnd;
 
   private P3 center;
   private P3 navCenter;

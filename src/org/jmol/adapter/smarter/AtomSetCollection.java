@@ -40,7 +40,6 @@ import org.jmol.java.BS;
 import javajs.util.P3;
 
 import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
 
 import javajs.util.V3;
 
@@ -750,7 +749,7 @@ public class AtomSetCollection {
     return xtalSymmetry;
   }
 
-  public SymmetryInterface getSymmetry(Viewer vwr) {
+  public SymmetryInterface getSymmetry() {
     return getXSymmetry().getSymmetry();
   }
 

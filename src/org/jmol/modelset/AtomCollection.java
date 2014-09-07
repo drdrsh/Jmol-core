@@ -63,7 +63,6 @@ import org.jmol.util.Tensor;
 import org.jmol.util.Escape;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
-import org.jmol.util.Rectangle;
 import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.util.Vibration;
@@ -76,6 +75,104 @@ abstract public class AtomCollection {
   
   private static final Float MINUSZERO = Float.valueOf(-0.0f);
 
+
+  public Viewer vwr;
+  protected GData g3d;
+
+  public Atom[] at;
+  public int ac;
+
+  ////////////////////////////////////////////////////////////////
+  // these may or may not be allocated
+  // depending upon the AtomSetCollection characteristics
+  //
+  // used by Atom:
+  //
+  String[] atomNames;
+  String[] atomTypes;
+  int[] atomSerials;
+  int[] atomSeqIDs;
+  public Vibration[] vibrations;
+  float[] occupancies;
+  short[] bfactor100s;
+  float[] partialCharges;
+  float[] bondingRadii;
+  float[] hydrophobicities;
+  
+  public Object[][] atomTensorList; // specifically now for {*}.adpmin {*}.adpmax
+  public Map<String, Lst<Object>> atomTensors;
+
+  protected int[] surfaceDistance100s;
+
+
+  ////////////////////
+  
+  private LabelToken labeler;
+  
+  // the maximum BondingRadius seen in this set of atoms
+  // used in autobonding
+  protected float maxBondingRadius = PT.FLOAT_MIN_SAFE;
+  private float maxVanderwaalsRadius = PT.FLOAT_MIN_SAFE;
+
+  private boolean hasBfactorRange;
+  private int bfactor100Lo;
+  private int bfactor100Hi;
+
+  private BS bsSurface;
+  private int nSurfaceAtoms;
+  private int surfaceDistanceMax;
+
+  protected P3 averageAtomPoint;
+
+  /**
+   *  Binary Space Partitioning Forest
+   */
+  protected Bspf bspf = null;
+
+  protected boolean preserveState = true;
+  public boolean canSkipLoad = true;
+
+  protected boolean haveStraightness;
+
+  // be sure to add the name to the list below as well!
+  final public static byte TAINT_ATOMNAME = 0;
+  final public static byte TAINT_ATOMTYPE = 1;
+  final public static byte TAINT_COORD = 2;
+  final public static byte TAINT_ELEMENT = 3;
+  final public static byte TAINT_FORMALCHARGE = 4;
+  final public static byte TAINT_HYDROPHOBICITY = 5;
+  final public static byte TAINT_BONDINGRADIUS = 6;
+  final public static byte TAINT_OCCUPANCY = 7;
+  final public static byte TAINT_PARTIALCHARGE = 8;
+  final public static byte TAINT_TEMPERATURE = 9;
+  final public static byte TAINT_VALENCE = 10;
+  final public static byte TAINT_VANDERWAALS = 11;
+  final public static byte TAINT_VIBRATION = 12;
+  final public static byte TAINT_ATOMNO = 13;
+  final public static byte TAINT_SEQID = 14;
+  final public static byte TAINT_MAX = 15; // 1 more than last number, above
+  
+  public static String[] userSettableValues;
+  
+  private final static float almost180 = (float) Math.PI * 0.95f;
+  private final static float sqrt3_2 = (float) (Math.sqrt(3) / 2);
+  private final static V3 vRef = V3.new3(3.14159f, 2.71828f, 1.41421f);
+
+  public BS[] tainted;
+  private BS bsHidden;
+  public BS bsVisible, bsClickable, bsModulated;
+
+  public boolean haveBSVisible, haveBSClickable;
+  
+  protected void setupAC() {
+    bsHidden = new BS();
+    bsVisible = new BS();
+    bsClickable = new BS();
+    // this allows the Google Closure compiler to skip all the TAINTED defs in Clazz.defineStatics
+    if (userSettableValues == null)
+      userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupany partialCharge temperature valence vanderWaals vibrationVector atomNo seqID".split(" ");
+  }
+  
   protected void releaseModelSet() {
     releaseModelSetAC();
   }
@@ -127,12 +224,6 @@ abstract public class AtomCollection {
     return haveStraightness;
   }
   
-  public Viewer vwr;
-  protected GData g3d;
-
-  public Atom[] at;
-  public int ac;
-
   public Lst<P3> getAtomPointVector(BS bs) {
     Lst<P3> v = new  Lst<P3>();
     if (bs != null) {
@@ -148,30 +239,6 @@ abstract public class AtomCollection {
     return ac;
   }
   
-  ////////////////////////////////////////////////////////////////
-  // these may or may not be allocated
-  // depending upon the AtomSetCollection characteristics
-  //
-  // used by Atom:
-  //
-  String[] atomNames;
-  String[] atomTypes;
-  int[] atomSerials;
-  int[] atomSeqIDs;
-  public Vibration[] vibrations;
-  float[] occupancies;
-  short[] bfactor100s;
-  float[] partialCharges;
-  float[] bondingRadii;
-  float[] hydrophobicities;
-  
-  public Object[][] atomTensorList; // specifically now for {*}.adpmin {*}.adpmax
-  public Map<String, Lst<Object>> atomTensors;
-
-  protected int[] surfaceDistance100s;
-
-  protected boolean haveStraightness;
-
   public boolean modelSetHasVibrationVectors(){
     return (vibrations != null);
   }
@@ -197,8 +264,6 @@ abstract public class AtomCollection {
   }
   
 
-  private BS bsHidden = new BS();
-
   public void setBsHidden(BS bs) { //from selection manager
     bsHidden = bs;
   }
@@ -208,8 +273,6 @@ abstract public class AtomCollection {
   }
   
   //////////// atoms //////////////
-  
-  private LabelToken labeler;
   
   public LabelToken getLabeler() {
     // prevents JavaScript from requiring LabelToken upon core load
@@ -301,11 +364,6 @@ abstract public class AtomCollection {
         VDW.JMOL) / 1000f;
   }
   
-  // the maximum BondingRadius seen in this set of atoms
-  // used in autobonding
-  protected float maxBondingRadius = PT.FLOAT_MIN_SAFE;
-  private float maxVanderwaalsRadius = PT.FLOAT_MIN_SAFE;
-
   public float getMaxVanderwaalsRadius() {
     //Dots
     if (maxVanderwaalsRadius == PT.FLOAT_MIN_SAFE)
@@ -323,10 +381,6 @@ abstract public class AtomCollection {
         maxVanderwaalsRadius = r;
     }
   }
-
-  private boolean hasBfactorRange;
-  private int bfactor100Lo;
-  private int bfactor100Hi;
 
   public void clearBfactorRange() {
     hasBfactorRange = false;
@@ -373,8 +427,6 @@ abstract public class AtomCollection {
     return bfactor100Hi;
   }
 
-  private int surfaceDistanceMax;
-
   public int getSurfaceDistanceMax() {
     //ColorManager, Eval
     if (surfaceDistance100s == null)
@@ -391,9 +443,6 @@ abstract public class AtomCollection {
     return volume;
   }
   
-  private BS bsSurface;
-  private int nSurfaceAtoms;
-
   int getSurfaceDistance100(int atomIndex) {
     //atom
     if (nSurfaceAtoms == 0)
@@ -977,12 +1026,6 @@ abstract public class AtomCollection {
     }
   }
 
-  protected P3 averageAtomPoint;
-
-  // Binary Space Partitioning Forest
-  
-  protected Bspf bspf = null;
-
   public void validateBspf(boolean isValid) {
     if (bspf != null)
       bspf.validate(isValid);
@@ -996,40 +1039,11 @@ abstract public class AtomCollection {
 
   // state tainting
   
-  protected boolean preserveState = true;
-  
   public void setPreserveState(boolean TF) {
     preserveState = TF;
   }
   ////  atom coordinate and property changing  //////////
   
-  // be sure to add the name to the list below as well!
-  final public static byte TAINT_ATOMNAME = 0;
-  final public static byte TAINT_ATOMTYPE = 1;
-  final public static byte TAINT_COORD = 2;
-  final public static byte TAINT_ELEMENT = 3;
-  final public static byte TAINT_FORMALCHARGE = 4;
-  final public static byte TAINT_HYDROPHOBICITY = 5;
-  final public static byte TAINT_BONDINGRADIUS = 6;
-  final public static byte TAINT_OCCUPANCY = 7;
-  final public static byte TAINT_PARTIALCHARGE = 8;
-  final public static byte TAINT_TEMPERATURE = 9;
-  final public static byte TAINT_VALENCE = 10;
-  final public static byte TAINT_VANDERWAALS = 11;
-  final public static byte TAINT_VIBRATION = 12;
-  final public static byte TAINT_ATOMNO = 13;
-  final public static byte TAINT_SEQID = 14;
-  final public static byte TAINT_MAX = 15; // 1 more than last number, above
-  
-  public static String[] userSettableValues;
-  static {
-    // this allows the Google Closure compiler to skip all the TAINTED defs in Clazz.defineStatics
-    userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupany partialCharge temperature valence vanderWaals vibrationVector atomNo seqID".split(" ");
-  }
-  
-  public BS[] tainted;  // not final -- can be set to null
-  public boolean canSkipLoad = true;
-
   public static int getUserSettableType(String dataType) {
     boolean isExplicit = (dataType.indexOf("property_") == 0);
     String check = (isExplicit ? dataType.substring(9) : dataType);
@@ -1139,23 +1153,6 @@ abstract public class AtomCollection {
     return contender.sZ > 1 && !g3d.isClippedZ(contender.sZ)
         && g3d.isInDisplayRange(contender.sX, contender.sY)
         && contender.isCursorOnTopOf(x, y, radius, champion);
-  }
-
-  // jvm < 1.4 does not have a BitSet.clear();
-  // so in order to clear you "and" with an empty bitset.
-  private final BS bsEmpty = new BS();
-  private final BS bsFoundRectangle = new BS();
-
-  public BS findAtomsInRectangle(Rectangle rect) {
-    BS bsModels = vwr.getVisibleFramesBitSet();
-    bsFoundRectangle.and(bsEmpty);
-    for (int i = ac; --i >= 0;) {
-      Atom atom = at[i];
-      if (bsModels.get(atom.mi) && atom.checkVisible() 
-          && rect.contains(atom.sX, atom.sY))
-        bsFoundRectangle.set(i);
-    }
-    return bsFoundRectangle;
   }
 
   protected void fillADa(AtomData atomData, int mode) {
@@ -1464,9 +1461,6 @@ abstract public class AtomCollection {
     }    
     return n;
   }
-  private final static float sqrt3_2 = (float) (Math.sqrt(3) / 2);
-  private final static V3 vRef = V3.new3(3.14159f, 2.71828f, 1.41421f);
-  private final static float almost180 = (float) Math.PI * 0.95f;
 
   public String getHybridizationAndAxes(int atomIndex, int atomicNumber, V3 z, V3 x,
                                         String lcaoTypeRaw,
@@ -2613,10 +2607,7 @@ abstract public class AtomCollection {
     return bsResult;
   }
 
-  public BS bsVisible = new BS();
-  public BS bsClickable = new BS();
-  public boolean haveBSVisible, haveBSClickable;
-  
+
   public void getRenderable(BS bsAtoms) {
     bsAtoms.clearAll();
     haveBSVisible = false;
@@ -2648,8 +2639,6 @@ abstract public class AtomCollection {
     return bsClickable;
   }
 
-  public BS bsModulated;
-  
   public boolean isModulated(int i) {
     return bsModulated != null && bsModulated.get(i);
   }

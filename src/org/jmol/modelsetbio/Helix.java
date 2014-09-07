@@ -32,6 +32,15 @@ import javajs.util.V3;
 
 public class Helix extends ProteinStructure {
 
+  /**
+   * @param apolymer 
+   * @param monomerIndex 
+   * @param monomerCount 
+   * @param subtype 
+   * @j2sIgnoreSuperConstructor
+   * @j2sOverride
+   * 
+   */
   Helix(AlphaPolymer apolymer, int monomerIndex, int monomerCount, STR subtype) {
     setupPS(apolymer, STR.HELIX, monomerIndex,
         monomerCount);

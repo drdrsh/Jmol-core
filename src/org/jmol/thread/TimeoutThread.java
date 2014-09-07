@@ -37,6 +37,14 @@ public class TimeoutThread extends JmolThread {
   private boolean triggered = true;
   private Map<String, Object> timeouts;
   
+  /**
+   * @param vwr 
+   * @param name 
+   * @param ms 
+   * @param script 
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   public TimeoutThread(Viewer vwr, String name, int ms, String script) {
     setViewer(vwr, name);
     this.name = name; // no appended info

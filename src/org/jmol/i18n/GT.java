@@ -40,10 +40,9 @@ import org.jmol.viewer.Viewer;
  * The language list is now in org.jmol.i18n.Language -- Bob Hanson, 12/16/12
  * 
  * implementing translations in JavaScript
- * 
  */
 
-@J2SRequireImport({java.text.MessageFormat.class, org.jmol.i18n.Resource.class, org.jmol.i18n.Language.class})
+@J2SRequireImport({java.text.MessageFormat.class, org.jmol.i18n.Resource.class, org.jmol.i18n.Language.class, javajs.util.PT.class})
 public class GT implements Translator {
 
   private static boolean ignoreApplicationBundle = false;

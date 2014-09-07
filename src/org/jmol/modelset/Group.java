@@ -73,6 +73,9 @@ public class Group {
   
   public int shapeVisibilityFlags;
   
+  /**
+   * @j2sIngore
+   */
   public Group() {}
   
   public Group setGroup(Chain chain, String group3, int seqcode,

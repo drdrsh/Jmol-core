@@ -1079,7 +1079,7 @@ public class MSRdr implements MSInterface {
 
   private SymmetryInterface getDefaultUnitCell() {
     return (modCell != null && htSubsystems.containsKey(modCell) ? htSubsystems
-        .get(modCell).getSymmetry() : cr.asc.getSymmetry(cr.vwr));
+        .get(modCell).getSymmetry() : cr.asc.getSymmetry());
   }
 
   @Override

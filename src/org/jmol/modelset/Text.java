@@ -66,6 +66,9 @@ public class Text extends Object2d {
 
   private Viewer vwr;
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   */
   Text() {
   }
 

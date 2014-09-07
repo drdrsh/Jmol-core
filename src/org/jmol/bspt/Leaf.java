@@ -37,6 +37,13 @@ import javajs.util.P3;
 class Leaf extends Element {
   P3[] tuples;
     
+  /**
+   * @param bspt 
+   * @param leaf 
+   * @param countToKeep 
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   Leaf(Bspt bspt, Leaf leaf, int countToKeep) {
     this.bspt = bspt;
     count = 0;

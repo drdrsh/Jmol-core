@@ -32,6 +32,9 @@ package javajs.util;
  */
 public class V3 extends T3 {
 
+  /**
+   * @j2sIgnore
+   */
   public V3() {
     // ignore T3
   }

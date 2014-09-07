@@ -43,6 +43,9 @@ class FileLoadThread extends JmolThread {
    * @param fileName
    * @param key 
    * @param cacheName 
+   * 
+   * @j2sIgnoreSuperConstructor
+   * 
    */
   public FileLoadThread(JmolScriptEvaluator eval, Viewer vwr, String fileName, String key, String cacheName) {
     setViewer(vwr, "FileLoadThread");
@@ -95,8 +98,9 @@ class FileLoadThread extends JmolThread {
       sc.parentContext.htFileCache.put(key, cacheName = cacheName.substring(0, 
           cacheName.lastIndexOf("_") + 1) + fileName);
     vwr.cachePut(cacheName, data);
-    if (fileName0 != null)
-      vwr.cachePut(fileName, data);
+    if (fileName0 != null) {
+      vwr.cachePut(vwr.fm.getFilePath(fileName, true, false), data);
+    }
     run1(FINISH);
   }
   

@@ -1,5 +1,11 @@
 package javajs.api;
 
+/** 
+ * called by JSmol JavaScript methods using
+ * 
+ *  this._applet.xxxx()
+ *  
+ */
 public interface JSInterface {
 
   int cacheFileByName(String fileName, boolean isAdd);

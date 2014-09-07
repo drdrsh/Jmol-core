@@ -33,7 +33,6 @@ import java.util.ArrayList;
  */
 public class Lst<V> extends ArrayList<V> {
 
-  //needed?
   public Lst() {
     super();  
   }

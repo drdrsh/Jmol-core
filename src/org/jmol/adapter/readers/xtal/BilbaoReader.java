@@ -212,7 +212,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
         v.setT(a.vib);
         a.vib = v;
         //v.modDim = Vibration.TYPE_DISPLACEMENT;
-        asc.getSymmetry(vwr).toCartesian(v, true);
+        asc.getSymmetry().toCartesian(v, true);
         v.scale(1 / fAmp);
       }
     }

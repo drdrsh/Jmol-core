@@ -18,7 +18,7 @@ import javajs.util.V3;
 import javajs.util.T3;
 
 public class MeshSurface {
-
+  
   protected static final int SEED_COUNT = 25;
 
   public V3[] spanningVectors;
@@ -78,6 +78,10 @@ public class MeshSurface {
 
   private int checkCount = 2;
 
+  /**
+   * 
+   * @j2sIgnore
+   */
   public MeshSurface() {
   }
 

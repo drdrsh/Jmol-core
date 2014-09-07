@@ -39,13 +39,15 @@ public class HoverWatcherThread extends JmolThread {
   private int hoverDelay;
 
   /**
-   * @param actionManager 
-   * @param current 
-   * @param moved 
+   * @param actionManager
+   * @param current
+   * @param moved
    * @param vwr
+   * 
+   * @j2sIgnoreSuperConstructor
+   * 
    */
   public HoverWatcherThread(ActionManager actionManager, MouseState current, MouseState moved, Viewer vwr) {
-    super();
     setViewer(vwr, "HoverWatcher");
     this.actionManager = actionManager;
     this.current = current;

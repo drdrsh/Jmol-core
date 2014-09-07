@@ -34,6 +34,11 @@ class BondIterator extends JmolAdapterBondIterator {
 	private Bond bond;
 	private int bondCount;
 
+  /**
+   * @param asc 
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
 	BondIterator(AtomSetCollection asc) {
 		bsAtoms = asc.bsAtoms;
 		bonds = asc.bonds;

@@ -33,6 +33,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
+import org.jmol.util.Rectangle;
 import org.jmol.util.Tensor;
 import org.jmol.util.Triangulator;
 import org.jmol.util.Vibration;
@@ -104,11 +105,118 @@ import java.util.Properties;
  */
  public class ModelSet extends BondCollection {
 
+   protected BS bsSymmetry;
+
+   public String modelSetName;
+   
+   public Model[] am;
+   /**
+    * model count
+    */
+   public int mc;
+   public SymmetryInterface[] unitCells;
+   public boolean haveUnitCells;
+
+   protected final Atom[] closest;
+
+   protected int[] modelNumbers; // from adapter -- possibly PDB MODEL record; possibly modelFileNumber
+   protected int[] modelFileNumbers; // file * 1000000 + modelInFile (1-based)
+   public String[] modelNumbersForAtomLabel, modelNames, frameTitles;
+
+   protected BS[] elementsPresent;
+
+   protected boolean isXYZ;
+   protected boolean isPDB;
+
+   public Properties modelSetProperties;
+   protected Map<String, Object> msInfo;
+
+   protected boolean someModelsHaveSymmetry;
+   protected boolean someModelsHaveAromaticBonds;
+   protected boolean someModelsHaveFractionalCoordinates;
+
+   ////////////////////////////////////////////
+
+   private boolean isBbcageDefault;
+   private BS bboxModels;
+   private BS bboxAtoms;
+   private final BoxInfo boxInfo;
+
+   public Lst<StateScript> stateScripts;
+   /*
+    * stateScripts are connect commands that must be executed in sequence.
+    * 
+    * What I fear is that in deleting models we must delete these connections,
+    * and in deleting atoms, the bitsets may not be retrieved properly. 
+    * 
+    * 
+    */
+   private int thisStateModel;
+
+   public Lst<P3[]> trajectorySteps;
+   protected Lst<V3[]> vibrationSteps;
+
+   private BS selectedMolecules;
+
+   //private final static boolean MIX_BSPT_ORDER = false;
+   boolean showRebondTimes = true;
+
+   protected BS bsAll;
+
+   public ShapeManager sm;
+
+   private static float hbondMin = 2.5f;
+   public boolean proteinStructureTainted;
+   public SymmetryInterface symTemp;
+
+   public Hashtable<String, BS> htPeaks;
+
+   private Quat[] vOrientations;
+   private Triangulator triangulator;
+   
+   private final P3 ptTemp, ptTemp1, ptTemp2;
+   private final M3 matTemp, matInv;
+   private final M4 mat4, mat4t;
+   private final V3 vTemp;
+
   ////////////////////////////////////////////////////////////////
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * 
+   * @param vwr
+   * @param name
+   */
   public ModelSet(Viewer vwr, String name) {
     this.vwr = vwr;
     modelSetName = name;
+    
+    selectedMolecules = new BS();
+    stateScripts = new Lst<StateScript>();
+    
+    boxInfo = new BoxInfo();
+    boxInfo.addBoundBoxPoint(P3.new3(-10, -10, -10));
+    boxInfo.addBoundBoxPoint(P3.new3(10, 10, 10));
+    
+    am = new Model[1];
+    modelNumbers = new int[1]; // from adapter -- possibly PDB MODEL record; possibly modelFileNumber
+    modelFileNumbers = new int[1]; // file * 1000000 + modelInFile (1-based)
+    modelNumbersForAtomLabel = new String[1];
+    modelNames = new String[1];
+    frameTitles = new String[1];
+    
+    closest = new Atom[1];
+    
+    ptTemp = new P3();
+    ptTemp1 = new P3();
+    ptTemp2 = new P3();
+    matTemp = new M3();
+    matInv = new M3();
+    mat4 = new M4();
+    mat4t = new M4();
+    vTemp = new V3();
+    
+    setupBC();
   }
 
   @Override
@@ -373,8 +481,6 @@ import java.util.Properties;
     }
   }
   
-  protected final Atom[] closest = new Atom[1];
-
   public int findNearestAtomIndex(int x, int y, BS bsNot, int min) {
     if (ac == 0)
       return -1;
@@ -804,18 +910,6 @@ import java.util.Properties;
     mergeAtomArrays(mergeModelSet);
   }
 
-  protected BS bsSymmetry;
-
-  public String modelSetName;
-  
-  public Model[] am = new Model[1];
-  /**
-   * model count
-   */
-  public int mc;
-  public SymmetryInterface[] unitCells;
-  public boolean haveUnitCells;
-
   public SymmetryInterface getUnitCell(int modelIndex) {
     if (!haveUnitCells || modelIndex < 0 || modelIndex >= mc)
       return null;
@@ -860,12 +954,6 @@ import java.util.Properties;
     return intersectPlane(plane, v, flags);
   }
 
-  protected int[] modelNumbers = new int[1]; // from adapter -- possibly PDB MODEL record; possibly modelFileNumber
-  protected int[] modelFileNumbers = new int[1]; // file * 1000000 + modelInFile (1-based)
-  protected String[] modelNumbersForAtomLabel = new String[1];
-  protected String[] modelNames = new String[1];
-  public String[] frameTitles = new String[1];
-
   public String getModelName(int modelIndex) {
     return mc < 1 ? "" : modelIndex >= 0 ? modelNames[modelIndex]
         : modelNumbersForAtomLabel[-1 - modelIndex];
@@ -905,15 +993,6 @@ import java.util.Properties;
   public String getModelNumberForAtomLabel(int modelIndex) {
     return modelNumbersForAtomLabel[modelIndex];
   }
-
-  protected BS[] elementsPresent;
-
-  protected boolean isXYZ;
-  protected boolean isPDB;
-
-  public Properties modelSetProperties;
-  protected Map<String, Object> msInfo;
-
   protected void calculatePolymers(Group[] groups, int groupCount,
                                    int baseGroupIndex, BS modelsExcluded) {
     if (!isPDB)
@@ -963,28 +1042,9 @@ import java.util.Properties;
     return (c == null ? null : c.getNotionalUnitCell());
   }
 
-  //new way:
-
-  protected boolean someModelsHaveSymmetry;
-  protected boolean someModelsHaveAromaticBonds;
-  protected boolean someModelsHaveFractionalCoordinates;
-
   public boolean setCrystallographicDefaults() {
     return !isPDB && someModelsHaveSymmetry
         && someModelsHaveFractionalCoordinates;
-  }
-
-  protected final P3 ptTemp = new P3();
-
-  ////////////////////////////////////////////
-
-  private boolean isBbcageDefault;
-  private BS bboxModels;
-  private BS bboxAtoms;
-  private final BoxInfo boxInfo = new BoxInfo();
-  {
-    boxInfo.addBoundBoxPoint(P3.new3(-10, -10, -10));
-    boxInfo.addBoundBoxPoint(P3.new3(10, 10, 10));
   }
 
   public P3 getBoundBoxCenter(int modelIndex) {
@@ -1025,6 +1085,19 @@ import java.util.Properties;
     float v = Math.abs(8 * bbVector.x * bbVector.y * bbVector.z);
     s += Escape.eP(ptTemp) + " # volume = " + v;
     return s;
+  }
+
+  public BS findAtomsInRectangle(Rectangle rect) {
+    BS bsModels = vwr.getVisibleFramesBitSet();
+    BS bs = new BS();
+    for (int i = ac; --i >= 0;) {
+      Atom atom = at[i];
+      if (!bsModels.get(atom.mi))
+        i = am[atom.mi].firstAtomIndex;
+      else if (atom.checkVisible() && rect.contains(atom.sX, atom.sY))
+        bs.set(i);
+    }
+    return bs;
   }
 
   public VDW getDefaultVdwType(int modelIndex) {
@@ -1216,18 +1289,6 @@ import java.util.Properties;
       break;
     }
   }
-
-  public Lst<StateScript> stateScripts = new Lst<StateScript>();
-  /*
-   * stateScripts are connect commands that must be executed in sequence.
-   * 
-   * What I fear is that in deleting models we must delete these connections,
-   * and in deleting atoms, the bitsets may not be retrieved properly. 
-   * 
-   * 
-   */
-  private int thisStateModel = 0;
-
   public StateScript addStateScript(String script1, BS bsBonds, BS bsAtoms1,
                                     BS bsAtoms2, String script2,
                                     boolean addFrameNumber,
@@ -1417,8 +1478,6 @@ import java.util.Properties;
     return (val instanceof Boolean && ((Boolean) val).booleanValue());
   }
 
-  public Lst<P3[]> trajectorySteps;
-  protected Lst<V3[]> vibrationSteps;
 
   protected int mergeTrajectories(boolean isTrajectory) {
     if (trajectorySteps == null) {
@@ -2048,8 +2107,6 @@ import java.util.Properties;
     return n;
   }
 
-  private BS selectedMolecules = new BS();
-
   public void calcSelectedMoleculesCount() {
     BS bsSelected = vwr.bsA();
     if (moleculeCount == 0)
@@ -2119,9 +2176,6 @@ import java.util.Properties;
   }
 
   //////////// iterators //////////
-
-  //private final static boolean MIX_BSPT_ORDER = false;
-  boolean showRebondTimes = true;
 
   protected void initializeBspf() {
     if (bspf != null && bspf.isInitialized())
@@ -2252,10 +2306,6 @@ import java.util.Properties;
   public int getAtomCountInModel(int modelIndex) {
     return (modelIndex < 0 ? ac : am[modelIndex].ac);
   }
-
-  protected BS bsAll;
-
-  public ShapeManager sm;
 
   /**
    * note -- this method returns ALL atoms, including deleted.
@@ -2514,9 +2564,6 @@ import java.util.Properties;
     }
     return bsResult;
   }
-
-  private final P3 ptTemp1 = new P3();
-  private final P3 ptTemp2 = new P3();
 
   public BS getAtomsWithin(float distance, P3 coord, BS bsResult, int modelIndex) {
 
@@ -2920,7 +2967,6 @@ import java.util.Properties;
             bsBonds, vwr.getMadBond(), legacyAutoBond), 0 };
   }
 
-  private static float hbondMin = 2.5f;
 
   /**
    * a generalized formation of HBONDS, carried out in relation to calculate
@@ -3104,8 +3150,6 @@ import java.util.Properties;
 
   //////////// state definition ///////////
 
-  public boolean proteinStructureTainted = false;
-
   void setStructureIndexes() {
     int id;
     int idnew = 0;
@@ -3216,11 +3260,6 @@ import java.util.Properties;
     }
     return bsResult;
   }
-
-  public SymmetryInterface symTemp;
-
-  public Hashtable<String, BS> htPeaks;
-
   public SymmetryInterface getSymTemp(boolean forceNew) {
     return (symTemp == null || forceNew ? (symTemp = Interface.getSymmetry(vwr, "ms")) : symTemp);
   }
@@ -3858,8 +3897,6 @@ import java.util.Properties;
       bsModulated = null;
   }
 
-  private Quat[] vOrientations;
-
   public String getBoundBoxOrientation(int type, BS bsAtoms) {
     int j0 = bsAtoms.nextSetBit(0);
     if (j0 < 0)
@@ -3951,7 +3988,6 @@ import java.util.Properties;
         : q.getTheta() == 0 ? "{0 0 0 1}" : q.toString());
   }
 
-  private Triangulator triangulator;
 
   public Lst<Object> intersectPlane(P4 plane, Lst<Object> v, int i) {
     return (triangulator == null ? (triangulator = (Triangulator) Interface
@@ -4096,11 +4132,6 @@ import java.util.Properties;
     recalculatePositionDependentQuantities(bs, mat4);
   }
 
-  private final M3 matTemp = new M3();
-  private final M3 matInv = new M3();
-  private final M4 mat4 = new M4();
-  private final M4 mat4t = new M4();
-  private final V3 vTemp = new V3();
   public void setDihedrals(float[] dihedralList, BS[] bsBranches, float f) {
     int n = dihedralList.length / 6;
     if (f > 1)

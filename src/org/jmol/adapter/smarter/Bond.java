@@ -31,6 +31,13 @@ public class Bond extends AtomSetObject {
   public short colix = -1;
   public int uniqueID = -1;
 
+
+  /**
+   * @param atomIndex1 
+   * @param atomIndex2 
+   * @param order 
+   * @j2sIgnoreSuperConstructor
+   */
   public Bond (int atomIndex1, int atomIndex2, int order) {
     this.atomIndex1 = atomIndex1;
     this.atomIndex2 = atomIndex2;

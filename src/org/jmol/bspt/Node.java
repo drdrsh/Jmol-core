@@ -51,6 +51,13 @@ class Node extends Element {
   float minRight, maxRight;
   Element eleRight;
   
+  /**
+   * @param bspt 
+   * @param level 
+   * @param leafLeft 
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   Node(Bspt bspt, int level, Leaf leafLeft) {
     this.bspt = bspt;
     if (level == bspt.treeDepth) {

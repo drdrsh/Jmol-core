@@ -64,6 +64,10 @@ public class ScriptCompiler extends ScriptTokenParser {
    * 
    */
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   public ScriptCompiler(Viewer vwr) {
     this.vwr = vwr;
   }

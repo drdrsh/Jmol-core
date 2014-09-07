@@ -180,7 +180,7 @@ public class JanaReader extends AtomSetCollectionReader {
     if (!haveM40Data)
       readM40Data(false);
     if (lattvecs != null && lattvecs.size() > 0)
-      asc.getSymmetry(vwr).addLatticeVectors(lattvecs);
+      asc.getSymmetry().addLatticeVectors(lattvecs);
     applySymmetryAndSetTrajectory();
     finalizeReaderASCR();
   }
@@ -896,7 +896,7 @@ public class JanaReader extends AtomSetCollectionReader {
   private void adjustM40Occupancies() {
     Map<String, Integer> htSiteMult = new Hashtable<String, Integer>();    
     Atom[] atoms = asc.atoms;
-    SymmetryInterface symmetry = asc.getSymmetry(vwr);
+    SymmetryInterface symmetry = asc.getSymmetry();
     for (int i = asc.ac; --i >= 0;) {
       Atom a = atoms[i];
       Integer ii = htSiteMult.get(a.atomName);

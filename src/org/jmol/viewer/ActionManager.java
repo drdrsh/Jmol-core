@@ -23,6 +23,7 @@
  */
 package org.jmol.viewer;
 
+import javajs.J2SRequireImport;
 import javajs.api.GenericPlatform;
 import javajs.api.EventManager;
 import javajs.awt.event.Event;
@@ -49,6 +50,7 @@ import org.jmol.util.Rectangle;
 import org.jmol.viewer.binding.Binding;
 import org.jmol.viewer.binding.JmolBinding;
 
+@J2SRequireImport({ org.jmol.i18n.GT.class })
 public class ActionManager implements EventManager {
 
   protected Viewer vwr;

@@ -28,7 +28,7 @@ import org.jmol.viewer.Viewer;
 public abstract class GenericApplet implements JmolAppletInterface,
     JmolStatusListener {
 
-  protected static Map<String, Object> htRegistry = new Hashtable<String, Object>();
+  protected static Map<String, Object> htRegistry;
 
   protected boolean isJS;
 
@@ -53,7 +53,8 @@ public abstract class GenericApplet implements JmolAppletInterface,
 
   protected Object gRight;
   protected Viewer viewer;
-  protected Map<CBK, String> callbacks = new Hashtable<CBK, String>();
+  protected Map<CBK, String> callbacks;
+  
   protected Map<String, Object> vwrOptions;
 
   protected boolean haveNotifiedError;
@@ -91,6 +92,10 @@ public abstract class GenericApplet implements JmolAppletInterface,
   abstract protected void doShowStatus(String errorMsg);
 
   protected void init(Object applet) {
+    callbacks = new Hashtable<CBK, String>();
+    if (htRegistry == null)
+      htRegistry = new Hashtable<String, Object>();
+
     appletObject = applet;
     htmlName = PT.split("" + getJmolParameter("name"), "_object")[0];
     syncId = getJmolParameter("syncId");
@@ -112,7 +117,8 @@ public abstract class GenericApplet implements JmolAppletInterface,
     vwrOptions.put("applet", Boolean.TRUE);
     if (getJmolParameter("statusListener") == null)
       vwrOptions.put("statusListener", this);
-    viewer = new Viewer(vwrOptions);
+    viewer = new Viewer(null);
+    viewer.setOptions(vwrOptions);
     viewer.pushHoldRepaint();
     String emulate = getValueLowerCase("emulate", "jmol");
     setStringProperty("defaults", emulate.equals("chime") ? "RasMol" : "Jmol");
@@ -181,7 +187,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
     if (loadParam != null && viewer.loadInline(loadParam) != null)
       script = "";
     if (script.length() > 0)
-      scriptProcessor(script, null, SCRIPT_NOWAIT);
+      scriptProcessor(script, null, SCRIPT_WAIT);
     viewer.notifyStatusReady(true);
   }
 

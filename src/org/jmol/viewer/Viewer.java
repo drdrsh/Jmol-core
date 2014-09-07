@@ -310,8 +310,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   private Object display;
   private JmolAdapter modelAdapter;
   private ACCESS access;
-  private CommandHistory commandHistory = new CommandHistory();
-
+  private CommandHistory commandHistory;
+  
   private ModelManager mm;
   public StateManager stm;
   private JmolScriptManager scm;
@@ -360,6 +360,21 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return new Viewer(info);
   }
 
+  final Dimension dimScreen;
+  final Lst<String> actionStates;
+  final Lst<String> actionStatesRedo;
+  VDW defaultVdw;
+
+  public RadiusData rd;
+  public Map<Object, Object> chainMap;
+  private Lst<String> chainList;
+  private String errorMessage;
+  private String errorMessageUntranslated;
+  private double privateKey;
+
+
+
+
   /**
    * new way...
    * 
@@ -370,11 +385,22 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    *        "appletProxy" "useCommandThread" "platform" [option]
    *        "backgroundTransparent" "exit" "listCommands" "check" "checkLoad"
    *        "silent" "access:READSPT" "access:NONE" "menuFile"
-   *        "headlessMaxTimeMs" "headlessImage" "isDataOnly"
+   *        "headlessMaxTimeMs" "headlessImage" "isDataOnly" "async"
    **/
 
   public Viewer(Map<String, Object> info) {
-    setOptions(info);
+    commandHistory =  new CommandHistory();
+    dimScreen =  new Dimension(0, 0);
+    rd =  new RadiusData (null, 0, null, null);
+    defaultVdw = VDW.JMOL;
+    localFunctions = new Hashtable<String, JmolScriptFunction>();
+    privateKey = Math.random();
+    actionStates = new Lst<String>();
+    actionStatesRedo = new Lst<String>();
+    chainMap = new Hashtable<Object, Object>();
+    chainList = new Lst<String>();
+    if (info != null)
+      setOptions(info);
   }
 
   StatusManager getStatusManager() {
@@ -407,8 +433,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   @SuppressWarnings({ "unchecked", "null", "unused" })
-  private void setOptions(Map<String, Object> info) {
-
+  public void setOptions(Map<String, Object> info) {
+    // can be deferred
     vwrOptions = info;
     // could be a Component, or could be a JavaScript class
     // use allocateViewer
@@ -440,7 +466,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (isJNLP)
       Logger.info("setting JNLP mode TRUE");
 
-    async = info.containsKey("async");
     isSignedApplet = isJNLP || checkOption2("signedApplet", "-signed");
     isApplet = isSignedApplet || checkOption2("applet", "-applet");
     allowScripting = !checkOption2("noscripting", "-noscripting");
@@ -467,24 +492,25 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       platform = (String) o;
       isWebGL = (platform.indexOf(".awtjs.") >= 0);
       isJS = isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
+      async = (isJS && info.containsKey("async"));
       Object applet = null;
-      String ver = "?";
+      String javaver = "?";
       /**
        * @j2sNative
        * 
        *            if(self.Jmol) { 
        *              applet = Jmol._applets[this.htmlName.split("_object")[0]];
-       *              ver = Jmol._version;
+       *              javaver = Jmol._version;
        *            }
        * 
        * 
        */
       {
-        ver = null;
+        javaver = null;
       }
-      if (ver != null) {
+      if (javaver != null) {
         html5Applet = applet;        
-        strJavaVersion = ver;
+        strJavaVersion = javaver;
         strJavaVendor = "Java2Script " + (this.isWebGL ? "(WebGL)" : "(HTML5)");
       }
       o = Interface.getInterface(platform, this, "setOptions");
@@ -632,6 +658,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
           + (!isApplet ? "" : "\nappletId:" + htmlName
               + (isSignedApplet ? " (signed)" : "")));
     }
+    if (allowScripting)
+      getScriptManager();
     zap(false, true, false); // here to allow echos
     g.setO("language", GT.getLanguage());
     stm.setJmolDefaults();
@@ -3611,8 +3639,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   // //////////// screen/image methods ///////////////
-
-  final Dimension dimScreen = new Dimension(0, 0);
 
   // final Rectangle rectClip = new Rectangle();
 
@@ -7093,8 +7119,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   // delegated to stateManager
   // ///////////////////////////////////////////////////////////////
 
-  public RadiusData rd = new RadiusData(null, 0, null, null);
-
   @Override
   public void setPercentVdwAtom(int value) {
     g.setI("percentVdwAtom", value);
@@ -8483,8 +8507,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   }
 
-  VDW defaultVdw = VDW.JMOL;
-
   public String cd(String dir) {
     if (dir == null) {
       dir = ".";
@@ -8503,9 +8525,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   // //// Error handling
-
-  private String errorMessage;
-  private String errorMessageUntranslated;
 
   public String setErrorMessage(String errMsg, String errMsgUntranslated) {
     errorMessageUntranslated = errMsgUntranslated;
@@ -8574,7 +8593,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   // / User-defined functions
 
   final static Map<String, JmolScriptFunction> staticFunctions = new Hashtable<String, JmolScriptFunction>();
-  Map<String, JmolScriptFunction> localFunctions = new Hashtable<String, JmolScriptFunction>();
+  Map<String, JmolScriptFunction> localFunctions;
 
   public Map<String, JmolScriptFunction> getFunctions(boolean isStatic) {
     return (isStatic ? staticFunctions : localFunctions);
@@ -8629,8 +8648,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public String getMoInfo(int modelIndex) {
     return ms.getMoInfo(modelIndex);
   }
-
-  private double privateKey = Math.random();
 
   /**
    * Simple method to ensure that the image creator (which writes files) was in
@@ -8940,9 +8957,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (haveDisplay)
       actionManager.setBondPickingOption(option);
   }
-
-  final Lst<String> actionStates = new Lst<String>();
-  final Lst<String> actionStatesRedo = new Lst<String>();
 
   void undoClear() {
     actionStates.clear();
@@ -9499,9 +9513,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public BS[] getBsBranches(float[] dihedralList) {
     return ms.getBsBranches(dihedralList);
   }
-
-  public Map<Object, Object> chainMap = new Hashtable<Object, Object>();
-  public Lst<String> chainList = new Lst<String>();
 
   /**
    * Create a unique integer for any chain string. Note that if there are any

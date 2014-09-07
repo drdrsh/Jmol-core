@@ -1263,6 +1263,7 @@ public class FileManager implements BytePoster {
     int pt = key.indexOf("|");
     if (pt >= 0)
       key = key.substring(0, pt);
+    key = getFilePath(key, true, false);
     Object data = null;
     /**
      * @j2sNative

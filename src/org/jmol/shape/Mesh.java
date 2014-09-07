@@ -112,6 +112,8 @@ public class Mesh extends MeshSurface {
   
   /**
    * always use Mesh().mesh1(thisID, colix, index)
+   * 
+   * @j2sIgnoreSuperConstructor
    */
   public Mesh() {
   }

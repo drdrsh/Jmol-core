@@ -41,6 +41,36 @@ import org.jmol.script.T;
 
 abstract public class BondCollection extends AtomCollection {
 
+  public Bond[] bo;
+  public int bondCount;
+  protected int[] numCached;
+  protected Bond[][][] freeBonds;
+  //note: Molecules is set up to only be calculated WHEN NEEDED
+  protected JmolMolecule[] molecules;
+  protected int moleculeCount;
+
+  private boolean haveWarned;
+
+  protected short defaultCovalentMad;
+
+  private BS bsAromaticSingle;
+  private BS bsAromaticDouble;
+  protected BS bsAromatic = new BS();
+
+  public boolean haveHiddenBonds;
+  
+
+  protected final static int BOND_GROWTH_INCREMENT = 250;
+  protected final static int MAX_BONDS_LENGTH_TO_CACHE = 5;
+  protected final static int MAX_NUM_TO_CACHE = 200;
+
+  protected void setupBC() {
+    numCached = new int[MAX_BONDS_LENGTH_TO_CACHE];
+    freeBonds = new Bond[MAX_BONDS_LENGTH_TO_CACHE][][];
+    for (int i = MAX_BONDS_LENGTH_TO_CACHE; --i > 0;) // NOT >= 0
+      freeBonds[i] = new Bond[MAX_NUM_TO_CACHE][];
+    setupAC();
+  }
   @Override
   protected void releaseModelSet() {
     releaseModelSetBC();
@@ -52,18 +82,11 @@ abstract public class BondCollection extends AtomCollection {
     releaseModelSetAC();
   }
 
-  //note: Molecules is set up to only be calculated WHEN NEEDED
-  protected JmolMolecule[] molecules;
-  protected int moleculeCount;
-
   public void resetMolecules() {
     molecules = null;
     moleculeCount = 0;
   }
 
-  public Bond[] bo;
-  public int bondCount;
-  
   public Bond getBondAt(int bondIndex) {
     return bo[bondIndex];
   }
@@ -148,8 +171,6 @@ abstract public class BondCollection extends AtomCollection {
     return bond;
   }
 
-  protected final static int BOND_GROWTH_INCREMENT = 250;
-
   private Bond getOrAddBond(Atom atom, Atom atomOther, int order, short mad,
                             BS bsBonds, float energy, boolean overrideBonding) {
     int i;
@@ -200,16 +221,6 @@ abstract public class BondCollection extends AtomCollection {
     }
   }
 
-  protected final static int MAX_BONDS_LENGTH_TO_CACHE = 5;
-  protected final static int MAX_NUM_TO_CACHE = 200;
-  protected int[] numCached = new int[MAX_BONDS_LENGTH_TO_CACHE];
-  protected Bond[][][] freeBonds = new Bond[MAX_BONDS_LENGTH_TO_CACHE][][];
-  {
-    for (int i = MAX_BONDS_LENGTH_TO_CACHE; --i > 0;)
-      // .GT. 0
-      freeBonds[i] = new Bond[MAX_NUM_TO_CACHE][];
-  }
-
   private Bond[] addToBonds(Bond newBond, Bond[] oldBonds) {
     Bond[] newBonds;
     if (oldBonds == null) {
@@ -256,8 +267,6 @@ abstract public class BondCollection extends AtomCollection {
     return (distance2 > maxAcceptable2 ? (short) 0 : (short) 1);
   }
 
-  private boolean haveWarned = false;
-
   protected boolean checkValencesAndBond(Atom atomA, Atom atomB, int order, short mad,
                             BS bsBonds) {
     if (atomA.getCurrentBondCount() > JC.MAXIMUM_AUTO_BOND_COUNT
@@ -291,8 +300,6 @@ abstract public class BondCollection extends AtomCollection {
     bondCount = 0;
   }
   
-
-  protected short defaultCovalentMad;
 
   /**
    * When creating a new bond, determine bond diameter from order
@@ -478,10 +485,6 @@ abstract public class BondCollection extends AtomCollection {
    * Bob Hanson -- 10/2007
    * 
    */
-
-  private BS bsAromaticSingle;
-  private BS bsAromaticDouble;
-  protected BS bsAromatic = new BS();
 
   public void resetAromatic() {
     for (int i = bondCount; --i >= 0;) {
@@ -840,8 +843,6 @@ abstract public class BondCollection extends AtomCollection {
     if (bs.nextSetBit(0) >= 0)
       vwr.deleteAtoms(bs, false);
   }
-  
-  public boolean haveHiddenBonds;
   
   public void displayBonds(BondSet bs, boolean isDisplay) {
     if (!isDisplay)

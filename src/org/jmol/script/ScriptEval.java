@@ -335,6 +335,10 @@ public class ScriptEval extends ScriptExpr {
   private boolean forceNoAddHydrogens;
   
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   public ScriptEval() {
     // by reflection as well as directly
     currentThread = Thread.currentThread();

@@ -53,6 +53,9 @@ import javajs.api.GenericZipTools;
 
 public class BinaryDocument extends BC implements GenericBinaryDocument {
 
+  /**
+   * @j2sIgnore
+   */
   public BinaryDocument() {  
   }
 

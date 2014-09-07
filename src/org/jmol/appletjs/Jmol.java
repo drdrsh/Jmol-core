@@ -46,9 +46,15 @@ import java.util.Map;
 
 public class Jmol extends GenericApplet implements JSInterface {
 
-  private Map<String, Object> htParams = new Hashtable<String, Object>();
+  private Map<String, Object> htParams;
 
+  /**
+   * cannot ignore super because it involves preparing fields
+   * @param vwrOptions 
+   * 
+   */
   public Jmol(Map<String, Object> vwrOptions) {
+    htParams = new Hashtable<String, Object>();
     if (vwrOptions == null)
       vwrOptions = new Hashtable<String, Object>();
     this.vwrOptions = vwrOptions;

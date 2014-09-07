@@ -32,6 +32,15 @@ public class ScriptException extends Exception {
   String untranslated;
   boolean isError;
 
+  /**
+   * @param se 
+   * @param msg 
+   * @param untranslated 
+   * @param isError
+   *  
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   ScriptException(ScriptError se, String msg, String untranslated, boolean isError) {
     eval = (ScriptEval) se;
     message = msg;

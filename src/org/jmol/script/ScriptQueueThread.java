@@ -41,8 +41,12 @@ public class ScriptQueueThread extends JmolThread {
   private boolean startedByCommandThread = false;
   private int pt;
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * 
+   */
   public ScriptQueueThread(JmolScriptManager scriptManager, Viewer vwr, boolean startedByCommandThread, int pt) {
-    super();
+    //super();
     setViewer(vwr, "QueueThread" + pt);
     this.scriptManager = scriptManager;
     this.vwr = vwr;

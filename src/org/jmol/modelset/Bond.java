@@ -37,7 +37,15 @@ public class Bond extends Edge {
 
   public short mad;
   public short colix = C.INHERIT_ALL;
-  
+
+  /**
+   * @j2sIgnoreSuperConstructor
+   * @param atom1
+   * @param atom2
+   * @param order
+   * @param mad
+   * @param colix
+   */
   public Bond(Atom atom1, Atom atom2, int order,
               short mad, short colix) {
     this.atom1 = atom1;

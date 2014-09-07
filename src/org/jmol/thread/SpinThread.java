@@ -55,6 +55,10 @@ public class SpinThread extends JmolThread {
   private BS[] bsBranches;
   private boolean isDone = false;
   
+  /**
+   * @j2sIgnore
+   * 
+   */
   public SpinThread() {}
   
   @SuppressWarnings("unchecked")

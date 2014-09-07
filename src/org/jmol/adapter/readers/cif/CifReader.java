@@ -249,7 +249,7 @@ public class CifReader extends AtomSetCollectionReader {
         if (htAudit != null && auditBlockCode.contains("_MOD_")) {
           String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
           if (asc.setSymmetry((SymmetryInterface) htAudit.get(key)) != null) {
-            notionalUnitCell = asc.getSymmetry(vwr).getNotionalUnitCell();
+            notionalUnitCell = asc.getSymmetry().getNotionalUnitCell();
             iHaveUnitCell = true;
           }
         } else if (htAudit != null) {
@@ -584,7 +584,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
     }
     if (lattvecs != null && lattvecs.size() > 0
-        && asc.getSymmetry(vwr).addLatticeVectors(lattvecs))
+        && asc.getSymmetry().addLatticeVectors(lattvecs))
       appendLoadNote("Note! Symmetry operators added for lattice centering "
           + latticeType);
     latticeType = null;
@@ -1652,7 +1652,7 @@ public class CifReader extends AtomSetCollectionReader {
     // get list of sites based on atom names
 
     bsSets = new BS[nat];
-    symmetry = asc.getSymmetry(vwr);
+    symmetry = asc.getSymmetry();
     for (int i = firstAtom; i < ac; i++) {
       int ipt = asc.getAtomFromName(atoms[i].atomName).index - firstAtom;
       if (bsSets[ipt] == null)
