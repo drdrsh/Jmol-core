@@ -116,28 +116,23 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
   @Override
   public int readByteArray(byte[] b, int off, int len) throws Exception {
     int n = ioRead(b, off, len);
-    if (n > 0)
-      nBytes += n;
-    int nBytesRead = n;
-    if (n > 0 && n < len) {
-      // apparently this is possible over the web
-      // it occurred in getting a DNS6B format file from Uppsala
-      while (nBytesRead < len && n > 0) {
-        n = ioRead(b, nBytesRead, len - nBytesRead);
-        if (n > 0) {
-          nBytes += n;
-          nBytesRead += n;
-        }
-      }
-    }
-    return nBytesRead;
+    nBytes += n;
+    return n;
   }
 
   private int ioRead(byte[] b, int off, int len) throws Exception {
-    int n = stream.read(b, off, len);
-    if (n > 0 && out != null)
-      writeBytes(b, off, n);
-    return n;
+    int m = 0;
+    while (len > 0) {
+      int n = stream.read(b, off, len);
+      m += n;
+      if (n > 0 && out != null)
+        writeBytes(b, off, n);
+      if (n >= len)
+        break;
+      off += n;
+      len -= n;
+    }
+    return m;
   }
 
   public void writeBytes(byte[] b, int off, int n) throws Exception {
@@ -189,7 +184,9 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
   @Override
   public int readInt() throws Exception {
     nBytes += 4;
-    return (isBigEndian ? ioReadInt() : readLEInt());
+    int t = (isBigEndian ? ioReadInt() : readLEInt());
+    System.out.println(t);
+    return t;
   }
   
   private int ioReadInt() throws Exception {

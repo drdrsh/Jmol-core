@@ -293,6 +293,8 @@ class MrcBinaryReader extends MapFileReader {
       break;
     }
     nBytes = binarydoc.getPosition();
+    if (voxelValue > 1000)
+      System.out.println(nBytes + " " + voxelValue);
     return voxelValue;
   }
 
