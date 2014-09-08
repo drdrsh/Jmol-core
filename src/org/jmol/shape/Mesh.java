@@ -80,10 +80,12 @@ public class Mesh extends MeshSurface {
   public boolean haveXyPoints;
   public int diameter;
   public float width;
-  public final P3 ptCenter = P3.new3(0,0,0);
+  public P3 ptCenter;
   public Mesh linkedMesh; //for lcaoOrbitals
   public Map<String, BS> vertexColorMap;
   
+  public V3 vAB, vAC, vTemp;
+
   public int color;
   public boolean useColix = true;
   public SymmetryInterface unitCell;
@@ -113,7 +115,7 @@ public class Mesh extends MeshSurface {
   /**
    * always use Mesh().mesh1(thisID, colix, index)
    * 
-   * @j2sIgnoreSuperConstructor
+   * @j2sIgnore
    */
   public Mesh() {
   }
@@ -125,6 +127,11 @@ public class Mesh extends MeshSurface {
     this.thisID = thisID;
     this.colix = colix;
     this.index = index;
+    ptCenter = new P3();
+    vAB = new V3();
+    vAC = new V3();
+    vTemp = new V3();
+
     //System.out.println("Mesh " + this + " constructed");
     return this;
   }
@@ -249,10 +256,6 @@ public class Mesh extends MeshSurface {
   public void setTranslucent(boolean isTranslucent, float iLevel) {
     colix = C.getColixTranslucent3(colix, isTranslucent, iLevel);
   }
-
-  public final V3 vAB = new V3();
-  public final V3 vAC = new V3();
-  public final V3 vTemp = new V3();
 
   //public Vector data1;
   //public Vector data2;

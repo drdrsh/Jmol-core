@@ -48,7 +48,7 @@ public abstract class Object2d {
   public boolean visible = true;
   public boolean hidden = false;
 
-  public float[] boxXY = new float[5];
+  public float[] boxXY;
 
   public float scalePixelsPerMicron;
 

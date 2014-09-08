@@ -62,7 +62,7 @@ import org.jmol.script.T;
 import org.jmol.shape.Mesh;
 
 public class IsosurfaceMesh extends Mesh {
-  public JvxlData jvxlData = new JvxlData();
+  public JvxlData jvxlData;
   public int vertexIncrement = 1;
   public int firstRealVertex = -1;
   public int dataType;
@@ -72,8 +72,16 @@ public class IsosurfaceMesh extends Mesh {
   Object info;
   
 
+  /**
+   * @j2sIgnoreSuperConstructor
+   * 
+   * @param thisID
+   * @param colix
+   * @param index
+   */
   IsosurfaceMesh(String thisID, short colix, int index) {
     mesh1(thisID, colix, index);
+    jvxlData = new JvxlData();
     checkByteCount = 2;
     jvxlData.version = Viewer.getJmolVersion();
   }

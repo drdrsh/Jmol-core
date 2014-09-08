@@ -197,9 +197,9 @@ public class XmlReader extends AtomSetCollectionReader {
        * @j2sNative
        * 
        *            this.domObj[0] =
-       *            parent.vwr._createDomNode("xmlReader",o);
+       *            parent.vwr.html5Applet._createDomNode("xmlReader",o);
        *            this.walkDOMTree();
-       *            parent.vwr._createDomNode("xmlReader",null);
+       *            parent.vwr.html5Applet._createDomNode("xmlReader",null);
        * 
        */
       {

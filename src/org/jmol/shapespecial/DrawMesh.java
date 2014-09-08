@@ -37,7 +37,14 @@ import javajs.util.V3;
 
 
 public class DrawMesh extends Mesh {
-  
+
+  /**
+   * @j2sIgnoreSuperConstructor
+   * 
+   * @param thisID
+   * @param colix
+   * @param index
+   */
   public DrawMesh(String thisID, short colix, int index) {
     mesh1(thisID, colix, index);
   }

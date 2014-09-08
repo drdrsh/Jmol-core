@@ -69,7 +69,8 @@ public class Text extends Object2d {
   /**
    * @j2sIgnoreSuperConstructor
    */
-  Text() {
+  private Text() {
+    boxXY =  new float[5];
   }
 
   static public Text newLabel(GData gdata, Font font, String text,
