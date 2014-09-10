@@ -830,8 +830,8 @@ public class ActionManager implements EventManager {
   @Override
   public void mouseEnterExit(long time, int x, int y, boolean isExit) {
     setCurrent(time, x, y, 0);
-    if (isExit)
-      exitMeasurementMode("mouseExit");
+    //if (isExit)
+      //exitMeasurementMode("mouseExit");
   }
 
   private int pressAction;
@@ -905,7 +905,9 @@ public class ActionManager implements EventManager {
       int deltaY = y - dragged.y;
       setCurrent(time, x, y, buttonMods);
       dragged.setCurrent(current, -1);
-      if (apm != PICKING_ASSIGN_ATOM)
+      if (false && apm != PICKING_ASSIGN_ATOM 
+          && apm != ACTION_pickMeasure
+          && apm != PICKING_MEASURE_DISTANCE)
         exitMeasurementMode(null);
       dragGesture.add(dragAction, x, y, time);
       checkDragWheelAction(dragAction, x, y, deltaX, deltaY, time,

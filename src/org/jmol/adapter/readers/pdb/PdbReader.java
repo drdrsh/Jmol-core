@@ -1229,10 +1229,10 @@ Polyproline 10
 
     String structureID = line.substring(11, 15).trim();
     int serialID = parseIntRange(line, 7, 10);
-    char startChainID = line.charAt(startChainIDIndex);
+    int startChainID = vwr.getChainID(line.substring(startChainIDIndex, startChainIDIndex + 1));
     int startSequenceNumber = parseIntRange(line, startIndex, startIndex + 4);
     char startInsertionCode = line.charAt(startIndex + 4);
-    char endChainID = line.charAt(endChainIDIndex);
+    int endChainID = vwr.getChainID(line.substring(endChainIDIndex, endChainIDIndex + 1));
     int endSequenceNumber = parseIntRange(line, endIndex, endIndex + 4);
     // some files are chopped to remove trailing whitespace
     char endInsertionCode = ' ';
@@ -1295,8 +1295,9 @@ Polyproline 10
     currentGroup3 = null;
   }
 
+  private float cryst1;
   private void cryst1() throws Exception {
-    float a = getFloat(6, 9);
+    float a = cryst1 = getFloat(6, 9);
     if (a == 1)
       a = Float.NaN; // 1 for a means no unit cell
     setUnitCell(a, getFloat(15, 9), getFloat(24, 9), getFloat(33,
@@ -1310,7 +1311,10 @@ Polyproline 10
   }
 
   private void scale(int n) throws Exception {
+    if (cryst1 != 1 || notionalUnitCell == null)
+      return; // not an EM image
     int pt = n * 4 + 2;
+    notionalUnitCell[0] = 1;
     setUnitCellItem(pt++,getFloat(10, 10));
     setUnitCellItem(pt++,getFloat(20, 10));
     setUnitCellItem(pt++,getFloat(30, 10));

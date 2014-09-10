@@ -26,7 +26,6 @@ package org.jmol.adapter.readers.cif;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
@@ -640,6 +639,7 @@ public class CifReader extends AtomSetCollectionReader {
     float v = parseFloatStr(data);
     if (Float.isNaN(v))
       return;
+    notionalUnitCell[0] = 1;
     for (int i = 0; i < TransformFields.length; i++) {
       if (key.indexOf(TransformFields[i]) >= 0) {
         setUnitCellItem(6 + i, v);

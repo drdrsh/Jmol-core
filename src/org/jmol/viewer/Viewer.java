@@ -8230,7 +8230,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return outputManager;
     return (outputManager = (OutputManager) Interface
         .getInterface("org.jmol.viewer.OutputManager"
-            + (isJS && !isWebGL ? "JS" : "Awt"), this, "file")).setViewer(this, privateKey);
+            + (isJS ? "JS" : "Awt"), this, "file")).setViewer(this, privateKey);
   }
 
   private void setSyncTarget(int mode, boolean TF) {
@@ -9530,7 +9530,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (iboxed != null)
       return iboxed.intValue();
     int i = id.charAt(0);
-    if (id.length() > 1 || id.toLowerCase().equals(id)) {
+    if (id.length() > 1 || (97 <= i && i <= 122)) { // lower case
       //this will force chainCaseSensitive when it is necessary
       i = 256 + chainList.size();
       chainList.addLast(id);

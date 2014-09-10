@@ -774,7 +774,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (i < 6 || Float.isNaN(x))
       iHaveUnitCell = checkUnitCell(6);
     else if (++nMatrixElements == 12)
-      checkUnitCell(22);
+      iHaveUnitCell = checkUnitCell(22);
   }
 
   protected M3 matUnitCellOrientation;
@@ -817,6 +817,23 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     for (int i = 0; i < n; i++)
       if (Float.isNaN(notionalUnitCell[i]))
         return false;
+    if (n == 22 && notionalUnitCell[0] == 1) {
+      if (notionalUnitCell[1] == 1 
+          && notionalUnitCell[2] == 1 
+          && notionalUnitCell[6] == 1 
+          && notionalUnitCell[11] == 1 
+          && notionalUnitCell[16] == 1 
+          )
+        return false; 
+      // this is an mmCIF or PDB case for NMR models having
+      // CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1          
+      // ORIGX1      1.000000  0.000000  0.000000        0.00000                         
+      // ORIGX2      0.000000  1.000000  0.000000        0.00000                         
+      // ORIGX3      0.000000  0.000000  1.000000        0.00000                         
+      // SCALE1      1.000000  0.000000  0.000000        0.00000                         
+      // SCALE2      0.000000  1.000000  0.000000        0.00000                         
+      // SCALE3      0.000000  0.000000  1.000000        0.00000 
+    }
     if (doApplySymmetry) {
       getSymmetry();
       doConvertToFractional = !fileCoordinatesAreFractional;

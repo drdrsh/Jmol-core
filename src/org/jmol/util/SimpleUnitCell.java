@@ -102,18 +102,7 @@ public class SimpleUnitCell {
       V3 va = V3.new3(parameters[6], parameters[7], parameters[8]);
       V3 vb = V3.new3(parameters[9], parameters[10], parameters[11]);
       V3 vc = V3.new3(parameters[12], parameters[13], parameters[14]);
-      a = va.length();
-      b = vb.length();
-      c = vc.length();
-      if (a == 0)
-        return;
-      if (b == 0)
-        b = c = -1; //polymer
-      else if (c == 0)
-        c = -1; //slab
-      alpha = (b < 0 || c < 0 ? 90 : vb.angle(vc) / toRadians);
-      beta = (c < 0 ? 90 : va.angle(vc) / toRadians);
-      gamma = (b < 0 ? 90 : va.angle(vb) / toRadians);
+      setABC(va, vb, vc);
       if (c < 0) {
         float[] n = AU.arrayCopyF(parameters, -1);
         if (b < 0) {
@@ -151,22 +140,8 @@ public class SimpleUnitCell {
       dimension = 3;
     }
 
-    cosAlpha = Math.cos(toRadians * alpha);
-    sinAlpha = Math.sin(toRadians * alpha);
-    cosBeta = Math.cos(toRadians * beta);
-    sinBeta = Math.sin(toRadians * beta);
-    cosGamma = Math.cos(toRadians * gamma);
-    sinGamma = Math.sin(toRadians * gamma);
-    double unitVolume = Math.sqrt(sinAlpha * sinAlpha + sinBeta * sinBeta
-        + sinGamma * sinGamma + 2.0 * cosAlpha * cosBeta * cosGamma - 2);
-    volume = a * b * c * unitVolume;
-    // these next few are for the B' calculation
-    cA_ = (cosAlpha - cosBeta * cosGamma) / sinGamma;
-    cB_ = unitVolume / sinGamma;
-    a_ = b * c * sinAlpha / volume;
-    b_ = a * c * sinBeta / volume;
-    c_ = a * b * sinGamma / volume;
-
+    setCellParams();
+    
     if (parameters.length > 21 && !Float.isNaN(parameters[21])) {
       // parameters with a 4x4 matrix
       // [a b c alpha beta gamma m00 m01 m02 m03 m10 m11.... m20...]
@@ -189,11 +164,12 @@ public class SimpleUnitCell {
           break;
         }
         scaleMatrix[i] = parameters[6 + i] * f;
-      }
-      
+      }      
       matrixCartesianToFractional = M4.newA16(scaleMatrix);
       matrixFractionalToCartesian = new M4();
       matrixFractionalToCartesian.invertM(matrixCartesianToFractional);
+      if (parameters[0] == 1)
+        setParamsFromMatrix();
     } else if (parameters.length > 14 && !Float.isNaN(parameters[14])) {
       // parameters with a 3 vectors
       // [a b c alpha beta gamma ax ay az bx by bz cx cy cz...]
@@ -221,6 +197,50 @@ public class SimpleUnitCell {
     }
     matrixCtoFANoOffset = matrixCartesianToFractional;
     matrixFtoCNoOffset = matrixFractionalToCartesian;
+  }
+
+  private void setParamsFromMatrix() {
+    V3 va = V3.new3(1,  0,  0);
+    V3 vb = V3.new3(0,  1,  0);
+    V3 vc = V3.new3(0,  0,  1);
+    matrixFractionalToCartesian.rotate(va);
+    matrixFractionalToCartesian.rotate(vb);
+    matrixFractionalToCartesian.rotate(vc);
+    setABC(va, vb, vc);
+    setCellParams();
+  }
+
+  private void setABC(V3 va, V3 vb, V3 vc) {
+    a = va.length();
+    b = vb.length();
+    c = vc.length();
+    if (a == 0)
+      return;
+    if (b == 0)
+      b = c = -1; //polymer
+    else if (c == 0)
+      c = -1; //slab
+    alpha = (b < 0 || c < 0 ? 90 : vb.angle(vc) / toRadians);
+    beta = (c < 0 ? 90 : va.angle(vc) / toRadians);
+    gamma = (b < 0 ? 90 : va.angle(vb) / toRadians);
+  }
+
+  private void setCellParams() {
+    cosAlpha = Math.cos(toRadians * alpha);
+    sinAlpha = Math.sin(toRadians * alpha);
+    cosBeta = Math.cos(toRadians * beta);
+    sinBeta = Math.sin(toRadians * beta);
+    cosGamma = Math.cos(toRadians * gamma);
+    sinGamma = Math.sin(toRadians * gamma);
+    double unitVolume = Math.sqrt(sinAlpha * sinAlpha + sinBeta * sinBeta
+        + sinGamma * sinGamma + 2.0 * cosAlpha * cosBeta * cosGamma - 2);
+    volume = a * b * c * unitVolume;
+    // these next few are for the B' calculation
+    cA_ = (cosAlpha - cosBeta * cosGamma) / sinGamma;
+    cB_ = unitVolume / sinGamma;
+    a_ = b * c * sinAlpha / volume;
+    b_ = a * c * sinBeta / volume;
+    c_ = a * b * sinGamma / volume;
   }
 
   protected M4 matrixCtoFANoOffset;
