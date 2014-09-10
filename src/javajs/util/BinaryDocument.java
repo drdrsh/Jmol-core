@@ -184,9 +184,7 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
   @Override
   public int readInt() throws Exception {
     nBytes += 4;
-    int t = (isBigEndian ? ioReadInt() : readLEInt());
-    System.out.println(t);
-    return t;
+    return (isBigEndian ? ioReadInt() : readLEInt());
   }
   
   private int ioReadInt() throws Exception {
