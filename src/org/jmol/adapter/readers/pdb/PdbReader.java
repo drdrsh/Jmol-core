@@ -1314,7 +1314,7 @@ Polyproline 10
     if (cryst1 != 1 || notionalUnitCell == null)
       return; // not an EM image
     int pt = n * 4 + 2;
-    notionalUnitCell[0] = 1;
+    //could enable EM box: notionalUnitCell[0] = 1;
     setUnitCellItem(pt++,getFloat(10, 10));
     setUnitCellItem(pt++,getFloat(20, 10));
     setUnitCellItem(pt++,getFloat(30, 10));

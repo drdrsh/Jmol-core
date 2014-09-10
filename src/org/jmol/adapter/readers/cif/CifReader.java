@@ -639,7 +639,7 @@ public class CifReader extends AtomSetCollectionReader {
     float v = parseFloatStr(data);
     if (Float.isNaN(v))
       return;
-    notionalUnitCell[0] = 1;
+    //could enable EM box: notionalUnitCell[0] = 1;
     for (int i = 0; i < TransformFields.length; i++) {
       if (key.indexOf(TransformFields[i]) >= 0) {
         setUnitCellItem(6 + i, v);
