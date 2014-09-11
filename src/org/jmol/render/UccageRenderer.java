@@ -87,7 +87,7 @@ public class UccageRenderer extends CageRenderer {
     isSlab = unitcell.isSlab();
     P3[] vertices = unitcell.getUnitCellVertices();
     offset.setT(unitcell.getCartesianOffset());
-    offsetT.set(0, 0, 0);
+    offsetT.setT(unitcell.getFractionalOrigin());
     unitcell.toCartesian(offsetT, true);
     offset.sub(offsetT);
 

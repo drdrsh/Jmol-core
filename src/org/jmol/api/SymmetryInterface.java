@@ -193,4 +193,6 @@ public interface SymmetryInterface {
 
   public Tensor getTensor(Viewer vwr, float[] anisoBorU);
 
+  public T3 getFractionalOrigin();
+
 }

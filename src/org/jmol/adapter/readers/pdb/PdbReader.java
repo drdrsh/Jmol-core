@@ -1311,10 +1311,14 @@ Polyproline 10
   }
 
   private void scale(int n) throws Exception {
-    if (cryst1 != 1 || notionalUnitCell == null)
-      return; // not an EM image
+    if (notionalUnitCell == null)
+      return; 
+    // Could be an EM image
+    // this information will only be processed
+    // if a lattice is requested.
+    
     int pt = n * 4 + 2;
-    //could enable EM box: notionalUnitCell[0] = 1;
+    notionalUnitCell[0] = cryst1;
     setUnitCellItem(pt++,getFloat(10, 10));
     setUnitCellItem(pt++,getFloat(20, 10));
     setUnitCellItem(pt++,getFloat(30, 10));

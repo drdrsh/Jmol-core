@@ -526,9 +526,9 @@ class UnitCell extends SimpleUnitCell {
    * @return quaternion
    */
   public Quat getQuaternionRotation(String abc) {
-    T3 a = vertices[4];
-    T3 b = vertices[2];
-    T3 c = vertices[1];
+    T3 a = V3.newVsub(vertices[4], vertices[0]);
+    T3 b = V3.newVsub(vertices[2], vertices[0]);
+    T3 c = V3.newVsub(vertices[1], vertices[0]);
     T3 x = new V3();
     T3 v = new V3();
   

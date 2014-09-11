@@ -692,4 +692,9 @@ public class Symmetry implements SymmetryInterface {
     return (unitCell == null ? null : unitCell.getQuaternionRotation(abc));
   }
 
+  @Override
+  public T3 getFractionalOrigin() {
+    return unitCell.getFractionalOrigin();
+  }
+
 }

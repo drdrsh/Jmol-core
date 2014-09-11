@@ -63,6 +63,7 @@ public class SimpleUnitCell {
   protected double a_;
   protected double b_, c_;
   protected int dimension;
+  private P3 fractionalOrigin;
 
   public static boolean isValid(float[] parameters) {
     return (parameters != null && (parameters[0] > 0 || parameters.length > 14
@@ -70,6 +71,7 @@ public class SimpleUnitCell {
   }
 
   protected SimpleUnitCell() {
+    fractionalOrigin = new P3();
   }
   
   public static SimpleUnitCell newA(float[] parameters) {
@@ -166,6 +168,7 @@ public class SimpleUnitCell {
         scaleMatrix[i] = parameters[6 + i] * f;
       }      
       matrixCartesianToFractional = M4.newA16(scaleMatrix);
+      matrixCartesianToFractional.getTranslation(fractionalOrigin);
       matrixFractionalToCartesian = new M4();
       matrixFractionalToCartesian.invertM(matrixCartesianToFractional);
       if (parameters[0] == 1)
@@ -241,6 +244,10 @@ public class SimpleUnitCell {
     a_ = b * c * sinAlpha / volume;
     b_ = a * c * sinBeta / volume;
     c_ = a * b * sinGamma / volume;
+  }
+
+  public T3 getFractionalOrigin() {
+    return fractionalOrigin ;
   }
 
   protected M4 matrixCtoFANoOffset;
