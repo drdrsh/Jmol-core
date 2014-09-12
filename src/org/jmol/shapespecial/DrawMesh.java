@@ -24,8 +24,6 @@
 
 package org.jmol.shapespecial;
 
-
-
 import org.jmol.java.BS;
 import org.jmol.shape.Mesh;
 import org.jmol.shapespecial.Draw.EnumDrawType;
@@ -34,7 +32,6 @@ import org.jmol.util.BSUtil;
 import javajs.util.AU;
 import javajs.util.P3;
 import javajs.util.V3;
-
 
 public class DrawMesh extends Mesh {
 
@@ -46,15 +43,18 @@ public class DrawMesh extends Mesh {
    * @param index
    */
   public DrawMesh(String thisID, short colix, int index) {
+    drawType = EnumDrawType.NONE;
+    axis = V3.new3 (1, 0, 0);
+    bsMeshesVisible =  new BS ();
     mesh1(thisID, colix, index);
   }
 
+  public BS bsMeshesVisible;
   public BS modelFlags;
-  
-  public EnumDrawType drawType = EnumDrawType.NONE;
+  public EnumDrawType drawType;
   EnumDrawType[] drawTypes;
   P3 ptCenters[];
-  V3 axis = V3.new3(1,0,0);
+  V3 axis;
   V3 axes[];
   int drawVertexCount;
   int[] drawVertexCounts;
@@ -63,7 +63,6 @@ public class DrawMesh extends Mesh {
   public float drawArrowScale;
   public boolean noHead;
   public boolean isBarb;
-
   public float scale = 1;
   public boolean isScaleSet;
 
@@ -75,8 +74,6 @@ public class DrawMesh extends Mesh {
     isScaleSet = false;
   }
   
-  public BS bsMeshesVisible = new BS();
-
   void setCenters() {
     if (ptCenters == null)
       setCenter(-1);
