@@ -33,7 +33,6 @@ import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Structure;
-import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.c.STR;
 import org.jmol.java.BS;
@@ -87,9 +86,13 @@ public class MMCifReader extends CifReader {
     if (!isCourseGrained && asc.ac == nAtoms) {
       asc.removeCurrentAtomSet();
     } else {
-      if (validation != null && !isCourseGrained) {
-        MMCifValidationParser vs = (MMCifValidationParser) getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser");
-        String note = vs.finalizeValidations(modelMap);
+      if ((validation != null || addedData != null) && !isCourseGrained) {
+        MMCifValidationParser vs = ((MMCifValidationParser) getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser")).set(this);
+        String note; 
+        if (addedData == null)
+          note = vs.finalizeValidations(modelMap);
+        else
+          note = vs.finalizeRna3d(modelMap);        
         if (note != null)
           appendLoadNote(note);
       }
@@ -183,6 +186,12 @@ public class MMCifReader extends CifReader {
       processDataNonpoly();
     else if (key.startsWith("_pdbx_struct_assembly_gen"))
       processDataAssemblyGen();
+    else if (key.startsWith("_rna3d"))
+      processRna3d();
+  }
+
+  private void processRna3d() {
+    addedData = data;
   }
 
   final private static byte STRUCT_REF_G3 = 0;

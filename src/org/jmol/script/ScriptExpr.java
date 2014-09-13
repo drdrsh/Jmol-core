@@ -354,6 +354,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.substructure:
       case T.structure:
       case T.dssr:
+      case T.rna3d:
         ////
       case T.on:
       case T.off:

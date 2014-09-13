@@ -1137,7 +1137,7 @@ public class AtomSetCollection {
     return (String) getAtomSetAuxiliaryInfoValue(atomSetIndex, "name");
   }
 
-  Map<String, Object> getAtomSetAuxiliaryInfo(int atomSetIndex) {
+  public Map<String, Object> getAtomSetAuxiliaryInfo(int atomSetIndex) {
     int i = (atomSetIndex >= atomSetCount ? atomSetCount - 1
         : atomSetIndex);
     return (i < 0 ? null : atomSetAuxiliaryInfo[i]);

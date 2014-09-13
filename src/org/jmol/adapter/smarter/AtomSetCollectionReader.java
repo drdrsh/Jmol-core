@@ -146,6 +146,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Lst<P3[]> trajectorySteps;
   private Object domains;
   public Object validation;
+  protected boolean isConcatenated;
+  public String addedData;
   public boolean fixJavaFloat = true;
 
   //protected String parameterData;
@@ -630,6 +632,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     domains = htParams.get("domains");
     validation = htParams.get("validation");
+    isConcatenated = htParams.containsKey("concatenate");
   }
 
   protected void initializeSymmetryOptions() {

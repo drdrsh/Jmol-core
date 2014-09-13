@@ -4437,10 +4437,11 @@ public class ScriptEval extends ScriptExpr {
         loadScript = null;
       } else if (!isConcat && filename.startsWith("*") && filename.indexOf("/") > 1) {
         
-          // EBI domains and validations
+          // EBI domains and validations, also rna3
 
           // load *1cbs/dom/xx/xx  -->  load *1cbs + *dom/xx/xx/1cbs
           // load *1cbs/val/xx/xx  -->  load *1cbs + *val/xx/xx/1cbs
+          // load *1cbs/rna3d/loops  -->  load *1cbs + *rna3d/loops/downloads/1cbs
           // TODO load *1cbs/map/xx/xx  -->  load *1cbs + *map/xx/xx/1cbs (unimplemented electron density?)
 
           isConcat = true;

@@ -4209,6 +4209,12 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         f = name.substring(ptv + 1);
         format = (ptv > 4 ? name.substring(5) : "validation/outliers/all");
         return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
+      } else if (name.startsWith("*rna3d/")) {
+        //  *val/.../.../.../xxxx
+        int ptv = name.lastIndexOf("/");
+        f = name.substring(ptv + 1);
+        format = (ptv > 6 ? name.substring(6) : "loops");
+        return PT.rep(g.resolveDataBase("rna3d", f), "%TYPE", format);
       }
       // these are processed in SmarterJmolAdapter
       return g.resolveDataBase("pdbe", f);

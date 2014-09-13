@@ -209,6 +209,10 @@ public class SmarterJmolAdapter extends JmolAdapter {
             htParams.put(type, x);
           continue;
         }
+        if (names[i].indexOf("rna3d") >= 0) {
+          s += "\n_rna3d \n;" + f + "\n;\n";
+          continue;
+        }
         s += f;
         if (!s.endsWith("\n"))
           s += "\n";

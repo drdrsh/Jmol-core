@@ -4,10 +4,12 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.Lst;
+import javajs.util.PT;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.script.SV;
+import org.jmol.util.Logger;
 
 public class MMCifValidationParser {
 
@@ -49,6 +51,51 @@ public class MMCifValidationParser {
         : setProperties(retProps));
     svMap.getMap().put("_note", SV.newS(note));
     return note;
+  }
+
+  public String finalizeRna3d(Map<String, Integer> modelMap) {
+    mapAtomResIDs(modelMap);
+    SV svMap = getRna3dMap(reader.addedData);
+    
+    String note = reader.vwr.getAnnotationParser().catalogStructureUnits(
+        reader.vwr, svMap, getModelAtomIndices(), resMap, null, modelMap);
+    svMap.getMap().put("_note", SV.newS(note));
+    for (int i = reader.asc.atomSetCount; --i >= 0;) {
+      Map<String, Object> info = reader.asc.getAtomSetAuxiliaryInfo(i);
+      info.put("rna3d", svMap);
+    }
+    return note;
+  }
+  private SV getRna3dMap(String addedData) {
+    Map<String, Lst<Map<String, Object>>> map = new Hashtable<String, Lst<Map<String, Object>>>();
+    int[] next = new int[1];
+    String id = "";
+    while ((id = PT.getQuotedStringNext(addedData, next)).length() > 0) {
+      String units = PT.getQuotedStringNext(addedData, next);
+      String type = "?";
+      switch (id.charAt(0)) {
+      case 'H':
+        type = "hairpinLoops";
+        break;
+      case 'I':
+        type = "internalLoops";
+        break;
+      case 'J':
+        type = "junctions";
+        break;
+      default:
+        Logger.error("MMCif could not read: " + id + " " + units);
+        continue;
+      }
+      Lst<Map<String, Object>> list = map.get(type);
+      if (list == null)
+        map.put(type, list = new Lst<Map<String, Object>>());
+      Map<String, Object> m = new Hashtable<String, Object>();
+      m.put("index", Integer.valueOf(PT.parseInt(id.substring(id.lastIndexOf("_") + 1))));
+      m.put("units", units);
+      list.addLast(m);
+    }
+    return SV.getVariableMap(map);
   }
 
   /**
@@ -140,6 +187,7 @@ public class MMCifValidationParser {
     }
     return note;
   }
+
 
 
 }

@@ -2357,6 +2357,8 @@ import java.util.Properties;
       //      TODO -- generalize this
     case T.dssr:
       return getAnnotationBits("dssr", T.dssr, (String) specInfo);
+    case T.rna3d:
+      return getAnnotationBits("rna3d", T.rna3d, (String) specInfo);
     case T.bonds:
     case T.isaromatic:
       return getAtomBitsMDb(tokType, specInfo);

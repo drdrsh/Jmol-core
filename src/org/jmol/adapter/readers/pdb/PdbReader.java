@@ -159,7 +159,6 @@ public class PdbReader extends AtomSetCollectionReader {
   private int atomTypeLen;
   private boolean isCourseGrained;
   private boolean isbiomol;
-  private boolean isConcatenated;
 
   final private static String lineOptions = 
    "ATOM    " + //0
@@ -202,7 +201,7 @@ public class PdbReader extends AtomSetCollectionReader {
    isCourseGrained = byChain || bySymop;
    if (!isCourseGrained)
      setIsPDB();
-   isConcatenated = htParams.containsKey("concatenate") || filePath.endsWith(".dssr");
+   isConcatenated |= filePath.endsWith(".dssr");
    if (htParams.containsKey("vTlsModels")) {
      // from   load files "tls.out" "xxxx.pdb"
      vTlsModels = ( Lst<Map<String, Object>>) htParams.remove("vTlsModels");

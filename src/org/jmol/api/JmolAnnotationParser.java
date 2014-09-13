@@ -36,5 +36,9 @@ public interface JmolAnnotationParser {
   Lst<Float> getAtomValidation(Viewer vwr, String type, Atom atom);
 
   void fixAtoms(int modelIndex, SV v, BS bsAddedMask, int type, int margin);
+
+  String catalogStructureUnits(Viewer vwr, SV svMap, int[] modelAtomIndices,
+                               Map<String, int[]> resMap, Object object,
+                               Map<String, Integer> modelMap);
   
 }

@@ -1301,7 +1301,8 @@ public class T {
   public final static int resolution     = misc  | 298;
   public final static int reversecolor   = misc  | 300;
   public final static int rewind         = misc  | 302;
-  public final static int right          = misc  | 304;
+  public final static int right          = misc  | 303;
+  public final static int rna3d          = misc  | 304;
   public final static int rock           = misc  | 305;
   public final static int rotate45       = misc  | 306;
   public final static int rotation = misc  | 308;
@@ -2072,6 +2073,7 @@ public class T {
         "reverse",
         "right",
         "RNA",
+        "rna3d",
         "rock",
         "rubberband",
         "saSurface",
@@ -3088,6 +3090,7 @@ public class T {
         reverse,                            // "reverse"
         right,                              // "right"
         rna,                                // "RNA"
+        rna3d,                              // "rna3d"
         rock,                               // "rock"
         rubberband,                         // "rubberband"
         sasurface,                          // "saSurface"
