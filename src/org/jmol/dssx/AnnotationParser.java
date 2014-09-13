@@ -1562,19 +1562,13 @@ public class AnnotationParser implements JmolAnnotationParser {
   //          integer, range 1-99
   //      Chain ID
   //          From PDBx/mmCIF item: _atom_site.auth_asym_id
-  //          1 character, case-sensitive
-  //
-  //  JMOL NOTE: We allow any number of characters
-  //
+  //          <= 4 character, case-sensitive
   //      Residue/Nucleotide/Component Identifier
   //          From PDBx/mmCIF item: _atom_site.label_comp_id
   //          1-3 characters, case-insensitive
   //      Residue/Nucleotide/Component Number
   //          From PDBx/mmCIF item: _atom_site.auth_seq_id
   //          integer, range: -999..9999 (there are negative residue numbers)
-  //
-  //  JMOL NOTE: We use _atom_site.label_seq_id
-  //
   //      Atom Name (Optional, default: blank)
   //          From PDBx/mmCIF item: _atom_site.label_atom_id
   //          0-4 characters, case-insensitive

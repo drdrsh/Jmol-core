@@ -4435,7 +4435,8 @@ public class ScriptEval extends ScriptExpr {
             "=dssr/" + filename.substring(1, 5) };
         filename = "fileSet";
         loadScript = null;
-      } else if (!isConcat && filename.startsWith("*") && filename.indexOf("/") > 1) {
+      } else if (!isConcat && (filename.startsWith("=") || filename.startsWith("*"))
+          && filename.indexOf("/") > 1) {
         
           // EBI domains and validations, also rna3
 
@@ -4448,9 +4449,14 @@ public class ScriptEval extends ScriptExpr {
           int pt = filename.indexOf("/");
           String id = filename.substring(1, pt);
           String ext = filename.substring(pt + 1);          
+          filename = filename.substring(0, pt);
+          if ((pt = filename.indexOf(".")) >= 0)
+            filename = filename.substring(0, pt);
+          if (filename.startsWith("="))
+            filename += ".cif";
           filenames = (ext.equals("all") ? 
-            new String[] { "*" + id, "*dom/" + id ,  "*val/" + id }
-          : new String[] { "*" + id, "*" + ext + "/" + id });
+            new String[] { filename, "*dom/" + id ,  "*val/" + id }
+          : new String[] { filename, "*" + ext + "/" + id });
           filename = "fileSet";
           loadScript = null;
       } else {

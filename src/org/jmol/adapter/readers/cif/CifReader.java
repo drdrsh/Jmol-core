@@ -1160,7 +1160,7 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case AUTH_SEQ_ID:
           maxSerial = Math.max(maxSerial,
-              atom.sequenceNumber = parseIntStr(field));
+          atom.sequenceNumber = parseIntStr(field));
           break;
         case INS_CODE:
           atom.insertionCode = firstChar;
