@@ -147,7 +147,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private Object domains;
   public Object validation;
   protected boolean isConcatenated;
-  public String addedData;
+  public String addedData, addedDataKey;
   public boolean fixJavaFloat = true;
 
   //protected String parameterData;

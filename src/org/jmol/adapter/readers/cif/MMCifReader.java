@@ -29,6 +29,7 @@ import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.PT;
+import javajs.util.Rdr;
 import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
@@ -88,16 +89,21 @@ public class MMCifReader extends CifReader {
     } else {
       if ((validation != null || addedData != null) && !isCourseGrained) {
         MMCifValidationParser vs = ((MMCifValidationParser) getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser")).set(this);
-        String note; 
-        if (addedData == null)
+        String note = null; 
+        if (addedData == null) {
           note = vs.finalizeValidations(modelMap);
-        else
-          note = vs.finalizeRna3d(modelMap);        
+        } else if (addedDataKey.equals("_rna3d")) {
+          note = vs.finalizeRna3d(modelMap);   
+        } else { 
+          reader = Rdr.getBR(addedData);
+          processDSSR(this, htGroup1);
+        }
         if (note != null)
           appendLoadNote(note);
       }
       applySymmetryAndSetTrajectory();
     }
+    
     if (htSites != null)
       addSites(htSites);
     if (vBiomolecules != null && vBiomolecules.size() == 1
@@ -186,12 +192,13 @@ public class MMCifReader extends CifReader {
       processDataNonpoly();
     else if (key.startsWith("_pdbx_struct_assembly_gen"))
       processDataAssemblyGen();
-    else if (key.startsWith("_rna3d"))
-      processRna3d();
+    else if (key.equals("_rna3d") || key.equals("_dssr"))
+      processAddedData();
   }
 
-  private void processRna3d() {
+  private void processAddedData() {
     addedData = data;
+    addedDataKey = key;
   }
 
   final private static byte STRUCT_REF_G3 = 0;

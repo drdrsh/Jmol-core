@@ -4425,26 +4425,17 @@ public class ScriptEval extends ScriptExpr {
           loadScript.append("/*file*/").append(
               (localName != null ? PT.esc(localName) : "$FILENAME$"));
       }
-      if (!isConcat && filename.startsWith("=") && filename.endsWith("/dssr")) {
-
-        // load =1mys/dssr  -->  load =1mys + =dssr/1mys
-
-        isConcat = true;
-        filenames = new String[] {
-            filename.substring(0, filename.length() - 5),
-            "=dssr/" + filename.substring(1, 5) };
-        filename = "fileSet";
-        loadScript = null;
-      } else if (!isConcat && (filename.startsWith("=") || filename.startsWith("*"))
+      if (!isConcat && (filename.startsWith("=") || filename.startsWith("*"))
           && filename.indexOf("/") > 1) {
         
-          // EBI domains and validations, also rna3
+          // EBI domains and validations, also rna3 and dssr
 
           // load *1cbs/dom/xx/xx  -->  load *1cbs + *dom/xx/xx/1cbs
           // load *1cbs/val/xx/xx  -->  load *1cbs + *val/xx/xx/1cbs
           // load *1cbs/rna3d/loops  -->  load *1cbs + *rna3d/loops/downloads/1cbs
           // TODO load *1cbs/map/xx/xx  -->  load *1cbs + *map/xx/xx/1cbs (unimplemented electron density?)
-
+          // load =1mys/dssr  -->  load =1mys + *dssr/1mys
+        
           isConcat = true;
           int pt = filename.indexOf("/");
           String id = filename.substring(1, pt);

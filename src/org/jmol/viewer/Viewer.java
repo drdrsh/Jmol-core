@@ -4197,24 +4197,25 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return PT.formatStringS(s, "FILE", f);
     case '*':
       // European Bioinformatics Institute
+      int pt = name.lastIndexOf("/");      
       if (name.startsWith("*dom/")) {
         //  *ann/.../.../.../xxxx
-        int pt = name.lastIndexOf("/");
         f = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "mappings");
         return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
       } else if (name.startsWith("*val/")) {
         //  *val/.../.../.../xxxx
-        int ptv = name.lastIndexOf("/");
-        f = name.substring(ptv + 1);
-        format = (ptv > 4 ? name.substring(5) : "validation/outliers/all");
+        f = name.substring(pt + 1);
+        format = (pt > 4 ? name.substring(5) : "validation/outliers/all");
         return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
       } else if (name.startsWith("*rna3d/")) {
         //  *val/.../.../.../xxxx
-        int ptv = name.lastIndexOf("/");
-        f = name.substring(ptv + 1);
-        format = (ptv > 6 ? name.substring(6) : "loops");
+        f = name.substring(pt + 1);
+        format = (pt > 6 ? name.substring(6) : "loops");
         return PT.rep(g.resolveDataBase("rna3d", f), "%TYPE", format);
+      } else if (name.startsWith("*dssr/")) {
+        f = name.substring(pt + 1);
+        return g.resolveDataBase("dssr", f);
       }
       // these are processed in SmarterJmolAdapter
       return g.resolveDataBase("pdbe", f);
