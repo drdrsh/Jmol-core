@@ -67,22 +67,22 @@ public class Sheet extends ProteinStructure {
 
     P3 tempA = new P3();
     apolymer.getLeadMidPoint(monomerIndexFirst, tempA);
-    if (lowerNeighborIsHelixOrSheet()) {
-      //System.out.println("ok"); 
-    } else {
+    if (notHelixOrSheet(monomerIndexFirst - 1))
       Measure
           .projectOntoAxis(tempA, axisA, axisUnitVector, vectorProjection);
-    }
     P3 tempB = new P3();
     apolymer.getLeadMidPoint(monomerIndexFirst + nRes, tempB);
-    if (upperNeighborIsHelixOrSheet()) {
-      //System.out.println("ok");       
-    } else {
+    if (notHelixOrSheet(monomerIndexFirst + nRes))
       Measure
           .projectOntoAxis(tempB, axisA, axisUnitVector, vectorProjection);
-    }
     axisA = tempA;
     axisB = tempB;
+  }
+
+  private boolean notHelixOrSheet(int i) {
+    return (i < 0 || i >= apolymer.monomerCount 
+        || !apolymer.monomers[i].isHelix() 
+          && !apolymer.monomers[i].isSheet());
   }
 
   V3 widthUnitVector;
@@ -114,15 +114,14 @@ public class Sheet extends ProteinStructure {
     }
   }
 
-  public V3 getWidthUnitVector() {
-    if (widthUnitVector == null)
-      calcSheetUnitVectors();
-    return widthUnitVector;
-  }
-
-  public V3 getHeightUnitVector() {
+  public void setBox(float w, float h, P3 pt, V3 vW, V3 vH, P3 ptC, float scale) {
     if (heightUnitVector == null)
       calcSheetUnitVectors();
-    return heightUnitVector;
+    vW.setT(widthUnitVector);
+    vW.scale(scale * w);
+    vH.setT(heightUnitVector);
+    vH.scale(scale * h);
+    ptC.ave(vW, vH);
+    ptC.sub2(pt, ptC);
   }
 }

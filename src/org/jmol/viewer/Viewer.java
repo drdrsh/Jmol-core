@@ -7261,11 +7261,12 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   // //////////////////////////////////////////////////////////////
 
   public P3[] allocTempPoints(int size) {
-    // rockets renderer
+    // rockets cartoons renderer only
     return tempArray.allocTempPoints(size);
   }
 
   public void freeTempPoints(P3[] tempPoints) {
+    // rockets, cartoons render only
     tempArray.freeTempPoints(tempPoints);
   }
 

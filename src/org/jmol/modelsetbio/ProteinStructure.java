@@ -43,12 +43,12 @@ public abstract class ProteinStructure {
   int serialID;
   int strandCount;
 
+  public int nRes;
   protected AlphaPolymer apolymer;
   protected int monomerIndexFirst;
-  protected int nRes;
   protected P3 axisA, axisB;
   protected V3 axisUnitVector;
-  protected final V3 vectorProjection = new V3();
+  protected V3 vectorProjection;
 
   private static int globalStrucNo = 1000;
   private int monomerIndexLast;
@@ -65,7 +65,8 @@ public abstract class ProteinStructure {
                        int monomerIndex, int monomerCount) {
     strucNo = ++globalStrucNo;
     this.apolymer = apolymer;
-    this.type = type;    
+    this.type = type;
+    vectorProjection = new V3();
     monomerIndexFirst = monomerIndex;
     addMonomer(monomerIndex + monomerCount - 1);
     if(Logger.debugging)
@@ -84,6 +85,7 @@ public abstract class ProteinStructure {
    */
   void addMonomer(int index) {
     resMap = null;
+    resetAxes();
     monomerIndexFirst = Math.min(monomerIndexFirst, index);
     monomerIndexLast = Math.max(monomerIndexLast, index);
     nRes = monomerIndexLast - monomerIndexFirst + 1;
@@ -98,6 +100,7 @@ public abstract class ProteinStructure {
    */
   void removeMonomer(int index) {
     resMap = null;
+    resetAxes();
     if (index > monomerIndexLast || index < monomerIndexFirst)
       return;
     if (index == monomerIndexFirst) {
@@ -125,6 +128,7 @@ public abstract class ProteinStructure {
   }
 
   public void calcAxis() {
+    // implemented in helix and sheet
   }
 
   void calcSegments() {
@@ -149,25 +153,6 @@ public abstract class ProteinStructure {
     }
   }
 
-  boolean lowerNeighborIsHelixOrSheet() {
-    if (monomerIndexFirst == 0)
-      return false;
-    return apolymer.monomers[monomerIndexFirst - 1].isHelix()
-        || apolymer.monomers[monomerIndexFirst - 1].isSheet();
-  }
-
-  boolean upperNeighborIsHelixOrSheet() {
-    int upperNeighborIndex = monomerIndexFirst + nRes;
-    if (upperNeighborIndex == apolymer.monomerCount)
-      return false;
-    return apolymer.monomers[upperNeighborIndex].isHelix()
-        || apolymer.monomers[upperNeighborIndex].isSheet();
-  }
-
-  public int getMonomerCount() {
-    return nRes;
-  }
-  
   public boolean isWithin(int monomerIndex) {
     return (monomerIndex > monomerIndexFirst 
         && monomerIndex < monomerIndexLast);

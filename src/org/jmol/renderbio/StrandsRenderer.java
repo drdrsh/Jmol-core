@@ -61,15 +61,15 @@ public class StrandsRenderer extends BioShapeRenderer {
     P3i[] screens;
     for (int i = strandCount >> 1; --i >= 0;) {
       float f = (i * strandSeparation) + baseStrandOffset;
-      screens = calcScreens(f);
+      screens = calcScreens(f, mads);
       renderStrand(screens);
       vwr.freeTempScreens(screens);
-      screens = calcScreens(-f);
+      screens = calcScreens(-f, mads);
       renderStrand(screens);
       vwr.freeTempScreens(screens);
     }
     if (strandCount % 2 == 1) {
-      screens = calcScreens(0f);
+      screens = calcScreens(0f, mads);
       renderStrand(screens);
       vwr.freeTempScreens(screens);
     }

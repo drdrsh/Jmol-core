@@ -66,11 +66,9 @@ abstract class BioShapeRenderer extends MeshRenderer {
   private float sheetSmoothing;
   protected boolean cartoonsFancy;
 
-
   private Mesh[] meshes;
   private boolean[] meshReady;
   private BS bsRenderMesh;
-
 
   protected int monomerCount;
   protected Monomer[] monomers;
@@ -241,29 +239,19 @@ abstract class BioShapeRenderer extends MeshRenderer {
   }
 
   private void setStructureTypes() {
-    structureTypes = vwr.allocTempEnum(monomerCount + 1);
-    for (int i = monomerCount; --i >= 0;) {
-      structureTypes[i] = monomers[i].getProteinStructureType();
-      if (structureTypes[i] == STR.TURN)
-        structureTypes[i] = STR.NONE;
-    }
-    structureTypes[monomerCount] = structureTypes[monomerCount - 1];
+    STR[] types = structureTypes = vwr.allocTempEnum(monomerCount + 1);
+    for (int i = monomerCount; --i >= 0;)
+      if ((types[i] = monomers[i].getProteinStructureType()) == STR.TURN)
+        types[i] = STR.NONE;
+    types[monomerCount] = types[monomerCount - 1];
   }
 
-  protected boolean isHelix(int i) {
-    return structureTypes[i] == STR.HELIX;
-  }
-
-  protected void getScreenControlPoints() {
-    calcScreenControlPoints(controlPoints);
-  }
-
-  protected void calcScreenControlPoints(P3[] points) {
+  protected void calcScreenControlPoints() {
     int count = monomerCount + 1;
-    controlPointScreens = vwr.allocTempScreens(count);
-    for (int i = count; --i >= 0;) {
-      tm.transformPtScr(points[i], controlPointScreens[i]);
-    }
+    P3i[] scr = controlPointScreens = vwr.allocTempScreens(count);
+    P3[] points = controlPoints;
+    for (int i = count; --i >= 0;)
+      tm.transformPtScr(points[i], scr[i]);
     haveControlPointScreens = true;
   }
 
@@ -272,9 +260,10 @@ abstract class BioShapeRenderer extends MeshRenderer {
    * (cartoon, strand, meshRibbon, and ribbon)
    * 
    * @param offsetFraction
+   * @param mads 
    * @return Point3i array THAT MUST BE LATER FREED
    */
-  protected P3i[] calcScreens(float offsetFraction) {
+  protected P3i[] calcScreens(float offsetFraction, short[] mads) {
     int count = controlPoints.length;
     P3i[] screens = vwr.allocTempScreens(count);
     if (offsetFraction == 0) {
@@ -464,7 +453,8 @@ abstract class BioShapeRenderer extends MeshRenderer {
         doCap0 = true;
         doCap1 = false;
         if ((meshes[i] == null || !meshReady[i])
-            && !createMesh(i, (int) Math.floor(madBeg * 1.2), (int) Math.floor(madBeg * 0.6), 0,
+            && !createMesh(i, (int) Math.floor(madBeg * 1.2),
+                (int) Math.floor(madBeg * 0.6), 0,
                 (aspectRatio == 1 ? aspectRatio : aspectRatio / 2), 7))
           return;
         meshes[i].setColix(colix);
@@ -478,18 +468,17 @@ abstract class BioShapeRenderer extends MeshRenderer {
       }
     }
 
-    calc1Screen(controlPoints[i], wingVectors[i], madBeg, .0007f,
-        screenArrowTop);
-    calc1Screen(controlPoints[i], wingVectors[i], madBeg, -.0007f,
-        screenArrowBot);
-    calc1Screen(controlPoints[i], wingVectors[i], madBeg, 0.001f,
-        screenArrowTopPrev);
-    calc1Screen(controlPoints[i], wingVectors[i], madBeg, -0.001f,
-        screenArrowBotPrev);
+    P3 cp = controlPoints[i];
+    V3 wv = wingVectors[i];
+    calc1Screen(cp, wv, madBeg, .0007f, screenArrowTop);
+    calc1Screen(cp, wv, madBeg, -.0007f, screenArrowBot);
+    calc1Screen(cp, wv, madBeg, 0.001f, screenArrowTopPrev);
+    calc1Screen(cp, wv, madBeg, -0.001f, screenArrowBotPrev);
     g3d.drawHermite7(true, ribbonBorder, isNucleic ? 4 : 7, screenArrowTopPrev,
         screenArrowTop, controlPointScreens[iNext],
         controlPointScreens[iNext2], screenArrowBotPrev, screenArrowBot,
-        controlPointScreens[iNext], controlPointScreens[iNext2], (int) aspectRatio, colixBack);
+        controlPointScreens[iNext], controlPointScreens[iNext2],
+        (int) aspectRatio, colixBack);
     if (ribbonBorder && aspectRatio == 0) {
       g3d.fillCylinderXYZ(colix, colix,
           GData.ENDCAPS_SPHERICAL,
@@ -542,7 +531,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
   private boolean createMesh(int i, int madBeg, int madMid, int madEnd,
                              float aspectRatio, int tension) {
     setNeighbors(i);
-    if (controlPoints[i].distance(controlPoints[iNext]) == 0)
+    if (controlPoints[i].distanceSquared(controlPoints[iNext]) == 0)
       return false;
 
     // options:

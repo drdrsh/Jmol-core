@@ -39,9 +39,9 @@ public abstract class ShapeRenderer {
   //  System.out.println("ShapeRenderer " + shapeID + " " + this + " finalized");
   //}
   
-  protected Viewer vwr;
+  public Viewer vwr;
   protected TransformManager tm;
-  protected JmolRendererInterface g3d;
+  public JmolRendererInterface g3d;
   protected ModelSet ms;
   protected Shape shape;
 
