@@ -67,7 +67,7 @@ public class Halos extends AtomShape {
   }
 
   @Override
-  public void setVisibilityFlags(BS bs) {
+  public void setModelVisibilityFlags(BS bs) {
     BS bsSelected = (vwr.getSelectionHaloEnabled(false) ? vwr
         .bsA() : null);
     for (int i = ac; --i >= 0;) {

@@ -1093,7 +1093,7 @@ protected void resetObjects() {
   }
 
   @Override
-  public void setVisibilityFlags(BS bsModels) {
+  public void setModelVisibilityFlags(BS bsModels) {
     /*
      * set all fixed objects visible; others based on model being displayed note
      * that this is NOT done with atoms and bonds, because they have mads. When

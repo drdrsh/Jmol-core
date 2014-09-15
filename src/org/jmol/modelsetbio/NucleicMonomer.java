@@ -335,12 +335,12 @@ public class NucleicMonomer extends PhosphorusMonomer {
       return;
     for (int i = 6; --i >= 0;) {
       atom = getAtomFromOffsetIndex(ring6OffsetIndexes[i]);
-      atom.setClickable(BioShape.CARTOON_VISIBILITY_FLAG);
+      atom.setClickable(JC.VIS_CARTOON_FLAG);
     }
     if (isPurine)
       for (int i = 4; --i >= 1;) {
         atom = getAtomFromOffsetIndex(ring5OffsetIndexes[i]);
-        atom.setClickable(BioShape.CARTOON_VISIBILITY_FLAG);
+        atom.setClickable(JC.VIS_CARTOON_FLAG);
       }
   }
  

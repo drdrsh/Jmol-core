@@ -96,14 +96,6 @@ public class BioShape extends AtomShape {
   int bfactorMin, bfactorMax;
   int range;
   float floatRange;
-  public final static int CARTOON_VISIBILITY_FLAG = JC.getShapeVisibilityFlag(JC.SHAPE_CARTOON);  
-
-  private final static int ALPHA_CARBON_VISIBILITY_FLAG = CARTOON_VISIBILITY_FLAG 
-      | JC.getShapeVisibilityFlag(JC.SHAPE_TRACE)
-      | JC.getShapeVisibilityFlag(JC.SHAPE_STRANDS)
-      | JC.getShapeVisibilityFlag(JC.SHAPE_MESHRIBBON)
-      | JC.getShapeVisibilityFlag(JC.SHAPE_RIBBONS)
-      | JC.VIS_BACKBONE_FLAG; // no rockets?
 
   void calcBfactorRange() {
     bfactorMin = bfactorMax =
@@ -385,7 +377,7 @@ public class BioShape extends AtomShape {
       int iAtom = leadAtomIndices[i];
       if (monomers[i].chain.model.ms.isAtomHidden(iAtom))
         continue;
-      shape.atoms[iAtom].setClickable(ALPHA_CARBON_VISIBILITY_FLAG);
+      shape.atoms[iAtom].setClickable(JC.ALPHA_CARBON_VISIBILITY_FLAG);
       if (isNucleicPolymer)
         ((NucleicMonomer) monomers[i]).setModelClickability();
     }

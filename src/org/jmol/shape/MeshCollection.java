@@ -575,7 +575,7 @@ public abstract class MeshCollection extends Shape {
   }
   
   @Override
-  public void setVisibilityFlags(BS bsModels) {
+  public void setModelVisibilityFlags(BS bsModels) {
     /*
      * set all fixed objects visible; others based on model being displayed
      * 

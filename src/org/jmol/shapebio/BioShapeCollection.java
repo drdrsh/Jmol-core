@@ -208,7 +208,7 @@ public abstract class BioShapeCollection extends Shape {
   }
 
   @Override
-  public void setVisibilityFlags(BS bsModels) {
+  public void setModelVisibilityFlags(BS bsModels) {
     if (bioShapes == null)
       return;
     bsModels = BSUtil.copy(bsModels);

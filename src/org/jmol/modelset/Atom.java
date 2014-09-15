@@ -150,11 +150,10 @@ public class Atom extends Point3fi implements BNode {
   }
   
   public final void setShapeVisibility(int flag, boolean isVisible) {
-    if(isVisible) {
+    if(isVisible)
       shapeVisibilityFlags |= flag;        
-    } else {
+    else
       shapeVisibilityFlags &=~flag;
-    }
   }
   
   public boolean isCovalentlyBonded(Atom atomOther) {
@@ -1032,7 +1031,8 @@ public class Atom extends Point3fi implements BNode {
       clickabilityFlags = 0;
     } else {
       clickabilityFlags |= flag;
-      shapeVisibilityFlags |= flag;
+      if (flag != JC.ALPHA_CARBON_VISIBILITY_FLAG)
+        shapeVisibilityFlags |= flag;
     }
   }
   

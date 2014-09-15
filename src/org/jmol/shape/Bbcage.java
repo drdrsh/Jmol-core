@@ -45,7 +45,7 @@ public class Bbcage extends FontLineShape {
   public boolean isVisible;
   
   @Override
-  public void setVisibilityFlags(BS bs) {
+  public void setModelVisibilityFlags(BS bs) {
     BS bboxModels;
     isVisible = ((mad = (short) vwr.getObjectMad(StateManager.OBJ_BOUNDBOX)) != 0 
         && ((bboxModels = vwr.ms.getBoundBoxModels()) == null 

@@ -377,7 +377,7 @@ public class ShapeManager {
     // bioshapes, Echo, Hover, 
     for (int i = JC.SHAPE_MIN_HAS_SETVIS; i < JC.SHAPE_MAX_HAS_SETVIS; i++)
       if (shapes[i] != null)
-        shapes[i].setVisibilityFlags(bs);
+        shapes[i].setModelVisibilityFlags(bs);
     
     // now check ATOM_IN_FRAME, and ATOM_NOTHIDDEN, VIS_BALLS_FLAG 
     

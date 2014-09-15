@@ -1564,7 +1564,14 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
   public static final int VIS_BOND_FLAG = 16 << SHAPE_STICKS;
   public static final int VIS_BALLS_FLAG = 16 << SHAPE_BALLS;
   public static final int VIS_LABEL_FLAG = 16 << SHAPE_LABELS;
-  public static final int VIS_BACKBONE_FLAG = 16 << JC.SHAPE_BACKBONE;
+  public static final int VIS_BACKBONE_FLAG = 16 << SHAPE_BACKBONE;
+  public final static int VIS_CARTOON_FLAG = 16 << SHAPE_CARTOON;  
+
+  public final static int ALPHA_CARBON_VISIBILITY_FLAG = 
+      (16 << SHAPE_ROCKETS) | (16 << SHAPE_TRACE) | (16 << SHAPE_STRANDS) 
+      | (16 << SHAPE_MESHRIBBON) | (16 << SHAPE_RIBBONS)
+      | VIS_CARTOON_FLAG | VIS_BACKBONE_FLAG;
+  
 
   // note that these next two arrays *MUST* be in the same sequence 
   // given in SHAPE_* and they must be capitalized exactly as in their class name 
@@ -1801,5 +1808,6 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
   }
 
   public static String READER_NOT_FOUND = "File reader was not found:";
+
 
 }
