@@ -8764,6 +8764,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   /**
    * 
+   * @param eval 
    * @param steps
    *        Integer.MAX_VALUE --> use defaults
    * @param crit
@@ -9316,7 +9317,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public ScriptContext getEvalContextAndHoldQueue(JmolScriptEvaluator eval) {
-    if (false && (eval == null || !isJS))
+    if (eval == null || !isJS && !testAsync)
       return null;
     eval.pushContextDown("getEvalContextAndHoldQueue");
     ScriptContext sc = eval.getThisContext();
