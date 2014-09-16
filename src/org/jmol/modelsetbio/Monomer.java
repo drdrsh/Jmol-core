@@ -486,7 +486,7 @@ public abstract class Monomer extends Group {
     boolean checkPrevious = (vReturn == null && group == null);
     for (int j = 0; j < bonds.length; j++) {
       Atom a = bonds[j].getOtherAtom(atom);
-      Group g = a.getGroup();
+      Group g = a.group;
       if (group != null && g != group)
         continue;
       int iPolymer = g.getBioPolymerIndexInModel();

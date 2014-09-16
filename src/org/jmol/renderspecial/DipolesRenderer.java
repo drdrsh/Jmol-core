@@ -98,8 +98,8 @@ public class DipolesRenderer extends ShapeRenderer {
         dipole.colix, dipole.bond.colix));
     colixB = colixA;
     if (dipole.atoms[0] != null) {
-      colixA = C.getColixInherited(colixA, dipole.atoms[0].getColix());
-      colixB = C.getColixInherited(colixB, dipole.atoms[1].getColix());
+      colixA = C.getColixInherited(colixA, dipole.atoms[0].colixAtom);
+      colixB = C.getColixInherited(colixB, dipole.atoms[1].colixAtom);
     }
     if (colixA == 0)
       colixA = C.ORANGE;

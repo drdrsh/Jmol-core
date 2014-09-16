@@ -519,11 +519,11 @@ public class IsosurfaceMesh extends Mesh {
       if (iAtom < 0 || !bs.get(iAtom))
         continue;
       jvxlData.vertexColors[i] = vwr.getColorArgbOrGray(vcs[i] = C
-          .copyColixTranslucency(colix, atoms[iAtom].getColix()));
+          .copyColixTranslucency(colix, atoms[iAtom].colixAtom));
 
       short colix = (colixes == null ? C.INHERIT_ALL : colixes[atomMap[iAtom]]);
       if (colix == C.INHERIT_ALL)
-        colix = atoms[iAtom].getColix();
+        colix = atoms[iAtom].colixAtom;
       vcs[i] = C.copyColixTranslucency(this.colix, colix);
     }
   }
@@ -759,7 +759,7 @@ public class IsosurfaceMesh extends Mesh {
         int pt = vertexSource[i];
         if (pt >= 0 && pt < atoms.length)
           jvxlData.vertexColors[i] = vwr.getColorArgbOrGray(vcs[i] = C.copyColixTranslucency(colix,
-            atoms[pt].getColix()));
+            atoms[pt].colixAtom));
       }
       return;
     }

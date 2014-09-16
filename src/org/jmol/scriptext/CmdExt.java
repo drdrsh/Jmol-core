@@ -92,6 +92,7 @@ import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.TempArray;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.StateManager;
 import org.jmol.viewer.Viewer;
@@ -371,7 +372,11 @@ public class CmdExt implements JmolCmdExtension {
         bs1 = (slen == 2 ? null : atomExpressionAt(2));
         e.checkLast(e.iToken);
         if (!chk)
-          vwr.calculatePartialCharges(bs1);
+          try {
+            vwr.calculatePartialCharges(bs1);
+          } catch (JmolAsyncException e1) {
+            e.loadFileResourceAsync(e1.getFileName());
+          }
         return;
       case T.pointgroup:
         if (!chk)
@@ -4792,8 +4797,13 @@ public class CmdExt implements JmolCmdExtension {
         break;
       }
     if (!chk)
-      vwr.minimize(steps, crit, bsSelected, bsFixed, 0, addHydrogen, isOnly,
-          isSilent, false);
+      try {
+        vwr.minimize(e, steps, crit, bsSelected, bsFixed, 0, addHydrogen, isOnly,
+            isSilent, false);
+      } catch (Exception e1) {
+        // actually an async exception
+        throw new ScriptInterruption(e, "minimize", 1);
+      }
   }
 
   private boolean mo(boolean isInitOnly) throws ScriptException {

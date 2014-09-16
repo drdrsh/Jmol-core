@@ -227,7 +227,7 @@ abstract public class __CartesianExporter extends ___Exporter {
 
   @Override
   void drawAtom(Atom atom) {
-    short colix = atom.getColix();
+    short colix = atom.colixAtom;
     outputSphere(atom, atom.madAtom / 2000f, colix, C.isColixTranslucent(colix));
   }
 

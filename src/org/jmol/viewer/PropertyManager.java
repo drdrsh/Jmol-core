@@ -1238,7 +1238,7 @@ public class PropertyManager implements JmolPropertyManager {
         case T.group1:
           int id = a.getChainID();
           s = (id == 0 ? " " : a.getChainIDStr());
-          if (id > 255)
+          if (id >= 300)
             s = PT.esc(s);
           switch (tok) {
           case T.residue:
@@ -1261,7 +1261,7 @@ public class PropertyManager implements JmolPropertyManager {
               info.append("Chain " + s + ":\n");
               glast = null;
             }
-            Group g = a.getGroup();
+            Group g = a.group;
             if (g != glast) {
               glast = g;
               if (tok == T.group1) {

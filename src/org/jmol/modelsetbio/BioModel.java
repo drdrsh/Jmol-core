@@ -335,7 +335,7 @@ public final class BioModel extends Model{
       Chain chain = chains[i];
       if (chainID == -1 
           || chainID == (id = chain.chainID) 
-          || !caseSensitive && id < 256 && chainID == AtomCollection.chainToUpper(id))
+          || !caseSensitive && id > 0 && id < 300 && chainID == AtomCollection.chainToUpper(id))
         for (int index = 0; index >= 0;)
           index = chains[i].selectSeqcodeRange(index, seqcodeA, seqcodeB, bs);
     }

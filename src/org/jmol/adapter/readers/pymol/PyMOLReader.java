@@ -1045,7 +1045,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     if (sym.equals("A"))
       sym = "C";
     boolean isHetero = (intAt(a, 19) != 0);
-    int ichain = vwr.getChainID(chainID);
+    int ichain = vwr.getChainID(chainID, true);
     Atom atom = processAtom(new Atom(), name, altLoc.charAt(0), group3, 
         ichain, seqNo, insCode.charAt(0), isHetero, sym);
     if (!filterPDBAtom(atom, fileAtomIndex++))

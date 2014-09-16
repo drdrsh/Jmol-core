@@ -225,7 +225,7 @@ public class AlphaPolymer extends BioPolymer {
       int bpt = monomerIndex;
       if (bpt < nEndMin)
         biopolymerStartsEnds[polymerIndex][bpt] = i + 1;
-      bpt = ((Monomer) a1.getGroup()).getBioPolymerLength() - monomerIndex - 1;
+      bpt = ((Monomer) a1.group).getBioPolymerLength() - monomerIndex - 1;
       if (bpt < nEndMin)
         biopolymerStartsEnds[polymerIndex][nEndMin + bpt] = i + 1;
     }

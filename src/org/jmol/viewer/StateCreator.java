@@ -269,7 +269,7 @@ public class StateCreator extends JmolStateCreator {
               || (bonds[i].order & Edge.BOND_NEW) != 0) {
             Bond bond = bonds[i];
             int index = bond.atom1.i;
-            if (bond.atom1.getGroup().isAdded(index))
+            if (bond.atom1.group.isAdded(index))
               index = -1 - index;
             sb.appendI(index).appendC('\t').appendI(bond.atom2.i).appendC(
                 '\t').appendI(bond.order & ~Edge.BOND_NEW).appendC('\t')
@@ -1275,10 +1275,10 @@ public class StateCreator extends JmolStateCreator {
             BSUtil.setMapBitSet(temp, i, i, "Spacefill " + (r / 2000f));
         }
         if (shape.bsColixSet != null && shape.bsColixSet.get(i)) {
-          byte pid = atoms[i].getPaletteID();
+          byte pid = atoms[i].paletteID;
           if (pid != PAL.CPK.id || atoms[i].isTranslucent())
             BSUtil.setMapBitSet(temp, i, i, Shape.getColorCommand("atoms", pid,
-                atoms[i].getColix(), shape.translucentAllowed));
+                atoms[i].colixAtom, shape.translucentAllowed));
           if (colixes != null && i < colixes.length)
             BSUtil.setMapBitSet(temp2, i, i, Shape.getColorCommand("balls",
                 pids[i], colixes[i], shape.translucentAllowed));

@@ -46,6 +46,7 @@ import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 
 import org.jmol.script.T;
+import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.Viewer;
 
 public class Minimizer implements MinimizerInterface {
@@ -189,7 +190,7 @@ public class Minimizer implements MinimizerInterface {
   @Override
   public boolean minimize(int steps, double crit, BS bsSelected,
                           BS bsFixed, boolean haveFixed, boolean forceSilent, 
-                          String ff) {
+                          String ff) throws JmolAsyncException {
     isSilent = (forceSilent || vwr.getBooleanProperty("minimizationSilent"));
     Object val;
     setEnergyUnits();
@@ -289,7 +290,7 @@ public class Minimizer implements MinimizerInterface {
     units = (s.equalsIgnoreCase("kcal") ? "kcal" : "kJ");
   }
 
-  private boolean setupMinimization() {
+  private boolean setupMinimization() throws JmolAsyncException {
 
     coordSaved = null;
     atomMap = new int[atoms.length];
@@ -320,7 +321,7 @@ public class Minimizer implements MinimizerInterface {
     return setModel(bsElements);
   }
   
-  private boolean setModel(BS bsElements) {
+  private boolean setModel(BS bsElements) throws JmolAsyncException {
     if (!pFF.setModel(bsElements, elemnoMax)) {
       //pFF.log("could not setup force field " + ff);
       Logger.error(GT.o(GT._("could not setup force field {0}"), ff));
@@ -482,7 +483,7 @@ public class Minimizer implements MinimizerInterface {
   
   ///////////////////////////// minimize //////////////////////
 
-  public ForceField getForceField(String ff) {
+  public ForceField getForceField(String ff) throws JmolAsyncException {
     if (ff.startsWith("MMFF"))
       ff = "MMFF";
     if (pFF == null || !ff.equals(this.ff)) {
@@ -668,7 +669,7 @@ public class Minimizer implements MinimizerInterface {
 
   @Override
   public void calculatePartialCharges(Bond[] bonds, int bondCount,
-                                      Atom[] atoms, BS bsAtoms) {
+                                      Atom[] atoms, BS bsAtoms) throws JmolAsyncException {
     ForceFieldMMFF ff = new ForceFieldMMFF(this);
     ff.setArrays(atoms, bsAtoms, bonds, bondCount, true, true);
     vwr.setAtomProperty(bsAtoms, T.atomtype, 0, 0, null, null,

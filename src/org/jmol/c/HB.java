@@ -37,7 +37,7 @@ public enum HB {
   NOT, ACCEPTOR, DONOR, UNKNOWN;
 
   public static HB getType(Atom atom) {
-    Group group = atom.getGroup();
+    Group group = atom.group;
     int groupID = group.getGroupID();
     boolean considerHydrogens = !atom.isHetero();
     switch (atom.getElementNumber()) {

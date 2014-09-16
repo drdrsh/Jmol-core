@@ -70,7 +70,7 @@ abstract public class JmolThread extends Thread {
   }
 
   public void resumeEval() {
-    if (eval == null || !isJS || !useTimeout)
+    if (eval == null || !isJS && !vwr.testAsync || !useTimeout)
       return;
     sc.mustResumeEval = !stopped;
     eval.resumeEval(sc);

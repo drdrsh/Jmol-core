@@ -289,7 +289,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
 
   protected short getLeadColix(int i) {
     return C.getColixInherited(colixes[i], monomers[i].getLeadAtom()
-        .getColix());
+        .colixAtom);
   }
 
   protected short getLeadColixBack(int i) {

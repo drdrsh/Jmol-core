@@ -806,7 +806,7 @@ public abstract class BioPolymer {
                 q = dq.rightDifference(dqprev); // q = dq.mul(dqprev.inv());
                 val1 = getQuaternionStraightness(id, dqprev, dq);
                 val2 = get3DStraightness(id, dqprev, dq);
-                ((Monomer) aprev.getGroup()).setGroupParameter(T.straightness,
+                ((Monomer) aprev.group).setGroupParameter(T.straightness,
                     useQuaternionStraightness ? val1 : val2);
               }
               dqprev = dq;
@@ -890,7 +890,7 @@ public abstract class BioPolymer {
         }
         if (pdbATOM == null)// || bsSelected != null && !bsSelected.get(a.getIndex()))
           continue;
-        bsWritten.set(((Monomer) a.getGroup()).leadAtomIndex);
+        bsWritten.set(((Monomer) a.group).leadAtomIndex);
         pdbATOM.append(vwr.ms.getLabeler().formatLabelAtomArray(vwr, a, tokens, '\0',
             null, ptTemp));
         pdbATOM.append(PT

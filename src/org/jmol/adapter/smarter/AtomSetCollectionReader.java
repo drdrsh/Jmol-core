@@ -1750,7 +1750,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   public void setChainID(Atom atom, String label) {
-    atom.chainID = vwr.getChainID(label);    
+    atom.chainID = vwr.getChainID(label, true);    
   }
 
   @Override

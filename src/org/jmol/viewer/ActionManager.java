@@ -1640,14 +1640,10 @@ public class ActionManager implements EventManager {
   }
 
   private void minimize(boolean dragDone) {
-    vwr.stopMinimization();
     int iAtom = dragAtomIndex;
     if (dragDone)
       dragAtomIndex = -1;
-    BS bs = (vwr.getMotionFixedAtoms().cardinality() == 0 ? vwr
-        .ms.getAtoms((vwr.isAtomPDB(iAtom) ? T.group : T.molecule), BSUtil
-            .newAndSetBit(iAtom)) : BSUtil.setAll(vwr.getAtomCount()));
-    vwr.minimize(Integer.MAX_VALUE, 0, bs, null, 0, false, false, false, false);
+    vwr.dragMinimizeAtom(iAtom);
   }
 
   private int queueAtom(int atomIndex, Point3fi ptClicked) {

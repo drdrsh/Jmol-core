@@ -66,11 +66,11 @@ public class HalosRenderer extends ShapeRenderer {
         if (colix == C.USE_PALETTE)
           colix = C.GOLD;
         else if (colix == C.INHERIT_ALL)
-          colix = C.getColixInherited(colix, atom.getColix());
+          colix = C.getColixInherited(colix, atom.colixAtom);
       } else if (isHidden) {
         continue;
       } else {
-        colix = C.getColixInherited(colix, atom.getColix());
+        colix = C.getColixInherited(colix, atom.colixAtom);
       }
       if (mad != 0) {
         if (render1(atom))

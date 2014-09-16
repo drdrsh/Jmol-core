@@ -1223,13 +1223,13 @@ abstract class ScriptTokenParser {
       int val = theToken.intValue;
       if (val < 0 || val > 9999)
         return error(ERROR_invalidChainSpecification);
-      chain = vwr.getChainID("" + val);
+      chain = vwr.getChainID("" + val, false);
       break;
     default:
       String strChain = "" + getToken().value;
       if (strChain.equals("?"))
         return true;
-      chain = vwr.getChainID(strChain);
+      chain = vwr.getChainID(strChain, false);
       break;
     }
     return generateResidueSpecCode(T.tv(T.spec_chain, chain,

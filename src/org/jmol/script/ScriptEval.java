@@ -406,7 +406,7 @@ public class ScriptEval extends ScriptExpr {
   }
 
   public boolean useThreads() {
-    return (!chk && !vwr.isHeadless() && !vwr.autoExit
+    return (!chk && !vwr.headless && !vwr.autoExit
         && vwr.haveDisplay && outputBuffer == null && allowJSThreads);
   }
 
@@ -646,7 +646,7 @@ public class ScriptEval extends ScriptExpr {
 
   @Override
   public void pauseExecution(boolean withDelay) {
-    if (chk || vwr.isHeadless())
+    if (chk || vwr.headless)
       return;
     if (withDelay && !isJS)
       delayScript(-100);
@@ -1799,7 +1799,7 @@ public class ScriptEval extends ScriptExpr {
   public void showStringPrint(String str, boolean isPrint) {
     if (chk || str == null)
       return;
-    if (outputBuffer != null)
+    if (outputBuffer != null && Logger.isActiveLevel(Logger.LEVEL_WARN))
       outputBuffer.append(str).appendC('\n');
     else
       vwr.showString(str, isPrint);
@@ -1934,6 +1934,14 @@ public class ScriptEval extends ScriptExpr {
   }
 
   /**
+   * load a static file asynchronously
+   */
+  @Override
+  public void loadFileResourceAsync(String fileName) throws ScriptException {
+    loadFileAsync(null, fileName, -Math.abs(fileName.hashCode()), false);    
+  }
+  
+  /**
    * Allows asynchronous file loading from the LOAD or SCRIPT command. Saves the
    * context, initiates a FileLoadThread instance. When the file loading
    * completes, the file data (sans filename) is saved in the FileManager cache
@@ -1964,7 +1972,8 @@ public class ScriptEval extends ScriptExpr {
     
     if (vwr.cacheGet(filename) != null)
       return filename;
-    prefix = "cache://local" + prefix;
+    if (prefix != null)
+      prefix = "cache://local" + prefix;
     String key = pc + "_" + i;
     String cacheName;
     if (thisContext == null || thisContext.htFileCache == null) {
@@ -1983,12 +1992,17 @@ public class ScriptEval extends ScriptExpr {
     }
     thisContext.htFileCache.put(key,
         cacheName = prefix + System.currentTimeMillis());
-    if (fileLoadThread != null)
+    if (fileLoadThread != null && i >= 0)
       evalError("#CANCELED#", null);
     if (doClear)
       vwr.cacheFileByName(prefix + "*", false);
     fileLoadThread = new FileLoadThread(this, vwr, filename, key, cacheName);
-    fileLoadThread.run();
+    if (vwr.testAsync)
+      fileLoadThread.start();
+    else
+      fileLoadThread.run();
+    if (i < 0) // no need to hang on to this - never "canceled"
+      fileLoadThread = null;
     throw new ScriptInterruption(this, "load", 1);
   }
 
@@ -2011,7 +2025,7 @@ public class ScriptEval extends ScriptExpr {
           .append(vwr.getModelNumberDotted(i)).append("\n");
     }
     if (sb.length() > 0)
-      showString(sb.toString());
+     vwr.showString(sb.toString(), false);
   }
 
   @Override
@@ -2303,6 +2317,8 @@ public class ScriptEval extends ScriptExpr {
     case T.exitjmol:
       if (chk)
         return;
+      if (outputBuffer != null)
+        Logger.warn(outputBuffer.toString());
       vwr.exitJmol();
       break;
     case T.file:
@@ -2325,7 +2341,7 @@ public class ScriptEval extends ScriptExpr {
       cmdGetProperty();
       break;
     case T.gotocmd: //
-      if (vwr.isHeadless())
+      if (vwr.headless)
         break;
       cmdGoto(true);
       break;
@@ -4381,10 +4397,10 @@ public class ScriptEval extends ScriptExpr {
         loadScript = new SB().append("{\n    var ")
             .append(filename.substring(1)).append(" = ").append(PT.esc(s))
             .append(";\n    ").appendSB(loadScript);
-      } else if (vwr.isJS && (isAsync || filename.startsWith("?"))) {
+      } else if ((vwr.testAsync || vwr.isJS) && (isAsync || filename.startsWith("?"))) {
         localName = null;
         filename = loadFileAsync("LOAD" + (isAppend ? "_APPEND_" : "_"),
-            filename, i, !isAppend && pc != this.pcResume );
+            filename, i, !isAppend && pc != pcResume);
         // on first pass, a ScriptInterruption will be thrown; 
         // on the second pass, we will have the file name, which will be cache://localLoad_n__m
       }
@@ -4845,7 +4861,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.setCurrentModelIndex(modelCount0);
     }    
     if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2))
-      showString((String) vwr.ms.getInfoM("modelLoadNote"));
+      vwr.showString((String) vwr.ms.getInfoM("modelLoadNote"), false);
     Object centroid = vwr.ms.getInfoM("centroidMinMax");
     if (PT.isAI(centroid) && vwr.getAtomCount() > 0) {
       BS bs = BSUtil.newBitSet2(isAppend ? ac0 : 0, vwr.getAtomCount());
@@ -4893,7 +4909,7 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private void cmdLoop() throws ScriptException {
-    if (vwr.isHeadless())
+    if (vwr.headless)
       return;
     // back to the beginning of this script
     if (!chk)
@@ -5964,7 +5980,7 @@ public class ScriptEval extends ScriptExpr {
     // a thread will be required if we are spinning 
     // UNLESS we are headless, 
     // in which case we just turn off the spin
-    boolean requiresThread = (isSpin && (!vwr.isHeadless() || endDegrees == Float.MAX_VALUE));
+    boolean requiresThread = (isSpin && (!vwr.headless || endDegrees == Float.MAX_VALUE));
     // just turn this into a rotation if we cannot spin
     if (isSpin && !requiresThread)
       isSpin = false;

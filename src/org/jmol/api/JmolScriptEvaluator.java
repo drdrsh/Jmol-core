@@ -99,4 +99,6 @@ public interface JmolScriptEvaluator {
 
   boolean checkSelect(Map<String, SV> h, T[] where);
 
+  void loadFileResourceAsync(String fileName) throws Exception;
+
 }

@@ -45,7 +45,7 @@ public class BallsRenderer extends ShapeRenderer {
         Atom atom = atoms[i];
         if (atom.sD > 0
             && (atom.shapeVisibilityFlags & myVisibilityFlag) != 0) {
-          if (g3d.setC(colixes == null ? atom.getColix() : Shape.getColix(colixes, i, atom))) {
+          if (g3d.setC(colixes == null ? atom.colixAtom : Shape.getColix(colixes, i, atom))) {
             g3d.drawAtom(atom);
           } else {
             needTranslucent = true;

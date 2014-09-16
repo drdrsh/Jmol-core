@@ -437,14 +437,14 @@ public class NucleicMonomer extends PhosphorusMonomer {
       Bond[] bonds = ptNorP.getBonds();
       if (bonds == null)
         return null;
-      Group g = ptNorP.getGroup();
+      Group g = ptNorP.group;
       for (int i = 0; i < bonds.length; i++) {
         Atom atom = bonds[i].getOtherAtom(ptNorP);
         if (p1 != null && atom.i == p1.i)
           continue;
         if (p2 != null && atom.i == p2.i)
           continue;
-        if (atom.getGroup() == g)
+        if (atom.group == g)
           ptB = atom;
         else
           ptA = atom;
@@ -504,7 +504,7 @@ public boolean isCrossLinked(Group g) {
       //System.out.println(bonds[i].getOtherAtom(N).getInfo());
       if (bonds[i].isHydrogen()) {
         Atom N2 = bonds[i].getOtherAtom(N);
-        Group g = N2.getGroup();
+        Group g = N2.group;
         if (!(g instanceof NucleicMonomer))
           continue;
         NucleicMonomer m = (NucleicMonomer) g;

@@ -64,7 +64,7 @@ class FileLoadThread extends JmolThread {
         mode = MAIN;
         break;
       case MAIN:
-        if (stopped || eval.isStopped()) {
+        if (stopped || !vwr.testAsync && eval.isStopped()) {
           mode = FINISH;
           break;
         }
@@ -75,8 +75,19 @@ class FileLoadThread extends JmolThread {
          * 
          */
         {
+          if (vwr.testAsync) {
+            if (!runSleep(sleepTime, CHECK1))
+              return;
+            mode = CHECK1;
+            break;
+          }
         }
-        break;
+        return;
+      case CHECK1:
+        // vwr.testAsync only
+        Object data = vwr.getFileAsBytes(this.fileName, null);
+        setData(this.fileName, this.fileName, data, null);
+        return;    
       case FINISH:
         resumeEval();
         return;

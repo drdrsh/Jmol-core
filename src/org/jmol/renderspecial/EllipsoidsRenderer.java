@@ -213,7 +213,7 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
         atom = ms.at[ellipsoid.tensor.atomIndex1];
         if (atom.sZ <= 1 || !isVisibleForMe(atom))
           continue;
-        colix = C.getColixInherited(ellipsoid.colix, atom.getColix());
+        colix = C.getColixInherited(ellipsoid.colix, atom.colixAtom);
       }
       if (!g3d.setC(colix)) {
         needTranslucent = true;

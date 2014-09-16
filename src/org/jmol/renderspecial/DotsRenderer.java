@@ -92,7 +92,7 @@ public class DotsRenderer extends ShapeRenderer {
             atom.sX, atom.sY, atom.sZ);
         if (nPoints != 0)
           renderConvex(C.getColixInherited(dots.colixes[i],
-              atom.getColix()), map, nPoints);
+              atom.colixAtom), map, nPoints);
       } catch (Exception e) {
         System.out.println("Dots rendering error");
         System.out.println(e.toString());

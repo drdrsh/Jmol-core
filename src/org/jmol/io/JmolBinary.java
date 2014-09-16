@@ -43,6 +43,7 @@ import javajs.util.PT;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.Viewer;
 
 
@@ -193,34 +194,41 @@ public class JmolBinary {
     return null;
   }
 
-  public static BufferedReader getBufferedReaderForResource(Viewer vwr, 
+  @SuppressWarnings("null")
+  public static BufferedReader getBufferedReaderForResource(Viewer vwr,
                                                             Object resourceClass,
-                                              String classPath,
-                                              String resourceName)
-       throws IOException {
+                                                            String classPath,
+                                                            String resourceName)
+      throws IOException {
 
-     /**
-      * @j2sNative
-      * 
-      *            resourceName = vwr.vwrOptions.get("codePath") +
-      *            classPath + resourceName;
-      * 
-      */
-     {
-       URL url = resourceClass.getClass().getResource(resourceName);
-       boolean ret = true;
-       if (url == null) {
-         System.err.println("Couldn't find file: " + classPath + resourceName);
-         throw new IOException();
-       }
-       if (ret) // avoids dead code message
-         return Rdr.getBufferedReader(new BufferedInputStream(
-             (InputStream) url.getContent()), null);
-     }
-     // JavaScript only; here and not in JavaDoc to preserve Eclipse search reference
-     return (BufferedReader) vwr.getBufferedReaderOrErrorMessageFromName(
-         resourceName, new String[] { null, null }, false);
-   }
+    URL url;
+    /**
+     * @j2sNative
+     * 
+     */
+    {
+      url = resourceClass.getClass().getResource(resourceName);
+      if (url == null) {
+        System.err.println("Couldn't find file: " + classPath + resourceName);
+        throw new IOException();
+      }
+      if (!vwr.async)
+        return Rdr.getBufferedReader(
+            new BufferedInputStream((InputStream) url.getContent()), null);
+    }
+    resourceName = (url == null 
+        ? vwr.vwrOptions.get("codePath") + classPath + resourceName
+            : url.getFile());
+    if (vwr.async) {
+      Object bytes = vwr.cacheGet(resourceName);
+      if (bytes == null)
+        throw new JmolAsyncException(resourceName);
+      return Rdr.getBufferedReader(Rdr.getBIS((byte[]) bytes), null);
+    }
+    // JavaScript only; here and not in JavaDoc to preserve Eclipse search reference
+    return (BufferedReader) vwr.getBufferedReaderOrErrorMessageFromName(
+        resourceName, new String[] { null, null }, false);
+  }
 
 
 }

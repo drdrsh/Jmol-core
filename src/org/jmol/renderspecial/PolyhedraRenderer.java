@@ -67,7 +67,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
   private boolean render1(Polyhedron p, short colix) {
     if (p.visibilityFlags == 0)
       return false;
-    colix = C.getColixInherited(colix, p.centralAtom.getColix());
+    colix = C.getColixInherited(colix, p.centralAtom.colixAtom);
     boolean needTranslucent = false;
     if (C.isColixTranslucent(colix)) {
       needTranslucent = true;

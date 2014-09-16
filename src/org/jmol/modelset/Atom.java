@@ -83,7 +83,7 @@ public class Atom extends Point3fi implements BNode {
   public short madAtom;
 
   public short colixAtom;
-  byte paletteID = PAL.CPK.id;
+  public byte paletteID = PAL.CPK.id;
 
   Bond[] bonds;
   
@@ -592,14 +592,6 @@ public class Atom extends Point3fi implements BNode {
     return bonds == null ? 0 : bonds.length;
   }
 
-  public short getColix() {
-    return colixAtom;
-  }
-
-  public byte getPaletteID() {
-    return paletteID;
-  }
-
   public float getRadius() {
     return Math.abs(madAtom / (1000f * 2));
   }
@@ -626,11 +618,7 @@ public class Atom extends Point3fi implements BNode {
      this.group = group;
    }
 
-   public Group getGroup() {
-     return group;
-   }
-   
-   @Override
+  @Override
   public void getGroupBits(BS bs) {
      group.selectAtoms(bs);
    }
@@ -1242,7 +1230,7 @@ public class Atom extends Point3fi implements BNode {
     case T.chainno:
       return atom.group.chain.index + 1;
     case T.color:
-      return atom.group.chain.model.ms.vwr.getColorArgbOrGray(atom.getColix());
+      return atom.group.chain.model.ms.vwr.getColorArgbOrGray(atom.colixAtom);
     case T.element:
     case T.elemno:
       return atom.getElementNumber();
@@ -1270,7 +1258,7 @@ public class Atom extends Point3fi implements BNode {
     case T.occupancy:
       return atom.getOccupancy100();
     case T.polymer:
-      return atom.getGroup().getBioPolymerIndexInModel() + 1;
+      return atom.group.getBioPolymerIndexInModel() + 1;
     case T.polymerlength:
       return atom.getPolymerLength();
     case T.radius:
@@ -1527,7 +1515,7 @@ public class Atom extends Point3fi implements BNode {
       return atom;
     case T.color:
       return CU.colorPtFromInt(
-          atom.group.chain.model.ms.vwr.getColorArgbOrGray(atom.getColix()),
+          atom.group.chain.model.ms.vwr.getColorArgbOrGray(atom.colixAtom),
           ptTemp);
     }
     return null;
@@ -1544,7 +1532,7 @@ public class Atom extends Point3fi implements BNode {
   
   @Override
   public boolean isCrossLinked(BNode node) {
-    return group.isCrossLinked(((Atom) node).getGroup());
+    return group.isCrossLinked(((Atom) node).group);
   }
 
   @Override

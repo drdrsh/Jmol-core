@@ -358,7 +358,7 @@ public abstract class Shape {
   public static short getColix(short[] colixes, int i, Atom atom) {
     return C.getColixInherited(
         (colixes == null || i >= colixes.length ? C.INHERIT_ALL
-            : colixes[i]), atom.getColix());
+            : colixes[i]), atom.colixAtom);
   }
   
   public static String getFontCommand(String type, Font font) {

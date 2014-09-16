@@ -322,10 +322,6 @@ abstract public class AtomCollection {
     return at[i].getVanderwaalsRadiusFloat(vwr, type);
   }
 
-  public short getAtomColix(int i) {
-    return at[i].getColix();
-  }
-
   public String getAtomChain(int i) {
     return at[i].getChainIDStr();
   }
@@ -1352,7 +1348,7 @@ abstract public class AtomCollection {
             switch (targetValence - nBonds) {
             case 1:
               // sp3 or Boron sp2 or N sp2
-              if (atomicNumber == 8 && atom == atom.getGroup().getCarbonylOxygenAtom()) {
+              if (atomicNumber == 8 && atom == atom.group.getCarbonylOxygenAtom()) {
                 hAtoms[i] = null;
                 continue;
               }
@@ -2265,7 +2261,7 @@ abstract public class AtomCollection {
     switch (tokType) {
     case T.group:
       for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        int j = at[i].getGroup().selectAtoms(bs);
+        int j = at[i].group.selectAtoms(bs);
         if (j > i)
           i = j;
       }
@@ -2318,15 +2314,15 @@ abstract public class AtomCollection {
       for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
         if (bs.get(i))
           continue;
-        Object structure = at[i].getGroup().getStructure();
+        Object structure = at[i].group.getStructure();
         bs.set(i);
         for (int j = i; --j >= 0;)
-          if (at[j].getGroup().getStructure() == structure)
+          if (at[j].group.getStructure() == structure)
             bs.set(j);
           else
             break;
         for (; ++i < ac;)
-          if (at[i].getGroup().getStructure() == structure)
+          if (at[i].group.getStructure() == structure)
             bs.set(i);
           else
             break;
@@ -2538,15 +2534,16 @@ abstract public class AtomCollection {
   }
   
   protected BS getChainBits(int chainID) {
-    boolean caseSensitive = chainID < 256 && vwr.getBoolean(T.chaincasesensitive);
-    if (!caseSensitive)
+    boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
+    if (chainID >= 0 && chainID < 300 && !caseSensitive)
       chainID = chainToUpper(chainID);
     BS bs = new BS();
     BS bsDone = BS.newN(ac);
     int id;
     for (int i = bsDone.nextClearBit(0); i < ac; i = bsDone.nextClearBit(i + 1)) {
       Chain chain = at[i].getChain();
-      if (chainID == (id = chain.chainID) || !caseSensitive && chainID == chainToUpper(id)) {
+      if (chainID == (id = chain.chainID) || !caseSensitive 
+          && id >= 0 && id < 300 && chainID == chainToUpper(id)) {
         chain.setAtomBitSet(bs);
         bsDone.or(bs);
       } else {
@@ -2557,15 +2554,11 @@ abstract public class AtomCollection {
   }
 
   public static int chainToUpper(int chainID) {
-    /** 
-     * @j2sNative
-     * 
-     * return String.fromCharCode(chainID).toUpperCase().charCodeAt(0);
-     * 
-     */
-    {
-      return Character.toUpperCase(chainID);
-    }
+    return (chainID >= 97 && chainID <= 122 ? chainID - 32 
+        : chainID >= 256 && chainID < 300 ? chainID - 191
+          // must be single-character lower-case 256=="a" 
+          // to lower case is to 65, so subtract (256-65) 
+        : chainID);
   }
 
   public int[] getAtomIndices(BS bs) {

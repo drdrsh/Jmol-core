@@ -37,6 +37,7 @@ import org.jmol.minimize.Minimizer;
 import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JmolAsyncException;
 
 
 public class ForceFieldUFF extends ForceField {
@@ -56,7 +57,7 @@ public class ForceFieldUFF extends ForceField {
   }
  
   @Override
-  public boolean setModel(BS bsElements, int elemnoMax) {
+  public boolean setModel(BS bsElements, int elemnoMax) throws JmolAsyncException {
     setModelFields();
     Logger.info("minimize: setting atom types...");
     if (atomTypes == null && (atomTypes = getAtomTypes()) == null)
@@ -256,7 +257,7 @@ public class ForceFieldUFF extends ForceField {
     return temp;
   }
 
-  private Lst<String[]> getAtomTypes() {
+  private Lst<String[]> getAtomTypes() throws JmolAsyncException {
     Lst<String[]> types = new  Lst<String[]>(); //!< external atom type rules
     String fileName = "UFF.txt";
     try {
@@ -271,6 +272,8 @@ public class ForceFieldUFF extends ForceField {
       }
 
       br.close();
+    } catch (JmolAsyncException e) {
+      throw new JmolAsyncException(e.getFileName());
     } catch (Exception e) {
       System.err.println("Exception " + e.toString() + " in getResource "
           + fileName);

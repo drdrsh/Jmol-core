@@ -50,6 +50,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JmolAsyncException;
 
 /**
  * MMFF94 implementation 5/14/2012
@@ -230,7 +231,7 @@ public class ForceFieldMMFF extends ForceField {
    */
   private Lst<BS>[] vRings;
   
-  public ForceFieldMMFF(Minimizer m) {
+  public ForceFieldMMFF(Minimizer m) throws JmolAsyncException {
     this.minimizer = m;
     this.name = "MMFF";
     getParameters();
@@ -274,7 +275,7 @@ public class ForceFieldMMFF extends ForceField {
   private final static String names = "END.BCI.CHG.ANG.NDK.OND.OOP.TBN.FSB.TOR.VDW.";
   private final static int[] types = {0, TYPE_PBCI, TYPE_CHRG, TYPE_ANGLE, TYPE_BNDK, TYPE_BOND, TYPE_OOP, TYPE_SB, TYPE_SBDEF, TYPE_TORSION, TYPE_VDW };
   
-  private void getParameters() {
+  private void getParameters() throws JmolAsyncException {
     if (ffParams != null)
       return;
     getAtomTypes();
@@ -295,13 +296,15 @@ public class ForceFieldMMFF extends ForceField {
         readParams(br, dataType, data);
       }
       br.close();
+    } catch (JmolAsyncException e) {
+      throw new JmolAsyncException(e.getFileName());
     } catch (Exception e) {
       System.err.println("Exception " + e.toString() + " in getResource "
           + resourceName + " line=" + line);
     } finally {
       try {
         br.close();
-      } catch (IOException e) {
+      } catch (Exception e) {
         //ignore
       }
     }
@@ -464,7 +467,7 @@ public class ForceFieldMMFF extends ForceField {
     return PT.dVal(line.substring(i,j).trim());
   }
 
-  private void getAtomTypes() {
+  private void getAtomTypes() throws JmolAsyncException {
     String resourceName = "MMFF94-smarts.txt";
     Lst<AtomType> types = new  Lst<AtomType>();
     try {
@@ -493,6 +496,8 @@ public class ForceFieldMMFF extends ForceField {
         setFlags(at);
       }
       br.close();
+    } catch (JmolAsyncException e) {
+      throw new JmolAsyncException(e.getFileName());
     } catch (Exception e) {
       System.err.println("Exception " + e.toString() + " in getResource "
           + resourceName + " line=" + line);

@@ -550,7 +550,7 @@ public class MMCifReader extends CifReader {
           break;
         case BEG_ASYM_ID:
           structure.startChainStr = field;
-          structure.startChainID = vwr.getChainID(field);
+          structure.startChainID = vwr.getChainID(field, true);
           break;
         case BEG_SEQ_ID:
           structure.startSequenceNumber = parseIntStr(field);
@@ -560,7 +560,7 @@ public class MMCifReader extends CifReader {
           break;
         case END_ASYM_ID:
           structure.endChainStr = field;
-          structure.endChainID = vwr.getChainID(field);
+          structure.endChainID = vwr.getChainID(field, true);
           break;
         case END_SEQ_ID:
           structure.endSequenceNumber = parseIntStr(field);
@@ -621,7 +621,7 @@ public class MMCifReader extends CifReader {
       for (int i = 0; i < n; ++i) {
         switch (fieldProperty(i)) {
         case BEG_ASYM_ID:
-          structure.startChainID = vwr.getChainID(field);
+          structure.startChainID = vwr.getChainID(field, true);
           break;
         case BEG_SEQ_ID:
           structure.startSequenceNumber = parseIntStr(field);
@@ -630,7 +630,7 @@ public class MMCifReader extends CifReader {
           structure.startInsertionCode = firstChar;
           break;
         case END_ASYM_ID:
-          structure.endChainID = vwr.getChainID(field);
+          structure.endChainID = vwr.getChainID(field, true);
           break;
         case END_SEQ_ID:
           structure.endSequenceNumber = parseIntStr(field);

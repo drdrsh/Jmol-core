@@ -145,11 +145,11 @@ public class SticksRenderer extends FontLineShapeRenderer {
          render(bond, atomA, atomB);
          */
 
-        a = a.getGroup().getLeadAtomOr(a);
-        b = b.getGroup().getLeadAtomOr(b);
+        a = a.group.getLeadAtomOr(a);
+        b = b.group.getLeadAtomOr(b);
       } else if (hbondsBackbone && Bond.isOrderH(order)) {
-        a = a.getGroup().getLeadAtomOr(a);
-        b = b.getGroup().getLeadAtomOr(b);
+        a = a.group.getLeadAtomOr(a);
+        b = b.group.getLeadAtomOr(b);
       }
     }
     if (!isPass2
@@ -170,8 +170,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
     zB = b.sZ;
     if (zA == 1 || zB == 1)
       return false;
-    colixA = atomA0.getColix();
-    colixB = atomB0.getColix();
+    colixA = atomA0.colixAtom;
+    colixB = atomB0.colixAtom;
     if (((colix = bond.colix) & C.OPAQUE_MASK) == C.USE_PALETTE) {
       colix = (short) (colix & ~C.OPAQUE_MASK);
       colixA = C.getColixInherited((short) (colix | vwr

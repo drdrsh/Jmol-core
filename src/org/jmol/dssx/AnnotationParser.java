@@ -1007,7 +1007,7 @@ public class AnnotationParser implements JmolAnnotationParser {
     bs.clearAll();
     getDSSRAtoms(vwr, res, null, bs, htChains);
     NucleicMonomer group = (NucleicMonomer) vwr.ms.at[bs.nextSetBit(0)]
-        .getGroup();
+        .group;
     ((NucleicPolymer) group.bioPolymer).isDssrSet = true;
     return group;
   }
@@ -1641,7 +1641,7 @@ public class AnnotationParser implements JmolAnnotationParser {
       m = im.intValue();
     if (m >= modelAtomIndices.length)
       return false;
-    String res = s[1] + "_" + viewer.getChainID(s[2]) + "_" + s[4] + "_"
+    String res = s[1] + "_" + viewer.getChainID(s[2], true) + "_" + s[4] + "_"
         + s[7].toLowerCase();
     int i0 = modelAtomIndices[m];
     boolean isRes = (atomMap == null || s[5].length() == 0);
@@ -1727,7 +1727,7 @@ public class AnnotationParser implements JmolAnnotationParser {
           htChains.put(
               chain,
               bsChain = vwr.ms.getAtoms(T.spec_chain,
-                  Integer.valueOf(vwr.getChainID(chain))));
+                  Integer.valueOf(vwr.getChainID(chain, true))));
         BS bsRes = vwr.ms
             .getAtoms(T.resno, Integer.valueOf(t.substring(0, pt)));
         bsRes.and(bsChain);

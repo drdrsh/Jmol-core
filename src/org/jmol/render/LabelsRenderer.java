@@ -130,7 +130,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         zSlab = 1;
       zBox = zSlab;
       if (labelsGroup) {
-        Group group = atom.getGroup();
+        Group group = atom.group;
         int ig = group.getGroupIndex();
         if (ig != iGroup) {
           group.getMinZ(atoms, minZ);

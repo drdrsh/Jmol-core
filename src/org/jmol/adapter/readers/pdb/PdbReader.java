@@ -918,7 +918,7 @@ REMARK 290 REMARK: NULL
         line.substring(12, 16).trim(), 
         line.charAt(16),
         parseTokenRange(line, 17, 20),
-        vwr.getChainID(line.substring(21, 22)),
+        vwr.getChainID(line.substring(21, 22), true),
         getSeqNo(22, 26),
         line.charAt(26),
         isHetero,
@@ -1228,10 +1228,10 @@ Polyproline 10
 
     String structureID = line.substring(11, 15).trim();
     int serialID = parseIntRange(line, 7, 10);
-    int startChainID = vwr.getChainID(line.substring(startChainIDIndex, startChainIDIndex + 1));
+    int startChainID = vwr.getChainID(line.substring(startChainIDIndex, startChainIDIndex + 1), true);
     int startSequenceNumber = parseIntRange(line, startIndex, startIndex + 4);
     char startInsertionCode = line.charAt(startIndex + 4);
-    int endChainID = vwr.getChainID(line.substring(endChainIDIndex, endChainIDIndex + 1));
+    int endChainID = vwr.getChainID(line.substring(endChainIDIndex, endChainIDIndex + 1), true);
     int endSequenceNumber = parseIntRange(line, endIndex, endIndex + 4);
     // some files are chopped to remove trailing whitespace
     char endInsertionCode = ' ';

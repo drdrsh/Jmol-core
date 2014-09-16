@@ -184,6 +184,8 @@ import java.io.Reader;
 @J2SIgnoreImport( { Runtime.class })
 public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer {
 
+  public boolean testAsync;// = true; // testing only
+
   static {
     /**
      * allows customization of Viewer -- not implemented in JSmol. 
@@ -302,11 +304,11 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   private boolean isSignedAppletLocal = false;
   private boolean isSilent;
   private boolean multiTouch;
-  private boolean noGraphicsAllowed;
+  public boolean noGraphicsAllowed;
   private boolean useCommandThread = false;
 
   private String commandOptions;
-  private Map<String, Object> vwrOptions;
+  public Map<String, Object> vwrOptions;
   private Object display;
   private JmolAdapter modelAdapter;
   private ACCESS access;
@@ -371,6 +373,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   private String errorMessage;
   private String errorMessageUntranslated;
   private double privateKey;
+  private boolean dataOnly;
 
 
 
@@ -479,7 +482,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (isPreviewOnly)
       info.remove("previewOnly"); // see FilePreviewPanel
     isPrintOnly = checkOption2("printOnly", "-p");
-
+    dataOnly = checkOption2("isDataOnly", "\0");
+    autoExit = checkOption2("exit", "-x");
     o = info.get("platform");
     String platform = "unknown";
     if (o == null) {
@@ -492,7 +496,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       platform = (String) o;
       isWebGL = (platform.indexOf(".awtjs.") >= 0);
       isJS = isWebGL || (platform.indexOf(".awtjs2d.") >= 0);
-      async = (isJS && info.containsKey("async"));
+      async = !dataOnly && !autoExit && (testAsync || isJS && info.containsKey("async"));
       Object applet = null;
       String javaver = "?";
       /**
@@ -520,8 +524,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     isSingleThreaded = apiPlatform.isSingleThreaded();
     noGraphicsAllowed = checkOption2("noGraphics", "-n");
     haveDisplay = (isWebGL || display != null && !noGraphicsAllowed
-        && !isHeadless() && !checkOption2("isDataOnly", "\0"));
+        && !headless && !dataOnly);
     noGraphicsAllowed &= (display == null);
+    headless = (noGraphicsAllowed || apiPlatform.isHeadless());
     if (haveDisplay) {
       mustRender = true;
       multiTouch = checkOption2("multiTouch", "-multitouch");
@@ -615,13 +620,14 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       isSilent = checkOption2("silent", "-i");
       if (isSilent)
         Logger.setLogLevel(Logger.LEVEL_WARN); // no info, but warnings and
+      if (headless && !isSilent)
+        Logger.info("Operating headless display=" + display + " nographicsallowed=" + noGraphicsAllowed);
       // errors
       isSyntaxAndFileCheck = checkOption2("checkLoad", "-C");
       isSyntaxCheck = isSyntaxAndFileCheck || checkOption2("check", "-c");
       listCommands = checkOption2("listCommands", "-l");
-      autoExit = checkOption2("exit", "-x");
       cd(".");
-      if (isHeadless()) {
+      if (headless) {
         headlessImageParams = (Map<String, Object>) info.get("headlessImage");
         o = info.get("headlistMaxTimeMs");
         if (o == null)
@@ -629,7 +635,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         setTimeout("" + Math.random(), ((Integer) o).intValue(), "exitJmol");
       }
     }
-    useCommandThread = !isHeadless()
+    useCommandThread = !headless
         && checkOption2("useCommandThread", "-threaded");
     setStartupBooleans();
     setIntProperty("_nProcessors", nProcessors);
@@ -705,41 +711,35 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return (vwrOptions.containsKey(key1) || commandOptions.indexOf(key2) >= 0);
   }
 
-  private boolean isPreviewOnly = false;
+  private boolean isPreviewOnly;
 
   public boolean isPreviewOnly() {
     return isPreviewOnly;
   }
 
+  public boolean headless;
+
   public boolean isHeadless() {
+    return headless;
     // determined by GraphicsEnvironment.isHeadless()
     //   from java -Djava.awt.headless=true
     // disables command threading
     // disables DELAY, TIMEOUT, PAUSE, LOOP, GOTO, SPIN <rate>, ANIMATION ON
     // turns SPIN <rate> <end> into just ROTATE <end>
-    return apiPlatform.isHeadless();
   }
 
   private void setStartupBooleans() {
     setBooleanProperty("_applet", isApplet);
     setBooleanProperty("_JSpecView".toLowerCase(), false);
     setBooleanProperty("_signedApplet", isSignedApplet);
-    setBooleanProperty("_headless", apiPlatform.isHeadless());
+    setBooleanProperty("_headless", headless);
     setStringProperty("_restrict", "\"" + access + "\"");
     setBooleanProperty("_useCommandThread", useCommandThread);
-  }
-
-  public boolean noGraphicsAllowed() {
-    return noGraphicsAllowed;
   }
 
   public String getExportDriverList() {
     return (haveAccess(ACCESS.ALL) ? (String) g
         .getParameter("exportDrivers", true) : "");
-  }
-
-  public String getHtmlName() {
-    return htmlName;
   }
 
   @Override
@@ -1689,7 +1689,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    * opens a file as a model, a script, or a surface via the creation of a
    * script that is queued \t at the beginning disallows script option - used by
    * JmolFileDropper and JmolPanel file-open actions - sets up a script to load
-   * the file
+   * the file. 
+   * 
+   * Called from (JSmolCore.js)Jmol.$appEvent(,,"drop").reader.onloadend()
    * 
    * @param fileName
    * @param flags 1=pdbCartoons, 2=no scripting, 4=append, 8=fileOpen
@@ -2349,7 +2351,11 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         String jmolScript = (String) ms
             .getInfoM("jmolscript");
         if (ms.getMSInfoB("doMinimize"))
-          minimize(Integer.MAX_VALUE, 0, bsNew, null, 0, true, true, true, true);
+          try {
+            minimize((JmolScriptEvaluator) htParams.get("eval"), Integer.MAX_VALUE, 0, bsNew, null, 0, true, true, true, true);
+          } catch (Exception e) {
+            // TODO
+          }
         else
           addHydrogens(bsNew, false, true);
         // no longer necessary? -- this is the JME/SMILES data:
@@ -3588,9 +3594,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
          *            if (!this.html5Applet) return;
          *            this.html5Applet._refresh(); 
          */
-        {
-          System.out.println(tm);
-        }
+        {}
       }
     } else {
       if (mode > 0 && mode != 7)
@@ -4095,7 +4099,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return;
     if (headlessImageParams != null) {
       try {
-        if (isHeadless())
+        if (headless)
           outputToFile(headlessImageParams);
       } catch (Exception e) {
         //
@@ -6890,8 +6894,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public void showString(String str, boolean isPrint) {
-    if (isScriptQueued() && (!isSilent || isPrint) && !isJS)
+    if (!isJS && isScriptQueued() && (!isSilent || isPrint)) {
       Logger.warn(str); // warn here because we still want to be be able to turn this off
+    }
     scriptEcho(str);
   }
 
@@ -7333,7 +7338,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   @Override
   public int getAtomArgb(int i) {
-    return gdata.getColorArgbOrGray(ms.getAtomColix(i));
+    return gdata.getColorArgbOrGray(ms.at[i].colixAtom);
   }
 
   @Override
@@ -7621,7 +7626,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
                                            float[] dihedralList) {
     // Eval: rotate INTERNAL
     
-    if (isHeadless()) {
+    if (headless) {
       if (isSpin && endDegrees == Float.MAX_VALUE)
         return false;
       isSpin = false;
@@ -8747,8 +8752,12 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     refreshMeasures(true);
     if (!g.monitorEnergy)
       return;
-    minimize(0, 0, getAllAtoms(), null, 0, false, false, true,
-        false);
+    try {
+      minimize(null, 0, 0, getAllAtoms(), null, 0, false, false, true,
+          false);
+    } catch (Exception e) {
+      // TODO
+    }
     echoMessage(getP("_minimizationForceField") + " Energy = "
         + getP("_minimizationEnergy"));
   }
@@ -8766,10 +8775,11 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    * @param isOnly
    * @param isSilent
    * @param isLoad2D
+   * @throws Exception 
    */
-  public void minimize(int steps, float crit, BS bsSelected, BS bsFixed,
+  public void minimize(JmolScriptEvaluator eval, int steps, float crit, BS bsSelected, BS bsFixed,
                        float rangeFixed, boolean addHydrogen, boolean isOnly,
-                       boolean isSilent, boolean isLoad2D) {
+                       boolean isSilent, boolean isLoad2D) throws Exception {
 
     // We only work on atoms that are in frame
 
@@ -8820,6 +8830,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         Logger.info("Minimizing " + bsSelected.cardinality() + " atoms");
       getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed,
           haveFixed, isSilent, ff);
+    } catch (JmolAsyncException e) {
+      eval.loadFileResourceAsync(e.getFileName()); 
     } catch (Exception e) {
       Logger.error("Minimization error: " + e.toString());
       if (!isJS)
@@ -9071,8 +9083,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
             index1 = index2;
             index2 = i;
           }
-          index1 = atoms[index1].getGroup().firstAtomIndex;
-          index2 = atoms[index2].getGroup().lastAtomIndex;
+          index1 = atoms[index1].group.firstAtomIndex;
+          index2 = atoms[index2].group.lastAtomIndex;
         }
         bsSelected = new BS();
         bsSelected.setBits(index1, index2 + 1);
@@ -9208,7 +9220,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public void setTimeout(String name, int mSec, String script) {
-    if (!haveDisplay || isHeadless() || autoExit)
+    if (!haveDisplay || headless || autoExit)
       return;
     if (name == null) {
       clearTimeouts();
@@ -9234,7 +9246,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return (haveDisplay ? TimeoutThread.showTimeout(timeouts, name) : "");
   }
 
-  public void calculatePartialCharges(BS bsSelected) {
+  public void calculatePartialCharges(BS bsSelected) throws JmolAsyncException {
     if (bsSelected == null || bsSelected.cardinality() == 0)
       bsSelected = getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
     getMinimizer(true).calculatePartialCharges(ms.bo,
@@ -9303,11 +9315,11 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     setAnimationOn(false);
   }
 
-  public ScriptContext getEvalContextAndHoldQueue(JmolScriptEvaluator jse) {
-    if (jse == null || !isJS)
+  public ScriptContext getEvalContextAndHoldQueue(JmolScriptEvaluator eval) {
+    if (false && (eval == null || !isJS))
       return null;
-    jse.pushContextDown("getEvalContextAndHoldQueue");
-    ScriptContext sc = jse.getThisContext();
+    eval.pushContextDown("getEvalContextAndHoldQueue");
+    ScriptContext sc = eval.getThisContext();
     sc.setMustResume();
     sc.isJSThread = true;
     queueOnHold = true;
@@ -9529,20 +9541,37 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    * 
    * 
    * @param id
-   *        < 256 is just the character of a single-character chain id; >= 256
-   *        indicates a list pointer into chainList.
+   *        < 256 is just the character of a single-character 
+   *              upper-case chain id, upper or lower case query; 
+   *        
+   *        >= 256 < 300 is lower case found in structure
+   *        
+   * @param isAssign from a file reader, not a select query
+   *        
    * @return i
    */
-  public int getChainID(String id) {
+  public int getChainID(String id, boolean isAssign) {
+    // if select :a and there IS chain "a" in a structure,
+    // then we return that id, and all is good. Chain selectivity
+    // is inforced, and we will find it.
     Integer iboxed = (Integer) chainMap.get(id);
     if (iboxed != null)
       return iboxed.intValue();
     int i = id.charAt(0);
-    if (id.length() > 1 || (97 <= i && i <= 122)) { // lower case
+    if (id.length() > 1) {
+      i = 300 + chainList.size();
+    } else if (isAssign && 97 <= i && i <= 122) { // lower case
+      i += 159; // starts at 256
+    }
+    if (i >= 256) {
       //this will force chainCaseSensitive when it is necessary
-      i = 256 + chainList.size();
       chainList.addLast(id);
     }
+    // if select :a and there is NO chain "a" in the structure,
+    // there still might be an "A" and we cannot check for 
+    // chain case sensitivity yet, as we are parsing the script,
+    // not processing it. So we just store this one as 97-122.
+
     iboxed = Integer.valueOf(i);
     chainMap.put(iboxed, id);
     chainMap.put(id, iboxed);
@@ -9702,6 +9731,27 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   public GenericZipTools getJzt() {
     return (jzt == null ? jzt = (GenericZipTools) Interface.getInterface("javajs.util.ZipTools", this, "zip") : jzt);
+  }
+
+  void dragMinimizeAtom(int iAtom) {
+    stopMinimization();
+    BS bs = (getMotionFixedAtoms().cardinality() == 0 ?
+        ms.getAtoms((isAtomPDB(iAtom) ? T.group : T.molecule), BSUtil
+            .newAndSetBit(iAtom)) : BSUtil.setAll(getAtomCount()));
+    try {
+      minimize(null, Integer.MAX_VALUE, 0, bs, null, 0, false, false, false, false);
+    } catch (Exception e) {
+      if (!async)
+        return;
+      /**
+       * @j2sNative
+       * 
+       * var me = this;
+       * setTimeout(function() {me.dragMinimizeAtom(iAtom)}, 100);
+       * 
+       */
+      {}
+    }
   }
 
 

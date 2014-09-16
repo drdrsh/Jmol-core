@@ -2419,7 +2419,7 @@ import java.util.Properties;
       int chainID = info[2];
       bs = new BS();
       boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
-      if (chainID >= 0 && chainID < 256 && !caseSensitive)
+      if (chainID >= 0 && chainID < 300 && !caseSensitive)
         chainID = chainToUpper(chainID);
       for (int i = mc; --i >= 0;)
         if (am[i].isBioModel)
@@ -3165,7 +3165,7 @@ import java.util.Properties;
         lastid = -1;
       }
       if ((id = at[i].getStrucNo()) != lastid && id != 0) {
-        at[i].getGroup().setStrucNo(++idnew);
+        at[i].group.setStrucNo(++idnew);
         lastid = idnew;
       }
     }

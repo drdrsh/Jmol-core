@@ -70,8 +70,8 @@ public class BackboneRenderer extends BioShapeRenderer {
         || ms.isAtomHidden(atomB.i)
         || !isDataFrame && atomA.distanceSquared(atomB) > max)
       return;
-    colixA = C.getColixInherited(colixA, atomA.getColix());
-    colixB = C.getColixInherited(colixB, atomB.getColix());
+    colixA = C.getColixInherited(colixA, atomA.colixAtom);
+    colixB = C.getColixInherited(colixB, atomB.colixAtom);
     if (!isExport && !isPass2 && !setBioColix(colixA) && !setBioColix(colixB))
       return;
     int xA = atomA.sX, yA = atomA.sY, zA = atomA.sZ;

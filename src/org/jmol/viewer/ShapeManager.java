@@ -158,7 +158,7 @@ public class ShapeManager {
   }
   
   public void resetShapes() {
-    if (!vwr.noGraphicsAllowed())
+    if (!vwr.noGraphicsAllowed)
       shapes = new Shape[JC.SHAPE_MAX];
   }
   

@@ -242,7 +242,7 @@ public final class Resolver implements JmolBioResolver {
     P3 xyz = P3.new3(Float.NaN, Float.NaN, Float.NaN);
     Atom a = ms.at[iFirst];
     for (int i = 0; i < nH; i++)
-      ms.addAtom(a.mi, a.getGroup(), 1, "H", 0, a.getSeqID(), 0, xyz,
+      ms.addAtom(a.mi, a.group, 1, "H", 0, a.getSeqID(), 0, xyz,
           Float.NaN, null, 0, 0, 1, 0, null, isHetero, (byte) 0, null)
           .deleteBonds(null);
   }
@@ -378,7 +378,7 @@ public final class Resolver implements JmolBioResolver {
       if (pts[i] == null)
         continue;
       Atom atom = ms.at[i];
-      Group g = atom.getGroup();
+      Group g = atom.group;
       if (g != groupLast) {
         groupLast = g;
         ipt = g.lastAtomIndex;
@@ -577,7 +577,7 @@ public final class Resolver implements JmolBioResolver {
     // fix terminal N groups as +1
     for (int i = bsAtomsForHs.nextSetBit(0); i >= 0; i = bsAtomsForHs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      if (a.getGroup().getNitrogenAtom() == a && a.getCovalentBondCount() == 1)
+      if (a.group.getNitrogenAtom() == a && a.getCovalentBondCount() == 1)
         a.setFormalCharge(1);
       if ((i = bsAtomsForHs.nextClearBit(i + 1)) < 0)
         break;
@@ -591,8 +591,8 @@ public final class Resolver implements JmolBioResolver {
     for (int i = baseBondIndex; i < bondCount; i++) {
       Atom a1 = bonds[i].getAtom1();
       Atom a2 = bonds[i].getAtom2();
-      Group g = a1.getGroup();
-      if (g != a2.getGroup())
+      Group g = a1.group;
+      if (g != a2.group)
         continue;
       SB key = new SB().append(g.getGroup3());
       key.append(":");
@@ -635,7 +635,7 @@ public final class Resolver implements JmolBioResolver {
     for (int i = 0; i < bondCount; i++) {
       Atom a1 = bonds[i].getAtom1();
       Atom a2 = bonds[i].getAtom2();
-      if (a1.getGroup() == a2.getGroup())
+      if (a1.group == a2.group)
         continue;
       String value;
       if ((value = htKeysBad.get(a1.getGroup3(false) + ":" + a1.getAtomName())) == null

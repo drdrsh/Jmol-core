@@ -718,7 +718,7 @@ public class Labels extends AtomShape {
       colix = (bgcolixes == null || i >= bgcolixes.length) ? 0 : bgcolixes[i];
     } else {
       colix = (colixes == null || i >= colixes.length) ? 0 : colixes[i];
-      colix = C.getColixInherited(colix, atom.getColix());
+      colix = C.getColixInherited(colix, atom.colixAtom);
       if (C.isColixTranslucent(colix))
         colix = C.getColixTranslucent3(colix, false, 0);
     }

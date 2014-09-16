@@ -103,7 +103,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   @Override
   void drawAtom(Atom atom) {
     outputSphere(atom.sX, atom.sY, atom.sZ,
-        atom.sD / 2f, atom.getColix());
+        atom.sD / 2f, atom.colixAtom);
   }
 
   @Override
