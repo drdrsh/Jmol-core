@@ -1272,8 +1272,9 @@ public class FileManager implements BytePoster {
      * 
      */
     {
-    if (Logger.debugging)
-      Logger.debug("cacheGet " + key + " " + cache.containsKey(key));
+    //if (Logger.debugging)
+      //Logger.debug
+      Logger.info("cacheGet " + key + " " + cache.containsKey(key));
        data = cache.get(key);
     }    
     return (bytesOnly && (data instanceof String) ? null : data);

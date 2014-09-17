@@ -244,6 +244,7 @@ public class JmolUtil implements JmolZipUtilities {
     if (data[1] == null)
       return false;
     byte[] bytes = data[1].getBytes();
+    System.out.println("jmolutil caching " + bytes.length + " bytes as " + jmb.fm.getCanonicalName(data[0]));
     jmb.pngjCache.put(jmb.fm.getCanonicalName(data[0]), bytes); // marker in case the .all. file is changed
     if (shortName.indexOf("_scene_") >= 0) {
       jmb.pngjCache.put(shortSceneFilename(data[0]), bytes); // good for all .min. files of this scene set

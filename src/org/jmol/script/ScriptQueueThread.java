@@ -25,11 +25,10 @@
 
 package org.jmol.script;
 
-
+import javajs.util.Lst;
 
 import org.jmol.api.JmolScriptManager;
 import org.jmol.thread.JmolThread;
-import javajs.util.Lst;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
@@ -42,6 +41,10 @@ public class ScriptQueueThread extends JmolThread {
   private int pt;
 
   /**
+   * @param scriptManager 
+   * @param vwr 
+   * @param startedByCommandThread 
+   * @param pt 
    * @j2sIgnoreSuperConstructor
    * 
    */
@@ -92,8 +95,8 @@ public class ScriptQueueThread extends JmolThread {
     String script = (String) scriptItem.get(0);
     String statusList = (String) scriptItem.get(1);
     String returnType = (String) scriptItem.get(2);
-    boolean isScriptFile = ((Boolean) scriptItem.get(3)).booleanValue();
-    boolean isQuiet = ((Boolean) scriptItem.get(4)).booleanValue();
+    //boolean isScriptFile = ((Boolean) scriptItem.get(3)).booleanValue();
+    boolean isQuiet = ((Boolean) scriptItem.get(3)).booleanValue();
     if (Logger.debugging) {
       Logger.debug("Queue[" + pt + "][" + queue.size()
           + "] scripts; running: " + script);
@@ -101,7 +104,11 @@ public class ScriptQueueThread extends JmolThread {
     //System.out.println("removing: " + scriptItem + " " + script);
     queue.remove(0);
     //System.out.println("removed: " + scriptItem);
-    vwr.evalStringWaitStatusQueued(returnType, script, statusList, isScriptFile, isQuiet, true);
+//    if (isScriptFile) {
+//      script = "script " + PT.esc(script);
+//      isScriptFile = false;
+//    }
+    vwr.evalStringWaitStatusQueued(returnType, script, statusList, isQuiet, true);
     if (queue.size() == 0) {// might have been cleared with an exit
       //Logger.info("SCRIPT QUEUE READY", 0);
       return false;

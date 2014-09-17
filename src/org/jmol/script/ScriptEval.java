@@ -1974,7 +1974,7 @@ public class ScriptEval extends ScriptExpr {
       return filename;
     if (prefix != null)
       prefix = "cache://local" + prefix;
-    String key = pc + "_" + i;
+    String key = pc + "_" + i + "_" + filename;
     String cacheName;
     if (thisContext == null || thisContext.htFileCache == null) {
       pushContext(null, "loadFileAsync");
@@ -1986,14 +1986,14 @@ public class ScriptEval extends ScriptExpr {
       fileLoadThread = null;
       popContext(false, false);
       vwr.queueOnHold = false;
-      if ("#CANCELED#".equals(vwr.cacheGet(cacheName)))
+      if ("#CANCELED#".equals(cacheName) || "#CANCELED#".equals(vwr.cacheGet(cacheName)))
         evalError("#CANCELED#", null);
       return cacheName;
     }
     thisContext.htFileCache.put(key,
         cacheName = prefix + System.currentTimeMillis());
-    if (fileLoadThread != null && i >= 0)
-      evalError("#CANCELED#", null);
+//    if (fileLoadThread != null && i >= 0)
+//      evalError("#CANCELED#", null);
     if (doClear)
       vwr.cacheFileByName(prefix + "*", false);
     fileLoadThread = new FileLoadThread(this, vwr, filename, key, cacheName);
@@ -6246,7 +6246,7 @@ public class ScriptEval extends ScriptExpr {
             remotePath = paramAsStr(++i);
           filename = paramAsStr(++i);
         }
-        if (vwr.isJS && (isAsync || filename.startsWith("?"))) {
+        if (vwr.isJS || vwr.testAsync && (isAsync || filename.startsWith("?"))) {
           filename = loadFileAsync("SCRIPT_", filename, i, true);
           // on first pass a ScriptInterruption will be thrown; 
           // on the second pass we will have the file name, which will be cache://local_n__m
@@ -6289,6 +6289,8 @@ public class ScriptEval extends ScriptExpr {
         }
         checkLength(doStep ? i + 1 : i);
       }
+    } else if (filename != null && isAsync) {
+        filename = loadFileAsync("SCRIPT_", filename, i, true);
     }
 
     // processing

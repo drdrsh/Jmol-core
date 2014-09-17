@@ -95,19 +95,23 @@ class FileLoadThread extends JmolThread {
   }
 
   /**
-   * Called by Jmol._loadFileAsyncDone(this.vwr.html5Applet). Allows for callback
-   * to set the file name.
+   * Called by Jmol._loadFileAsyncDone(this.vwr.html5Applet). Allows for
+   * callback to set the file name.
    * 
    * @param fileName
-   * @param fileName0 
+   * @param fileName0
    * @param data
-   * @param myData unused in Jmol
+   * @param myData
+   *        unused in Jmol
    * @throws InterruptedException
    */
-  void setData(String fileName, String fileName0, Object data, Object myData) throws InterruptedException {
-    if (fileName != null)
-      sc.parentContext.htFileCache.put(key, cacheName = cacheName.substring(0, 
-          cacheName.lastIndexOf("_") + 1) + fileName);
+  void setData(String fileName, String fileName0, Object data, Object myData)
+      throws InterruptedException {
+    System.out.println("FileLoadThread async setData " + fileName);
+    boolean isCanceled = fileName.equals("#CANCELED#");
+    sc.parentContext.htFileCache.put(key, (isCanceled ? fileName
+        : (cacheName = cacheName.substring(0, cacheName.lastIndexOf("_") + 1)
+            + fileName)));
     vwr.cachePut(cacheName, data);
     if (fileName0 != null) {
       vwr.cachePut(vwr.fm.getFilePath(fileName, true, false), data);

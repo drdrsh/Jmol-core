@@ -35,10 +35,9 @@ public interface JmolScriptManager {
 
   Object evalStringWaitStatusQueued(String returnType, String strScript,
                                            String statusList,
-                                           boolean isScriptFile,
                                            boolean isQuiet, boolean isQueued);
 
-  String addScript(String strScript, boolean isScriptFile, boolean isQuiet);
+  String addScript(String strScript, boolean isQuiet);
 
   boolean checkHalt(String str, boolean isInsert);
 

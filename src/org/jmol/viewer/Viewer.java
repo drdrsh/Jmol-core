@@ -4068,7 +4068,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     scm.waitForQueue();
     boolean doTranslateTemp = GT.setDoTranslate(false);
     Object ret = evalStringWaitStatusQueued(returnType, strScript, statusList,
-        false, false, false);
+        false, false);
     GT.setDoTranslate(doTranslateTemp);
     return ret;
   }
@@ -4076,7 +4076,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public synchronized Object evalStringWaitStatusQueued(String returnType,
                                                         String strScript,
                                                         String statusList,
-                                                        boolean isScriptFile,
                                                         boolean isQuiet,
                                                         boolean isQueued) {
     /**
@@ -4091,7 +4090,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     }
     return (getScriptManager() == null ? null :
       scm.evalStringWaitStatusQueued(returnType, strScript,
-        statusList, isScriptFile, isQuiet, isQueued));
+        statusList, isQuiet, isQueued));
   }
 
   public void exitJmol() {

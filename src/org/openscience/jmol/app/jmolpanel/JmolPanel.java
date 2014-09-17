@@ -1532,6 +1532,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   void notifyFileOpen(String fullPathName, String title) {
     if (fullPathName == null || !fullPathName.equals("file[]")) {
+      int pt = (fullPathName == null ? -1 : fullPathName.lastIndexOf("|"));
+      if (pt > 0)
+        fullPathName = fullPathName.substring(0, pt);
       recentFiles.notifyFileOpen(fullPathName);
       frame.setTitle(title);
     }
