@@ -403,11 +403,13 @@ public class ShapeManager {
       }
     }
 
+    ms.clearVisibleSets();
+
     //set clickability -- this enables measures and such
     for (int i = 0; i < JC.SHAPE_MAX; ++i) {
       Shape shape = shapes[i];
       if (shape != null)
-        shape.setModelClickability();
+        shape.setAtomClickability();
     }
   }
 

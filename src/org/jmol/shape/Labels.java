@@ -621,7 +621,7 @@ public class Labels extends AtomShape {
   }
 
   @Override
-  public void setModelClickability() {
+  public void setAtomClickability() {
     if (strings == null)
       return;
     for (int i = strings.length; --i >= 0;) {

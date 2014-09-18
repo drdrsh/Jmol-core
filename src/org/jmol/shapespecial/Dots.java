@@ -283,7 +283,7 @@ public class Dots extends AtomShape {
   }
 
   @Override
-  public void setModelClickability() {
+  public void setAtomClickability() {
     for (int i = ac; --i >= 0;) {
       Atom atom = atoms[i];
       if ((atom.shapeVisibilityFlags & vf) == 0

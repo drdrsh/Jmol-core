@@ -289,7 +289,7 @@ public abstract class Shape {
   public void checkBoundsMinMax(P3 pointMin, P3 pointMax) {
   }
 
-  public void setModelClickability() {
+  public void setAtomClickability() {
   }
 
   /**

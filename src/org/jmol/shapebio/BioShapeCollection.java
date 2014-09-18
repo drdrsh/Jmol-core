@@ -223,11 +223,11 @@ public abstract class BioShapeCollection extends Shape {
   }
 
   @Override
-  public void setModelClickability() {
+  public void setAtomClickability() {
     if (bioShapes == null)
       return;
     for (int i = bioShapes.length; --i >= 0; )
-      bioShapes[i].setModelClickability();
+      bioShapes[i].setAtomClickability();
   }
 
   int getMpsShapeCount() {

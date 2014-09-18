@@ -34,7 +34,6 @@ import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.Quat;
 
-import org.jmol.shapebio.BioShape;
 import javajs.util.V3;
 
 import org.jmol.viewer.JC;
@@ -329,19 +328,21 @@ public class NucleicMonomer extends PhosphorusMonomer {
       closest[0] = lead;
   }
   
-  public void setModelClickability() {
-    Atom atom;
-    if (chain.model.ms.isAtomHidden(leadAtomIndex))
-      return;
-    for (int i = 6; --i >= 0;) {
-      atom = getAtomFromOffsetIndex(ring6OffsetIndexes[i]);
-      atom.setClickable(JC.VIS_CARTOON_FLAG);
-    }
+  public void setRingsVisible(boolean isVisible) {
+    for (int i = 6; --i >= 0;)
+      getAtomFromOffsetIndex(ring6OffsetIndexes[i]).setShapeVisibility(JC.VIS_CARTOON_FLAG, isVisible);
     if (isPurine)
-      for (int i = 4; --i >= 1;) {
-        atom = getAtomFromOffsetIndex(ring5OffsetIndexes[i]);
-        atom.setClickable(JC.VIS_CARTOON_FLAG);
-      }
+      for (int i = 4; --i >= 1;)
+        getAtomFromOffsetIndex(ring5OffsetIndexes[i]).setShapeVisibility(JC.VIS_CARTOON_FLAG, isVisible);
+  }
+
+  public void setRingsClickable() {
+    // this also sets them VISIBLE
+    for (int i = 6; --i >= 0;)
+      getAtomFromOffsetIndex(ring6OffsetIndexes[i]).setClickable(JC.VIS_CARTOON_FLAG);
+    if (isPurine)
+      for (int i = 4; --i >= 1;)
+        getAtomFromOffsetIndex(ring5OffsetIndexes[i]).setClickable(JC.VIS_CARTOON_FLAG);
   }
  
   Atom getN0() {

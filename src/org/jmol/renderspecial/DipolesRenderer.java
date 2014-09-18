@@ -78,7 +78,7 @@ public class DipolesRenderer extends ShapeRenderer {
     Dipoles dipoles = (Dipoles) shape;
     dipoleVectorScale = vwr.getFloat(T.dipolescale);
     boolean needTranslucent = false;
-    BS vis = vwr.ms.getVisibleSet();
+    BS vis = vwr.ms.getVisibleSet(false);
     for (int i = dipoles.dipoleCount; --i >= 0;) {
       Dipole dipole = dipoles.dipoles[i];
       if (dipole.visibilityFlags != 0 && 

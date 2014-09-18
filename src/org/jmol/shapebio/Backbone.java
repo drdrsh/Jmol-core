@@ -107,7 +107,7 @@ public class Backbone extends BioShapeCollection {
   }
   
   @Override
-  public void setModelClickability() {
+  public void setAtomClickability() {
     if (bioShapes == null)
       return;
     for (int iShape = bioShapes.length; --iShape >= 0; ) {

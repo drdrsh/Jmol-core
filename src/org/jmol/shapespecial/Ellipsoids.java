@@ -445,7 +445,7 @@ public class Ellipsoids extends Shape {
   }
 
   @Override
-  public void setModelClickability() {
+  public void setAtomClickability() {
     if (atomEllipsoids.isEmpty())
       return;
     for (Ellipsoid e: atomEllipsoids.values()) {

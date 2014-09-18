@@ -186,7 +186,7 @@ public class Sticks extends Shape {
   }
 
   @Override
-  public void setModelClickability() {
+  public void setAtomClickability() {
     Bond[] bonds = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
       Bond bond = bonds[i];

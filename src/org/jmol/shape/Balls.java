@@ -137,7 +137,7 @@ public class Balls extends AtomShape {
   }
 
   @Override
-  public void setModelClickability() {
+  public void setAtomClickability() {
     BS bsDeleted = vwr.getDeletedAtoms();
     for (int i = ac; --i >= 0;) {
       Atom atom = atoms[i];

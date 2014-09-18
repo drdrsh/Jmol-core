@@ -210,7 +210,7 @@ public abstract class AtomShape extends Shape {
   }
 
   @Override
-  public void setModelClickability() {
+  public void setAtomClickability() {
     if (!isActive)
       return;
     for (int i = ac; --i >= 0;) {

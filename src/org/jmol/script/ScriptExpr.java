@@ -783,16 +783,15 @@ abstract class ScriptExpr extends ScriptParam {
         rpn.addXBs(vwr.getBaseModelBitSet());
         break;
       case T.visible:
-        if (!chk && !refreshed)
-          vwr.setModelVisibility();
+        rpn.addXBs(chk ? new BS() : BSUtil.copy(vwr.ms.getVisibleSet(!refreshed)));
         refreshed = true;
-        rpn.addXBs(vwr.ms.getVisibleSet());
         break;
       case T.clickable:
         // a bit different, because it requires knowing what got slabbed
         if (!chk && allowRefresh)
           refresh(false);
-        rpn.addXBs(vwr.ms.getClickableSet());
+        rpn.addXBs(chk ? new BS() : vwr.ms.getClickableSet(!allowRefresh));
+        allowRefresh = false;
         break;
       case T.spec_atom:
         if (vwr.allowSpecAtom()) {

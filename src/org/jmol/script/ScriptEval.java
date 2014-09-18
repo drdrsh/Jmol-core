@@ -2188,6 +2188,8 @@ public class ScriptEval extends ScriptExpr {
         continue;
       }
       thisCommand = getCommand(pc, false, true);
+      if (debugScript)
+        Logger.info(thisCommand);
       String nextCommand = getCommand(pc + 1, false, true);
       fullCommand = thisCommand
           + (nextCommand.startsWith("#") ? nextCommand : "");
@@ -3812,11 +3814,8 @@ public class ScriptEval extends ScriptExpr {
       property = ""; // produces a list from Property Manager
       param = "";
     } else if (propertyID >= 0 && slen < 3) {
-      param = vwr.getDefaultPropertyParam(propertyID);
-      if (param.equals("(visible)")) {
-        vwr.setModelVisibility();
-        param = vwr.ms.getVisibleSet();
-      }
+      if ((param = vwr.getDefaultPropertyParam(propertyID)).equals("(visible)"))
+        param = vwr.ms.getVisibleSet(true);
     } else if (propertyID == vwr.getPropertyNumber("fileContents")) {
       String s = param.toString();
       for (int i = 3; i < slen; i++)

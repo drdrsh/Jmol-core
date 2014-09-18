@@ -162,7 +162,7 @@ abstract public class AtomCollection {
   private BS bsHidden;
   public BS bsVisible, bsClickable, bsModulated;
 
-  public boolean haveBSVisible, haveBSClickable;
+  private boolean haveBSVisible, haveBSClickable;
   
   protected void setupAC() {
     bsHidden = new BS();
@@ -2600,18 +2600,24 @@ abstract public class AtomCollection {
     return bsResult;
   }
 
-
-  public void getRenderable(BS bsAtoms) {
-    bsAtoms.clearAll();
+  
+  public void clearVisibleSets() {
     haveBSVisible = false;
     haveBSClickable = false;
+  }
+
+  public void getRenderable(BS bsAtoms) {
+    clearVisibleSets();
+    bsAtoms.clearAll();
     for (int i = ac; --i >= 0;)
       if (at[i].isVisible(JC.ATOM_INFRAME))
         bsAtoms.set(i);
   }
 
-  public BS getVisibleSet() {
-    if (haveBSVisible)
+  public BS getVisibleSet(boolean forceNew) {
+    if (forceNew)
+      vwr.setModelVisibility();
+    else if (haveBSVisible)
       return bsVisible;
     bsVisible.clearAll();
     for (int i = ac; --i >= 0;)
@@ -2621,8 +2627,10 @@ abstract public class AtomCollection {
     return bsVisible;
   }
 
-  public BS getClickableSet() {
-    if (haveBSClickable)
+  public BS getClickableSet(boolean forceNew) {
+    if (forceNew)
+      vwr.setModelVisibility();
+    else if (haveBSClickable)
       return bsClickable;
     bsClickable.clearAll();
     for (int i = ac; --i >= 0;)

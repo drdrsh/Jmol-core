@@ -29,6 +29,8 @@ import org.jmol.c.PAL;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Group;
+import org.jmol.modelset.ModelSet;
+import org.jmol.modelsetbio.AlphaPolymer;
 import org.jmol.modelsetbio.BioPolymer;
 import org.jmol.modelsetbio.Monomer;
 import org.jmol.modelsetbio.NucleicMonomer;
@@ -196,6 +198,7 @@ public class BioShape extends AtomShape {
     if (bsSizeSet == null)
       bsSizeSet = new BS();
     int flag = shape.vf;
+    boolean setRingVis = (flag == JC.VIS_CARTOON_FLAG && bioPolymer instanceof NucleicPolymer);
     for (int i = monomerCount; --i >= 0; ) {
       int leadAtomIndex = leadAtomIndices[i];
       if (bsSelected.get(leadAtomIndex)) {
@@ -207,7 +210,10 @@ public class BioShape extends AtomShape {
         boolean isVisible = ((mads[i] = getMad(i, mad)) > 0);
         bsSizeSet.setBitTo(i, isVisible);
         monomers[i].setShapeVisibility(flag, isVisible);
+        // this is necessary in case we are 
         shape.atoms[leadAtomIndex].setShapeVisibility(flag, isVisible);
+        if (setRingVis)
+          ((NucleicMonomer) monomers[i]).setRingsVisible(isVisible);
         falsifyNearbyMesh(i);
       }
     }
@@ -367,19 +373,22 @@ public class BioShape extends AtomShape {
   }
 
   @Override
-  public void setModelClickability() {
-    if (!isActive || wingVectors == null)
+  public void setAtomClickability() {
+    if (!isActive || wingVectors == null || monomerCount == 0)
       return;
-    boolean isNucleicPolymer = bioPolymer instanceof NucleicPolymer;
+    boolean setRingsClickable = (bioPolymer instanceof NucleicPolymer && shape.shapeID == JC.SHAPE_CARTOON);
+    boolean setAlphaClickable = (bioPolymer instanceof AlphaPolymer || shape.shapeID != JC.SHAPE_ROCKETS);
+    ModelSet ms = monomers[0].chain.model.ms;
     for (int i = monomerCount; --i >= 0;) {
       if (mads[i] <= 0)
         continue;
       int iAtom = leadAtomIndices[i];
-      if (monomers[i].chain.model.ms.isAtomHidden(iAtom))
+      if (ms.isAtomHidden(iAtom))
         continue;
-      shape.atoms[iAtom].setClickable(JC.ALPHA_CARBON_VISIBILITY_FLAG);
-      if (isNucleicPolymer)
-        ((NucleicMonomer) monomers[i]).setModelClickability();
+      if (setAlphaClickable)
+        ms.at[iAtom].setClickable(JC.ALPHA_CARBON_VISIBILITY_FLAG);
+      if (setRingsClickable)
+        ((NucleicMonomer) monomers[i]).setRingsClickable();
     }
   }
 
