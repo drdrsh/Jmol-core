@@ -707,8 +707,8 @@ public class CifReader extends AtomSetCollectionReader {
       asc.setAtomSetAuxiliaryInfo("formula", thisFormula);  
       return;
     }
-    if (key.startsWith("_symmetry_equiv_pos")
-        || key.startsWith(FAMILY_SGOP)
+    if (key.startsWith(FAMILY_SGOP)
+        || key.startsWith("_symmetry_equiv_pos")
         || key.startsWith("_symmetry_ssg_equiv")) {
       if (ignoreFileSymmetryOperators) {
         Logger.warn("ignoring file-based symmetry operators");
@@ -1019,7 +1019,8 @@ public class CifReader extends AtomSetCollectionReader {
       disableField(CARTN_X);
       disableField(CARTN_Y);
       disableField(CARTN_Z);
-    } else if (fieldOf[ANISO_LABEL] != NONE || fieldOf[ANISO_MMCIF_ID] != NONE
+    } else if (fieldOf[ANISO_LABEL] != NONE 
+        || fieldOf[ANISO_MMCIF_ID] != NONE
         || fieldOf[MOMENT_LABEL] != NONE) {
       haveCoord = false;
       // no coordinates, but valuable information
@@ -1063,8 +1064,9 @@ public class CifReader extends AtomSetCollectionReader {
         atom = new Atom();
       } else {
         if (fieldProperty(fieldOf[ANISO_LABEL]) != NONE
+            || fieldProperty(fieldOf[ANISO_MMCIF_ID]) != NONE
             || fieldProperty(fieldOf[MOMENT_LABEL]) != NONE
-            || fieldProperty(fieldOf[ANISO_MMCIF_ID]) != NONE) {
+            ) {
           if ((atom = asc.getAtomFromName(field)) == null)
             continue; // atom has been filtered out
         } else {
@@ -1392,28 +1394,51 @@ public class CifReader extends AtomSetCollectionReader {
   // symmetry operations
   ////////////////////////////////////////////////////////////////
 
-  final private static byte SYMOP_XYZ = 0;
-  final private static byte SYM_EQUIV_XYZ = 1;
-  final private static byte SYM_SSG_XYZ = 2;
-  final private static byte SYM_SSG_OP = 3;
-  final private static byte SYM_MAGN_OP = 4;
-  final private static byte SYM_PRELIM_REV = 5;
-  final private static byte SYM_MAGN_SSG_XYZ = 6;
-  final private static byte SYM_MAGN_SSG_OP = 7;
-  final private static byte SYM_MAGN_REV = 8;
-  final private static byte SYM_MAGN_SSG_REV = 9;
+  //loop_
+  //_space_group_symop.magn_centering_id
+  //_space_group_symop.magn_centering_xyz
+  //1 x+2/3,y+1/3,z+1/3,+1 mx,my,mz
+  //2 x+1/3,y+2/3,z+2/3,+1 mx,my,mz
+  //3 x,y,z,+1 mx,my,mz
+
+  //_space_group_symop.magn_ssg_centering_id
+  //_space_group_symop.magn_ssg_centering_algebraic
+  // 1 x1,x2,x3,x4,+1
+  // 2 x1,x2,x3,x4+1/2,-1 
+
+  final private static byte SYM_XYZ = 0;
+  final private static byte SYM_MAGN_XYZ = 1;
+  
+  final private static byte SYM_SSG_ALG = 2;
+  final private static byte SYM_MAGN_SSG_ALG = 3;
+  final private static byte SYM_EQ_XYZ = 4;  
+  final private static byte SYM_SSG_EQ_XYZ = 5;
+  
+  final private static byte SYM_MAGN_REV = 7;
+  final private static byte SYM_MAGN_SSG_REV = 8;
+  final private static byte SYM_MAGN_REV_PRELIM = 6;
+  
+  final private static byte SYM_MAGN_CENTERING = 9;
+  final private static byte SYM_MAGN_SSG_CENTERING = 10;
+  final private static byte SYM_MAGN_SSG_CENT_XYZ = 11;
+
   final private static String FAMILY_SGOP = "_space_group_symop";
   final private static String[] symmetryOperationsFields = {
       "*_operation_xyz", 
-      "_symmetry_equiv_pos_as_xyz",
-      "_symmetry_ssg_equiv_pos_as_xyz",
-      "*_ssg_operation_algebraic",
       "*_magn_operation_xyz",
-      "*_magn_ssg_centering_algebraic",
-      "*_operation_timereversal", // preliminary only
+      
+      "*_ssg_operation_algebraic",
       "*_magn_ssg_operation_algebraic",
-      "*_magn_operation_timereversal",
-      "*_magn_ssg_operation_timereversal"
+      "_symmetry_equiv_pos_as_xyz",     // old
+      "_symmetry_ssg_equiv_pos_as_xyz", // old
+      
+      "*_magn_operation_timereversal", // second iteration
+      "*_magn_ssg_operation_timereversal", // another iteration
+      "*_operation_timereversal", // preliminary only
+      
+      "*_magn_centering_xyz",
+      "*_magn_ssg_centering_algebraic",
+      "*_magn_ssg_centering_xyz" // preliminary
   };
 
   /**
@@ -1422,51 +1447,45 @@ public class CifReader extends AtomSetCollectionReader {
    * @throws Exception
    */
   private void processSymmetryOperationsLoopBlock() throws Exception {
-    if (key.endsWith("magn_centering_id") || key.endsWith("magn_ssg_centering_id")) {
-      processMagCenteringLoopBlock();
-      return;
-    }
     parseLoopParametersFor(FAMILY_SGOP, symmetryOperationsFields);
-    int nRefs = 0;
+    int n;
     symops = new Lst<String>();
-    for (int i = propertyCount; --i >= 0;)
-      if (fieldOf[i] != NONE)
-        nRefs++;
-    if (nRefs == 0) {
-      Logger
-          .warn("?que? _symmetry_equiv or _space_group_symop property not found");
+    for (n = propertyCount; --n >= 0;)
+      if (fieldOf[n] != NONE)
+        break;
+    if (n < 0) {
+      Logger.warn("required " + FAMILY_SGOP + " key not found");
       parser.skipLoop();
       return;
     }
-    int n = 0;
+    n = 0;
     boolean isMag = false;
     while (parser.getData()) {
       boolean ssgop = false;
       int nn = parser.getFieldCount();
-      int timeRev = (fieldProperty(fieldOf[SYM_PRELIM_REV]) == NONE
-          && fieldProperty(fieldOf[SYM_MAGN_REV]) == NONE
-              && fieldProperty(fieldOf[SYM_MAGN_SSG_REV]) == NONE
-          ? 0 : field
-          .equals("-1") ? -1 : 1);
+      int timeRev = (
+          fieldProperty(fieldOf[SYM_MAGN_REV]) == NONE
+          && fieldProperty(fieldOf[SYM_MAGN_SSG_REV]) == NONE
+          && fieldProperty(fieldOf[SYM_MAGN_REV_PRELIM]) == NONE              
+          ? 0 : field.equals("-1") ? -1 : 1);
       for (int i = 0, tok; i < nn; ++i) {
         switch (tok = fieldProperty(i)) {
-        case SYM_SSG_XYZ:
+        case SYM_SSG_EQ_XYZ:
           // check for non-standard record x~1~,x~2~,x~3~,x~4~  kIsfCqpM.cif
           if (field.indexOf('~') >= 0)
             field = PT.rep(field, "~", "");
           //$FALL-THROUGH$
-        case SYM_SSG_OP:
-        case SYM_MAGN_SSG_XYZ:
-        case SYM_MAGN_SSG_OP:
+        case SYM_SSG_ALG:
+        case SYM_MAGN_SSG_ALG:
           modulated = true;
           ssgop = true;
           //$FALL-THROUGH$
-        case SYMOP_XYZ:
-        case SYM_EQUIV_XYZ:
-        case SYM_MAGN_OP:
+        case SYM_XYZ:
+        case SYM_EQ_XYZ:
+        case SYM_MAGN_XYZ:
           if (allowRotations || timeRev != 0 || ++n == 1)
             if (!modulated || ssgop) {
-              if (tok == SYM_MAGN_OP || tok == SYM_MAGN_SSG_XYZ) {
+              if (tok == SYM_MAGN_XYZ || tok == SYM_MAGN_SSG_ALG) {
                 isMag = true;
                 timeRev = (field.endsWith(",+1") || field.endsWith(",1")? 1
                     : field.endsWith(",-1") ? -1 : 0);
@@ -1480,6 +1499,14 @@ public class CifReader extends AtomSetCollectionReader {
               setSymmetryOperator(field);
             }
           break;
+        case SYM_MAGN_CENTERING:
+        case SYM_MAGN_SSG_CENTERING:
+        case SYM_MAGN_SSG_CENT_XYZ:
+          isMag = true;
+          if (magCenterings == null)
+            magCenterings = new Lst<String>();
+          magCenterings.addLast(field);
+          break;
         }
       }
     }
@@ -1487,40 +1514,7 @@ public class CifReader extends AtomSetCollectionReader {
       addLatticeVectors();
   }
 
-  final static byte MAGN_CENTERING = 0;
-  final static byte MAGN_SSG_CENTERING = 1;
-
-  final private static String[] magnCenteringFields = { 
-      "_space_group_symop_magn_centering_xyz",
-      "_space_group_symop_magn_ssg_centering_xyz"
-    };
-
-  //loop_
-  //_space_group_symop.magn_centering_id
-  //_space_group_symop.magn_centering_xyz
- 
   
-  //_space_group_symop.magn_ssg_centering_id
-  //_space_group_symop.magn_ssg_centering_xyz
-
-//
-  //1 x+2/3,y+1/3,z+1/3,+1 mx,my,mz
-  //2 x+1/3,y+2/3,z+2/3,+1 mx,my,mz
-  //3 x,y,z,+1 mx,my,mz
-
-  // 1 x1,x2,x3,x4,+1
-  // 2 x1,x2,x3,x4+1/2,-1 
-
-  
-  private void processMagCenteringLoopBlock() throws Exception {
-    parseLoopParameters(magnCenteringFields);
-    magCenterings = new Lst<String>();
-    while (parser.getData())
-      magCenterings.addLast(fieldProperty(fieldOf[MAGN_CENTERING]) == NONE 
-      && fieldProperty(fieldOf[MAGN_SSG_CENTERING]) == NONE ? null
-          : field);
-  }
-
   public int getBondOrder(String field) {
     switch (field.charAt(0)) {
     default:
