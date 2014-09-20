@@ -137,7 +137,6 @@ public class ScriptManager implements JmolScriptManager {
     //  Logger.info("ScriptManager queue size=" + scriptQueue.size() + " scripts; added: " 
     //    + strScript + " " + Thread.currentThread().getName());
     startScriptQueue(false);
-    //System.out.println("ScriptManager queue 'pending'");
     return "pending";
   }
 
@@ -208,7 +207,6 @@ public class ScriptManager implements JmolScriptManager {
     boolean isOK = (watching ? flag < 0 
         : isByCommandWatcher ? flag == 0
         : flag == 1);
-    //System.out.println("checking queue for thread " + (watching ? 1 : 0) + "watching = " + watching + " isbycommandthread=" + isByCommandWatcher + "  flag=" + flag + " isOK = " + isOK + " " + scriptItem.get(0));
     return (isOK ? scriptItem : null);
   }
 
@@ -327,7 +325,6 @@ public class ScriptManager implements JmolScriptManager {
     String str = checkScriptExecution(strScript, false);
     if (str != null)
       return str;
-    System.out.println("scriptman statuslist is " + statusList);
     SB outputBuffer = (statusList == null
         || statusList.equals("output") ? new SB() : null);
 
@@ -427,7 +424,6 @@ public class ScriptManager implements JmolScriptManager {
     // initiated WITHIN this applet (not sent to it)
     // we append #NOSYNC; here so that the receiving applet does not attempt
     // to pass it back to us or any other applet.
-    //System.out.println("OK, I'm in evalStringQUiet");
     if (allowSyncScript && vwr.sm.syncingScripts
         && strScript.indexOf("#NOSYNC;") < 0)
       vwr.syncScript(strScript + " #NOSYNC;", null, 0);

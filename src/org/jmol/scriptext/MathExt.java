@@ -1464,12 +1464,20 @@ public class MathExt implements JmolMathExtension {
     String type = "D";
     float t = Float.NaN;
     P3 t456 = null;
-    int pt = -1;
     switch (args.length) {
     case 0:
       break;
     case 1:
-      pt = 0;
+      switch (args[0].tok) {
+      case T.point3f:
+        t456 = (P3) args[0].value;
+        break;
+      case T.string:
+        type = args[0].asString();
+        break;
+      default:
+        t = SV.fValue(args[0]);
+      }
       break;
     case 2:
       type = SV.sValue(args[0]).toUpperCase();
@@ -1477,12 +1485,6 @@ public class MathExt implements JmolMathExtension {
       break;
     default:
       return false;
-    }
-    if (pt >= 0) {
-      if (args[pt].tok == T.point3f)
-        t456 = (P3) args[pt].value;
-      else
-        t = SV.fValue(args[pt]);
     }
     if (t456 == null && t < 1e6)
       t456 = P3.new3(t, t, t);

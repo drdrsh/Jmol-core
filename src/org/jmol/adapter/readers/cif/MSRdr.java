@@ -1092,6 +1092,7 @@ public class MSRdr implements MSInterface {
       throws Exception {
     float[] a = null;
     char c = data.charAt(0);
+    int dim = modDim + 3;
     switch (c) {
     case 'P':
     case 'X':
@@ -1109,9 +1110,12 @@ public class MSRdr implements MSInterface {
       addLatticeVector(lattvecs, "B");
       addLatticeVector(lattvecs, "C");
       break;
+    case 'M': // magnetic
+      dim++;
+      //$FALL-THROUGH$
     case '0': // X explicit
       if (data.indexOf(".") >= 0)
-        a = AtomSetCollectionReader.getTokensFloat(data, null, modDim + 3);
+        a = AtomSetCollectionReader.getTokensFloat(data, null, dim);
       break;
     default:
       return false;

@@ -387,7 +387,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   @Override
   public void doPreSymmetry() throws Exception {
-    if (centerings != null)
+    if (magCenterings != null)
       addLatticeVectors();
     if (modDim > 0)
       getModulationReader().setModulation(false, null);
@@ -544,17 +544,19 @@ public class CifReader extends AtomSetCollectionReader {
 
   private void addLatticeVectors() {
     lattvecs = null;
-    if (centerings != null) {
+    if (magCenterings != null) {
       // could be x+1/2,y+1/2,z,+1
       // or   x+0.5,y+0.5,z,+1
       // or   0.5+x,0.5+y,z,+1
       //
       latticeType = "Magnetic";
       lattvecs = new Lst<float[]>();
-      for (int i = 0; i < centerings.size(); i++) {
-        String s = centerings.get(i);
-        float[] f = new float[5];
-        f[4] = Float.NaN; // flags magnetic
+      for (int i = 0; i < magCenterings.size(); i++) {
+        String s = magCenterings.get(i);
+        float[] f = new float[modDim + 4];
+        if (s.indexOf("x1") >= 0)
+          for (int j = 1; j <= modDim + 3; j++) 
+            s = PT.rep(s, "x" + j, "");
         String[] tokens = PT.split(PT.replaceAllCharacters(s, "xyz+", ""), ",");
         int n = 0;
         for (int j = 0; j < tokens.length; j++) {
@@ -573,7 +575,7 @@ public class CifReader extends AtomSetCollectionReader {
         if (n >= 2) // needs to have an x y or z as well as a +/-1;
           lattvecs.addLast(f);
       }
-      centerings = null;
+      magCenterings = null;
     } else if (latticeType != null && "ABCFI".indexOf(latticeType) >= 0) {
       lattvecs = new Lst<float[]>();
       try {
@@ -584,7 +586,7 @@ public class CifReader extends AtomSetCollectionReader {
     }
     if (lattvecs != null && lattvecs.size() > 0
         && asc.getSymmetry().addLatticeVectors(lattvecs))
-      appendLoadNote("Note! Symmetry operators added for lattice centering "
+      appendLoadNote("Note! " + lattvecs.size() + " symmetry operators added for lattice centering "
           + latticeType);
     latticeType = null;
   }
@@ -807,7 +809,7 @@ public class CifReader extends AtomSetCollectionReader {
   private String disorderAssembly = ".";
   private String lastDisorderAssembly;
   private Lst<float[]> lattvecs;
-  private Lst<String> centerings;
+  private Lst<String> magCenterings;
   private int maxSerial;
 
   final private static byte ATOM_TYPE_SYMBOL = 0;
@@ -1423,6 +1425,7 @@ public class CifReader extends AtomSetCollectionReader {
       return;
     }
     int n = 0;
+    boolean isMag = false;
     while (parser.getData()) {
       boolean ssgop = false;
       int nn = parser.getFieldCount();
@@ -1448,7 +1451,8 @@ public class CifReader extends AtomSetCollectionReader {
         case SYM_MAGN_OP:
           if (allowRotations || timeRev != 0 || ++n == 1)
             if (!modulated || ssgop) {
-              if (tok == SYM_MAGN_OP) {
+              if (tok == SYM_MAGN_OP || tok == SYM_MAGN_SSG_XYZ) {
+                isMag = true;
                 timeRev = (field.endsWith(",+1") || field.endsWith(",1")? 1
                     : field.endsWith(",-1") ? -1 : 0);
                 if (timeRev != 0)
@@ -1464,7 +1468,7 @@ public class CifReader extends AtomSetCollectionReader {
         }
       }
     }
-    if (ms != null)
+    if (ms != null && !isMag)
       addLatticeVectors();
   }
 
@@ -1495,9 +1499,9 @@ public class CifReader extends AtomSetCollectionReader {
   
   private void processMagCenteringLoopBlock() throws Exception {
     parseLoopParameters(magnCenteringFields);
-    centerings = new Lst<String>();
+    magCenterings = new Lst<String>();
     while (parser.getData())
-      centerings.addLast(fieldProperty(fieldOf[MAGN_CENTERING]) == NONE 
+      magCenterings.addLast(fieldProperty(fieldOf[MAGN_CENTERING]) == NONE 
       && fieldProperty(fieldOf[MAGN_SSG_CENTERING]) == NONE ? null
           : field);
   }

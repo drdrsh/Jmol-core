@@ -357,8 +357,7 @@ class SymmetryOperation extends M4 {
       myLabels = labelsXYZ;
     xyz = xyz.toLowerCase() + ",";
     if (modDim > 0)
-      for (int i = modDim + 3; --i >= 0;)
-        xyz = PT.rep(xyz, labelsXn[i], labelsXnSub[i]);
+      xyz = replaceXn(xyz, modDim + 3);
     int xpt = 0;
     int tpt0 = 0;
     int rowPt = 0;
@@ -474,6 +473,12 @@ class SymmetryOperation extends M4 {
       isDecimal = isDenominator = isNegative = false;
     }
     return null;
+  }
+
+  static String replaceXn(String xyz, int n) {
+    for (int i = n; --i >= 0;)
+      xyz = PT.rep(xyz, labelsXn[i], labelsXnSub[i]);
+    return xyz;
   }
 
   private final static String xyzFraction(float n12ths, boolean allPositive, boolean halfOrLess) {

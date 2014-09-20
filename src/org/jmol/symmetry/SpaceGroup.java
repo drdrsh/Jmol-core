@@ -471,23 +471,24 @@ class SpaceGroup {
   }
 
   private int addOp(SymmetryOperation op, String xyz0, boolean isSpecial) {
-    String ext = "";//(op.timeReversal == 0 ? "" : op.timeReversal == 1 ? ",m+1" : ",m-1");
-    String xyz = op.xyz + ext;
-    String xxx = PT.replaceAllCharacters(xyz, "+123/", "");
+    String xyz = op.xyz;
     if (!isSpecial) {
       // ! in character 0 indicates we are using the symop() function and want to be explicit
       if (xyzList.containsKey(xyz))
         return xyzList.get(xyz).intValue();
       if (latticeOp < 0) {
+        String xxx = PT.replaceAllCharacters(
+            modDim > 0 ? SymmetryOperation.replaceXn(xyz, modDim + 3) : xyz,
+            "+123/", "");
         if (xyzList.containsKey(xxx))
           latticeOp = operationCount;
         else
           xyzList.put(xxx, Integer.valueOf(operationCount));
       }
-        xyzList.put(xyz, Integer.valueOf(operationCount));
+      xyzList.put(xyz, Integer.valueOf(operationCount));
     }
-    if (!xyz.equals(xyz0 + ext))
-      xyzList.put(xyz0 + ext, Integer.valueOf(operationCount));
+    if (!xyz.equals(xyz0))
+      xyzList.put(xyz0, Integer.valueOf(operationCount));
     if (operations == null)
       operations = new SymmetryOperation[4];
     if (operationCount == operations.length)
@@ -1449,15 +1450,17 @@ class SpaceGroup {
   };
   
   public boolean addLatticeVectors(Lst<float[]> lattvecs) {
-    if (latticeOp >= 0)
+    if (latticeOp >= 0 || lattvecs.size() == 0)
       return false;
     int nOps = latticeOp = operationCount;
+    boolean isMag = (lattvecs.get(0).length == modDim + 4);
+    int magRev = -2;
     for (int j = 0; j < lattvecs.size(); j++) {
       float[] data = lattvecs.get(j);
-      int magRev = (int) (data.length == 5 && Float.isNaN(data[4]) ? data[3]
-          : -2);
-      if (magRev != -2)
-        data = new float[] { data[0], data[1], data[2] };
+      if (isMag) {
+        magRev = (int) data[modDim + 3];
+        data = AU.arrayCopyF(data, modDim + 3);
+      }
       if (data.length > modDim + 3)
         return false;
       for (int i = 0; i < nOps; i++) {
@@ -1496,24 +1499,22 @@ class SpaceGroup {
     return n / pts.size();
   }
 
-  private int[] latticeOps;
-
-  public int[] getAllLatticeOps() {
-    if (latticeOp < 0 || modDim > 0)
-      return null;
-    if (latticeOps == null) {
-      latticeOps = new int[3];
-      int nOps = 0;
-      for (int i = latticeOp; i < operationCount; i++) {
-        SymmetryOperation o = finalOperations[i];
-        if (o.m00 + o.m01 + o.m02 == 3) {
-          System.out.println("spacegroup " + o);
-          latticeOps[nOps++] = i;
-        }
-      }
-    }
-    return latticeOps;
-  }
+//  private int[] latticeOps;
+//  public int[] getAllLatticeOps() {
+//    // presumes all lattice operations are listed at end of operations list
+//    if (latticeOp < 0 || modDim > 0)
+//      return null;
+//    if (latticeOps == null) {
+//      latticeOps = new int[3];
+//      int nOps = 0;
+//      for (int i = latticeOp; i < operationCount; i++) {
+//        SymmetryOperation o = finalOperations[i];
+//        if (o.m00 + o.m01 + o.m02 == 3)
+//          latticeOps[nOps++] = i;
+//      }
+//    }
+//    return latticeOps;
+//  }
 
 
   /*  see http://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
