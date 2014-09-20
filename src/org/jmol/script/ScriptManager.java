@@ -296,7 +296,7 @@ public class ScriptManager implements JmolScriptManager {
     if (scriptQueue.size() > 0) {
       Lst<Object> scriptItem = getScriptItem(true, true);
       if (scriptItem != null) {
-        scriptItem.set(5, Integer.valueOf(0));
+        scriptItem.set(4, Integer.valueOf(0));
         startScriptQueue(true);
       }
     }
@@ -327,6 +327,7 @@ public class ScriptManager implements JmolScriptManager {
     String str = checkScriptExecution(strScript, false);
     if (str != null)
       return str;
+    System.out.println("scriptman statuslist is " + statusList);
     SB outputBuffer = (statusList == null
         || statusList.equals("output") ? new SB() : null);
 
