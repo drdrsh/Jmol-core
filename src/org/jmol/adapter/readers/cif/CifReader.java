@@ -697,20 +697,18 @@ public class CifReader extends AtomSetCollectionReader {
       case 1:
         return;
       }
-    if (key.startsWith("_atom_site_")
+    if (key.startsWith(FAMILY_ATOM)
         || (isLigand = key.equals("_chem_comp_atom_comp_id"))) {
       if (!processAtomSiteLoopBlock(isLigand))
         return;
       asc.setAtomSetName(thisDataSetName);
       asc.setAtomSetAuxiliaryInfo("chemicalName", chemicalName);
       asc.setAtomSetAuxiliaryInfo("structuralFormula", thisStructuralFormula);
-      asc.setAtomSetAuxiliaryInfo("formula", thisFormula);
-      
+      asc.setAtomSetAuxiliaryInfo("formula", thisFormula);  
       return;
     }
-    
     if (key.startsWith("_symmetry_equiv_pos")
-        || key.startsWith("_space_group_symop")
+        || key.startsWith(FAMILY_SGOP)
         || key.startsWith("_symmetry_ssg_equiv")) {
       if (ignoreFileSymmetryOperators) {
         Logger.warn("ignoring file-based symmetry operators");
@@ -728,7 +726,7 @@ public class CifReader extends AtomSetCollectionReader {
       processAtomTypeLoopBlock();
       return;
     }
-    if (key.startsWith("_geom_bond") && (isMolecular || !doApplySymmetry)) {
+    if ((isMolecular || !doApplySymmetry) && key.startsWith("_geom_bond")) {
       processGeomBondLoopBlock();
       return;
     }
@@ -787,6 +785,16 @@ public class CifReader extends AtomSetCollectionReader {
     propertyCount = parser.parseLoopParameters(fields, fieldOf, propertyOf);
   }
 
+  void parseLoopParametersFor(String key, String[] fields) throws Exception {
+    // just once for static fields
+    // first field must start with * if any do
+    if (fields[0].charAt(0) == '*')
+      for (int i = fields.length; --i >= 0;)
+        if (fields[i].charAt(0) == '*')
+          fields[i] = key + fields[i].substring(1);
+    parseLoopParameters(fields);
+  }
+
   /**
    * 
    * used for turning off fractional or nonfractional coord.
@@ -815,8 +823,10 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte ATOM_TYPE_SYMBOL = 0;
   final private static byte ATOM_TYPE_OXIDATION_NUMBER = 1;
 
-  final private static String[] atomTypeFields = { "_atom_type_symbol",
-      "_atom_type_oxidation_number", };
+  final private static String[] atomTypeFields = { 
+    "_atom_type_symbol",
+    "_atom_type_oxidation_number"
+  };
 
   /**
    * 
@@ -935,30 +945,30 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte MOMENT_Z = 69;
   final private static byte ATOM_ID = 70;
   final private static byte SEQ_ID = 71; 
-
-  final private static String[] atomFields = { "_atom_site_type_symbol",
-      "_atom_site_label", "_atom_site_auth_atom_id", "_atom_site_fract_x",
-      "_atom_site_fract_y", "_atom_site_fract_z", "_atom_site_cartn_x",
-      "_atom_site_cartn_y", "_atom_site_cartn_z", "_atom_site_occupancy",
-      "_atom_site_b_iso_or_equiv", "_atom_site_auth_comp_id",
-      "_atom_site_auth_asym_id", "_atom_site_auth_seq_id",
-      "_atom_site_pdbx_pdb_ins_code", "_atom_site_label_alt_id",
-      "_atom_site_group_pdb", "_atom_site_pdbx_pdb_model_num",
-      "_atom_site_calc_flag", "_atom_site_disorder_group",
-      "_atom_site_aniso_label", "_atom_site_anisotrop_id",
-      "_atom_site_aniso_u_11", "_atom_site_aniso_u_22",
-      "_atom_site_aniso_u_33", "_atom_site_aniso_u_12",
-      "_atom_site_aniso_u_13", "_atom_site_aniso_u_23",
-      "_atom_site_anisotrop_u[1][1]", "_atom_site_anisotrop_u[2][2]",
-      "_atom_site_anisotrop_u[3][3]", "_atom_site_anisotrop_u[1][2]",
-      "_atom_site_anisotrop_u[1][3]", "_atom_site_anisotrop_u[2][3]",
-      "_atom_site_u_iso_or_equiv", "_atom_site_aniso_b_11",
-      "_atom_site_aniso_b_22", "_atom_site_aniso_b_33",
-      "_atom_site_aniso_b_12", "_atom_site_aniso_b_13",
-      "_atom_site_aniso_b_23", "_atom_site_aniso_beta_11",
-      "_atom_site_aniso_beta_22", "_atom_site_aniso_beta_33",
-      "_atom_site_aniso_beta_12", "_atom_site_aniso_beta_13",
-      "_atom_site_aniso_beta_23", "_atom_site_adp_type",
+  final protected static String FAMILY_ATOM = "_atom_site";
+  final private static String[] atomFields = { "*_type_symbol",
+      "*_label", "*_auth_atom_id", "*_fract_x",
+      "*_fract_y", "*_fract_z", "*_cartn_x",
+      "*_cartn_y", "*_cartn_z", "*_occupancy",
+      "*_b_iso_or_equiv", "*_auth_comp_id",
+      "*_auth_asym_id", "*_auth_seq_id",
+      "*_pdbx_pdb_ins_code", "*_label_alt_id",
+      "*_group_pdb", "*_pdbx_pdb_model_num",
+      "*_calc_flag", "*_disorder_group",
+      "*_aniso_label", "*_anisotrop_id",
+      "*_aniso_u_11", "*_aniso_u_22",
+      "*_aniso_u_33", "*_aniso_u_12",
+      "*_aniso_u_13", "*_aniso_u_23",
+      "*_anisotrop_u[1][1]", "*_anisotrop_u[2][2]",
+      "*_anisotrop_u[3][3]", "*_anisotrop_u[1][2]",
+      "*_anisotrop_u[1][3]", "*_anisotrop_u[2][3]",
+      "*_u_iso_or_equiv", "*_aniso_b_11",
+      "*_aniso_b_22", "*_aniso_b_33",
+      "*_aniso_b_12", "*_aniso_b_13",
+      "*_aniso_b_23", "*_aniso_beta_11",
+      "*_aniso_beta_22", "*_aniso_beta_33",
+      "*_aniso_beta_12", "*_aniso_beta_13",
+      "*_aniso_beta_23", "*_adp_type",
       "_chem_comp_atom_comp_id", "_chem_comp_atom_atom_id",
       "_chem_comp_atom_type_symbol", "_chem_comp_atom_charge",
       "_chem_comp_atom_model_cartn_x", "_chem_comp_atom_model_cartn_y",
@@ -966,13 +976,13 @@ public class CifReader extends AtomSetCollectionReader {
       "_chem_comp_atom_pdbx_model_cartn_x_ideal",
       "_chem_comp_atom_pdbx_model_cartn_y_ideal",
       "_chem_comp_atom_pdbx_model_cartn_z_ideal",
-      "_atom_site_disorder_assembly", "_atom_site_label_asym_id",
-      "_atom_site_subsystem_code", "_atom_site_symmetry_multiplicity",
-      "_atom_site_thermal_displace_type", "_atom_site_moment_label",
-      "_atom_site_moment_crystalaxis_mx", "_atom_site_moment_crystalaxis_my",
-      "_atom_site_moment_crystalaxis_mz", "_atom_site_moment_crystalaxis_x",
-      "_atom_site_moment_crystalaxis_y", "_atom_site_moment_crystalaxis_z",
-      "_atom_site_id", "_atom_site_label_seq_id" };
+      "*_disorder_assembly", "*_label_asym_id",
+      "*_subsystem_code", "*_symmetry_multiplicity",
+      "*_thermal_displace_type", "*_moment_label",
+      "*_moment_crystalaxis_mx", "*_moment_crystalaxis_my",
+      "*_moment_crystalaxis_mz", "*_moment_crystalaxis_x",
+      "*_moment_crystalaxis_y", "*_moment_crystalaxis_z",
+      "*_id", "*_label_seq_id" };
 
   final private static String singleAtomID = atomFields[CC_COMP_ID];
 
@@ -996,7 +1006,7 @@ public class CifReader extends AtomSetCollectionReader {
   boolean processAtomSiteLoopBlock(boolean isLigand) throws Exception {
     int currentModelNo = -1; // PDBX
     boolean haveCoord = true;
-    parseLoopParameters(atomFields);
+    parseLoopParametersFor(FAMILY_ATOM, atomFields);
     if (fieldOf[CC_ATOM_X_IDEAL] != NONE) {
       setFractionalCoordinates(false);
     } else if (fieldOf[CARTN_X] != NONE || fieldOf[CC_ATOM_X] != NONE) {
@@ -1355,8 +1365,10 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte CITATION_ID = 0;
   final private static byte CITATION_TITLE = 1;
 
-  final private static String[] citationFields = { "_citation_id",
-      "_citation_title" };
+  final private static String[] citationFields = { 
+    "_citation_id",
+    "_citation_title"
+  };
 
   private void processCitationListBlock() throws Exception {
     parseLoopParameters(citationFields);
@@ -1387,19 +1399,21 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte SYM_MAGN_OP = 4;
   final private static byte SYM_PRELIM_REV = 5;
   final private static byte SYM_MAGN_SSG_XYZ = 6;
-  final private static byte SYM_MAGN_REV = 7;
-  final private static byte SYM_MAGN_SSG_REV = 8;
-
+  final private static byte SYM_MAGN_SSG_OP = 7;
+  final private static byte SYM_MAGN_REV = 8;
+  final private static byte SYM_MAGN_SSG_REV = 9;
+  final private static String FAMILY_SGOP = "_space_group_symop";
   final private static String[] symmetryOperationsFields = {
-      "_space_group_symop_operation_xyz", 
+      "*_operation_xyz", 
       "_symmetry_equiv_pos_as_xyz",
       "_symmetry_ssg_equiv_pos_as_xyz",
-      "_space_group_symop_ssg_operation_algebraic",
-      "_space_group_symop_magn_operation_xyz",
-      "_space_group_symop_operation_timereversal", // preliminary only
-      "_space_group_symop_magn_ssg_operation_algebraic",
-      "_space_group_symop_magn_operation_timereversal",
-      "_space_group_symop_magn_ssg_operation_timereversal"
+      "*_ssg_operation_algebraic",
+      "*_magn_operation_xyz",
+      "*_magn_ssg_centering_algebraic",
+      "*_operation_timereversal", // preliminary only
+      "*_magn_ssg_operation_algebraic",
+      "*_magn_operation_timereversal",
+      "*_magn_ssg_operation_timereversal"
   };
 
   /**
@@ -1412,7 +1426,7 @@ public class CifReader extends AtomSetCollectionReader {
       processMagCenteringLoopBlock();
       return;
     }
-    parseLoopParameters(symmetryOperationsFields);
+    parseLoopParametersFor(FAMILY_SGOP, symmetryOperationsFields);
     int nRefs = 0;
     symops = new Lst<String>();
     for (int i = propertyCount; --i >= 0;)
@@ -1443,6 +1457,7 @@ public class CifReader extends AtomSetCollectionReader {
           //$FALL-THROUGH$
         case SYM_SSG_OP:
         case SYM_MAGN_SSG_XYZ:
+        case SYM_MAGN_SSG_OP:
           modulated = true;
           ssgop = true;
           //$FALL-THROUGH$
@@ -1531,8 +1546,10 @@ public class CifReader extends AtomSetCollectionReader {
   //final private static byte GEOM_BOND_SITE_SYMMETRY_2 = 3;
 
   final private static String[] geomBondFields = {
-      "_geom_bond_atom_site_label_1", "_geom_bond_atom_site_label_2",
-      "_geom_bond_distance", "_ccdc_geom_bond_type"
+      "_geom_bond_atom_site_label_1", 
+      "_geom_bond_atom_site_label_2",
+      "_geom_bond_distance", 
+      "_ccdc_geom_bond_type"
   //  "_geom_bond_site_symmetry_2",
   };
 

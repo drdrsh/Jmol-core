@@ -127,28 +127,33 @@ public class MMCifReader extends CifReader {
 
   final private static byte OPER_ID = 12;
   final private static byte OPER_XYZ = 13;
+  final private static String FAMILY_OPER = "_pdbx_struct_oper_list";
   final private static String[] operFields = {
-      "_pdbx_struct_oper_list_matrix[1][1]",
-      "_pdbx_struct_oper_list_matrix[1][2]",
-      "_pdbx_struct_oper_list_matrix[1][3]",
-      "_pdbx_struct_oper_list_vector[1]",
-      "_pdbx_struct_oper_list_matrix[2][1]",
-      "_pdbx_struct_oper_list_matrix[2][2]",
-      "_pdbx_struct_oper_list_matrix[2][3]",
-      "_pdbx_struct_oper_list_vector[2]",
-      "_pdbx_struct_oper_list_matrix[3][1]",
-      "_pdbx_struct_oper_list_matrix[3][2]",
-      "_pdbx_struct_oper_list_matrix[3][3]",
-      "_pdbx_struct_oper_list_vector[3]", "_pdbx_struct_oper_list_id",
-      "_pdbx_struct_oper_list_symmetry_operation" };
+    "*_matrix[1][1]",
+    "*_matrix[1][2]",
+    "*_matrix[1][3]",
+    "*_vector[1]",
+    "*_matrix[2][1]",
+    "*_matrix[2][2]",
+    "*_matrix[2][3]",
+    "*_vector[2]",
+    "*_matrix[3][1]",
+    "*_matrix[3][2]",
+    "*_matrix[3][3]",
+    "*_vector[3]", 
+    "*_id",
+    "*_symmetry_operation" 
+  };
 
   final private static byte ASSEM_ID = 0;
   final private static byte ASSEM_OPERS = 1;
   final private static byte ASSEM_LIST = 2;
+  final private static String FAMILY_ASSEM = "_pdbx_struct_assembly_gen";
   final private static String[] assemblyFields = {
-      "_pdbx_struct_assembly_gen_assembly_id",
-      "_pdbx_struct_assembly_gen_oper_expression",
-      "_pdbx_struct_assembly_gen_asym_id_list" };
+    "*_assembly_id",
+    "*_oper_expression",
+    "*_asym_id_list" 
+  };
 
   /*
   _pdbx_struct_assembly_gen.assembly_id       1 
@@ -190,7 +195,7 @@ public class MMCifReader extends CifReader {
   protected void processSubclassEntry() throws Exception {
     if (key.startsWith("_pdbx_entity_nonpoly"))
       processDataNonpoly();
-    else if (key.startsWith("_pdbx_struct_assembly_gen"))
+    else if (key.startsWith(FAMILY_ASSEM))
       processDataAssemblyGen();
     else if (key.equals("_rna3d") || key.equals("_dssr"))
       processAddedData();
@@ -203,9 +208,10 @@ public class MMCifReader extends CifReader {
 
   final private static byte STRUCT_REF_G3 = 0;
   final private static byte STRUCT_REF_G1 = 1;
-
   final private static String[] structRefFields = {
-      "_struct_ref_seq_dif_mon_id", "_struct_ref_seq_dif.db_mon_id" };
+    "_struct_ref_seq_dif_mon_id", 
+    "_struct_ref_seq_dif.db_mon_id" 
+  };
 
   private boolean processSequence() throws Exception {
     parseLoopParameters(structRefFields);
@@ -261,7 +267,7 @@ public class MMCifReader extends CifReader {
   }
 
   private boolean processAssemblyGenBlock() throws Exception {
-    parseLoopParameters(assemblyFields);
+    parseLoopParametersFor(FAMILY_ASSEM, assemblyFields);
     while (parser.getData()) {
       assem = new String[3];
       int count = 0;
@@ -349,7 +355,7 @@ public class MMCifReader extends CifReader {
   }
 
   private boolean processStructOperListBlock() throws Exception {
-    parseLoopParameters(operFields);
+    parseLoopParametersFor(FAMILY_OPER, operFields);
     float[] m = new float[16];
     m[15] = 1;
     while (parser.getData()) {
@@ -400,7 +406,8 @@ public class MMCifReader extends CifReader {
   final private static byte NONPOLY_COMP_ID = 2;
 
   final private static String[] nonpolyFields = {
-      "_pdbx_entity_nonpoly_entity_id", "_pdbx_entity_nonpoly_name",
+      "_pdbx_entity_nonpoly_entity_id", 
+      "_pdbx_entity_nonpoly_name",
       "_pdbx_entity_nonpoly_comp_id", };
 
   /**
@@ -418,8 +425,10 @@ public class MMCifReader extends CifReader {
   final private static byte CHEM_COMP_ID = 0;
   final private static byte CHEM_COMP_NAME = 1;
 
-  final private static String[] chemCompFields = { "_chem_comp_id",
-      "_chem_comp_name", };
+  final private static String[] chemCompFields = { 
+    "_chem_comp_id",
+    "_chem_comp_name"
+  };
 
   /**
    * 
@@ -516,12 +525,18 @@ public class MMCifReader extends CifReader {
   final private static byte HELIX_CLASS = 9;
 
   final private static String[] structConfFields = {
-      "_struct_conf_conf_type_id", "_struct_conf_beg_auth_asym_id",
-      "_struct_conf_beg_auth_seq_id", "_struct_conf_pdbx_beg_pdb_ins_code",
-      "_struct_conf_end_auth_asym_id", "_struct_conf_end_auth_seq_id",
-      "_struct_conf_pdbx_end_pdb_ins_code", "_struct_conf_id",
-      "_struct_conf_pdbx_pdb_helix_id", "_struct_conf_pdbx_pdb_helix_class" };
+      "*_conf_type_id", 
+      "*_beg_auth_asym_id",
+      "*_beg_auth_seq_id", 
+      "*_pdbx_beg_pdb_ins_code",
+      "*_end_auth_asym_id", 
+      "*_end_auth_seq_id",
+      "*_pdbx_end_pdb_ins_code", 
+      "*_id",
+      "*_pdbx_pdb_helix_id", 
+      "*_pdbx_pdb_helix_class" };
 
+  final private static String FAMILY_STRUCTCONF = "_struct_conf";
   /**
    * identifies ranges for HELIX and TURN
    * 
@@ -529,7 +544,7 @@ public class MMCifReader extends CifReader {
    * @throws Exception
    */
   private boolean processStructConfLoopBlock() throws Exception {
-    parseLoopParameters(structConfFields);
+    parseLoopParametersFor(FAMILY_STRUCTCONF, structConfFields);
     for (int i = propertyCount; --i >= 0;)
       if (fieldOf[i] == NONE) {
         Logger.warn("?que? missing property: " + structConfFields[i]);
@@ -591,14 +606,17 @@ public class MMCifReader extends CifReader {
   final private static byte SHEET_ID = 0;
   final private static byte STRAND_ID = 7;
 
+  final private static String FAMILY_SHEET = "_struct_sheet_range";
   final private static String[] structSheetRangeFields = {
-      "_struct_sheet_range_sheet_id", //unused placeholder
-      "_struct_sheet_range_beg_auth_asym_id",
-      "_struct_sheet_range_beg_auth_seq_id",
-      "_struct_sheet_range_pdbx_beg_pdb_ins_code",
-      "_struct_sheet_range_end_auth_asym_id",
-      "_struct_sheet_range_end_auth_seq_id",
-      "_struct_sheet_range_pdbx_end_pdb_ins_code", "_struct_sheet_range_id", };
+      "*_sheet_id", //unused placeholder
+      "*_beg_auth_asym_id",
+      "*_beg_auth_seq_id",
+      "*_pdbx_beg_pdb_ins_code",
+      "*_end_auth_asym_id",
+      "*_end_auth_seq_id",
+      "*_pdbx_end_pdb_ins_code", 
+      "*_id"
+  };
 
   /**
    * 
@@ -609,7 +627,7 @@ public class MMCifReader extends CifReader {
    * @throws Exception
    */
   private boolean processStructSheetRangeLoopBlock() throws Exception {
-    parseLoopParameters(structSheetRangeFields);
+    parseLoopParametersFor(FAMILY_SHEET, structSheetRangeFields);
     for (int i = propertyCount; --i >= 0;)
       if (fieldOf[i] == NONE) {
         Logger.warn("?que? missing property:" + structSheetRangeFields[i]);
@@ -652,21 +670,19 @@ public class MMCifReader extends CifReader {
     return true;
   }
 
-  protected void parseSubclassLoopParameters(String[] fields) throws Exception {
-    parseLoopParameters(fields);
-    propertyCount = fields.length;
-  }
-
   final private static byte SITE_ID = 0;
   final private static byte SITE_COMP_ID = 1;
   final private static byte SITE_ASYM_ID = 2;
   final private static byte SITE_SEQ_ID = 3;
   final private static byte SITE_INS_CODE = 4; //???
 
-  final private static String[] structSiteRangeFields = {
-      "_struct_site_gen_site_id", "_struct_site_gen_auth_comp_id",
-      "_struct_site_gen_auth_asym_id", "_struct_site_gen_auth_seq_id",
-      "_struct_site_gen_label_alt_id", //should be an insertion code, not an alt ID? 
+  final private static String FAMILY_STRUCSITE = "_struct_site_gen";
+  final private static String[] structSiteFields = {
+      "*_site_id", 
+      "*_auth_comp_id",
+      "*_auth_asym_id", 
+      "*_auth_seq_id",
+      "*_label_alt_id", //should be an insertion code, not an alt ID? 
   };
 
   //  loop_
@@ -699,10 +715,10 @@ public class MMCifReader extends CifReader {
    * @throws Exception
    */
   private boolean processStructSiteBlock() throws Exception {
-    parseLoopParameters(structSiteRangeFields);
+    parseLoopParametersFor(FAMILY_STRUCSITE, structSiteFields);
     for (int i = 3; --i >= 0;)
       if (fieldOf[i] == NONE) {
-        Logger.warn("?que? missing property: " + structSiteRangeFields[i]);
+        Logger.warn("?que? missing property: " + structSiteFields[i]);
         return false;
       }
     String siteID = "";
@@ -854,12 +870,16 @@ public class MMCifReader extends CifReader {
   final private static byte CHEM_COMP_BOND_ATOM_ID_2 = 1;
   final private static byte CHEM_COMP_BOND_VALUE_ORDER = 2;
   final private static byte CHEM_COMP_BOND_AROMATIC_FLAG = 3;
+  
+  final private static String FAMILY_COMPBOND = "_chem_comp_bond";
   final private static String[] chemCompBondFields = {
-      "_chem_comp_bond_atom_id_1", "_chem_comp_bond_atom_id_2",
-      "_chem_comp_bond_value_order", "_chem_comp_bond_pdbx_aromatic_flag", };
-
+    "*_atom_id_1", 
+    "*_atom_id_2",
+    "*_value_order", 
+    "*_pdbx_aromatic_flag"
+  };
   private boolean processLigandBondLoopBlock() throws Exception {
-    parseLoopParameters(chemCompBondFields);
+    parseLoopParametersFor(FAMILY_COMPBOND, chemCompBondFields);
     for (int i = propertyCount; --i >= 0;)
       if (fieldOf[i] == NONE) {
         Logger.warn("?que? missing property: " + chemCompBondFields[i]);
@@ -967,9 +987,9 @@ public class MMCifReader extends CifReader {
 
   @Override
   protected boolean processSubclassLoopBlock() throws Exception {
-    if (key.startsWith("_pdbx_struct_oper_list"))
+    if (key.startsWith(FAMILY_OPER))
       return processStructOperListBlock();
-    if (key.startsWith("_pdbx_struct_assembly_gen"))
+    if (key.startsWith(FAMILY_ASSEM))
       return processAssemblyGenBlock();
     if (key.startsWith("_struct_ref_seq_dif"))
       return processSequence();
@@ -977,17 +997,17 @@ public class MMCifReader extends CifReader {
     if (isCourseGrained)
       return false;
 
-    if (key.startsWith("_struct_site_gen"))
+    if (key.startsWith(FAMILY_STRUCSITE))
       return processStructSiteBlock();
-    if (key.startsWith("_chem_comp_bond"))
+    if (key.startsWith(FAMILY_COMPBOND))
       return processLigandBondLoopBlock();
     if (key.startsWith("_chem_comp"))
       return processChemCompLoopBlock();
     if (key.startsWith("_pdbx_entity_nonpoly"))
       return processNonpolyLoopBlock();
-    if (key.startsWith("_struct_conf") && !key.startsWith("_struct_conf_type"))
+    if (key.startsWith(FAMILY_STRUCTCONF) && !key.startsWith("_struct_conf_type"))
       return processStructConfLoopBlock();
-    if (key.startsWith("_struct_sheet_range"))
+    if (key.startsWith(FAMILY_SHEET))
       return processStructSheetRangeLoopBlock();
     return false;
   }

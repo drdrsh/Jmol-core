@@ -53,11 +53,11 @@ public class MSCifRdr extends MSRdr {
 //  _atom_site_occ_Fourier_atom_site_label and
 //  _atom_site_occ_Fourier_wave_vector_seq_id.
 
-  private final static int WV_ID = 0;
-  private final static int WV_X = 1;
-  private final static int WV_Y = 2;
-  private final static int WV_Z = 3;
-  private final static int FWV_ID = 4;
+  private final static int FWV_ID = 0;
+  private final static int WV_ID = 1;
+  private final static int WV_X = 2;
+  private final static int WV_Y = 3;
+  private final static int WV_Z = 4;
   private final static int FWV_X = 5;
   private final static int FWV_Y = 6;
   private final static int FWV_Z = 7;
@@ -144,95 +144,93 @@ public class MSCifRdr extends MSRdr {
   private final static int DEPR_FO_SIN = 74;
   private final static int DEPR_FU_COS = 75;
   private final static int DEPR_FU_SIN = 76;
-  
+  // * will be _atom_site
   final private static String[] modulationFields = {
-      "_cell_wave_vector_seq_id", 
-      "_cell_wave_vector_x", 
-      "_cell_wave_vector_y", 
-      "_cell_wave_vector_z", 
-      "_atom_site_fourier_wave_vector_seq_id",  
-      "_atom_site_fourier_wave_vector_x", // 5
-      "_atom_site_fourier_wave_vector_y", 
-      "_atom_site_fourier_wave_vector_z",
-      "_atom_site_fourier_wave_vector_q1_coeff", //_jana 
-      "_atom_site_fourier_wave_vector_q2_coeff", // jana 
-      "_atom_site_fourier_wave_vector_q3_coeff", // jana
-      "_atom_site_displace_fourier_atom_site_label", 
-      "_atom_site_displace_fourier_axis", 
-      "_atom_site_displace_fourier_wave_vector_seq_id", // 13 
-      "_atom_site_displace_fourier_param_cos",  
-      "_atom_site_displace_fourier_param_sin", // 15
-      "_atom_site_displace_fourier_param_modulus", 
-      "_atom_site_displace_fourier_param_phase", 
-      "_atom_site_displace_special_func_atom_site_label", 
-      "_atom_site_displace_special_func_sawtooth_ax", // 25 
-      "_atom_site_displace_special_func_sawtooth_ay", 
-      "_atom_site_displace_special_func_sawtooth_az", 
-      "_atom_site_displace_special_func_sawtooth_c", 
-      "_atom_site_displace_special_func_sawtooth_w", 
-      "_atom_site_occ_fourier_atom_site_label", 
-      "_atom_site_occ_fourier_wave_vector_seq_id", 
-      "_atom_site_occ_fourier_param_cos", // 20
-      "_atom_site_occ_fourier_param_sin",
-      "_atom_site_occ_fourier_param_modulus", 
-      "_atom_site_occ_fourier_param_phase", 
-      "_atom_site_occ_special_func_atom_site_label", // 30
-      "_atom_site_occ_special_func_crenel_c",
-      "_atom_site_occ_special_func_crenel_w",
+    "*_fourier_wave_vector_seq_id",  // *_ must be first
+    "_cell_wave_vector_seq_id", 
+    "_cell_wave_vector_x", 
+    "_cell_wave_vector_y", 
+    "_cell_wave_vector_z", 
+    "*_fourier_wave_vector_x", // 5
+    "*_fourier_wave_vector_y", 
+    "*_fourier_wave_vector_z",
+    "*_fourier_wave_vector_q1_coeff", //_jana 
+    "*_fourier_wave_vector_q2_coeff", // jana 
+    "*_fourier_wave_vector_q3_coeff", // jana
+    "*_displace_fourier_atom_site_label", 
+    "*_displace_fourier_axis", 
+    "*_displace_fourier_wave_vector_seq_id", // 13 
+    "*_displace_fourier_param_cos",  
+    "*_displace_fourier_param_sin", // 15
+    "*_displace_fourier_param_modulus", 
+    "*_displace_fourier_param_phase", 
+    "*_displace_special_func_atom_site_label", 
+    "*_displace_special_func_sawtooth_ax", // 25 
+    "*_displace_special_func_sawtooth_ay", 
+    "*_displace_special_func_sawtooth_az", 
+    "*_displace_special_func_sawtooth_c", 
+    "*_displace_special_func_sawtooth_w", 
+    "*_occ_fourier_atom_site_label", 
+    "*_occ_fourier_wave_vector_seq_id", 
+    "*_occ_fourier_param_cos", // 20
+    "*_occ_fourier_param_sin",
+    "*_occ_fourier_param_modulus", 
+    "*_occ_fourier_param_phase", 
+    "*_occ_special_func_atom_site_label", // 30
+    "*_occ_special_func_crenel_c",
+    "*_occ_special_func_crenel_w",
 
-      "_atom_site_u_fourier_atom_site_label",
-      "_atom_site_u_fourier_tens_elem",
-      "_atom_site_u_fourier_wave_vector_seq_id", // 35
-      "_atom_site_u_fourier_param_cos",
-      "_atom_site_u_fourier_param_sin",
-      "_atom_site_u_fourier_param_modulus",
-      "_atom_site_u_fourier_param_phase",
-      
-      "_atom_site_displace_fourier_id", // 40
-      "_atom_site_occ_fourier_id",
-      "_atom_site_u_fourier_id",
+    "*_u_fourier_atom_site_label",
+    "*_u_fourier_tens_elem",
+    "*_u_fourier_wave_vector_seq_id", // 35
+    "*_u_fourier_param_cos",
+    "*_u_fourier_param_sin",
+    "*_u_fourier_param_modulus",
+    "*_u_fourier_param_phase",
+    
+    "*_displace_fourier_id", // 40
+    "*_occ_fourier_id",
+    "*_u_fourier_id",
 
-      "_atom_site_displace_fourier_param_id", // 43
-      "_atom_site_occ_fourier_param_id",
-      "_atom_site_u_fourier_param_id",
-      
-      "_atom_site_occ_fourier_absolute_site_label", // 46 // _jana
-      "_atom_site_occ_fourier_absolute",  // _jana
+    "*_displace_fourier_param_id", // 43
+    "*_occ_fourier_param_id",
+    "*_u_fourier_param_id",
+    
+    "*_occ_fourier_absolute_site_label", // 46 // _jana
+    "*_occ_fourier_absolute",  // _jana
 
-      "_atom_site_moment_fourier_atom_site_label", // 48 
-      "_atom_site_moment_fourier_axis", 
-      "_atom_site_moment_fourier_wave_vector_seq_id", // 50 
-      "_atom_site_moment_fourier_param_cos",  
-      "_atom_site_moment_fourier_param_sin", 
-      "_atom_site_moment_fourier_param_modulus", 
-      "_atom_site_moment_fourier_param_phase", 
-      "_atom_site_moment_special_func_atom_site_label",// 55 
-      "_atom_site_moment_special_func_sawtooth_ax",  
-      "_atom_site_moment_special_func_sawtooth_ay", 
-      "_atom_site_moment_special_func_sawtooth_az", 
-      "_atom_site_moment_special_func_sawtooth_c", 
-      "_atom_site_moment_special_func_sawtooth_w",  // 60
-      
-      //_jana:
-      "_atom_site_displace_legendre_atom_site_label", // 61 
-      "_atom_site_displace_legendre_axis", 
-      "_atom_site_displace_legendre_param_order", 
-      "_atom_site_displace_legendre_param_coeff",
-      "_atom_site_u_legendre_atom_site_label", // 65  
-      "_atom_site_u_legendre_param_order", 
-      "_atom_site_u_legendre_param_coeff",
-      "_atom_site_occ_legendre_atom_site_label", 
-      "_atom_site_occ_legendre_param_order",
-      "_atom_site_occ_legendre_param_coeff", // 70
-
-      
-      // deprecated:
-      "_atom_site_displace_fourier_cos", // 71
-      "_atom_site_displace_fourier_sin",
-      "_atom_site_occ_fourier_cos",
-      "_atom_site_occ_fourier_sin",
-      "_atom_site_u_fourier_cos",
-      "_atom_site_u_fourier_sin" //76
+    "*_moment_fourier_atom_site_label", // 48 
+    "*_moment_fourier_axis", 
+    "*_moment_fourier_wave_vector_seq_id", // 50 
+    "*_moment_fourier_param_cos",  
+    "*_moment_fourier_param_sin", 
+    "*_moment_fourier_param_modulus", 
+    "*_moment_fourier_param_phase", 
+    "*_moment_special_func_atom_site_label",// 55 
+    "*_moment_special_func_sawtooth_ax",  
+    "*_moment_special_func_sawtooth_ay", 
+    "*_moment_special_func_sawtooth_az", 
+    "*_moment_special_func_sawtooth_c", 
+    "*_moment_special_func_sawtooth_w",  // 60
+    
+    //_jana:
+    "*_displace_legendre_atom_site_label", // 61 
+    "*_displace_legendre_axis", 
+    "*_displace_legendre_param_order", 
+    "*_displace_legendre_param_coeff",
+    "*_u_legendre_atom_site_label", // 65  
+    "*_u_legendre_param_order", 
+    "*_u_legendre_param_coeff",
+    "*_occ_legendre_atom_site_label", 
+    "*_occ_legendre_param_order",
+    "*_occ_legendre_param_coeff", // 70    
+    // deprecated:
+    "*_displace_fourier_cos", // 71
+    "*_displace_fourier_sin",
+    "*_occ_fourier_cos",
+    "*_occ_fourier_sin",
+    "*_u_fourier_cos",
+    "*_u_fourier_sin" //76
   };
   
   private static final int NONE = -1;
@@ -280,7 +278,7 @@ public class MSCifRdr extends MSRdr {
       return 0;
     if (cr.asc.iSet < 0)
       cr.asc.newAtomSet();
-    cr.parseLoopParameters(modulationFields);
+    cr.parseLoopParametersFor(CifReader.FAMILY_ATOM, modulationFields);
     int tok;
     if (cr.fieldOf[JANA_FWV_Q1_COEF] != NONE) {
       // disable x y z for atom_site_fourier if we have coefficients
