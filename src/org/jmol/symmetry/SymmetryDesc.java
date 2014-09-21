@@ -463,7 +463,7 @@ public class SymmetryDesc {
       info1 += "|centering " + strCoord(op.centering, op.isBio);
 
     if (op.timeReversal != 0)
-      info1 += "|spin timeReversal " + (op.timeReversal == 1 ? "+1" : "-1");
+      info1 += "|spin " + (op.timeReversal == 1 ? "m" : "-m");
 
     String cmds = null;
     String xyzNew = (op.isBio ? op.xyzOriginal : SymmetryOperation
@@ -763,7 +763,7 @@ public class SymmetryDesc {
     xyzNew = (op.isBio ? m2.toString() : op.modDim > 0 ? op.xyzOriginal
         : SymmetryOperation.getXYZFromMatrix(m2, false, false, false));
     if (op.timeReversal != 0)
-      xyzNew += (op.timeReversal == 1 ? ",m+1" : ",m-1");
+      xyzNew += (op.timeReversal == 1 ? ",m" : ",-m");
     return new Object[] { xyzNew, op.xyzOriginal, info1, cmds, approx0(ftrans),
         approx0(trans), approx0(ipt), approx0(pa1), approx0(ax1),
         Integer.valueOf(ang1), m2, vtrans, op.centering };

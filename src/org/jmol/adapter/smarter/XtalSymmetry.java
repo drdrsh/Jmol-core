@@ -858,6 +858,8 @@ public class XtalSymmetry {
             asc.bsAtoms.set(atom1.index);
           atom1.setT(ptAtom);
           if (spinOp != 0 && atom1.vib != null) {
+            //System.out.println("vib for iSym " + iSym + " " + atom1 + " " +  atom1.vib);
+            //System.out.println(symmetry.getSpaceGroupOperation(iSym));
             symmetry.getSpaceGroupOperation(iSym).rotate(atom1.vib);
             atom1.vib.scale(spinOp);
             //System.out.println("vib for iSym " + iSym + " " + atom1 + " " +  atom1.vib);
@@ -1164,6 +1166,7 @@ public class XtalSymmetry {
         if (v.modDim > 0) {
           ((JmolModulationSet) v).setMoment();
         } else {
+          //System.out.println("xytalsym v=" + v + "  "+ i + "  ");
           v = (Vibration) v.clone(); // this could be a modulation set
           sym.toCartesian(v, true);
           asc.atoms[i].vib = v;

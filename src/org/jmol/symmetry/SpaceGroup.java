@@ -172,7 +172,7 @@ class SpaceGroup {
       if (operation instanceof SymmetryOperation) {
         SymmetryOperation op = (SymmetryOperation) operation;
         int iop = sg.addOp(op, op.xyz, false);
-        sg.operations[iop].timeReversal = op.timeReversal;
+        sg.operations[iop].setTimeReversal(op.timeReversal);
       } else {
         sg.addSymmetrySM("xyz matrix:" + operation, (M4) operation);
       }
@@ -456,7 +456,7 @@ class SpaceGroup {
       operationCount = 0;
       modDim = PT.parseInt(xyz0.substring(xyz0
           .lastIndexOf("x") + 1)) - 3;
-    } else if (xyz0.equals("x,y,z,m+1")) {
+    } else if (xyz0.equals("x,y,z,m")) {
       xyzList.clear();
       operationCount = 0;
     }
@@ -1470,9 +1470,9 @@ class SpaceGroup {
         SymmetryOperation op = operations[i];
         newOp.linearRotTrans = AU.arrayCopyF(op.linearRotTrans, -1);
         newOp.setFromMatrix(data, false);
-        newOp.xyzOriginal = newOp.xyz;
         if (magRev != -2)
           newOp.setTimeReversal(op.timeReversal * magRev);
+        newOp.xyzOriginal = newOp.xyz;
         addOp(newOp, newOp.xyz, true);
       }
     }

@@ -255,8 +255,8 @@ class SymmetryOperation extends M4 {
       this.xyz = (isBio ? toString() : getXYZFromMatrix(this, false, false, false));
       return true;
     }
-    if (xyz.indexOf(",m") >= 0) {
-      timeReversal = (xyz.indexOf(",m-1") >= 0 ? -1 : 1);
+    if (xyz.endsWith("m")) {
+      timeReversal = (xyz.indexOf("-m") >= 0 ? -1 : 1);
       allowScaling = true;
     }
     String strOut = getMatrixFromString(this, xyz, linearRotTrans, allowScaling);
@@ -265,7 +265,7 @@ class SymmetryOperation extends M4 {
     setMatrix(isReverse);
     this.xyz = (isReverse ? getXYZFromMatrix(this, true, false, false) : strOut);
     if (timeReversal != 0)
-      this.xyz += (timeReversal == 1 ? ",m+1" : ",m-1");
+      this.xyz += (timeReversal == 1 ? ",m" : ",-m");
     //System.out.println("testing " + xyz +  " == " + this.xyz + " " + this + "\n" + Escape.eAF(linearRotTrans));
     if (Logger.debugging)
       Logger.debug("" + this);
@@ -705,9 +705,9 @@ class SymmetryOperation extends M4 {
 
   public void setTimeReversal(int magRev) {
     timeReversal = magRev;
-    if (xyz.indexOf(",m") >= 0)
-      xyz = xyz.substring(0, xyz.indexOf(",m"));
-    xyz += (magRev == 1 ? ",m+1" : ",m-1");
+    if (xyz.indexOf("m") >= 0)
+      xyz = xyz.substring(0, xyz.indexOf("m"));
+    xyz += (magRev == 1 ? ",m" : magRev == -1 ? ",-m" : "");
   }
 
   public static String cleanMatrix(M4 m4) {

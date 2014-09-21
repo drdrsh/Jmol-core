@@ -173,6 +173,12 @@ public class JanaReader extends AtomSetCollectionReader {
   public void doPreSymmetry() throws Exception {
     if (ms != null)
       ms.setModulation(false, null);
+    // when M40 can store magnetic moments
+    // but I do not know if they will be fractional like this.
+    // currently vibsFractional is false
+    if (vibsFractional)
+      asc.getXSymmetry().scaleFractionalVibs();
+
   }
 
   @Override
@@ -193,9 +199,6 @@ public class JanaReader extends AtomSetCollectionReader {
       ms.setModulation(true, asc.getXSymmetry().getBaseSymmetry());
       ms.finalizeModulation();
     }
-    // when M40 can store magnetic moments
-    if (haveSymmetry && vibsFractional)
-      asc.getXSymmetry().scaleFractionalVibs();
   }
 
 

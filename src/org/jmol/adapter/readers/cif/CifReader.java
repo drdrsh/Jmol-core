@@ -392,8 +392,10 @@ public class CifReader extends AtomSetCollectionReader {
     if (modDim > 0)
       getModulationReader().setModulation(false, null);
     if (isMagCIF) {
-      // set fractional; note that this will be set to Cartesians later
+      asc.getXSymmetry().scaleFractionalVibs();
       vibsFractional = true;
+    //if (isMagCIF) {
+      // set fractional; note that this will be set to Cartesians later
     }
   }
 
@@ -437,8 +439,6 @@ public class CifReader extends AtomSetCollectionReader {
       getModulationReader().setModulation(true, sym);
       mr.finalizeModulation();
     }
-    if (sym != null && vibsFractional)
-      asc.getXSymmetry().scaleFractionalVibs();
     if (isMagCIF)
       asc.setNoAutoBond();
       //addJmolScript("connect none;");
@@ -1424,7 +1424,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   final private static String FAMILY_SGOP = "_space_group_symop";
   final private static String[] symmetryOperationsFields = {
-      "*_operation_xyz", 
+      "*_operation_xyz",
       "*_magn_operation_xyz",
       
       "*_ssg_operation_algebraic",
@@ -1493,7 +1493,7 @@ public class CifReader extends AtomSetCollectionReader {
                   field = field.substring(0, field.lastIndexOf(','));
               }
               if (timeRev != 0)
-                field += ",m" + (timeRev == 1 ? "+1" : "-1");
+                field += "," + (timeRev == 1 ? "m" : "-m");
               field = field.replace(';', ' ');
               symops.addLast(field);
               setSymmetryOperator(field);
