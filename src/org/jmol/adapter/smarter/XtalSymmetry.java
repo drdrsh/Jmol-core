@@ -1177,29 +1177,41 @@ public class XtalSymmetry {
     return nVib;
   }
 
+  /**
+   * magCIF files have moments expressed as Bohr magnetons along
+   * the cryrstallographic axes. These have to be "fractionalized" in order
+   * to be properly handled by symmetry operations, then, in the end, turned
+   * into Cartesians.
+   * 
+   * It is not clear to me at all how this would be handled if there are subsystems.
+   * This method must be run PRIOR to applying symmetry and thus prior to creation of 
+   * modulation sets.
+   * 
+   */
   public void scaleFractionalVibs() {
     float[] params = getBaseSymmetry().getNotionalUnitCell();
     P3 ptScale = P3.new3(1 / params[0], 1 / params[1], 1 / params[2]);
-    P3 pt = new P3();
+//    P3 pt = new P3();
     int i0 = asc.getAtomSetAtomIndex(asc.iSet);
     for (int i = asc.ac; --i >= i0;) {
       Vibration v = (Vibration) asc.atoms[i].vib;
       if (v != null) {
-        JmolModulationSet mod = (v instanceof JmolModulationSet ? (JmolModulationSet) v : null);
-        pt = ptScale;
-        if (mod != null) {
-          // if there are modulations, then a fractional vib would be
-          // a vib within a modulation set.
-          v = mod.getVibration(false);
-          if (v == null)
-            continue;
-          SymmetryInterface subsym = mod.getSubSystemUnitCell();
-          if (subsym != null) {
-            params = subsym.getNotionalUnitCell();
-            pt.set(1 / params[0], 1 / params[1], 1 / params[2]);
-          }
-        }
-        v.scaleT(pt);
+//      pt = ptScale;
+//        if (mod != null) {
+          // this is not relevant, because this has to be done in doPreSymmetry()
+          // before subsystems are set, I think. 
+//          // if there are modulations, then a fractional vib would be
+//          // a vib within a modulation set.
+//          v = mod.getVibration(false);
+//          if (v == null)
+//            continue;
+//          SymmetryInterface subsym = mod.getSubSystemUnitCell();
+//          if (subsym != null) {
+//            params = subsym.getNotionalUnitCell();
+//            pt.set(1 / params[0], 1 / params[1], 1 / params[2]);
+//          }
+//        }
+        v.scaleT(ptScale);
       }
     }
   }
