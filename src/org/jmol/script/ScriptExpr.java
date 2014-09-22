@@ -1078,7 +1078,7 @@ abstract class ScriptExpr extends ScriptParam {
         isFloatProperty = false;
       } else if (isFloatProperty) {
         comparisonFloat = comparisonInt;
-      }
+      }        
     } else if (val instanceof Float) {
       if (isModel) {
         tokWhat = -T.model;
@@ -1181,8 +1181,11 @@ abstract class ScriptExpr extends ScriptParam {
     float propertyFloat = 0;
     vwr.autoCalculate(tokWhat);
     boolean isProp = (tokWhat == T.property);
-    if (!isProp && ptTemp == null)
-      ptTemp = new P3();
+    if (!isProp) {
+      if (ptTemp == null)
+        ptTemp = new P3();
+      ptTemp.x = (tokOperator == T.opGE || tokOperator == T.opLT && comparisonFloat == 0 ? Float.NaN : 0);
+    }
     for (int i = ac; --i >= 0;) {
       boolean match = false;
       Atom atom = atoms[i];
@@ -1191,7 +1194,7 @@ abstract class ScriptExpr extends ScriptParam {
           continue;
         propertyFloat = data[i];
       } else {
-        propertyFloat = Atom.atomPropertyFloat(vwr, atom, tokWhat, ptTemp);
+        propertyFloat = atom.atomPropertyFloat(vwr, tokWhat, ptTemp);
       }
       match = compareFloat(tokOperator, propertyFloat, comparisonFloat);
       if (match)
@@ -1228,8 +1231,8 @@ abstract class ScriptExpr extends ScriptParam {
     if (!isCaseSensitive)
       comparisonString = comparisonString.toLowerCase();
     for (int i = ac; --i >= 0;) {
-      String propertyString = Atom
-          .atomPropertyString(vwr, atoms[i], tokWhat);
+      String propertyString = atoms[i]
+          .atomPropertyString(vwr, tokWhat);
       if (!isCaseSensitive)
         propertyString = propertyString.toLowerCase();
       if (compareStringValues(tokOperator, propertyString, comparisonString))
@@ -1308,7 +1311,7 @@ abstract class ScriptExpr extends ScriptParam {
       Atom atom = atoms[i];
       switch (tokWhat) {
       default:
-        ia = Atom.atomPropertyInt(atom, tokWhat);
+        ia = atom.atomPropertyInt(tokWhat);
         break;
       case T.subsystem:
       case T.configuration:
@@ -1660,7 +1663,7 @@ abstract class ScriptExpr extends ScriptParam {
               fv = atom.distance(ptRef);
             break;
           default:
-            fv = Atom.atomPropertyFloat(vwr, atom, tok, ptTemp);
+            fv = atom.atomPropertyFloat(vwr, tok, ptTemp);
           }
           if (fv == Float.MAX_VALUE || Float.isNaN(fv) && minmaxtype != T.all) {
             n--; // don't count this one
@@ -1698,7 +1701,7 @@ abstract class ScriptExpr extends ScriptParam {
             errorStr(ERROR_unrecognizedAtomProperty, T.nameOf(tok));
             break;
           default:
-            iv = Atom.atomPropertyInt(atom, tok);
+            iv = atom.atomPropertyInt(tok);
           }
           switch (minmaxtype) {
           case T.min:
@@ -1725,7 +1728,7 @@ abstract class ScriptExpr extends ScriptParam {
           }
           break;
         case 2: // isString
-          String s = Atom.atomPropertyString(vwr, atom, tok);
+          String s = atom.atomPropertyString(vwr, tok);
           switch (minmaxtype) {
           case T.allfloat:
             fout[i] = PT.parseFloat(s);
@@ -1737,7 +1740,8 @@ abstract class ScriptExpr extends ScriptParam {
           }
           break;
         case 3: // isPt
-          T3 t = Atom.atomPropertyTuple(vwr, atom, tok, ptTemp);
+          ptTemp.x = 0;
+          T3 t = atom.atomPropertyTuple(vwr, tok, ptTemp);
           if (t == null)
             errorStr(ERROR_unrecognizedAtomProperty, T.nameOf(tok));
           switch (minmaxtype) {

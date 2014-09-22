@@ -1064,9 +1064,9 @@ REMARK 290 REMARK: NULL
     if (lineLength >= 78) {
       char ch76 = line.charAt(76);
       char ch77 = line.charAt(77);
-      if (ch76 == ' ' && Atom.isValidElementSymbol(ch77))
+      if (ch76 == ' ' && Atom.isValidSym1(ch77))
         return "" + ch77;
-      if (Atom.isValidElementSymbolNoCaseSecondChar2(ch76, ch77))
+      if (Atom.isValidSymNoCase(ch76, ch77))
         return "" + ch76 + ch77;
     }
     char ch12 = line.charAt(12);
@@ -1075,7 +1075,7 @@ REMARK 290 REMARK: NULL
     // But they could be right-aligned or left-aligned
     if ((htElementsInCurrentGroup == null ||
          htElementsInCurrentGroup.get(line.substring(12, 14)) != null) &&
-        Atom.isValidElementSymbolNoCaseSecondChar2(ch12, ch13))
+        Atom.isValidSymNoCase(ch12, ch13))
       return (isHetero || ch12 != 'H' ? "" + ch12 + ch13 : "H");
     // not a known two-letter code
     if (ch12 == 'H') // added check for PQR files "HD22" for example
@@ -1083,12 +1083,12 @@ REMARK 290 REMARK: NULL
     // check for " NZ" for example
     if ((htElementsInCurrentGroup == null ||
          htElementsInCurrentGroup.get("" + ch13) != null) &&
-        Atom.isValidElementSymbol(ch13))
+        Atom.isValidSym1(ch13))
       return "" + ch13;
     // check for misplaced "O   " for example
     if (ch12 != ' ' && (htElementsInCurrentGroup == null ||
          htElementsInCurrentGroup.get("" + ch12) != null) &&
-        Atom.isValidElementSymbol(ch12))
+        Atom.isValidSym1(ch12))
       return "" + ch12;
     // could be GLX or ASX;
     // probably a bad file. But we will make ONE MORE ATTEMPT
@@ -1096,7 +1096,7 @@ REMARK 290 REMARK: NULL
     char ch14 = line.charAt(14);
     if (ch12 == ' ' && ch13 != 'X' && (htElementsInCurrentGroup == null ||
         htElementsInCurrentGroup.get(line.substring(13, 15)) != null) &&
-        Atom.isValidElementSymbolNoCaseSecondChar2(ch13, ch14))
+        Atom.isValidSymNoCase(ch13, ch14))
      return  "" + ch13 + ch14;
     return "Xx";
   }
@@ -1351,9 +1351,9 @@ Polyproline 10
         continue;
       char chFirst = elementWithCount.charAt(0);
       char chSecond = elementWithCount.charAt(1);
-      if (Atom.isValidElementSymbolNoCaseSecondChar2(chFirst, chSecond))
+      if (Atom.isValidSymNoCase(chFirst, chSecond))
         htElementsInGroup.put("" + chFirst + chSecond, Boolean.TRUE);
-      else if (Atom.isValidElementSymbol(chFirst))
+      else if (Atom.isValidSym1(chFirst))
         htElementsInGroup.put("" + chFirst, Boolean.TRUE);
     }
   }

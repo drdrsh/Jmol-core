@@ -905,10 +905,10 @@ public class ActionManager implements EventManager {
       int deltaY = y - dragged.y;
       setCurrent(time, x, y, buttonMods);
       dragged.setCurrent(current, -1);
-      if (false && apm != PICKING_ASSIGN_ATOM 
-          && apm != ACTION_pickMeasure
-          && apm != PICKING_MEASURE_DISTANCE)
-        exitMeasurementMode(null);
+      //if (false && apm != PICKING_ASSIGN_ATOM 
+      //    && apm != ACTION_pickMeasure
+      //    && apm != PICKING_MEASURE_DISTANCE)
+      //  exitMeasurementMode(null);
       dragGesture.add(dragAction, x, y, time);
       checkDragWheelAction(dragAction, x, y, deltaX, deltaY, time,
           Event.DRAGGED);

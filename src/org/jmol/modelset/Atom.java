@@ -181,6 +181,7 @@ public class Atom extends Point3fi implements BNode {
     return null;
   }
 
+  
   void addDisplayedBond(int stickVisibilityFlag, boolean isVisible) {
     nBondsDisplayed += (isVisible ? 1 : -1);
     setShapeVisibility(stickVisibilityFlag, (nBondsDisplayed > 0));
@@ -1209,75 +1210,74 @@ public class Atom extends Point3fi implements BNode {
    * called by isosurface and int comparator via atomProperty()
    * and also by getBitsetProperty() 
    * 
-   * @param atom
    * @param tokWhat
    * @return         int value or Integer.MIN_VALUE
    */
-  public static int atomPropertyInt(Atom atom, int tokWhat) {
+  public int atomPropertyInt(int tokWhat) {
     switch (tokWhat) {
     case T.atomno:
-      return atom.getAtomNumber();
+      return getAtomNumber();
     case T.seqid:
-      return atom.getSeqID();
+      return getSeqID();
     case T.atomid:
-      return atom.atomID;
+      return atomID;
     case T.subsystem:
-      return Math.max(0, atom.altloc - 32);
+      return Math.max(0, altloc - 32);
     case T.atomindex:
-      return atom.i;
+      return i;
     case T.bondcount:
-      return atom.getCovalentBondCount();
+      return getCovalentBondCount();
     case T.chainno:
-      return atom.group.chain.index + 1;
+      return group.chain.index + 1;
     case T.color:
-      return atom.group.chain.model.ms.vwr.getColorArgbOrGray(atom.colixAtom);
+      return group.chain.model.ms.vwr.getColorArgbOrGray(colixAtom);
     case T.element:
     case T.elemno:
-      return atom.getElementNumber();
+      return getElementNumber();
     case T.elemisono:
-      return atom.atomicAndIsotopeNumber;
+      return atomicAndIsotopeNumber;
     case T.file:
-      return atom.getModelFileIndex() + 1;
+      return getModelFileIndex() + 1;
     case T.formalcharge:
-      return atom.getFormalCharge();
+      return getFormalCharge();
     case T.groupid:
-      return atom.getGroupID(); //-1 if no group
+      return getGroupID(); //-1 if no group
     case T.groupindex:
-      return atom.group.getGroupIndex();
+      return group.getGroupIndex();
     case T.model:
       //integer model number -- could be PDB/sequential adapter number
       //or it could be a sequential model in file number when multiple files
-      return atom.getModelNumber();
+      return getModelNumber();
     case -T.model:
       //float is handled differently
-      return atom.getModelFileNumber();
+      return getModelFileNumber();
     case T.modelindex:
-      return atom.mi;
+      return mi;
     case T.molecule:
-      return atom.getMoleculeNumber(true);
+      return getMoleculeNumber(true);
     case T.occupancy:
-      return atom.getOccupancy100();
+      return getOccupancy100();
     case T.polymer:
-      return atom.group.getBioPolymerIndexInModel() + 1;
+      return group.getBioPolymerIndexInModel() + 1;
     case T.polymerlength:
-      return atom.getPolymerLength();
+      return getPolymerLength();
     case T.radius:
       // the comparator uses rasmol radius, unfortunately, for integers
-      return atom.getRasMolRadius();        
+      return getRasMolRadius();        
     case T.resno:
-      return atom.getResno();
+      return getResno();
     case T.site:
-      return atom.getAtomSite();
+      return getAtomSite();
     case T.structure:
-      return atom.getProteinStructureType().getId();
+      return getProteinStructureType().getId();
     case T.substructure:
-      return atom.getProteinStructureSubType().getId();
+      return getProteinStructureSubType().getId();
     case T.strucno:
-      return atom.getStrucNo();
+      return getStrucNo();
     case T.symop:
-      return atom.getSymOp();
+      return getSymOp();
     case T.valence:
-      return atom.getValence();
+      return getValence();
     }
     return 0;      
   }
@@ -1292,28 +1292,27 @@ public class Atom extends Point3fi implements BNode {
    * 
    * @param vwr
    * 
-   * @param atom
    * @param tokWhat
    * @param ptTemp 
    * @return float value or value*100 (asInt=true) or throw an error if not
    *         found
    * 
    */
-  public static float atomPropertyFloat(Viewer vwr, Atom atom, int tokWhat, P3 ptTemp) {
+  public float atomPropertyFloat(Viewer vwr, int tokWhat, P3 ptTemp) {
     switch (tokWhat) {
     case T.adpmax:
-      return atom.getADPMinMax(true);
+      return getADPMinMax(true);
     case T.adpmin:
-      return atom.getADPMinMax(false);
+      return getADPMinMax(false);
     case T.atomx:
     case T.x:
-      return atom.x;
+      return x;
     case T.atomy:
     case T.y:
-      return atom.y;
+      return y;
     case T.atomz:
     case T.z:
-      return atom.z;
+      return z;
     case T.backbone:
     case T.cartoon:
     case T.dots:
@@ -1326,107 +1325,107 @@ public class Atom extends Point3fi implements BNode {
     case T.star:
     case T.strands:
     case T.trace:
-      return vwr.shm.getAtomShapeValue(tokWhat, atom.group, atom.i);
+      return vwr.shm.getAtomShapeValue(tokWhat, group, i);
     case T.bondingradius:
-      return atom.getBondingRadius();
+      return getBondingRadius();
     case T.chemicalshift:
-      return vwr.getNMRCalculation().getChemicalShift(atom);
+      return vwr.getNMRCalculation().getChemicalShift(this);
     case T.covalentradius:
-      return Elements.getCovalentRadius(atom.atomicAndIsotopeNumber);
+      return Elements.getCovalentRadius(atomicAndIsotopeNumber);
     case T.eta:
     case T.theta:
     case T.straightness:
-      return atom.getGroupParameter(tokWhat);
+      return getGroupParameter(tokWhat);
     case T.fracx:
-      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', true, ptTemp);
+      return getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', true, ptTemp);
     case T.fracy:
-      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', true, ptTemp);
+      return getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', true, ptTemp);
     case T.fracz:
-      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', true, ptTemp);
+      return getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', true, ptTemp);
     case T.fux:
-      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', false, ptTemp);
+      return getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', false, ptTemp);
     case T.fuy:
-      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', false, ptTemp);
+      return getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', false, ptTemp);
     case T.fuz:
-      return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp);
+      return getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp);
     case T.hydrophobicity:
-      return atom.getHydrophobicity();
+      return getHydrophobicity();
     case T.magneticshielding:
-      return vwr.getNMRCalculation().getMagneticShielding(atom);
+      return vwr.getNMRCalculation().getMagneticShielding(this);
     case T.mass:
-      return atom.getMass();
+      return getMass();
     case T.occupancy:
-      return atom.getOccupancy100() / 100f;
+      return getOccupancy100() / 100f;
     case T.partialcharge:
-      return atom.getPartialCharge();
+      return getPartialCharge();
     case T.phi:
     case T.psi:
     case T.omega:
-      if (atom.group.chain.model.isJmolDataFrame
-          && atom.group.chain.model.jmolFrameType
+      if (group.chain.model.isJmolDataFrame
+          && group.chain.model.jmolFrameType
               .startsWith("plot ramachandran")) {
         switch (tokWhat) {
         case T.phi:
-          return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', false, ptTemp);
+          return getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', false, ptTemp);
         case T.psi:
-          return atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', false, ptTemp);
+          return getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', false, ptTemp);
         case T.omega:
-          if (atom.group.chain.model.isJmolDataFrame
-              && atom.group.chain.model.jmolFrameType
+          if (group.chain.model.isJmolDataFrame
+              && group.chain.model.jmolFrameType
                   .equals("plot ramachandran")) {
-            float omega = atom.getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp) - 180;
+            float omega = getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp) - 180;
             return (omega < -180 ? 360 + omega : omega);
           }
         }
       }
-      return atom.getGroupParameter(tokWhat);
+      return getGroupParameter(tokWhat);
     case T.radius:
     case T.spacefill:
-      return atom.getRadius();
+      return getRadius();
     case T.screenx:
-      return atom.sX;
+      return sX;
     case T.screeny:
-      return atom.group.chain.model.ms.vwr.getScreenHeight() - atom.sY;
+      return group.chain.model.ms.vwr.getScreenHeight() - sY;
     case T.screenz:
-      return atom.sZ;
+      return sZ;
     case T.selected:
-      return (vwr.isAtomSelected(atom.i) ? 1 : 0);
+      return (vwr.isAtomSelected(i) ? 1 : 0);
     case T.surfacedistance:
-      atom.group.chain.model.ms.getSurfaceDistanceMax();
-      return atom.getSurfaceDistance100() / 100f;
+      group.chain.model.ms.getSurfaceDistanceMax();
+      return getSurfaceDistance100() / 100f;
     case T.temperature: // 0 - 9999
-      return atom.getBfactor100() / 100f;
+      return getBfactor100() / 100f;
     case T.unitx:
-      return atom.getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'X', ptTemp);
+      return getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'X', ptTemp);
     case T.unity:
-      return atom.getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'Y', ptTemp);
+      return getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'Y', ptTemp);
     case T.unitz:
-      return atom.getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'Z', ptTemp);
+      return getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'Z', ptTemp);
     case T.vanderwaals:
-      return atom.getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
+      return getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
     case T.vectorscale:
-      V3 v = atom.getVibrationVector();
+      V3 v = getVibrationVector();
       return (v == null ? 0 : v.length() * vwr.getFloat(T.vectorscale));
     case T.vibx:
-      return atom.getVibrationCoord('X');
+      return getVibrationCoord('X');
     case T.viby:
-      return atom.getVibrationCoord('Y');
+      return getVibrationCoord('Y');
     case T.vibz:
-      return atom.getVibrationCoord('Z');
+      return getVibrationCoord('Z');
     case T.modx:
-      return atom.getModulationCoord('X');
+      return getModulationCoord('X');
     case T.modt1:
-      return atom.getModulationCoord('1');
+      return getModulationCoord('1');
     case T.modt2:
-      return atom.getModulationCoord('2');
+      return getModulationCoord('2');
     case T.modt3:
-      return atom.getModulationCoord('3');
+      return getModulationCoord('3');
     case T.mody:
-      return atom.getModulationCoord('Y');
+      return getModulationCoord('Y');
     case T.modz:
-      return atom.getModulationCoord('Z');
+      return getModulationCoord('Z');
     case T.volume:
-      return atom.getVolume(vwr, VDW.AUTO);
+      return getVolume(vwr, VDW.AUTO);
     case T.fracxyz:
     case T.fuxyz:
     case T.unitxyz:
@@ -1434,9 +1433,10 @@ public class Atom extends Point3fi implements BNode {
     case T.vibxyz:
     case T.modxyz:
     case T.xyz:
-      return atomPropertyTuple(vwr, atom, tokWhat, ptTemp).length();
+      T3 v3 = atomPropertyTuple(vwr, tokWhat, ptTemp);
+      return (v3 == null ? -1 : v3.length());
     }
-    return atomPropertyInt(atom, tokWhat);
+    return atomPropertyInt(tokWhat);
   }
 
   private float getMass() {
@@ -1444,78 +1444,77 @@ public class Atom extends Point3fi implements BNode {
     return (mass > 0 ? mass : Elements.getAtomicMass(getElementNumber()));
   }
 
-  public static String atomPropertyString(Viewer vwr, Atom atom, int tokWhat) {
+  public String atomPropertyString(Viewer vwr, int tokWhat) {
     char ch;
     switch (tokWhat) {
     case T.altloc:
-      ch = atom.altloc;
+      ch = altloc;
       return (ch == '\0' ? "" : "" + ch);
     case T.atomname:
-      return atom.getAtomName();
+      return getAtomName();
     case T.atomtype:
-      return atom.getAtomType();
+      return getAtomType();
     case T.chain:
-      return atom.getChainIDStr();
+      return getChainIDStr();
     case T.sequence:
-      return atom.getGroup1('?');
+      return getGroup1('?');
     case T.group1:
-      return atom.getGroup1('\0');
+      return getGroup1('\0');
     case T.group:
-      return atom.getGroup3(false);
+      return getGroup3(false);
     case T.element:
-      return atom.getElementSymbolIso(true);
+      return getElementSymbolIso(true);
     case T.identify:
-      return atom.getIdentity(true);
+      return getIdentity(true);
     case T.insertion:
-      ch = atom.getInsertionCode();
+      ch = getInsertionCode();
       return (ch == '\0' ? "" : "" + ch);
     case T.label:
     case T.format:
-      String s = (String) vwr.shm.getShapePropertyIndex(JC.SHAPE_LABELS, "label", atom.i);
+      String s = (String) vwr.shm.getShapePropertyIndex(JC.SHAPE_LABELS, "label", i);
       if (s == null)
         s = "";
       return s;
     case T.structure:
-      return atom.getProteinStructureType().getBioStructureTypeName(false);
+      return getProteinStructureType().getBioStructureTypeName(false);
     case T.substructure:
-      return atom.getProteinStructureSubType().getBioStructureTypeName(false);
+      return getProteinStructureSubType().getBioStructureTypeName(false);
     case T.strucid:
-      return atom.getStructureId();
+      return getStructureId();
     case T.shape:
-      return vwr.getHybridizationAndAxes(atom.i, null, null, "d");
+      return vwr.getHybridizationAndAxes(i, null, null, "d");
     case T.symbol:
-      return atom.getElementSymbolIso(false);
+      return getElementSymbolIso(false);
     case T.symmetry:
-      return atom.getSymmetryOperatorList();
+      return getSymmetryOperatorList();
     }
     return ""; 
   }
 
-  public static T3 atomPropertyTuple(Viewer vwr, Atom atom, int tok, P3 ptTemp) {
+  public T3 atomPropertyTuple(Viewer vwr, int tok, P3 ptTemp) {
     switch (tok) {
     case T.fracxyz:
-      return atom.getFractionalCoordPt(!vwr.g.legacyJavaFloat, !atom.group.chain.model.isJmolDataFrame,
+      return getFractionalCoordPt(!vwr.g.legacyJavaFloat, !group.chain.model.isJmolDataFrame,
           ptTemp);
     case T.fuxyz:
-      return atom.getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp);
+      return getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp);
     case T.unitxyz:
-      return (atom.group.chain.model.isJmolDataFrame ? atom
-          .getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp) 
-          : atom.getFractionalUnitCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp));
+      return (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp) 
+          : getFractionalUnitCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp));
     case T.screenxyz:
-      return P3.new3(atom.sX, atom.group.chain.model.ms.vwr.getScreenHeight()
-          - atom.sY, atom.sZ);
+      return P3.new3(sX, group.chain.model.ms.vwr.getScreenHeight()
+          - sY, sZ);
     case T.vibxyz:
-      V3 v = atom.getVibrationVector();
-      return (v == null ? new V3() : v);
+      V3 v = getVibrationVector();
+      return (v == null && !Float.isNaN(ptTemp.x) ? new V3() : v);
     case T.modxyz:
-      JmolModulationSet ms = atom.getModulation();
-      return (ms == null ? new V3() : ms.getV3());
+      JmolModulationSet ms = getModulation();
+      return (ms == null ? (Float.isNaN(ptTemp.x) ? null : new V3()) : ms.getV3());
     case T.xyz:
-      return atom;
+      return this;
     case T.color:
       return CU.colorPtFromInt(
-          atom.group.chain.model.ms.vwr.getColorArgbOrGray(atom.colixAtom),
+          group.chain.model.ms.vwr.getColorArgbOrGray(colixAtom),
           ptTemp);
     }
     return null;
@@ -1543,23 +1542,6 @@ public class Atom extends Point3fi implements BNode {
   @Override
   public String toString() {
     return getInfo();
-  }
-
-  public boolean isWithinFourBonds(Atom atomOther) {
-    if (mi != atomOther.mi)
-      return  false;
-    if (isCovalentlyBonded(atomOther))
-      return true; 
-    Bond[] bondsOther = atomOther.bonds;
-    for (int i = 0; i < bondsOther.length; i++) {
-      Atom atom2 = bondsOther[i].getOtherAtom(atomOther);
-      if (isCovalentlyBonded(atom2))
-        return true;
-      for (int j = 0; j < bonds.length; j++)
-        if (bonds[j].getOtherAtom(this).isCovalentlyBonded(atom2))
-          return true;
-    }
-    return false;
   }
 
   @Override

@@ -1096,7 +1096,7 @@ public class CifReader extends AtomSetCollectionReader {
             elementSymbol = field;
           } else {
             char ch1 = Character.toLowerCase(field.charAt(1));
-            if (Atom.isValidElementSymbol2(firstChar, ch1))
+            if (Atom.isValidSym2(firstChar, ch1))
               elementSymbol = "" + firstChar + ch1;
             else
               elementSymbol = "" + firstChar;

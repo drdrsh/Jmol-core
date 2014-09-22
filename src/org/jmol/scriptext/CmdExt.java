@@ -3157,7 +3157,7 @@ public class CmdExt implements JmolCmdExtension {
             if (tokProperty != T.color) {
               pt = new P3();
               for (int iAtom = ac; --iAtom >= 0;)
-                data[iAtom] = Atom.atomPropertyFloat(vwr, atoms[iAtom],
+                data[iAtom] = atoms[iAtom].atomPropertyFloat(vwr,
                     tokProperty, pt);
             }
           }

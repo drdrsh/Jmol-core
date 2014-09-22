@@ -138,7 +138,7 @@ public class AlchemyReader extends AtomSetCollectionReader {
         // any name > 2 characters -- just read first character
         // any name = 2 characters -- check for known atom or "Du"
         int nChar = (name.length() == 2
-            && (Atom.isValidElementSymbol2(c1,
+            && (Atom.isValidSym2(c1,
                 c2 = Character.toLowerCase(name.charAt(1))) || name
                 .equals("Du")) ? 2 : 1);
         name = (nChar == 1 ? "" + c1 : "" + c1 + c2);

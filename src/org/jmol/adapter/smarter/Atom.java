@@ -110,20 +110,20 @@ public class Atom extends P3 implements Cloneable {
         int ichFirst = 0;
         char chFirst = 0;
         while (ichFirst < len &&
-               !isValidFirstSymbolChar(chFirst = atomName.charAt(ichFirst)))
+               !isValidSymChar1(chFirst = atomName.charAt(ichFirst)))
           ++ichFirst;
         switch(len - ichFirst) {
         case 0:
           break;
         default:
           char chSecond = atomName.charAt(ichFirst + 1);
-          if (isValidElementSymbolNoCaseSecondChar2(chFirst, chSecond)) {
+          if (isValidSymNoCase(chFirst, chSecond)) {
             elementSymbol = "" + chFirst + chSecond;
             break;
           }
           //$FALL-THROUGH$
         case 1:
-          if (isValidElementSymbol(chFirst))
+          if (isValidSym1(chFirst))
             elementSymbol = "" + chFirst;
           break;
         }
@@ -274,41 +274,51 @@ public class Atom extends P3 implements Cloneable {
     1 << ('r' - 'a')
   };
 
-  public static boolean isValidElementSymbol(char ch) {
-    return ch >= 'A' && ch <= 'Z' && elementCharMasks[ch - 'A'] < 0;
+  /**
+   * 
+   * @param ch
+   * @return true if matches a one-character symbol X
+   */
+  public static boolean isValidSym1(char ch) {
+    return (ch >= 'A' && ch <= 'Z' && elementCharMasks[ch - 'A'] < 0);
   }
 
-  public static boolean isValidElementSymbol2(char chFirst, char chSecond) {
-    return (chFirst >= 'A' && chFirst <= 'Z' && chSecond >= 'a'
-        && chSecond <= 'z' && ((elementCharMasks[chFirst - 'A'] >> (chSecond - 'a')) & 1) != 0);
+  /**
+   * 
+   * @param ch1
+   * @param ch2
+   * @return true if matches a valid symbol Xy
+   */
+  public static boolean isValidSym2(char ch1, char ch2) {
+    return (ch1 >= 'A' && ch1 <= 'Z' && ch2 >= 'a'
+        && ch2 <= 'z' && ((elementCharMasks[ch1 - 'A'] >> (ch2 - 'a')) & 1) != 0);
   }
 
-  public static boolean isValidElementSymbolNoCaseSecondChar2(char chFirst,
-                                                      char chSecond) {
-    if (chSecond >= 'A' && chSecond <= 'Z')
-      chSecond += 'a' - 'A';
-    if (chFirst < 'A' || chFirst > 'Z' || chSecond < 'a' || chSecond > 'z')
-      return false;
-    return ((elementCharMasks[chFirst - 'A'] >> (chSecond - 'a')) & 1) != 0;
+  /**
+   * 
+   * @param ch1
+   * @param ch2
+   * @return true if matches a two-character symbol, XX or Xx
+   */
+  public static boolean isValidSymNoCase(char ch1, char ch2) {
+    return isValidSym2(ch1, ch2 < 'a' ? (char)(ch2 + 32) : ch2);
   }
 
-  public static boolean isValidFirstSymbolChar(char ch) {
-    return ch >= 'A' && ch <= 'Z' && elementCharMasks[ch - 'A'] != 0;
+  /**
+   *
+   * @param ch
+   * @return true if matches FIRST character of some symbol Xx
+   */
+  private static boolean isValidSymChar1(char ch) {
+    return (ch >= 'A' && ch <= 'Z' && elementCharMasks[ch - 'A'] != 0);
   }
 
-  public static boolean isValidElementSymbolNoCaseSecondChar(String str) {
-    if (str == null)
-      return false;
-    int length = str.length();
-    if (length == 0)
-      return false;
-    char chFirst = str.charAt(0);
-    if (length == 1)
-      return isValidElementSymbol(chFirst);
-    if (length > 2)
-      return false;
-    char chSecond = str.charAt(1);
-    return isValidElementSymbolNoCaseSecondChar2(chFirst, chSecond);
-  }
-
+//  static {
+//    System.out.println(isValidSymChar1('A'));
+//    System.out.println(isValidSym1('A'));
+//    System.out.println(isValidSymNoCase('A', 'l'));
+//    System.out.println(isValidSym1('W'));
+//    System.out.println(isValidSymNoCase('A', 'L'));
+//  }
+  
 }

@@ -187,7 +187,7 @@ public class FoldingXyzReader extends AtomSetCollectionReader {
     default:
       char c1 = name.charAt(0);
       char c2 = name.charAt(1);
-      n = (Atom.isValidElementSymbol2(c1, c2) || c1 == 'C' && c2 == 'L' ? 2 : 1);
+      n = (Atom.isValidSym2(c1, c2) || c1 == 'C' && c2 == 'L' ? 2 : 1);
     }
     return name.substring(0, n);
   }

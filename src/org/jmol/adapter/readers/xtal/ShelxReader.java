@@ -183,7 +183,7 @@ public class ShelxReader extends AtomSetCollectionReader {
     boolean allElementSymbols = true;
     for (int i = tokens.length; allElementSymbols && --i >= 1;) {
       String token = tokens[i];
-      allElementSymbols = Atom.isValidElementSymbolNoCaseSecondChar(token);
+      allElementSymbols = isValidElementSymbolNoCaseSecondChar(token);
     }
     String[] sfacTokens = getTokensStr(line.substring(4));
     if (allElementSymbols)
@@ -280,5 +280,21 @@ public class ShelxReader extends AtomSetCollectionReader {
       return sym.substring(0, 2);
     return "" + sym.charAt(0);
   }
+
+  public static boolean isValidElementSymbolNoCaseSecondChar(String str) {
+    if (str == null)
+      return false;
+    int length = str.length();
+    if (length == 0)
+      return false;
+    char chFirst = str.charAt(0);
+    if (length == 1)
+      return Atom.isValidSym1(chFirst);
+    if (length > 2)
+      return false;
+    char chSecond = str.charAt(1);
+    return Atom.isValidSymNoCase(chFirst, chSecond);
+  }
+
 
 }

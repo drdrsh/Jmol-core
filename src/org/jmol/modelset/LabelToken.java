@@ -161,7 +161,7 @@ public class LabelToken {
       T.fux, T.fuy, T.fuz, T.hydrophobicity, T.screenx, 
       T.screeny, T.screenz, T.screenxyz, // added in 12.3.30
       T.magneticshielding, T.chemicalshift, T.chainno, T.seqid,
-      T.modx, T.mody, T.modz, T.modxyz
+      T.modx, T.mody, T.modz, T.modxyz, T.symop
   };
 
   public LabelToken() {
@@ -478,7 +478,7 @@ public class LabelToken {
         strT = "" + (indices == null ? atom.i : indices[atom.i]);
         break;
       case T.color:
-        ptT = Atom.atomPropertyTuple(vwr, atom, t.tok, ptTemp);
+        ptT = atom.atomPropertyTuple(vwr, t.tok, ptTemp);
         break;
       case T.data:
       case T.validation:
@@ -525,13 +525,13 @@ public class LabelToken {
         strT = atom.getModelNumberForLabel();
         break;
       case T.occupancy:
-        strT = "" + Atom.atomPropertyInt(atom, t.tok);
+        strT = "" + atom.atomPropertyInt(t.tok);
         break;
       case 'Q':
         floatT = atom.getOccupancy100() / 100f;
         break;
       case T.radius:
-        floatT = Atom.atomPropertyFloat(vwr, atom, t.tok, ptTemp);
+        floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);
         break;
       case 'r':
         strT = atom.getSeqcodeString();
@@ -555,7 +555,7 @@ public class LabelToken {
         break;
       case T.structure:
       case T.substructure:
-        strT = Atom.atomPropertyString(vwr, atom, t.tok);
+        strT = atom.atomPropertyString(vwr, t.tok);
         break;
       case 'W':
         strT = atom.getIdentityXYZ(false, ptTemp);
@@ -567,18 +567,18 @@ public class LabelToken {
         switch (t.tok & T.PROPERTYFLAGS) {
         case T.intproperty:
           if (t.intAsFloat)
-            floatT = Atom.atomPropertyInt(atom, t.tok);
+            floatT = atom.atomPropertyInt(t.tok);
           else
-            strT = "" + Atom.atomPropertyInt(atom, t.tok);
+            strT = "" + atom.atomPropertyInt(t.tok);
           break;
         case T.floatproperty:
-          floatT = Atom.atomPropertyFloat(vwr, atom, t.tok, ptTemp);
+          floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);
           break;
         case T.strproperty:
-          strT = Atom.atomPropertyString(vwr, atom, t.tok);
+          strT = atom.atomPropertyString(vwr, t.tok);
           break;
         case T.atomproperty:
-          ptT = Atom.atomPropertyTuple(vwr, atom, t.tok, ptTemp);
+          ptT = atom.atomPropertyTuple(vwr, t.tok, ptTemp);
           break;
         default:
           // any dual case would be here -- must handle specially

@@ -45,6 +45,7 @@ import org.jmol.jvxl.data.MeshData;
 import org.jmol.jvxl.data.VolumeData;
 import org.jmol.jvxl.readers.Parameters;
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.Bond;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.ColorEncoder;
@@ -399,7 +400,7 @@ public class Contact extends Isosurface {
           continue;
         Atom atomB = atoms[ib];
         boolean isSameMolecule = (ad.atomMolecule[ia] == ad.atomMolecule[ib]);
-        if (ia == ib || isSameMolecule && atomA.isWithinFourBonds(atomB))
+        if (ia == ib || isSameMolecule && isWithinFourBonds(atomA, atomB))
           continue;
         switch (intramolecularMode) {
         case 0:
@@ -471,6 +472,24 @@ public class Contact extends Isosurface {
         Logger.debug(list.get(i).toString());
     Logger.info("Contact pairs: " + list.size());
     return list;
+  }
+
+  private boolean isWithinFourBonds(Atom atomA, Atom atomB) {
+    if (atomA.mi != atomB.mi)
+      return false;
+    if (atomA.isCovalentlyBonded(atomB))
+      return true;
+    Bond[] bondsOther = atomB.getBonds();
+    Bond[] bonds = atomA.getBonds();
+    for (int i = 0; i < bondsOther.length; i++) {
+      Atom atom2 = bondsOther[i].getOtherAtom(atomB);
+      if (atomA.isCovalentlyBonded(atom2))
+        return true;
+      for (int j = 0; j < bonds.length; j++)
+        if (bonds[j].getOtherAtom(atomA).isCovalentlyBonded(atom2))
+          return true;
+    }
+    return false;
   }
 
   /**
