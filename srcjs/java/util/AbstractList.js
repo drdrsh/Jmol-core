@@ -107,6 +107,7 @@ return it.nextIndex();
 //});
 Clazz.defineMethod(c$,"listIterator",
 function(location){
+location || (location = 0);
 return new java.util.AbstractListFullListIterator(this, location);//Clazz.innerTypeInstance(java.util.AbstractList.FullListIterator,this,null,location);
 },"~N");
 Clazz.defineMethod(c$,"remove",
