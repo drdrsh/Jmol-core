@@ -574,8 +574,16 @@ abstract public class ScriptParam extends ScriptError {
     error(ERROR_numberExpected);
     return 0;
   }
-  
-  public P3[] getPointArray(int i, int nPoints) throws ScriptException {
+
+  /**
+   * may return null values in some cases
+   * @param i
+   * @param nPoints
+   * @param allowNull if allowing null values (as in setting atom properties such as vxyz or xyz)
+   * @return array of P3, with possible null values
+   * @throws ScriptException
+   */
+  public P3[] getPointArray(int i, int nPoints, boolean allowNull) throws ScriptException {
     P3[] points = (nPoints < 0 ? null : new P3[nPoints]);
     Lst<P3> vp = (nPoints < 0 ? new Lst<P3>() : null);
     int tok = (i < 0 ? T.varray : getToken(i++).tok);
@@ -587,9 +595,9 @@ abstract public class ScriptParam extends ScriptError {
       nPoints = v.size();
       if (points == null)
         points = new P3[nPoints];
-      for (int j = 0; j < nPoints; j++)
-        if ((points[j] = SV.ptValue(v.get(j))) == null)
-          invArg();
+      for (int j = 0; j < nPoints; j++) 
+        if ((points[j] = SV.ptValue(v.get(j))) == null && !allowNull)
+          invArg();  
       return points;
     case T.spacebeforesquare:
       tok = tokAt(i++);

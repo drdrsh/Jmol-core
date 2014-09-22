@@ -2168,7 +2168,7 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.varray:
         theToken = tokenValue;
-        vwr.setAtomCoords(bs, tok, getPointArray(-1, nValues));
+        vwr.setAtomCoords(bs, tok, getPointArray(-1, nValues, true));
         break;
       }
       return;

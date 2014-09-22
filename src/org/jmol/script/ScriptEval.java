@@ -7807,7 +7807,7 @@ public class ScriptEval extends ScriptExpr {
       if (isArrayParameter(i)) {
         // Origin vA vB vC
         // these are VECTORS, though
-        oabc = getPointArray(i, 4);
+        oabc = getPointArray(i, 4, false);
         i = iToken;
       } else if (slen > i + 1) {
         pt = (P3) getPointOrPlane(i, false, true, false, true, 3, 3);

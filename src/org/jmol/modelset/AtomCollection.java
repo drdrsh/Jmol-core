@@ -505,7 +505,7 @@ abstract public class AtomCollection {
       if ((nValues = v.size()) == 0)
         return;
       type = 1;
-    } else if (PT.isAP(xyzValues)){
+    } else if (PT.isAP(xyzValues)) {
       values = (P3[]) xyzValues;
       if ((nValues = values.length) == 0)
         return;
@@ -515,7 +515,7 @@ abstract public class AtomCollection {
     }
     int n = 0;
     if (bs != null)
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) { 
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         switch (type) {
         case 1:
           if (n >= nValues)
@@ -528,22 +528,23 @@ abstract public class AtomCollection {
           xyz = values[n++];
           break;
         }
-        switch (tokType) {
-        case T.xyz:
-          setAtomCoord(i, xyz.x, xyz.y, xyz.z);
-          break;
-        case T.fracxyz:
-          at[i].setFractionalCoordTo(xyz, true);
-          taintAtom(i, TAINT_COORD);
-          break;
-        case T.fuxyz:
-          at[i].setFractionalCoordTo(xyz, false);
-          taintAtom(i, TAINT_COORD);
-          break;
-        case T.vibxyz:
-          setAtomVibrationVector(i, xyz);
-          break;
-        }
+        if (xyz != null)
+          switch (tokType) {
+          case T.xyz:
+            setAtomCoord(i, xyz.x, xyz.y, xyz.z);
+            break;
+          case T.fracxyz:
+            at[i].setFractionalCoordTo(xyz, true);
+            taintAtom(i, TAINT_COORD);
+            break;
+          case T.fuxyz:
+            at[i].setFractionalCoordTo(xyz, false);
+            taintAtom(i, TAINT_COORD);
+            break;
+          case T.vibxyz:
+            setAtomVibrationVector(i, xyz);
+            break;
+          }
       }
   }
 

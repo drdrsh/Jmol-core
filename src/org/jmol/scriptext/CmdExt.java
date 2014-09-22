@@ -711,7 +711,7 @@ public class CmdExt implements JmolCmdExtension {
     P3[] coordTo = null;
     BS bsTo = null;
     if (e.isArrayParameter(++e.iToken)) {
-      coordTo = e.getPointArray(e.iToken, -1);
+      coordTo = e.getPointArray(e.iToken, -1, false);
     } else if (tokAt(e.iToken) != T.atoms) {
       bsTo = atomExpressionAt(e.iToken);
     }
@@ -776,7 +776,7 @@ public class CmdExt implements JmolCmdExtension {
         }
 
         if (bsAtoms2 == null)
-          coordTo = e.getPointArray(++e.iToken, -1);
+          coordTo = e.getPointArray(++e.iToken, -1, false);
         else
           bsAtoms2.and(bsTo);
         if (vAtomSets == null)
@@ -2164,7 +2164,7 @@ public class CmdExt implements JmolCmdExtension {
         P3[] points = null;
         Lst<SV> vpolygons = null;
         if (eval.isArrayParameter(++i)) {
-          points = eval.getPointArray(i, -1);
+          points = eval.getPointArray(i, -1, false);
           nVertices = points.length;
         } else {
           nVertices = Math.max(0, intParameter(i));
@@ -7303,7 +7303,7 @@ public class CmdExt implements JmolCmdExtension {
               pts[k] = atoms[j];
           }
         } else {
-          pts = eval.getPointArray(i, -1);
+          pts = eval.getPointArray(i, -1, false);
         }
         if (pts.length == 0) {
           eval.iToken = i;
@@ -7311,7 +7311,7 @@ public class CmdExt implements JmolCmdExtension {
         }
         data = new Object[] { Float.valueOf(d), pts, bs };
       } else {
-        data = eval.getPointArray(i, 4);
+        data = eval.getPointArray(i, 4, false);
         tok = T.boundbox;
       }
       break;
