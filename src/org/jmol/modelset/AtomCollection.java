@@ -740,7 +740,7 @@ abstract public class AtomCollection {
   public float getVibrationCoord(int atomIndex, char c) {
     Vibration v = getVibration(atomIndex, false);
     if (v == null)
-      return 0;
+      return Float.NaN;
     switch (c) {
     case 'X':
       return v.x;
@@ -753,26 +753,26 @@ abstract public class AtomCollection {
 
   public float getModulationCoord(int atomIndex, char c) {
     JmolModulationSet ms = getModulation(atomIndex);
-    if (ms == null)
-      return 0;
-    Vibration v = ms.getVibration(false);
-    if (v == null)
-      v = (Vibration) ms;
-    switch (c) {
-    case 'X':
-      return v.x;
-    case 'Y':
-      return v.y;
-    case 'Z':
-      return v.z;
-    case '1':
-    case '2':
-    case '3':
-      T3 t = ms.getModulation("T", null);
-      float x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
-      return (float)(x - Math.floor(x));
+    if (ms != null) {
+      Vibration v = ms.getVibration(false);
+      if (v == null)
+        v = (Vibration) ms;
+      switch (c) {
+      case 'X':
+        return v.x;
+      case 'Y':
+        return v.y;
+      case 'Z':
+        return v.z;
+      case '1':
+      case '2':
+      case '3':
+        T3 t = ms.getModulation("T", null);
+        float x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
+        return (float) (x - Math.floor(x));
+      }
     }
-    return 0;
+    return Float.NaN;
   }
 
   public Vibration getVibration(int atomIndex, boolean forceNew) {

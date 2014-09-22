@@ -1505,11 +1505,10 @@ public class Atom extends Point3fi implements BNode {
       return P3.new3(sX, group.chain.model.ms.vwr.getScreenHeight()
           - sY, sZ);
     case T.vibxyz:
-      V3 v = getVibrationVector();
-      return (v == null && !Float.isNaN(ptTemp.x) ? new V3() : v);
+      return getVibrationVector();
     case T.modxyz:
       JmolModulationSet ms = getModulation();
-      return (ms == null ? (Float.isNaN(ptTemp.x) ? null : new V3()) : ms.getV3());
+      return (ms == null ? null : ms.getV3());
     case T.xyz:
       return this;
     case T.color:

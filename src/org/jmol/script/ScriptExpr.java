@@ -1181,11 +1181,8 @@ abstract class ScriptExpr extends ScriptParam {
     float propertyFloat = 0;
     vwr.autoCalculate(tokWhat);
     boolean isProp = (tokWhat == T.property);
-    if (!isProp) {
-      if (ptTemp == null)
-        ptTemp = new P3();
-      ptTemp.x = (tokOperator == T.opGE || tokOperator == T.opLT && comparisonFloat == 0 ? Float.NaN : 0);
-    }
+    if (!isProp && ptTemp == null)
+      ptTemp = new P3();
     for (int i = ac; --i >= 0;) {
       boolean match = false;
       Atom atom = atoms[i];
@@ -1216,7 +1213,7 @@ abstract class ScriptExpr extends ScriptParam {
     case T.opEQ:
       return a == b;
     case T.opNE:
-      return a != b;
+      return a != b && !Float.isNaN(a);
     }
     return false;
   }
@@ -1740,19 +1737,19 @@ abstract class ScriptExpr extends ScriptParam {
           }
           break;
         case 3: // isPt
-          ptTemp.x = 0;
           T3 t = atom.atomPropertyTuple(vwr, tok, ptTemp);
-          if (t == null)
-            errorStr(ERROR_unrecognizedAtomProperty, T.nameOf(tok));
           switch (minmaxtype) {
           case T.allfloat:
-            fout[i] = (float) Math.sqrt(t.x * t.x + t.y * t.y + t.z * t.z);
+            fout[i] = (pt == null ? -1 : t.length());
             break;
           case T.all:
-            vout.addLast(P3.newP(t));
+            vout.addLast(t == null ? Integer.valueOf(-1) : P3.newP(t));
             break;
           default:
-            pt.add(t);
+            if (t == null)
+              n--;
+            else
+              pt.add(t);
           }
           break;
         }
@@ -1841,7 +1838,7 @@ abstract class ScriptExpr extends ScriptParam {
             fout[i] = PT.parseFloat((String) v);
             break;
           case 3:
-            fout[i] = ((P3) v).length();
+            fout[i] = (v == null ? -1 : ((P3) v).length());
             break;
           }
         }
@@ -1864,7 +1861,7 @@ abstract class ScriptExpr extends ScriptParam {
       return sout; // potential j2s issue here
     }
     if (isPt)
-      return (n == 0 ? pt : P3.new3(pt.x / n, pt.y / n, pt.z / n));
+      return (n == 0 ? Integer.valueOf(-1) : P3.new3(pt.x / n, pt.y / n, pt.z / n));
     if (n == 0 || n == 1 && minmaxtype == T.stddev)
       return Float.valueOf(Float.NaN);
     if (isInt) {

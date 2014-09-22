@@ -553,6 +553,16 @@ public class LabelToken {
         strT = vwr.ms.getAtomProp(atom,
             t.text.substring(2, t.text.length() - 1));
         break;
+      case T.vibx:
+      case T.viby:
+      case T.vibz:
+      case T.modx:
+      case T.mody:
+      case T.modz:
+        floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);
+        if (Float.isNaN(floatT))
+          strT = "";
+        break;
       case T.structure:
       case T.substructure:
         strT = atom.atomPropertyString(vwr, t.tok);
@@ -579,6 +589,8 @@ public class LabelToken {
           break;
         case T.atomproperty:
           ptT = atom.atomPropertyTuple(vwr, t.tok, ptTemp);
+          if (ptT == null)
+            strT = "";
           break;
         default:
           // any dual case would be here -- must handle specially
