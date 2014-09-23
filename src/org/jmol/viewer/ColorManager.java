@@ -217,11 +217,11 @@ public class ColorManager {
     case StaticConstants.PALETTE_MOLECULE:
       return ce.getColorIndexFromPalette(
           modelSet.getMoleculeIndex(atom.i, true), 0,
-          modelSet.getMoleculeCountInModel(atom.getModelIndex()) - 1,
+          modelSet.getMoleculeCountInModel(atom.mi) - 1,
           ColorEncoder.ROYGB, false);
     case StaticConstants.PALETTE_ALTLOC:
       //very inefficient!
-      modelIndex = atom.getModelIndex();
+      modelIndex = atom.mi;
       return ce
           .getColorIndexFromPalette(
               modelSet.getAltLocIndexInModel(modelIndex,
@@ -230,7 +230,7 @@ public class ColorManager {
               false);
     case StaticConstants.PALETTE_INSERTION:
       //very inefficient!
-      modelIndex = atom.getModelIndex();
+      modelIndex = atom.mi;
       return ce.getColorIndexFromPalette(
           modelSet.getInsertionCodeIndexInModel(modelIndex,
               atom.getInsertionCode()), 0,

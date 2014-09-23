@@ -356,4 +356,19 @@ public class SimpleUnitCell {
     cell.z = (nnn % f) + offset;
   }
 
+  /**
+   * calculate weighting of 1 (interior), 0.5 (face), 0.25 (edge), or 0.125 (vertex)
+   * @param pt
+   * @return weighting
+   */
+  public static float getCellWeight(P3 pt) {
+    float f = 1;
+    if (pt.x == 0)
+      f /= 2;
+    if (pt.y == 0)
+      f /= 2;
+    if (pt.z == 0)
+      f /= 2;
+    return f;
+  }
 }

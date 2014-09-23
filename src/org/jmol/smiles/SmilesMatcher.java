@@ -129,7 +129,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     SmilesSearch search = SmilesParser.getMolecule(pattern, isSmarts);
     search.createTopoMap(null);
     search.nodes = search.jmolAtoms;
-    return search.getMolecularFormula(!isSmarts);
+    return search.getMolecularFormula(!isSmarts, null, false);
   }
 
   @Override

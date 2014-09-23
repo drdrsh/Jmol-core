@@ -156,17 +156,82 @@ public class JmolMolecule {
     return molecules;
   }
   
-  public static String getMolecularFormula(Node[] atoms, BS bsSelected, boolean includeMissingHydrogens) {
+  public static String getMolecularFormula(Node[] atoms, BS bsSelected, boolean includeMissingHydrogens, float[] wts, boolean isEmpirical) {
     JmolMolecule m = new JmolMolecule();
     m.nodes = atoms;
     m.atomList = bsSelected;
-    return m.getMolecularFormula(includeMissingHydrogens);
+    return m.getMolecularFormula(includeMissingHydrogens, wts, isEmpirical);
   }
   
-  public String getMolecularFormula(boolean includeMissingHydrogens) {
+  public String getMolecularFormula(boolean includeMissingHydrogens,
+                                    float[] wts, boolean isEmpirical) {
     if (mf != null)
       return mf;
-    getElementAndAtomCount(includeMissingHydrogens);
+    // get element and atom counts
+    if (atomList == null) {
+      atomList = new BS();
+      atomList.setBits(0, nodes.length);
+    }
+    elementCounts = new int[Elements.elementNumberMax];
+    altElementCounts = new int[Elements.altElementMax];
+    ac = atomList.cardinality();
+    for (int p = 0, i = atomList.nextSetBit(0); i >= 0; i = atomList
+        .nextSetBit(i + 1), p++) {
+      int n = nodes[i].getAtomicAndIsotopeNumber();
+      int f = (wts == null ? 1 : (int) (8 * wts[p]));
+      if (n < Elements.elementNumberMax) {
+        if (elementCounts[n] == 0)
+          nElements++;
+        elementCounts[n] += f;
+        elementNumberMax = Math.max(elementNumberMax, n);
+        if (includeMissingHydrogens) {
+          int nH = nodes[i].getImplicitHydrogenCount();
+          if (nH > 0) {
+            if (elementCounts[1] == 0)
+              nElements++;
+            elementCounts[1] += nH * f;
+          }
+        }
+      } else {
+        n = Elements.altElementIndexFromNumber(n);
+        if (altElementCounts[n] == 0)
+          nElements++;
+        altElementCounts[n] += f;
+        altElementMax = Math.max(altElementMax, n);
+      }
+    }
+    if (wts != null)
+      for (int i = 1; i <= elementNumberMax; i++) {
+        int c = elementCounts[i] / 8;
+        if (c * 8 != elementCounts[i])
+          return "?";
+        elementCounts[i] = c;
+      }
+    if (isEmpirical) {
+      int min = 2;
+      boolean ok = true;
+      while (ok) {
+        min = 100000;
+        int c;
+        for (int i = 1; i <= elementNumberMax; i++)
+          if ((c = elementCounts[i]) > 0 && c < min)
+            min = c;
+        if (min == 1)
+          break;
+        int j = min;
+        for (; j > 1; j--) {
+          ok = true;
+          for (int i = 1; i <= elementNumberMax && ok; i++)
+            if ((c = elementCounts[i]) / j * j != c)
+              ok = false;
+          if (ok) {
+            for (int i = 1; i <= elementNumberMax; i++)
+              elementCounts[i] /= j;
+            break;
+          }
+        }
+      }
+    }
     String mf = "";
     String sep = "";
     int nX;
@@ -201,39 +266,6 @@ public class JmolMolecule {
     jm.modelIndex = modelIndex;
     jm.indexInModel = indexInModel;
     return jm;
-  }
-
-  private void getElementAndAtomCount(boolean includeMissingHydrogens) {
-    if (atomList == null) {
-      atomList = new BS();
-      atomList.setBits(0, nodes.length);
-    }
-    elementCounts = new int[Elements.elementNumberMax];
-    altElementCounts = new int[Elements.altElementMax];
-    ac = atomList.cardinality();
-    for (int i = atomList.nextSetBit(0); i >= 0; i = atomList.nextSetBit(i + 1)) {
-      int n = nodes[i].getAtomicAndIsotopeNumber();
-      if (n < Elements.elementNumberMax) {
-        elementCounts[n]++;
-        if (elementCounts[n] == 1)
-          nElements++;
-        elementNumberMax = Math.max(elementNumberMax, n);
-        if (includeMissingHydrogens) {
-          int nH = nodes[i].getImplicitHydrogenCount();
-          if (nH > 0) {
-            if (elementCounts[1] == 0)
-              nElements++;
-            elementCounts[1] += nH;
-          }
-        }
-      } else {
-        n = Elements.altElementIndexFromNumber(n);
-        altElementCounts[n]++;
-        if (altElementCounts[n] == 1)
-          nElements++;
-        altElementMax = Math.max(altElementMax, n);
-      }
-    }
   }
 
   private static boolean getCovalentlyConnectedBitSet(Node[] atoms,

@@ -487,7 +487,7 @@ public class Dipoles extends Shape {
       dipole.set2AtomValue(atom1, atom2, value);
     }
     dipole.type = Dipole.DIPOLE_TYPE_BOND;
-    dipole.modelIndex = atom1.getModelIndex();
+    dipole.modelIndex = atom1.mi;
   }
 
   private int getDipoleIndexFor(String dipoleInfo, String thisID) {

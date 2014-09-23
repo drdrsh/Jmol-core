@@ -413,10 +413,10 @@ public class MathExt implements JmolMathExtension {
               .getRelationship(smiles1, smiles2).toUpperCase());
         String mf1 = (bs1 == null ? vwr.getSmilesMatcher()
             .getMolecularFormula(smiles1, false) : JmolMolecule
-            .getMolecularFormula(vwr.ms.at, bs1, false));
+            .getMolecularFormula(vwr.ms.at, bs1, false, null, false));
         String mf2 = (bs2 == null ? vwr.getSmilesMatcher()
             .getMolecularFormula(smiles2, false) : JmolMolecule
-            .getMolecularFormula(vwr.ms.at, bs2, false));
+            .getMolecularFormula(vwr.ms.at, bs2, false, null, false));
         if (!mf1.equals(mf2))
           return mp.addXStr("NONE");
         if (bs1 != null)
@@ -881,6 +881,7 @@ public class MathExt implements JmolMathExtension {
     if (args.length == 0)
       return false;
 
+    // {*}.find("CF",true|false)
     // {*}.find("MF")
     // {*}.find("SEQENCE")
     // {*}.find("SMARTS", "CCCC")
@@ -900,6 +901,8 @@ public class MathExt implements JmolMathExtension {
     boolean isSearch = sFind.equalsIgnoreCase("SMARTS");
     boolean isChemical = sFind.equalsIgnoreCase("CHEMICAL");
     boolean isMF = sFind.equalsIgnoreCase("MF");
+    boolean isCF = sFind.equalsIgnoreCase("CELLFORMULA");
+    boolean isON = (args[args.length - 1].tok == T.on);
     try {
       if (isChemical) {
         String data = (x1.tok == T.bitset ? vwr.getSmiles(SV.getBitSet(x1, false)) : SV.sValue(x1));
@@ -916,7 +919,7 @@ public class MathExt implements JmolMathExtension {
             : null);
         boolean asBonds = ("bonds".equalsIgnoreCase(SV
             .sValue(args[args.length - 1])));
-        boolean isAll = (asBonds || args[args.length - 1].tok == T.on);
+        boolean isAll = (asBonds || isON);
         Object ret = null;
         switch (x1.tok) {
         case T.string:
@@ -931,9 +934,9 @@ public class MathExt implements JmolMathExtension {
           }
           break;
         case T.bitset:
-          if (isMF)
+          if (isMF || isCF)
             return mp.addXStr(JmolMolecule.getMolecularFormula(
-                vwr.ms.at, (BS) x1.value, false));
+                vwr.ms.at, (BS) x1.value, false, (isMF ? null : vwr.ms.getCellWeights((BS) x1.value)), isON));
           if (isSequence)
             return mp.addXStr(vwr.getSmilesOpt((BS) x1.value, -1, -1, false,
                 true, isAll, isAll, false));

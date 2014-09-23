@@ -780,6 +780,12 @@ public class Atom extends Point3fi implements BNode {
     return (ch == 'X' ? pt.x : ch == 'Y' ? pt.y : pt.z);
   }
 
+  /**
+   * @param fixJavaFloat ALWAYS set true for any new references to this method. False is for legacy only
+   * @param asCartesian
+   * @param pt
+   * @return unit cell coord
+   */
   P3 getFractionalUnitCoordPt(boolean fixJavaFloat, boolean asCartesian, P3 pt) {
     SymmetryInterface c = getUnitCell();
     if (c == null)

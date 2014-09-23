@@ -736,7 +736,7 @@ public class PropertyManager implements JmolPropertyManager {
       bsTemp.and(m.atomList);
       if (bsTemp.length() > 0) {
         Map<String, Object> info = new Hashtable<String, Object>();
-        info.put("mf", m.getMolecularFormula(false)); // sets ac and nElements
+        info.put("mf", m.getMolecularFormula(false, null, false)); // sets ac and nElements
         info.put("number", Integer.valueOf(m.moleculeIndex + 1)); //for now
         info.put("modelNumber", vwr.ms.getModelNumberDotted(m.modelIndex));
         info.put("numberInModel", Integer.valueOf(m.indexInModel + 1));
@@ -1246,10 +1246,10 @@ public class PropertyManager implements JmolPropertyManager {
             break;
           case T.sequence:
           case T.group1:
-            if (a.getModelIndex() != modelLast) {
+            if (a.mi != modelLast) {
               info.appendC('\n');
               n = 0;
-              modelLast = a.getModelIndex();
+              modelLast = a.mi;
               info.append("Model " + a.getModelNumber());
               glast = null;
               clast = null;

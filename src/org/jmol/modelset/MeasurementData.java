@@ -255,7 +255,7 @@ public class MeasurementData implements JmolMeasurementClient {
     for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs.nextSetBit(i + 1), pt++) {
       if (i == thisAtomIndex)
         continue;
-      int modelIndex = atoms[i].getModelIndex();
+      int modelIndex = atoms[i].mi;
       if (thisModel >= 0 && justOneModel) {
         if (thispt == 0)
           thisModel = modelIndex;

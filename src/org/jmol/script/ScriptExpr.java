@@ -1319,8 +1319,8 @@ abstract class ScriptExpr extends ScriptParam {
         propertyBitSet = atom.getAtomSymmetry();
         if (propertyBitSet == null)
           continue;
-        if (atom.getModelIndex() != iModel) {
-          iModel = atom.getModelIndex();
+        if (atom.mi != iModel) {
+          iModel = atom.mi;
           cellRange = modelSet.getModelCellRange(iModel);
           nOps = modelSet.getModelSymmetryCount(iModel);
         }

@@ -28,7 +28,7 @@ public class Polyhedron {
   Polyhedron(Atom centralAtom, int ptCenter, int nPoints, int planeCount,
       P3[] otherAtoms, short[] normixes, byte[] planes, boolean collapsed, float faceCenterOffset, float distanceFactor) {
     this.centralAtom = centralAtom;
-    modelIndex = centralAtom.getModelIndex();
+    modelIndex = centralAtom.mi;
     this.ptCenter = ptCenter;
     this.vertices = new P3[nPoints];
     this.visible = true;

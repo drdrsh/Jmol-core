@@ -54,7 +54,7 @@ public class SmilesSearch extends JmolMolecule {
   @Override
   public String toString() {
     SB sb = new SB().append(pattern);
-    sb.append("\nmolecular formula: " + getMolecularFormula(true));
+    sb.append("\nmolecular formula: " + getMolecularFormula(true, null, false)); 
     return sb.toString();    
   }
   

@@ -34,6 +34,7 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
 import org.jmol.util.Rectangle;
+import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.util.Triangulator;
 import org.jmol.util.Vibration;
@@ -558,7 +559,7 @@ import java.util.Properties;
     int modelIndex = vwr.am.cmi;
     int iAtom = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
     if (modelIndex < 0 && iAtom >= 0)
-      modelIndex = at[iAtom].getModelIndex();
+      modelIndex = at[iAtom].mi;
     if (modelIndex < 0) {
       modelIndex = vwr.getVisibleFramesBitSet().nextSetBit(0);
       bsAtoms = null;
@@ -2053,7 +2054,7 @@ import java.util.Properties;
       int ia = bsAtoms.nextSetBit(0);
       if (ia < 0)
         return null;
-      modelIndex = at[ia].getModelIndex();
+      modelIndex = at[ia].mi;
     }
     if (partialCharges == null || modelIndex < 0)
       return null;
@@ -4232,6 +4233,21 @@ import java.util.Properties;
 
   public void setMSInfo(String key, Object val) {
     msInfo.put(key,  val);
+  }
+
+  public float[] getCellWeights(BS bsAtoms) {
+    float[] wts = null;
+    int i = bsAtoms.nextSetBit(0);
+    int iModel = -1;
+    if (i >= 0 && getUnitCell(iModel = at[i].mi) != null) {
+      P3 pt = new P3();
+      BS bs = getModelAtomBitSetIncludingDeleted(iModel, true);
+      bs.and(bsAtoms);
+      wts = new float[bsAtoms.cardinality()];
+      for (int p = 0; i >= 0; i = bsAtoms.nextSetBit(i + 1))
+        wts[p++] = SimpleUnitCell.getCellWeight(at[i].getFractionalUnitCoordPt(true, false, pt));
+    }
+    return wts;
   }
   
 }

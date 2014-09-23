@@ -446,7 +446,7 @@ public abstract class Monomer extends Group {
   public String getUniqueID() {
     int cid = getChainID();
     Atom a = getLeadAtom();
-    String id = (a == null ? "" : "_" + a.getModelIndex()) + "_" + getResno()
+    String id = (a == null ? "" : "_" + a.mi) + "_" + getResno()
         + (cid == 0 ? "" : "_" + cid);
     char aid = (a == null ? '\0' : getLeadAtom().getAlternateLocationID());
     if (aid != '\0')
