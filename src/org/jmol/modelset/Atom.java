@@ -718,7 +718,7 @@ public class Atom extends Point3fi implements BNode {
      return 0;
    }
    
-   String getSymmetryOperatorList() {
+   String getSymmetryOperatorList(boolean isAll) {
     String str = "";
     ModelSet f = group.chain.model.ms;
     int nOps = f.getModelSymmetryCount(mi);
@@ -727,10 +727,18 @@ public class Atom extends Point3fi implements BNode {
     int[] cellRange = f.getModelCellRange(mi);
     int pt = nOps;
     int n = (cellRange == null ? 1 : cellRange.length);
+    BS bs = (isAll ? null : new BS());
     for (int i = 0; i < n; i++)
       for (int j = 0; j < nOps; j++)
         if (atomSymmetry.get(pt++))
-          str += "," + (j + 1) + "" + cellRange[i];
+          if (isAll) {
+            str += "," + (j + 1) + cellRange[i];
+          } else {
+            bs.set(j + 1);
+          }
+    if (!isAll)
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+        str += "," + i;
     return (str.length() == 0 ? "" : str.substring(1));
   }
    
@@ -1486,7 +1494,7 @@ public class Atom extends Point3fi implements BNode {
     case T.symbol:
       return getElementSymbolIso(false);
     case T.symmetry:
-      return getSymmetryOperatorList();
+      return getSymmetryOperatorList(true);
     }
     return ""; 
   }

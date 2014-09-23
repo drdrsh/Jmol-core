@@ -95,7 +95,7 @@ public class LabelToken {
   // and then also added in appendTokenValue()
   // and also in Eval, to atomProperty()
 
-  final private static String labelTokenParams = "AaBbCcDEefGgIiLlMmNnoPpQqRrSsTtUuVvWXxxYyyZzz%%%gqW";
+  final private static String labelTokenParams = "AaBbCcDEefGgIiLlMmNnOoPpQqRrSsTtUuVvWXxxYyyZzz%%%gqW";
   final private static int[] labelTokenIds = {
       /* 'A' */T.altloc,
       /* 'a' */T.atomname,
@@ -117,6 +117,7 @@ public class LabelToken {
       /* 'm' */T.group1,
       /* 'N' */T.molecule,
       /* 'n' */T.group,
+      /* 'O' */'O', // all symmetry operators
       /* 'o' */T.symmetry,
       /* 'P' */T.partialcharge,
       /* 'p' */T.psi,
@@ -523,6 +524,9 @@ public class LabelToken {
         break;
       case T.model:
         strT = atom.getModelNumberForLabel();
+        break;
+      case 'O':
+        strT = atom.getSymmetryOperatorList(false);
         break;
       case T.occupancy:
         strT = "" + atom.atomPropertyInt(t.tok);
