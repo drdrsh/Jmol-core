@@ -25,10 +25,16 @@
 
 package org.jmol.util;
 
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.jmol.java.BS;
+import org.jmol.modelset.Atom;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.PT;
 
 
 
@@ -320,6 +326,38 @@ public class JmolMolecule {
   private static JmolMolecule[] allocateArray(JmolMolecule[] molecules, int len) {
     return (len == molecules.length ? molecules : (JmolMolecule[]) AU
         .arrayCopyObject(molecules, len));
+  }
+
+  public static BS getBitSetForMF(Atom[] at, BS bsAtoms, String mf) {
+    Map<String, int[]> map = new Hashtable<String, int[]>();
+    char ch;
+    boolean isDigit;
+    mf = PT.rep(PT.clean(mf + "Z"), " ", "");
+    for (int i = 0, pt = 0, pt0 = 0, n = mf.length(); i < n; i++) {
+      if ((isDigit = Character.isDigit((ch = mf.charAt(i)))) || i > 0
+          && Character.isUpperCase(ch)) {
+        pt0 = i;
+        String s = mf.substring(pt, pt0).trim();
+        if (isDigit)
+          while (i < n && Character.isDigit(mf.charAt(i)))
+            i++;
+        pt = i;
+        map.put(s,
+            new int[] { isDigit ? PT.parseInt(mf.substring(pt0, pt)) : 1 });
+      }
+    }
+    BS bs = new BS();
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      String a = at[i].getElementSymbol();
+      int[] c = map.get(a);
+      if (c == null || c[0]-- < 1)
+        continue;
+      bs.set(i);
+    }
+    for (int[] e : map.values())
+      if (e[0] > 0)
+        return new BS();
+    return bs;
   }
   
 

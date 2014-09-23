@@ -883,6 +883,7 @@ public class MathExt implements JmolMathExtension {
 
     // {*}.find("CF",true|false)
     // {*}.find("MF")
+    // {*}.find("MF", "C2H4")
     // {*}.find("SEQENCE")
     // {*}.find("SMARTS", "CCCC")
     // "CCCC".find("SMARTS", "CC")
@@ -934,6 +935,8 @@ public class MathExt implements JmolMathExtension {
           }
           break;
         case T.bitset:
+          if (isMF && flags != null)
+            return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at, (BS) x1.value, flags));
           if (isMF || isCF)
             return mp.addXStr(JmolMolecule.getMolecularFormula(
                 vwr.ms.at, (BS) x1.value, false, (isMF ? null : vwr.ms.getCellWeights((BS) x1.value)), isON));
