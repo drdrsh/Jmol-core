@@ -36,7 +36,6 @@ import javajs.awt.Font;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.T3;
-import javajs.util.V3;
 
 /**
  * A class to output WebGL graphics. 
@@ -135,7 +134,7 @@ public class JSExporter extends __CartesianExporter {
    * @param vertexColors
    * @param polygonColors
    */
-  protected void jsSurface(Object applet, P3[] vertices, V3[] normals,
+  protected void jsSurface(Object applet, T3[] vertices, T3[] normals,
                            int[][] indices, int nVertices, int nPolygons,
                            int nFaces, BS bsPolygons, int faceVertexMax,
                            int color, int[] vertexColors, int[] polygonColors) {
@@ -238,7 +237,7 @@ public class JSExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputSurface(P3[] vertices, V3[] normals,
+  protected void outputSurface(T3[] vertices, T3[] normals,
                                short[] vertexColixes, int[][] indices,
                                short[] polygonColixes, int nVertices,
                                int nPolygons, int nFaces, BS bsPolygons,

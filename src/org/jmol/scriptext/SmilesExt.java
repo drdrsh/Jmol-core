@@ -28,10 +28,11 @@ import org.jmol.api.Interface;
 import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.BondSet;
 import org.jmol.script.JmolSmilesExtension;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
-import org.jmol.util.Escape;
+import org.jmol.util.BSUtil;
 
 import javajs.util.AU;
 import javajs.util.Lst;
@@ -228,10 +229,13 @@ public class SmilesExt implements JmolSmilesExtension {
         iarray[pt++] = i + 1;
       return iarray;
     }
-    String[] matches = new String[b.length];
+    if (!asAtoms)
+      for (int j = 0; j < b.length; j++)
+        b[j] = BSUtil.copy2(b[j], new BondSet());
+    Lst<BS> list = new Lst<BS>();
     for (int j = 0; j < b.length; j++)
-      matches[j] = (asAtoms ? Escape.eBS(b[j]) : Escape.eBond(b[j]));
-    return matches;
+      list.addLast(b[j]);
+    return list;
   }
 
   @Override

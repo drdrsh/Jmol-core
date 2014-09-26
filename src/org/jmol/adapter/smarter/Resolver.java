@@ -53,7 +53,7 @@ public class Resolver {
     "pdb.", ";Pdb;Pqr;P2n;",
     "pymol.", ";PyMOL;",
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;ZMatrix;", 
-    "xtal.", ";Abinit;Aims;Bilbao;Castep;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
+    "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
              "VaspPoscar;Wien2k;Xcrysden;",
     "xml.",  ";XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
@@ -419,7 +419,8 @@ public class Resolver {
       String[] tokens = PT.getTokens(lines[i]);
       if (tokens.length == 0)
         continue;
-      if (tokens[0].startsWith("atom") && tokens.length >= 5
+      if (tokens[0].startsWith("atom") && tokens.length > 4
+          && Float.isNaN(PT.parseFloat(tokens[4]))
           || tokens[0].startsWith("multipole") && tokens.length >= 6
           || tokens[0].startsWith("lattice_vector") && tokens.length >= 4)
         return true;
@@ -749,13 +750,16 @@ public class Resolver {
   private final static String[] vaspOutcarLineStartRecords = 
   { "VaspOutcar", " vasp.", " INCAR:" };
 
+  private final static String[] cgdLineStartRecords = 
+  { "Cgd", "EDGE ", "edge " };
+
   private final static String[][] lineStartsWithRecords =
   { mmcifLineStartRecords, cifLineStartRecords, pqrLineStartRecords, p2nLineStartRecords,
     pdbLineStartRecords, shelxLineStartRecords, 
     ghemicalMMLineStartRecords, jaguarLineStartRecords, 
     mdlLineStartRecords, spartanSmolLineStartRecords, csfLineStartRecords, 
     mol2Records, mdTopLineStartRecords, hyperChemLineStartRecords,
-    vaspOutcarLineStartRecords
+    vaspOutcarLineStartRecords, cgdLineStartRecords
     };
 
  

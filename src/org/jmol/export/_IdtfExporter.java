@@ -841,7 +841,7 @@ public class _IdtfExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputSurface(P3[] vertices, V3[] normals,
+  protected void outputSurface(T3[] vertices, T3[] normals,
                                short[] colixes, int[][] indices,
                                short[] polygonColixes, int nVertices,
                                int nPolygons, int nFaces, BS bsPolygons,

@@ -35,7 +35,6 @@ import org.jmol.java.BS;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.T3;
-import javajs.util.V3;
 
 
 public class _MayaExporter extends __CartesianExporter {
@@ -170,7 +169,7 @@ public class _MayaExporter extends __CartesianExporter {
   }
   
   @Override
-  protected void outputSurface(P3[] vertices, V3[] normals,
+  protected void outputSurface(T3[] vertices, T3[] normals,
                                   short[] colixes, int[][] indices,
                                   short[] polygonColixes,
                                   int nVertices, int nPolygons, int nFaces, BS bsPolygons,

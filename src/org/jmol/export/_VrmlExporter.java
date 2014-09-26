@@ -41,7 +41,6 @@ import javajs.util.A4;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.T3;
-import javajs.util.V3;
 import org.jmol.viewer.Viewer;
 
 public class _VrmlExporter extends __CartesianExporter {
@@ -299,7 +298,7 @@ public class _VrmlExporter extends __CartesianExporter {
 
 
   @Override
-  protected void outputSurface(P3[] vertices, V3[] normals,
+  protected void outputSurface(T3[] vertices, T3[] normals,
                                short[] colixes, int[][] indices,
                                short[] polygonColixes,
                                int nVertices, int nPolygons, int nFaces, BS bsPolygons,

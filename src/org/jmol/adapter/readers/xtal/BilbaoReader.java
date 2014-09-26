@@ -160,14 +160,22 @@ public class BilbaoReader extends AtomSetCollectionReader {
     if (!doGetModel(++modelNumber, title))
       return;
     asc.newAtomSet();
+    if (line.startsWith("Bilbao Crys:")) {
+      title = line.substring(13).trim();
+      rdLine();
+    }
     setTitle(title);
     int ptPre = line.indexOf("<pre>");
     if (ptPre >= 0)
       line = line.substring(ptPre + 5);
     int intTableNo = parseIntStr(line);
-    while (intTableNo < 0 && rdLine() != null)
-      intTableNo = parseIntStr(line);
-    setSpaceGroupName("bilbao:" + intTableNo);
+    if (intTableNo == 0) {
+      setSpaceGroupName("bilbao:" + line.substring(2));
+    } else {
+      while (intTableNo < 0 && rdLine() != null)
+        intTableNo = parseIntStr(line);
+      setSpaceGroupName("bilbao:" + intTableNo);
+    }
     float[] data = new float[6];
     fillFloatArray(null, 0, data);
     for (int i = 0; i < 6; i++)
@@ -178,7 +186,10 @@ public class BilbaoReader extends AtomSetCollectionReader {
       String[] tokens = getTokensStr(rdLine());
       if (!getSym && tokens[1].contains("_"))
         continue;
-      addAtomXYZSymName(tokens, 3, tokens[0], tokens[0] + tokens[1]);
+      if (tokens.length == 3)
+        addAtomXYZSymName(tokens, 0,"Be", "Be1");
+      else
+        addAtomXYZSymName(tokens, 3, tokens[0], tokens[0] + tokens[1]);
     }
     if (Float.isNaN(fAmp)) {
       if (ptPre >= 0)

@@ -33,7 +33,7 @@ import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
-import javajs.util.V3;
+import javajs.util.T3;
 
 /*
  * for PovRay and related ray tracers that use screen coordinates
@@ -52,7 +52,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   }
 
   @Override
-  protected void outputVertex(P3 pt, P3 offset) {
+  protected void outputVertex(T3 pt, T3 offset) {
     setTempVertex(pt, offset, tempP1);
     tm.transformPt3f(tempP1, tempP1);
     output(tempP1);
@@ -80,7 +80,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   abstract protected void outputCone(P3 screenBase, P3 screenTip, float radius,
                                      short colix, boolean isBarb);
 
-  protected P3 getScreenNormal(P3 pt, V3 normal, float factor) {
+  protected P3 getScreenNormal(T3 pt, T3 normal, float factor) {
     if (Float.isNaN(normal.x)) {
       tempP3.set(0, 0, 0);
       return tempP3;

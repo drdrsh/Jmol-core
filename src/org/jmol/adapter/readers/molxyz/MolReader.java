@@ -26,9 +26,6 @@ package org.jmol.adapter.readers.molxyz;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
-
-
-import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 

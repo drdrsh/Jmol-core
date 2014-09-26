@@ -246,13 +246,13 @@ public abstract class ___Exporter {
   }
   
 
-  protected static void setTempVertex(P3 pt, P3 offset, P3 ptTemp) {
+  protected static void setTempVertex(T3 pt, T3 offset, T3 ptTemp) {
     ptTemp.setT(pt);
     if (offset != null)
       ptTemp.add(offset);
   }
 
-  protected void outputVertices(P3[] vertices, int nVertices, P3 offset) {
+  protected void outputVertices(T3[] vertices, int nVertices, T3 offset) {
     for (int i = 0; i < nVertices; i++) {
       if (Float.isNaN(vertices[i].x))
         continue;
@@ -261,7 +261,7 @@ public abstract class ___Exporter {
     }
   }
 
-  protected void outputVertex(P3 pt, P3 offset) {
+  protected void outputVertex(T3 pt, T3 offset) {
     setTempVertex(pt, offset, tempP1);
     output(tempP1);
   }
@@ -480,8 +480,8 @@ public abstract class ___Exporter {
     if (nFaces == 0)
       return;
 
-    P3[] vertices = (P3[]) meshSurface.getVertices();
-    V3[] normals = (V3[]) meshSurface.normals;
+    T3[] vertices = meshSurface.getVertices();
+    T3[] normals = meshSurface.normals;
 
     boolean colorSolid = (colix != 0);
     short[] colixes = (colorSolid ? null : meshSurface.vcs);
@@ -522,7 +522,7 @@ public abstract class ___Exporter {
    * @param offset 
    * 
    */
-  protected void outputSurface(P3[] vertices, V3[] normals,
+  protected void outputSurface(T3[] vertices, T3[] normals,
                                 short[] colixes, int[][] indices,
                                 short[] polygonColixes,
                                 int nVertices, int nPolygons, int nFaces, BS bsPolygons,

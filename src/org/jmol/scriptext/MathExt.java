@@ -935,7 +935,7 @@ public class MathExt implements JmolMathExtension {
           }
           break;
         case T.bitset:
-          if (isMF && flags != null)
+          if (isMF && flags.length() != 0)
             return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at, (BS) x1.value, flags));
           if (isMF || isCF)
             return mp.addXStr(JmolMolecule.getMolecularFormula(

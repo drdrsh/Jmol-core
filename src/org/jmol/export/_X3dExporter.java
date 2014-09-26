@@ -40,7 +40,8 @@ import org.jmol.java.BS;
 import org.jmol.util.GData;
 import javajs.util.P3;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.T3;
+
 import org.jmol.viewer.Viewer;
 
 public class _X3dExporter extends _VrmlExporter {
@@ -294,7 +295,7 @@ public class _X3dExporter extends _VrmlExporter {
   }
 
   @Override
-  protected void outputSurface(P3[] vertices, V3[] normals,
+  protected void outputSurface(T3[] vertices, T3[] normals,
                                short[] colixes, int[][] indices,
                                short[] polygonColixes,
                                int nVertices, int nPolygons, int nFaces, BS bsPolygons,

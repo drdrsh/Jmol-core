@@ -249,7 +249,7 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputSurface(P3[] vertices, V3[] normals,
+  protected void outputSurface(T3[] vertices, T3[] normals,
                                short[] colixes, int[][] indices,
                                short[] polygonColixes, int nVertices,
                                int nPolygons, int nFaces, BS bsPolygons,
