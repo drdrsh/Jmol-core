@@ -78,7 +78,7 @@ public class CgdReader extends AtomSetCollectionReader {
         case 6:
           //cell 1.1548 1.1548 1.1548 90.000 90.000 90.000
           for (int i = 0; i < 6; i++)
-            setUnitCellItem(i, parseFloatStr(tokens[i + 1]));
+            setUnitCellItem(i, (i < 3 ? 10 : 1) * parseFloatStr(tokens[i + 1]));
           break;
         case 12:
           setSpaceGroupName(tokens[1]);
@@ -119,7 +119,7 @@ public class CgdReader extends AtomSetCollectionReader {
     // could be a bit slow without partition. Let's see...
     M3 m = new M3();
     P3 pt = new P3();
-    for (int i = asc.ac; --i >= 0;) {
+    for (int i = 0, n = asc.ac; i < n; i++) {
       Atom a = asc.atoms[i];
       V3[] edges = htEdges.get(asc.atoms[a.atomSite]);
       if (edges == null)
@@ -132,7 +132,8 @@ public class CgdReader extends AtomSetCollectionReader {
       m.setColumnV(1, vecs[iy]);
       m.setColumnV(2, vecs[iz]);
       a.vib = null;
-      for (int j = edges.length; --j >= 0;){
+      System.out.println(a);
+      for (int j = 0, n1 = edges.length; j < n1; j++) {
         pt.sub2(edges[j], asc.atoms[a.atomSite]);
         m.rotate(pt);
         pt.add(a);
@@ -146,7 +147,7 @@ public class CgdReader extends AtomSetCollectionReader {
 
   private Atom findAtom(P3 pt) {
     for (int i = asc.ac; --i >= 0;)
-      if (asc.atoms[i].distanceSquared(pt) < 0.05f)
+      if (asc.atoms[i].distanceSquared(pt) < 0.00001f)
         return asc.atoms[i];
     return null;
   }

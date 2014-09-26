@@ -2242,8 +2242,7 @@ public class CmdExt implements JmolCmdExtension {
         if (!chk) {
           String s = (String) vwr.getSymmetryInfoAtom(bsAtoms, xyz, iSym,
               center, target, thisId, T.draw);
-          if (Logger.debugging)
-            Logger.debug(s);
+          showString(s.substring(0, s.indexOf('\n') + 1));
           eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId + "*\" delete");
         }
         return false;
