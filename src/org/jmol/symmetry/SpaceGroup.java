@@ -124,9 +124,7 @@ class SpaceGroup {
   private SpaceGroup(String cifLine, boolean doInit) {
     index = ++sgIndex;
     init(doInit && cifLine == null);
-    if (!doInit)
-      return;
-    if (cifLine != null)
+    if (doInit && cifLine != null)
       buildSpaceGroup(cifLine);
   }
 
@@ -449,8 +447,9 @@ class SpaceGroup {
     boolean isSpecial = (xyz0.charAt(0) == '=');
     if (isSpecial)
       xyz0 = xyz0.substring(1);
-    if (xyzList.containsKey(xyz0))
-      return xyzList.get(xyz0).intValue();
+    int id = checkXYZlist(xyz0);
+    if (id >= 0)
+      return id;
     if (xyz0.startsWith("x1,x2,x3,x4") && modDim == 0) {
       xyzList.clear();
       operationCount = 0;
@@ -470,16 +469,27 @@ class SpaceGroup {
     return addOp(op, xyz0, isSpecial);
   }
 
+  private int checkXYZlist(String xyz) {
+    return (xyzList.containsKey(xyz) && !(latticeOp > 0 && xyz.indexOf("/") < 0)
+        ? xyzList.get(xyz).intValue() : -1);
+  }
+
   private int addOp(SymmetryOperation op, String xyz0, boolean isSpecial) {
     String xyz = op.xyz;
     if (!isSpecial) {
       // ! in character 0 indicates we are using the symop() function and want to be explicit
-      if (xyzList.containsKey(xyz))
-        return xyzList.get(xyz).intValue();
+      // exception for a lattice op that has no / in it. (I 41 by name)  
+      int id = checkXYZlist(xyz);
+      if (id >= 0)
+        return id;
       if (latticeOp < 0) {
+        String xxx0 = (modDim > 0 ? SymmetryOperation.replaceXn(xyz, modDim + 3) : xyz);
         String xxx = PT.replaceAllCharacters(
-            modDim > 0 ? SymmetryOperation.replaceXn(xyz, modDim + 3) : xyz,
-            "+123/", "");
+            xxx0, "+123/", "");
+        // problem here with I/41. In that group we have a 4-bar 
+        // axis that results in -x+1/2, -y+1/2, z+1/2 FIRST
+        // and -x,-y,z later, causing it to not be recorded.
+        // so here we add "-x,-y,z" inappropriately.
         if (xyzList.containsKey(xxx))
           latticeOp = operationCount;
         else
@@ -550,11 +560,12 @@ class SpaceGroup {
 
   int addSymmetrySM(String xyz, M4 operation) {
     int iop = addOperation(xyz, 0, false);
+    //System.out.println("spacegroup addding " + iop + " " + xyz);
     if (iop >= 0) {
-    SymmetryOperation symmetryOperation = operations[iop];
-    symmetryOperation.setM4(operation);
+      SymmetryOperation symmetryOperation = operations[iop];
+      symmetryOperation.setM4(operation);
     }
-    return  iop;
+    return iop;
   }
 
   private final static SpaceGroup determineSpaceGroupN(String name) {

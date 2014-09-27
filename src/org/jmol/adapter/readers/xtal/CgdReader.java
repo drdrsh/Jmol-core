@@ -29,10 +29,10 @@ import java.util.Map;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Bond;
+import org.jmol.util.Logger;
 
 import javajs.util.M3;
 import javajs.util.P3;
-import javajs.util.PT;
 import javajs.util.V3;
 
 /**
@@ -53,10 +53,7 @@ public class CgdReader extends AtomSetCollectionReader {
   }
 
   private String[] tokens;
-  private Atom lastAtom;
-  private int edgeCount;
   private Map<Atom, V3[]> htEdges;
-  private V3[] atomEdges;
 
   @Override
   protected boolean checkLine() throws Exception {
@@ -84,12 +81,7 @@ public class CgdReader extends AtomSetCollectionReader {
           setSpaceGroupName(tokens[1]);
           break;
         case 18:
-          lastAtom = addAtomXYZSymName(tokens, 3, "C", null);
-          asc.addVibrationVector(lastAtom.index, 1f, 2f, 3f);
-          edgeCount = parseIntStr(tokens[2]);
-          atomEdges = new V3[edgeCount];
-          if (htEdges == null)
-            htEdges = new Hashtable<Atom, V3[]>();
+          atom();
           break;
         case 24:
           edges();
@@ -99,20 +91,58 @@ public class CgdReader extends AtomSetCollectionReader {
     return true;
   }
 
+  private void atom() {
+    String name = "C" + tokens[1];
+    Atom a = addAtomXYZSymName(tokens, 3, "C", name);
+    asc.atomSymbolicMap.put(name, a);
+    asc.addVibrationVector(a.index, 1f, 3f, 7f);
+    int edgeCount = parseIntStr(tokens[2]);
+    if (htEdges == null)
+      htEdges = new Hashtable<Atom, V3[]>();
+    htEdges.put(a, new V3[edgeCount]);
+  }
+
+  private void edges() throws Exception {
+    V3[] atomEdges = htEdges.get(asc.getAtomFromName("C" + tokens[1]));
+    for (int i = 0, n = atomEdges.length; i < n; i++) {
+      if (i > 0) {
+        while (rd().length() == 0)
+          rd();
+        tokens = getTokens();
+      }
+      atomEdges[i] = V3.new3(parseFloatStr(tokens[2]),
+          parseFloatStr(tokens[3]), parseFloatStr(tokens[4]));
+    }
+  }
+  
   @Override
   public void finalizeSubclassReader() throws Exception {
     finalizeReaderASCR();
     finalizeNet();
   }
 
+  // a.vib holds {1 3 7}, corresponding to 
+  // x, y, and z and allowing for 
+  // x-y (-2) and y-x (2)
+  // x-z (-6) and z-x (6)
+  // y-z (-4) and z-y (4)
+
   private final static V3[] vecs = new V3[] {
-    V3.new3(-1, 0, 0),
-    V3.new3(0, -1, 0),
-    V3.new3(0, 0, -1),
+    V3.new3(0, 0, -1), // -z   -7
+    V3.new3(1, 0, -1), //  x-z -6
     null,
-    V3.new3(1, 0, 0),
-    V3.new3(0, 1, 0),
-    V3.new3(0, 0, 1)
+    V3.new3(0, 1, -1), //  y-z -4
+    V3.new3(0, -1, 0), // -y   -3
+    V3.new3(1, -1, 0), //  x-y -2
+    V3.new3(-1, 0, 0), // -x   -1
+    null,
+    V3.new3(1, 0, 0),  //  x    1
+    V3.new3(-1, 1, 0), //  y-x  2    
+    V3.new3(0, 1, 0),  //  y    3
+    V3.new3(0, -1, 1), //  z-y  4
+    null,
+    V3.new3(-1, 0, 1), //  z-x  6
+    V3.new3(0, 0, 1)   //  z    7
   };
   private void finalizeNet() {
     // atom vibration vector has been rotated and now gives us the needed orientations for the edges. 
@@ -121,26 +151,28 @@ public class CgdReader extends AtomSetCollectionReader {
     P3 pt = new P3();
     for (int i = 0, n = asc.ac; i < n; i++) {
       Atom a = asc.atoms[i];
-      V3[] edges = htEdges.get(asc.atoms[a.atomSite]);
+      Atom a0 = asc.atoms[a.atomSite];
+      V3[] edges = htEdges.get(a0);
       if (edges == null)
         continue;
-      int ix = (int) a.vib.x + 3;
-      int iy = (int) a.vib.y + 3;
-      int iz = (int) a.vib.z + 3;
-      // ix, iy, iz now range from 0 to 6 (not 3)
-      m.setColumnV(0, vecs[ix]);
-      m.setColumnV(1, vecs[iy]);
-      m.setColumnV(2, vecs[iz]);
-      a.vib = null;
-      System.out.println(a);
+      int ix = (int) a.vib.x + 7;
+      int iy = (int) a.vib.y + 7;
+      int iz = (int) a.vib.z + 7;
+      // ix, iy, iz now range from 0 to 13
+      m.setRowV(0, vecs[ix]);
+      m.setRowV(1, vecs[iy]);
+      m.setRowV(2, vecs[iz]);
       for (int j = 0, n1 = edges.length; j < n1; j++) {
-        pt.sub2(edges[j], asc.atoms[a.atomSite]);
+        pt.sub2(edges[j], a0);
         m.rotate(pt);
         pt.add(a);
         Atom b = findAtom(pt);
         if (b != null)
           asc.addBond(new Bond(a.index, b.index, 1));
+        else if (Logger.debugging)
+          Logger.info(" not found: i=" + i +"  pt="+pt + " for a=" + a +  "\n a0=" + a0 + " edge["+j+"]=" + edges[j] + "\n a.vib="+a.vib+"\n m=" + m);
       }
+      a.vib = null;
     }
 
   }
@@ -152,18 +184,5 @@ public class CgdReader extends AtomSetCollectionReader {
     return null;
   }
 
-  private void edges() throws Exception {
-    for (int i = 0; i < edgeCount; i++) {
-      if (i > 0) {
-        while (rd().length() == 0)
-          rd();
-        tokens = getTokens();
-      }
-      atomEdges[i] = V3.new3(parseFloatStr(tokens[2]),
-          parseFloatStr(tokens[3]), parseFloatStr(tokens[4]));
-    }
-    htEdges.put(lastAtom, atomEdges);
-  }
-  
   
 }
