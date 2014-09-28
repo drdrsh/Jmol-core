@@ -339,6 +339,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     platform.clearBuffer();
     if (backgroundImage != null)
       plotImage(Integer.MIN_VALUE, 0, Integer.MIN_VALUE, backgroundImage, null, (short) 0, 0, 0);
+    textY = 0;
   }
 
   @Override

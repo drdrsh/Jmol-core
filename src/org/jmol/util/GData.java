@@ -48,10 +48,14 @@ public class GData implements JmolGraphicsInterface {
   public int width, height;
   public int zSlab, zDepth;
   public int zShadePower = 3;
+  public int ambientOcclusion;
 
   protected short colixCurrent;
   protected int argbCurrent;
 
+  public boolean isPass2;
+  protected int textY;
+  
   public int bufferSize;
 
   public Shader shader;
@@ -666,10 +670,6 @@ public class GData implements JmolGraphicsInterface {
     argbCurrent = color;
   }
 
-  public boolean isPass2;
-
-  public int ambientOcclusion;
-  
   public boolean isPass2() {
     return isPass2;
   }  
@@ -809,5 +809,15 @@ public class GData implements JmolGraphicsInterface {
       list[index0 + i] = (isPt ? P3.new3(x, y, z) : V3.new3(x, y, z));
     }
   }
+
+  public void setTextPosition(int y) {
+    textY = y;
+  }
+
+  public int getTextPosition() {
+    return textY;
+  }
+
+
 
 }

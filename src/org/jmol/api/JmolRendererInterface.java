@@ -350,4 +350,8 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
 
   public abstract void addRenderer(int tok);
 
+  public abstract void setTextPosition(int y);
+
+  public abstract int getTextPosition();
+
 }

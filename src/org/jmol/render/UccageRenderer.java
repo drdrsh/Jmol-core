@@ -148,7 +148,8 @@ public class UccageRenderer extends CageRenderer {
     }
 
     if (!isExport && vwr.getBoolean(T.displaycellparameters) && !vwr.isPreviewOnly()
-        && !unitcell.isPeriodic() && g3d.setC(vwr.getColixBackgroundContrast()))
+        && !unitcell.isPeriodic() && g3d.setC(vwr.getColixBackgroundContrast())
+        && g3d.getTextPosition() == 0)
       renderInfo(unitcell);
   }
   

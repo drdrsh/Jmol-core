@@ -22,6 +22,8 @@ import org.jmol.util.Logger;
  * 
  * updated by Bob Hanson <hansonr@stolaf.edu> for Jmol 12.0/12.1
  * 
+ * adding [spacegroup] [operators] [cell] [cellaxes] for Jmol 14.3.7 
+ * 
  * @author Matthew Zwier <mczwier@gmail.com>
  */
 
@@ -107,6 +109,14 @@ public class MoldenReader extends MopacSlaterReader {
       for (int i = 0; i < 6; i++)
         setUnitCellItem(i, parseFloat());
       rd();
+      return true;
+    }
+    if (line.startsWith("[CELLAXES]")) {
+      float[] f = new float[9];
+      fillFloatArray(null, 0, f);
+      addPrimitiveLatticeVector(0, f, 0);
+      addPrimitiveLatticeVector(1, f, 3);
+      addPrimitiveLatticeVector(2, f, 6);
       return true;
     }
     return false;

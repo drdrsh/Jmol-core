@@ -169,8 +169,10 @@ public class CgdReader extends AtomSetCollectionReader {
         Atom b = findAtom(pt);
         if (b != null)
           asc.addBond(new Bond(a.index, b.index, 1));
-        else if (Logger.debugging)
-          Logger.info(" not found: i=" + i +"  pt="+pt + " for a=" + a +  "\n a0=" + a0 + " edge["+j+"]=" + edges[j] + "\n a.vib="+a.vib+"\n m=" + m);
+        else if (pt.x >= 0 && pt.x <= 1 
+            && pt.y >= 0 && pt.y <= 1
+            && pt.z >= 0 && pt.z <= 1)
+          Logger.error(" not found: i=" + i +"  pt="+pt + " for a=" + a +  "\n a0=" + a0 + " edge["+j+"]=" + edges[j] + "\n a.vib="+a.vib+"\n m=" + m);
       }
       a.vib = null;
     }

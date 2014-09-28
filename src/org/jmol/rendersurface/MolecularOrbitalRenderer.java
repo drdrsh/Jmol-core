@@ -61,6 +61,7 @@ public class MolecularOrbitalRenderer extends IsosurfaceRenderer {
         g3d.drawStringNoSlab(mesh.title[i], null, x, y, 0, (short) 0);
         y += lineheight;
       }
+    g3d.setTextPosition(y);
   }
 
 }

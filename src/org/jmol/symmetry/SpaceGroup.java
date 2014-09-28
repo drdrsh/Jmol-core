@@ -719,7 +719,7 @@ class SpaceGroup {
 
       if (!haveExtension || ext.charAt(0) == '?')
         // no extension or unknown extension, so we look for unique axis
-        for (i = lastIndex; --i >= 0;) {
+        for (i = 0; i < lastIndex; i++) {
           s = SG[i];
           if (s.hmSymbolAbbr.equals(abbr) || s.hmSymbolAbbrShort.equals(abbr)) {
             switch (s.ambiguityType) {
@@ -793,10 +793,7 @@ class SpaceGroup {
     intlTableNumberExt = (parts.length == 1 ? "" : parts[1]);
     ambiguityType = '\0';
     if (intlTableNumberExt.length() > 0) {
-      String term = intlTableNumberExt;
-      if (term.startsWith("-"))
-        term = term.substring(1);
-      if (term.equals("h") || term.equals("r")) {
+      if (intlTableNumberExt.equals("h") || intlTableNumberExt.equals("r")) {
         ambiguityType = 't';
         axisChoice = intlTableNumberExt.charAt(0);
       } else if (intlTableNumberExt.startsWith("1")
@@ -806,8 +803,13 @@ class SpaceGroup {
       } else if (intlTableNumberExt.length() <= 2) { // :a or :b3
         ambiguityType = 'a';
         uniqueAxis = intlTableNumberExt.charAt(0);
+        // Q: should we include :-a1 here?
         // if (intlTableNumberExt.length() == 2)
         // cellChoice = intlTableNumberExt.charAt(1);
+      } else if (intlTableNumberExt.contains("-")){
+        ambiguityType = '-';
+        // skip when searching for a group by name
+        // added 9/28/14 Jmol 14.3.7
       }
     }
     /* schoenfliesSymbol = terms[1] */

@@ -1031,4 +1031,14 @@ public class Export3D implements JmolRendererInterface {
     g3d.renderAllStrings(this);
   }
 
+  @Override
+  public void setTextPosition(int y) {
+    // ignore
+  }
+  
+  @Override
+  public int getTextPosition() {
+    return -1; // no text
+  }
+
 }
