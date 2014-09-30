@@ -609,7 +609,7 @@ class SpaceGroup {
     boolean checkBilbao = false;
     if (name.startsWith("bilbao:")) {
       checkBilbao = true;
-      name = name.substring(7); 
+      name = name.substring(7);
     }
     int nameType = (name.startsWith("hall:") ? NAME_HALL : name
         .startsWith("hm:") ? NAME_HM : 0);
@@ -659,69 +659,56 @@ class SpaceGroup {
     // Hall symbol
 
     if (nameType != NAME_HM && !haveExtension)
-      for (i = lastIndex; --i >= 0;) {
-        s = SG[i];
-        if (s.hallSymbol.equals(name))
+      for (i = lastIndex; --i >= 0;)
+        if (SG[i].hallSymbol.equals(name))
           return i;
-      }
 
     if (nameType != NAME_HALL) {
 
       // Full intl table entry, including :xx
 
       if (nameType != NAME_HM)
-        for (i = lastIndex; --i >= 0;) {
-          s = SG[i];
-          if (s.intlTableNumberFull.equals(nameExt))
+        for (i = lastIndex; --i >= 0;)
+          if (SG[i].intlTableNumberFull.equals(nameExt))
             return i;
-        }
 
       // Full H-M symbol, including :xx
 
       // BUT some on the list presume defaults. The way to finesse this is
       // to add ":?" to a space group name to force axis ambiguity check
 
-      for (i = lastIndex; --i >= 0;) {
-        s = SG[i];
-        if (s.hmSymbolFull.equals(nameExt))
+      for (i = lastIndex; --i >= 0;)
+        if (SG[i].hmSymbolFull.equals(nameExt))
           return i;
-      }
 
       // alternative, but unique H-M symbol, specifically for F m 3 m/F m -3 m type
-      for (i = lastIndex; --i >= 0;) {
-        s = SG[i];
-        if (s.hmSymbolAlternative != null
+      for (i = lastIndex; --i >= 0;)
+        if ((s = SG[i]).hmSymbolAlternative != null
             && s.hmSymbolAlternative.equals(nameExt))
           return i;
-      }
 
-      // Abbreviated H-M with intl table :xx
-
-      if (haveExtension) // P2/m:a      
-        for (i = lastIndex; --i >= 0;) {
-          s = SG[i];
-          if (s.hmSymbolAbbr.equals(abbr) && s.intlTableNumberExt.equals(ext))
-            return i;
-        }
-
-      // shortened -- not including " 1 " terms
-      if (haveExtension) // P2/m:a      
-        for (i = lastIndex; --i >= 0;) {
-          s = SG[i];
-          if (s.hmSymbolAbbrShort.equals(abbr)
+      if (haveExtension) { // P2/m:a      
+        // Abbreviated H-M with intl table :xx
+        for (i = lastIndex; --i >= 0;)
+          if ((s = SG[i]).hmSymbolAbbr.equals(abbr)
               && s.intlTableNumberExt.equals(ext))
             return i;
-        }
-
+        // shortened -- not including " 1 " terms
+        for (i = lastIndex; --i >= 0;)
+          if ((s = SG[i]).hmSymbolAbbrShort.equals(abbr)
+              && s.intlTableNumberExt.equals(ext))
+            return i;
+      }
       // unique axis, cell and origin options with H-M abbr
 
       char uniqueAxis = determineUniqueAxis(a, b, c, alpha, beta, gamma);
 
       if (!haveExtension || ext.charAt(0) == '?')
         // no extension or unknown extension, so we look for unique axis
-        for (i = 0; i < lastIndex; i++) {
-          s = SG[i];
-          if (s.hmSymbolAbbr.equals(abbr) || s.hmSymbolAbbrShort.equals(abbr)) {
+        for (i = 0; i < lastIndex; i++)
+          if (((s = SG[i]).hmSymbolAbbr.equals(abbr) 
+              || s.hmSymbolAbbrShort.equals(abbr)) 
+              && (!checkBilbao || s.isBilbao))
             switch (s.ambiguityType) {
             case '\0':
               return i;
@@ -744,18 +731,14 @@ class SpaceGroup {
                 return i;
               break;
             }
-          }
-        }
-
     }
     // inexact just the number; no extension indicated -- first in list
 
     if (ext.length() == 0)
-      for (i = 0; i < lastIndex; i++) {
-        s = SG[i];
-        if (s.intlTableNumber.equals(nameExt)&& (!checkBilbao || s.isBilbao))
+      for (i = 0; i < lastIndex; i++)
+        if ((s = SG[i]).intlTableNumber.equals(nameExt)
+            && (!checkBilbao || s.isBilbao))
           return i;
-      }
     return -1;
   }
    
@@ -787,6 +770,10 @@ class SpaceGroup {
     intlTableNumberFull = terms[0].trim(); // International Table Number :
                                            // options
     isBilbao = (terms.length < 5 && !intlTableNumberFull.equals("0"));
+    // actually will have ";-b" as 5th term.
+    // "48:1;d2h^2;p n n n:1;p 2 2 -1n;-b",
+    // and is probably origin choice 1.
+    
     // 4:c*;c2^2;p 1 1 21*;p 21
     String[]  parts = PT.split(intlTableNumberFull, ":");
     intlTableNumber = parts[0];

@@ -78,7 +78,7 @@ public class CgdReader extends AtomSetCollectionReader {
             setUnitCellItem(i, (i < 3 ? 10 : 1) * parseFloatStr(tokens[i + 1]));
           break;
         case 12:
-          setSpaceGroupName(tokens[1]);
+          setSpaceGroupName("bilbao:" + tokens[1]);
           break;
         case 18:
           atom();
