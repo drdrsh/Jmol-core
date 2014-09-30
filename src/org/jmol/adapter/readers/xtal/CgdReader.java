@@ -43,6 +43,7 @@ import javajs.util.V3;
  * 
  * http://gavrog.org/Systre-Help.html#file_formats
  * 
+ * H-M aliases from gavrov distribution geometry/sgtable.data
  * 
  */
 
