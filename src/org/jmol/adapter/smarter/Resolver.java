@@ -723,6 +723,9 @@ public class Resolver {
     "ATOM  ", "HETATM", "MODEL ", "LINK  ",
   };
 
+  private final static String[] cgdLineStartRecords = 
+  { "Cgd", "EDGE ", "edge " };
+
   private final static String[] shelxLineStartRecords =
   { "Shelx", "TITL ", "ZERR ", "LATT ", "SYMM ", "CELL " };
 
@@ -750,16 +753,13 @@ public class Resolver {
   private final static String[] vaspOutcarLineStartRecords = 
   { "VaspOutcar", " vasp.", " INCAR:" };
 
-  private final static String[] cgdLineStartRecords = 
-  { "Cgd", "EDGE ", "edge " };
-
   private final static String[][] lineStartsWithRecords =
   { mmcifLineStartRecords, cifLineStartRecords, pqrLineStartRecords, p2nLineStartRecords,
-    pdbLineStartRecords, shelxLineStartRecords, 
+    pdbLineStartRecords, cgdLineStartRecords, shelxLineStartRecords, 
     ghemicalMMLineStartRecords, jaguarLineStartRecords, 
     mdlLineStartRecords, spartanSmolLineStartRecords, csfLineStartRecords, 
     mol2Records, mdTopLineStartRecords, hyperChemLineStartRecords,
-    vaspOutcarLineStartRecords, cgdLineStartRecords
+    vaspOutcarLineStartRecords
     };
 
  
