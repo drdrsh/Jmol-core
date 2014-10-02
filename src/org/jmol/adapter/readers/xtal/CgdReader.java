@@ -49,11 +49,15 @@ import javajs.util.V3;
 
 public class CgdReader extends AtomSetCollectionReader {
 
+  private boolean noBondSym;
+
   @Override
   public void initializeReader() {
     setFractionalCoordinates(true);
     asc.setNoAutoBond();
     asc.vibScale = 1;
+    forceSymmetry(!checkFilterKey("NOPACK"));
+    noBondSym = checkFilterKey("NOBONDSYM");
   }
 
   private String[] tokens;
@@ -246,6 +250,8 @@ public class CgdReader extends AtomSetCollectionReader {
     for (int i = 0, n = asc.ac; i < n; i++) {
       Atom a = asc.atoms[i];
       Atom a0 = asc.atoms[a.atomSite];
+      if (noBondSym && a != a0)
+        continue;
       V3[] edges = htEdges.get(a0);
       if (edges == null)
         continue;
@@ -275,7 +281,7 @@ public class CgdReader extends AtomSetCollectionReader {
   }
 
   private Atom findAtom(P3 pt) {
-    for (int i = asc.ac; --i >= 0;)
+    for (int i = asc.ac; --i >= 0;) 
       if (asc.atoms[i].distanceSquared(pt) < 0.00001f)
         return asc.atoms[i];
     return null;

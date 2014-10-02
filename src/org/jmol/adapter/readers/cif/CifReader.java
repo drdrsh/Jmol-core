@@ -132,12 +132,7 @@ public class CifReader extends AtomSetCollectionReader {
     filterAssembly = checkFilterKey("$");
     useAuthorChainID = !checkFilterKey("NOAUTHORCHAINS");
     if (isMolecular) {
-      if (!doApplySymmetry) {
-        doApplySymmetry = true;
-        latticeCells[0] = 1;
-        latticeCells[1] = 1;
-        latticeCells[2] = 1;
-      }
+      forceSymmetry(false);
       molecularType = "filter \"MOLECULAR\"";
     }
     checkSpecial = !checkFilterKey("NOSPECIAL");
@@ -1626,8 +1621,7 @@ public class CifReader extends AtomSetCollectionReader {
       Logger.info(bondCount + " bonds read");
       if (!doApplySymmetry) {
         isMolecular = true;
-        doApplySymmetry = true;
-        latticeCells[0] = latticeCells[1] = latticeCells[2] = 1;
+        forceSymmetry(false);
       }
     }
   }

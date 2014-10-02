@@ -1782,5 +1782,16 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return o;
 }
 
+  public void forceSymmetry(boolean andPack) {
+    if (andPack)
+      doPackUnitCell = andPack;
+    if (!doApplySymmetry) {
+      doApplySymmetry = true;
+      latticeCells[0] = 1;
+      latticeCells[1] = 1;
+      latticeCells[2] = 1;
+    }
+  }
+
 
 }

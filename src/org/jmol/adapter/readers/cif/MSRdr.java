@@ -247,13 +247,7 @@ public class MSRdr implements MSInterface {
   }
 
   private void setSubsystemOptions() {
-    cr.doPackUnitCell = modPack;
-    if (!cr.doApplySymmetry) {
-      cr.doApplySymmetry = true;
-      cr.latticeCells[0] = 1;
-      cr.latticeCells[1] = 1;
-      cr.latticeCells[2] = 1;
-    }
+    cr.forceSymmetry(modPack);
     if (modCell != null)
       cr.addJmolScript("unitcell {%" + modCell + "}");
   }
