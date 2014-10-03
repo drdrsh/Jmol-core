@@ -378,12 +378,14 @@ class IsoSolventReader extends AtomDataReader {
     int vB = marchingCubes.getLinearOffset(x, y, z, vB0);
     isSurfacePoint = (bsSurfaceVoxels != null && (bsSurfaceVoxels.get(vA) || bsSurfaceVoxels
         .get(vB)));
+    if (voxelSource != null) {
+      int vs = Math.abs(valueA < valueB ? voxelSource[vA] : voxelSource[vB]);
+      iAtomSurface = atomIndex[vs - 1];      
+    }
     if (testLinear || voxelSource == null || voxelSource[vA] == 0
         || voxelSource[vA] != voxelSource[vB])
       return getSPF(cutoff, isCutoffAbsolute, valueA,
           valueB, pointA, edgeVector, x, y, z, vA, vB, fReturn, ptReturn);
-    int iAtom = Math.abs(valueA < valueB ? voxelSource[vA] : voxelSource[vB]);
-    iAtomSurface = atomIndex[iAtom - 1];
     float fraction = fReturn[0] = MeshSurface
         .getSphericalInterpolationFraction((voxelSource[vA] < 0 ? sr : 
           atomRadius[voxelSource[vA] - 1]), valueA, valueB,
@@ -1317,8 +1319,8 @@ class IsoSolventReader extends AtomDataReader {
       return pt.distance(contactPair.myAtoms[1]) - contactPair.radii[1];
     float value = Float.MAX_VALUE;
     for (int iAtom = 0; iAtom < firstNearbyAtom; iAtom++) {
-      if (rs == null  || atomXyz == null || atomXyz[iAtom] == null || pt == null)
-        System.out.println("HOH");
+//      if (rs == null  || atomXyz == null || atomXyz[iAtom] == null || pt == null)
+//        System.out.println("HOH");
       float r = pt.distance(atomXyz[iAtom]) - rs[iAtom];
       if (r < value)
         value = r;
