@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Jmol\n"
 "Report-Msgid-Bugs-To: jmol-developers@lists.sourceforge.net\n"
 "POT-Creation-Date: 2014-09-21 08:41+0200\n"
-"PO-Revision-Date: 2014-03-10 20:30+0100\n"
+"PO-Revision-Date: 2014-10-05 21:15+0100\n"
 "Last-Translator: Angel Herráez <aherraez@users.sourceforge.net>\n"
 "Language-Team: Spanish <Jmol-developers@lists.sf.net>\n"
 "MIME-Version: 1.0\n"
@@ -17,7 +17,7 @@ msgstr ""
 
 #: org/jmol/awt/FileDropper.java:106
 msgid "Would you like to replace the current model with the selected model?"
-msgstr ""
+msgstr "¿Quieres reemplazar el modelo actual por el nuevo modelo seleccionado?"
 
 #: org/jmol/awtjs2d/JSModelKitPopup.java:89
 #: org/jmol/modelkit/ModelKitPopup.java:72
@@ -81,19 +81,11 @@ msgstr "Cargar"
 
 #: org/jmol/console/GenericConsole.java:96
 msgid "press CTRL-ENTER for new line or paste model data and press Load"
-msgstr ""
-"pulsa Ctrl+Intro para una línea nueva o pega datos de un modelo y luego "
-"pulsa Cargar"
+msgstr "pulsa Ctrl+Intro para una línea nueva o pega datos de un modelo y luego pulsa Cargar"
 
 #: org/jmol/console/GenericConsole.java:98
-msgid ""
-"Messages will appear here. Enter commands in the box below. Click the "
-"console Help menu item for on-line help, which will appear in a new browser "
-"window."
-msgstr ""
-"Aquí aparecerán los mensajes. Escribe las instrucciones en el recuadro de "
-"abajo. Puedes solicitar ayuda en línea usando el menú situado aquí encima; "
-"la ayuda se mostrará en una ventana nueva del navegador."
+msgid "Messages will appear here. Enter commands in the box below. Click the console Help menu item for on-line help, which will appear in a new browser window."
+msgstr "Aquí aparecerán los mensajes. Escribe las instrucciones en el recuadro de abajo. Puedes solicitar ayuda en línea usando el menú situado aquí encima; la ayuda se mostrará en una ventana nueva del navegador."
 
 #: org/jmol/console/GenericConsole.java:118
 msgid "Jmol Script Console"
@@ -108,8 +100,10 @@ msgstr "Editor de guiones de Jmol"
 msgid "Console"
 msgstr "Consola"
 
-#: org/jmol/console/ScriptEditor.java:136 org/jmol/dialog/Dialog.java:455
-#: org/jmol/dialog/Dialog.java:479 org/jmol/dialog/Dialog.java:482
+#: org/jmol/console/ScriptEditor.java:136
+#: org/jmol/dialog/Dialog.java:455
+#: org/jmol/dialog/Dialog.java:479
+#: org/jmol/dialog/Dialog.java:482
 msgid "Open"
 msgstr "Abrir"
 
@@ -159,7 +153,8 @@ msgstr "Archivo o URL:"
 msgid "Image Type"
 msgstr "Tipo de imagen"
 
-#: org/jmol/dialog/Dialog.java:290 org/jmol/dialog/Dialog.java:332
+#: org/jmol/dialog/Dialog.java:290
+#: org/jmol/dialog/Dialog.java:332
 #, java-format
 msgid "JPEG Quality ({0})"
 msgstr "Calidad de JPEG ({0})"
@@ -174,11 +169,13 @@ msgstr "Compresión de PNG ({0})"
 msgid "PNG Quality ({0})"
 msgstr "Calidad de PNG ({0})"
 
-#: org/jmol/dialog/Dialog.java:385 org/jmol/dialog/Dialog.java:498
+#: org/jmol/dialog/Dialog.java:385
+#: org/jmol/dialog/Dialog.java:498
 msgid "Yes"
 msgstr "Sí"
 
-#: org/jmol/dialog/Dialog.java:385 org/jmol/dialog/Dialog.java:496
+#: org/jmol/dialog/Dialog.java:385
+#: org/jmol/dialog/Dialog.java:496
 msgid "No"
 msgstr "No"
 
@@ -195,7 +192,8 @@ msgstr "Aviso"
 msgid "All Files"
 msgstr "Todos los archivos"
 
-#: org/jmol/dialog/Dialog.java:448 org/jmol/dialog/Dialog.java:495
+#: org/jmol/dialog/Dialog.java:448
+#: org/jmol/dialog/Dialog.java:495
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -203,7 +201,8 @@ msgstr "Cancelar"
 msgid "Abort file chooser dialog"
 msgstr "Cancelar el diálogo de elección de archivo"
 
-#: org/jmol/dialog/Dialog.java:452 org/jmol/dialog/Dialog.java:453
+#: org/jmol/dialog/Dialog.java:452
+#: org/jmol/dialog/Dialog.java:453
 msgid "Details"
 msgstr "Detalles"
 
@@ -255,11 +254,13 @@ msgstr "Ayuda"
 msgid "FileChooser help"
 msgstr "Ayuda para elegir archivo"
 
-#: org/jmol/dialog/Dialog.java:469 org/jmol/dialog/Dialog.java:470
+#: org/jmol/dialog/Dialog.java:469
+#: org/jmol/dialog/Dialog.java:470
 msgid "Home"
 msgstr "Inicio"
 
-#: org/jmol/dialog/Dialog.java:471 org/jmol/dialog/Dialog.java:472
+#: org/jmol/dialog/Dialog.java:471
+#: org/jmol/dialog/Dialog.java:472
 msgid "List"
 msgstr "Lista"
 
@@ -283,7 +284,8 @@ msgstr "Crear nueva carpeta"
 msgid "Open selected file"
 msgstr "Abrir archivo seleccionado"
 
-#: org/jmol/dialog/Dialog.java:483 org/jmol/dialog/Dialog.java:486
+#: org/jmol/dialog/Dialog.java:483
+#: org/jmol/dialog/Dialog.java:486
 #: org/jmol/popup/MainPopupResourceBundle.java:620
 msgid "Save"
 msgstr "Guardar"
@@ -331,28 +333,22 @@ msgstr "Esquemático PDB"
 #: org/jmol/dssx/DSSP.java:288
 #, java-format
 msgid ""
-"NOTE: Backbone amide hydrogen positions are present and will be ignored. "
-"Their positions will be approximated, as in standard DSSP analysis.\n"
+"NOTE: Backbone amide hydrogen positions are present and will be ignored. Their positions will be approximated, as in standard DSSP analysis.\n"
 "Use {0} to not use this approximation.\n"
 "\n"
 msgstr ""
-"NOTA: Existen posiciones para los hidrógenos amida del esqueleto, pero se "
-"ignorarán. Sus posiciones se aproximarán, tal como se hace en un análisis "
-"DSSP típico.\n"
+"NOTA: Existen posiciones para los hidrógenos amida del esqueleto, pero se ignorarán. Sus posiciones se aproximarán, tal como se hace en un análisis DSSP típico.\n"
 "Utiliza {0} si no quieres emplear este método.\n"
 "\n"
 
 #: org/jmol/dssx/DSSP.java:294
 #, java-format
 msgid ""
-"NOTE: Backbone amide hydrogen positions are present and will be used. "
-"Results may differ significantly from standard DSSP analysis.\n"
+"NOTE: Backbone amide hydrogen positions are present and will be used. Results may differ significantly from standard DSSP analysis.\n"
 "Use {0} to ignore these hydrogen positions.\n"
 "\n"
 msgstr ""
-"NOTA: Existen posiciones para los hidrógenos amida del esqueleto, y se "
-"utilizarán. Los resultados pueden diferir de modo significativo de los de un "
-"análisis DSSP típico.\n"
+"NOTA: Existen posiciones para los hidrógenos amida del esqueleto, y se utilizarán. Los resultados pueden diferir de modo significativo de los de un análisis DSSP típico.\n"
 "Utiliza {0} para ignorar dichas posiciones de los hidrógenos.\n"
 "\n"
 
@@ -878,9 +874,7 @@ msgid "Right"
 msgstr "Derecha"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:318
-msgid ""
-"Top[as in \"view from the top, from above\" - (translators: remove this "
-"bracketed part]"
+msgid "Top[as in \"view from the top, from above\" - (translators: remove this bracketed part]"
 msgstr "Desde arriba"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:319
@@ -892,34 +886,28 @@ msgid "Back"
 msgstr "Desde atrás"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:321
-#, fuzzy
 msgid "Axis x"
-msgstr "Ejes"
+msgstr "Eje x"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:322
-#, fuzzy
 msgid "Axis y"
-msgstr "Ejes"
+msgstr "Eje y"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:323
-#, fuzzy
 msgid "Axis z"
-msgstr "Ejes"
+msgstr "Eje z"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:324
-#, fuzzy
 msgid "Axis a"
-msgstr "Ejes"
+msgstr "Eje a"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:325
-#, fuzzy
 msgid "Axis b"
-msgstr "Ejes"
+msgstr "Eje b"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:326
-#, fuzzy
 msgid "Axis c"
-msgstr "Ejes"
+msgstr "Eje c"
 
 #: org/jmol/popup/MainPopupResourceBundle.java:328
 msgid "Scenes"
@@ -2006,9 +1994,7 @@ msgstr "Se requiere un índice de orbitales moleculares entre 1 y {0}"
 
 #: org/jmol/script/ScriptError.java:274
 msgid "no MO basis/coefficient data available for this frame"
-msgstr ""
-"en este modelo no hay datos disponibles de base o coeficientes de orbitales "
-"moleculares"
+msgstr "en este modelo no hay datos disponibles de base o coeficientes de orbitales moleculares"
 
 #: org/jmol/script/ScriptError.java:277
 msgid "no MO occupancy data available"
@@ -2033,12 +2019,8 @@ msgid "No data available"
 msgstr "no hay datos disponibles"
 
 #: org/jmol/script/ScriptError.java:293
-msgid ""
-"No partial charges were read from the file; Jmol needs these to render the "
-"MEP data."
-msgstr ""
-"No se han podido leer las cargas parciales en el archivo; Jmol las necesita "
-"para trazar los datos de MEP"
+msgid "No partial charges were read from the file; Jmol needs these to render the MEP data."
+msgstr "No se han podido leer las cargas parciales en el archivo; Jmol las necesita para trazar los datos de MEP"
 
 #: org/jmol/script/ScriptError.java:296
 msgid "No unit cell"
@@ -2065,12 +2047,8 @@ msgstr "se esperaba un nombre de objeto tras el '$'"
 
 #: org/jmol/script/ScriptError.java:312
 #, java-format
-msgid ""
-"plane expected -- either three points or atom expressions or {0} or {1} or "
-"{2}"
-msgstr ""
-"se esperaba un plano, bien en forma de tres puntos, o bien de expresiones "
-"atómicas, o {0}, o {1}, o {2}"
+msgid "plane expected -- either three points or atom expressions or {0} or {1} or {2}"
+msgstr "se esperaba un plano, bien en forma de tres puntos, o bien de expresiones atómicas, o {0}, o {1}, o {2}"
 
 #: org/jmol/script/ScriptError.java:315
 msgid "property name expected"
@@ -2126,9 +2104,7 @@ msgstr "no se reconoce el parámetro {0}"
 #: org/jmol/script/ScriptError.java:352
 #, java-format
 msgid "unrecognized {0} parameter in Jmol state script (set anyway)"
-msgstr ""
-"no se reconoce el parámetro {0} en el guión de estado (defínase de todos "
-"modos)"
+msgstr "no se reconoce el parámetro {0} en el guión de estado (defínase de todos modos)"
 
 #: org/jmol/script/ScriptError.java:355
 #, java-format
@@ -2140,7 +2116,8 @@ msgstr "no se reconoce el parámetro SHOW; utilice {0}"
 msgid "write what? {0} or {1} \"filename\""
 msgstr "¿qué escribir? {0} o {1} “nombre de archivo”"
 
-#: org/jmol/script/ScriptError.java:410 org/jmol/script/ScriptEval.java:6338
+#: org/jmol/script/ScriptError.java:410
+#: org/jmol/script/ScriptEval.java:6338
 msgid "script ERROR: "
 msgstr "ERROR en guión: "
 
@@ -2149,12 +2126,14 @@ msgstr "ERROR en guión: "
 msgid "show saved: {0}"
 msgstr "mostrar lo guardado: {0}"
 
-#: org/jmol/script/ScriptEval.java:3269 org/jmol/script/ScriptEval.java:7984
+#: org/jmol/script/ScriptEval.java:3269
+#: org/jmol/script/ScriptEval.java:7984
 #, java-format
 msgid "{0} atoms deleted"
 msgstr "se han borrado {0} átomos"
 
-#: org/jmol/script/ScriptEval.java:3896 org/jmol/scriptext/CmdExt.java:362
+#: org/jmol/script/ScriptEval.java:3896
+#: org/jmol/scriptext/CmdExt.java:362
 #, java-format
 msgid "{0} hydrogen bonds"
 msgstr "{0} enlaces de hidrógeno"
@@ -2387,12 +2366,8 @@ msgstr "elige una etiqueta para cambiar su visibilidad (requiere {0})"
 
 #: org/jmol/viewer/ActionManager.java:277
 #, java-format
-msgid ""
-"pick an atom to include it in a measurement (after starting a measurement or "
-"after {0})"
-msgstr ""
-"elige un átomo para incluirlo en una medición (tras haber comenzado una "
-"medición o tras {0})"
+msgid "pick an atom to include it in a measurement (after starting a measurement or after {0})"
+msgstr "elige un átomo para incluirlo en una medición (tras haber comenzado una medición o tras {0})"
 
 #: org/jmol/viewer/ActionManager.java:280
 #, java-format
@@ -2431,11 +2406,8 @@ msgid "rotate Z"
 msgstr "rotar en Z"
 
 #: org/jmol/viewer/ActionManager.java:299
-msgid ""
-"rotate Z (horizontal motion of mouse) or zoom (vertical motion of mouse)"
-msgstr ""
-"rotación alrededor de Z (desplazamiento horizontal del ratón) o tamaño "
-"(desplazamiento vertical del ratón)"
+msgid "rotate Z (horizontal motion of mouse) or zoom (vertical motion of mouse)"
+msgstr "rotación alrededor de Z (desplazamiento horizontal del ratón) o tamaño (desplazamiento vertical del ratón)"
 
 #: org/jmol/viewer/ActionManager.java:300
 #, java-format
@@ -2469,12 +2441,8 @@ msgstr "(des)activar la selección (requiere {0})"
 
 #: org/jmol/viewer/ActionManager.java:320
 #, java-format
-msgid ""
-"if all are selected, unselect all, otherwise add this group of atoms to the "
-"set of selected atoms (requires {0})"
-msgstr ""
-"si están todos seleccionados, eliminar la selección; si no, añadir este "
-"grupo de átomos a la selección (requiere {0})"
+msgid "if all are selected, unselect all, otherwise add this group of atoms to the set of selected atoms (requires {0})"
+msgstr "si están todos seleccionados, eliminar la selección; si no, añadir este grupo de átomos a la selección (requiere {0})"
 
 #: org/jmol/viewer/ActionManager.java:323
 msgid "pick an atom to initiate or conclude a measurement"
@@ -2497,8 +2465,7 @@ msgstr "tamaño (a lo largo del borde derecho de la ventana)"
 #: org/jmol/viewer/ActionManager.java:335
 #, java-format
 msgid "click on two points to spin around axis counterclockwise (requires {0})"
-msgstr ""
-"pulsa en dos puntos para definir un eje de giro antihorario (requiere {0})"
+msgstr "pulsa en dos puntos para definir un eje de giro antihorario (requiere {0})"
 
 #: org/jmol/viewer/ActionManager.java:338
 #, java-format
@@ -2512,9 +2479,7 @@ msgstr "detener movimiento (requiere {0})"
 
 #: org/jmol/viewer/ActionManager.java:346
 msgid "spin model (swipe and release button and stop motion simultaneously)"
-msgstr ""
-"girar el modelo (deslizar, deteniendo el movimiento al tiempo que se suelta "
-"el botón)"
+msgstr "girar el modelo (deslizar, deteniendo el movimiento al tiempo que se suelta el botón)"
 
 #: org/jmol/viewer/ActionManager.java:347
 msgid "translate"
@@ -2537,10 +2502,8 @@ msgid "pick one more atom in order to display the symmetry relationship"
 msgstr "elige un átomo más para mostrar la relación de simetría"
 
 #: org/jmol/viewer/ActionManager.java:1975
-msgid ""
-"pick two atoms in order to display the symmetry relationship between them"
-msgstr ""
-"elige en orden dos átomos para mostrar la relación de simetría entre ambos"
+msgid "pick two atoms in order to display the symmetry relationship between them"
+msgstr "elige en orden dos átomos para mostrar la relación de simetría entre ambos"
 
 #: org/jmol/viewer/OutputManager.java:731
 msgid "canceled"
@@ -2577,9 +2540,7 @@ msgstr "Arrastra para mover la etiqueta"
 
 #: org/jmol/viewer/Viewer.java:8204
 msgid "clipboard is not accessible -- use signed applet"
-msgstr ""
-"no es posible acceder al portapapeles; para ello debe utilizarse la "
-"miniaplicación firmada"
+msgstr "no es posible acceder al portapapeles; para ello debe utilizarse la miniaplicación firmada"
 
 #: org/jmol/viewer/Viewer.java:9425
 #, java-format
