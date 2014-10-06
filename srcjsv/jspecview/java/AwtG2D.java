@@ -208,7 +208,7 @@ public class AwtG2D implements JSVGraphics {
 	
 	@Override
 	public void doStroke(Object g, boolean isBegin) {
-		if (isBegin) {
+		if (isBegin || path == null) {
 			path = new GeneralPath();
 		} else {
 			((Graphics2D) g).draw(path);

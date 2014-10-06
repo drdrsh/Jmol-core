@@ -1862,13 +1862,17 @@ class GraphSet implements XYScaleConverter {
 	}
 
 	private void drawPlot(Object g, int index, Spectrum spec,
-			boolean isContinuous, int yOffset, boolean isGrey, IntegralData ig, boolean isSelected) {
-		Coordinate[] xyCoords = (ig == null ? spec.getXYCoords() : getIntegrationGraph(index).getXYCoords());
+			boolean isContinuous, int yOffset, boolean isGrey, IntegralData ig,
+			boolean isSelected) {
+		Coordinate[] xyCoords = (ig == null ? spec.getXYCoords()
+				: getIntegrationGraph(index).getXYCoords());
 		boolean isIntegral = (ig != null);
-		BS bsDraw = (ig == null ? null : ig.getBitSet());
-		boolean fillPeaks = (!isIntegral && !isGrey
+		BS bsDraw = (isIntegral ? ig.getBitSet() : null);
+		boolean hasPendingIntegral = (!isIntegral && !isGrey
 				&& pendingIntegral != null && pendingIntegral.spec == spectra
-				.get(index) || spec.fillColor != null && isSelected);
+				.get(index));
+		boolean fillPeaks = (hasPendingIntegral || spec.fillColor != null
+				&& isSelected);
 		int iColor = (isGrey ? -2 : isIntegral ? -1 : !allowStacking ? 0 : index);
 		setPlotColor(g, iColor);
 		boolean plotOn = true;
@@ -1877,11 +1881,17 @@ class GraphSet implements XYScaleConverter {
 			fillPeaks &= (y0 == fixY(y0));
 		else
 			y0 = fixY(y0);
+		GenericColor cInt = (isIntegral || fillPeaks ? pd
+				.getColor(ScriptToken.INTEGRALPLOTCOLOR) : null);
+		GenericColor cFill = (cInt == null || spec.fillColor == null ? cInt
+				: spec.fillColor);
 		int iFirst = viewData.getStartingPointIndex(index);
 		int iLast = viewData.getEndingPointIndex(index);
 		if (isContinuous) {
 			iLast--;
-			boolean doLineTo = !fillPeaks && g2d.canDoLineTo();
+			// all graphics can do line to for now
+			boolean doLineTo = (isIntegral || pendingIntegral != null)
+					&& g2d.canDoLineTo();
 			if (doLineTo)
 				g2d.doStroke(g, true);
 			boolean isDown = false;
@@ -1896,8 +1906,10 @@ class GraphSet implements XYScaleConverter {
 						.getYVal()));
 				if (y2 == Integer.MIN_VALUE)
 					continue;
-				int x1 = toPixelX(point1.getXVal());
-				int x2 = toPixelX(point2.getXVal());
+				double xv1 = point1.getXVal();
+				double xv2 = point2.getXVal();
+				int x1 = toPixelX(xv1);
+				int x2 = toPixelX(xv2);
 				y1 = fixY(yOffset + y1);
 				y2 = fixY(yOffset + y2);
 				if (isIntegral) {
@@ -1910,24 +1922,32 @@ class GraphSet implements XYScaleConverter {
 				}
 				if (x2 == x1 && y1 == y2)
 					continue;
-				if (fillPeaks
-						&& (!isIntegral || pendingIntegral.overlaps(point1.getXVal(), point2.getXVal()))) {
-					if (isIntegral) {
-						g2d.setGraphicsColor(g,
-								pd.getColor(ScriptToken.INTEGRALPLOTCOLOR));
-						g2d.drawLine(g, x1, y0, x1, y1);
-					} else {
-						g2d.setGraphicsColor(g, spec.fillColor);
-						g2d.fillRect(g, x1, Math.min(y0, y1), x2 - x1, Math.abs(y0 - y1));
+				if (fillPeaks && hasPendingIntegral
+						&& pendingIntegral.overlaps(xv1, xv2)) {
+					if (cFill != null) {
+						g2d.doStroke(g, false);
+						g2d.setGraphicsColor(g, cFill);
 					}
-					setPlotColor(g, iColor);
+					g2d.fillRect(g, Math.min(x1, x2), Math.min(y0, y1),
+							Math.max(1, Math.abs(x2 - x1)), Math.abs(y0 - y1));
+					if (cFill != null) {
+						g2d.doStroke(g, false);
+						g2d.doStroke(g, true);
+						isDown = false;
+						setPlotColor(g, iColor);
+					}
 					continue;
 				}
 				if (y1 == y2 && (y1 == yPixel0)) {
-						continue;					
+					continue;
 				}
 				if (bsDraw != null && bsDraw.get(i) != plotOn) {
 					plotOn = bsDraw.get(i);
+					if (doLineTo && isDown) {
+						g2d.doStroke(g, false);
+						g2d.doStroke(g, true);
+						isDown = false;
+					}
 					if (!pd.isPrinting && pd.integralShiftMode != 0)
 						setPlotColor(g, 0);
 					else if (plotOn)
@@ -1940,8 +1960,8 @@ class GraphSet implements XYScaleConverter {
 				if (isDown) {
 					g2d.lineTo(g, x2, y2);
 				} else {
-				  g2d.drawLine(g, x1, y1, x2, y2);
-				  isDown = doLineTo;
+					g2d.drawLine(g, x1, y1, x2, y2);
+					isDown = doLineTo;
 				}
 			}
 			if (doLineTo)

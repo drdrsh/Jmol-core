@@ -242,7 +242,8 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
     	pd.g2d = pd.g2d0;
     	pd.drawGraph(g, g, g, getWidth(), getHeight(), false);
     } catch (Exception e) {
-    	// tough luck
+    	System.out.println("Exception while painting " + e);
+    	e.printStackTrace();
     }
     
     vwr.repaintDone();

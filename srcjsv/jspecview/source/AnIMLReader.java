@@ -236,10 +236,10 @@ public class AnIMLReader extends XMLReader {
       if (dataArray.length != 0) {       
         if (vectorType.equals("float64")) {
         	for (int i = 0, pt = 0; i  < npoints; i++, pt += 8)
-        		yaxisData[i] = bc.bytesToDoubleToFloat(dataArray, pt, false);
+        		yaxisData[i] = BC.bytesToDoubleToFloat(dataArray, pt, false);
         } else {
         	for (int i = 0, pt = 0; i  < npoints; i++, pt += 4)
-        		yaxisData[i] = bc.bytesToFloat(dataArray, pt, false);
+        		yaxisData[i] = BC.bytesToFloat(dataArray, pt, false);
         }
       }
     }

@@ -441,8 +441,9 @@ public class JSVFileManager {
 	   *
 		 */
 		{
-			// application only
-			System.out.println("jsonMolFile is " + jsonMolFile);
+			// JAVA only
+			System.out.println("molFile is \n" + molFile);
+			System.out.println("jsonMolFile is \n" + jsonMolFile);
 			viewer.syncScript("JSVSTR:" + jsonMolFile);
 		}
 		String xml = getQuotedJSONAttribute(json, "xml", null);
