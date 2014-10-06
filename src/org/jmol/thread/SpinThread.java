@@ -176,7 +176,7 @@ public class SpinThread extends JmolThread {
           if (!runSleep(10, CHECK1))
             return;
         if (bsAtoms == null)
-          vwr.refresh(1, "SpinThread:run()");
+          vwr.refresh(1, "SpinThread");
         else
           vwr.requestRepaintAndWait("spin thread");
         //System.out.println(angle * degreesPerRadian + " " + count + " " + nDegrees + " " + endDegrees);

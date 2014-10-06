@@ -3574,9 +3574,10 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   @Override
   public void refresh(int mode, String strWhy) {
     // refresh(-1) is used in stateManager to force no repaint
+    // refresh(1) is used by operations to ONLY do a repaint -- no syncing
     // refresh(2) indicates this is a mouse motion -- not going through Eval
     //            so we bypass Eval and mainline on the other vwr!
-    // refresh(3) is used by operations to ONLY do a repaint -- no syncing
+    // refresh(3) same as 1, but not WebGL
     // refresh(6) is used to do no refresh if in motion
     // refresh(7) is used to send JavaScript a "new orientation" command
     //            for example, at the end of a script
@@ -3585,7 +3586,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (mode == 6 && getInMotion(true))
       return;
     if (isWebGL) {
-      if (mode == 2 || mode == 7) {
+      if (mode == 1 || mode == 2 || mode == 7) {
         tm.finalizeTransformParameters();
         
         /**
@@ -3600,9 +3601,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       if (mode > 0 && mode != 7)
         rm.repaintIfReady("refresh " + mode + " " + strWhy);
     }
-    if (mode == 7)
-      return;
-    if (mode % 3 != 0 && sm.doSync())
+    if (mode != 7 && mode % 3 != 0 && sm.doSync())
       sm.setSync(mode == 2 ? strWhy : null);
   }
 

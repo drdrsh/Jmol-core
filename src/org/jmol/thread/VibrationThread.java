@@ -73,7 +73,7 @@ public class VibrationThread extends JmolThread {
               / transformManager.vibrationPeriodMs;
 //          t = 0.2f;
           transformManager.setVibrationT(t);
-          vwr.refresh(3, "VibrationThread:run()");
+          vwr.refresh(3, "VibrationThread");
           mode = (checkInterrupted(transformManager.vibrationThread) ? FINISH : MAIN);
         }
         break;
