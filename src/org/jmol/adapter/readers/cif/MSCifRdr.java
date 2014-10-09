@@ -466,11 +466,10 @@ public class MSCifRdr extends MSRdr {
       if (ignore || type_id == null || atomLabel != null && !atomLabel.equals("*")
           && cr.rejectAtomName(atomLabel))
         continue;
-      double d = 0;
+      int nzero = 0;
       for (int j = 0; j < pt.length; j++)
-        d += pt[j];
-      if (Double.isNaN(d) || d > 1e10 || d == 0)
-        continue;
+        if (Double.isNaN(pt[j]) || pt[j] > 1e100 || pt[j] == 0 && ++nzero == 3)
+          continue;
       switch (type_id.charAt(0)) {
       case 'D':
       case 'O':
@@ -580,4 +579,4 @@ public class MSCifRdr extends MSRdr {
             cr.propertyOf[i] : NONE);
   }
 
-  }
+}
