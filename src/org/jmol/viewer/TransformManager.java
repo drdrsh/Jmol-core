@@ -300,7 +300,7 @@ public class TransformManager {
       matrixRotate.mul2(mNew, matrixRotate);
       return;
     }
-      vwr.moveAtoms(mNew, matrixRotate, translation, internalRotationCenter,
+    vwr.moveAtoms(mNew, matrixRotate, translation, internalRotationCenter,
         isInternal, bsAtoms, translationOnly);
     if (translation != null) {
       internalRotationCenter.add(translation);
@@ -382,7 +382,8 @@ public class TransformManager {
       isSpinFixed = true;
       isSpinSelected = (bsAtoms != null);
       setSpin(eval, true, endDegrees, null, null, bsAtoms, false);
-      return false;
+      // fixed spin -- we will wait
+      return (endDegrees != Float.MAX_VALUE);
     }
     float radians = endDegrees * JC.radiansPerDegree;
     fixedRotationAxis.setVA(rotAxis, endDegrees);
@@ -2083,7 +2084,8 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
             Float.valueOf(endDegrees), endPositions, dihedralList,
             bsAtoms, isGesture ? Boolean.TRUE : null } );
         spinIsGesture = isGesture;
-        if (bsAtoms == null && dihedralList == null) {
+        if (bsAtoms == null && dihedralList == null && 
+            (endDegrees == Float.MAX_VALUE || !vwr.g.waitForMoveTo)) {
           spinThread.start();
         } else {
           spinThread.setEval(eval);

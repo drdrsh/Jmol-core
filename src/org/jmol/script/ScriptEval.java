@@ -5996,8 +5996,16 @@ public class ScriptEval extends ScriptExpr {
             return;
         }
         if (vwr.rotateAxisAngleAtCenter(this, points[0], rotAxis, rate,
-            endDegrees, isSpin, bsAtoms) && isJS && isSpin && bsAtoms == null)
-          throw new ScriptInterruption(this, "rotate", 1);
+            endDegrees, isSpin, bsAtoms)) {
+          // bsAtoms can be non-null if we have a quaternion
+          // rotate quaternion {2 3 4 4} {atomno<10}
+          // a fixed quaternion rotation of a set of atoms
+          // currently rotateAxisAngleAtCenter cannot return true
+          // if isSpin is true. But that is what we are working on
+          // TODO: not exactly clear here if this will work
+          if (isJS && isSpin && bsAtoms == null && vwr.g.waitForMoveTo && endDegrees != Float.MAX_VALUE)
+            throw new ScriptInterruption(this, "rotate", 1);
+        }
         return;
       }
 

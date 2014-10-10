@@ -794,7 +794,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       setAxesModeMolecular(false);
     prevFrame = Integer.MIN_VALUE;
     if (!tm.spinOn)
-      refresh(-1, "Viewer:homePosition()"); // from 1 - was repainting
+      setSync();
   }
 
   @Override
@@ -3573,10 +3573,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
    */
   @Override
   public void refresh(int mode, String strWhy) {
-    // refresh(-1) is used in stateManager to force no repaint
     // refresh(1) is used by operations to ONLY do a repaint -- no syncing
-    // refresh(2) indicates this is a mouse motion -- not going through Eval
-    //            so we bypass Eval and mainline on the other vwr!
+    // refresh(2) indicates this is a mouse motion requiring synchronization
+    //            -- not going through Eval so we bypass Eval and mainline on the other vwr!
     // refresh(3) same as 1, but not WebGL
     // refresh(6) is used to do no refresh if in motion
     // refresh(7) is used to send JavaScript a "new orientation" command
@@ -3775,6 +3774,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
     //System.out.println(Thread.currentThread() + "render Screen Image " +
     // creatingImage);
+    //System.out.println("viewer render");
     if (updateWindow(width, height)) {
       if (!checkStereoSlave || gRight == null) {
         getScreenImageBuffer(gLeft, false);
@@ -3788,8 +3788,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (captureParams != null
         && Boolean.FALSE != captureParams.get("captureEnabled")) {
       //showString(transformManager.matrixRotate.toString(), false);
-      if (System.currentTimeMillis() + 50 > ((Long) captureParams
-          .get("endTime")).longValue())
+      long t = ((Long) captureParams
+               .get("endTime")).longValue();
+      if (t > 0 && System.currentTimeMillis() + 50 > t)
         captureParams.put("captureMode", "end");
       processWriteOrCapture(captureParams);
     }
@@ -7612,7 +7613,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     boolean isOK = tm.rotateAxisAngleAtCenter(eval, rotCenter,
         rotAxis, degreesPerSecond, endDegrees, isSpin, bsSelected);
     if (isOK)
-      refresh(-1, "rotateAxisAngleAtCenter");
+      setSync();
     return isOK;
   }
 
@@ -7634,7 +7635,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         point2, degreesPerSecond, endDegrees, false, isSpin, bsSelected, false,
         translation, finalPoints, dihedralList);
     if (isOK)
-      refresh(-1, "rotateAxisAboutPointsInternal");
+      setSync();
     return isOK;
   }
 
@@ -8265,7 +8266,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     }
     // if turning both off, sync the orientation now
     if (!sm.syncingScripts && !sm.syncingMouse)
-      refresh(-1, "set sync");
+      setSync();
   }
 
   public final static String SYNC_GRAPHICS_MESSAGE = "GET_GRAPHICS";

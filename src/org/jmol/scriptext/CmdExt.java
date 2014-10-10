@@ -477,14 +477,12 @@ public class CmdExt implements JmolCmdExtension {
       showString("Cannot capture on this platform");
       return;
     }
-    int fps = vwr.getInt(T.animationfps);
     float endTime = 10; // ten seconds by default
     int mode = 0;
     String fileName = "";
     Map<String, Object> params = vwr.captureParams;
     boolean looping = !vwr.am.animationReplayMode.name().equals("ONCE");
     int tok = tokAt(1);
-    String sfps = "";
     switch (tok) {
     case T.nada:
       mode = T.end;
@@ -497,53 +495,51 @@ public class CmdExt implements JmolCmdExtension {
       }
       if (!fileName.endsWith(".gif"))
         fileName += ".gif";
-      String s = null;
-      String axis = "y";
       int i = 2;
+      boolean isRock = false;
       switch (tokAt(i)) {
       case T.rock:
-        looping = true;
-        i = 3;
-        axis = (tokAt(3) == T.integer ? "y" : e.optParameterAsString(i++)
-            .toLowerCase());
-        int n = (tokAt(i) == T.nada ? 5 : intParameter(i++));
-        s = "; rotate Y 10 10;delay 2.0; rotate Y -10 -10; delay 2.0;rotate Y -10 -10; delay 2.0;rotate Y 10 10;delay 2.0";
-        s = PT.rep(s, "10", "" + n);
-        break;
+        isRock = true;
+        //$FALL-THROUGH$
       case T.spin:
+        String s = null;
+        String axis = "y";
         looping = true;
         i = 3;
-        axis = e.optParameterAsString(i).toLowerCase();
-        if (axis.length() > 0)
-          i++;
-        s = "; rotate Y 360 30;delay 15.0;";
-        if (tokAt(i) == T.integer)
-          sfps = " " + (fps = intParameter(i++));
-        break;
-      case T.decimal:
-        endTime = floatParameter(2);
-        break;
-      case T.integer:
-        fps = intParameter(2);
-        break;
-      }
-      if (s != null) {
-        if (!chk)
-          vwr.setNavigationMode(false);
+        if (isRock) {
+          if (tokAt(3) != T.integer)
+            axis = e.optParameterAsString(i++).toLowerCase();
+          s = "rotate Y 10 10;rotate Y -10 -10;rotate Y -10 -10;rotate Y 10 10";
+          s = PT.rep(s, "10", "" + (tokAt(i) == T.nada ? 5 : intParameter(i++)));
+        } else {
+          axis = e.optParameterAsString(i).toLowerCase();
+          s = "rotate Y 360 30;";
+        }
+        if (chk)
+          return;
+        vwr.setNavigationMode(false);
         if (axis == "" || "xyz".indexOf(axis) < 0)
           axis = "y";
-        s = PT.rep(s, "Y", axis);
-        s = "capture " + PT.esc(fileName) + sfps + s + ";capture;";
+        boolean wf = vwr.g.waitForMoveTo;
+        s = "set waitformoveto true;" + PT.rep(s, "Y", axis) + ";set waitformoveto " + wf;
+        s = "capture " + PT.esc(fileName) + " -1;" + s + ";capture;";
         e.cmdScript(0, null, s);
         return;
+      case T.decimal:
+      case T.integer:
+        endTime = floatParameter(2);
+        if (endTime < 0)
+          looping = true;
+        break;
       }
-      if (params != null)
-        params = new Hashtable<String, Object>();
+      if (chk)
+        return;
       mode = T.movie;
       params = new Hashtable<String, Object>();
       if (!looping)
         showString(GT.o(GT._("Note: Enable looping using {0}"),
             new Object[] { "ANIMATION MODE LOOP" }));
+      int fps = vwr.getInt(T.animationfps);
       showString(GT.o(GT._("Animation delay based on: {0}"),
           new Object[] { "ANIMATION FPS " + fps }));
       params.put("captureFps", Integer.valueOf(fps));
@@ -562,8 +558,10 @@ public class CmdExt implements JmolCmdExtension {
     params.put("type", "GIF");
     params.put("fileName", fileName);
     params.put("quality", Integer.valueOf(-1));
-    params.put("endTime",
-        Long.valueOf(System.currentTimeMillis() + (long) (endTime * 1000)));
+    params.put( 
+        "endTime",
+        Long.valueOf(endTime < 0 ? -1 : System.currentTimeMillis()
+            + (long) (endTime * 1000)));
     params.put("captureMode", T.nameOf(mode).toLowerCase());
     params.put("captureLooping", looping ? Boolean.TRUE : Boolean.FALSE);
     String msg = vwr.processWriteOrCapture(params);

@@ -149,7 +149,7 @@ public class SpinThread extends JmolThread {
         targetTime = (long) (++index * 1000 / myFps);
         currentTime = System.currentTimeMillis() - startTime;
         sleepTime = (int) (targetTime - currentTime);
-        //System.out.println(targetTime + " " + currentTime + " " + sleepTime);
+        //System.out.println(index + " spin thread " + targetTime + " " + currentTime + " " + sleepTime);
         if (sleepTime < 0) {
           if (!haveNotified)
             Logger.info("spinFPS is set too fast (" + myFps
@@ -175,11 +175,10 @@ public class SpinThread extends JmolThread {
         while (!checkInterrupted(transformManager.spinThread) && !vwr.getRefreshing())
           if (!runSleep(10, CHECK1))
             return;
-        if (bsAtoms == null)
-          vwr.refresh(1, "SpinThread");
+        if (bsAtoms != null || vwr.g.waitForMoveTo && endDegrees != Float.MAX_VALUE)
+            vwr.requestRepaintAndWait("spin thread");
         else
-          vwr.requestRepaintAndWait("spin thread");
-        //System.out.println(angle * degreesPerRadian + " " + count + " " + nDegrees + " " + endDegrees);
+          vwr.refresh(1, "SpinThread");
         if (endDegrees >= 1e10f ? nDegrees/endDegrees > 0.99 : !isNav && endDegrees >= 0 ? nDegrees >= endDegrees - 0.001
             : -nDegrees <= endDegrees + 0.001) {
           isDone = true;
