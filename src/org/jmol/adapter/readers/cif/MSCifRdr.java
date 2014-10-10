@@ -271,10 +271,8 @@ public class MSCifRdr extends MSRdr {
     CifReader cr = (CifReader) this.cr;
     if (cr.key.equals("_cell_subsystem_code"))
       return processSubsystemLoopBlock();
-    if (!cr.key.startsWith("_cell_wave") 
-        && !cr.key.contains("fourier")
-        && !cr.key.contains("legendre")
-        && !cr.key.contains("_special_func"))
+    if (!cr.key.startsWith("_cell_wave") && !cr.key.contains("fourier")
+        && !cr.key.contains("legendre") && !cr.key.contains("_special_func"))
       return 0;
     if (cr.asc.iSet < 0)
       cr.asc.newAtomSet();
@@ -334,7 +332,8 @@ public class MSCifRdr extends MSRdr {
           case FWV_OCC_SEQ_ID:
           case FWV_SPIN_SEQ_ID:
           case FWV_U_SEQ_ID:
-            type_id = Character.toUpperCase(modulationFields[tok].charAt(11)) + "_";
+            type_id = Character.toUpperCase(modulationFields[tok].charAt(11))
+                + "_";
             break;
           }
           type_id += field;
@@ -463,13 +462,17 @@ public class MSCifRdr extends MSRdr {
           break;
         }
       }
-      if (ignore || type_id == null || atomLabel != null && !atomLabel.equals("*")
-          && cr.rejectAtomName(atomLabel))
+      if (ignore || type_id == null || atomLabel != null
+          && !atomLabel.equals("*") && cr.rejectAtomName(atomLabel))
         continue;
-      int nzero = 0;
-      for (int j = 0; j < pt.length; j++)
-        if (Double.isNaN(pt[j]) || pt[j] > 1e100 || pt[j] == 0 && ++nzero == 3)
-          continue;
+      boolean ok = true;
+      for (int j = 0, nzero = pt.length; j < pt.length; j++)
+        if (Double.isNaN(pt[j]) || pt[j] > 1e100 || pt[j] == 0 && --nzero == 0) {
+          ok = false;
+          break;
+        }
+      if (!ok)
+        continue;
       switch (type_id.charAt(0)) {
       case 'D':
       case 'O':
@@ -483,11 +486,14 @@ public class MSCifRdr extends MSRdr {
           if (Double.isNaN(c) || Double.isNaN(w))
             continue;
           if (pt[0] != 0)
-            addMod(type_id + "#x;" + atomLabel, fid, new double[] { c, w, pt[0] });
+            addMod(type_id + "#x;" + atomLabel, fid,
+                new double[] { c, w, pt[0] });
           if (pt[1] != 0)
-            addMod(type_id + "#y;" + atomLabel, fid, new double[] { c, w, pt[1] });
+            addMod(type_id + "#y;" + atomLabel, fid,
+                new double[] { c, w, pt[1] });
           if (pt[2] != 0)
-            addMod(type_id + "#z;" + atomLabel, fid, new double[] { c, w, pt[2] });
+            addMod(type_id + "#z;" + atomLabel, fid,
+                new double[] { c, w, pt[2] });
           continue;
         }
         type_id += "#" + axis + ";" + atomLabel;
