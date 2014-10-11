@@ -844,6 +844,7 @@ public class MSRdr implements MSInterface {
     ModulationSet ms = new ModulationSet().setMod(a.index + " " + a.atomName,
         r0, modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a), 
         a.vib instanceof Vibration ? (Vibration) a.vib : null);
+
     ms.calculate(null, false);
 
     // ms parameter values are used to set occupancies, 

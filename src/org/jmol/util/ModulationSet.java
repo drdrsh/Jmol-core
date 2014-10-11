@@ -83,13 +83,23 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * Multiplying sigma by the atom vector r (3 x 1) gives us a (d x 1) column vector.
    * This column vector is the set of coefficients of [x4, x5, x6...] that I will
    * call X. 
-
-   * Similarly, we express the x1' - xn' aspects of the operators as the matrices
-   * Gamma_I (d x d epsilons) and s_I (d x 1 shifts). 
    * 
+   * Similarly, we express the x1' - xn' aspects of the operators as the matrices
+   * Gamma_I (d x d epsilons) and s_I (d x 1 shifts).
+   * 
+   * Note that S_I may include mixing in from x1, x2, and x3.
+   * In SSG 67.1.16.12  Acmm(1/2,0,g)0s0, for example, we have:  
+   *  
+   *   (x1,x2,-x3,-x4 + x1+1/2) 
+   *  
+   *   http://stokes.byu.edu/iso/ssginfo.php?label=67.1.16.12&notation=x1x2x3x4
+   * 
+   * These components need to be added into the offsets S_I. 
+   * (Fixed in Jmol 14.[2/3].7 10/11/2014)
+   *    
    * In the case of subsystems, these are extracted from:
    * 
-   * {Rs_nu | Vs_nu} = W_nu {Rs|Vs} W_nu^-1
+   *    {Rs_nu | Vs_nu} = W_nu {Rs|Vs} W_nu^-1
    * 
    * Then for X defined as [x4,x5,x6...] we have:
    * 
@@ -100,7 +110,9 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * X = (Gamma_I^-1)(X' - S_I)
    * 
    * I call this array "tau". We can think of this as a
-   * distance along the asn axis, as in a t-plot. 
+   * distance along the a_sn axis, as in a t-plot (van Smaalen, Fig. 2.6, p. 35)
+   * but for all d, not just one. 
+   * 
    * Ultimately we will need to add in a term allowing 
    * us to adjust the t-value:
    * 
@@ -162,19 +174,16 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     
     if (isSubsystem) {
       tFactor = tFactor.inverse();
-      //gammaE = new M3();
-      //symmetry.getSpaceGroupOperation(iop).getRotationScale(gammaE);
-    // no, didn't work, but it really should work, I think....
-      // why would we want to use the global gammaE?
     }
     
-    this.gammaE = gammaE; // gammaE_nu
+    this.gammaE = gammaE; // gammaE_nu, R, the real 3x3 rotation matrix
     
+    Matrix mr0 = Matrix.newT(r0, true);
     Matrix rsvs = symmetry.getOperationRsVs(iop);
     gammaIinv = rsvs.getSubmatrix(3,  3,  modDim,  modDim).inverse();
-    sI = rsvs.getSubmatrix(3, 3 + modDim, modDim, 1);
-    
-    tau = gammaIinv.mul(sigma.mul(Matrix.newT(r0, true)).sub(sI));
+    Matrix sMix = rsvs.getSubmatrix(3, 0, modDim, 3);
+    sI = rsvs.getSubmatrix(3, 3 + modDim, modDim, 1).add(sMix.mul(mr0));
+    tau = gammaIinv.mul(sigma.mul(mr0).sub(sI));
     if (Logger.debuggingHigh)
       Logger.debug("MODSET create r=" + Escape.eP(r0) + " si=" + Escape.e(sI.getArray())
               + " ginv=" + gammaIinv.toString().replace('\n', ' '));

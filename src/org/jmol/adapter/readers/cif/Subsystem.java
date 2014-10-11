@@ -54,11 +54,16 @@ class Subsystem {
     Logger.info("w=" + w);
     Logger.info("w_inv=" + winv);
 
+    //      w33  w3d      van Smaalen, p. 94, Eqn. 4.15
+    // w = 
+    //      wd3  wdd
+    
     Matrix w33 = w.getSubmatrix(0, 0, 3, 3);
     Matrix wd3 = w.getSubmatrix(3, 0, d, 3);
     Matrix w3d = w.getSubmatrix(0, 3, 3, d);
     Matrix wdd = w.getSubmatrix(3, 3, d, d);
     Matrix sigma = msRdr.getSigma();
+    // Eqn. 4.16
     Matrix sigma_nu = wdd.mul(sigma).add(wd3).mul(w3d.mul(sigma).add(w33).inverse());
     Matrix tFactor = wdd.sub(sigma_nu.mul(w3d)); 
     

@@ -215,10 +215,15 @@ public class JanaReader extends AtomSetCollectionReader {
 
   private int qicount;
 
-  private void qi() {
+  private void qi() throws Exception {
     double[] pt = new double[modDim];
     pt[qicount] = 1;
-    ms.addModulation(null, "W_" + (++qicount), new double[] {parseFloat(), parseFloat(), parseFloat()}, -1);
+    double[] a = new double[] {parseFloat(), parseFloat(), parseFloat()};
+    // get qr record as well
+    parseTokenStr(rd());
+    for (int i = 0; i < 3; i++)
+      a[i] += parseFloat();
+    ms.addModulation(null, "W_" + (++qicount), a, -1);
     ms.addModulation(null, "F_" + qicount + "_coefs_", pt, -1);
   }
 

@@ -139,14 +139,17 @@ class SymmetryOperation extends M4 {
   //
   // becomes for a superspace group
   //
-  //  [ Gamma_R   [0x0]   | Gamma_S
-  //    [0x0]     Gamma_e | Gamma_d 
-  //     [0]       [0]    |   1     ]
+  //  rows\cols    (3)    (modDim)    (1)
+  // (3)        [ Gamma_R   [0x0]   | Gamma_S
+  // (modDim)       m*      Gamma_e | Gamma_d 
+  // (1)           [0]       [0]    |   1     ]
     
     int n = 3 + modDim;
     double[][] a = (rsvs = new Matrix(null, n + 1, n + 1)).getArray();
     double[] t = new double[n];
     int pt = 0;
+    // first retrieve all n x n values from linearRotTrans
+    // and get the translation as well
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++)
         a[i][j] = linearRotTrans[pt++];
@@ -155,8 +158,10 @@ class SymmetryOperation extends M4 {
     a[n][n] = 1;
     if (isReverse)
       rsvs = rsvs.inverse();
+    // t is already reversed; set it now.
     for (int i = 0; i < n; i++)
       a[i][n] = t[i];
+    // then set this operation matrix as {R|t}
     a = rsvs.getSubmatrix(0,  0,  3,  3).getArray();
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 4; j++)
