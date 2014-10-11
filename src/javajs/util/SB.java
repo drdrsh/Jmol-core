@@ -282,7 +282,7 @@ public class SB {
      *            return this.s.indexOf(s, i);
      */
     {
-      return sb.lastIndexOf(s, i);
+      return sb.indexOf(s, i);
     }
   }
 
