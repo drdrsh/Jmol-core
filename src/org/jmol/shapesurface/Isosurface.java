@@ -922,6 +922,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return  thisMesh.calculatedVolume = Float.valueOf(f); 
     }
     Object ret = meshData.calculateVolumeOrArea(thisMesh.jvxlData.thisSet, isArea, false);
+    if (thisMesh.nSets <= 0)
+      thisMesh.nSets = -meshData.nSets;
     if (isArea)
       thisMesh.calculatedArea = ret;
     else

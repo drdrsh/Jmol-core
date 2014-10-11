@@ -1884,20 +1884,22 @@ public class CmdExt implements JmolCmdExtension {
     if (bsA != null && (displayType == T.nci || localOnly)) {
       Object volume = getShapeProperty(JC.SHAPE_CONTACT, "volume");
       double v;
+      boolean isFull = (displayType == T.full);
       if (PT.isAD(volume)) {
         double[] vs = (double[]) volume;
         v = 0;
         for (int i = 0; i < vs.length; i++)
-          v += Math.abs(vs[i]);
+          v += (isFull ? vs[i] : Math.abs(vs[i])); // no abs value for full -- some are negative
       } else {
         v = ((Float) volume).floatValue();
       }
+      v = (Math.round(v * 1000) / 1000.);
       if (colorDensity || displayType != T.trim) {
         int nsets = ((Integer) getShapeProperty(JC.SHAPE_CONTACT, "nSets"))
-            .intValue();
-        String s = "Contacts: " + nsets;
+            .intValue(); // will be < 0 if FULL option
+        String s = "Contacts: " + (nsets < 0 ? -nsets/2 : nsets);
         if (v != 0)
-          s += " with net volume " + v + " A^3";
+          s += ", with " + (isFull ? "approx " : "net ") + "volume " + v + " A^3";
         showString(s);
       }
     }

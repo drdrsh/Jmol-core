@@ -201,7 +201,13 @@ public class MeshData extends MeshSurface {
     if (!setsSuccessful && level < 2)
       getSurfaceSetForLevel(level + 1);
     if (level == 0) {
-      sortSurfaceSets();
+      // sort sets
+      SSet[] sets = new SSet[nSets];
+      for (int i = 0; i < nSets; i++)
+        sets[i] = new SSet(surfaceSet[i]);
+      Arrays.sort(sets, new SortSet());
+      for (int i = 0; i < nSets; i++)
+        surfaceSet[i] = sets[i].bs;
       setVertexSets(false);      
     }
     return surfaceSet;
@@ -223,15 +229,6 @@ public class MeshData extends MeshSurface {
     public int compare(SSet o1, SSet o2) {
       return (o1.n > o2.n ? -1 : o1.n < o2.n ? 1 : 0);
     }  
-  }
-
-  private void sortSurfaceSets() {
-    SSet[] sets = new SSet[nSets];
-    for (int i = 0; i < nSets; i++)
-      sets[i] = new SSet(surfaceSet[i]);
-    Arrays.sort(sets, new SortSet());
-    for (int i = 0; i < nSets; i++)
-      surfaceSet[i] = sets[i].bs;
   }
 
   public void setVertexSets(boolean onlyIfNull) {
@@ -318,10 +315,10 @@ public class MeshData extends MeshSurface {
    * @return Float or double[]
    */
   public Object calculateVolumeOrArea(int thisSet, boolean isArea, boolean getSets) {
-    if (getSets || nSets == 0)
+    if (getSets || nSets <= 0)
       getSurfaceSet();
     boolean justOne = (thisSet >= -1);
-    int n = (justOne || nSets == 0 ? 1 : nSets);
+    int n = (justOne || nSets <= 0 ? 1 : nSets);
     double[] v = new double[n];
     V3 vAB = new V3();
     V3 vAC = new V3();
@@ -329,7 +326,7 @@ public class MeshData extends MeshSurface {
     for (int i = pc; --i >= 0;) {
       if (!setABC(i))
         continue;
-      int iSet = (nSets == 0 ? 0 : vertexSets[iA]);
+      int iSet = (nSets <= 0 ? 0 : vertexSets[iA]);
       if (thisSet >= 0 && iSet != thisSet)
         continue;
       if (isArea) {
