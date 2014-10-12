@@ -6253,7 +6253,7 @@ public class ScriptEval extends ScriptExpr {
             remotePath = paramAsStr(++i);
           filename = paramAsStr(++i);
         }
-        if (vwr.isJS || vwr.testAsync && (isAsync || filename.startsWith("?"))) {
+        if ((vwr.isJS || vwr.testAsync) && (isAsync || filename.startsWith("?"))) {
           filename = loadFileAsync("SCRIPT_", filename, i, true);
           // on first pass a ScriptInterruption will be thrown; 
           // on the second pass we will have the file name, which will be cache://local_n__m
