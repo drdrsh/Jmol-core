@@ -124,6 +124,8 @@ public class AnnotationParser implements JmolAnnotationParser {
         int n = PT.parseInt(line.substring(8));
         if (n < 0 || line.endsWith("files"))
           continue;
+        if (line.indexOf("lone WC") >= 0)
+          line = PT.rep(line, "lone WC", "isolated WC");
         addMessage(line);
         line = PT.rep(PT.trim(line, "s"), " interaction", "");
         int pt = "pair elix lice plet stem tack loop ulge tion ment otif pper turn bond file"
@@ -571,19 +573,19 @@ public class AnnotationParser implements JmolAnnotationParser {
 
   private void readPairs(int n) throws Exception {
     Lst<Map<String, Object>> pairs;
-    if (line.indexOf("lone ") >= 0) {
+    if (line.indexOf("lone ") >= 0 || line.indexOf("isolated ") >= 0) {
       // just store negative indices in temporary map.
       // pointing to original base pair
       rd();
       skipHeader();
-      pairs = newList("lonePairs");
+      pairs = newList("isolatedPairs");
       for (int i = 0; i < n; i++) {
         String[] tokens = PT.getTokens(line);
         @SuppressWarnings("unchecked")
         Map<String, Object> data = (Map<String, Object>) htTemp.get(tokens[1]
             + tokens[2]);
         htTemp.put("#" + line.substring(0, 5).trim(), data);
-        data.put("lonePair", Boolean.TRUE);
+        data.put("isolatedPair", Boolean.TRUE);
         pairs.addLast(data);
         rd();
       }
@@ -1295,7 +1297,7 @@ public class AnnotationParser implements JmolAnnotationParser {
                 map.put("_path", svPath);
                 list.addLast(struc);
                 for (int k = units.size(); --k >= 0;) {
-                  boolean ret = catalogUnit(viewer, null, units.get(k)
+                  catalogUnit(viewer, null, units.get(k)
                       .asString(), 0, bsAtoms, modelAtomIndices, resMap,
                       null, modelMap);
                 }
@@ -1670,6 +1672,10 @@ public class AnnotationParser implements JmolAnnotationParser {
 
   private String fixKeyDSSR(String key) {
     String s = key.toLowerCase();
+    int pt;
+    // lonePair is now isoslatedPair
+    while((pt = s.indexOf("lonepair")) >= 0)
+      s = (key = key.substring(0, pt) + "isolatedPair" + key.substring(pt + 8)).toLowerCase();
     // Check to see if we have already asked for pairs or the data type
     // does not have the "basePairs" key
     if (s.indexOf("pairs") < 0 && s.indexOf("kissingloops") < 0
@@ -1753,9 +1759,9 @@ public class AnnotationParser implements JmolAnnotationParser {
                         int modelIndex, BS bsModel) {
     if (dbObj == null)
       return new BS();
-    boolean isStruc = (type == T.rna3d);
-    boolean isDomains = (type == T.domains);
-    boolean isValidation = (type == T.validation);
+    //boolean isStruc = (type == T.rna3d);
+    //boolean isDomains = (type == T.domains);
+    //boolean isValidation = (type == T.validation);
     boolean isDSSR = (type == T.dssr);
     boolean doCache = !key.contains("NOCACHE");
     if (!doCache) {
