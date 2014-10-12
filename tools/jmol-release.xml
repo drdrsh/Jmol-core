@@ -21,8 +21,9 @@
   <property name="path.release"    value="Jmol-beta/Jmol 14.3" />
   <property name="prefix.release"  value="Jmol " />
 
+	<echo message="${dist.dir}" />
   <property file="${dist.dir}/Jmol.properties" prefix="Jmol.properties" />
-  <property name="version" value="${Jmol.properties.___JmolVersion}" />
+  <property name="version" value="${Jmol.properties.Jmol.___JmolVersion}" />
   <propertyregex property="version"
   			  override = "true"
 	          input="${version}"
