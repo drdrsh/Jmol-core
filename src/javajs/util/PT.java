@@ -1590,6 +1590,17 @@ public class PT {
     return Math.round(d * f) / f;
   }
 
+  /**
+   * parse a float or "float/float"
+   * @param s
+   * @return a/b
+   */
+  public static float parseFloatFraction(String s) {
+      int pt = s.indexOf("/");
+      return (pt < 0 ? parseFloat(s) : parseFloat(s.substring(0, pt))
+          / parseFloat(s.substring(pt + 1)));
+  }
+
 //static {
 //    
 //  double d = 790.8999998888;

@@ -9,6 +9,7 @@ import javajs.util.M3;
 import javajs.util.Matrix;
 import javajs.util.P3;
 import javajs.util.PT;
+import javajs.util.T3;
 //import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
@@ -229,8 +230,7 @@ public class MSRdr implements MSInterface {
   }
 
   @Override
-  public int initialize(AtomSetCollectionReader r, int modDim)
-      throws Exception {
+  public int initialize(AtomSetCollectionReader r, int modDim) throws Exception {
     cr = r;
     modCoord = r.checkFilterKey("MODCOORD");
     modDebug = r.checkFilterKey("MODDEBUG");
@@ -242,6 +242,18 @@ public class MSRdr implements MSInterface {
     modSelected = r.parseIntStr("" + r.getFilter("MOD="));
     modVib = r.checkFilterKey("MODVIB"); // then use MODULATION ON  to see modulation
     modAverage = r.checkFilterKey("MODAVE");
+    String smodTUV = r.getFilter("MODT=");
+    if (smodTUV != null || (smodTUV = r.getFilter("MODTUV=")) != null) {
+      modTUV = new P3();
+      String[] tuv = (smodTUV + ",0,0,0").split(",");
+      modTUV.x = PT.parseFloatFraction(tuv[0]);
+      modTUV.y = PT.parseFloatFraction(tuv[1]);
+      modTUV.z = PT.parseFloatFraction(tuv[2]);
+      if (Float.isNaN(modTUV.lengthSquared())) {
+        Logger.error("MSRdr cannot read modTUV=" + smodTUV);
+        modTUV = null;
+      }
+    }
     setModDim(modDim);
     return modDim;
   }
@@ -334,7 +346,10 @@ public class MSRdr implements MSInterface {
   @Override
   public void finalizeModulation() {
     if (!finalized && modDim > 0 && !modVib) {
-      cr.asc.setInfo("modulationOn", Boolean.TRUE);
+      // handled by ModelLoader
+      if (modTUV != null)
+        cr.appendLoadNote("modTUV=" + modTUV);
+      cr.asc.setInfo("modulationOn", modTUV == null ? Boolean.TRUE : modTUV);
       cr.addJmolScript((haveOccupancy && !isCommensurate ? ";display occupancy >= 0.5"
           : ""));
     }
@@ -592,7 +607,7 @@ public class MSRdr implements MSInterface {
       double[] pt = htModulation.get(key);
       if (pt != null) {
         // look for corresponding crenel so that we can combine them.
-        String key1 = "O_0#0" + key.substring(5);
+        String key1 = "O_0#0" + key.substring(key.indexOf(";"));
         double[] pt1 = htModulation.get(key1);
         if (pt1 == null) {
           Logger.error("Crenel " + key1 + " not found for legendre modulation " + key);
@@ -601,7 +616,6 @@ public class MSRdr implements MSInterface {
           htModulation.put(key, new double[] { pt1[0], pt1[1], pt[0], pt[1] });
         }
       }
-      break;
     }
   }
         
@@ -644,6 +658,8 @@ public class MSRdr implements MSInterface {
   private P3[] qs;
 
   private int modCount;
+
+  private T3 modTUV;
 
   /**
    * determine simple linear combination assuming simple -3 to 3 no more than
@@ -794,7 +810,7 @@ public class MSRdr implements MSInterface {
    * 
    * Modulation generally involves x4 = q.r + t. Here we arbitrarily set t =
    * modT = 0, but modT could be a FILTER option MODT=n. There would need to be
-   * one modT per dimension.
+   * one modT per dimension or modU, modV.
    * 
    * @param a
    */
@@ -845,7 +861,7 @@ public class MSRdr implements MSInterface {
         r0, modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a), 
         a.vib instanceof Vibration ? (Vibration) a.vib : null);
 
-    ms.calculate(null, false);
+    ms.calculate(modTUV, false);
 
     // ms parameter values are used to set occupancies, 
     // vibrations, and anisotropy tensors.

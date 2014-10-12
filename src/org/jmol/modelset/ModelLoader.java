@@ -151,6 +151,7 @@ public final class ModelLoader {
   private JmolBioResolver jbr;
   public Group[] groups;
   private int groupCount;
+  private P3 modulationTUV;
   
 
   @SuppressWarnings("unchecked")
@@ -191,7 +192,11 @@ public final class ModelLoader {
       }
     }
     htGroup1 = (Map<String, String>) ms.getInfoM("htGroup1");
-    modulationOn = ms.getMSInfoB("modulationOn");
+    Object mod = ms.getInfoM("modulationOn");
+    if (mod != null) {
+      modulationOn = true;
+      modulationTUV = (mod == Boolean.TRUE ? null : (P3) mod);
+    }
     noAutoBond = ms.getMSInfoB("noAutoBond");
     is2D = ms.getMSInfoB("is2D");
     doMinimize = is2D && ms.getMSInfoB("doMinimize");
@@ -1136,7 +1141,7 @@ public final class ModelLoader {
         }
       }
     if (modulationOn)
-      ms.setModulation(null, true, null, false);
+      ms.setModulation(null, true, modulationTUV, false);
     if (autoBonding) {
       ms.autoBondBs4(bs, bs, bsExclude, null,
           ms.defaultCovalentMad, vwr.getBoolean(T.legacyautobonding));

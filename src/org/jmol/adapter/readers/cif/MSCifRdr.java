@@ -418,11 +418,13 @@ public class MSCifRdr extends MSRdr {
             pt[0] = f;
             pt[2] = 1;
             break;
+          case LEG_OCC_ORDER:
           case DEPR_FO_COS:
           case FWV_OCC_COS:
-          case LEG_OCC_ORDER:
             axis = "0";
             //$FALL-THROUGH$
+          case LEG_DISP_ORDER:
+          case LEG_U_ORDER:
           case WV_Y:
           case FWV_Y:
           case JANA_FWV_Q2_COEF:
@@ -439,8 +441,6 @@ public class MSCifRdr extends MSRdr {
           case FWV_U_COS:
           case DEPR_FD_COS:
           case DEPR_FU_COS:
-          case LEG_DISP_ORDER:
-          case LEG_U_ORDER:
             pt[1] = f;
             break;
           case WV_Z:
@@ -495,6 +495,9 @@ public class MSCifRdr extends MSRdr {
             addMod(type_id + "#z;" + atomLabel, fid,
                 new double[] { c, w, pt[2] });
           continue;
+        }
+        if (type_id.indexOf("_L") == 1) {
+          axis += (int) pt[1];
         }
         type_id += "#" + axis + ";" + atomLabel;
         break;

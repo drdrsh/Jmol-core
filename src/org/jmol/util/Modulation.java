@@ -159,12 +159,11 @@ public class Modulation {
       // calc a1*P{i}(x)
       double xp = 1;
       double[] p = legendre[order];
-      double xv = 0;
       for (int i = 0, n = p.length; i < n; i++) {
-        xv += p[i] * xp;
+        v += p[i] * xp;
         xp *= x;
       }
-      v += xv * a1;
+      v *= a1;
       break;
     case TYPE_OCC_CRENEL:
 

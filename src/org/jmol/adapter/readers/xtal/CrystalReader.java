@@ -378,14 +378,9 @@ public class CrystalReader extends AtomSetCollectionReader {
   private boolean readShift() {
     String[] tokens = getTokens();
     int pt = tokens.length - 3;
-    ptOriginShift.set(fraction(tokens[pt++]), fraction(tokens[pt++]),
-        fraction(tokens[pt]));
+    ptOriginShift.set(PT.parseFloatFraction(tokens[pt++]), PT.parseFloatFraction(tokens[pt++]),
+        PT.parseFloatFraction(tokens[pt]));
     return true;
-  }
-
-  private float fraction(String f) {
-    String[] ab = PT.split(f, "/");
-    return (ab.length == 2 ? parseFloatStr(ab[0]) / parseFloatStr(ab[1]) : 0);
   }
 
   private float primitiveVolume;

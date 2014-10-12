@@ -1793,5 +1793,4 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
   }
 
-
 }

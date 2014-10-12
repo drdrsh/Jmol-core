@@ -34,6 +34,7 @@ import org.jmol.util.Logger;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.P3;
+import javajs.util.PT;
 import javajs.util.V3;
 
 /**
@@ -135,13 +136,9 @@ public class CgdReader extends AtomSetCollectionReader {
     // check for  ATOM "SI1" 4 0.3112 0.2500 0.3727
     int edgeCount = parseIntStr(tokens[2]);
     // check for  ATOM  1  4   5/8 5/8 5/8
-    for (int i = 3; i < 6; i++) {
-      int pt = tokens[i].indexOf("/");
-      if (pt >= 0)
-        tokens[i] = ""
-            + (parseFloatStr(tokens[i].substring(0, pt)) / parseFloatStr(tokens[i]
-                .substring(pt + 1)));
-    }
+    for (int i = 3; i < 6; i++)
+      if (tokens[i].indexOf("/") >= 0)
+        tokens[i] = "" + PT.parseFloatFraction(tokens[i]);
     Atom a = addAtomXYZSymName(tokens, 3, null, name);
     if (!doApplySymmetry)
       return;
@@ -207,14 +204,8 @@ public class CgdReader extends AtomSetCollectionReader {
   }
 
   private P3 getCoord(int i) {
-    return P3.new3(getFloat(tokens[i++]), getFloat(tokens[i++]),
-        getFloat(tokens[i++]));
-  }
-
-  private float getFloat(String s) {
-    int pt = s.indexOf("/");
-    return (pt >= 0 ? parseFloatStr(s.substring(0, pt))
-        / parseFloatStr(s.substring(pt + 1)) : parseFloatStr(s));
+    return P3.new3(PT.parseFloatFraction(tokens[i++]), PT.parseFloatFraction(tokens[i++]),
+        PT.parseFloatFraction(tokens[i++]));
   }
 
   private final static V3[] vecs = new V3[] { V3.new3(0, 0, -1), // -z   -7

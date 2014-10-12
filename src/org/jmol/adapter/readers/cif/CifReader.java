@@ -558,13 +558,7 @@ public class CifReader extends AtomSetCollectionReader {
           s = tokens[j].trim();
           if (s.length() == 0)
             continue;
-          int pt = s.indexOf("/");
-          if (pt < 0) {
-            pt = s.length();
-            s += "/1";
-          }
-          if ((f[j] = PT.parseFloat(s.substring(0, pt))
-              / PT.parseFloat(s.substring(pt + 1))) != 0)
+          if ((f[j] = PT.parseFloatFraction(s)) != 0)
             n++;
         }
         if (n >= 2) // needs to have an x y or z as well as a +/-1;
