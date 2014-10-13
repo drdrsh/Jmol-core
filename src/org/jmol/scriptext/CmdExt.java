@@ -2655,6 +2655,8 @@ public class CmdExt implements JmolCmdExtension {
           atomNumberFieldColumnCount, propertyField, propertyFieldColumnCount);
       return;
     }
+    if ("occupany".equals(dataType))
+        dataType = "occupancy"; // legacy misspelling in states
     int userType = AtomCollection.getUserSettableType(dataType);
     if (userType >= 0) {
       // this is a known settable type or "property_xxxx"

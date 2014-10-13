@@ -170,7 +170,7 @@ abstract public class AtomCollection {
     bsClickable = new BS();
     // this allows the Google Closure compiler to skip all the TAINTED defs in Clazz.defineStatics
     if (userSettableValues == null)
-      userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupany partialCharge temperature valence vanderWaals vibrationVector atomNo seqID".split(" ");
+      userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupancy partialCharge temperature valence vanderWaals vibrationVector atomNo seqID".split(" ");
   }
   
   protected void releaseModelSet() {
