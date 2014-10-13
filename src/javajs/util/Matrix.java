@@ -163,10 +163,20 @@ public class Matrix implements Cloneable {
     return x;
   }
 
+  /**
+   * add two matrices
+   * @param b
+   * @return new Matrix this + b
+   */
   public Matrix add(Matrix b) {
     return scaleAdd(b, 1);
   }
 
+  /**
+   * subtract two matrices
+   * @param b
+   * @return new Matrix this - b
+   */
   public Matrix sub(Matrix b) {
     return scaleAdd(b, -1);
   }

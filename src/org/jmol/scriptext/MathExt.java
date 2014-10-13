@@ -1467,7 +1467,7 @@ public class MathExt implements JmolMathExtension {
 
   private boolean evaluateModulation(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
-    String type = "D";
+    String type = "";
     float t = Float.NaN;
     P3 t456 = null;
     switch (args.length) {
@@ -1486,7 +1486,7 @@ public class MathExt implements JmolMathExtension {
       }
       break;
     case 2:
-      type = SV.sValue(args[0]).toUpperCase();
+      type = SV.sValue(args[0]);
       t = SV.fValue(args[1]);
       break;
     default:
@@ -1495,7 +1495,8 @@ public class MathExt implements JmolMathExtension {
     if (t456 == null && t < 1e6)
       t456 = P3.new3(t, t, t);
     BS bs = SV.getBitSet(mp.getX(), false);
-    return mp.addXList(vwr.ms.getModulationList(bs, type, t456));
+    return mp.addXList(vwr.ms.getModulationList(bs,
+        (type + "D").toUpperCase().charAt(0), t456));
   }
 
   private boolean evaluatePlane(ScriptMathProcessor mp, SV[] args, int tok)

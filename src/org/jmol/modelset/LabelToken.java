@@ -162,7 +162,7 @@ public class LabelToken {
       T.fux, T.fuy, T.fuz, T.hydrophobicity, T.screenx, 
       T.screeny, T.screenz, T.screenxyz, // added in 12.3.30
       T.magneticshielding, T.chemicalshift, T.chainno, T.seqid,
-      T.modx, T.mody, T.modz, T.modxyz, T.symop
+      T.modx, T.mody, T.modz, T.modo, T.modxyz, T.symop
   };
 
   public LabelToken() {
@@ -563,6 +563,7 @@ public class LabelToken {
       case T.modx:
       case T.mody:
       case T.modz:
+      case T.modo:
         floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);
         if (Float.isNaN(floatT))
           strT = "";

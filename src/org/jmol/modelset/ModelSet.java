@@ -1975,7 +1975,7 @@ import java.util.Properties;
     return -1;
   }
 
-  public Lst<Object> getModulationList(BS bs, String type, P3 t456) {
+  public Lst<Object> getModulationList(BS bs, char type, P3 t456) {
     Lst<Object> list = new Lst<Object>();
     if (vibrations != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
@@ -1983,7 +1983,7 @@ import java.util.Properties;
           list.addLast(((JmolModulationSet) vibrations[i]).getModulation(type,
               t456));
         else
-          list.addLast(null);
+          list.addLast(Float.valueOf(type == 'O' ? Float.NaN : -1));
     return list;
   }
 

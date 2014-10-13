@@ -606,6 +606,8 @@ abstract public class AtomCollection {
         if (n >= values.length)
           return;
         fValue = values[n++];
+        if (Float.isNaN(fValue))
+          continue;
         iValue = (int) fValue;
       } else if (list != null) {
         if (n >= list.length)
@@ -765,10 +767,12 @@ abstract public class AtomCollection {
         return v.y;
       case 'Z':
         return v.z;
+      case 'O':
+        return ((Float) ms.getModulation('O', null)).floatValue();
       case '1':
       case '2':
       case '3':
-        T3 t = ms.getModulation("T", null);
+        T3 t = (T3) ms.getModulation('T', null);
         float x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
         return (float) (x - Math.floor(x));
       }

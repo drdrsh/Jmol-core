@@ -238,14 +238,14 @@ public class MSRdr implements MSInterface {
     modLast = r.checkFilterKey("MODLAST"); // select last symmetry, not first, for special positions  
     modAxes = r.getFilter("MODAXES="); // xyz
     modType = r.getFilter("MODTYPE="); //ODU
-    modCell = r.getFilter("MODCELL="); // substystem for cell
+    modCell = r.getFilter("MODCELL="); // subsystem for cell
     modSelected = r.parseIntStr("" + r.getFilter("MOD="));
     modVib = r.checkFilterKey("MODVIB"); // then use MODULATION ON  to see modulation
     modAverage = r.checkFilterKey("MODAVE");
     String smodTUV = r.getFilter("MODT=");
     if (smodTUV != null || (smodTUV = r.getFilter("MODTUV=")) != null) {
       modTUV = new P3();
-      String[] tuv = (smodTUV + ",0,0,0").split(",");
+      String[] tuv = (PT.replaceAllCharacters(smodTUV,"{}()","") + ",0,0,0").split(",");
       modTUV.x = PT.parseFloatFraction(tuv[0]);
       modTUV.y = PT.parseFloatFraction(tuv[1]);
       modTUV.z = PT.parseFloatFraction(tuv[2]);
@@ -843,7 +843,6 @@ public class MSRdr implements MSInterface {
     if (iop != iopLast) {
       // for each new operator, we need to generate new matrices.
       // gammaE is the pure rotation part of the operation;
-      // gammaIS is a full rotation/translation matrix in fractional coordinates.
       // nOps is used as a factor in occupation modulation only.
       iopLast = iop;
       gammaE = new M3();
@@ -856,9 +855,9 @@ public class MSRdr implements MSInterface {
 
     // The magic happens here. Note that we must preserve any spin "vibration"
     // because we are going to repurpose that.
-    P3 r0 = getAtomR0(a);
     ModulationSet ms = new ModulationSet().setMod(a.index + " " + a.atomName,
-        r0, modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a), 
+        getAtomR0(cr.asc.atoms[a.atomSite]), getAtomR0(a), 
+        modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a), 
         a.vib instanceof Vibration ? (Vibration) a.vib : null);
 
     ms.calculate(modTUV, false);

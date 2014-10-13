@@ -115,7 +115,6 @@ public class Modulation {
 
   
   /**
-   * see note in ModulationSet
    * 
    * @param ms
    * @param t
@@ -145,8 +144,9 @@ public class Modulation {
         Logger.info("MOD " + ms.id + " " + Escape.e(qCoefs) + " axis=" + axis
             + " v=" + v + " csin,ccos=" + a1 + "," + a2 + " / theta=" + theta);
       break;
-    case TYPE_DISP_LEGENDRE:
     case TYPE_U_LEGENDRE:
+      // not implemented in reader, but all set here
+    case TYPE_DISP_LEGENDRE:
       ms.vOcc0 = Float.NaN; // absolute
       nt -= Math.floor(nt);
       if (!range(nt))
@@ -159,14 +159,16 @@ public class Modulation {
       // calc a1*P{i}(x)
       double xp = 1;
       double[] p = legendre[order];
-      for (int i = 0, n = p.length; i < n; i++) {
+      int i = 0, n = p.length;
+      while (true) {
         v += p[i] * xp;
+        if (++i == n)
+          break;
         xp *= x;
       }
       v *= a1;
       break;
     case TYPE_OCC_CRENEL:
-
       //  An occupational crenel function along the internal space is
       //  defined as follows:
       //

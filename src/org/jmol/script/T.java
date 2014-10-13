@@ -639,6 +639,7 @@ public class T {
   public final static int modx            = floatproperty | 23;
   public final static int mody            = floatproperty | 24;
   public final static int modz            = floatproperty | 25;
+  public final static int modo            = floatproperty | 26;
   public final static int vectorscale     = floatproperty | 1 | floatparam;
   public final static int atomx           = floatproperty | 1 | settable;
   public final static int atomy           = floatproperty | 2 | settable;
@@ -2011,6 +2012,7 @@ public class T {
         "modx",
         "mody",
         "modz",
+        "modo",
         "modxyz",
         "molecule",
         "molecules",
@@ -3028,6 +3030,7 @@ public class T {
         modx,                               // "modx"
         mody,                               // "mody"
         modz,                               // "modz"
+        modo,                               // "modo"
         modxyz,                             // "vxyz"
         molecule,                           // "molecule"
         -1,                                 // "molecules"

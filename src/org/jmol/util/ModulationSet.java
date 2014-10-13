@@ -15,8 +15,8 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 /**
- * A class to group a set of modulations for an atom as a "vibration"
- * Extends V3 so that it will be a displacement, and its value will be an occupancy
+ * A class to group a set of modulations for an atom as a "vibration" Extends V3
+ * so that it will be a displacement, and its value will be an occupancy
  * 
  * @author Bob Hanson hansonr@stolaf.edu 8/9/2013
  * 
@@ -29,166 +29,234 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public float vOcc0;
 
   String id;
-  
+
   private Lst<Modulation> mods;
   private int iop;
   private P3 r0;
   /**
-   * vib is a spin vector when the model has modulation; 
-   * otherwise an unmodulated vibration.
+   * vib is a spin vector when the model has modulation; otherwise an
+   * unmodulated vibration.
    * 
    */
   public Vibration vib;
   public V3 mxyz;
-  
-  private SymmetryInterface symmetry;  
+
+  private SymmetryInterface symmetry;
   private M3 gammaE;
   private Matrix gammaIinv;
   private Matrix sigma;
-  private Matrix sI;
   private Matrix tau;
-  
+
   private boolean enabled;
   private float scale = 1;
- 
+
   private P3 qtOffset = new P3();
   private boolean isQ;
 
-  private Matrix t;
-  
+  private Matrix rI;
+
   private ModulationSet modTemp;
   private String strop;
   private boolean isSubsystem;
-  
-  private Matrix tFactor;
+
+  private Matrix tFactorInv;
+  private Matrix rsvs;
 
   @Override
   public float getScale() {
     return scale;
   }
-  
+
   @Override
   public boolean isEnabled() {
     return enabled;
   }
 
   public ModulationSet() {
-    
+
   }
-  
+
   /**
    * A collection of modulations for a specific atom.
    * 
-   * The set of cell wave vectors form the sigma (d x 3) array, one vector per row. 
-   * Multiplying sigma by the atom vector r (3 x 1) gives us a (d x 1) column vector.
-   * This column vector is the set of coefficients of [x4, x5, x6...] that I will
-   * call X. 
-   * 
-   * Similarly, we express the x1' - xn' aspects of the operators as the matrices
-   * Gamma_I (d x d epsilons) and s_I (d x 1 shifts).
-   * 
-   * Note that S_I may include mixing in from x1, x2, and x3.
-   * In SSG 67.1.16.12  Acmm(1/2,0,g)0s0, for example, we have:  
-   *  
-   *   (x1,x2,-x3,-x4 + x1+1/2) 
-   *  
-   *   http://stokes.byu.edu/iso/ssginfo.php?label=67.1.16.12&notation=x1x2x3x4
-   * 
-   * These components need to be added into the offsets S_I. 
-   * (Fixed in Jmol 14.[2/3].7 10/11/2014)
-   *    
-   * In the case of subsystems, these are extracted from:
-   * 
-   *    {Rs_nu | Vs_nu} = W_nu {Rs|Vs} W_nu^-1
-   * 
-   * Then for X defined as [x4,x5,x6...] we have:
-   * 
-   * X' = Gamma_I * X + S_I
-   * 
-   * or
-   * 
-   * X = (Gamma_I^-1)(X' - S_I)
-   * 
-   * I call this array "tau". We can think of this as a
-   * distance along the a_sn axis, as in a t-plot (van Smaalen, Fig. 2.6, p. 35)
-   * but for all d, not just one. 
-   * 
-   * Ultimately we will need to add in a term allowing 
-   * us to adjust the t-value:
-   * 
-   * X = (Gamma_I^-1)(X' - S_I + t)
-   * 
-   * X = tau + (Gamma_I^-1)(t)
-   * 
-   * or, below:
-   * 
-   *   xt = gammaIinv.mul(t).add(tau)
-   * 
-   * For subsystem nu, we need to use t_nu, which will be
-   * 
-   * t_nu = (W_dd - sigma W_3d) t   (van Smaalen, p. 101)
-   * 
-   * t_nu = (tFactor) t
-   * 
-   * so this becomes
-   * 
-   * xt = gammaIinv.mul(tFactor.inverse().mul(t)).add(tau)
-   * 
-   * Thus we have two subsystem-dependent modulation factors we
-   * need to bring in, sigma and tFactor, and two we need to compute,
-   * GammaIinv and tau.
    * 
    * @param id
-   * @param r0        unmodulated (average) position
-   * @param modDim
+   * @param r00
+   *        originating atom position prior to application of symmetry
+   * @param r0
+   *        unmodulated (average) position after application of symmetry
+   * @param d
    * @param mods
    * @param gammaE
-   * @param factors   including sigma and tFactor
+   * @param factors
+   *        including sigma and tFactor
    * @param iop
    * @param symmetry
-   * @param v TODO
+   * @param v
+   *        TODO
    * @return this
    * 
    * 
    */
 
-  public ModulationSet setMod(String id, P3 r0, int modDim,
-                           Lst<Modulation> mods, M3 gammaE, Matrix[] factors,
-                           int iop, SymmetryInterface symmetry, Vibration v) {
+  public ModulationSet setMod(String id, P3 r00, P3 r0, int d,
+                              Lst<Modulation> mods, M3 gammaE,
+                              Matrix[] factors, int iop,
+                              SymmetryInterface symmetry, Vibration v) {
+
+    // The superspace operation matrix is (3+d+1)x(3+d+1) rotation/translation matrix
+    // that can be blocked as follows:
+    // 
+    //              rotational part     | translational part
+    //          
+    //             Gamma_E     0        |  S_E + n
+    // {Gamma|S} =                        
+    //             Gamma_M   Gamma_I    |  S_I
+    //             
+    //               0         0        |   1
+    // 
+    // where Gamma_E is the "external" 3x3 R3 point group operation 
+    //       Gamma_I is the "intermal" dxd point group operation
+    //       Gamma_M is the dx3 "mixing" component that adds an
+    //               external effect to tbe rotation of internal coordinates.
+    //       3x1 S_E and 3x1 S_I are the external and internal translations, respectively
+    //       n is the R3 part of the lattice translation that is part of this particular operation
+    //       
+    // Note that all elements of Gamma are 0, 1, or -1 -- "epsilons"
+    //
+    // Likewise, the 3+d coordinate vector that Gamma|S is being operated upon is a (3+d x 1) column vector
+    // that can be considered to be an external ("R3") component and an internal ("d-space") component:
+    // 
+    //        r_E (3 x 1)
+    //   r = 
+    //        r_I (d x 1)
+    //
+    // Thus, we have:
+    //
+    //   r' = Gamma * r + S + n 
+    //
+    // with components
+    //
+    //   r'_E = Gamma_E * r_E + S_E + n    (just as for standard structures)
+    //   r'_I = Gamma_M * r_E + Gamma_I * r_I + S_I 
+    //
+    // These equations are not actually used here.
+    //
+    // The set of cell wave vectors form the sigma (d x 3) array, one vector per row.
+    // Multiplying sigma by the atom vector r'_E and adding a zero-point offset
+    // in internal d-space, tuv, gives us r'_I
+    //
+    //   r'_I = sigma * r'_E + tuv
+    //
+    // However, this coordinate is not in the "space" that our modulation functions
+    // are defined for. In order to apply those functions, we must back-transform this
+    // point into the space of the asymmetric unit. We do that inverting our function 
+    // 
+    //   X'_I = Gamma_M * X_E + Gamma_I * X_I + S_I
+    //
+    // to give:
+    //
+    //   X_I = (Gamma_I^-1)(X'_I - Gamma_M * X_E - S_I)
+    //
+    // The parameters to this Java function r0 and r00 provide values for r'_E and r_E, 
+    // respectively. Substituting r'_I for X'_I and r_E for X_E, we get:
+    //
+    //   r_I = (Gamma_I^-1)(sigma * r'_E + tuv - Gamma_M * r_E - S_I)
+    //
+    // In the code below, we precalculate all except the zero-point offset as "tau":
+    //
+    //   tau = gammaIinv.mul(sigma.mul(vR0).sub(gammaM.mul(vR00)).sub(sI));
+    //
+    // and then, in calculate(), we add in the tuv part and sum all the modulations:
+    //
+    //   rI = tau.add(gammaIinv.mul(tuv)).toArray();
+    //   for (int i = mods.size(); --i >= 0;)
+    //     mods.get(i).apply(this, rI);
+    // 
+    // We can think of tau as an operator leading to a point in the "internal" d-space, 
+    // as in a t-plot (van Smaalen, Fig. 2.6, p. 35) but for all internal coordinates together.
+    //
+    //
+    //// Note that Gamma_M is not necessarily all zeros. For example, in 
+    //// SSG 67.1.16.12  Acmm(1/2,0,g)0s0 we have an operator
+    ////  
+    ////  (x1,x2,-x3,x1-x4+1/2) 
+    ////  
+    //// [http://stokes.byu.edu/iso/ssginfo.php?label=67.1.16.12&notation=x1x2x3x4]
+    //// 
+    //// Prior to Jmol 14.[2/3].7 10/11/2014 this was not being considered.
+    ////
+    //// Noting that we have 
+    ////
+    ////   Gamma_M = sigma * Gamma_E - Gamma_I * sigma
+    ////
+    //// and
+    ////
+    ////   X'_I = sigma * X'_E = sigma * (Gamma_E * X_E + S_E)
+    ////
+    //// we can, with some work, rewrite tau as:
+    //// 
+    ////   tau = X_I = sigma * X_E + (Gamma_I^-1)(sigma * S_E - S_I)
+    //// 
+    //// This relationship is used in Jana2006 but not here, because it 
+    //// also necessitates adding in the final lattice shift, and that is not
+    //// as easy as it sounds. It is easier just to use Gamma_M * X_E.
+    ////
+    //// Aside: In the case of subsystems, Gamma and S are extracted from:
+    //// 
+    ////   {Gamma | S} = {Rs_nu | Vs_nu} = W_nu {Rs|Vs} W_nu^-1
+    ////
+    //// For subsystem nu, we need to use t_nu, which will be
+    //// 
+    ////   t_nu = (W_dd - sigma W_3d) * tuv   (van Smaalen, p. 101)
+    //// 
+    ////   t_nu = tFactor * tuv
+    //// 
+    //// so this becomes
+    //// 
+    ////   X_I = tau + (Gamma_I^-1)(tFactor^-1 * tuv)
+    //// 
+    //// Thus we have two subsystem-dependent modulation factors we
+    //// need to bring in, sigma and tFactor, and two we need to compute,
+    //// GammaIinv and tau.
+
+    this.id = id + "_" + symmetry.getSpaceGroupName();
+    strop = symmetry.getSpaceGroupXyz(iop, false);
     this.r0 = r0;
-    vib = v;
-    if (v != null) {
-      mxyz = new V3(); // modulations of spin
-      vib.modScale = 1;
-    }
-    //Logger.info("ModulationSet atom " + id + " at " + r0);
-    this.modDim = modDim;
+    modDim = d;
+    rI = new Matrix(null, d, 1);
     this.mods = mods;
     this.iop = iop;
     this.symmetry = symmetry;
-    strop = symmetry.getSpaceGroupXyz(iop, false);
-    this.id = id + "_" + symmetry.getSpaceGroupName();
+    this.gammaE = gammaE; // gammaE_nu, R, the real 3x3 rotation matrix, as M3
     sigma = factors[0];
-    tFactor = factors[1];
-    isSubsystem = (tFactor != null);
-    
-    if (isSubsystem) {
-      tFactor = tFactor.inverse();
+    if (factors[1] != null) {
+      isSubsystem = true;
+      tFactorInv = factors[1].inverse();
     }
-    
-    this.gammaE = gammaE; // gammaE_nu, R, the real 3x3 rotation matrix
-    
-    Matrix mr0 = Matrix.newT(r0, true);
-    Matrix rsvs = symmetry.getOperationRsVs(iop);
-    gammaIinv = rsvs.getSubmatrix(3,  3,  modDim,  modDim).inverse();
-    Matrix sMix = rsvs.getSubmatrix(3, 0, modDim, 3);
-    sI = rsvs.getSubmatrix(3, 3 + modDim, modDim, 1).add(sMix.mul(mr0));
-    tau = gammaIinv.mul(sigma.mul(mr0).sub(sI));
+    if (v != null) {
+      // An atom's modulation will take the place of its vibration, if it
+      // has one, so we have to create a field here to hang onto that. 
+      // It could be a magnetic moment being modulated, or it may be
+      // just a simple vibration that just needs a place to be.
+      vib = v;
+      vib.modScale = 1;
+      mxyz = new V3(); // modulations of spin
+    }
+    Matrix vR00 = Matrix.newT(r00, true);
+    Matrix vR0 = Matrix.newT(r0, true);
+
+    rsvs = symmetry.getOperationRsVs(iop);
+    gammaIinv = rsvs.getSubmatrix(3, 3, d, d).inverse();
+    Matrix gammaM = rsvs.getSubmatrix(3, 0, d, 3);
+    Matrix sI = rsvs.getSubmatrix(3, 3 + d, d, 1);
+
+    tau = gammaIinv.mul(sigma.mul(vR0).sub(gammaM.mul(vR00)).sub(sI));
+
     if (Logger.debuggingHigh)
-      Logger.debug("MODSET create r=" + Escape.eP(r0) + " si=" + Escape.e(sI.getArray())
-              + " ginv=" + gammaIinv.toString().replace('\n', ' '));
-    
-    t = new Matrix(null, modDim, 1);
+      Logger.debug("MODSET create " + id + " r0=" + Escape.eP(r0) + " tau="
+          + tau);
+
     return this;
   }
 
@@ -196,107 +264,80 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public SymmetryInterface getSubSystemUnitCell() {
     return (isSubsystem ? symmetry : null);
   }
+
   /**
-   * In general, we have, for Fourier:
-   * 
-   * u_axis(x) = sum[A1 cos(theta) + B1 sin(theta)]
-   * 
-   * where axis is x, y, or z, and theta = 2n pi x
-   * 
-   * More generally, we have for a given rotation that is characterized by
-   * 
-   * X {x4 x5 x6 ...}
-   * 
-   * Gamma_E (R3 rotation)
-   * 
-   * Gamma_I (X rotation)
-   * 
-   * S_I (X translation)
-   * 
-   * We allow here only up to x6, simply because we are using standard R3
-   * rotation objects Matrix3f, P3, V3.
-   * 
-   * We desire:
-   * 
-   * u'(X') = Gamma_E u(X)
-   * 
-   * which is defined as [private communication, Vaclav Petricek]:
-   * 
-   * u'(X') = Gamma_E sum[ U_c cos(2 pi (n m).Gamma_I^-1{X - S_I}) + U_s sin(2
-   * pi (n m).Gamma_I^-1{X - S_I}) ]
-   * 
-   * where
-   * 
-   * U_c and U_s are coefficients for cos and sin, respectively (will be a1 and
-   * a2 here)
-   * 
-   * (n m) is an array of Fourier number coefficients, such as (1 0), (1 -1), or
-   * (0 2)
-   * 
-   * In Jmol we precalculate Gamma_I^-1(X - S_I) as tau, but we still have to
-   * factor in Gamma_I^-1(t).
-   * 
-   * @param fracT
+   * Calculate  r_I internal d-space coordinate of an atom.
+   *  
+   * @param tuv
    * @param isQ
-   * @return this
+   * @return this ModulationSet, with this.rI set to the coordinate
    */
-  
-  public synchronized ModulationSet calculate(T3 fracT, boolean isQ) {
+
+  public synchronized ModulationSet calculate(T3 tuv, boolean isQ) {
+    // initialize modulation components
     x = y = z = 0;
-    if (mxyz != null)
-      mxyz.set(0, 0, 0);
     htUij = null;
     vOcc = Float.NaN;
-    double[][] a = t.getArray();
-    for (int i = 0; i < modDim; i++)
-      a[i][0] = 0;
+    if (mxyz != null)
+      mxyz.set(0, 0, 0);
+    double[][] a;
     if (isQ && qtOffset != null) {
+      // basically moving whole unit cells here
+      // applied to all cell wave vectors
       Matrix q = new Matrix(null, 3, 1);
       a = q.getArray();
       a[0][0] = qtOffset.x;
       a[1][0] = qtOffset.y;
       a[2][0] = qtOffset.z;
-      a = (t = sigma.mul(q)).getArray();
+      a = (rI = sigma.mul(q)).getArray();
+    } else {
+      // initialize to 0 0 0
+      a = rI.getArray();
+      for (int i = 0; i < modDim; i++)
+        a[i][0] = 0;
     }
-    if (fracT != null) {
+    if (tuv != null) {
+      // add in specified x4,x5,x6 offset:
       switch (modDim) {
       default:
-        a[2][0] += fracT.z;
+        a[2][0] += tuv.z;
         //$FALL-THROUGH$
       case 2:
-        a[1][0] += fracT.y;
+        a[1][0] += tuv.y;
         //$FALL-THROUGH$
       case 1:
-        a[0][0] += fracT.x;
+        a[0][0] += tuv.x;
         break;
       }
-      if (isSubsystem)
-        t = tFactor.mul(t);
     }
-    t = gammaIinv.mul(t).add(tau);
-    double[][] ta = t.getArray();
-    //System.out.println("this1 =" + this + " " + ta[0][0] + " " + ta[1][0]);
+    if (isSubsystem) {
+      // apply subsystem scaling adjustment
+      rI = tFactorInv.mul(rI);
+    }
+    // add in precalculated part
+    rI = tau.add(gammaIinv.mul(rI));
+    // modulate
+    double[][] arI = rI.getArray();
     for (int i = mods.size(); --i >= 0;)
-      mods.get(i).apply(this, ta);
+      mods.get(i).apply(this, arI);
+    // rotate by R3 rotation
     gammaE.rotate(this);
-    //System.out.println("this2 =" + this);
     if (mxyz != null)
       gammaE.rotate(mxyz);
     return this;
   }
-  
+
   public void addUTens(String utens, float v) {
     if (htUij == null)
       htUij = new Hashtable<String, Float>();
     Float f = htUij.get(utens);
     if (Logger.debuggingHigh)
-      Logger.debug("MODSET " + id + " utens=" + utens + " f=" + f + " v="+ v);
-    if(f != null)
+      Logger.debug("MODSET " + id + " utens=" + utens + " f=" + f + " v=" + v);
+    if (f != null)
       v += f.floatValue();
     htUij.put(utens, Float.valueOf(v));
   }
 
-  
   /**
    * Set modulation "t" value, which sets which unit cell in sequence we are
    * looking at; d=1 only.
@@ -308,8 +349,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * 
    */
   @Override
-  public synchronized void setModTQ(T3 a, boolean isOn, T3 qtOffset, boolean isQ,
-                       float scale) {
+  public synchronized void setModTQ(T3 a, boolean isOn, T3 qtOffset,
+                                    boolean isQ, float scale) {
     if (enabled)
       addTo(a, Float.NaN);
     enabled = false;
@@ -336,7 +377,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     ptTemp.scale(this.scale * scale);
     if (a != null) {
       //if (!isReset)
-        //System.out.println(a + " ms " + ptTemp);
+      //System.out.println(a + " ms " + ptTemp);
       symmetry.toCartesian(ptTemp, true);
       a.add(ptTemp);
     }
@@ -344,7 +385,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (mxyz != null)
       setVib(isReset);
   }
-    
+
   private void setVib(boolean isReset) {
     vib.setT(v0);
     if (isReset)
@@ -370,28 +411,32 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   public T3 getModPoint(boolean asEnabled) {
     return (asEnabled ? this : r0);
   }
+
   @Override
-  public T3 getModulation(String type, T3 tuv) {
+  public Object getModulation(char type, T3 tuv) {
     getModTemp();
-    if (type.equals("D")) {
+    switch (type) {
+    case 'D':
       // return r0 if t456 is null, otherwise calculate dx,dy,dz for a given t4,5,6
       return P3.newP(tuv == null ? r0 : modTemp.calculate(tuv, false));
-    }
-    if (type.equals("M")) {
+    case 'M':
       // return r0 if t456 is null, otherwise calculate dx,dy,dz for a given t4,5,6
       return P3.newP(tuv == null ? v0 : modTemp.calculate(tuv, false).mxyz);
-    }
-    if (type.equals("T")) {
+    case 'T':
       modTemp.calculate(tuv, false);
-      double[][] ta = modTemp.t.getArray();
-      return P3.new3((float) ta[0][0], (modDim > 1 ? (float) ta[1][0] : 0), (modDim > 1 ? (float) ta[2][0] : 0));
+      double[][] ta = modTemp.rI.getArray();
+      return P3.new3((float) ta[0][0], (modDim > 1 ? (float) ta[1][0] : 0),
+          (modDim > 2 ? (float) ta[2][0] : 0));
+    case 'O':
+      // return vOcc
+      return Float.valueOf(modTemp.calculate(tuv, false).vOcc * 100);
     }
     return null;
   }
 
   P3 ptTemp = new P3();
   private V3 v0;
-  
+
   @Override
   public void setTempPoint(T3 a, T3 t456, float vibScale, float scale) {
     if (!enabled)
@@ -400,7 +445,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     addTo(a, Float.NaN);
     modTemp.calculate(t456, false).addTo(a, scale);
   }
-    
+
   private void getModTemp() {
     if (modTemp == null) {
       modTemp = new ModulationSet();
@@ -415,7 +460,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       modTemp.v0 = v0;
       modTemp.vib = vib;
       modTemp.symmetry = symmetry;
-      modTemp.t = t;
+      modTemp.rI = rI;
       if (mxyz != null) {
         modTemp.mxyz = new V3();
       }
@@ -429,9 +474,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     modInfo.put("r0", r0);
     modInfo.put("tau", tau.getArray());
     modInfo.put("modDim", Integer.valueOf(modDim));
-    modInfo.put("gammaE", gammaE);
-    modInfo.put("gammaIinv", gammaIinv.getArray());
-    modInfo.put("sI", sI.getArray());
+    modInfo.put("rsvs", rsvs);
     modInfo.put("sigma", sigma.getArray());
     modInfo.put("symop", Integer.valueOf(iop + 1));
     modInfo.put("strop", strop);
@@ -451,7 +494,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     // or an associated simple vibration,
     // then we allow setting of that.
     // but this is temporary, since really we set these from v0.
-    if (vib == null) 
+    if (vib == null)
       return;
     if (vib.modDim == Vibration.TYPE_SPIN) {
       if (v.x == PT.FLOAT_MIN_SAFE && v.y == PT.FLOAT_MIN_SAFE) {
@@ -494,13 +537,15 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public boolean isNonzero() {
-    return x != 0 || y != 0 || z != 0 || 
-        mxyz != null && (mxyz.x != 0 || mxyz.y != 0 || mxyz.z != 0);
+    return x != 0 || y != 0 || z != 0 || mxyz != null
+        && (mxyz.x != 0 || mxyz.y != 0 || mxyz.z != 0);
   }
 
   private float[] axesLengths;
+
   float[] getAxesLengths() {
-    return (axesLengths == null ? (axesLengths = symmetry.getNotionalUnitCell()) : axesLengths);
+    return (axesLengths == null ? (axesLengths = symmetry.getNotionalUnitCell())
+        : axesLengths);
   }
 
 }

@@ -7,7 +7,7 @@ import javajs.util.V3;
 
 public interface JmolModulationSet {
 
-  T3 getModulation(String type, T3 t456);
+  Object getModulation(char type, T3 t456);
 
   String getState();
 

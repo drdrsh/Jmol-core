@@ -1109,7 +1109,6 @@ public class Atom extends Point3fi implements BNode {
     return group.chain.model.ms.getModulationCoord(i, ch);
   }
 
-
   public int getPolymerLength() {
     return group.getBioPolymerLength();
   }
@@ -1438,6 +1437,8 @@ public class Atom extends Point3fi implements BNode {
       return getModulationCoord('Y');
     case T.modz:
       return getModulationCoord('Z');
+    case T.modo:
+      return getModulationCoord('O');
     case T.volume:
       return getVolume(vwr, VDW.AUTO);
     case T.fracxyz:
