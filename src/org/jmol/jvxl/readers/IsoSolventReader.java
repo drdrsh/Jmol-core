@@ -379,8 +379,9 @@ class IsoSolventReader extends AtomDataReader {
     isSurfacePoint = (bsSurfaceVoxels != null && (bsSurfaceVoxels.get(vA) || bsSurfaceVoxels
         .get(vB)));
     if (voxelSource != null) {
-      int vs = Math.abs(valueA < valueB ? voxelSource[vA] : voxelSource[vB]);
-      iAtomSurface = atomIndex[vs - 1];      
+      int vs = Math.abs(Float.isNaN(valueB)||valueA < valueB ? voxelSource[vA] : voxelSource[vB]);
+      if (vs > 0)
+        iAtomSurface = atomIndex[vs - 1];      
     }
     if (testLinear || voxelSource == null || voxelSource[vA] == 0
         || voxelSource[vA] != voxelSource[vB])
