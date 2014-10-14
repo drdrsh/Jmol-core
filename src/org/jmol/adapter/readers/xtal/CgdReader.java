@@ -57,8 +57,8 @@ public class CgdReader extends AtomSetCollectionReader {
     setFractionalCoordinates(true);
     asc.setNoAutoBond();
     asc.vibScale = 1;
-    forceSymmetry(!checkFilterKey("NOPACK"));
-    noBondSym = checkFilterKey("NOBONDSYM");
+    forceSymmetry(!checkFilterKey("NOPACK")); // standard here is to pack unit cell
+    noBondSym = checkFilterKey("NOBONDSYM"); // do not apply bond symmetry (just display what is in the file)
   }
 
   private String[] tokens;
