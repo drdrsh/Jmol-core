@@ -428,8 +428,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       return P3.new3((float) ta[0][0], (modDim > 1 ? (float) ta[1][0] : 0),
           (modDim > 2 ? (float) ta[2][0] : 0));
     case 'O':
-      // return vOcc
-      return Float.valueOf(modTemp.calculate(tuv, false).vOcc * 100);
+      // return vOcc current or calculated
+      return Float.valueOf((tuv == null ? vOcc : modTemp.calculate(tuv, false).vOcc) * 100);
     }
     return null;
   }
