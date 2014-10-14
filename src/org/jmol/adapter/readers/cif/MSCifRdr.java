@@ -130,20 +130,21 @@ public class MSCifRdr extends MSRdr {
   private final static int LEG_DISP_ORDER = 63;
   private final static int LEG_DISP_COEF = 64;
 
-  private final static int LEG_OCC_LABEL = 65;
-  private final static int LEG_OCC_ORDER = 66;
-  private final static int LEG_OCC_COEF = 67;
+  private final static int LEG_U_LABEL = 65;
+  private final static int LEG_U_TENS = 66;
+  private final static int LEG_U_ORDER = 67;
+  private final static int LEG_U_COEF = 68;
 
-  private final static int LEG_U_LABEL = 68;
-  private final static int LEG_U_ORDER = 69;
-  private final static int LEG_U_COEF = 70;
+  private final static int LEG_OCC_LABEL = 69;
+  private final static int LEG_OCC_ORDER = 70;
+  private final static int LEG_OCC_COEF = 71;
 
-  private final static int DEPR_FD_COS = 71;
-  private final static int DEPR_FD_SIN = 72;
-  private final static int DEPR_FO_COS = 73;
-  private final static int DEPR_FO_SIN = 74;
-  private final static int DEPR_FU_COS = 75;
-  private final static int DEPR_FU_SIN = 76;
+  private final static int DEPR_FD_COS = 72;
+  private final static int DEPR_FD_SIN = 73;
+  private final static int DEPR_FO_COS = 74;
+  private final static int DEPR_FO_SIN = 75;
+  private final static int DEPR_FU_COS = 76;
+  private final static int DEPR_FU_SIN = 77;
   // * will be _atom_site
   final private static String[] modulationFields = {
     "*_fourier_wave_vector_seq_id",  // *_ must be first
@@ -219,18 +220,19 @@ public class MSCifRdr extends MSRdr {
     "*_displace_legendre_param_order", 
     "*_displace_legendre_param_coeff",
     "*_u_legendre_atom_site_label", // 65  
+    "*_u_legendre_tens_elem",
     "*_u_legendre_param_order", 
     "*_u_legendre_param_coeff",
     "*_occ_legendre_atom_site_label", 
     "*_occ_legendre_param_order",
-    "*_occ_legendre_param_coeff", // 70    
+    "*_occ_legendre_param_coeff", // 71    
     // deprecated:
-    "*_displace_fourier_cos", // 71
+    "*_displace_fourier_cos", // 72
     "*_displace_fourier_sin",
     "*_occ_fourier_cos",
     "*_occ_fourier_sin",
     "*_u_fourier_cos",
-    "*_u_fourier_sin" //76
+    "*_u_fourier_sin" //77
   };
   
   private static final int NONE = -1;
@@ -356,6 +358,10 @@ public class MSCifRdr extends MSRdr {
           if (type_id == null)
             type_id = "D_L";
           //$FALL-THROUGH$
+        case LEG_U_LABEL:
+          if (type_id == null)
+            type_id = "U_L";
+          //$FALL-THROUGH$
         case LEG_OCC_LABEL:
           if (type_id == null)
             type_id = "O_L";
@@ -377,6 +383,7 @@ public class MSCifRdr extends MSRdr {
           if (modAxes != null && modAxes.indexOf(axis.toUpperCase()) < 0)
             ignore = true;
           break;
+        case LEG_U_TENS:
         case FWV_U_TENS:
           axis = field.toUpperCase();
           break;
@@ -497,7 +504,10 @@ public class MSCifRdr extends MSRdr {
           continue;
         }
         if (type_id.indexOf("_L") == 1) {
-          axis += (int) pt[1];
+          if (type_id.startsWith("U"))
+            type_id += (int) pt[1]; // axis is Utype here
+          else
+            axis += (int) pt[1];
         }
         type_id += "#" + axis + ";" + atomLabel;
         break;

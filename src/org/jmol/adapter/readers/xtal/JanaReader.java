@@ -313,6 +313,7 @@ public class JanaReader extends AtomSetCollectionReader {
   private P3 rho;
   private boolean firstPosition;
   private V3 vR, v0Cart;
+  private boolean isLegendre;
 
 
   /**
@@ -690,8 +691,8 @@ public class JanaReader extends AtomSetCollectionReader {
    * 
    * @throws Exception
    */
-  private float[][] readAtomRecord( Atom atom, P3 rm, P3 rp,
-                                   boolean isPos) throws Exception {
+  private float[][] readAtomRecord(Atom atom, P3 rm, P3 rp, boolean isPos)
+      throws Exception {
     String label = ";" + atom.atomName;
     int tType = (isPos ? -1 : getInt(13, 14));
     if (!isPos && molTtypes != null)
@@ -757,6 +758,7 @@ public class JanaReader extends AtomSetCollectionReader {
     atom.foccupancy *= o_0;
     int wv = 0;
     float a1, a2;
+    isLegendre = false;
     for (int j = 0; j < nOcc; j++) {
       if (haveSpecialOcc) {
         float[][] data = readM40FloatLines(2, 1);
@@ -782,10 +784,10 @@ public class JanaReader extends AtomSetCollectionReader {
         float w = floats[4]; // width
         for (int k = 0; k < 3; k++)
           if (floats[k] != 0)
-            ms.addModulation(null, "D_S#" + XYZ[k] + label,
-                new double[] { c, w, floats[k] }, -1);
+            ms.addModulation(null, "D_S#" + XYZ[k] + label, new double[] { c,
+                w, floats[k] }, -1);
       } else {
-        // Fourier displacements
+        // Fourier or Legendre displacements
         addSinCos(j, "D_", label, isPos);
       }
     }
@@ -797,27 +799,41 @@ public class JanaReader extends AtomSetCollectionReader {
 
     // finally read Uij sines and cosines
 
-    if (!isPos) // No TLS here
+    if (!isPos) { // No TLS here
+      if (isLegendre)
+        nUij *= 2;
       for (int j = 0; j < nUij; j++) {
-        ensureFourier(j);
         if (tType == 1) {
-          // fourier?
+          // Fourier displacements
           addSinCos(j, "U_", label, false);
         } else {
           if (haveSpecialUij) {
             //TODO
             Logger.error("JanaReader -- not interpreting SpecialUij flag: "
                 + line);
+          } else if (isLegendre) {
+            float[][] data = readM40FloatLines(1, 6);
+            int order = j + 1;
+            double coeff = 0;
+            for (int k = 0, p = 0; k < 6; k++, p += 3) {
+              if ((coeff = data[0][k]) != 0)
+                ms.addModulation(null,
+                    "U_L" + order + "#" + U_LIST.substring(p, p + 3) + label,
+                    new double[] { coeff, order, 0 }, -1);
+            }
           } else {
             float[][] data = readM40FloatLines(2, 6);
-            for (int k = 0, p = 0; k < 6; k++, p += 3)
+            for (int k = 0, p = 0; k < 6; k++, p += 3) {
+              double csin = data[1][k];
+              double ccos = data[0][k];
               ms.addModulation(null,
                   "U_" + (j + 1) + "#" + U_LIST.substring(p, p + 3) + label,
-                  new double[] { data[1][k], data[0][k], 0 }, -1);
+                  new double[] { csin, ccos, 0 }, -1);
+            }
           }
         }
       }
-
+    }
     // higher order temperature factor modulation ignored
 
     // phason ignored
@@ -825,7 +841,8 @@ public class JanaReader extends AtomSetCollectionReader {
   }
 
   /**
-   * Add x, y, and z modulations as [ csin, ccos, 0 ]
+   * Add x, y, and z modulations as [ csin, ccos, 0 ] or, possibly Legendre [
+   * coef, order, 0 ]
    * 
    * @param j
    * @param key
@@ -835,8 +852,25 @@ public class JanaReader extends AtomSetCollectionReader {
    */
   private void addSinCos(int j, String key, String label, boolean isPos)
       throws Exception {
-    ensureFourier(j);
     readM40Floats();
+    if (isLegendre) {
+      for (int i = 0; i < 2; i++) {
+        int order = (j * 2 + i + 1);
+        for (int k = 0; k < 3; ++k) {
+          float coeff = floats[3 * i + k];
+          if (coeff == 0) {
+            continue;
+          }
+          String axis = XYZ[k % 3];
+          if (modAxes != null && modAxes.indexOf(axis.toUpperCase()) < 0)
+            continue;
+          String id = key + "L#" + axis + order + label;
+          ms.addModulation(null, id, new double[] { coeff, order, 0 }, -1);
+        }
+      }
+      return;
+    }
+    ensureFourier(j);
     for (int k = 0; k < 3; ++k) {
       float csin = floats[k];
       float ccos = floats[k + 3];
@@ -845,7 +879,7 @@ public class JanaReader extends AtomSetCollectionReader {
           continue;
         csin = 1e-10f;
       }
-      String axis = XYZ[k%3];
+      String axis = XYZ[k % 3];
       if (modAxes != null && modAxes.indexOf(axis.toUpperCase()) < 0)
         continue;
       String id = key + (j + 1) + "#" + axis + label;
@@ -890,6 +924,8 @@ public class JanaReader extends AtomSetCollectionReader {
     float[][] data = new float[nLines][nFloats];
     for (int i = 0; i < nLines; i++) {
       readM40Floats();
+      if (line.indexOf("Legendre") == 19)
+        isLegendre = true;
       for (int j = 0; j < nFloats; j++)
         data[i][j] = floats[j];
     }

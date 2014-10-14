@@ -310,7 +310,7 @@ public class MSRdr implements MSInterface {
       map = htModulation;
     if (id.indexOf("@") < 0)
       id += "@" + (iModel >= 0 ? iModel : cr.asc.iSet);
-    if (id.startsWith("D_L#")) {
+    if (id.startsWith("D_L#") || id.startsWith("U_L")) {
       if (legendres == null)
         legendres = new Lst<String>();
       legendres.addLast(id);
@@ -571,7 +571,7 @@ public class MSRdr implements MSInterface {
       String utens = null;
       switch (type) {
       case 'U':
-        utens = key.substring(4, key.indexOf(";"));
+        utens = key.substring(pt_, key.indexOf(";"));
         //$FALL-THROUGH$
       case 'O':
       case 'D':
