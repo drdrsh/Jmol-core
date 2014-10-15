@@ -141,9 +141,10 @@ public class GifEncoder extends ImageEncoder {
     AdaptiveColorCollection(int rgb, int index) {
       //this.rgb = rgb;
       this.index = index;
-      if (rgb >= 0)
+      if (rgb >= 0 || rgb == transparentColor)
         transparentIndex = index;
     }
+      
     void addRgb(int rgb, int count) {
       this.count += count;
       b += (rgb & 0xFF) * count;
@@ -166,6 +167,7 @@ public class GifEncoder extends ImageEncoder {
   private boolean looping;
   private Map<String, Object> params;
   private int byteCount;
+  int transparentColor;
 
   /**
    * we allow for animated GIF by being able to re-enter
@@ -176,6 +178,9 @@ public class GifEncoder extends ImageEncoder {
   @Override
   protected void setParams(Map<String, Object> params) {
     this.params = params;
+     Integer ic = (Integer) params.get("transparentColor");
+     if (ic != null)
+       transparentColor = ic.intValue();
     interlaced = (Boolean.TRUE == params.get("interlaced"));
     if (interlaced || !params.containsKey("captureMode"))
       return;
@@ -280,10 +285,8 @@ public class GifEncoder extends ImageEncoder {
     ColorVector colorVector = new ColorVector();
     Map<Integer, ColorItem> ciHash = new Hashtable<Integer, ColorItem>();
     int nColors = 0;
-    Integer key;
     int ptTransparent = -1;
-    
-    for (int pt = 0, row = 0, transparentRgb = -1; row < height; ++row) {
+    out: for (int pt = 0, row = 0, transparentRgb = -1; row < height; ++row) {
       for (int col = 0; col < width; ++col, pt++) {
         int rgb = pixels[pt];
         boolean isTransparent = (rgb >= 0);
@@ -298,25 +301,106 @@ public class GifEncoder extends ImageEncoder {
             pixels[pt] = rgb = transparentRgb;
           }
         }
-        ColorItem item = ciHash.get(key = Integer.valueOf(rgb));
-        if (item == null) {
-          item = new ColorItem(rgb, 1);
-          ciHash.put(key, item);
-          colorVector.addLast(item);
-          nColors++;
-        } else {
-          item.count++;
+        if ((nColors = addColor(colorVector, ciHash, rgb, nColors)) > 250) {
+          colorVector = ditherPixels();
+          break out;
         }
       }
     }
     ciHash = null;
-   
+    colorVector.sort();
     if (logging)
       System.out.println("# total image colors = " + nColors);
     // sort by frequency
-    colorVector.sort();
     return colorVector;
   }
+
+  private int addColor(ColorVector colorVector, Map<Integer, ColorItem> ciHash,
+                       int rgb, int nColors) {
+    Integer key = Integer.valueOf(rgb);
+    ColorItem item = ciHash.get(key);
+    if (item == null) {
+      item = new ColorItem(rgb, 1);
+      ciHash.put(key, item);
+      colorVector.addLast(item);
+      nColors++;
+    } else {
+      item.count++;
+    }
+    return nColors;
+  }
+
+  private ColorVector ditherPixels() {
+    ColorVector colorVector = new ColorVector();
+    Map<Integer, ColorItem> ciHash = new Hashtable<Integer, ColorItem>();
+    int nColors = 0;
+    int[] sb = toByteARGB(pixels);
+    int w4 = width * 4;
+    int r1 = 25;
+    int r2 = 2 * r1 + 1;
+    for (int i = 0; i < height; ++i) {
+      for (int j = 0; j < width; ++j) {
+        for (int k = 0; k < 3; k++) {
+          int ci = 4 * (i * width + j) + k + 1;
+          int cc = sb[ci];
+          int rc = Math.round((cc + r1) / r2) * r2;
+          int err = cc - rc;
+          sb[ci] = rc;
+          if (j + 1 < width)
+            sb[ci + 4] += (err * 7) >> 4;
+          if (i + 1 == height)
+            continue;
+          if (j > 0)
+            sb[ci + w4 - 4] += (err * 3) >> 4;
+          sb[ci + w4] += (err * 5) >> 4;
+          if (j + 1 < width)
+            sb[ci + w4 + 4] += (err * 1) >> 4;
+        }
+      }
+    }
+    pixels = toIntARGB(sb);
+    for (int i = 0, pt = 0; i < height; ++i) {
+      for (int j = 0; j < width; ++j, pt++) {
+        nColors = addColor(colorVector, ciHash, pixels[pt], nColors);
+      }
+    }
+    System.out.println("GIF dithered to " + nColors + " colors");
+    return colorVector;
+  }
+
+  static int[] toIntARGB(int[] imgData) {
+    /*
+     * red=imgData.data[0];
+     * green=imgData.data[1];
+     * blue=imgData.data[2];
+     * alpha=imgData.data[3];
+     */
+    int n = imgData.length / 4;
+    int[] iData = new int[n];
+    for (int i = 0, j = 0; i < n;) {
+      iData[i++] = (imgData[j++] << 24) | (imgData[j++] << 16) | imgData[j++] << 8 | imgData[j++];
+    }
+    return iData;
+  }      
+  
+  static int[] toByteARGB(int[] argbs) {
+    /*
+     * red=imgData.data[0];
+     * green=imgData.data[1];
+     * blue=imgData.data[2];
+     * alpha=imgData.data[3];
+     */
+    int n = argbs.length * 4;
+    int[] iData = new int[n];
+    for (int i = 0, j = 0; i < n; j++) {
+      iData[i++] = (argbs[j] >> 24) & 0xFF;
+      iData[i++] = (argbs[j] >> 16) & 0xFF;
+      iData[i++] = (argbs[j] >> 8) & 0xFF;
+      iData[i++] = argbs[j] & 0xFF;      
+    }
+    return iData;
+  }      
+  
 
   /**
    * reduce GIF color collection to 256 or fewer by grouping shadings;
@@ -352,7 +436,7 @@ public class GifEncoder extends ImageEncoder {
     ColorItem item = colorVector.get(nMax);
     ht.put(Integer.valueOf(item.rgb),
         item.acc = new AdaptiveColorCollection(item.rgb, index++));
-    if (logging)
+    //if (logging)
       System.out.println("# GIF colors = " + ht.size());
     return ht;
   }

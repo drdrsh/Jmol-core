@@ -479,23 +479,28 @@ public class CmdExt implements JmolCmdExtension {
     }
     float endTime = 10; // ten seconds by default
     int mode = 0;
+    boolean isTransparent = false;
     String fileName = "";
     Map<String, Object> params = vwr.captureParams;
     boolean looping = !vwr.am.animationReplayMode.name().equals("ONCE");
-    int tok = tokAt(1);
+    int i = 1;
+    int tok = tokAt(i);
     switch (tok) {
     case T.nada:
       mode = T.end;
       break;
     case T.string:
-      fileName = e.optParameterAsString(1);
+      fileName = e.optParameterAsString(i++);
       if (fileName.length() == 0) {
         mode = T.end;
         break;
       }
-      if (!fileName.endsWith(".gif"))
+      if (fileName.toLowerCase().endsWith(".gift")) {
+        isTransparent = true;
+        fileName = fileName.substring(0,  fileName.length() - 1);
+      }
+      if (!fileName.toLowerCase().endsWith(".gif"))
         fileName += ".gif";
-      int i = 2;
       boolean isRock = false;
       switch (tokAt(i)) {
       case T.rock:
@@ -507,7 +512,7 @@ public class CmdExt implements JmolCmdExtension {
         looping = true;
         i = 3;
         if (isRock) {
-          if (tokAt(3) != T.integer)
+          if (tokAt(i) != T.integer)
             axis = e.optParameterAsString(i++).toLowerCase();
           s = "rotate Y 10 10;rotate Y -10 -10;rotate Y -10 -10;rotate Y 10 10";
           s = PT.rep(s, "10", "" + (tokAt(i) == T.nada ? 5 : intParameter(i++)));
@@ -522,12 +527,12 @@ public class CmdExt implements JmolCmdExtension {
           axis = "y";
         boolean wf = vwr.g.waitForMoveTo;
         s = "set waitformoveto true;" + PT.rep(s, "Y", axis) + ";set waitformoveto " + wf;
-        s = "capture " + PT.esc(fileName) + " -1;" + s + ";capture;";
+        s = "capture " + PT.esc(fileName) + (isTransparent ? " transparent" : "") + " -1;" + s + ";capture;";
         e.cmdScript(0, null, s);
         return;
       case T.decimal:
       case T.integer:
-        endTime = floatParameter(2);
+        endTime = floatParameter(i++);
         if (endTime < 0)
           looping = true;
         break;
@@ -555,7 +560,10 @@ public class CmdExt implements JmolCmdExtension {
     }
     if (chk || params == null)
       return;
-    params.put("type", "GIF");
+    params.put  ("type", "GIF");
+    if (isTransparent || tokAt(i) == T.translucent)
+      params.put("transparentColor",
+          Integer.valueOf(vwr.getBackgroundArgb()));
     params.put("fileName", fileName);
     params.put("quality", Integer.valueOf(-1));
     params.put( 
@@ -6125,7 +6133,7 @@ public class CmdExt implements JmolCmdExtension {
             ScriptError.ERROR_writeWhat,
             "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
                 + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL  CLIPBOARD",
-            "CML|GIF|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|SDF|CD|JSON|V2000|V3000|SPT|XJVXL|XYZ|XYZRN|XYZVIB|ZIP"
+            "CML|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|SDF|CD|JSON|V2000|V3000|SPT|XJVXL|XYZ|XYZRN|XYZVIB|ZIP"
                 + driverList.toUpperCase().replace(';', '|'));
       if (chk)
         return "";
@@ -6348,6 +6356,11 @@ public class CmdExt implements JmolCmdExtension {
         params = new Hashtable<String, Object>();
         if (fileName != null)
           params.put("fileName", fileName);
+        if (type.equals("GIFT")) {
+          params.put("transparentColor",
+              Integer.valueOf(vwr.getBackgroundArgb()));
+          type = "GIF";
+        }
         params.put("type", type);
         if (bytes instanceof String && quality == Integer.MIN_VALUE)
           params.put("text", bytes);

@@ -1691,7 +1691,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
 
   public static final String SCRIPT_COMPLETED = "Script completed";
   public static final String JPEG_EXTENSIONS = ";jpg;jpeg;jpg64;jpeg64;";
-  public final static String IMAGE_TYPES = JPEG_EXTENSIONS + "gif;pdf;ppm;png;pngj;pngt;";
+  public final static String IMAGE_TYPES = JPEG_EXTENSIONS + "gif;gift;pdf;ppm;png;pngj;pngt;";
   public static final String IMAGE_OR_SCENE = IMAGE_TYPES + "scene;";
 
   public static boolean isScriptType(String fname) {

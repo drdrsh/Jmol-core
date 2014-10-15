@@ -2125,6 +2125,7 @@ public class T {
         "trajectory",
         "trajectories",
         "translucent",
+        "transparent",
         "triangles",
         "trim",
         "type",
@@ -3143,6 +3144,7 @@ public class T {
         trajectory,                         // "trajectory"
         -1,                                 // "trajectories"
         translucent,                        // "translucent"
+        -1,                                 // "transparent"
         triangles,                          // "triangles"
         trim,                               // "trim"
         type,                               // "type"
