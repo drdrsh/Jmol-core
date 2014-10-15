@@ -474,8 +474,7 @@ public class GifEncoder extends ImageEncoder {
       putByte(0x21); // graphic control extension
       putByte(0xf9); // graphic control label
       putByte(4); // block size
-      int packedBytes = (transparentIndex == -1 ? 0 : 1) | (delayTime100ths > 0 ? 2 : 0);
-      putByte(packedBytes); 
+      putByte((transparentIndex == -1 ? 0 : 9) | (delayTime100ths > 0 ? 2 : 0)); // packed bytes 
       putWord(delayTime100ths > 0 ? delayTime100ths : 0);
       putByte(transparentIndex == -1 ? 0 : transparentIndex);
       putByte(0); // end-of-block
