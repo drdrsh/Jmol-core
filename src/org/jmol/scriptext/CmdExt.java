@@ -488,10 +488,7 @@ public class CmdExt implements JmolCmdExtension {
     boolean looping = !vwr.am.animationReplayMode.name().equals("ONCE");
     int i = 1;
     int tok = tokAt(i);
-    switch (tok) {
-    case T.nada:
-      mode = T.end;
-      break;
+    switch (tok == T.nada ? (tok = T.end) : tok) {
     case T.string:
       fileName = e.optParameterAsString(i++);
       if (fileName.length() == 0) {
@@ -562,7 +559,7 @@ public class CmdExt implements JmolCmdExtension {
       //$FALL-THROUGH$
     case T.on:
     case T.off:
-      checkLength(2);
+      checkLength(-2);
       mode = tok;
       break;
     default:
