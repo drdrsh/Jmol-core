@@ -189,7 +189,7 @@ abstract class OutputManager {
       if (closeChannel)
         out.closeChannel();
       if (isOK) {
-        if (params.containsKey("captureMsg"))
+        if (params.containsKey("captureMsg") && !params.containsKey("captureSilent"))
           vwr.prompt((String) params.get("captureMsg"), "OK", null, true);
 
         if (asBytes)

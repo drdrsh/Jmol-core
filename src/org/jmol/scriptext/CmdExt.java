@@ -479,7 +479,10 @@ public class CmdExt implements JmolCmdExtension {
     }
     float endTime = 10; // ten seconds by default
     int mode = 0;
-    boolean isTransparent = false;
+    int slen = e.slen;
+    boolean isTransparent = (tokAt(e.slen - 1) == T.translucent);
+    if (isTransparent)
+      slen--;
     String fileName = "";
     Map<String, Object> params = vwr.captureParams;
     boolean looping = !vwr.am.animationReplayMode.name().equals("ONCE");
@@ -511,29 +514,26 @@ public class CmdExt implements JmolCmdExtension {
         String axis = "y";
         looping = true;
         i++;
-          if (isRock) {
-            if (tokAt(i) != T.integer && tokAt(i) != T.translucent)
-              axis = e.optParameterAsString(i++).toLowerCase();
-            s = "rotate Y 10 10;rotate Y -10 -10;rotate Y -10 -10;rotate Y 10 10";
-            s = PT.rep(s, "10", ""
-                + (tokAt(i) == T.nada || tokAt(i) == T.translucent ? 5
-                    : intParameter(i++)));
-          } else {
-            if (tokAt(i) != T.translucent)
+        if (isRock) {
+          if (i < slen && tokAt(i) != T.integer)
             axis = e.optParameterAsString(i++).toLowerCase();
-            s = "rotate Y 360 30;";
-          }
+          s = "rotate Y 10 10;rotate Y -10 -10;rotate Y -10 -10;rotate Y 10 10";
+          s = PT.rep(s, "10", "" + (i < slen ? intParameter(i++) : 5));
+        } else {
+          if (i < slen)
+            axis = e.optParameterAsString(i++).toLowerCase();
+          s = "rotate Y 360 30;";
+        }
         if (chk)
           return;
         vwr.setNavigationMode(false);
         if (axis == "" || "xyz".indexOf(axis) < 0)
           axis = "y";
         boolean wf = vwr.g.waitForMoveTo;
-        isTransparent |= (tokAt(i) == T.translucent);
         s = "set waitformoveto true;" + PT.rep(s, "Y", axis)
             + ";set waitformoveto " + wf;
         s = "capture " + PT.esc(fileName) + " -1"
-            + (isTransparent ? " transparent;" : ";")+ s + ";capture;";
+            + (isTransparent ? " transparent;" : ";") + s + ";capture end;";
         e.cmdScript(0, null, s);
         return;
       case T.decimal:
@@ -555,7 +555,11 @@ public class CmdExt implements JmolCmdExtension {
           new Object[] { "ANIMATION FPS " + fps }));
       params.put("captureFps", Integer.valueOf(fps));
       break;
+    case T.end:
     case T.cancel:
+      if (params != null)
+        params.put("captureSilent", Boolean.TRUE);
+      //$FALL-THROUGH$
     case T.on:
     case T.off:
       checkLength(2);
@@ -567,7 +571,7 @@ public class CmdExt implements JmolCmdExtension {
     if (chk || params == null)
       return;
     params.put("type", "GIF");
-    if (isTransparent || tokAt(i) == T.translucent)
+    if (isTransparent)
       params.put("transparentColor", Integer.valueOf(vwr.getBackgroundArgb()));
     params.put("fileName", fileName);
     params.put("quality", Integer.valueOf(-1));

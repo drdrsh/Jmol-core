@@ -107,10 +107,11 @@ abstract class ScriptTokenParser {
                 && tokCommand != T.parallel 
                 && tokCommand != T.trycmd 
                 && tokCommand != T.catchcmd
-                    || tokenCommand.intValue != Integer.MAX_VALUE) 
-             && tokCommand != T.end 
-             && !T.tokAttr(tokCommand, T.atomExpressionCommand) 
-             && (nTokens > 2 || !T.tokAttr(tokCommand, T.implicitStringCommand))
+             || tokenCommand.intValue != Integer.MAX_VALUE) 
+                && tokCommand != T.end 
+                && !T.tokAttr(tokCommand, T.atomExpressionCommand) 
+                && (nTokens > 2 || !T.tokAttr(tokCommand, T.implicitStringCommand)
+                )
            )
       );
     isMathExpressionCommand = (tokCommand == T.identifier 
