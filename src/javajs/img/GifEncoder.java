@@ -338,23 +338,27 @@ public class GifEncoder extends ImageEncoder {
     int w4 = width * 4;
     int r1 = 25;
     int r2 = 2 * r1 + 1;
+    int ci = -1;
     for (int i = 0; i < height; ++i) {
+      boolean lastRow = (i == height - 1);
       for (int j = 0; j < width; ++j) {
-        for (int k = 0; k < 3; k++) {
-          int ci = 4 * (i * width + j) + k + 1;
-          int cc = sb[ci];
-          int rc = Math.round((cc + r1) / r2) * r2;
-          int err = cc - rc;
-          sb[ci] = rc;
-          if (j + 1 < width)
-            sb[ci + 4] += (err * 7) >> 4;
-          if (i + 1 == height)
-            continue;
-          if (j > 0)
-            sb[ci + w4 - 4] += (err * 3) >> 4;
-          sb[ci + w4] += (err * 5) >> 4;
-          if (j + 1 < width)
-            sb[ci + w4 + 4] += (err * 1) >> 4;
+        if (sb[++ci] != transparentColor) {
+          boolean notLastCol = (j < width - 1);
+          for (int k = 0; k < 3; k++) {
+            int cc = sb[++ci];
+            int rc = Math.round((cc + r1) / r2) * r2;
+            int err = cc - rc;
+            sb[ci] = rc;
+            if (notLastCol)
+              sb[ci + 4] += (err * 7) >> 4;
+            if (lastRow)
+              continue;
+            if (j > 0)
+              sb[ci + w4 - 4] += (err * 3) >> 4;
+            sb[ci + w4] += (err * 5) >> 4;
+            if (notLastCol)
+              sb[ci + w4 + 4] += (err * 1) >> 4;
+          }
         }
       }
     }
@@ -368,7 +372,7 @@ public class GifEncoder extends ImageEncoder {
     return colorVector;
   }
 
-  static int[] toIntARGB(int[] imgData) {
+  int[] toIntARGB(int[] imgData) {
     /*
      * red=imgData.data[0];
      * green=imgData.data[1];
@@ -378,12 +382,18 @@ public class GifEncoder extends ImageEncoder {
     int n = imgData.length / 4;
     int[] iData = new int[n];
     for (int i = 0, j = 0; i < n;) {
-      iData[i++] = (imgData[j++] << 24) | (imgData[j++] << 16) | imgData[j++] << 8 | imgData[j++];
+      int alpha = imgData[j++];
+      if (alpha == 0xFE) {
+        iData[i++] = transparentColor;
+        j += 3;
+        continue;
+      }
+      iData[i++] = (alpha << 24) | (imgData[j++] << 16) | imgData[j++] << 8 | imgData[j++];
     }
     return iData;
   }      
   
-  static int[] toByteARGB(int[] argbs) {
+  int[] toByteARGB(int[] argbs) {
     /*
      * red=imgData.data[0];
      * green=imgData.data[1];
@@ -393,10 +403,11 @@ public class GifEncoder extends ImageEncoder {
     int n = argbs.length * 4;
     int[] iData = new int[n];
     for (int i = 0, j = 0; i < n; j++) {
-      iData[i++] = (argbs[j] >> 24) & 0xFF;
-      iData[i++] = (argbs[j] >> 16) & 0xFF;
-      iData[i++] = (argbs[j] >> 8) & 0xFF;
-      iData[i++] = argbs[j] & 0xFF;      
+      int a = argbs[j];
+      iData[i++] = (a == transparentColor ? 0xFE : (a >> 24) & 0xFF);
+      iData[i++] = (a >> 16) & 0xFF;
+      iData[i++] = (a >> 8) & 0xFF;
+      iData[i++] = a & 0xFF;      
     }
     return iData;
   }      
