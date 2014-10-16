@@ -568,8 +568,10 @@ public class CmdExt implements JmolCmdExtension {
     if (chk || params == null)
       return;
     params.put("type", "GIF");
+    Integer c = Integer.valueOf(vwr.getBackgroundArgb());
+    params.put("backgroundColor", c);
     if (isTransparent)
-      params.put("transparentColor", Integer.valueOf(vwr.getBackgroundArgb()));
+      params.put("transparentColor", c);
     params.put("fileName", fileName);
     params.put("quality", Integer.valueOf(-1));
     params.put(
@@ -6367,6 +6369,7 @@ public class CmdExt implements JmolCmdExtension {
               Integer.valueOf(vwr.getBackgroundArgb()));
           type = "GIF";
         }
+        params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
         params.put("type", type);
         if (bytes instanceof String && quality == Integer.MIN_VALUE)
           params.put("text", bytes);

@@ -168,6 +168,7 @@ public class GifEncoder extends ImageEncoder {
   private Map<String, Object> params;
   private int byteCount;
   int transparentColor;
+  private int backgroundColor;
 
   /**
    * we allow for animated GIF by being able to re-enter
@@ -179,8 +180,13 @@ public class GifEncoder extends ImageEncoder {
   protected void setParams(Map<String, Object> params) {
     this.params = params;
      Integer ic = (Integer) params.get("transparentColor");
-     if (ic != null)
-       transparentColor = ic.intValue();
+     if (ic == null) {
+       ic = (Integer) params.get("backgroundColor");
+       if (ic != null)
+         backgroundColor = ic.intValue();
+     } else {
+       backgroundColor = transparentColor = ic.intValue();
+     }
     interlaced = (Boolean.TRUE == params.get("interlaced"));
     if (interlaced || !params.containsKey("captureMode"))
       return;
@@ -342,7 +348,7 @@ public class GifEncoder extends ImageEncoder {
     for (int i = 0; i < height; ++i) {
       boolean lastRow = (i == height - 1);
       for (int j = 0; j < width; ++j) {
-        if (sb[++ci] != transparentColor) {
+        if (sb[++ci] != backgroundColor) {
           boolean notLastCol = (j < width - 1);
           for (int k = 0; k < 3; k++) {
             int cc = sb[++ci];
@@ -384,7 +390,7 @@ public class GifEncoder extends ImageEncoder {
     for (int i = 0, j = 0; i < n;) {
       int alpha = imgData[j++];
       if (alpha == 0xFE) {
-        iData[i++] = transparentColor;
+        iData[i++] = backgroundColor;
         j += 3;
         continue;
       }
@@ -404,7 +410,7 @@ public class GifEncoder extends ImageEncoder {
     int[] iData = new int[n];
     for (int i = 0, j = 0; i < n; j++) {
       int a = argbs[j];
-      iData[i++] = (a == transparentColor ? 0xFE : (a >> 24) & 0xFF);
+      iData[i++] = (a == backgroundColor ? 0xFE : (a >> 24) & 0xFF);
       iData[i++] = (a >> 16) & 0xFF;
       iData[i++] = (a >> 8) & 0xFF;
       iData[i++] = a & 0xFF;      
