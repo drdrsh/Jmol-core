@@ -169,6 +169,8 @@ public class GifEncoder extends ImageEncoder {
   private int byteCount;
   int transparentColor;
   private int backgroundColor;
+  private boolean reducedColors;
+  private boolean floydSteinberg = true;
 
   /**
    * we allow for animated GIF by being able to re-enter
@@ -179,6 +181,7 @@ public class GifEncoder extends ImageEncoder {
   @Override
   protected void setParams(Map<String, Object> params) {
     this.params = params;
+    reducedColors = (params.get("reducedColors") == Boolean.TRUE);
      Integer ic = (Integer) params.get("transparentColor");
      if (ic == null) {
        ic = (Integer) params.get("backgroundColor");
@@ -345,25 +348,62 @@ public class GifEncoder extends ImageEncoder {
     int r1 = 25;
     int r2 = 2 * r1 + 1;
     int ci = -1;
-    for (int i = 0; i < height; ++i) {
-      boolean lastRow = (i == height - 1);
-      for (int j = 0; j < width; ++j) {
-        if (sb[++ci] != backgroundColor) {
-          boolean notLastCol = (j < width - 1);
-          for (int k = 0; k < 3; k++) {
-            int cc = sb[++ci];
-            int rc = Math.round((cc + r1) / r2) * r2;
-            int err = cc - rc;
-            sb[ci] = rc;
-            if (notLastCol)
-              sb[ci + 4] += (err * 7) >> 4;
-            if (lastRow)
-              continue;
-            if (j > 0)
-              sb[ci + w4 - 4] += (err * 3) >> 4;
-            sb[ci + w4] += (err * 5) >> 4;
-            if (notLastCol)
-              sb[ci + w4 + 4] += (err * 1) >> 4;
+    if (reducedColors) {
+      // Atkinson 
+      //     X   1   1 
+      // 1   1   1
+      //     1
+      // http://www.tannerhelland.com/4660/dithering-eleven-algorithms-source-code/
+      for (int i = 0; i < height; ++i) {
+        boolean lastRow = (i == height - 1);
+        boolean notNextToLastRow = (i < height - 2);
+        for (int j = 0; j < width; ++j) {
+          if (sb[++ci] != backgroundColor) {
+            boolean notLastCol = (j < width - 1);
+            boolean notNextToLastCol = (j < width - 2);
+            for (int k = 0; k < 3; k++) {
+              int trueColor = sb[++ci];
+              int roundedColor = Math.round((trueColor + r1) / r2) * r2;
+              int err = (trueColor - roundedColor) >> 3;
+              sb[ci] = roundedColor;
+              if (notLastCol)
+                sb[ci + 4] += err;
+              if (notNextToLastCol)
+                sb[ci + 8] += err;
+              if (notNextToLastRow)
+                sb[ci + w4 + w4] += err;
+              if (lastRow)
+                continue;
+              if (j > 0)
+                sb[ci + w4 - 4] += err;
+              sb[ci + w4] += err;
+              if (notLastCol)
+                sb[ci + w4 + 4] += err;
+            }
+          }
+        }
+      }
+    } else if (floydSteinberg ) {
+      for (int i = 0; i < height; ++i) {
+        boolean lastRow = (i == height - 1);
+        for (int j = 0; j < width; ++j) {
+          if (sb[++ci] != backgroundColor) {
+            boolean notLastCol = (j < width - 1);
+            for (int k = 0; k < 3; k++) {
+              int cc = sb[++ci];
+              int rc = Math.round((cc + r1) / r2) * r2;
+              int err = cc - rc;
+              sb[ci] = rc;
+              if (notLastCol)
+                sb[ci + 4] += (err * 7) >> 4;
+              if (lastRow)
+                continue;
+              if (j > 0)
+                sb[ci + w4 - 4] += (err * 3) >> 4;
+              sb[ci + w4] += (err * 5) >> 4;
+              if (notLastCol)
+                sb[ci + w4 + 4] += (err * 1) >> 4;
+            }
           }
         }
       }
