@@ -6939,6 +6939,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     case 2:
       // passed to MOCalcuation, but not used
       // nciCalculation special params.testFlag = 2 "absolute" calc.
+      // GIF reducedColors
       return g.testFlag2;
     case 3:
       // isosurface numbers
@@ -8160,6 +8161,16 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public String getSetHistory(int howFarBack) {
     return commandHistory.getSetHistory(howFarBack);
   }
+
+  public String historyFind(String cmd, int dir) {
+    return commandHistory.find(cmd, dir);
+  }
+
+  public void setHistory(String f) {
+    commandHistory.getSetHistory(Integer.MIN_VALUE);
+    commandHistory.addCommand(getFileAsString(f, true));
+  }
+
 
   // ///////////////////////////////////////////////////////////////
   // image and file export
@@ -9753,6 +9764,5 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       {}
     }
   }
-
 
 }

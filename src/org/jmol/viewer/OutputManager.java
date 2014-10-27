@@ -289,6 +289,8 @@ abstract class OutputManager {
     }
     boolean doClose = true;
     try {
+      if (type.equals("Gif") && vwr.getTestFlag(2))
+        params.put("reducedColors", Boolean.TRUE);
       int w = objImage == null ? -1 : PT.isAI(objImage) ? ((Integer) params
           .get("width")).intValue() : vwr.apiPlatform
           .getImageWidth(objImage);

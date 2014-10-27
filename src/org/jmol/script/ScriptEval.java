@@ -4102,11 +4102,17 @@ public class ScriptEval extends ScriptExpr {
       // load TEMPERATURE
       // load OCCUPANCY
       // load PARTIALCHARGE
+      // load HISTORY
       switch (tok) {
       case T.menu:
         String m = paramAsStr(checkLast(2));
         if (!chk)
           vwr.setMenu(m, true);
+        return;
+      case T.history:
+        String h = paramAsStr(checkLast(2));
+        if (!chk)
+          vwr.setHistory(h);
         return;
       case T.data:
         isData = true;

@@ -207,6 +207,20 @@ final public class CommandHistory {
     return str;
   }
 
+  public String find(String cmd, int dir) {
+    int cpos = cursorPos;
+    String c = cmd;
+    while (c != null) {
+      c = getSetHistory(dir);
+      if (c == null)
+        break;
+      if (c.startsWith(cmd))
+        return c;
+    }
+    cursorPos = cpos;
+    return null;
+  }
+  
   public String removeCommand() {
     return removeCommand(nextCommand - 1);
   }
@@ -240,5 +254,5 @@ final public class CommandHistory {
     //for (int i = 0; i < nextCommand; i++)
     //System.out.println("HISTORY:" + i+" "+commandList.get(i));
   }
-  
+
 }

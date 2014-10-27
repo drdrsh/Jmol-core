@@ -1077,6 +1077,7 @@ public class ScriptCompiler extends ScriptTokenParser {
             case T.menu:
             case T.orientation:
             case T.append:
+            case T.history:
               if (nTokens != 1)
                 return ERROR;
               //$FALL-THROUGH$

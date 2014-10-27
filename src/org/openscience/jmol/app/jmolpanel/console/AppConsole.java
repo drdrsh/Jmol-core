@@ -577,6 +577,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
     private EnterListener enterListener;
 
     boolean checking = false;
+    private String pageUpBuffer;
 
     ConsoleTextPane(AppConsole appConsole) {
       super(new ConsoleDocument());
@@ -683,12 +684,19 @@ public class AppConsole extends JmolConsole implements EnterListener {
         }
         nTab = 0;
       }
+      if ((kcode == KeyEvent.VK_PAGE_UP || kcode == KeyEvent.VK_PAGE_DOWN)
+          && ke.isControlDown()) {
+        if (kid == KeyEvent.KEY_PRESSED)
+          recallCommand(kcode == KeyEvent.VK_PAGE_UP, true);
+        return;
+      }
+      pageUpBuffer = null;
       if (kcode == KeyEvent.VK_UP && kid == KeyEvent.KEY_PRESSED
           && !ke.isControlDown()) {
-        recallCommand(true);
+        recallCommand(true, false);
       } else if (kcode == KeyEvent.VK_DOWN && kid == KeyEvent.KEY_PRESSED
           && !ke.isControlDown()) {
-        recallCommand(false);
+        recallCommand(false, false);
       } else if ((kcode == KeyEvent.VK_DOWN || kcode == KeyEvent.VK_UP)
           && kid == KeyEvent.KEY_PRESSED && ke.isControlDown()) {
         // If Control key is down, redefines the event as if it
@@ -718,10 +726,16 @@ public class AppConsole extends JmolConsole implements EnterListener {
      * Recall command history.
      * 
      * @param up
-     *          - history up or down
+     *        - history up or down
+     * @param pageup
+     *        TODO
      */
-    void recallCommand(boolean up) {
-      String cmd = vwr.getSetHistory(up ? -1 : 1);
+    void recallCommand(boolean up, boolean pageup) {
+      String cmd = (pageup ? vwr
+          .historyFind(pageUpBuffer == null ? (pageUpBuffer = consoleDoc
+              .getCommandString()) : pageUpBuffer, up ? -1
+                  : 1) : vwr.getSetHistory(up ? -1
+          : 1));
       if (cmd == null) {
         return;
       }

@@ -550,6 +550,9 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       clearContent();
       if (text == null)
         return "";
+      int pt = text.indexOf('\1');
+      if (pt >= 0)
+        text = text.substring(0, pt).trim();
       if (!text.endsWith("\n"))
         text += "\n";
       try {

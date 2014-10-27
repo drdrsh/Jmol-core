@@ -582,12 +582,17 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     // television effect. We want to avoid that. Here we can do that
     // because the colors will be blurred anyway.
     
-    if (downsampleZBuffer)
+    if (downsampleZBuffer) {
       bgcheck += ((bgcheck & 0xFF) == 0xFF ? -1 : 1);
+    } else {
+    }
+    bgcheck &= 0xFFFFFF;      
     for (int i = pbuf.length; --i >= 0;)
       if (pbuf[i] == 0)
         pbuf[i] = bgcheck;
-    bgcheck &= 0xFFFFFF;
+    int bg0 = ((bgcheck >> 2) & 0x3F3F3F3F)<< 2;
+        bg0 += (bg0 & 0xC0C0C0C0) >> 6;
+
     for (int i = windowHeight; --i >= 0; offset4 += width4)
       for (int j = windowWidth; --j >= 0; ++offset1) {
         
@@ -609,6 +614,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
           + ((pbuf[offset4] >> 2) & 0x3F3F3F3F)
           + ((pbuf[offset4++ + width4] >> 2) & 0x3F3F3F3F);
         argb += (argb & 0xC0C0C0C0) >> 6;
+        if (argb == bg0)
+          argb = bgcheck;
+      
         /**
          * I don't know why this is necessary.
          * 

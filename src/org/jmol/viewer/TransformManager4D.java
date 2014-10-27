@@ -138,7 +138,7 @@ public class TransformManager4D extends TransformManager {
   @Override
   public synchronized void calcTransformMatrix() {
     super.calcTransformMatrix();
-    is4D = vwr.getTestFlag(2);
+    //is4D = vwr.getTestFlag(2);
     doTransform4D  = (is4D && !stereoFrame && mode != MODE_NAVIGATION);
     if (!doTransform4D)
       return;
