@@ -387,9 +387,8 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   
   protected void recallCommand(boolean up) {
     String cmd = vwr.getSetHistory(up ? -1 : 1);
-    if (cmd == null)
-      return;
-    input.setText(cmd);
+    if (cmd != null)
+      input.setText(PT.escUnicode(cmd));
   }
 
   /**
@@ -412,7 +411,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
         if (input.getCaretPosition() == s.length()) {
           String cmd = completeCommand(s);
           if (cmd != null)
-            input.setText(cmd.replace('\t',' '));
+            input.setText(PT.escUnicode(cmd).replace('\t',' '));
           nTab++;
           return mode;
         }

@@ -566,6 +566,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
 
   }
+
   private void downsampleFullSceneAntialiasing(boolean downsampleZBuffer) {
     int width4 = width;
     int offset1 = 0;
@@ -573,7 +574,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     int bgcheck = bgcolor;
     // now is the time we have to put in the correct background color
     // this was a bug in 11.6.0-11.6.2. 
-    
+
     // we must downsample the Z Buffer if there are translucent
     // objects left to draw and antialiasTranslucent is set false
     // in that case we must fudge the background color, because
@@ -581,21 +582,19 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     // will put it in the back -- the "blue tie on a blue screen"
     // television effect. We want to avoid that. Here we can do that
     // because the colors will be blurred anyway.
-    
-    if (downsampleZBuffer) {
+
+    if (downsampleZBuffer)
       bgcheck += ((bgcheck & 0xFF) == 0xFF ? -1 : 1);
-    } else {
-    }
-    bgcheck &= 0xFFFFFF;      
+    bgcheck &= 0xFFFFFF;
     for (int i = pbuf.length; --i >= 0;)
       if (pbuf[i] == 0)
         pbuf[i] = bgcheck;
-    int bg0 = ((bgcheck >> 2) & 0x3F3F3F3F)<< 2;
-        bg0 += (bg0 & 0xC0C0C0C0) >> 6;
+    int bg0 = ((bgcheck >> 2) & 0x3F3F3F3F) << 2;
+    bg0 += (bg0 & 0xC0C0C0C0) >> 6;
 
     for (int i = windowHeight; --i >= 0; offset4 += width4)
       for (int j = windowWidth; --j >= 0; ++offset1) {
-        
+
         /* more precise, but of no benefit:
 
         int a = pbuf[offset4];
@@ -608,21 +607,21 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
            +   (c & 0xF0F0F0) + (d & 0xF0F0F0)
                 ) >> 2);
         */
-        
+
         int argb = ((pbuf[offset4] >> 2) & 0x3F3F3F3F)
-          + ((pbuf[offset4++ + width4] >> 2) & 0x3F3F3F3F)
-          + ((pbuf[offset4] >> 2) & 0x3F3F3F3F)
-          + ((pbuf[offset4++ + width4] >> 2) & 0x3F3F3F3F);
+            + ((pbuf[offset4++ + width4] >> 2) & 0x3F3F3F3F)
+            + ((pbuf[offset4] >> 2) & 0x3F3F3F3F)
+            + ((pbuf[offset4++ + width4] >> 2) & 0x3F3F3F3F);
         argb += (argb & 0xC0C0C0C0) >> 6;
         if (argb == bg0)
           argb = bgcheck;
-      
+
         /**
          * I don't know why this is necessary.
          * 
          * @j2sNative
          * 
-         * this.pbuf[offset1] = argb & 0x00FFFFFF | 0xFF000000;
+         *            this.pbuf[offset1] = argb & 0x00FFFFFF | 0xFF000000;
          */
         {
           pbuf[offset1] = argb & 0x00FFFFFF;
@@ -638,12 +637,11 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
           z = Math.min(z, zbuf[offset4 + width4]);
           if (z != Integer.MAX_VALUE)
             z >>= 1;
-          zbuf[offset1] = (pbuf[offset1] == bgcheck ? Integer.MAX_VALUE
-              : z);
+          zbuf[offset1] = (pbuf[offset1] == bgcheck ? Integer.MAX_VALUE : z);
         }
       antialiasThisFrame = false;
       setWidthHeight(false);
-    }    
+    }
   }
 
   public boolean hasContent() {

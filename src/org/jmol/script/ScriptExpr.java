@@ -1801,7 +1801,7 @@ abstract class ScriptExpr extends ScriptParam {
           }
           break;
         case T.color:
-          CU.toRGBpt(vwr.getColorArgbOrGray(bond.colix), ptT);
+          CU.colorPtFromInt(vwr.getColorArgbOrGray(bond.colix), ptT);
           switch (minmaxtype) {
           case T.all:
             vout.addLast(P3.newP(ptT));
