@@ -19,19 +19,13 @@ import org.jmol.viewer.Viewer;
 public class GData implements JmolGraphicsInterface {
 
   public GenericPlatform apiPlatform;
-
-  public boolean translucentCoverOnly = false;
-  public void setTranslucentCoverOnly(boolean TF) {
-    translucentCoverOnly = TF;
-  }
-  public boolean getTranslucentCoverOnly() {
-    return translucentCoverOnly;
-  }
-
+  public boolean translucentCoverOnly;
+  public boolean currentlyRendering;
+  public boolean antialiasEnabled;
+  
   protected int windowWidth, windowHeight;
   protected int displayMinX, displayMaxX, displayMinY, displayMaxY;
   protected boolean antialiasThisFrame;
-  protected boolean antialiasEnabled;
 
   protected boolean inGreyscaleMode;
 
@@ -120,7 +114,7 @@ public class GData implements JmolGraphicsInterface {
    */
   @Override
   public void setSlab(int slabValue) {
-    slab = slabValue < 0 ? 0 : slabValue;
+    slab = Math.max(0, slabValue);
   }
 
   public int zShadeR, zShadeG, zShadeB;
@@ -156,60 +150,10 @@ public class GData implements JmolGraphicsInterface {
     this.zShadePower = zPower;
   }
 
-  @Override
   public void setAmbientOcclusion(int value) {
     ambientOcclusion = value;
   }
 
-  /**
-   * gets g3d width
-   * 
-   * @return width pixel count;
-   */
-  @Override
-  public int getRenderWidth() {
-    return width;
-  }
-
-  /**
-   * gets g3d height
-   * 
-   * @return height pixel count
-   */
-  @Override
-  public int getRenderHeight() {
-    return height;
-  }
-
-  /**
-   * gets g3d slab
-   * 
-   * @return slab
-   */
-  @Override
-  public int getSlab() {
-    return slab;
-  }
-
-  /**
-   * gets g3d depth
-   * 
-   * @return depth
-   */
-  @Override
-  public int getDepth() {
-    return depth;
-  }
-
-
-  /**
-   * is full scene / oversampling antialiasing GENERALLY in effect
-   *
-   * @return the answer
-   */
-  public boolean isDisplayAntialiased() {
-    return antialiasEnabled;
-  }
 
   /**
    * is full scene / oversampling antialiasing in effect
@@ -238,7 +182,6 @@ public class GData implements JmolGraphicsInterface {
     return bgcolixes;
   }
 
-  @Override
   public int getColorArgbOrGray(short colix) {
     if (colix < 0)
       colix = changeableColixMap[colix & C.UNMASK_CHANGEABLE_TRANSLUCENT];
@@ -425,7 +368,6 @@ public class GData implements JmolGraphicsInterface {
     return (x < -r || x >= width + r || y < -r || y >= height + r);
   }
 
-  @Override
   public boolean isClippedZ(int z) {
     return (z != Integer.MIN_VALUE && (z < slab || z > depth));
   }
@@ -491,7 +433,6 @@ public class GData implements JmolGraphicsInterface {
         fontSize, apiPlatform, graphicsForMetrics);
   }
 
-  @Override
   public Font getFont3DScaled(Font font, float scale) {
     // TODO: problem here is that we are assigning a bold font, then not DEassigning it
     float newScale = font.fontSizeNominal * scale;
@@ -499,14 +440,8 @@ public class GData implements JmolGraphicsInterface {
         font.idFontFace, font.idFontStyle, newScale, font.fontSizeNominal, apiPlatform, graphicsForMetrics));
   }
 
-  @Override
   public byte getFontFid(float fontSize) {
     return getFont3D(fontSize).fid;
-  }
-
-  // {"Plain", "Bold", "Italic", "BoldItalic"};
-  public static int getFontStyleID(String fontStyle) {
-    return Font.getFontStyleID(fontStyle);
   }
 
   /**
@@ -647,10 +582,6 @@ public class GData implements JmolGraphicsInterface {
   public void renderBackground(JmolRendererInterface jmolRenderer) {
   }
 
-  public Font getFont3DCurrent() {
-    return null;
-  }
-
   /**
    * @param font3d  
    */
@@ -670,10 +601,6 @@ public class GData implements JmolGraphicsInterface {
     argbCurrent = color;
   }
 
-  public boolean isPass2() {
-    return isPass2;
-  }  
-
   /**
    * @param colix  
    * @return TRUE if correct pass (translucent or opaque)
@@ -687,11 +614,8 @@ public class GData implements JmolGraphicsInterface {
    * @return true if front
    */
   public boolean isDirectedTowardsCamera(short normix) {
-    return true;
-  }
-
-  public V3[] getTransformedVertexVectors() {
-    return null;
+    // normix < 0 means a double sided normix, so always visible
+    return (normix < 0) || (transformedVectors[normix].z > 0);
   }
 
   /**
@@ -816,6 +740,20 @@ public class GData implements JmolGraphicsInterface {
 
   public int getTextPosition() {
     return textY;
+  }
+
+  protected V3[] transformedVectors = new V3[normixCount];
+
+  public V3[] getTransformedVertexVectors() {
+    return transformedVectors;
+  }
+
+  protected static short normixCount = Normix.getNormixCount();
+  
+  protected Font currentFont;
+
+  public Font getFont3DCurrent() {
+    return currentFont;
   }
 
 

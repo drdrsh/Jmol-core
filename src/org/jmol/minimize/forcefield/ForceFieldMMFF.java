@@ -25,7 +25,6 @@
 package org.jmol.minimize.forcefield;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 
 import javajs.util.AU;
 import javajs.util.Lst;

@@ -190,15 +190,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     graphicsForMetrics = null;
   }
 
-  /**
-   * underlying GData object handles all general graphics setup. 
-   * @return "this" in the case of Graphics3D and this.g3d in the case of Export3D
-   * 
-   */
-  @Override
-  public GData getGData() {
-    return this;
-  }
 
   private byte[] anaglyphChannelBytes;
   
@@ -226,7 +217,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private boolean isScreened;
   private int argbNoisyUp, argbNoisyDn;
 
-  private Font currentFont;
   private Pixelator pixel;
 
   protected int zMargin;
@@ -238,6 +228,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
 
   public Graphics3D() {
+    for (int i = normixCount; --i >= 0; )
+      transformedVectors[i] = new V3();
   }
   
   @Override
@@ -280,15 +272,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         + "Renderer", vwr, "render"));
     if (r == null)
       throw new NullPointerException("Interface");
-    r.set(this);
+    r.set(this, this);
     return r;
   }
 
-  @Override
-  public boolean currentlyRendering() {
-    return currentlyRendering;
-  }
-  
   @Override
   public void setWindowParameters(int width, int height, boolean antialias) {
     setWinParams(width, height, antialias);
@@ -1071,13 +1058,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     currentFont = font3d;
   }
   
-  @Override
-  public Font getFont3DCurrent() {
-    return currentFont;
-  }
-
-  private boolean currentlyRendering;
-
   /*
   private void setRectClip(int x, int y, int width, int height) {
     // not implemented
@@ -1305,24 +1285,24 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
           screenC.y, screenC.z);
   }
 
-  @Override
-  public void drawTriangle3I(P3i screenA, P3i screenB, P3i screenC,
-                           int check) {
-    // primary method for unmapped monochromatic Mesh
-    if ((check & 1) == 1)
-      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
-          screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z,
-          true);
-    if ((check & 2) == 2)
-      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
-          screenB.x, screenB.y, screenB.z, screenC.x, screenC.y, screenC.z,
-          true);
-    if ((check & 4) == 4)
-      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
-          screenA.x, screenA.y, screenA.z, screenC.x, screenC.y, screenC.z,
-          true);
-  }
-
+//  @Override
+//  public void drawTriangle3I(P3i screenA, P3i screenB, P3i screenC,
+//                           int check) {
+//    // primary method for unmapped monochromatic Mesh
+//    if ((check & 1) == 1)
+//      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
+//          screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z,
+//          true);
+//    if ((check & 2) == 2)
+//      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
+//          screenB.x, screenB.y, screenB.z, screenC.x, screenC.y, screenC.z,
+//          true);
+//    if ((check & 4) == 4)
+//      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
+//          screenA.x, screenA.y, screenA.z, screenC.x, screenC.y, screenC.z,
+//          true);
+//  }
+//
   /*
   public void drawfillTriangle(int xA, int yA, int zA, int xB,
                                int yB, int zB, int xC, int yC, int zC) {
@@ -1966,28 +1946,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   
   // only these three instance variables depend upon current orientation:
 
-  private final static short normixCount = Normix.getNormixCount();
-  
-  private final V3[] transformedVectors = new V3[normixCount];
-  {
-    for (int i = normixCount; --i >= 0; )
-      transformedVectors[i] = new V3();
-  }
   private final byte[] shadeIndexes = new byte[normixCount];
   private final byte[] shadeIndexes2Sided = new byte[normixCount];
-
-  @Override
-  public V3[] getTransformedVertexVectors() {
-    return transformedVectors;
-  }
-  
-  @Override
-  public boolean isDirectedTowardsCamera(short normix) {
-    // normix < 0 means a double sided normix, so always visible
-    return (normix < 0) || (transformedVectors[normix].z > 0);
     
-  }
-
   public void setRotationMatrix(M3 rotationMatrix) {
     V3[] vertexVectors = Normix.getVertexVectors();
     for (int i = normixCount; --i >= 0; ) {
@@ -2053,7 +2014,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public boolean initializeOutput(Viewer vwr,
-                                  double privateKey, GData gdata, Map<String, Object> params) {
+                                  double privateKey, Map<String, Object> params) {
     // N/A
     return false;
   }

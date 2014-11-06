@@ -81,7 +81,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   
   @Override
   public void initShape() {
-    font3d = gdata.getFont3D(JC.MEASURE_DEFAULT_FONTSIZE);
+    font3d = vwr.gdata.getFont3D(JC.MEASURE_DEFAULT_FONTSIZE);
   }
 
   @Override

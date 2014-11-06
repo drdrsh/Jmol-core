@@ -30,6 +30,7 @@ import javajs.util.Lst;
 
 
 import org.jmol.api.JmolRendererInterface;
+import org.jmol.util.GData;
 import org.jmol.util.Point3fi;
 
 import javajs.util.P3;
@@ -67,13 +68,15 @@ public class HermiteRenderer implements G3DRenderer {
 
   
   private JmolRendererInterface g3d;
+  private GData gdata;
 
   public HermiteRenderer() {
   }
 
   @Override
-  public G3DRenderer set(JmolRendererInterface g3d) {
+  public G3DRenderer set(JmolRendererInterface g3d, GData gdata) {
     this.g3d = g3d;
+    this.gdata = gdata;
     return this;
   }
 
@@ -104,7 +107,7 @@ public class HermiteRenderer implements G3DRenderer {
                      P3i p0, P3i p1, P3i p2, P3i p3) {
     if (p0.z == 1 ||p1.z == 1 ||p2.z == 1 ||p3.z == 1)
       return;
-    if (g3d.isClippedZ(p1.z) || g3d.isClippedZ(p2.z))
+    if (gdata.isClippedZ(p1.z) || gdata.isClippedZ(p2.z))
       return;
     int x1 = p1.x, y1 = p1.y, z1 = p1.z;
     int x2 = p2.x, y2 = p2.y, z2 = p2.z;

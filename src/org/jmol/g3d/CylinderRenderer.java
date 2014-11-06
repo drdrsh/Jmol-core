@@ -77,7 +77,7 @@ class CylinderRenderer {
               boolean isScreenedB, byte endcaps, int diameter, int xa, int ya,
               int za, int xb, int yb, int zb) {
     //0 for colixA or colixB means ignore for this pass
-    if (diameter > g3d.getRenderHeight() * 3)
+    if (diameter > g3d.height * 3)
       return;
     int r = diameter / 2 + 1;
     int codeMinA = g3d.clipCode3(xa - r, ya - r, za - r);
@@ -149,7 +149,7 @@ class CylinderRenderer {
                   boolean isScreenedB, byte endcaps, int diameter, float xa,
                   float ya, float za, float xb, float yb, float zb) {
     // dipole cross, cartoonRockets, draw mesh nofill or width = -1
-    if (diameter > g3d.getRenderHeight() * 3)
+    if (diameter > g3d.height * 3)
       return;    
     // oops -- problem here if diameter < 0 is that we may have already clipped it!
     int r = diameter / 2 + 1;
@@ -241,7 +241,7 @@ class CylinderRenderer {
 
   void renderCone(short colix, boolean isScreenedA, byte endcap, int diameter, float xa, float ya,
                   float za, float xtip, float ytip, float ztip, boolean doFill, boolean isBarb) {
-    if (diameter > g3d.getRenderHeight() * 3)
+    if (diameter > g3d.height * 3)
       return;
     dxBf = (xtip) - (xAf = xa);
     dyBf = (ytip) - (yAf = ya);

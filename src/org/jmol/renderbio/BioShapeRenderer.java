@@ -103,7 +103,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
   }
 
   private void setGlobals() {
-    isPass2 = g3d.isPass2();
+    isPass2 = vwr.gdata.isPass2;
     invalidateMesh = false;
     needTranslucent = false;
     g3d.addRenderer(T.hermitelevel);

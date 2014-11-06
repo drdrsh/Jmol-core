@@ -54,7 +54,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
     g3d.setC(colix);
     FontLineShape fls = (FontLineShape) shape;
     imageFontScaling = vwr.getImageFontScaling();
-    font3d = g3d.getFont3DScaled(fls.font3d, imageFontScaling);
+    font3d = vwr.gdata.getFont3DScaled(fls.font3d, imageFontScaling);
 
     float zSum = 0;
     for (int i = 8; --i >= 0;) {

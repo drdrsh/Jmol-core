@@ -84,7 +84,7 @@ public class Labels extends AtomShape {
   @Override
   public void initShape() {
     super.initShape();
-    defaultFontId = zeroFontId = gdata.getFont3DFSS(JC.DEFAULT_FONTFACE,
+    defaultFontId = zeroFontId = vwr.gdata.getFont3DFSS(JC.DEFAULT_FONTFACE,
         JC.DEFAULT_FONTSTYLE, JC.LABEL_DEFAULT_FONTSIZE).fid;
     defaultColix = 0; //"none" -- inherit from atom
     defaultBgcolix = 0; //"none" -- off
@@ -130,7 +130,7 @@ public class Labels extends AtomShape {
           continue;
         text = getLabel(i);
         if (text == null) {
-          text = Text.newLabel(gdata, null, strings[i], C.INHERIT_ALL,
+          text = Text.newLabel(vwr, null, strings[i], C.INHERIT_ALL,
               (short) 0, 0, scalePixelsPerMicron, null);
           putLabel(i, text);
         } else {
@@ -224,7 +224,7 @@ public class Labels extends AtomShape {
         fids = null;
         return;
       }
-      byte fid = gdata.getFontFid(fontsize);
+      byte fid = vwr.gdata.getFontFid(fontsize);
       if (!setDefaults)
         for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
             .nextSetBit(i + 1))
@@ -413,7 +413,7 @@ public class Labels extends AtomShape {
         setFont(i, fid = defaultFontId);
       Font font = Font.getFont3D(fid);
       short colix = getColix2(i, atoms[i], false);
-      text = Text.newLabel(gdata, font, strings[i], colix, getColix2(i, atoms[i], true), 
+      text = Text.newLabel(vwr, font, strings[i], colix, getColix2(i, atoms[i], true), 
           0, scalePixelsPerMicron, value);
       setTextLabel(i, text);
     } else {
@@ -458,7 +458,7 @@ public class Labels extends AtomShape {
     addString(atom, i, label, strLabel);
     text = getLabel(i);
     if (isScaled) {
-      text = Text.newLabel(gdata, null, label, C.INHERIT_ALL, (short) 0, 0, scalePixelsPerMicron, null);
+      text = Text.newLabel(vwr, null, label, C.INHERIT_ALL, (short) 0, 0, scalePixelsPerMicron, null);
       putLabel(i, text);
     } else if (text != null && label != null) {
       text.setText(label);

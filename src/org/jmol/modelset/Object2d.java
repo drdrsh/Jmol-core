@@ -2,7 +2,6 @@ package org.jmol.modelset;
 
 import org.jmol.java.BS;
 import org.jmol.util.C;
-import org.jmol.util.GData;
 import javajs.util.P3;
 import org.jmol.viewer.JC;
 
@@ -11,7 +10,6 @@ public abstract class Object2d {
   // Echo, Label
 
   public boolean isLabelOrHover;
-  protected GData gdata;
   public P3 xyz;
   public String target;
   public String script;

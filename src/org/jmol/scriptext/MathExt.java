@@ -295,17 +295,17 @@ public class MathExt implements JmolMathExtension {
     if (args.length == 2 && colorScheme.equalsIgnoreCase("TOHSL"))
       return mp.addXPt(CU.rgbToHSL(P3.newP(args[1].tok == T.point3f ? SV
           .ptValue(args[1])
-          : CU.colorPtFromString(args[1].asString(), new P3())), true));
+          : CU.colorPtFromString(args[1].asString())), true));
     if (args.length == 2 && colorScheme.equalsIgnoreCase("TORGB")) {
       P3 pt = P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1]) : CU
-          .colorPtFromString(args[1].asString(), new P3()));
+          .colorPtFromString(args[1].asString()));
       return mp.addXPt(args[1].tok == T.point3f ? CU.hslToRGB(pt) : pt);
     }
     if (args.length == 4 && (args[3].tok == T.on || args[3].tok == T.off)) {
       P3 pt1 = P3.newP(args[0].tok == T.point3f ? SV.ptValue(args[0]) : CU
-          .colorPtFromString(args[0].asString(), new P3()));
+          .colorPtFromString(args[0].asString()));
       P3 pt2 = P3.newP(args[1].tok == T.point3f ? SV.ptValue(args[1]) : CU
-          .colorPtFromString(args[1].asString(), new P3()));
+          .colorPtFromString(args[1].asString()));
       boolean usingHSL = (args[3].tok == T.on);
       if (usingHSL) {
         pt1 = CU.rgbToHSL(pt1, false);

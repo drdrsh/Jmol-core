@@ -348,7 +348,7 @@ public class _ObjExporter extends __CartesianExporter {
       } else {
         debugPrint("  number of polygons used=" + meshSurface.bsPolygons.cardinality());
       }
-      debugPrint("  solid color=" + g3d.getColorArgbOrGray(colix));
+      debugPrint("  solid color=" + gdata.getColorArgbOrGray(colix));
     }
 
     // Create reduced face set
@@ -429,10 +429,10 @@ public class _ObjExporter extends __CartesianExporter {
    * @see org.jmol.export.___Exporter#initializeOutput(org.jmol.viewer.Viewer, org.jmol.g3d.Graphics3D, java.lang.Object)
    */
   @Override
-  boolean initializeOutput(Viewer vwr, double privateKey, GData g3d, Map<String, Object> params) {
+  boolean initializeOutput(Viewer vwr, double privateKey, GData gdata, Map<String, Object> params) {
     debugPrint("initializeOutput: + output");
     // Call the super method
-    boolean retVal = initOutput(vwr, privateKey, g3d, params);
+    boolean retVal = initOutput(vwr, privateKey, gdata, params);
     if (!retVal) {
       debugPrint("End initializeOutput (error in super):");
       return false;
@@ -515,7 +515,7 @@ public class _ObjExporter extends __CartesianExporter {
    * @return The name for the structure.
    */
   private String getTextureName(short colix) {
-    return "k" + Escape.getHexColorFromRGB(g3d.getColorArgbOrGray(colix));
+    return "k" + Escape.getHexColorFromRGB(gdata.getColorArgbOrGray(colix));
   }
 
   /**
@@ -945,11 +945,11 @@ public class _ObjExporter extends __CartesianExporter {
         // Get the vertex colors and average them
         sum.set(0, 0, 0);
         for (int iVertex : face)
-          sum.add(CU.colorPtFromInt(g3d.getColorArgbOrGray(colixes[iVertex]), ptTemp));
+          sum.add(CU.colorPtFromInt(gdata.getColorArgbOrGray(colixes[iVertex]), ptTemp));
         sum.scale(1.0f / face.length);
         rgb = CU.colorPtToFFRGB(sum);
       } else {
-        rgb = g3d.getColorArgbOrGray(colixes[i]);
+        rgb = gdata.getColorArgbOrGray(colixes[i]);
       }
       if (bytes == null) {
         // just create an int32 rgb buffer. That's all any of the encoders need.

@@ -30,11 +30,10 @@ import javajs.awt.Font;
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.modelset.Text;
 import org.jmol.viewer.JC;
-import org.jmol.viewer.Viewer;
 
 class TextRenderer {
   
-  static void render(Text text, Viewer vwr, JmolRendererInterface g3d,
+  static void render(Text text, JmolRendererInterface g3d,
                      float scalePixelsPerMicron, float imageFontScaling,
                      boolean isExact, float[] boxXY, float[] temp) {
     if (text == null || text.image == null && !text.doFormatText && text.lines == null)
@@ -44,8 +43,7 @@ class TextRenderer {
         && (text.image == null && (text.bgcolix == 0 || !g3d
             .setC(text.bgcolix))))
       return;
-    text.setPosition(vwr, g3d.getRenderWidth(), g3d.getRenderHeight(),
-        scalePixelsPerMicron, imageFontScaling, isExact, boxXY);
+    text.setPosition(scalePixelsPerMicron, imageFontScaling, isExact, boxXY);
     // draw the box if necessary; colix has been set
     if (text.image == null && text.bgcolix != 0) {
       if (g3d.setC(text.bgcolix))

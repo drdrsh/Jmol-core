@@ -51,7 +51,7 @@ public class Frank extends FontShape {
   public void initShape() {
     super.initShape();
     myType = "frank";
-    baseFont3d = font3d = gdata.getFont3DFSS(defaultFontName, defaultFontStyle, defaultFontSize);
+    baseFont3d = font3d = vwr.gdata.getFont3DFSS(defaultFontName, defaultFontStyle, defaultFontSize);
     calcMetrics();
   }
 
@@ -73,7 +73,7 @@ public class Frank extends FontShape {
   public boolean checkObjectHovered(int x, int y, BS bsVisible) {
     if (!vwr.getShowFrank() || !wasClicked(x, y) || !vwr.menuEnabled())
       return false;
-    if (gdata.isDisplayAntialiased() && !vwr.isSingleThreaded) {
+    if (vwr.gdata.antialiasEnabled && !vwr.isSingleThreaded) {
       //because hover rendering is done in FIRST pass only
       x <<= 1;
       y <<= 1;
@@ -96,7 +96,7 @@ public class Frank extends FontShape {
   }
 
   public void getFont(float imageFontScaling) {
-    font3d = gdata.getFont3DScaled(baseFont3d, imageFontScaling);
+    font3d = vwr.gdata.getFont3DScaled(baseFont3d, imageFontScaling);
     calcMetrics();
   }
   

@@ -122,9 +122,9 @@ public class _PovrayExporter extends __RayTracerExporter {
 
   private void writeMacros() {
     output("#default { finish {\n" + "  ambient "
-        + g3d.getAmbientPercent() / 100f + "\n" + "  diffuse "
-        + g3d.getDiffusePercent() / 100f + "\n" + "  specular "
-        + g3d.getSpecularPercent() / 100f + "\n"
+        + gdata.getAmbientPercent() / 100f + "\n" + "  diffuse "
+        + gdata.getDiffusePercent() / 100f + "\n" + "  specular "
+        + gdata.getSpecularPercent() / 100f + "\n"
         + "  roughness .00001\n  metallic\n  phong 0.9\n  phong_size 120\n}}"
         + "\n\n");
 
@@ -191,9 +191,9 @@ public class _PovrayExporter extends __RayTracerExporter {
         + "  #declare shineFactor = 0;\n"
         + " #end\n"
         + " finish {\n" + "  ambient "
-        + g3d.getAmbientPercent() / 100f + "\n" + "  diffuse "
-        + g3d.getDiffusePercent() / 100f + "\n" + "  specular "
-        + g3d.getSpecularPercent() / 100f + "\n"
+        + gdata.getAmbientPercent() / 100f + "\n" + "  diffuse "
+        + gdata.getDiffusePercent() / 100f + "\n" + "  specular "
+        + gdata.getSpecularPercent() / 100f + "\n"
         + "  roughness .00001\n"  
         + "  metallic shineFactor\n"  
         + "  phong 0.9*shineFactor\n"  

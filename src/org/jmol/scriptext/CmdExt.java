@@ -1334,7 +1334,7 @@ public class CmdExt implements JmolCmdExtension {
       Text text = null;
       if (font != null)
         text = ((Text) Interface.getInterface("org.jmol.modelset.Text", vwr, "script")).newLabel(
-            vwr.gdata, font, "", colix, (short) 0, 0, 0, null);
+            vwr, font, "", colix, (short) 0, 0, 0, null);
       if (text != null)
         text.pymolOffset = offset;
       setShapeProperty(

@@ -1608,7 +1608,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     String s = findValue(x, y, false, bsVisible);
     if (s == null)
       return false;
-    if (gdata.isDisplayAntialiased()) {
+    if (vwr.gdata.antialiasEnabled) {
       //because hover rendering is done in FIRST pass only
       x <<= 1;
       y <<= 1;
@@ -1643,7 +1643,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         f = thisMesh.colorEncoder.quantize(f, false);
         s = "" + g + " - " + f;
       }
-      if (gdata.isAntialiased()) {
+      if (vwr.gdata.isAntialiased()) {
         x <<= 1;
         y <<= 1;
       }
@@ -1663,7 +1663,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if (!vwr.isBound(action, ActionManager.ACTION_pickIsosurface))
       return null;
     int dmin2 = MAX_OBJECT_CLICK_DISTANCE_SQUARED;
-    if (gdata.isAntialiased()) {
+    if (vwr.gdata.isAntialiased()) {
       x <<= 1;
       y <<= 1;
       dmin2 <<= 1;
@@ -1839,7 +1839,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
    */
   private String findValue(int x, int y, boolean isPicking, BS bsVisible) {
     int dmin2 = MAX_OBJECT_CLICK_DISTANCE_SQUARED;
-    if (gdata.isAntialiased()) {
+    if (vwr.gdata.isAntialiased()) {
       x <<= 1;
       y <<= 1;
       dmin2 <<= 1;

@@ -41,6 +41,9 @@ public abstract class ShapeRenderer {
   
   public Viewer vwr;
   protected TransformManager tm;
+  /**
+   * could be vwr.gdata or an exporter
+   */
   public JmolRendererInterface g3d;
   protected ModelSet ms;
   protected Shape shape;

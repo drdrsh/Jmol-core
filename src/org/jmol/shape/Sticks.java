@@ -248,7 +248,7 @@ public class Sticks extends Shape {
    */
   private Bond findPickedBond(int x, int y, BS bsVisible, P3 pt) {
     int dmin2 = MAX_BOND_CLICK_DISTANCE_SQUARED;
-    if (gdata.isAntialiased()) {
+    if (vwr.gdata.isAntialiased()) {
       x <<= 1;
       y <<= 1;
       dmin2 <<= 1;

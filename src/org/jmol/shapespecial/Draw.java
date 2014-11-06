@@ -1173,7 +1173,7 @@ protected void resetObjects() {
       return false;
     if (!findPickedObject(x, y, false, bsVisible))
       return false;
-    if (gdata.isDisplayAntialiased()) {
+    if (vwr.gdata.antialiasEnabled) {
       //because hover rendering is done in FIRST pass only
       x <<= 1;
       y <<= 1;
@@ -1221,7 +1221,7 @@ protected void resetObjects() {
                       boolean moveAll) {
     if (vertexes == null || vertexes.length == 0)
       return;
-    if (gdata.isAntialiased()) {
+    if (vwr.gdata.isAntialiased()) {
       x <<= 1;
       y <<= 1;
     }
@@ -1265,7 +1265,7 @@ protected void resetObjects() {
    */
   private boolean findPickedObject(int x, int y, boolean isPicking, BS bsVisible) {
     int dmin2 = MAX_OBJECT_CLICK_DISTANCE_SQUARED;
-    if (gdata.isAntialiased()) {
+    if (vwr.gdata.isAntialiased()) {
       x <<= 1;
       y <<= 1;
       dmin2 <<= 1;

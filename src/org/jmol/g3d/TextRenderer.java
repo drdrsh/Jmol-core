@@ -108,8 +108,8 @@ class TextRenderer {
     }
     if (jmolRenderer != null
         || (x < 0 || x + text3d.width > g3d.width || y < 0 || y + text3d.height > g3d.height))
-      plotClipped(x, y, z, argb, bgargb, g3d, jmolRenderer, text3d.mapWidth,
-          text3d.height, text3d.tmap);
+      plotClipped(x, y, z, argb, bgargb, jmolRenderer == null ? g3d : jmolRenderer, 
+          text3d.mapWidth, text3d.height, text3d.tmap);
     else
       plotUnclipped(x, y, z, argb, bgargb, g3d, text3d.mapWidth, text3d.height,
           text3d.tmap);
@@ -190,13 +190,9 @@ class TextRenderer {
   }
   
   private static void plotClipped(int x, int y, int z, int argb, int bgargb,
-                                  Graphics3D g3d,
                                   JmolRendererInterface jmolRenderer,
                                   int textWidth, int textHeight, byte[] tmap) {
-    if (jmolRenderer == null)
-      jmolRenderer = g3d;
-    int offset = 0;
-    for (int i = 0; i < textHeight; i++) {
+    for (int offset = 0, i = 0; i < textHeight; i++) {
       for (int j = 0; j < textWidth; j++) {
         byte shade = tmap[offset++];
         if (shade != 0)

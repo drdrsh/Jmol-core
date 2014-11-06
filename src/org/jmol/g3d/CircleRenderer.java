@@ -24,6 +24,7 @@
 package org.jmol.g3d;
 
 import org.jmol.api.JmolRendererInterface;
+import org.jmol.util.GData;
 
 /**
  *<p>
@@ -42,7 +43,7 @@ public final class CircleRenderer implements G3DRenderer {
   
   
   @Override
-  public G3DRenderer set(JmolRendererInterface g3d) {
+  public G3DRenderer set(JmolRendererInterface g3d, GData gdata) {
     try {
       this.g3d = (Graphics3D) g3d;
     } catch (Exception e) {

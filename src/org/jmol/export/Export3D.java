@@ -38,7 +38,6 @@ import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
-import javajs.util.V3;
 import org.jmol.viewer.Viewer;
 
 public class Export3D implements JmolRendererInterface {
@@ -47,7 +46,7 @@ public class Export3D implements JmolRendererInterface {
 
   private double privateKey;
 
-  private GData g3d;
+  private GData gdata;
   private short colix;
   private HermiteRenderer hermite3d;
   private int width;
@@ -69,20 +68,20 @@ public class Export3D implements JmolRendererInterface {
     isWebGL = exportName.equals("JS");
     if ((exporter = (___Exporter) Interface.getOption("export." + (isWebGL ? "" : "_") + exportName + "Exporter", vwr, "export")) == null)
       return null;
-    g3d = gdata;
+    this.gdata = gdata;
     exporter.setRenderer(this);
-    g3d.setNewWindowParametersForExport();
-    slab = g3d.getSlab();
-    width = g3d.getRenderWidth();
-    height = g3d.getRenderHeight();
+    gdata.setNewWindowParametersForExport();
+    slab = gdata.slab;
+    width = gdata.width;
+    height = gdata.height;
     this.privateKey = privateKey;
-    return (initializeOutput(vwr, privateKey, g3d, params) ? exporter : null);
+    return (initializeOutput(vwr, privateKey, params) ? exporter : null);
   }
 
   @Override
   public boolean initializeOutput(Viewer vwr, double privateKey,
-                                  GData gdata, Map<String, Object> params) {
-    return exporter.initializeOutput(vwr, privateKey, g3d, params);
+                                  Map<String, Object> params) {
+    return exporter.initializeOutput(vwr, privateKey, gdata, params);
   }
 
   @Override
@@ -102,20 +101,20 @@ public class Export3D implements JmolRendererInterface {
 
   @Override
   public void setSlab(int slabValue) {
-    slab = slabValue;
-    g3d.setSlab(slabValue);
+    gdata.setSlab(slabValue);
+    slab = gdata.slab;
   }
 
   @Override
   public void setDepth(int depthValue) {
     // no equivalent in exporters?
-    g3d.setDepth(depthValue);
+    gdata.setDepth(depthValue);
   }
 
   @Override
   public void renderBackground(JmolRendererInterface me) {
     if (exporter.exportType == GData.EXPORT_RAYTRACER)
-      g3d.renderBackground(me);
+      gdata.renderBackground(me);
   }
 
   @Override
@@ -146,7 +145,7 @@ public class Export3D implements JmolRendererInterface {
       return;
     }
     // labels (and rubberband, not implemented) and navigation cursor
-    if (zSlab != 0 && isClippedZ(zSlab))
+    if (zSlab != 0 && gdata.isClippedZ(zSlab))
       return;
     int w = rWidth - 1;
     int h = rHeight - 1;
@@ -172,7 +171,7 @@ public class Export3D implements JmolRendererInterface {
   private void drawHLine(int x, int y, int z, int w) {
     // hover, labels only
     //OVERRIDDED IN JS
-    int argbCurrent = g3d.getColorArgbOrGray(colix);
+    int argbCurrent = gdata.getColorArgbOrGray(colix);
     if (w < 0) {
       x += w;
       w = -w;
@@ -191,7 +190,7 @@ public class Export3D implements JmolRendererInterface {
   private void drawVLine(int x, int y, int z, int h) {
     // hover, labels only
     // OVERRIDDED IN JS
-    int argbCurrent = g3d.getColorArgbOrGray(colix);
+    int argbCurrent = gdata.getColorArgbOrGray(colix);
     if (h < 0) {
       y += h;
       h = -h;
@@ -219,9 +218,8 @@ public class Export3D implements JmolRendererInterface {
   public void drawFilledCircle(short colixRing, short colixFill, int diameter,
                                int x, int y, int z) {
     // halos, draw
-    if (isClippedZ(z))
-      return;
-    exporter.drawFilledCircle(colixRing, colixFill, diameter, x, y, z);
+    if (!gdata.isClippedZ(z))
+      exporter.drawFilledCircle(colixRing, colixFill, diameter, x, y, z);
   }
 
   /**
@@ -244,9 +242,8 @@ public class Export3D implements JmolRendererInterface {
   public void drawCircle(short colix, int diameter, int x, int y, int z,
                          boolean doFill) {
     // halos, draw
-    if (isClippedZ(z))
-      return;
-    exporter.drawCircle(x, y, z, diameter, colix, doFill);
+    if (!gdata.isClippedZ(z))
+      exporter.drawCircle(x, y, z, diameter, colix, doFill);
   }
 
   private P3 ptA = new P3();
@@ -330,7 +327,7 @@ public class Export3D implements JmolRendererInterface {
   public void fillRect(int x, int y, int z, int zSlab, int widthFill,
                        int heightFill) {
     // hover and labels only -- slab at atom or front -- simple Z/window clip
-    if (isClippedZ(zSlab))
+    if (gdata.isClippedZ(zSlab))
       return;
     ptA.set(x, y, z);
     ptB.set(x + widthFill, y, z);
@@ -362,11 +359,8 @@ public class Export3D implements JmolRendererInterface {
   public void drawString(String str, Font font3d, int xBaseline, int yBaseline,
                          int z, int zSlab, short bgcolix) {
     // axis, labels, measures
-    if (str == null)
-      return;
-    if (isClippedZ(zSlab))
-      return;
-    drawStringNoSlab(str, font3d, xBaseline, yBaseline, z, bgcolix);
+    if (str != null && !gdata.isClippedZ(zSlab))
+      drawStringNoSlab(str, font3d, xBaseline, yBaseline, z, bgcolix);
   }
 
   /**
@@ -394,9 +388,9 @@ public class Export3D implements JmolRendererInterface {
       return;
     z = Math.max(slab, z);
     if (font3d == null)
-      font3d = g3d.getFont3DCurrent();
+      font3d = gdata.getFont3DCurrent();
     else
-      g3d.setFont(font3d);
+      gdata.setFont(font3d);
     exporter.plotText(xBaseline, yBaseline, z, colix, str, font3d);
   }
 
@@ -405,7 +399,7 @@ public class Export3D implements JmolRendererInterface {
                         short bgcolix, int width, int height) {
     if (objImage == null || width == 0 || height == 0)
       return;
-    if (isClippedZ(zSlab))
+    if (gdata.isClippedZ(zSlab))
       return;
     z = Math.max(slab, z);
     exporter.plotImage(x, y, z, objImage, bgcolix, width, height);
@@ -616,19 +610,19 @@ public class Export3D implements JmolRendererInterface {
           screenC.y, screenC.z);
   }
 
-  @Override
-  public void drawTriangle3I(P3i screenA, P3i screenB, P3i screenC, int check) {
-    // primary method for mapped Mesh
-    if ((check & 1) == 1)
-      drawLine(colix, colix, screenA.x, screenA.y, screenA.z, screenB.x,
-          screenB.y, screenB.z);
-    if ((check & 2) == 2)
-      drawLine(colix, colix, screenB.x, screenB.y, screenB.z, screenC.x,
-          screenC.y, screenC.z);
-    if ((check & 4) == 4)
-      drawLine(colix, colix, screenA.x, screenA.y, screenA.z, screenC.x,
-          screenC.y, screenC.z);
-  }
+//  @Override
+//  public void drawTriangle3I(P3i screenA, P3i screenB, P3i screenC, int check) {
+//    // primary method for mapped Mesh
+//    if ((check & 1) == 1)
+//      drawLine(colix, colix, screenA.x, screenA.y, screenA.z, screenB.x,
+//          screenB.y, screenB.z);
+//    if ((check & 2) == 2)
+//      drawLine(colix, colix, screenB.x, screenB.y, screenB.z, screenC.x,
+//          screenC.y, screenC.z);
+//    if ((check & 4) == 4)
+//      drawLine(colix, colix, screenA.x, screenA.y, screenA.z, screenC.x,
+//          screenC.y, screenC.z);
+//  }
 
   /*
    * public void drawfillTriangle(int xA, int yA, int zA, int xB, int yB, int
@@ -741,11 +735,11 @@ public class Export3D implements JmolRendererInterface {
     exporter.drawSurface(meshSurface, colix);
   }
 
-  @Override
-  public short[] getBgColixes(short[] bgcolixes) {
-    // 3D exporters cannot do background labels
-    return exporter.exportType == GData.EXPORT_CARTESIAN ? null : bgcolixes;
-  }
+//  @Override
+//  public short[] getBgColixes(short[] bgcolixes) {
+//    // 3D exporters cannot do background labels
+//    return exporter.exportType == GData.EXPORT_CARTESIAN ? null : bgcolixes;
+//  }
 
   @Override
   public void fillEllipsoid(P3 center, P3[] points, int x, int y, int z,
@@ -767,11 +761,6 @@ public class Export3D implements JmolRendererInterface {
    * **************************************************************
    */
 
-  @Override
-  public GData getGData() {
-    return g3d;
-  }
-
   /**
    * is full scene / oversampling antialiasing in effect
    * 
@@ -792,56 +781,6 @@ public class Export3D implements JmolRendererInterface {
     return true;
   }
 
-  @Override
-  public void setColor(int color) {
-    g3d.setColor(color);
-  }
-
-  /**
-   * gets g3d width
-   * 
-   * @return width pixel count;
-   */
-  @Override
-  public int getRenderWidth() {
-    return g3d.getRenderWidth();
-  }
-
-  /**
-   * gets g3d height
-   * 
-   * @return height pixel count
-   */
-  @Override
-  public int getRenderHeight() {
-    return g3d.getRenderHeight();
-  }
-
-  @Override
-  public boolean isPass2() {
-    return g3d.isPass2();
-  }
-
-  /**
-   * gets g3d slab
-   * 
-   * @return slab
-   */
-  @Override
-  public int getSlab() {
-    return g3d.getSlab();
-  }
-
-  /**
-   * gets g3d depth
-   * 
-   * @return depth
-   */
-  @Override
-  public int getDepth() {
-    return g3d.getDepth();
-  }
-
   /**
    * sets current color from colix color index
    * 
@@ -852,93 +791,31 @@ public class Export3D implements JmolRendererInterface {
   @Override
   public boolean setC(short colix) {
     this.colix = colix;
-    g3d.setC(colix);
+    gdata.setC(colix);
     return true;
   }
 
   @Override
-  public void setFontFid(byte fid) {
-    g3d.setFontFid(fid);
-  }
-
-  @Override
-  public Font getFont3DCurrent() {
-    return g3d.getFont3DCurrent();
-  }
-
-  @Override
   public boolean isInDisplayRange(int x, int y) {
-    if (exporter.exportType == GData.EXPORT_CARTESIAN)
-      return true;
-    return g3d.isInDisplayRange(x, y);
-  }
-
-  @Override
-  public boolean isClippedZ(int z) {
-    return g3d.isClippedZ(z);
+    return (exporter.exportType == GData.EXPORT_CARTESIAN || gdata.isInDisplayRange(x, y));
   }
 
   public int clipCode(int x, int y, int z) {
-    return (exporter.exportType == GData.EXPORT_CARTESIAN ? g3d.clipCode(z)
-        : g3d.clipCode3(x, y, z));
+    return (exporter.exportType == GData.EXPORT_CARTESIAN ? gdata.clipCode(z)
+        : gdata.clipCode3(x, y, z));
   }
 
   @Override
   public boolean isClippedXY(int diameter, int x, int y) {
-    if (exporter.exportType == GData.EXPORT_CARTESIAN)
-      return false;
-    return g3d.isClippedXY(diameter, x, y);
+    return (exporter.exportType != GData.EXPORT_CARTESIAN && gdata.isClippedXY(diameter, x, y));
   }
 
   public boolean isClipped(int x, int y, int z) {
-    return (g3d.isClippedZ(z) || isClipped(x, y));
+    return (gdata.isClippedZ(z) || isClipped(x, y));
   }
 
   protected boolean isClipped(int x, int y) {
-    if (exporter.exportType == GData.EXPORT_CARTESIAN)
-      return false;
-    return g3d.isClipped(x, y);
-  }
-
-  @Override
-  public int getColorArgbOrGray(short colix) {
-    return g3d.getColorArgbOrGray(colix);
-  }
-
-  @Override
-  public void setNoisySurfaceShade(P3i pointA, P3i pointB, P3i pointC) {
-    g3d.setNoisySurfaceShade(pointA, pointB, pointC);
-  }
-
-  @Override
-  public byte getFontFidFS(String fontFace, float fontSize) {
-    return g3d.getFontFidFS(fontFace, fontSize);
-  }
-
-  @Override
-  public boolean isDirectedTowardsCamera(short normix) {
-    // polyhedra
-    return g3d.isDirectedTowardsCamera(normix);
-  }
-
-  @Override
-  public V3[] getTransformedVertexVectors() {
-    return g3d.getTransformedVertexVectors();
-  }
-
-  @Override
-  public Font getFont3DScaled(Font font, float scale) {
-    return g3d.getFont3DScaled(font, scale);
-  }
-
-  @Override
-  public byte getFontFid(float fontSize) {
-    return g3d.getFontFid(fontSize);
-  }
-
-  @Override
-  public void setTranslucentCoverOnly(boolean TF) {
-    // ignore
+    return (exporter.exportType != GData.EXPORT_CARTESIAN && gdata.isClipped(x, y));
   }
 
   public double getPrivateKey() {
@@ -948,13 +825,6 @@ public class Export3D implements JmolRendererInterface {
   @Override
   public void volumeRender4(int diam, int x, int y, int z) {
     fillSphereXYZ(diam, x, y, z);
-
-  }
-
-  // Graphics3D only:
-  @Override
-  public boolean currentlyRendering() {
-    return false;
   }
 
   @Override
@@ -969,24 +839,10 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public boolean getTranslucentCoverOnly() {
-    return g3d.getTranslucentCoverOnly();
-  }
-
-  @Override
   public void addRenderer(int tok) {
     if (tok == T.hermitelevel)
-      hermite3d = (HermiteRenderer) new HermiteRenderer().set(this);
+      hermite3d = (HermiteRenderer) new HermiteRenderer().set(this, gdata);
   }
-
-  @Override
-  public void setAmbientOcclusion(int value) {
-    // n/a?
-  }
-
-  //  public int getAmbientOcclusion() {
-  //    return g3d.ambientOcclusion;
-  //  }
 
   @Override
   public void plotImagePixel(int argb, int x, int y, int z, int shade,
@@ -1028,17 +884,7 @@ public class Export3D implements JmolRendererInterface {
       // TODO
       return;
     }
-    g3d.renderAllStrings(this);
-  }
-
-  @Override
-  public void setTextPosition(int y) {
-    // ignore
-  }
-  
-  @Override
-  public int getTextPosition() {
-    return -1; // no text
+    gdata.renderAllStrings(this);
   }
 
 }

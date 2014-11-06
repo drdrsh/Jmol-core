@@ -26,7 +26,6 @@
 package org.jmol.shape;
 
 import org.jmol.util.C;
-import org.jmol.util.GData;
 
 import javajs.awt.Font;
 import javajs.util.Lst;
@@ -102,7 +101,6 @@ public abstract class Shape {
   public static final float RADIUS_MAX = 4;
   public Viewer vwr; //public for now for Backbone
   public ModelSet ms;
-  public GData gdata;
   public int shapeID;
   /**
    * shape visibility flag
@@ -122,12 +120,11 @@ public abstract class Shape {
     return vwr;
   }
   
-  final public void initializeShape(Viewer vwr, GData g3d, ModelSet modelSet,
+  final public void initializeShape(Viewer vwr, ModelSet modelSet,
                                int shapeID) {
     this.vwr = vwr;
-    this.gdata = g3d;
     this.shapeID = shapeID;
-    this.vf = JC.getShapeVisibilityFlag(shapeID);
+    vf = JC.getShapeVisibilityFlag(shapeID);
     setModelSet(modelSet);
     initShape();
     //System.out.println("Shape " + shapeID + " " + this + " initialized");

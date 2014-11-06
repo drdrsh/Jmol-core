@@ -981,9 +981,7 @@ public class ScriptMathProcessor {
         switch (x2.tok) {
         case T.string:
         case T.varray:
-          s = SV.sValue(x2);
-          pt = new P3();
-          return addXPt(CU.colorPtFromString(s, pt));
+          return addXPt(CU.colorPtFromString(SV.sValue(x2)));
         case T.integer:
         case T.decimal:
           return addXPt(vwr.getColorPointForPropertyValue(SV.fValue(x2)));

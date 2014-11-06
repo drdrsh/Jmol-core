@@ -65,6 +65,7 @@ public class ScriptCompiler extends ScriptTokenParser {
    */
 
   /**
+   * @param vwr 
    * @j2sIgnoreSuperConstructor
    * 
    */

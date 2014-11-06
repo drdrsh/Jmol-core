@@ -41,10 +41,6 @@ import org.jmol.viewer.StateManager;
 
 public class UccageRenderer extends CageRenderer {
 
-  //NumberFormat nf;
-  byte fid;
-  //boolean doLocalize;
-  
   private final P3[] verticesT = new P3[8]; 
 
   @Override
@@ -58,14 +54,14 @@ public class UccageRenderer extends CageRenderer {
   @Override
   protected boolean render() {
     imageFontScaling = vwr.getImageFontScaling();
-    font3d = g3d.getFont3DScaled(((Uccage) shape).font3d, imageFontScaling);
+    font3d = vwr.gdata.getFont3DScaled(((Uccage) shape).font3d, imageFontScaling);
     int mad = vwr.getObjectMad(StateManager.OBJ_UNITCELL);
     if (mad == 0 || vwr.isJmolDataFrame() || tm.isNavigating()
         && vwr.getBoolean(T.navigationperiodic))
       return false;
     colix = vwr.getObjectColix(StateManager.OBJ_UNITCELL);
     boolean needTranslucent = C.isColixTranslucent(colix);
-    if (!isExport && needTranslucent != g3d.isPass2())
+    if (!isExport && needTranslucent != vwr.gdata.isPass2)
       return needTranslucent;
     //doLocalize = vwr.getUseNumberLocalization();
     render1(mad);
@@ -77,10 +73,18 @@ public class UccageRenderer extends CageRenderer {
   private P3 cell1 = new P3();
   private P3 offset = new P3();
   private P3 offsetT = new P3();
+
+  private SymmetryInterface unitcell;
+
+  private int lineheight;
+
+  private int xpos;
+
+  private int ypos;
   
   private void render1(int mad) {
     g3d.setC(colix);
-    SymmetryInterface unitcell = vwr.getCurrentUnitCell();
+    unitcell = vwr.getCurrentUnitCell();
     if (unitcell == null)
       return;
     isPolymer = unitcell.isPolymer();
@@ -146,87 +150,55 @@ public class UccageRenderer extends CageRenderer {
         }
       }
     }
-
-    if (!isExport && vwr.getBoolean(T.displaycellparameters) && !vwr.isPreviewOnly()
-        && !unitcell.isPeriodic() && g3d.setC(vwr.getColixBackgroundContrast())
-        && g3d.getTextPosition() == 0)
-      renderInfo(unitcell);
+    renderInfo();
   }
   
-  private String nfformat(float x) {
-    return (/*doLocalize && nf != null ? nf.format(x) :*/ DF.formatDecimal(x, 3));
-  }
+  private void renderInfo() {
+    if (isExport 
+        || !vwr.getBoolean(T.displaycellparameters) 
+        || unitcell.isPeriodic() 
+        || vwr.isPreviewOnly()
+        || !vwr.gdata.setC(vwr.getColixBackgroundContrast())
+        || vwr.gdata.getTextPosition() != 0) // molecularOrbital has displayed
+      return;
+    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Monospaced", 14 * imageFontScaling));
+    xpos = (int) Math.floor(5 * imageFontScaling);
+    ypos = lineheight = (int) Math.floor(15 * imageFontScaling);
 
-  private void renderInfo(SymmetryInterface symmetry) {
-    fid = g3d.getFontFidFS("Monospaced", 14 * imageFontScaling);
-
-//    if (nf == null) {
-//      nf = NumberFormat.getInstance();
-//    }
-//    if (nf != null) {
-//      nf.setMaximumFractionDigits(3);
-//      nf.setMinimumFractionDigits(3);
-//    }
-    g3d.setFontFid(fid);
-
-    int lineheight = (int) Math.floor(15 * imageFontScaling);
-    int x = (int) Math.floor(5 * imageFontScaling);
-    int y = lineheight;
-
-    String sgName = symmetry.getSpaceGroupName();
-    if (isPolymer)
-      sgName = "polymer";
-    else if (isSlab)
-      sgName = "slab";
-    else if (sgName != null && sgName.startsWith("cell=!"))
-      sgName = "cell=inverse[" + sgName.substring(6) + "]";
-    sgName = PT.rep(sgName, ";0,0,0", "");
-    if (sgName != null & !sgName.equals("-- [--]")) {
-      y += lineheight;
-      g3d.drawStringNoSlab(sgName, null, x, y, 0, (short) 0);
+    String sgName = (isPolymer ? "polymer" : isSlab ? "slab" : unitcell
+        .getSpaceGroupName());
+    if (sgName != null) {
+      if (sgName.startsWith("cell=!"))
+        sgName = "cell=inverse[" + sgName.substring(6) + "]";
+      sgName = PT.rep(sgName, ";0,0,0", "");
+      if (!sgName.equals("-- [--]"))
+        drawInfo(sgName, 0, null);
     }
-    Lst<String> info = symmetry.getMoreInfo();
+    Lst<String> info = unitcell.getMoreInfo();
     if (info != null)
-      for (int i = 0; i < info.size(); i++) {
-        y += lineheight;
-        g3d.drawStringNoSlab(info.get(i), null, x, y, 0, (short) 0);
-      }
+      for (int i = 0; i < info.size(); i++)
+        drawInfo(info.get(i), 0, null);
     if (!vwr.getBoolean(T.showunitcelldetails))
       return;
-    y += lineheight;
-    g3d.drawStringNoSlab("a="
-        + nfformat(symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_A)) + "\u00C5",
-        null, x, y, 0, (short) 0);
-    if (!isPolymer) {
-      y += lineheight;
-      g3d.drawStringNoSlab(
-          "b=" + nfformat(symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_B))
-              + "\u00C5", null, x, y, 0, (short) 0);
-    }
-    if (!isPolymer && !isSlab) {
-      y += lineheight;
-      g3d.drawStringNoSlab(
-          "c=" + nfformat(symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_C))
-              + "\u00C5", null, x, y, 0, (short) 0);
-    }
-    //if (nf != null)
-      //nf.setMaximumFractionDigits(1);
+    drawInfo("a=", SimpleUnitCell.INFO_A, "\u00C5");
+    if (!isPolymer)
+      drawInfo("b=", SimpleUnitCell.INFO_B, "\u00C5");
+    if (!isPolymer && !isSlab)
+      drawInfo("c=", SimpleUnitCell.INFO_C, "\u00C5");
     if (!isPolymer) {
       if (!isSlab) {
-        y += lineheight;
-        g3d.drawStringNoSlab("\u03B1="
-            + nfformat(symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_ALPHA))
-            + "\u00B0", null, x, y, 0, (short) 0);
-        y += lineheight;
-        g3d.drawStringNoSlab("\u03B2="
-            + nfformat(symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_BETA))
-            + "\u00B0", null, x, y, 0, (short) 0);
+        drawInfo("\u03B1=", SimpleUnitCell.INFO_ALPHA, "\u00B0");
+        drawInfo("\u03B2=", SimpleUnitCell.INFO_BETA, "\u00B0");
       }
-      y += lineheight;
-      g3d.drawStringNoSlab("\u03B3="
-          + nfformat(symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_GAMMA))
-          + "\u00B0", null, x, y, 0, (short) 0);
+      drawInfo("\u03B3=", SimpleUnitCell.INFO_GAMMA, "\u00B0");
     }
+  }
+
+  private void drawInfo(String s, int type, String post) {
+    ypos += lineheight;
+    if (post != null)
+      s += DF.formatDecimal(unitcell.getUnitCellInfoType(type), 3) + post;
+    g3d.drawStringNoSlab(s, null, xpos, ypos, 0, (short) 0);
   }
 
 }

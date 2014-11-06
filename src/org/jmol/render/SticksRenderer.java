@@ -78,7 +78,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     Bond[] bonds = ms.bo;
     if (bonds == null)
       return false;
-    isPass2 = g3d.isPass2();
+    isPass2 = vwr.gdata.isPass2;
     if (!isPass2)
       bsForPass2.clearAll();
     slabbing = tm.slabEnabled;
@@ -130,7 +130,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
 
   private boolean renderBond() {
     Atom atomA0, atomB0;
-    
+
     a = atomA0 = bond.getAtom1();
     b = atomB0 = bond.getAtom2();
 
@@ -153,17 +153,16 @@ public class SticksRenderer extends FontLineShapeRenderer {
       }
     }
     if (!isPass2
-        && (!a.isVisible(JC.ATOM_INFRAME_NOTHIDDEN) 
+        && (!a.isVisible(JC.ATOM_INFRAME_NOTHIDDEN)
             || !b.isVisible(JC.ATOM_INFRAME_NOTHIDDEN)
-            || !g3d.isInDisplayRange(a.sX, a.sY)
-            || !g3d.isInDisplayRange(b.sX, b.sY)))
+            || !g3d.isInDisplayRange(a.sX, a.sY) || !g3d.isInDisplayRange(b.sX,
+            b.sY)))
       return false;
 
     if (slabbing) {
-      if (g3d.isClippedZ(a.sZ) && g3d.isClippedZ(b.sZ))
-        return false;
-      if (slabByAtom
-          && (g3d.isClippedZ(a.sZ) || g3d.isClippedZ(b.sZ)))
+      if (vwr.gdata.isClippedZ(a.sZ) && vwr.gdata.isClippedZ(b.sZ)
+          || slabByAtom
+          && (vwr.gdata.isClippedZ(a.sZ) || vwr.gdata.isClippedZ(b.sZ)))
         return false;
     }
     zA = a.sZ;
@@ -174,10 +173,14 @@ public class SticksRenderer extends FontLineShapeRenderer {
     colixB = atomB0.colixAtom;
     if (((colix = bond.colix) & C.OPAQUE_MASK) == C.USE_PALETTE) {
       colix = (short) (colix & ~C.OPAQUE_MASK);
-      colixA = C.getColixInherited((short) (colix | vwr
-          .getColixAtomPalette(atomA0, PAL.CPK.id)), colixA);
-      colixB = C.getColixInherited((short) (colix | vwr
-          .getColixAtomPalette(atomB0, PAL.CPK.id)), colixB);
+      colixA = C
+          .getColixInherited(
+              (short) (colix | vwr.getColixAtomPalette(atomA0, PAL.CPK.id)),
+              colixA);
+      colixB = C
+          .getColixInherited(
+              (short) (colix | vwr.getColixAtomPalette(atomB0, PAL.CPK.id)),
+              colixB);
     } else {
       colixA = C.getColixInherited(colix, colixA);
       colixB = C.getColixInherited(colix, colixB);
@@ -204,8 +207,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
       if ((bondOrder & Edge.BOND_COVALENT_MASK) != 0) {
         if (!showMultipleBonds
             || (modeMultipleBond == JC.MULTIBOND_NOTSMALL && mad > JC.madMultipleBondSmallMaximum)
-            || (bondOrder & Edge.BOND_PYMOL_MULT) == Edge.BOND_PYMOL_SINGLE 
-            ) {
+            || (bondOrder & Edge.BOND_PYMOL_MULT) == Edge.BOND_PYMOL_SINGLE) {
           bondOrder = 1;
         }
       }

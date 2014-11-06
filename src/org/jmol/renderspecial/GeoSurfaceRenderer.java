@@ -53,14 +53,14 @@ public class GeoSurfaceRenderer extends DotsRenderer {
     if (!iShowSolid && !g3d.setC(C.BLACK))
       return false;
     // need to hide inner parts if translucent
-    boolean tcover = g3d.getTranslucentCoverOnly();
+    boolean tCover = vwr.gdata.translucentCoverOnly;
     if (iShowSolid)
-      g3d.setTranslucentCoverOnly(true);
+      vwr.gdata.translucentCoverOnly = true;
     g3d.addRenderer(T.triangles);
     if (iShowSolid && faceMap == null)
       faceMap = new int[screenDotCount];
     render1(gs);
-    g3d.setTranslucentCoverOnly(tcover);
+    vwr.gdata.translucentCoverOnly = tCover;
     return requireTranslucent;
   }
   

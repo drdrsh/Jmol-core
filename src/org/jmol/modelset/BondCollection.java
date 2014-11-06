@@ -49,8 +49,6 @@ abstract public class BondCollection extends AtomCollection {
   protected JmolMolecule[] molecules;
   protected int moleculeCount;
 
-  private boolean haveWarned;
-
   protected short defaultCovalentMad;
 
   private BS bsAromaticSingle;
@@ -171,7 +169,7 @@ abstract public class BondCollection extends AtomCollection {
     return bond;
   }
 
-  private Bond getOrAddBond(Atom atom, Atom atomOther, int order, short mad,
+  protected Bond getOrAddBond(Atom atom, Atom atomOther, int order, short mad,
                             BS bsBonds, float energy, boolean overrideBonding) {
     int i;
     if (order == Edge.BOND_ORDER_NULL || order == Edge.BOND_ORDER_ANY)
@@ -265,30 +263,6 @@ abstract public class BondCollection extends AtomCollection {
     float maxAcceptable = bondingRadiusA + bondingRadiusB + bondTolerance;
     float maxAcceptable2 = maxAcceptable * maxAcceptable;
     return (distance2 > maxAcceptable2 ? (short) 0 : (short) 1);
-  }
-
-  protected boolean checkValencesAndBond(Atom atomA, Atom atomB, int order, short mad,
-                            BS bsBonds) {
-    if (atomA.getCurrentBondCount() > JC.MAXIMUM_AUTO_BOND_COUNT
-        || atomB.getCurrentBondCount() > JC.MAXIMUM_AUTO_BOND_COUNT) {
-      if (!haveWarned)
-        Logger.warn("maximum auto bond count reached");
-      haveWarned = true;
-      return false;
-    }
-    int formalChargeA = atomA.getFormalCharge();
-    if (formalChargeA != 0) {
-      int formalChargeB = atomB.getFormalCharge();
-      if ((formalChargeA < 0 && formalChargeB < 0)
-          || (formalChargeA > 0 && formalChargeB > 0))
-        return false;
-    }
-    // don't connect differing altloc unless there are modulations
-    if (atomA.altloc != atomB.altloc
-        && atomA.altloc != '\0' && atomB.altloc != '\0' && getModulation(atomA.i) == null)
-      return false;
-    getOrAddBond(atomA, atomB, order, mad, bsBonds, 0, false);
-    return true;
   }
 
   protected void deleteAllBonds2() {

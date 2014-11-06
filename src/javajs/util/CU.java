@@ -440,8 +440,8 @@ public class CU {
     return 0xFF000000 | (red << 16) | (grn << 8) | blu;
   }
 
-  public final static P3 colorPtFromString(String colorName, P3 pt) {
-    return colorPtFromInt(getArgbFromString(colorName), pt);
+  public final static P3 colorPtFromString(String colorName) {
+    return colorPtFromInt(getArgbFromString(colorName), null);
   }
 
   public final static P3 colorPtFromInt(int color, P3 pt) {
@@ -453,13 +453,6 @@ public class CU {
 
   public static int colorPtToFFRGB(T3 pt) {
     return colorTriadToFFRGB(pt.x, pt.y, pt.z);
-  }
-
-  public final static P3 toRGBpt(int color, P3 pt) {
-    pt.x = (color >> 16) & 0xFF;
-    pt.y = (color >> 8) & 0xFF;
-    pt.z = color & 0xFF;
-    return pt;
   }
 
   public static void toRGB3f(int c, float[] f) {

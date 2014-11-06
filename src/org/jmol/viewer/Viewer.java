@@ -9124,7 +9124,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     boolean isJS = params.get("type").equals("JS");
     if (isJS) {
       if (jsExporter3D != null) {
-        jsExporter3D.initializeOutput(this, privateKey, gdata, params);
+        jsExporter3D.initializeOutput(this, privateKey, params);
         return jsExporter3D;
       }
     } else {

@@ -28,8 +28,6 @@ package org.jmol.rendersurface;
 
 public class MolecularOrbitalRenderer extends IsosurfaceRenderer {
 
-  //private NumberFormat nf;
-
   @Override
   protected boolean render() {
     imageFontScaling = vwr.getImageFontScaling();
@@ -39,29 +37,20 @@ public class MolecularOrbitalRenderer extends IsosurfaceRenderer {
 
   @Override
   protected void renderInfo() {
-    if (vwr.am.cmi < 0
-        
+    if (isExport || vwr.am.cmi < 0
         || mesh.title == null 
         || !g3d.setC(vwr.getColixBackgroundContrast()))
       return;
-//    if (nf == null)
-//      nf = NumberFormat.getInstance();
-//    if (nf != null) {
-//      nf.setMaximumFractionDigits(3);
-//      nf.setMinimumFractionDigits(3);
-//    }
-    byte fid = g3d.getFontFidFS("Serif", 14 * imageFontScaling);
-    g3d.setFontFid(fid);
+    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Serif", 14 * imageFontScaling));
     int lineheight = Math.round(15 * imageFontScaling);
     int x = Math.round(5 * imageFontScaling);
-    int y = lineheight;
-    
+    int y = lineheight;    
     for (int i = 0; i < mesh.title.length; i++)
       if (mesh.title[i].length() > 0) {
         g3d.drawStringNoSlab(mesh.title[i], null, x, y, 0, (short) 0);
         y += lineheight;
       }
-    g3d.setTextPosition(y);
+    vwr.gdata.setTextPosition(y);
   }
 
 }

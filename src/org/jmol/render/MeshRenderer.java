@@ -182,7 +182,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (mesh.bsSlabGhost != null)
       g3d.setC(mesh.slabColix); // forces a second pass
     isGhostPass = (mesh.bsSlabGhost != null && (isExport ? exportPass == 2
-        : g3d.isPass2()));
+        : vwr.gdata.isPass2));
     isTranslucentInherit = (isGhostPass && C.getColixTranslucent3(mesh.slabColix, false, 0)== C.INHERIT_COLOR);
     isTranslucent = isGhostPass
         || C.isColixTranslucent(mesh.colix);
@@ -218,7 +218,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
           && (meshSlabValue == Integer.MIN_VALUE || meshSlabValue >= 100);
       screens = vwr.allocTempScreens(vertexCount);
       if (frontOnly)
-        transformedVectors = g3d.getTransformedVertexVectors();
+        transformedVectors = vwr.gdata.getTransformedVertexVectors();
       if (transformedVectors == null)
         frontOnly = false;
     }
@@ -232,7 +232,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       colix = C.getColixTranslucent3(colix, true, 0.8f);
     this.colix = colix;
     if (C.isColixLastAvailable(colix))
-      g3d.setColor(mesh.color);
+      vwr.gdata.setColor(mesh.color);
     return g3d.setC(colix);
   }
 
@@ -336,7 +336,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       int check;
       if (mesh.isTriangleSet) {
         short normix = normixes[i];
-        if (!g3d.isDirectedTowardsCamera(normix))
+        if (!vwr.gdata.isDirectedTowardsCamera(normix))
           continue;
         if (fill) {
           /*if (isExport) { this cannot be right....

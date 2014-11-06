@@ -70,7 +70,7 @@ public class EchoRenderer extends LabelsRenderer {
         if (t.zSlab == Integer.MIN_VALUE)
           t.zSlab = 1;
       }
-      TextRenderer.render(t, vwr, g3d, scalePixelsPerMicron, imageFontScaling,
+      TextRenderer.render(t, g3d, scalePixelsPerMicron, imageFontScaling,
           false, null, xy);
      if (C.isColixTranslucent(t.bgcolix) || C.isColixTranslucent(t.colix))
        haveTranslucent = true;
@@ -89,8 +89,7 @@ public class EchoRenderer extends LabelsRenderer {
   }
   
   private void renderFrameTitle(String frameTitle) {
-    byte fid = g3d.getFontFidFS("Serif", 14 * imageFontScaling);
-    g3d.setFontFid(fid);
+    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Serif", 14 * imageFontScaling));
     int y = (int) Math.floor(vwr.getScreenHeight() * (g3d.isAntialiased() ? 2 : 1) - 10 * imageFontScaling);
     int x = (int) Math.floor(5 * imageFontScaling);
     g3d.drawStringNoSlab(frameTitle, null, x, y, 0, (short) 0);

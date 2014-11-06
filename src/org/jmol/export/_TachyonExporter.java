@@ -59,18 +59,18 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
  
   @Override
-  boolean initializeOutput(Viewer vwr, double privateKey, GData g3d, Map<String, Object> params) {
+  boolean initializeOutput(Viewer vwr, double privateKey, GData gdata, Map<String, Object> params) {
     //wasPerspectiveDepth = vwr.getPerspectiveDepth();
     //vwr.setPerspectiveDepth(false);
     getLightingInfo();
-    return initOutput(vwr, privateKey, g3d, params);    
+    return initOutput(vwr, privateKey, gdata, params);    
   }
   
   private void getLightingInfo() {
-    lighting = " AMBIENT " + round(g3d.getAmbientPercent() / 100f)
-        + " DIFFUSE " + round(g3d.getDiffusePercent()/100f) 
-        + " SPECULAR " + round(g3d.getSpecularPercent() / 100f);
-    phong = " Phong Plastic 0.5 Phong_size " + g3d.getSpecularExponent();
+    lighting = " AMBIENT " + round(gdata.getAmbientPercent() / 100f)
+        + " DIFFUSE " + round(gdata.getDiffusePercent()/100f) 
+        + " SPECULAR " + round(gdata.getSpecularPercent() / 100f);
+    phong = " Phong Plastic 0.5 Phong_size " + gdata.getSpecularExponent();
   }  
   
   /* 

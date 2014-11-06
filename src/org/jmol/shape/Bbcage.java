@@ -38,7 +38,7 @@ public class Bbcage extends FontLineShape {
   @Override
   public void initShape() {
     super.initShape();
-    font3d = gdata.getFont3D(JC.AXES_DEFAULT_FONTSIZE);
+    font3d = vwr.gdata.getFont3D(JC.AXES_DEFAULT_FONTSIZE);
     myType = "boundBox";
   }
 

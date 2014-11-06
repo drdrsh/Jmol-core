@@ -233,7 +233,7 @@ public class JSExporter extends __CartesianExporter {
   }
 
   private Integer getColor(short colix) {
-    return Integer.valueOf(g3d.getColorArgbOrGray(colix));
+    return Integer.valueOf(gdata.getColorArgbOrGray(colix));
   }
 
   @Override
@@ -247,13 +247,13 @@ public class JSExporter extends __CartesianExporter {
     int[] vertexColors = getColors(vertexColixes);
     int[] polygonColors = getColors(polygonColixes);
     jsSurface(html5Applet, vertices, normals, indices, nVertices, nPolygons, nFaces,
-        bsPolygons, faceVertexMax, g3d.getColorArgbOrGray(colix), vertexColors,
+        bsPolygons, faceVertexMax, gdata.getColorArgbOrGray(colix), vertexColors,
         polygonColors);
   }
 
   @Override
   protected void outputTriangle(P3 pt1, P3 pt2, P3 pt3, short colix) {
-    jsTriangle(html5Applet, g3d.getColorArgbOrGray(colix), pt1, pt2, pt3);
+    jsTriangle(html5Applet, gdata.getColorArgbOrGray(colix), pt1, pt2, pt3);
   }
 
   @Override
@@ -298,7 +298,7 @@ public class JSExporter extends __CartesianExporter {
       return null;
     int[] colors = new int[colixes.length];
     for (int i = colors.length; --i >= 0;) {
-      colors[i] = g3d.getColorArgbOrGray(colixes[i]);
+      colors[i] = gdata.getColorArgbOrGray(colixes[i]);
     }
     return colors;
   }

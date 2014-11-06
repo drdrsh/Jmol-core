@@ -73,8 +73,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
         continue;
       hasColorRange = false;
       if (renderMeshSlab()) {
-        if (!isExport)
-          renderInfo();
+        renderInfo();
         if (isExport && isGhostPass) {
           exportPass = 1;
           renderMeshSlab();
@@ -97,16 +96,14 @@ public class IsosurfaceRenderer extends MeshRenderer {
     showKey = (vwr.getBoolean(T.isosurfacekey) ? Boolean.TRUE : null);
     isosurface.keyXy = null;
     meshScale = -1;
-    globalSlabValue = g3d.getSlab();
+    globalSlabValue = vwr.gdata.slab;
     mySlabValue = (isNavigationMode ? (int) tm.getNavigationOffset().z : Integer.MAX_VALUE);
   }
 
   protected void renderInfo() {
-    if (hasColorRange && imesh.colorEncoder != null && Boolean.TRUE == showKey)
-      showKey();
-  }
-  
-  private void showKey() {
+    if (isExport || !hasColorRange || imesh.colorEncoder == null
+        || Boolean.TRUE != showKey)
+      return;
     showKey = Boolean.FALSE; // once only
     int[] colors = null;
     short[] colixes = null;
@@ -119,14 +116,15 @@ public class IsosurfaceRenderer extends MeshRenderer {
         colixes = imesh.jvxlData.contourColixes;
         if (colixes == null)
           return;
-        n = colixes.length; 
+        n = colixes.length;
       } else {
         n = vContours.length;
         type = 1;
       }
     } else {
-      colors = imesh.colorEncoder.getColorSchemeArray(imesh.colorEncoder.currentPalette);
-      n = (colors == null ? 0  : colors.length);
+      colors = imesh.colorEncoder
+          .getColorSchemeArray(imesh.colorEncoder.currentPalette);
+      n = (colors == null ? 0 : colors.length);
       type = 2;
     }
     if (n < 2)
@@ -137,8 +135,8 @@ public class IsosurfaceRenderer extends MeshRenderer {
     int y = height / 4 * 3 - dy;
     int x = 10 * factor;
     int dx = 20 * factor;
-    
-    isosurface.keyXy = new int[] { x / factor, 0, (x + dx) / factor, (y + dy) / factor, dy / factor };
+    isosurface.keyXy = new int[] { x / factor, 0, (x + dx) / factor,
+        (y + dy) / factor, dy / factor };
     for (int i = 0; i < n; i++, y -= dy) {
       switch (type) {
       case 0:
@@ -150,7 +148,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
           return;
         break;
       case 2:
-        g3d.setColor(colors[i]);
+        vwr.gdata.setColor(colors[i]);
         break;
       }
       g3d.fillRect(x, y, 5, Integer.MIN_VALUE, dx, dy);
@@ -181,8 +179,8 @@ public class IsosurfaceRenderer extends MeshRenderer {
         frontOnly &= (meshSlabValue >= 100);
       }
     }
-    boolean tcover = g3d.getTranslucentCoverOnly();
-    g3d.setTranslucentCoverOnly(frontOnly || !vwr.getBoolean(T.translucent));
+    boolean tCover = vwr.gdata.translucentCoverOnly;
+    vwr.gdata.translucentCoverOnly = (frontOnly || !vwr.getBoolean(T.translucent));
     thePlane = imesh.jvxlData.jvxlPlane;
     vertexValues = mesh.vvs;
     boolean isOK;
@@ -193,7 +191,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
     } else {
       isOK = renderMesh(mesh);
     }
-    g3d.setTranslucentCoverOnly(tcover);
+    vwr.gdata.translucentCoverOnly = tCover;
     return isOK;
   }
   
@@ -303,7 +301,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       int cX = (showNumbers ? vwr.getScreenWidth() / 2 : 0);
       int cY = (showNumbers ? vwr.getScreenHeight() / 2 : 0);
       if (showNumbers)
-        g3d.setFontFid(g3d.getFontFidFS("Monospaced", 24));
+        vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Monospaced", 24));
       for (int i = (!imesh.hasGridPoints || imesh.firstRealVertex < 0 ? 0
           : imesh.firstRealVertex); i < vertexCount; i += incr) {
         if (vertexValues != null && Float.isNaN(vertexValues[i]) || frontOnly
@@ -512,7 +510,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
     // Logger.debug("mesh renderPoints: " + vertexCount);
     if (!g3d.setC(C.WHITE))
       return;
-    g3d.setFontFid(g3d.getFontFidFS("Monospaced", 24));
+    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Monospaced", 24));
     V3[] vertexVectors = Normix.getVertexVectors();
     for (int i = vertexCount; --i >= 0;) {
       if (vertexValues != null && Float.isNaN(vertexValues[i]))

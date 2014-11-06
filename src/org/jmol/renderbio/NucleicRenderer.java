@@ -237,7 +237,7 @@ public class NucleicRenderer {
    */
   private void renderTriangle(P3i[] scr, P3[] pt, int i, int j, int k, boolean doShade) {
     if (doShade)
-      g3d.setNoisySurfaceShade(scr[i], scr[j], scr[k]);
+      vwr.gdata.setNoisySurfaceShade(scr[i], scr[j], scr[k]);
     g3d.fillTriangle3i(scr[i], scr[j], scr[k], pt[i], pt[j], pt[k]);
   }
 

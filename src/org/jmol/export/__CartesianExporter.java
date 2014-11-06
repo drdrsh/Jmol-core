@@ -47,6 +47,7 @@ import javajs.util.T3;
 
 /*
  * for programs that use the standard 3D coordinates.
+ * IDTF, Maya, OBJ, VRML, JS
  * 
  */
 abstract public class __CartesianExporter extends ___Exporter {
@@ -215,14 +216,14 @@ abstract public class __CartesianExporter extends ___Exporter {
     // trick here is that we use Jmol's standard g3d package to construct
     // the bitmap, but then output to jmolRenderer, which returns control
     // here via drawPixel.
-    g3d.plotText(x, y, z, g3d.getColorArgbOrGray(colix), 0, text,
+    gdata.plotText(x, y, z, gdata.getColorArgbOrGray(colix), 0, text,
         font3d, jmolRenderer);
   }
 
   @Override
   void plotImage(int x, int y, int z, Object image, short bgcolix, int width,
                  int height) {
-    g3d.plotImage(x, y, z, image, jmolRenderer, bgcolix, width, height);
+    gdata.plotImage(x, y, z, image, jmolRenderer, bgcolix, width, height);
   }
 
   @Override

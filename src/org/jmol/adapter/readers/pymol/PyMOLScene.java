@@ -1227,7 +1227,7 @@ class PyMOLScene implements JmolSceneGenerator {
     }
     Font font = vwr.getFont3D(face, style, fontSize == 0 ? 12 : fontSize
         * factor);
-    Text t = Text.newLabel(vwr.gdata, font, label, getColix(
+    Text t = Text.newLabel(vwr, font, label, getColix(
         colorIndex, 0), (short) 0, 0, 0, labelOffset);
     return t;
   }

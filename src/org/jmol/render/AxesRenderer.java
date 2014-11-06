@@ -77,7 +77,7 @@ public class AxesRenderer extends FontLineShapeRenderer {
       if (f != null)
         axes.font3d = f;
     }
-    font3d = g3d.getFont3DScaled(axes.font3d, imageFontScaling);
+    font3d = vwr.gdata.getFont3DScaled(axes.font3d, imageFontScaling);
 
     int modelIndex = vwr.am.cmi;
     // includes check here for background model present
@@ -109,7 +109,7 @@ public class AxesRenderer extends FontLineShapeRenderer {
     }
     boolean isDataFrame = vwr.isJmolDataFrame();
 
-    int slab = g3d.getSlab();
+    int slab = vwr.gdata.slab;
     int diameter = mad;
     boolean drawTicks = false;
     if (isXY) {

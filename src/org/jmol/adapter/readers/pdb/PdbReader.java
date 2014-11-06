@@ -1118,7 +1118,9 @@ REMARK 290 REMARK: NULL
     for (int i = 0; i < 9; i += (i == 5 ? 2 : 1)) {
       int offset = i * 5 + 11;
       int offsetEnd = offset + 5;
-      int targetSerial = (offsetEnd <= lineLength ? getSerial(offset, offsetEnd) : -1);
+      if (offsetEnd > lineLength)
+        break;
+      int targetSerial = getSerial(offset, offsetEnd);
       if (targetSerial < 0)
         continue;
       boolean isDoubleBond = (sourceSerial == lastSourceSerial && targetSerial == lastTargetSerial);
@@ -1142,11 +1144,9 @@ REMARK 290 REMARK: NULL
         String st1 = "--" + st;
         if (sbConect.indexOf(st1) >= 0)
           continue;
-        sbConect.append(st);
         sb.append(st1);
-      } else {
-        sbConect.append(st);
       }
+      sbConect.append(st);
       addConnection(new int[] { i1, targetSerial,
           i < 4 ? 1 : JmolAdapter.ORDER_HBOND });
     }

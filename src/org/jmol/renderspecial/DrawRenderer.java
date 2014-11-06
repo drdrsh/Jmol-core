@@ -455,7 +455,7 @@ public class DrawRenderer extends MeshRenderer {
   }
 
   private void renderInfo() {
-    if (mesh.title == null || vwr.getDrawHover()
+    if (isExport || mesh.title == null || vwr.getDrawHover()
         || !g3d.setC(vwr.getColixBackgroundContrast()))
       return;
     for (int i = dmesh.pc; --i >= 0;)
@@ -464,8 +464,7 @@ public class DrawRenderer extends MeshRenderer {
         float size = vwr.getFloat(T.drawfontsize);
         if (size <= 0)
           size = 14;
-        byte fid = g3d.getFontFid(size * imageFontScaling);
-        g3d.setFontFid(fid);
+        vwr.gdata.setFontFid(vwr.gdata.getFontFid(size * imageFontScaling));
         String s = mesh.title[i < mesh.title.length ? i : mesh.title.length - 1];
         int pt = 0;
         if (s.length() > 1 && s.charAt(0) == '>') {

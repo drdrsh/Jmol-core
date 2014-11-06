@@ -146,7 +146,7 @@ public abstract class ___Exporter {
   
   public boolean isCartesian;
   
-  protected GData g3d;
+  protected GData gdata;
 
   protected short backgroundColix;
   protected int screenWidth;
@@ -196,9 +196,9 @@ public abstract class ___Exporter {
     this.jmolRenderer = jmolRenderer;
   }
   
-  boolean initializeOutput(Viewer vwr, double privateKey, GData g3d,
+  boolean initializeOutput(Viewer vwr, double privateKey, GData gdata,
                            Map<String, Object> params) {
-    return initOutput(vwr, privateKey, g3d, params);
+    return initOutput(vwr, privateKey, gdata, params);
   }
 
   protected boolean initOutput(Viewer vwr, double privateKey, GData g3d,
@@ -206,7 +206,7 @@ public abstract class ___Exporter {
     this.vwr = vwr;
     tm = vwr.tm;
     isWebGL = params.get("type").equals("JS");
-    this.g3d = g3d;
+    this.gdata = g3d;
     this.privateKey = privateKey;
     backgroundColix = vwr.getObjectColix(StateManager.OBJ_BACKGROUND);
     center.setT(tm.getRotationCenter());
@@ -216,8 +216,8 @@ public abstract class ___Exporter {
       screenWidth = vwr.getScreenWidth();
       screenHeight = vwr.getScreenHeight();
     }
-    slabZ = g3d.getSlab();
-    depthZ = g3d.getDepth();
+    slabZ = g3d.slab;
+    depthZ = g3d.depth;
     lightSource = g3d.getLightSource();
     P3[] cameraFactors = vwr.tm.getCameraFactors();
     referenceCenter = cameraFactors[0];
@@ -322,7 +322,7 @@ public abstract class ___Exporter {
   }
 
   protected String rgbFractionalFromColix(short colix) {
-    return rgbFractionalFromArgb(g3d.getColorArgbOrGray(colix));
+    return rgbFractionalFromArgb(gdata.getColorArgbOrGray(colix));
   }
 
   protected String getTriad(T3 t) {
@@ -576,7 +576,7 @@ public abstract class ___Exporter {
     if (z < 3)
       z = (int) tm.cameraDistance;
     outputComment("start image " + (++nImage));
-    g3d.plotImage(x, y, z, image, jmolRenderer, bgcolix, width, height);
+    gdata.plotImage(x, y, z, image, jmolRenderer, bgcolix, width, height);
     outputComment("end image " + nImage);
   }
 
@@ -588,7 +588,7 @@ public abstract class ___Exporter {
     if (z < 3)
       z = (int) tm.cameraDistance;
     outputComment("start text " + (++nText) + ": " + text);
-    g3d.plotText(x, y, z, g3d.getColorArgbOrGray(colix), 0, text, font3d, jmolRenderer);
+    gdata.plotText(x, y, z, gdata.getColorArgbOrGray(colix), 0, text, font3d, jmolRenderer);
     outputComment("end text " + nText + ": " + text);
   }
 

@@ -84,9 +84,6 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     Labels labels = (Labels) shape;
 
     String[] labelStrings = labels.strings;
-    short[] bgcolixes = labels.bgcolixes;
-    if (isExport)
-      bgcolixes = g3d.getBgColixes(bgcolixes);
     byte[] fids = labels.fids;
     int[] offsets = labels.offsets;
     if (labelStrings == null)
@@ -112,7 +109,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         continue;
       labelColix = labels.getColix2(i, atom, false);
       bgcolix = labels.getColix2(i, atom, true);
-      if (bgcolix == 0 && g3d.getColorArgbOrGray(labelColix) == backgroundColor)
+      if (bgcolix == 0 && vwr.gdata.getColorArgbOrGray(labelColix) == backgroundColor)
         labelColix = backgroundColixContrast;
       fid = ((fids == null || i >= fids.length || fids[i] == 0) ? labels.zeroFontId
           : fids[i]);
@@ -185,9 +182,9 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     } else {
       boolean isLeft = (textAlign == JC.ALIGN_LEFT || textAlign == JC.ALIGN_NONE);
       if (fid != fidPrevious || ascent == 0) {
-        g3d.setFontFid(fid);
+        vwr.gdata.setFontFid(fid);
         fidPrevious = fid;
-        font3d = g3d.getFont3DCurrent();
+        font3d = vwr.gdata.getFont3DCurrent();
         if (isLeft) {
           ascent = font3d.getAscent();
           descent = font3d.getDescent();
@@ -208,7 +205,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
             isExact);
         atomPt = null;
       } else {
-        text = Text.newLabel(g3d.getGData(), font3d, label, labelColix,
+        text = Text.newLabel(vwr, font3d, label, labelColix,
             bgcolix, textAlign, 0, null);
         text.atomX = atomPt.sX; // just for pointer
         text.atomY = atomPt.sY;
@@ -224,7 +221,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
           text.setAlignment(textAlign);
       }
       text.setPointer(pointer);
-      TextRenderer.render(text, vwr, g3d, scalePixelsPerMicron,
+      TextRenderer.render(text, g3d, scalePixelsPerMicron,
           imageFontScaling, isExact, boxXY, xy);
     }
     return (newText ? text : null);

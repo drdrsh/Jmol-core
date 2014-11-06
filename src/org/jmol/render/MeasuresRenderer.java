@@ -83,7 +83,7 @@ public class MeasuresRenderer extends LabelsRenderer {
     // note that this COULD be screen pixels if <= 20. 
     imageFontScaling = vwr.getImageFontScaling();
     mad0 = measures.mad;
-    font3d = g3d.getFont3DScaled(measures.font3d, imageFontScaling);
+    font3d =vwr.gdata.getFont3DScaled(measures.font3d, imageFontScaling);
     m = measures.mPending;
     if (!isExport && m != null && (count = m.count)!= 0)
       renderPendingMeasurement();

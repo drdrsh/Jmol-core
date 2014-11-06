@@ -23,9 +23,6 @@
  */
 package org.jmol.modelset;
 
-
-import org.jmol.util.GData;
-
 import javajs.awt.Font;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -35,6 +32,7 @@ import org.jmol.viewer.Viewer;
 
 public class Text extends Object2d {
 
+  private static boolean isEcho;
   @Override
   public void setScalePixelsPerMicron(float scalePixelsPerMicron) {    
     fontScale = 0;//fontScale * this.scalePixelsPerMicron / scalePixelsPerMicron;
@@ -67,29 +65,30 @@ public class Text extends Object2d {
   private Viewer vwr;
 
   /**
+   * @param vwr 
    * @j2sIgnoreSuperConstructor
    */
-  private Text() {
+  private Text(Viewer vwr) {
+    this.vwr = vwr;
     boxXY =  new float[5];
   }
 
-  static public Text newLabel(GData gdata, Font font, String text,
+  static public Text newLabel(Viewer vwr, Font font, String text,
                               short colix, short bgcolix, int align, float scalePixelsPerMicron, float[] value) {
     // for labels and hover
-    Text t = new Text();
-    t.set(gdata, font, colix, align, true, scalePixelsPerMicron, value);
+    Text t = new Text(vwr);
+    t.set(font, colix, align, true, scalePixelsPerMicron, value);
     t.setText(text);
     t.bgcolix = bgcolix;
     return t;
   }
 
-  public static Text newEcho(Viewer vwr, GData gdata, Font font, String target,
+  public static Text newEcho(Viewer vwr, Font font, String target,
                       short colix, int valign, int align,
                       float scalePixelsPerMicron) {
-    // for echo
-    Text t = new Text();
-    t.set(gdata, font, colix, align, false, scalePixelsPerMicron, null);
-    t.vwr = vwr;
+    isEcho = true;
+    Text t = new Text(vwr);
+    t.set(font, colix, align, false, scalePixelsPerMicron, null);
     t.target = target;
     if (target.equals("error"))
       valign = JC.VALIGN_TOP;
@@ -99,10 +98,9 @@ public class Text extends Object2d {
     return t;
   }
 
-  private void set(GData gdata, Font font, short colix, int align, boolean isLabelOrHover,
+  private void set(Font font, short colix, int align, boolean isLabelOrHover,
                    float scalePixelsPerMicron, float[] value) {
     this.scalePixelsPerMicron = scalePixelsPerMicron;
-    this.gdata = gdata;
     this.isLabelOrHover = isLabelOrHover;
     this.colix = colix;
     this.align = align;
@@ -132,7 +130,7 @@ public class Text extends Object2d {
       return;
     this.text = text;
     textUnformatted = text;
-    doFormatText = (vwr != null && text != null && (text.indexOf("%{") >= 0 || text
+    doFormatText = (isEcho && text != null && (text.indexOf("%{") >= 0 || text
         .indexOf("@{") >= 0));
     if (!doFormatText)
       recalc();
@@ -171,7 +169,7 @@ public class Text extends Object2d {
       return;
     fontScale = scale;
     if (fontScale != 0)
-      setFont(gdata.getFont3DScaled(font, scale), true);
+      setFont(vwr.gdata.getFont3DScaled(font, scale), true);
   }
 
   String fixText(String text) {
@@ -211,20 +209,18 @@ public class Text extends Object2d {
   }
 
   public void formatText() {
-    text = (vwr == null ? textUnformatted : vwr
-        .formatText(textUnformatted));
+    text = (isEcho ? vwr.formatText(textUnformatted) : textUnformatted);
     recalc();
   }
 
 
-  public void setPosition(Viewer vwr, int width, int height,
-                          float scalePixelsPerMicron, float imageFontScaling,
+  public void setPosition(float scalePixelsPerMicron, float imageFontScaling,
                           boolean isExact, float[] boxXY) {
     if (boxXY == null)
       boxXY = this.boxXY;
     else
       this.boxXY = boxXY;
-    setWindow(width, height, scalePixelsPerMicron);
+    setWindow(vwr.gdata.width, vwr.gdata.height, scalePixelsPerMicron);
     if (scalePixelsPerMicron != 0 && this.scalePixelsPerMicron != 0)
       setFontScale(scalePixelsPerMicron / this.scalePixelsPerMicron);
     else if (fontScale != imageFontScaling)

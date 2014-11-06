@@ -52,10 +52,10 @@ public class Hover extends TextShape {
   public void initShape() {
     super.initShape();
     isHover = true;
-    Font font3d = gdata.getFont3DFSS(FONTFACE, FONTSTYLE, FONTSIZE);
+    Font font3d = vwr.gdata.getFont3DFSS(FONTFACE, FONTSTYLE, FONTSIZE);
     short bgcolix = C.getColixS("#FFFFC3"); // 255, 255, 195
     short colix = C.BLACK;
-    currentObject = hoverText = Text.newLabel(gdata, font3d, null, colix, bgcolix, JC.ALIGN_LEFT, 0,
+    currentObject = hoverText = Text.newLabel(vwr, font3d, null, colix, bgcolix, JC.ALIGN_LEFT, 0,
         null);
     hoverText.setAdjustForWindow(true);
   }

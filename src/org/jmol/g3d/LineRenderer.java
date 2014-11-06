@@ -74,7 +74,7 @@ final class LineRenderer {
     // from cylinder
     slope = (dx != 0 ?  dy / dx : dy >= 0 ? Float.MAX_VALUE  : -Float.MAX_VALUE);
     lineTypeX = (slope <=1 && slope >= -1);
-    nBits = (lineTypeX ? g3d.getRenderWidth() : g3d.getRenderHeight());
+    nBits = (lineTypeX ? g3d.width : g3d.height);
     if (getCachedLine())
       return;
     lineBits = BS.newN(nBits);
@@ -335,7 +335,7 @@ final class LineRenderer {
                                int rise) {
     // standard, dashed or not dashed -- isosurface mesh
     int[] zbuf = g3d.zbuf;
-    int width = g3d.getRenderWidth();
+    int width = g3d.width;
     int runIndex = 0;
     if (run == 0) {
       rise = Integer.MAX_VALUE;
@@ -450,7 +450,7 @@ final class LineRenderer {
                                int rise) {
     // special shading for bonds
     int[] zbuf = g3d.zbuf;
-    int width = g3d.getRenderWidth();
+    int width = g3d.width;
     int runIndex = 0;
     if (run == 0) {
       rise = Integer.MAX_VALUE;

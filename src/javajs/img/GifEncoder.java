@@ -61,12 +61,11 @@
 // <P>
 // @see ToGif
 
-
 package javajs.img;
 
-import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.Lst;
+import javajs.util.P3;
 
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -79,34 +78,32 @@ import java.io.IOException;
  * 
  * -- using median-cut with rgb
  * 
+ * -- adds adaptive color reduction to generate 256 colors using the median-cut
+ * algorithm. Some problems still with systems having > 2000 colors.
+ * 
  * -- TODO use median-cut with HSL
  * 
  * -- much simplified interface with ImageEncoder
  * 
  * -- uses simple Hashtable with Integer()
  * 
- * -- adds adaptive color reduction to generate 256 colors
- *      Reduction algorithm simply removes lower bits of red, green, and blue
- *      one at a time until the number of sets is <= 256. Then it creates a
- *      color for each set that is a weighted average of all the colors for that set.
- *      Seems to work reasonably well. Mapped isosurfaces look pretty crude.
- * 
  * -- allows progressive production of animated GIF via Jmol CAPTURE command
  * 
  * -- uses general purpose javajs.util.OutputChannel for byte-handling options
- *    such as posting to a server, writing to disk, and retrieving bytes.
- *    
+ * such as posting to a server, writing to disk, and retrieving bytes.
+ * 
  * -- allows JavaScript port
- *    
+ * 
  * -- Bob Hanson, 24 Sep 2013
- *    
+ * 
  * @author Bob Hanson hansonr@stolaf.edu
  */
 
 public class GifEncoder extends ImageEncoder {
 
   private int bitsPerPixel = 1;
-  private int[][] errors;
+  private P3[] errors;
+  private P3[] pixelsLab;
   private boolean interlaced;
   private boolean addHeader = true;
   private boolean addImage = true;
@@ -126,28 +123,24 @@ public class GifEncoder extends ImageEncoder {
   private class ColorItem {
 
     int rgb;
-    int r;
-    int g;
-    int b;
+    P3 lab;
     int count;
 
     ColorItem(int rgb) {
       this.rgb = rgb;
-      r = (rgb >> 16) & 0xFF;
-      g = (rgb >> 8) & 0xFF;
-      b = rgb & 0xFF;
+      lab = toXYZ(rgb);
     }
-    
+
     @Override
     public String toString() {
-      return Integer.toHexString(rgb) + " " + r + "  " + g + " " + b;
+      return Integer.toHexString(rgb) + " " + lab;
     }
   }
 
   protected class ColorVector extends Lst<ColorItem> {
 
     private Lst<ColorCell> boxes;
-    
+
     void indexColors() {
       // goal is to create an index set and and to generate rgb errors for each color
       boxes = new Lst<ColorCell>();
@@ -174,13 +167,13 @@ public class GifEncoder extends ImageEncoder {
       for (int i = 0; i < n; i++)
         boxes.get(i).setErrors();
     }
-    
+
     private boolean splitBoxes() {
       int n = boxes.size();
-      double maxVol = 0;
+      float maxVol = 0;
       int imax = -1;
       for (int i = n; --i >= 1;) {
-        double v = boxes.get(i).getVolume();
+        float v = boxes.get(i).getVolume();
         if (v > maxVol) {
           maxVol = v;
           imax = i;
@@ -188,7 +181,6 @@ public class GifEncoder extends ImageEncoder {
       }
       if (imax < 0)
         return false;
-      //System.out.println("splitting box " + imax);
       boxes.get(imax).splitBox(boxes);
       return true;
     }
@@ -199,42 +191,33 @@ public class GifEncoder extends ImageEncoder {
     protected int index;
     // counts here are counts of color occurances for this grouped set.
     // ints here allow for 2147483647/0x100 = count of 8388607 for THIS average color, which should be fine.
-    private int r, g, b;
+    private P3 xyz;
     // min and max based on 0 0 0 for this rgb
-    private int maxr = Integer.MAX_VALUE, 
-        minr = -Integer.MAX_VALUE, 
-        maxg = Integer.MAX_VALUE, 
-        ming = -Integer.MAX_VALUE, 
-        maxb = Integer.MAX_VALUE, 
-        minb = -Integer.MAX_VALUE;
-    private int rmaxr = -Integer.MAX_VALUE, 
-        rminr = Integer.MAX_VALUE, 
-        rmaxg = -Integer.MAX_VALUE, 
-        rming = Integer.MAX_VALUE, 
-        rmaxb = -Integer.MAX_VALUE, 
-        rminb = Integer.MAX_VALUE;
-    private int maxre = Integer.MAX_VALUE, 
-        minre = -Integer.MAX_VALUE, 
-        maxge = Integer.MAX_VALUE, 
-        minge = -Integer.MAX_VALUE, 
-        maxbe = Integer.MAX_VALUE, 
-        minbe = -Integer.MAX_VALUE;
+    private float maxr = Integer.MAX_VALUE, minr = -Integer.MAX_VALUE,
+        maxg = Integer.MAX_VALUE, ming = -Integer.MAX_VALUE,
+        maxb = Integer.MAX_VALUE, minb = -Integer.MAX_VALUE;
+    private float rmaxr = -Integer.MAX_VALUE, rminr = Integer.MAX_VALUE,
+        rmaxg = -Integer.MAX_VALUE, rming = Integer.MAX_VALUE,
+        rmaxb = -Integer.MAX_VALUE, rminb = Integer.MAX_VALUE;
+    private float maxre = Integer.MAX_VALUE, minre = -Integer.MAX_VALUE,
+        maxge = Integer.MAX_VALUE, minge = -Integer.MAX_VALUE,
+        maxbe = Integer.MAX_VALUE, minbe = -Integer.MAX_VALUE;
     private ColorCell nextr, prevr, nextg, prevg, nextb, prevb;
     int rgb;
     Lst<ColorItem> lst;
-    private double volume;
+    private float volume;
 
     ColorCell(int index) {
       this.index = index;
       lst = new Lst<ColorItem>();
     }
-      
-    public double getVolume() {
+
+    public float getVolume() {
       if (volume != 0)
         return volume;
       if (lst.size() < 2)
         return -1;
-      double d;
+      float d;
       rmaxr = -Integer.MAX_VALUE;
       rminr = Integer.MAX_VALUE;
       rmaxg = -Integer.MAX_VALUE;
@@ -243,37 +226,38 @@ public class GifEncoder extends ImageEncoder {
       rminb = Integer.MAX_VALUE;
       int n = lst.size();
       for (int i = n; --i >= 0;) {
-        ColorItem c = lst.get(i);
-        if (c.r < rminr)
-          rminr = c.r;
-        if (c.g < rming)
-          rming = c.g;
-        if (c.b < rminb)
-          rminb = c.b;
-        if (c.r > rmaxr)
-          rmaxr = c.r;
-        if (c.g > rmaxg)
-          rmaxg = c.g;
-        if (c.b > rmaxb)
-          rmaxb = c.b;
+        P3 xyz = lst.get(i).lab;
+        if (xyz.x < rminr)
+          rminr = xyz.x;
+        if (xyz.y < rming)
+          rming = xyz.y;
+        if (xyz.z < rminb)
+          rminb = xyz.z;
+        if (xyz.x > rmaxr)
+          rmaxr = xyz.x;
+        if (xyz.y > rmaxg)
+          rmaxg = xyz.y;
+        if (xyz.z > rmaxb)
+          rmaxb = xyz.z;
       }
-      return volume = ((d = rmaxr - rminr) * d
-          + (d = rmaxg - rming) * d + (d = rmaxb - rminb) * d);
+      return volume = ((d = (rmaxr - rminr)/RFACTOR) * d + (d = rmaxg - rming) * d + (d = rmaxb
+          - rminb)
+          * d);
     }
 
     void setErrors() {
       if (nextr != null)
-        maxre = ((nextr.minr + maxr) >> 1) - r;
+        maxre = ((nextr.minr + maxr) / 2) - xyz.x;
       if (nextg != null)
-        maxge = ((nextg.ming + maxg) >> 1) - g;
+        maxge = ((nextg.ming + maxg) / 2) - xyz.y;
       if (nextb != null)
-        maxbe = ((nextb.minb + maxb) >> 1) - b;
+        maxbe = ((nextb.minb + maxb) / 2) - xyz.z;
       if (prevr != null)
-        minre = ((prevr.maxr + minr) >> 1) - r;
+        minre = ((prevr.maxr + minr) / 2) - xyz.x;
       if (prevg != null)
-        minge = ((prevg.maxg + ming) >> 1) - g;
+        minge = ((prevg.maxg + ming) / 2) - xyz.y;
       if (prevb != null)
-        minbe = ((prevb.maxb + minb) >> 1) - b;
+        minbe = ((prevb.maxb + minb) / 2) - xyz.z;
     }
 
     void addItem(ColorItem c) {
@@ -282,20 +266,18 @@ public class GifEncoder extends ImageEncoder {
 
     ColorItem average() {
       int count = lst.size();
+      xyz = new P3();
       for (int i = count; --i >= 0;) {
         ColorItem c = lst.get(i);
         colorMap.put(Integer.valueOf(c.rgb), this);
-        r += c.r;
-        g += c.g;
-        b += c.b;
+        xyz.add(c.lab);
       }
-      r = (r / count) & 0xff;
-      g = (g / count) & 0xff;
-      b = (b / count) & 0xff;
-      rgb = CU.rgb(r, g, b);
-      red[index] = r;
-      green[index] = g;
-      blue[index] = b;
+      xyz.scale(1f / count);
+      P3 ptrgb = toRGB(xyz);
+      rgb = CU.colorPtToFFRGB(ptrgb);
+      red[index] = (int) ptrgb.x;
+      green[index] = (int) ptrgb.y;
+      blue[index] = (int) ptrgb.z;
       /*
       for (int i = size(); --i >= 0;) {
         int rgb = get(i).rgb;
@@ -307,21 +289,23 @@ public class GifEncoder extends ImageEncoder {
       System.out.println("draw id 'c"+index+"' width 1.0 " + CU.colorPtFromInt(r, null) + " color "+CU.colorPtFromInt(rgb, null)+"");
       
       */
-      colors256.put(Integer.valueOf(this.rgb), this);
-      //System.out.println(index + " " + r + " " + g + " " + b + " " + (maxr - minr)+ " " + (maxg - ming) + " " + (maxb-minb));
+      colors256.put(Integer.valueOf(rgb), this);
+      System.out.println(index + " " + Integer.toHexString(rgb) + " " + ptrgb + " " + xyz + " " + (maxr - minr)+ " " + (maxg - ming) + " " + (maxb-minb));
       return new ColorItem(rgb);
     }
 
-    private int[] ar, ag, ab;
-        
+    private float[] ar, ag, ab;
+
     /**
-     * use median_cut algorithm to split the box, 
-     * creating a doubly linked list
+     * use median_cut algorithm to split the box, creating a doubly linked list.
+     * 
+     * Paul Heckbert, MIT thesis COLOR IMAGE QUANTIZATION FOR FRAME BUFFER
+     * DISPLAY https://www.cs.cmu.edu/~ph/ciq_thesis
      * 
      * @param boxes
      */
     protected void splitBox(Lst<ColorCell> boxes) {
-      int  n = lst.size();
+      int n = lst.size();
       if (n < 2)
         return;
       int newIndex = boxes.size();
@@ -329,18 +313,18 @@ public class GifEncoder extends ImageEncoder {
       boxes.addLast(newBox);
       for (int i = 0; i < 3; i++)
         getArray(i);
-      int ranger = ar[n - 1] - ar[0];
-      int rangeg = ag[n - 1] - ag[0];
-      int rangeb = ab[n - 1] - ab[0];
+      float ranger = (ar[n - 1] - ar[0]) / RFACTOR;
+      float rangeg = ag[n - 1] - ag[0];
+      float rangeb = ab[n - 1] - ab[0];
       int mode = (ranger >= rangeg ? (ranger >= rangeb ? 0 : 2)
           : rangeg >= rangeb ? 1 : 2);
-      int[] a = (mode == 0 ? ar : mode == 1 ? ag : ab);
+      float[] a = (mode == 0 ? ar : mode == 1 ? ag : ab);
       int median = n / 2;
-      int val = a[median];
+      float val = a[median];
       int dir = (val == a[0] ? 1 : -1);
       while (median >= 0 && median < n && a[median] == val) {
         median += dir;
-      }        
+      }
       if (dir == -1)
         median++;
       val = a[median];
@@ -361,45 +345,46 @@ public class GifEncoder extends ImageEncoder {
       switch (mode) {
       case 0:
         for (int i = lst.size(); --i >= 0;)
-          if (lst.get(i).r >= val)
+          if (lst.get(i).lab.x >= val)
             newBox.addItem(lst.remove(i));
         newBox.prevr = this;
         nextr = newBox;
-        maxr = val - 1;
+        maxr = val - DELTA;
         newBox.minr = val;
         break;
       case 1:
         for (int i = lst.size(); --i >= 0;)
-          if (lst.get(i).g >= val)
+          if (lst.get(i).lab.y >= val)
             newBox.addItem(lst.remove(i));
         newBox.prevg = this;
         nextg = newBox;
-        maxg = val - 1;
+        maxg = val - DELTA;
         newBox.ming = val;
         break;
       case 2:
         for (int i = lst.size(); --i >= 0;)
-          if (lst.get(i).b >= val)
+          if (lst.get(i).lab.z >= val)
             newBox.addItem(lst.remove(i));
         newBox.prevb = this;
         nextb = newBox;
-        maxb = val - 1;
+        maxb = val - DELTA;
         newBox.minb = val;
-        break;      
+        break;
       }
-      //System.out.println(this + " -"+mode+"-> " + newBox +" " + lst.size() + "/" + newBox.lst.size());
+      System.out.println(this + " -"+mode+"-> " + newBox +" " + lst.size() + "/" + newBox.lst.size());
     }
 
     /**
      * Get sorted array of unique component entries
      * 
-     * @param ic 0(red) 1(green) 2(blue)
+     * @param ic
+     *        0(red) 1(green) 2(blue)
      */
     private void getArray(int ic) {
-      int[] a = new int[lst.size()];
+      float[] a = new float[lst.size()];
       for (int i = a.length; --i >= 0;) {
-        ColorItem c = lst.get(i);
-        a[i] = (ic == 0 ? c.r : ic == 1 ? c.g : c.b);
+        P3 xyz = lst.get(i).lab;
+        a[i] = (ic == 0 ? xyz.x : ic == 1 ? xyz.y : xyz.z);
       }
       Arrays.sort(a);
       switch (ic) {
@@ -416,34 +401,31 @@ public class GifEncoder extends ImageEncoder {
 
     /**
      * 
-     * Find nearest cell; return errors in [r g b]
-     * @param rgb
+     * Find nearest cell; return errors in [x y z]
+     * 
+     * @param xyz
      * @param err
      * @return color cell
      * 
      */
-    ColorCell findCell(int rgb, int[] err) {
-      err[0] = ((rgb >> 16) & 0xFF) - r;
+    ColorCell findCell(P3 xyz, P3 err) {
+      err.sub2(xyz, this.xyz);
       //System.out.println(Integer.toHexString(rgb) + " " + this + " " + PT.toJSON(null, err));
-      if (err[0] > maxre && nextr != null)
-        return nextr.findCell(rgb, err);
-      if (err[0] < minre && prevr != null)
-        return prevr.findCell(rgb, err);
-      
-      err[1] = ((rgb >> 8) & 0xFF) - g;
-      if (err[1] > maxge && nextg != null)
-        return nextg.findCell(rgb, err);
-      if (err[1] < minge && prevg != null)
-        return prevg.findCell(rgb, err);
-      
-      err[2] = (rgb & 0xFF) - b;
-      if (err[2] > maxbe && nextb != null)
-        return nextb.findCell(rgb, err);
-      if (err[2] < minbe && prevb != null)
-        return prevb.findCell(rgb, err);
+      if (err.x > maxre && nextr != null)
+        return nextr.findCell(xyz, err);
+      if (err.x < minre && prevr != null)
+        return prevr.findCell(xyz, err);
+      if (err.y > maxge && nextg != null)
+        return nextg.findCell(xyz, err);
+      if (err.y < minge && prevg != null)
+        return prevg.findCell(xyz, err);
+      if (err.z > maxbe && nextb != null)
+        return nextb.findCell(xyz, err);
+      if (err.z < minbe && prevb != null)
+        return prevb.findCell(xyz, err);
       return this; // in this box or best we can do
-    }    
-    
+    }
+
     @Override
     public String toString() {
       return index + " " + Integer.toHexString(rgb);
@@ -451,28 +433,28 @@ public class GifEncoder extends ImageEncoder {
   }
 
   /**
-   * we allow for animated GIF by being able to re-enter
-   * the code with different parameters held in params
+   * we allow for animated GIF by being able to re-enter the code with different
+   * parameters held in params
    * 
    * 
    */
   @Override
   protected void setParams(Map<String, Object> params) {
-    this.params = params;    
-     Integer ic = (Integer) params.get("transparentColor");
-     if (ic == null) {
-       ic = (Integer) params.get("backgroundColor");
-       if (ic != null)
-         backgroundColor = ic.intValue();
-     } else {
-       backgroundColor = ic.intValue();
-       isTransparent = true;
-     }
+    this.params = params;
+    Integer ic = (Integer) params.get("transparentColor");
+    if (ic == null) {
+      ic = (Integer) params.get("backgroundColor");
+      if (ic != null)
+        backgroundColor = ic.intValue();
+    } else {
+      backgroundColor = ic.intValue();
+      isTransparent = true;
+    }
 
-     floydSteinberg = false;
-     
-     logging = true;
-     
+    //floydSteinberg = false;
+
+    logging = true;
+
     interlaced = (Boolean.TRUE == params.get("interlaced"));
     if (interlaced || !params.containsKey("captureMode"))
       return;
@@ -481,8 +463,9 @@ public class GifEncoder extends ImageEncoder {
     } catch (Exception e) {
       // ignore
     }
-    int imode = "maec".indexOf(((String) params.get("captureMode")).substring(0, 1));
-    
+    int imode = "maec".indexOf(((String) params.get("captureMode")).substring(
+        0, 1));
+
     if (logging)
       System.out.println("GIF capture mode " + imode);
     switch (imode) {
@@ -495,7 +478,7 @@ public class GifEncoder extends ImageEncoder {
       addHeader = false;
       addTrailer = false;
       int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
-      delayTime100ths =  (fps == 0 ? 0 : 100 / fps);
+      delayTime100ths = (fps == 0 ? 0 : 100 / fps);
       looping = (Boolean.FALSE != params.get("captureLooping"));
       break;
     case 2: // end
@@ -509,7 +492,28 @@ public class GifEncoder extends ImageEncoder {
       break;
     }
   }
+/*
+  float RFACTOR = 3.6f;
+  float DELTA = 0.001f; 
+  
+  P3 toRGB(P3 xyz) {
+    return CU.hslToRGB(xyz);
+  }
 
+  P3 toXYZ(int rgb) {
+    return CU.rgbToHSL(CU.colorPtFromInt(rgb, new P3()), false);
+  }
+*/
+  
+  float RFACTOR = 1;
+  float DELTA = 1; 
+  P3 toRGB(P3 xyz) {
+    return P3.new3(clamp(xyz.x), clamp(xyz.y), clamp(xyz.z));
+  }
+
+  P3 toXYZ(int rgb) {
+    return CU.colorPtFromInt(rgb, new P3());
+  }
 
   @Override
   protected void generate() throws IOException {
@@ -537,6 +541,7 @@ public class GifEncoder extends ImageEncoder {
 
   /**
    * includes logical screen descriptor
+   * 
    * @throws IOException
    */
   private void writeHeader() throws IOException {
@@ -577,13 +582,16 @@ public class GifEncoder extends ImageEncoder {
    */
   private ColorVector getColors() {
     int n = pixels.length;
-    errors = AU.newInt2(n);
+    errors = new P3[n];
+    pixelsLab = new P3[n];
     indexes = new int[n];
     ColorVector colorVector = new ColorVector();
     Map<Integer, ColorItem> ciHash = new Hashtable<Integer, ColorItem>();
     int nColors = 0;
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
+      pixelsLab[i] = toXYZ(pixels[i]);
       nColors += addColor(colorVector, ciHash, i);
+    }
     ciHash = null;
     //colorVector.sort();
     System.out.println("# total image colors = " + nColors);
@@ -608,22 +616,23 @@ public class GifEncoder extends ImageEncoder {
 
   /**
    * 
-   * Idea is to find the closest known color
-   * and then spread out the error over four pixels
+   * Idea is to find the closest known color and then spread out the error over
+   * four pixels
    * 
    */
   private void ditherPixels() {
+    P3 xyz = new P3();
     for (int i = 0, p = 0; i < height; ++i) {
       boolean notLastRow = (i != height - 1);
       for (int j = 0; j < width; ++j, p++) {
-        int rgb = getRGB(p);
+        int rgb = getRGB(p, xyz);
         try {
           ColorCell app = colors256.get(Integer.valueOf(rgb));
           if (app == null) {
-            int[] err = new int[3];
+            P3 err = new P3();
             app = colorMap.get(Integer.valueOf(pixels[p]));
             if (floydSteinberg) {
-              app = app.findCell(rgb, err);
+              app = app.findCell(xyz, err);
               colorMap.put(Integer.valueOf(rgb), app);
               boolean notLastCol = (j < width - 1);
               if (notLastCol)
@@ -644,32 +653,27 @@ public class GifEncoder extends ImageEncoder {
       }
     }
   }
-  
-  private int getRGB(int p) {
-    int[] err = errors[p];
-    int rgb = pixels[p];
+
+  private int getRGB(int p, P3 xyz) {
+    P3 err = errors[p];
+    xyz.setT(pixelsLab[p]);
     if (err == null)
-      return rgb;
-    int r = clamp(((rgb >> 16) & 0xFF) + err[0]);
-    int g = clamp(((rgb >> 8) & 0xFF) + err[1]);
-    int b = clamp(((rgb) & 0xFF) + err[2]);   
-    return CU.rgb(r, g, b); 
+      return pixels[p];
+    xyz.add(err);
+    return CU.colorPtToFFRGB(toRGB(xyz));
   }
 
-
-  private void addError(int[] err, int f, int p) {
-    int[] errp = errors[p];
+  private void addError(P3 err, int f, int p) {
+    P3 errp = errors[p];
     if (errp == null)
-      errp = errors[p] = new int[3];
-    for (int i = 0; i < 3; i++)
-      errp[i] += (err[i] * f) >> 4;
+      errp = errors[p] = new P3();
+    errp.scaleAdd2(f / 16f, err, errp);
   }
 
-  int clamp(int c) {
-    return c < 0 ? 0 : c > 255 ? 255 : c;
+  int clamp(float c) {
+    return (int) Math.floor(c < 0 ? 0 : c > 255 ? 255 : c);
   }
 
-  
   private void writeGraphicControlExtension() {
     if (isTransparent || delayTime100ths >= 0) {
       putByte(0x21); // graphic control extension
@@ -682,57 +686,57 @@ public class GifEncoder extends ImageEncoder {
     }
   }
 
-// see  http://www.vurdalakov.net/misc/gif/netscape-looping-application-extension
-//      +---------------+
-//   0  |     0x21      |  Extension Label
-//      +---------------+
-//   1  |     0xFF      |  Application Extension Label
-//      +---------------+
-//   2  |     0x0B      |  Block Size
-//      +---------------+
-//   3  |               | 
-//      +-             -+
-//   4  |               | 
-//      +-             -+
-//   5  |               | 
-//      +-             -+
-//   6  |               | 
-//      +-  NETSCAPE   -+  Application Identifier (8 bytes)
-//   7  |               | 
-//      +-             -+
-//   8  |               | 
-//      +-             -+
-//   9  |               | 
-//      +-             -+
-//  10  |               | 
-//      +---------------+
-//  11  |               | 
-//      +-             -+
-//  12  |      2.0      |  Application Authentication Code (3 bytes)
-//      +-             -+
-//  13  |               | 
-//      +===============+                      --+
-//  14  |     0x03      |  Sub-block Data Size   |
-//      +---------------+                        |
-//  15  |     0x01      |  Sub-block ID          |
-//      +---------------+                        | Application Data Sub-block
-//  16  |               |                        |
-//      +-             -+  Loop Count (2 bytes)  |
-//  17  |               |                        |
-//      +===============+                      --+
-//  18  |     0x00      |  Block Terminator
-//      +---------------+
+  // see  http://www.vurdalakov.net/misc/gif/netscape-looping-application-extension
+  //      +---------------+
+  //   0  |     0x21      |  Extension Label
+  //      +---------------+
+  //   1  |     0xFF      |  Application Extension Label
+  //      +---------------+
+  //   2  |     0x0B      |  Block Size
+  //      +---------------+
+  //   3  |               | 
+  //      +-             -+
+  //   4  |               | 
+  //      +-             -+
+  //   5  |               | 
+  //      +-             -+
+  //   6  |               | 
+  //      +-  NETSCAPE   -+  Application Identifier (8 bytes)
+  //   7  |               | 
+  //      +-             -+
+  //   8  |               | 
+  //      +-             -+
+  //   9  |               | 
+  //      +-             -+
+  //  10  |               | 
+  //      +---------------+
+  //  11  |               | 
+  //      +-             -+
+  //  12  |      2.0      |  Application Authentication Code (3 bytes)
+  //      +-             -+
+  //  13  |               | 
+  //      +===============+                      --+
+  //  14  |     0x03      |  Sub-block Data Size   |
+  //      +---------------+                        |
+  //  15  |     0x01      |  Sub-block ID          |
+  //      +---------------+                        | Application Data Sub-block
+  //  16  |               |                        |
+  //      +-             -+  Loop Count (2 bytes)  |
+  //  17  |               |                        |
+  //      +===============+                      --+
+  //  18  |     0x00      |  Block Terminator
+  //      +---------------+
 
   private void writeNetscapeLoopExtension() {
     putByte(0x21); // graphic control extension
     putByte(0xff); // netscape loop extension
     putByte(0x0B); // block size
     putString("NETSCAPE2.0");
-    putByte(3); 
-    putByte(1); 
+    putByte(3);
+    putByte(1);
     putWord(0); // loop indefinitely
     putByte(0); // end-of-block
-    
+
   }
 
   private int initCodeSize;
@@ -772,7 +776,7 @@ public class GifEncoder extends ImageEncoder {
   }
 
   ///// compression routines /////
-  
+
   private static final int EOF = -1;
 
   // Return the next pixel from the image
@@ -790,25 +794,23 @@ public class GifEncoder extends ImageEncoder {
       if (interlaced)
         updateY(INTERLACE_PARAMS[pass], INTERLACE_PARAMS[pass + 4]);
       else
-       ++cury;
+        ++cury;
     }
     curpt = cury * width + curx;
     return colorIndex & 0xff;
   }
 
-  private static final int[] INTERLACE_PARAMS = {
-    8, 8, 4, 2, 
-    4, 2, 1, 0};
+  private static final int[] INTERLACE_PARAMS = { 8, 8, 4, 2, 4, 2, 1, 0 };
 
   /**
    * 
-   *   Group 1 : Every 8th. row, starting with row 0.              (Pass 1)
-   *   
-   *   Group 2 : Every 8th. row, starting with row 4.              (Pass 2)
-   *   
-   *   Group 3 : Every 4th. row, starting with row 2.              (Pass 3)
-   *   
-   *   Group 4 : Every 2nd. row, starting with row 1.              (Pass 4)
+   * Group 1 : Every 8th. row, starting with row 0. (Pass 1)
+   * 
+   * Group 2 : Every 8th. row, starting with row 4. (Pass 2)
+   * 
+   * Group 3 : Every 4th. row, starting with row 2. (Pass 3)
+   * 
+   * Group 4 : Every 2nd. row, starting with row 1. (Pass 4)
    * 
    * @param yNext
    * @param yNew

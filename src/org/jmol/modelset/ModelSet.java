@@ -663,14 +663,18 @@ import java.util.Properties;
         int targetIndex = serialMap[targetSerial] - 1;
         if (sourceIndex < 0 || targetIndex < 0)
           continue;
+        Atom atomA = at[sourceIndex];
+        Atom atomB = at[targetIndex];
         if (bsExclude != null) {
-          if (at[sourceIndex].isHetero())
+          if (atomA.isHetero())
             bsExclude.set(sourceIndex);
-          if (at[targetIndex].isHetero())
+          if (atomB.isHetero())
             bsExclude.set(targetIndex);
         }
-        checkValencesAndBond(at[sourceIndex], at[targetIndex], order,
-            (order == Edge.BOND_H_REGULAR ? 1 : mad), null);
+        // don't connect differing altloc
+        if (atomA.altloc == atomB.altloc
+            || atomA.altloc == '\0' || atomB.altloc == '\0')
+          getOrAddBond(atomA, atomB, order, (order == Edge.BOND_H_REGULAR ? 1 : mad), null, 0, false);
       }
     }
   }
@@ -2862,7 +2866,7 @@ import java.util.Properties;
             atomNear.getBondingRadius(), iter.foundDistance2(),
             minBondDistance2, bondTolerance);
         if (order > 0
-            && checkValencesAndBond(atom, atomNear, order, mad, bsBonds))
+            && autoBondCheck(atom, atomNear, order, mad, bsBonds))
           nNew++;
       }
       iter.release();
@@ -2870,6 +2874,32 @@ import java.util.Properties;
     if (showRebondTimes)
       Logger.checkTimer("autoBond", false);
     return nNew;
+  }
+
+  private boolean maxBondWarned;
+
+  private boolean autoBondCheck(Atom atomA, Atom atomB, int order,
+                                             short mad, BS bsBonds) {
+    if (atomA.getCurrentBondCount() > JC.MAXIMUM_AUTO_BOND_COUNT
+        || atomB.getCurrentBondCount() > JC.MAXIMUM_AUTO_BOND_COUNT) {
+      if (!maxBondWarned)
+        Logger.warn("maximum auto bond count reached");
+      maxBondWarned = true;
+      return false;
+    }
+    int formalChargeA = atomA.getFormalCharge();
+    if (formalChargeA != 0) {
+      int formalChargeB = atomB.getFormalCharge();
+      if ((formalChargeA < 0 && formalChargeB < 0)
+          || (formalChargeA > 0 && formalChargeB > 0))
+        return false;
+    }
+    // don't connect differing altloc unless there are modulations
+    if (atomA.altloc != atomB.altloc && atomA.altloc != '\0'
+        && atomB.altloc != '\0' && getModulation(atomA.i) == null)
+      return false;
+    getOrAddBond(atomA, atomB, order, mad, bsBonds, 0, false);
+    return true;
   }
 
   private int autoBond_Pre_11_9_24(BS bsA, BS bsB, BS bsExclude, BS bsBonds,
@@ -2945,7 +2975,7 @@ import java.util.Properties;
             atomNear.getBondingRadius(), iter.foundDistance2(),
             minBondDistance2, bondTolerance);
         if (order > 0) {
-          if (checkValencesAndBond(atom, atomNear, order, mad, bsBonds))
+          if (autoBondCheck(atom, atomNear, order, mad, bsBonds))
             nNew++;
         }
       }

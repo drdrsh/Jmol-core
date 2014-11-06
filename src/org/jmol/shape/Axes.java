@@ -116,7 +116,7 @@ public class Axes extends FontLineShape {
   public void initShape() {
     super.initShape();
     myType = "axes";
-    font3d = gdata.getFont3D(JC.AXES_DEFAULT_FONTSIZE);
+    font3d = vwr.gdata.getFont3D(JC.AXES_DEFAULT_FONTSIZE);
     AXES axesMode = vwr.g.axesMode;
     if (fixedOrigin == null)
       originPoint.set(0, 0, 0);

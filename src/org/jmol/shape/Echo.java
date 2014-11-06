@@ -148,7 +148,7 @@ public class Echo extends TextShape {
           } else if ("bottom" == target) {
             valign = JC.VALIGN_BOTTOM;
           }
-          text = Text.newEcho(vwr, gdata, gdata.getFont3DFS(FONTFACE,
+          text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE,
               FONTSIZE), target, COLOR, valign, halign, 0);
           text.setAdjustForWindow(true);
           objects.put(target, text);

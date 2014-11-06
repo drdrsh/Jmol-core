@@ -50,14 +50,12 @@ import org.jmol.util.Vibration;
 
 public class ShapeManager {
 
-  private GData gdata;
   private ModelSet ms;
   Shape[] shapes;
   public Viewer vwr;
 
   public ShapeManager(Viewer vwr) {
     this.vwr = vwr;
-    gdata = vwr.gdata;
   }
 
   /**
@@ -139,7 +137,7 @@ public class ShapeManager {
     if ((shape = (Shape) Interface.getInterface(className, vwr, "shape")) == null)
       return null;
     vwr.setShapeErrorState(shapeID, "allocate");
-    shape.initializeShape(vwr, gdata, ms, shapeID);
+    shape.initializeShape(vwr, ms, shapeID);
     vwr.setShapeErrorState(-1, null);
     return shapes[shapeID] = shape;
   }
@@ -418,7 +416,6 @@ public class ShapeManager {
     Viewer vwr = this.vwr;
     TransformManager tm = vwr.tm;
     BS bs = bsRenderableAtoms;
-    GData gdata = this.gdata;
     if (bsAtoms != null) {
       // translateSelected operation
       P3 ptCenter = ms.getAtomSetCenter(bsAtoms);
@@ -449,11 +446,12 @@ public class ShapeManager {
         d = (int) (vwr.getFloat(T.atoms) * 2000);
       atom.sD = (short) vwr.tm.scaleToScreen(screen.z, d);
     }
+    GData gdata = vwr.gdata;
     if (tm.slabEnabled) {
       boolean slabByMolecule = vwr.getBoolean(T.slabbymolecule);
       boolean slabByAtom = vwr.getBoolean(T.slabbyatom);
-      int minZ = gdata.getSlab();
-      int maxZ = gdata.getDepth();
+      int minZ = gdata.slab;
+      int maxZ = gdata.depth;
       if (slabByMolecule) {
         JmolMolecule[] molecules = ms.getMolecules();
         int moleculeCount = ms.getMoleculeCountInModel(-1);

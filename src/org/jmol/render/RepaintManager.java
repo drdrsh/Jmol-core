@@ -183,12 +183,12 @@ public class RepaintManager implements JmolRepaintManager {
   
   @Override
   public void render(GData gdata, ModelSet modelSet, boolean isFirstPass, int[] minMax) {
+    JmolRendererInterface g3d = (JmolRendererInterface) gdata;
     if (renderers == null)
       renderers = new ShapeRenderer[JC.SHAPE_MAX];
     getAllRenderers();
     try {
       boolean logTime = vwr.getBoolean(T.showtiming);
-      JmolRendererInterface g3d = (JmolRendererInterface) gdata;
       g3d.renderBackground(null);
       if (isFirstPass)  {
         bsTranslucent.clearAll();
@@ -200,7 +200,7 @@ public class RepaintManager implements JmolRepaintManager {
             g3d.drawRect(band.x, band.y, 0, 0, band.width, band.height);
       }
       String msg = null;
-      for (int i = 0; i < JC.SHAPE_MAX && g3d.currentlyRendering(); ++i) {
+      for (int i = 0; i < JC.SHAPE_MAX && gdata.currentlyRendering; ++i) {
         Shape shape = shapeManager.getShape(i);
         if (shape == null)
           continue;

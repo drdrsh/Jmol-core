@@ -60,7 +60,7 @@ public class TriangleRenderer implements G3DRenderer {
   }
   
   @Override
-  public G3DRenderer set(JmolRendererInterface g3d) {
+  public G3DRenderer set(JmolRendererInterface g3d, GData gdata) {
     try {
       rgb16sW = new Rgb16[DEFAULT];
       rgb16sE = new Rgb16[DEFAULT];

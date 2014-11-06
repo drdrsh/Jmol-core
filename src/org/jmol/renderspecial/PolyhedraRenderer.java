@@ -111,7 +111,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
   }
 
   private void drawFace(short normix, P3i A, P3i B, P3i C) {
-    if (isAll || frontOnly && g3d.isDirectedTowardsCamera(normix)) {
+    if (isAll || frontOnly && vwr.gdata.isDirectedTowardsCamera(normix)) {
       drawCylinderTriangle(A.x, A.y, A.z, B.x, B.y, B.z, C.x, C.y, C.z);
     }
   }

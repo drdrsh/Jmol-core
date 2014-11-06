@@ -54,7 +54,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
 import org.jmol.util.Elements;
-import org.jmol.util.GData;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
@@ -3739,7 +3738,7 @@ public class ScriptEval extends ScriptExpr {
     }
     if (chk)
       return;
-    if (GData.getFontStyleID(fontface) >= 0) {
+    if (Font.getFontStyleID(fontface) >= 0) {
       fontstyle = fontface;
       fontface = "SansSerif";
     }
