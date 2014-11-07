@@ -1102,9 +1102,8 @@ REMARK 290 REMARK: NULL
   }
   
   private boolean haveDoubleBonds;
-  
+
   private void conect() {
-    // adapted for improper non-crossreferenced files such as 1W7R
     if (sbConect == null) {
       sbConect = new SB();
       sb = new SB();
@@ -1115,14 +1114,24 @@ REMARK 290 REMARK: NULL
     sourceSerial = getSerial(6, 11);
     if (sourceSerial < 0)
       return;
-    for (int i = 0; i < 9; i += (i == 5 ? 2 : 1)) {
-      int offset = i * 5 + 11;
-      int offsetEnd = offset + 5;
-      if (offsetEnd > lineLength)
+    int order = 1;
+    // skip ancient salt bridges
+    int pt1 = Math.min(line.trim().length(), 52);
+    for (int pt = 11; pt < pt1; pt += 5) {
+      switch (pt) {
+      case 31:
+        order = JmolAdapter.ORDER_HBOND;
         break;
-      int targetSerial = getSerial(offset, offsetEnd);
-      if (targetSerial < 0)
+      case 41:
+        // old salt bridge
         continue;
+      }
+      int targetSerial = getSerial(pt, pt + 5);
+      if (targetSerial < 0) {
+        if (pt <= 31) // no hbonds -- get out of here
+          break;
+        continue;
+      }
       boolean isDoubleBond = (sourceSerial == lastSourceSerial && targetSerial == lastTargetSerial);
       if (isDoubleBond)
         haveDoubleBonds = true;
@@ -1147,8 +1156,7 @@ REMARK 290 REMARK: NULL
         sb.append(st1);
       }
       sbConect.append(st);
-      addConnection(new int[] { i1, targetSerial,
-          i < 4 ? 1 : JmolAdapter.ORDER_HBOND });
+      addConnection(new int[] { i1, targetSerial, order });
     }
     sbConect.appendSB(sb);
   }
