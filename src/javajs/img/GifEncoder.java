@@ -120,6 +120,69 @@ public class GifEncoder extends ImageEncoder {
   int[] red, green, blue;
   int[] indexes;
 
+  /**
+   * we allow for animated GIF by being able to re-enter the code with different
+   * parameters held in params
+   * 
+   * 
+   */
+  @Override
+  protected void setParams(Map<String, Object> params) {
+    this.params = params;
+    Integer ic = (Integer) params.get("transparentColor");
+    if (ic == null) {
+      ic = (Integer) params.get("backgroundColor");
+      if (ic != null)
+        backgroundColor = ic.intValue();
+    } else {
+      backgroundColor = ic.intValue();
+      isTransparent = true;
+    }
+
+    //floydSteinberg = false;
+
+    logging = true;
+
+    interlaced = (Boolean.TRUE == params.get("interlaced"));
+    if (interlaced 
+        || params.containsKey("captureRootExt") // file0000.gif 
+        || !params.containsKey("captureMode"))  // animated gif
+      return;
+    try {
+      byteCount = ((Integer) params.get("captureByteCount")).intValue();
+    } catch (Exception e) {
+      // ignore
+    }
+    int imode = "maec".indexOf(((String) params.get("captureMode")).substring(
+        0, 1));
+
+    if (logging)
+      System.out.println("GIF capture mode " + imode);
+    switch (imode) {
+    case 0: //"movie"
+      params.put("captureMode", "add");
+      addImage = false;
+      addTrailer = false;
+      break;
+    case 1: // add 
+      addHeader = false;
+      addTrailer = false;
+      int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
+      delayTime100ths = (fps == 0 ? 0 : 100 / fps);
+      looping = (Boolean.FALSE != params.get("captureLooping"));
+      break;
+    case 2: // end
+      addHeader = false;
+      addImage = false;
+      break;
+    case 3: // cancel
+      addHeader = false;
+      addImage = false;
+      out.cancel();
+      break;
+    }
+  }
+
   private class ColorItem {
 
     int rgb;
@@ -432,66 +495,6 @@ public class GifEncoder extends ImageEncoder {
     }
   }
 
-  /**
-   * we allow for animated GIF by being able to re-enter the code with different
-   * parameters held in params
-   * 
-   * 
-   */
-  @Override
-  protected void setParams(Map<String, Object> params) {
-    this.params = params;
-    Integer ic = (Integer) params.get("transparentColor");
-    if (ic == null) {
-      ic = (Integer) params.get("backgroundColor");
-      if (ic != null)
-        backgroundColor = ic.intValue();
-    } else {
-      backgroundColor = ic.intValue();
-      isTransparent = true;
-    }
-
-    //floydSteinberg = false;
-
-    logging = true;
-
-    interlaced = (Boolean.TRUE == params.get("interlaced"));
-    if (interlaced || !params.containsKey("captureMode"))
-      return;
-    try {
-      byteCount = ((Integer) params.get("captureByteCount")).intValue();
-    } catch (Exception e) {
-      // ignore
-    }
-    int imode = "maec".indexOf(((String) params.get("captureMode")).substring(
-        0, 1));
-
-    if (logging)
-      System.out.println("GIF capture mode " + imode);
-    switch (imode) {
-    case 0: //"movie"
-      params.put("captureMode", "add");
-      addImage = false;
-      addTrailer = false;
-      break;
-    case 1: // add 
-      addHeader = false;
-      addTrailer = false;
-      int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
-      delayTime100ths = (fps == 0 ? 0 : 100 / fps);
-      looping = (Boolean.FALSE != params.get("captureLooping"));
-      break;
-    case 2: // end
-      addHeader = false;
-      addImage = false;
-      break;
-    case 3: // cancel
-      addHeader = false;
-      addImage = false;
-      out.cancel();
-      break;
-    }
-  }
 /*
   float RFACTOR = 3.6f;
   float DELTA = 0.001f; 

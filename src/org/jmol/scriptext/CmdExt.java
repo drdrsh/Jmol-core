@@ -477,6 +477,8 @@ public class CmdExt implements JmolCmdExtension {
       showString("Cannot capture on this platform");
       return;
     }
+    Map<String, Object> params = vwr.captureParams;
+    String type = (params == null ? "GIF" : (String) params.get("type"));
     float endTime = 10; // ten seconds by default
     int mode = 0;
     int slen = e.slen;
@@ -484,7 +486,6 @@ public class CmdExt implements JmolCmdExtension {
     if (isTransparent)
       slen--;
     String fileName = "";
-    Map<String, Object> params = vwr.captureParams;
     boolean looping = !vwr.am.animationReplayMode.name().equals("ONCE");
     int i = 1;
     int tok = tokAt(i);
@@ -495,12 +496,22 @@ public class CmdExt implements JmolCmdExtension {
         mode = T.end;
         break;
       }
-      if (fileName.toLowerCase().endsWith(".gift")) {
+      String lc = fileName.toLowerCase();
+      if (lc.endsWith(".gift") || lc.endsWith(".pngt")) {
         isTransparent = true;
         fileName = fileName.substring(0, fileName.length() - 1);
-      }
-      if (!fileName.toLowerCase().endsWith(".gif"))
+        lc = fileName.toLowerCase();
+      } else if (!lc.endsWith(".gif") && !lc.contains(".png")) {
         fileName += ".gif";
+      }
+      if (lc.endsWith(".png")) {
+        if (!lc.endsWith("0.png"))
+          fileName = fileName.substring(0, fileName.length() - 4) + "0000.png";
+        type = "PNG";
+      } else {
+        type = "GIF";
+      }
+      boolean streaming = (fileName.indexOf("0000.") != fileName.lastIndexOf(".") - 4);      
       boolean isRock = false;
       switch (tokAt(i)) {
       case T.rock:
@@ -544,12 +555,15 @@ public class CmdExt implements JmolCmdExtension {
         return;
       mode = T.movie;
       params = new Hashtable<String, Object>();
-      if (!looping)
-        showString(GT.o(GT._("Note: Enable looping using {0}"),
-            new Object[] { "ANIMATION MODE LOOP" }));
       int fps = vwr.getInt(T.animationfps);
-      showString(GT.o(GT._("Animation delay based on: {0}"),
-          new Object[] { "ANIMATION FPS " + fps }));
+      if (streaming) {
+        params.put("streaming", Boolean.TRUE);
+        if (!looping)
+          showString(GT.o(GT._("Note: Enable looping using {0}"),
+              new Object[] { "ANIMATION MODE LOOP" }));
+        showString(GT.o(GT._("Animation delay based on: {0}"),
+            new Object[] { "ANIMATION FPS " + fps }));
+      }
       params.put("captureFps", Integer.valueOf(fps));
       break;
     case T.end:
@@ -567,7 +581,7 @@ public class CmdExt implements JmolCmdExtension {
     }
     if (chk || params == null)
       return;
-    params.put("type", "GIF");
+    params.put("type", type);
     Integer c = Integer.valueOf(vwr.getBackgroundArgb());
     params.put("backgroundColor", c);
     if (isTransparent)

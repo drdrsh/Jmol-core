@@ -408,12 +408,8 @@ abstract class OutputManager {
         quality));
     if (fileName == null)
       return null;
-    int ptDot = fileName.indexOf(".");
-    if (ptDot < 0)
-      ptDot = fileName.length();
-
-    String froot = fileName.substring(0, ptDot);
-    String fext = fileName.substring(ptDot);
+    String[] rootExt = new String[2];
+    getRootExt(fileName, rootExt, 0);
     SB sb = new SB();
     if (bsFrames == null) {
       vwr.tm.vibrationOn = true;
@@ -421,7 +417,7 @@ abstract class OutputManager {
       for (int i = 0; i < nVibes; i++) {
         for (int j = 0; j < 20; j++) {
           vwr.tm.setVibrationT(j / 20f + 0.2501f);
-          if (!writeFrame(++n, froot, fext, params, sb))
+          if (!writeFrame(++n, rootExt, params, sb))
             return "ERROR WRITING FILE SET: \n" + info;
         }
       }
@@ -430,13 +426,30 @@ abstract class OutputManager {
       for (int i = bsFrames.nextSetBit(0); i >= 0; i = bsFrames
           .nextSetBit(i + 1)) {
         vwr.setCurrentModelIndex(i);
-        if (!writeFrame(++n, froot, fext, params, sb))
+        if (!writeFrame(++n, rootExt, params, sb))
           return "ERROR WRITING FILE SET: \n" + info;
       }
     }
     if (info.length() == 0)
       info = "OK\n";
     return info + "\n" + n + " files created";
+  }
+
+  private static Object getRootExt(String fileName, String[] rootExt, int n) {
+    if (fileName == null) {
+      fileName = "0000" + n;
+      return rootExt[0] + fileName.substring(fileName.length() - 4)
+          + rootExt[1];
+    }
+    int ptDot = fileName.lastIndexOf(".");
+    if (ptDot < 0)
+      ptDot = fileName.length();
+    String froot = fileName.substring(0, ptDot);
+    if (froot.endsWith("0"))
+      froot = PT.trim(froot, "0");
+    rootExt[0] = froot;
+    rootExt[1] = fileName.substring(ptDot);
+    return rootExt;
   }
 
   private String setFullPath(Map<String, Object> params, String fileName) {
@@ -561,11 +574,12 @@ abstract class OutputManager {
     return msg;
   }
 
-  private boolean writeFrame(int n, String froot, String fext,
+  private boolean writeFrame(int n, String[] rootExt,
                              Map<String, Object> params, SB sb) {
-    String fileName = "0000" + n;
-    fileName = setFullPath(params, froot
-        + fileName.substring(fileName.length() - 4) + fext);
+    String fileName = (String) getRootExt(null, rootExt, n);
+    fileName = setFullPath(params, fileName);
+    if (fileName == null)
+      return false;
     String msg = handleOutputToFile(params, false);
     vwr.scriptEcho(msg);
     sb.append(msg).append("\n");
@@ -625,7 +639,6 @@ abstract class OutputManager {
     if (captureMode != null) {
       doCheck = false; // will be checked later
       mustRender = false;
-      type = "GIF";
     }
     if (doCheck)
       fileName = getOutputFileNameFromDialog(fileName, quality);
@@ -651,8 +664,8 @@ abstract class OutputManager {
         String[] scripts = (String[]) params.get("scripts");
         if (scripts != null && type.equals("ZIP"))
           type = "ZIPALL";
-        OC out = getOutputChannel(fileName, null);
-        sret = createZipSet(text, scripts, type.equals("ZIPALL"), out, null);
+        sret = createZipSet(text, scripts, type.equals("ZIPALL"),
+            getOutputChannel(fileName, null), null);
       } else if (type.equals("SCENE")) {
         sret = createSceneSet(fileName, text, width, height);
       } else {
@@ -660,50 +673,82 @@ abstract class OutputManager {
         // both Jmol application and applet return null
         byte[] bytes = (byte[]) params.get("bytes");
         // String return here
-        sret = vwr.sm.createImage(fileName, type, text, bytes,
-            quality);
+        sret = vwr.sm.createImage(fileName, type, text, bytes, quality);
         if (sret == null) {
+          boolean createImage = true;
           // allow Jmol to do it            
-          String msg = null;
+          String captureMsg = null;
           if (captureMode != null) {
             OC out = null;
             Map<String, Object> cparams = vwr.captureParams;
             int imode = "ad on of en ca mo ".indexOf(captureMode
                 .substring(0, 2));
             //           0  3  6  9  12 15
-            switch (imode) {
-            case 15:
-              if (cparams != null)
+            String[] rootExt;
+            if (imode == 15) {// movie -- start up
+              if (cparams != null && cparams.containsKey("outputChannel"))
                 ((OC) cparams.get("outputChannel")).closeChannel();
-              out = getOutputChannel(localName, null);
-              if (out == null) {
-                sret = msg = "ERROR: capture canceled";
+              boolean streaming = params.containsKey("streaming");
+              if (streaming
+                  && (out = getOutputChannel(localName, null)) == null) {
+                sret = captureMsg = "ERROR: capture canceled";
                 vwr.captureParams = null;
               } else {
-                localName = out.getFileName();
-                msg = type + "_STREAM_OPEN " + localName;
                 vwr.captureParams = params;
-                params.put("captureFileName", localName);
-                params.put("captureCount", Integer.valueOf(1));
-                params.put("captureMode", "movie");
+                if (params.containsKey("captureRootExt")) {
+                  imode = 0; // add
+                } else {
+                  if (out != null)
+                    localName = out.getFileName();
+                  params.put("captureFileName", localName);
+                  if (streaming) {
+                    captureMsg = type + "_STREAM_OPEN " + localName;
+                    params.put("captureMode", "movie");
+                  } else {
+                    rootExt = new String[2];
+                    params.put("captureRootExt",
+                        getRootExt(localName, rootExt, 0));
+                    localName = (String) getRootExt(null, rootExt, 1);
+                    imode = -1; // ignore
+                    cparams = params;
+                    createImage = false;
+                  }
+                }
+                if (!params.containsKey("captureCount"))
+                  params.put("captureCount", Integer.valueOf(0));
               }
-              break;
-            default:
+            }
+            if (imode >= 0 && imode != 15) {
               if (cparams == null) {
-                sret = msg = "ERROR: capture not active";
+                sret = captureMsg = "ERROR: capture not active";
               } else {
                 params = cparams;
                 switch (imode) {
                 default:
-                  sret = msg = "ERROR: CAPTURE MODE=" + captureMode + "?";
+                  sret = captureMsg = "ERROR: CAPTURE MODE=" + captureMode
+                      + "?";
                   break;
                 case 0: //add:
                   if (Boolean.FALSE == params.get("captureEnabled")) {
-                    sret = msg = "capturing OFF; use CAPTURE ON/END/CANCEL to continue";
+                    sret = captureMsg = "capturing OFF; use CAPTURE ON/END/CANCEL to continue";
                   } else {
-                    int count = getInt(params, "captureCount", 1);
+                    int count = getInt(params, "captureCount", 0);
                     params.put("captureCount", Integer.valueOf(++count));
-                    msg = type + "_STREAM_ADD " + count;
+                    if (count == 10)
+                      System.out.println("outman 10");
+
+                    if ((rootExt = (String[]) params.get("captureRootExt")) != null) {
+                      localName = (String) getRootExt(null, rootExt, count);
+                      captureMsg = null;
+                      createImage = true;
+                      //out = (OC) params.get("outputChannel");
+                      //if (out != null)
+                      //  out.closeChannel();
+                      //out = getOutputChannel(localName, null);
+                      //out = null;
+                    } else {
+                      captureMsg = type + "_STREAM_ADD " + count;
+                    }
                   }
                   break;
                 case 3: //on:
@@ -722,37 +767,49 @@ abstract class OutputManager {
                   params = cparams;
                   params.put("captureMode", captureMode);
                   fileName = (String) params.get("captureFileName");
-                  msg = type + "_STREAM_"
+                  captureMsg = type + "_STREAM_"
                       + (captureMode.equals("end") ? "CLOSE " : "CANCEL ")
-                      + params.get("captureFileName");
+                      + fileName;
                   vwr.captureParams = null;
                   params.put("captureMsg",
                       GT._("Capture")
                           + ": "
                           + (captureMode.equals("cancel") ? GT._("canceled")
                               : GT.o(GT._("{0} saved"), fileName)));
+                  if (params.containsKey("captureRootExt"))
+                    createImage = false;
+                  break;
                 }
-                break;
               }
-              break;
             }
-            if (out != null)
+            if (createImage && out != null)
               params.put("outputChannel", out);
           }
-          if (localName != null)
-            params.put("fileName", localName);
-          if (sret == null)
-            sret = writeToOutputChannel(params);
-          vwr.sm.createImage(sret, type, null, null, quality);
-          if (msg != null)
-            vwr.showString(msg + " (" + params.get("captureByteCount")
-                + " bytes)", false);
+          if (createImage) {
+            if (localName != null)
+              params.put("fileName", localName);
+            if (sret == null)
+              sret = writeToOutputChannel(params);
+            vwr.sm.createImage(sret, type, null, null, quality);
+            if (captureMode != null) {
+              if (captureMsg == null)
+                captureMsg = sret;
+              else
+                captureMsg += " ("
+                    + params
+                        .get(params.containsKey("captureByteCount") ? "captureByteCount"
+                            : "byteCount") + " bytes)";
+            }
+          }
+          if (captureMsg != null) {
+            vwr.showString(captureMsg, false);
+          }
         }
       }
     } catch (Throwable er) {
-      //er.printStackTrace();
-      Logger.error(vwr.setErrorMessage(sret = "ERROR creating image??: "
-          + er, null));
+      er.printStackTrace();
+      Logger.error(vwr.setErrorMessage(sret = "ERROR creating image??: " + er,
+          null));
     } finally {
       vwr.creatingImage = false;
       if (quality != Integer.MIN_VALUE)

@@ -1103,6 +1103,36 @@ REMARK 290 REMARK: NULL
   
   private boolean haveDoubleBonds;
 
+  // ancient provisions:
+  // - must check for pre-2000 format with hydrogen bonds
+  // - salt bridges are totally ignored
+  //7 - 11 source
+  //12 - 16 target
+  //17 - 21 target
+  //22 - 26 target
+  //27 - 31 target
+  //32 - 36 Hydrogen bond
+  //37 - 41 Hydrogen bond
+  //42 - 46 Salt bridge
+  //47 - 51 Hydrogen bond
+  //52 - 56 Hydrogen bond
+  //57 - 61 Salt bridge
+  //FORMAT (6A1,11I5)
+  //Note: Serial numbers are identical to those in cols. 7-11 of the appropriate ATOM/
+  //HETATM records, and connectivity entries correspond to these serial numbers. A
+  //second CONECT record, with the same serial number in cols. 7-11, may be used
+  //if necessary. Either all or none of the covalent connectivity of an atom must be
+  //specified, and if hydrogen bonding is specified the covalent connectivity is
+  //included also.
+  //The occurrence of a negative atom serial number on a CONECT record denotes
+  //that a translationally equivalent copy (see TVECT records) of the target atom specified
+  //is linked to the origin atom of the record.
+
+  //  0         1         2         3         4         5         6
+  //  012345678901234567890123456789012345678901234567890123456789012
+  //  CONECT   15   14                                493                     1BNA 635
+
+
   private void conect() {
     if (sbConect == null) {
       sbConect = new SB();
@@ -1110,28 +1140,25 @@ REMARK 290 REMARK: NULL
     } else {
       sb.setLength(0);
     }
-    int sourceSerial = -1;
-    sourceSerial = getSerial(6, 11);
+    int sourceSerial = getSerial(6, 11);
     if (sourceSerial < 0)
       return;
     int order = 1;
-    // skip ancient salt bridges
-    int pt1 = Math.min(line.trim().length(), 52);
+    int pt1 = line.trim().length();
+    if (pt1 > 56) // ancient full line; ignore final salt bridge
+      pt1 = line.substring(0, 56).trim().length();
     for (int pt = 11; pt < pt1; pt += 5) {
       switch (pt) {
       case 31:
         order = JmolAdapter.ORDER_HBOND;
         break;
       case 41:
-        // old salt bridge
+        // ancient salt bridge
         continue;
       }
       int targetSerial = getSerial(pt, pt + 5);
-      if (targetSerial < 0) {
-        if (pt <= 31) // no hbonds -- get out of here
-          break;
+      if (targetSerial < 0) // ancient gap in numbers 
         continue;
-      }
       boolean isDoubleBond = (sourceSerial == lastSourceSerial && targetSerial == lastTargetSerial);
       if (isDoubleBond)
         haveDoubleBonds = true;
@@ -1161,43 +1188,40 @@ REMARK 290 REMARK: NULL
     sbConect.appendSB(sb);
   }
 
-  /*
-          1         2         3
-  0123456789012345678901234567890123456
-  HELIX    1  H1 ILE      7  LEU     18
-  HELIX    2  H2 PRO     19  PRO     19
-  HELIX    3  H3 GLU     23  TYR     29
-  HELIX    4  H4 THR     30  THR     30
-  SHEET    1  S1 2 THR     2  CYS     4
-  SHEET    2  S2 2 CYS    32  ILE    35
-  SHEET    3  S3 2 THR    39  PRO    41
-  TURN     1  T1 GLY    42  TYR    44
-
-  HELIX     1 H1 ILE A    7  PRO A   19
-  HELIX     2 H2 GLU A   23  THR A   30
-  SHEET     1 S1 0 CYS A   3  CYS A   4
-  SHEET     2 S2 0 CYS A  32  ILE A  35
-
-  HELIX  113 113 ASN H  307  ARG H  327  1                                  21    
-  SHEET    1   A 6 ASP A  77  HIS A  80  0                                        
-  SHEET    2   A 6 GLU A  47  ILE A  51  1  N  ILE A  48   O  ASP A  77           
-  SHEET    3   A 6 ARG A  22  ILE A  26  1  N  VAL A  23   O  GLU A  47           
-
-
-TYPE OF HELIX CLASS NUMBER (COLUMNS 39 - 40)
---------------------------------------------------------------
-Right-handed alpha (default) 1
-Right-handed omega 2
-Right-handed pi 3
-Right-handed gamma 4
-Right-handed 310 5
-Left-handed alpha 6
-Left-handed omega 7
-Left-handed gamma 8
-27 ribbon/helix 9
-Polyproline 10
-
-   */
+  //  0         1         2         3
+  //  0123456789012345678901234567890123456
+  //  HELIX    1  H1 ILE      7  LEU     18
+  //  HELIX    2  H2 PRO     19  PRO     19
+  //  HELIX    3  H3 GLU     23  TYR     29
+  //  HELIX    4  H4 THR     30  THR     30
+  //  SHEET    1  S1 2 THR     2  CYS     4
+  //  SHEET    2  S2 2 CYS    32  ILE    35
+  //  SHEET    3  S3 2 THR    39  PRO    41
+  //  TURN     1  T1 GLY    42  TYR    44
+  //
+  //  HELIX     1 H1 ILE A    7  PRO A   19
+  //  HELIX     2 H2 GLU A   23  THR A   30
+  //  SHEET     1 S1 0 CYS A   3  CYS A   4
+  //  SHEET     2 S2 0 CYS A  32  ILE A  35
+  //
+  //  HELIX  113 113 ASN H  307  ARG H  327  1                                  21    
+  //  SHEET    1   A 6 ASP A  77  HIS A  80  0                                        
+  //  SHEET    2   A 6 GLU A  47  ILE A  51  1  N  ILE A  48   O  ASP A  77           
+  //  SHEET    3   A 6 ARG A  22  ILE A  26  1  N  VAL A  23   O  GLU A  47           
+  //
+  //
+  //TYPE OF HELIX CLASS NUMBER (COLUMNS 39 - 40)
+  //--------------------------------------------------------------
+  //Right-handed alpha (default) 1
+  //Right-handed omega 2
+  //Right-handed pi 3
+  //Right-handed gamma 4
+  //Right-handed 310 5
+  //Left-handed alpha 6
+  //Left-handed omega 7
+  //Left-handed gamma 8
+  //27 ribbon/helix 9
+  //Polyproline 10
   
   private void structure() {
     STR structureType = STR.NONE;

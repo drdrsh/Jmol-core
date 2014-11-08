@@ -72,6 +72,7 @@ public class OC extends OutputStream {
     	os = null;
     }
     this.os = os;
+    System.out.println("OC " + fileName);
     isLocalFile = (fileName != null && !(fileName.startsWith("http://") || fileName
         .startsWith("https://")));
     if (asWriter && !isBase64 && os != null)
@@ -147,6 +148,8 @@ public class OC extends OutputStream {
       {
         if (os instanceof FileOutputStream) {
           os.close();
+          System.out.println("OC2 " + fileName);
+
           os = new FileOutputStream(fileName);
         } else {
           os = null;
@@ -259,10 +262,14 @@ public class OC extends OutputStream {
 			} else if (os != null) {
 				os.flush();
 				os.close();
+		    System.out.println("OC3 " + fileName);
+
 			}
 			if (os0 != null && isCanceled) {
 				os0.flush();
 				os0.close();
+		    System.out.println("OC4 " + fileName);
+
 			}
 		} catch (Exception e) {
 			// ignore closing issues
