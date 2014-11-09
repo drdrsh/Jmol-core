@@ -82,7 +82,7 @@ import java.io.IOException;
  * (For example, we exclude the background color.)
  * 
  * Note that although GIMP code annotation refers to "median-cut", 
- * it is really uses MEAN-cut. That is what I use here as well.
+ * it is really using MEAN-cut. That is what I use here as well.
  * 
  * -- commented code allows visualization of the color space using Jmol. Very
  * enlightening!
