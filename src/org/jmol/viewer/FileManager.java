@@ -397,7 +397,7 @@ public class FileManager implements BytePoster {
                 .appendSB(Base64.getBase64(bytes)).toString();
           }
         }
-        int iurl = urlTypeIndex(name);
+        int iurl = OC.urlTypeIndex(name);
         boolean isURL = (iurl >= 0);
         String post = null;
         if (isURL && (iurl = name.indexOf("?POST?")) >= 0) {
@@ -930,30 +930,6 @@ public class FileManager implements BytePoster {
     // JSmol will call that from awtjs2d.Platform.java asynchronously
   }
 
-  public final static int URL_LOCAL = 4;
-  private final static String[] urlPrefixes = { "http:", "https:", "sftp:", "ftp:",
-      "file:" };
-
-  public static int urlTypeIndex(String name) {
-    if (name == null)
-      return -2; // local unsigned applet
-    for (int i = 0; i < urlPrefixes.length; ++i) {
-      if (name.startsWith(urlPrefixes[i])) {
-        return i;
-      }
-    }
-    return -1;
-  }
-  
-  public static boolean isLocal(String fileName) {
-    if (fileName == null)
-      return false;
-    int itype = urlTypeIndex(fileName);
-    return (itype < 0 || itype == URL_LOCAL);
-  }
-
-
-
   /**
    * [0] and [2] may return same as [1] in the 
    * case of a local unsigned applet.
@@ -987,7 +963,7 @@ public class FileManager implements BytePoster {
     if (appletDocumentBaseURL == null) {
       // This code is for the app or signed local applet 
       // -- no local file reading for headless
-      if (urlTypeIndex(name) >= 0 || vwr.haveAccess(ACCESS.NONE)
+      if (OC.urlTypeIndex(name) >= 0 || vwr.haveAccess(ACCESS.NONE)
           || vwr.haveAccess(ACCESS.READSPT) && !name.endsWith(".spt")
           && !name.endsWith("/")) {
         try {
@@ -1025,7 +1001,7 @@ public class FileManager implements BytePoster {
       names[0] = pathForAllFiles + names[1];
       Logger.info("FileManager substituting " + name0 + " --> " + names[0]);
     }
-    if (isFullLoad && (file != null || urlTypeIndex(names[0]) == URL_LOCAL)) {
+    if (isFullLoad && (file != null || OC.urlTypeIndex(names[0]) == OC.URL_LOCAL)) {
       String path = (file == null ? PT.trim(names[0].substring(5), "/")
           : names[0]);
       int pt = path.length() - names[1].length() - 1;
@@ -1203,7 +1179,7 @@ public class FileManager implements BytePoster {
     for (int iFile = 0; iFile < nFiles; iFile++) {
       String name0 = fileNames.get(iFile);
       String name = name0;
-      if (isLocal == isLocal(name)) {
+      if (isLocal == OC.isLocal(name)) {
         int pt = (noPath ? -1 : name.indexOf("/" + dataPath + "/"));
         if (pt >= 0) {
           name = name.substring(pt + 1);
@@ -1323,6 +1299,8 @@ public class FileManager implements BytePoster {
 
   @Override
   public String postByteArray(String fileName, byte[] bytes) {
+    // in principle, could have sftp or ftp here
+    // but sftp is not implemented
     Object ret = getBufferedInputStreamOrErrorMessageFromName(fileName, null, false,
             false, bytes, false, true);
     if (ret instanceof String)

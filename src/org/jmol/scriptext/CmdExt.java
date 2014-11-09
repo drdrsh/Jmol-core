@@ -479,16 +479,16 @@ public class CmdExt implements JmolCmdExtension {
     }
     Map<String, Object> params = vwr.captureParams;
     String type = (params == null ? "GIF" : (String) params.get("type"));
-    float endTime = 10; // ten seconds by default
+    float endTime = 0; // indefinitely by default
     int mode = 0;
     int slen = e.slen;
-    boolean isTransparent = (tokAt(e.slen - 1) == T.translucent);
-    if (isTransparent)
-      slen--;
     String fileName = "";
     boolean looping = !vwr.am.animationReplayMode.name().equals("ONCE");
     int i = 1;
     int tok = tokAt(i);
+    boolean isTransparent = (tok == T.translucent);
+    if (isTransparent)
+      tok = tokAt(++i);
     switch (tok == T.nada ? (tok = T.end) : tok) {
     case T.string:
       fileName = e.optParameterAsString(i++);
@@ -511,8 +511,14 @@ public class CmdExt implements JmolCmdExtension {
       } else {
         type = "GIF";
       }
-      boolean streaming = (fileName.indexOf("0000.") != fileName.lastIndexOf(".") - 4);      
+      if (isTransparent)
+        type += "T";
+      boolean streaming = (fileName.indexOf("0000.") != fileName.lastIndexOf(".") - 4);    
       boolean isRock = false;
+      if (tokAt(i) == T.loop) {
+        looping = true;
+        tok = tokAt(++i);
+      }
       switch (tokAt(i)) {
       case T.rock:
         isRock = true;
@@ -540,15 +546,13 @@ public class CmdExt implements JmolCmdExtension {
         boolean wf = vwr.g.waitForMoveTo;
         s = "set waitformoveto true;" + PT.rep(s, "Y", axis)
             + ";set waitformoveto " + wf;
-        s = "capture " + PT.esc(fileName) + " -1"
-            + (isTransparent ? " transparent;" : ";") + s + ";capture end;";
+        s = "capture " + (isTransparent ? "transparent " : "") + PT.esc(fileName) + " LOOP;"
+             + s + ";capture end;";
         e.cmdScript(0, null, s);
         return;
       case T.decimal:
       case T.integer:
         endTime = floatParameter(i++);
-        if (endTime < 0)
-          looping = true;
         break;
       }
       if (chk)
@@ -584,13 +588,11 @@ public class CmdExt implements JmolCmdExtension {
     params.put("type", type);
     Integer c = Integer.valueOf(vwr.getBackgroundArgb());
     params.put("backgroundColor", c);
-    if (isTransparent)
-      params.put("transparentColor", c);
     params.put("fileName", fileName);
     params.put("quality", Integer.valueOf(-1));
     params.put(
         "endTime",
-        Long.valueOf(endTime < 0 ? -1 : System.currentTimeMillis()
+        Long.valueOf(endTime <= 0 ? -1 : System.currentTimeMillis()
             + (long) (endTime * 1000)));
     params.put("captureMode", T.nameOf(mode).toLowerCase());
     params.put("captureLooping", looping ? Boolean.TRUE : Boolean.FALSE);
@@ -6019,7 +6021,7 @@ public class CmdExt implements JmolCmdExtension {
         } else if (PT.isOneOf(type, ";ZIP;ZIPALL;SPT;STATE;")) {
           pt++;
           break;
-        } else if (!isCoord){
+        } else if (!isCoord) {
           type = "(image)";
         }
       }
@@ -6105,6 +6107,8 @@ public class CmdExt implements JmolCmdExtension {
           || type.equals("FRAME") || type.equals("VIBRATION")) {
         type = (fileName != null && fileName.indexOf(".") >= 0 ? fileName
             .substring(fileName.lastIndexOf(".") + 1).toUpperCase() : "JPG");
+        if (PT.isOneOf(type, ";PNGJ;PNGT;GIFT;"))
+          fileName = fileName.substring(0, fileName.length() - 1);
       }
       if (type.equals("MNU")) {
         type = "MENU";
@@ -6291,7 +6295,8 @@ public class CmdExt implements JmolCmdExtension {
             }
           } else {
             if (fileName != null
-                && (bytes = data = vwr.createZip(fileName, v.size() == 1 ? "BINARY" : "ZIPDATA", v)) == null)
+                && (bytes = data = vwr.createZip(fileName,
+                    v.size() == 1 ? "BINARY" : "ZIPDATA", v)) == null)
               e.evalError("#CANCELED#", null);
           }
         } else if (data == "SPT") {
@@ -6378,11 +6383,6 @@ public class CmdExt implements JmolCmdExtension {
         params = new Hashtable<String, Object>();
         if (fileName != null)
           params.put("fileName", fileName);
-        if (type.equals("GIFT")) {
-          params.put("transparentColor",
-              Integer.valueOf(vwr.getBackgroundArgb()));
-          type = "GIF";
-        }
         params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
         params.put("type", type);
         if (bytes instanceof String && quality == Integer.MIN_VALUE)

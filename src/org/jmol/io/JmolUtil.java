@@ -34,6 +34,7 @@ import javajs.api.GenericPlatform;
 import javajs.api.GenericZipTools;
 import javajs.api.GenericBinaryDocument;
 import javajs.util.LimitedLineReader;
+import javajs.util.OC;
 import javajs.util.Rdr;
 import javajs.util.Lst;
 import javajs.util.PT;
@@ -52,7 +53,6 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolZipUtilities;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
 public class JmolUtil implements JmolZipUtilities {
@@ -695,7 +695,7 @@ public class JmolUtil implements JmolZipUtilities {
           return "" + ret;
         image = (vwr.isJS ? ret : apiPlatform.createImage(ret));
       } else if (vwr.isJS) {
-      } else if (FileManager.urlTypeIndex(fullPathName) >= 0) {
+      } else if (OC.urlTypeIndex(fullPathName) >= 0) {
         try {
           image = apiPlatform.createImage(new URL((URL) null, fullPathName,
               null));

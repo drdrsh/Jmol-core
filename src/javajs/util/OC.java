@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
 
+
 import javajs.J2SIgnoreImport;
 import javajs.api.BytePoster;
 
@@ -72,8 +73,7 @@ public class OC extends OutputStream {
     	os = null;
     }
     this.os = os;
-    isLocalFile = (fileName != null && !(fileName.startsWith("http://") || fileName
-        .startsWith("https://")));
+    isLocalFile = (fileName != null && !isRemote(fileName));
     if (asWriter && !isBase64 && os != null)
       bw = new BufferedWriter(new OutputStreamWriter(os));
     return this;
@@ -341,6 +341,36 @@ public class OC extends OutputStream {
   private String postByteArray() {
     byte[] bytes = (sb == null ? toByteArray() : sb.toString().getBytes());
     return bytePoster.postByteArray(fileName, bytes);
+  }
+
+  public final static String[] urlPrefixes = { "http:", "https:", "sftp:", "ftp:",
+  "file:" };
+  // note that SFTP is not supported
+  public final static int URL_LOCAL = 4;
+
+  public static boolean isRemote(String fileName) {
+    if (fileName == null)
+      return false;
+    int itype = urlTypeIndex(fileName);
+    return (itype >= 0 && itype != URL_LOCAL);
+  }
+
+  public static boolean isLocal(String fileName) {
+    if (fileName == null)
+      return false;
+    int itype = urlTypeIndex(fileName);
+    return (itype < 0 || itype == URL_LOCAL);
+  }
+
+  public static int urlTypeIndex(String name) {
+    if (name == null)
+      return -2; // local unsigned applet
+    for (int i = 0; i < urlPrefixes.length; ++i) {
+      if (name.startsWith(urlPrefixes[i])) {
+        return i;
+      }
+    }
+    return -1;
   }
 
 }

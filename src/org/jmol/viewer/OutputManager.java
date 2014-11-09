@@ -168,7 +168,7 @@ abstract class OutputManager {
           OC outTemp = getOutputChannel(null, null);
           getWrappedState(fileName, scripts, image, outTemp);
           stateData = outTemp.toByteArray();
-        } else if (rgbbuf == null && !asBytes) {
+        } else if (rgbbuf == null && !asBytes && !params.containsKey("captureMode")) {
           stateData = ((String) getWrappedState(null, scripts, image, null))
               .getBytes();
         }
@@ -176,10 +176,11 @@ abstract class OutputManager {
           params.put("pngAppData", stateData);
           params.put("pngAppPrefix", "Jmol Type");
         }
-        if (type.equals("PNGT"))
-          params.put("transparentColor",
-              Integer.valueOf(vwr.getBackgroundArgb()));
-        type = "PNG";
+      }
+      if (type.equals("PNGT") || type.equals("GIFT")) {
+        params.put("transparentColor",
+            Integer.valueOf(vwr.getBackgroundArgb()));
+        type = type.substring(0, 3);
       }
       if (comment != null)
         params.put("comment", comment.length() == 0 ? Viewer.getJmolVersion()
@@ -191,7 +192,6 @@ abstract class OutputManager {
       if (isOK) {
         if (params.containsKey("captureMsg") && !params.containsKey("captureSilent"))
           vwr.prompt((String) params.get("captureMsg"), "OK", null, true);
-
         if (asBytes)
           bytes = out.toByteArray();
         else if (params.containsKey("captureByteCount"))
@@ -365,7 +365,7 @@ abstract class OutputManager {
     }
     if (fullPath != null)
       fullPath[0] = fileName;
-    String localName = (FileManager.isLocal(fileName) ? fileName : null);
+    String localName = (OC.isLocal(fileName) ? fileName : null);
     try {
       return openOutputChannel(privateKey, localName, false, false);
     } catch (IOException e) {
@@ -647,7 +647,7 @@ abstract class OutputManager {
       return null;
     params.put("fileName", fileName);
     // JSmol/HTML5 WILL produce a localName now
-    if (FileManager.isLocal(fileName))
+    if (OC.isLocal(fileName))
       localName = fileName;
     int saveWidth = vwr.dimScreen.width;
     int saveHeight = vwr.dimScreen.height;
@@ -908,7 +908,7 @@ abstract class OutputManager {
     Lst<String> newFileNames = new Lst<String>();
     for (int iFile = 0; iFile < nFiles; iFile++) {
       String name = fileNames.get(iFile);
-      boolean isLocal = !vwr.isJS && FileManager.isLocal(name);
+      boolean isLocal = !vwr.isJS && OC.isLocal(name);
       String newName = name;
       // also check that somehow we don't have a local file with the same name as
       // a fixed remote file name (because someone extracted the files and then used them)

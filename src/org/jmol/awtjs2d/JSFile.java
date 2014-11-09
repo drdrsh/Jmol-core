@@ -4,9 +4,9 @@ import java.net.URL;
 
 import javajs.api.GenericFileInterface;
 import javajs.util.AjaxURLConnection;
+import javajs.util.OC;
 import javajs.util.PT;
 
-import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -29,7 +29,7 @@ public class JSFile implements GenericFileInterface {
 	JSFile(String name) {
   	this.name = name.replace('\\','/');
   	fullName = name;
-  	if (!fullName.startsWith("/") && FileManager.urlTypeIndex(name) < 0)
+  	if (!fullName.startsWith("/") && OC.urlTypeIndex(name) < 0)
   		fullName = Viewer.jsDocumentBase + "/" + fullName;
   	fullName = PT.rep(fullName, "/./", "/");
   	name = name.substring(name.lastIndexOf("/") + 1);

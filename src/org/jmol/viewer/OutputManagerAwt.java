@@ -85,7 +85,7 @@ final public class OutputManagerAwt extends OutputManager {
   OC openOutputChannel(double privateKey, String fileName,
                                       boolean asWriter, boolean asAppend)
       throws IOException {
-    boolean isLocal = FileManager.isLocal(fileName);
+    boolean isLocal = OC.isLocal(fileName);
     if (asAppend && isLocal && fileName.indexOf("JmolLog_") < 0)
       asAppend = false;
     return (fileName != null && !vwr.haveAccess(ACCESS.ALL)
