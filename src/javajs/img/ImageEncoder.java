@@ -108,8 +108,9 @@ public abstract class ImageEncoder implements GenericImageEncoder {
 
   protected int[] pixels;
 
-  protected void putString(String str) {
-    out.append(str);
+  protected void putString(String s) {
+    byte[] b = s.getBytes();
+    out.write(b, 0, b.length);
   }
 
   protected void putByte(int b) {

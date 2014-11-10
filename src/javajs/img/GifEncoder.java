@@ -78,7 +78,7 @@ import java.io.IOException;
  * GifEncoder extensively adapted for Jmol by Bob Hanson
  * 
  * Color quantization roughly follows the GIMP method
- * "dither Floyd-Steinberg standard" but with some twists.
+ * "dither Floyd-Steinberg (normal)" but with some twists.
  * (For example, we exclude the background color.)
  * 
  * Note that although GIMP code annotation refers to "median-cut", 

@@ -138,6 +138,17 @@ public class OC extends OutputStream {
 
   public void reset() {
     sb = null;
+    initOS();
+  }
+
+
+  private void initOS() {
+    if (sb != null) {
+      String s = sb.toString();
+      reset();
+      append(s);
+      return;
+    }
     try {
       /**
        * @j2sNative
@@ -165,25 +176,16 @@ public class OC extends OutputStream {
     byteCount = 0;
   }
 
-
   /**
    * @j2sOverride
    */
   @Override
   public void write(byte[] buf, int i, int len) {
     if (os == null)
-      os = new ByteArrayOutputStream();
-    /**
-     * @j2sNative
-     * 
-     *            this.os.write(buf, i, len);
-     * 
-     */
-    {
-      try {
-        os.write(buf, i, len);
-      } catch (IOException e) {
-      }
+      initOS();
+    try {
+      os.write(buf, i, len);
+    } catch (IOException e) {
     }
     byteCount += len;
   }
@@ -193,7 +195,7 @@ public class OC extends OutputStream {
    */
   public void writeByteAsInt(int b) {
     if (os == null)
-      os = new ByteArrayOutputStream();
+      initOS();
     /**
      * @j2sNative
      * 
@@ -221,7 +223,7 @@ public class OC extends OutputStream {
   public void write(int b) {
     // required by standard ZipOutputStream -- do not use, as it will break JavaScript methods
     if (os == null)
-      os = new ByteArrayOutputStream();
+      initOS();
     try {
       os.write(b);
     } catch (IOException e) {
