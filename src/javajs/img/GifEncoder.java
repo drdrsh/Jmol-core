@@ -482,21 +482,23 @@ public class GifEncoder extends ImageEncoder {
 
   /**
    * 
-   * Assign all colors to their closest approximation and
-   * change pixels[] array to index values.
+   * Assign all colors to their closest approximation and change pixels[] array
+   * to index values.
    * 
    * Floyd-Steinberg dithering, with error limiting to 75%. Finds the closest
    * known color and then spreads out the error over four leading pixels.
    * 
-   * @param colorMap 
-   * @param boxes 
+   * @param colorMap
+   * @param boxes
    * 
    */
-  private void quantizePixels(Map<Integer, ColorCell> colorMap, Lst<ColorCell> boxes) {
+  private void quantizePixels(Map<Integer, ColorCell> colorMap,
+                              Lst<ColorCell> boxes) {
     P3[] pixelErr = new P3[pixels.length];
     P3 err = new P3();
     P3 lab;
     int rgb;
+    Map<Integer, ColorCell> nearestCell = new Hashtable<Integer, ColorCell>();
     for (int i = 0, p = 0; i < height; ++i) {
       boolean notLastRow = (i != height - 1);
       for (int j = 0; j < width; ++j, p++) {
@@ -506,32 +508,37 @@ public class GifEncoder extends ImageEncoder {
         } else {
           lab = toLAB(pixels[p]);
           err = pixelErr[p]; // it does not matter that we repurpose errors[p] here.
+          // important not to round the clamp here -- full floating precision
           err.x = clamp(err.x, -75, 75);
           err.y = clamp(err.y, -75, 75);
           err.z = clamp(err.z, -75, 75);
           lab.add(err);
           rgb = CU.colorPtToFFRGB(toRGB(lab));
         }
-        ColorCell app = colorMap.get(Integer.valueOf(rgb));
-        if (app == null) {
-          if (lab == null)
-            lab = toLAB(pixels[p]);
-          // find nearest cell
-          float maxerr = Float.MAX_VALUE;
-          // skip 0 0 0
-          for (int ib = boxes.size(); --ib >= 1;) {
-            ColorCell b = boxes.get(ib);
-            err.sub2(lab, b.lab);
-            float d = err.lengthSquared();
-            if (d < maxerr) {
-              maxerr = d;
-              app = b;
+        Integer key = Integer.valueOf(rgb);
+        ColorCell cell = colorMap.get(key);
+        if (cell == null) {
+          // critical to generate lab from rgb here for nearestCell mapping.
+          lab = toLAB(rgb);
+          cell = nearestCell.get(key);
+          if (cell == null) {
+            // find nearest cell
+            float maxerr = Float.MAX_VALUE;
+            // skip 0 0 0
+            for (int ib = boxes.size(); --ib >= 1;) {
+              ColorCell b = boxes.get(ib);
+              err.sub2(lab, b.lab);
+              float d = err.lengthSquared();
+              if (d < maxerr) {
+                maxerr = d;
+                cell = b;
+              }
             }
+            nearestCell.put(key, cell);
           }
-          err.sub2(lab, app.lab);
-
           if (floydSteinberg) {
             // dither
+            err.sub2(lab, cell.lab);
             boolean notLastCol = (j < width - 1);
             if (notLastCol)
               addError(err, 7, pixelErr, p + 1);
@@ -544,7 +551,7 @@ public class GifEncoder extends ImageEncoder {
             }
           }
         }
-        pixels[p] = app.index;
+        pixels[p] = cell.index;
       }
     }
   }
@@ -683,7 +690,8 @@ public class GifEncoder extends ImageEncoder {
   }
 
   private float clamp(float c, float min, float max) {
-    return Math.round(c < min ? min : c > max ? max : c);
+    c = (c < min ? min : c > max ? max : c);
+    return (min == 0 ? Math.round(c) : c);
   }
 
   //static {
