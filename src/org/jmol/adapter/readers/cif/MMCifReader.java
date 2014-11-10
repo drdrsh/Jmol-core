@@ -62,6 +62,10 @@ public class MMCifReader extends CifReader {
 
   private P3 chainSum;
   private int[] chainAtomCount;
+  
+  private boolean isLigandBondBug; 
+  // Jmol-14.3.3_2014.07.27 broke mmCIF bond reading for ligands
+  // Jmol-1
 
   @Override
   protected void initSubclass() {
@@ -77,6 +81,10 @@ public class MMCifReader extends CifReader {
     if (checkFilterKey("BIOMOLECULE")) // PDB format
       filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
     isBiomolecule = checkFilterKey("ASSEMBLY");
+    
+    isLigandBondBug = (stateScriptVersionInt >= 140204 && stateScriptVersionInt <= 140208
+        || stateScriptVersionInt >= 140304 && stateScriptVersionInt <= 140308);
+
   }
 
   @Override
@@ -880,6 +888,12 @@ public class MMCifReader extends CifReader {
   };
   private boolean processLigandBondLoopBlock() throws Exception {
     parseLoopParametersFor(FAMILY_COMPBOND, chemCompBondFields);
+    // alas -- saved states must not read ligand bonding
+    // the problem was that these files were not recognized as mmCIF 
+    // files by the resolver when this MMCifReader was created.
+    
+    if (isLigandBondBug)
+      return false;
     for (int i = propertyCount; --i >= 0;)
       if (fieldOf[i] == NONE) {
         Logger.warn("?que? missing property: " + chemCompBondFields[i]);

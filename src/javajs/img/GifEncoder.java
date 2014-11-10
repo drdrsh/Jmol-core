@@ -495,6 +495,9 @@ public class GifEncoder extends ImageEncoder {
   private void quantizePixels(Map<Integer, ColorCell> colorMap,
                               Lst<ColorCell> boxes) {
     P3[] pixelErr = new P3[pixels.length];
+    // We should replace, not overwrite, pixels 
+    // as this may be the raw canvas.buf32.
+    int[] newPixels = new int[pixels.length];
     P3 err = new P3();
     P3 lab;
     int rgb;
@@ -507,7 +510,8 @@ public class GifEncoder extends ImageEncoder {
           rgb = pixels[p];
         } else {
           lab = toLAB(pixels[p]);
-          err = pixelErr[p]; // it does not matter that we repurpose errors[p] here.
+          err = pixelErr[p]; 
+          // it does not matter that we repurpose errors[p] here.
           // important not to round the clamp here -- full floating precision
           err.x = clamp(err.x, -75, 75);
           err.y = clamp(err.y, -75, 75);
@@ -551,12 +555,14 @@ public class GifEncoder extends ImageEncoder {
             }
           }
         }
-        pixels[p] = cell.index;
+        newPixels[p] = cell.index;
       }
     }
+    pixels = newPixels;
   }
 
   private void addError(P3 err, int f, P3[] pixelErr, int p) {
+    // GIMP will allow changing the background color.
     if (pixels[p] == backgroundColor)
       return;
     P3 errp = pixelErr[p];

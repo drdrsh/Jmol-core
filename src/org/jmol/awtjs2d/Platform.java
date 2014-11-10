@@ -217,7 +217,7 @@ public class Platform implements GenericPlatform {
 	@Override
   public int[] grabPixels(Object canvas, int width, int height, 
                           int[] pixels, int startRow, int nRows) {
-	  // from PNG and JPG image creators, also g3d.ImageRenderer.plotImage via drawImageToBuffer
+	  // from PNG and GIF and JPG image creators, also g3d.ImageRenderer.plotImage via drawImageToBuffer
 	  
 	  /**
 	   * 

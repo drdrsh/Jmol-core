@@ -130,7 +130,7 @@ abstract class OutputManager {
     String fileName = (String) params.get("fileName");
     String[] scripts = (String[]) params.get("scripts");
     Object objImage = params.get("image");
-    int[] rgbbuf = (int[]) params.get("rgbbuf");
+    int[] rgbbuf = (int[]) params.get("rgbbuf"); // only from OBJ exporter creating PNG output
     OC out = (OC) params.get("outputChannel");
     boolean asBytes = (out == null && fileName == null);
     boolean closeChannel = (out == null && fileName != null);
