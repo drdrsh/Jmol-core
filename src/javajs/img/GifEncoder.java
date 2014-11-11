@@ -628,14 +628,14 @@ public class GifEncoder extends ImageEncoder {
     // http://rsb.info.nih.gov/ij/plugins/download/Color_Space_Converter.java
     if (xyz == null)
       xyz = new P3();
-    xyz.x = srgb(rgb.x);
-    xyz.y = srgb(rgb.y);
-    xyz.z = srgb(rgb.z);
+    xyz.x = sxyz(rgb.x);
+    xyz.y = sxyz(rgb.y);
+    xyz.z = sxyz(rgb.z);
     rgb2xyz.rotate(xyz);
     return xyz;
   }
 
-  private float srgb(float x) {
+  private float sxyz(float x) {
     x /= 255;
     return (float) (x <= 0.04045 ? x / 12.92 : Math.pow(((x + 0.055) / 1.055),
         2.4)) * 100;
@@ -649,13 +649,13 @@ public class GifEncoder extends ImageEncoder {
     rgb.setT(xyz);
     rgb.scale(0.01f);
     xyz2rgb.rotate(rgb);
-    rgb.x = clamp(sxyz(rgb.x), 0, 255);
-    rgb.y = clamp(sxyz(rgb.y), 0, 255);
-    rgb.z = clamp(sxyz(rgb.z), 0, 255);
+    rgb.x = clamp(srgb(rgb.x), 0, 255);
+    rgb.y = clamp(srgb(rgb.y), 0, 255);
+    rgb.z = clamp(srgb(rgb.z), 0, 255);
     return rgb;
   }
 
-  private float sxyz(float x) {
+  private float srgb(float x) {
     return (float) (x > 0.0031308f ? (1.055 * Math.pow(x, 1.0 / 2.4)) - 0.055
         : x * 12.92) * 255;
   }
