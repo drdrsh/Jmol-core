@@ -480,11 +480,12 @@ public class GifEncoder extends ImageEncoder {
 
   /**
    * 
-   * Assign all colors to their closest approximation and change pixels[] array
-   * to index values.
+   * Assign all colors to their closest approximation and return an array of
+   * color indexes.
    * 
-   * Floyd-Steinberg dithering, with error limiting to 75%. Finds the closest
-   * known color and then spreads out the error over four leading pixels.
+   * Uses Floyd-Steinberg dithering, finding the closest known color and then
+   * spreading out the error over four leading pixels. Limits error to +/- 75
+   * percent in normalized L*a*b space.
    * 
    * @param cells
    *        quantized color cells
