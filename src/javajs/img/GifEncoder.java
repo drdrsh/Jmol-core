@@ -383,7 +383,8 @@ public class GifEncoder extends ImageEncoder {
   }
 
   /**
-   * Quantize all colors and create the final palette
+   * Quantize all colors and create the final palette;
+   * replace pixels[] with an array of color indices.
    * 
    */
   private void createPalette() {
