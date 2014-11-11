@@ -65,7 +65,7 @@ public class MMCifReader extends CifReader {
   
   private boolean isLigandBondBug; 
   // Jmol-14.3.3_2014.07.27 broke mmCIF bond reading for ligands
-  // Jmol-1
+  // Jmol-14.3.9_2014.11.11 fixes this. 
 
   @Override
   protected void initSubclass() {
@@ -82,6 +82,10 @@ public class MMCifReader extends CifReader {
       filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
     isBiomolecule = checkFilterKey("ASSEMBLY");
     
+    // When this reader was split off from CifReader, a bug was introduced
+    // into the Resolver that made it so that ligand files were read by 
+    // CifReader and not MMCifReader. This caused CHEM_COMP_BOND records to be 
+    // skipped and so in the case of pdbAddHydrogen no hydrogens added.
     isLigandBondBug = (stateScriptVersionInt >= 140204 && stateScriptVersionInt <= 140208
         || stateScriptVersionInt >= 140304 && stateScriptVersionInt <= 140308);
 

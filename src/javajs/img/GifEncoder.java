@@ -78,11 +78,11 @@ import java.io.IOException;
  * GifEncoder extensively adapted for Jmol by Bob Hanson
  * 
  * Color quantization roughly follows the GIMP method
- * "dither Floyd-Steinberg (normal)" but with some twists.
- * (For example, we exclude the background color.)
+ * "dither Floyd-Steinberg (normal)" but with some twists. (For example, we
+ * exclude the background color.)
  * 
- * Note that although GIMP code annotation refers to "median-cut", 
- * it is really using MEAN-cut. That is what I use here as well.
+ * Note that although GIMP code annotation refers to "median-cut", it is really
+ * using MEAN-cut. That is what I use here as well.
  * 
  * -- commented code allows visualization of the color space using Jmol. Very
  * enlightening!
@@ -207,47 +207,43 @@ public class GifEncoder extends ImageEncoder {
 
   //////////////  256-color quantization  //////////////
 
-  private class ColorItem {
+  /**
+   * a color point in normalized L*a*b space with a flag indicating whether it
+   * is the background color
+   */
+  private class ColorItem extends P3 {
+    protected boolean isBackground;
 
-    int rgb;
-    P3 lab;
-
-    ColorItem(int rgb) {
-      this.rgb = rgb;
-      lab = toLAB(rgb);
-    }
-
-    @Override
-    public String toString() {
-      return Integer.toHexString(rgb) + " " + lab;
+    ColorItem(int rgb, boolean isBackground) {
+      this.isBackground = isBackground;
+      setT(toLABnorm(rgb));
     }
   }
 
-  private class ColorCell {
+  /**
+   * A list of normalized L*a*b points with an index and a center and volume
+   * 
+   */
+  private class ColorCell extends Lst<P3> {
+
     protected int index;
-    // counts here are counts of color occurances for this grouped set.
-    // ints here allow for 2147483647/0x100 = count of 8388607 for THIS average color, which should be fine.
-    protected P3 lab;
-    // min and max based on 0 0 0 for this rgb
-//    private float maxr = Integer.MAX_VALUE, minr = -Integer.MAX_VALUE,
-//        maxg = Integer.MAX_VALUE, ming = -Integer.MAX_VALUE,
-//        maxb = Integer.MAX_VALUE, minb = -Integer.MAX_VALUE;
-//    private float rmaxr = -Integer.MAX_VALUE, rminr = Integer.MAX_VALUE,
-//        rmaxg = -Integer.MAX_VALUE, rming = Integer.MAX_VALUE,
-//        rmaxb = -Integer.MAX_VALUE, rminb = Integer.MAX_VALUE;
-    int rgb;
-    Lst<ColorItem> lst;
+    protected P3 center;
+
     private float volume;
 
     ColorCell(int index) {
       this.index = index;
-      lst = new Lst<ColorItem>();
     }
 
-    public float getVolume() {
+    /**
+     * @param doVisualize
+     *        debugging only
+     * @return volume in normalized L*a*b space
+     */
+    public float getVolume(boolean doVisualize) {
       if (volume != 0)
         return volume;
-      if (lst.size() < 2)
+      if (size() < 2)
         return -1;
       //if (true)
       //return lst.size();
@@ -258,9 +254,9 @@ public class GifEncoder extends ImageEncoder {
       float miny = Integer.MAX_VALUE;
       float maxz = -Integer.MAX_VALUE;
       float minz = Integer.MAX_VALUE;
-      int n = lst.size();
+      int n = size();
       for (int i = n; --i >= 0;) {
-        P3 xyz = lst.get(i).lab;
+        P3 xyz = get(i);
         if (xyz.x < minx)
           minx = xyz.x;
         if (xyz.y < miny)
@@ -277,70 +273,80 @@ public class GifEncoder extends ImageEncoder {
       float dx = (maxx - minx);
       float dy = (maxy - miny);
       float dz = (maxz - minz);
+      // Jmol visualization only
+      //      if (doVisualize) {
+      //        P3 ptRGB = toRGB(center);
+      //        drawPt(index, -size(), ptRGB);
+      //        //for (int i = n; --i >= 0;)
+      //        //drawPt(index, i, toRGB(get(i)));
+      //        P3 pt0 = toRGB(P3.new3(Math.max(minx, 0), Math.max(miny, 0),
+      //            Math.max(minz, 0)));
+      //        P3 pt1 = toRGB(P3.new3(Math.min(maxx, 100), Math.min(maxy, 100),
+      //            Math.min(maxz, 100)));
+      //        rgbToXyz(pt0, pt0);
+      //        xyzToLab(pt0, pt0);
+      //        rgbToXyz(pt1, pt1);
+      //        xyzToLab(pt1, pt1);
+      //        System.out.println("boundbox corners " + pt0 + " " + pt1);
+      //        System.out.println("draw d" + index + " boundbox color " + ptRGB
+      //            + " mesh nofill");
+      //      }
       return volume = dx * dx + dy * dy + dz * dz;
     }
 
-    void addItem(ColorItem c) {
-      lst.addLast(c);
-    }
+    //    // Jmol visualization only
+    //      private void drawPt(int index, int i, P3 rgb) {
+    //        boolean isMain = (i < 0);
+    //      P3 lab = rgbToXyz(rgb, null);
+    //      xyzToLab(lab, lab);
+    //      System.out.println("draw d" + index + (isMain ? "_" : "_" + i) + " width "
+    //          + (isMain ? 1.0 : 0.2) + " " + lab
+    //          + " color " + rgb + (isMain ? " '" + -i + "'" : ""));
+    //      }
 
     /**
-     * Set the average L*a*b value for this box
+     * Set the average normalized L*a*b value for this cell and return its RGB point
      * 
      * @return RGB point
      * 
      */
     protected P3 setColor() {
-      int count = lst.size();
-      lab = new P3();
-      for (int i = count; --i >= 0;) {
-        lab.add(lst.get(i).lab);
-      }
-      lab.scale(1f / count);
-      P3 ptrgb = toRGB(lab);
-      rgb = CU.colorPtToFFRGB(ptrgb);
-
-      //for (int i = 0; i < count; i++) {
-      // drawPt(index, i+1, lst.get(i).rgb, false);
-      // }
-
-      //      drawPt(index, 0, rgb, true);
-      //      System.out.println("boundbox corners { " + Math.max(minr, 0) + " "
-      //          + Math.max(ming, 0) + " " + Math.max(minb, 0) + "}{ "
-      //          + Math.min(maxr, 100) + " " + Math.min(maxg, 100) + " "
-      //          + Math.min(maxb, 100) + "}");
-      //      System.out.println("draw d" + index + " boundbox color "
-      //          + CU.colorPtFromInt(rgb, null) + " mesh nofill");
-      //      System.out.println("//" + index + " " + volume);
-
-      //System.out.println(index + " " + Integer.toHexString(rgb) + " " + ptrgb + " " + xyz + " " + (maxr - minr)+ " " + (maxg - ming) + " " + (maxb-minb));
-      return ptrgb;
+      int count = size();
+      center = new P3();
+      for (int i = count; --i >= 0;)
+        center.add(get(i));
+      center.scale(1f / count);
+      // Jmol visualization only
+      //volume = 0;
+      //getVolume(true); 
+      return toRGB(center);
     }
 
     /**
-     * use median_cut algorithm to split the box, creating a doubly linked list.
+     * use median_cut algorithm to split the cell, creating a doubly linked
+     * list.
      * 
      * Paul Heckbert, MIT thesis COLOR IMAGE QUANTIZATION FOR FRAME BUFFER
      * DISPLAY https://www.cs.cmu.edu/~ph/ciq_thesis
      * 
-     * except, as in GIMP, we use mean, not median here.
+     * except, as in GIMP, we use center (not median) here.
      * 
-     * @param boxes
+     * @param cells
      * @return true if split
      */
-    protected boolean splitBox(Lst<ColorCell> boxes) {
-      int n = lst.size();
+    protected boolean splitCell(Lst<ColorCell> cells) {
+      int n = size();
       if (n < 2)
         return false;
-      int newIndex = boxes.size();
-      ColorCell newBox = new ColorCell(newIndex);
-      boxes.addLast(newBox);
+      int newIndex = cells.size();
+      ColorCell newCell = new ColorCell(newIndex);
+      cells.addLast(newCell);
       float[][] ranges = new float[3][3];
       for (int ic = 0; ic < 3; ic++) {
         float low = Float.MAX_VALUE;
         float high = -Float.MAX_VALUE;
-        for (int i = lst.size(); --i >= 0;) {
-          P3 lab = lst.get(i).lab;
+        for (int i = n; --i >= 0;) {
+          P3 lab = get(i);
           float v = (ic == 0 ? lab.x : ic == 1 ? lab.y : lab.z);
           if (low > v)
             low = v;
@@ -352,132 +358,123 @@ public class GifEncoder extends ImageEncoder {
         ranges[2][ic] = high - low;
       }
       float[] r = ranges[2];
-      int mode = (r[0] >= r[1] ? (r[0] >= r[2] ? 0 : 2)
-          : r[1] >= r[2] ? 1 : 2);
-      // NOTE: GIMP does not use median! uses mean instead;
-
-      //      int median = n / 2;
-      //      float val = a[median];
-      //      int dir = (val == a[0] ? 1 : -1);
-      //      while (median >= 0 && median < n && a[median] == val) {
-      //        median += dir;
-      //      }
-      //      if (dir == -1)
-      //        median++;
-      //      val = a[median];
-
+      int mode = (r[0] >= r[1] ? (r[0] >= r[2] ? 0 : 2) : r[1] >= r[2] ? 1 : 2);
       float val = ranges[0][mode] + ranges[2][mode] / 2;
-      
-//      newBox.minr = minr;
-//      newBox.ming = ming;
-//      newBox.minb = minb;
-//      newBox.maxr = maxr;
-//      newBox.maxg = maxg;
-//      newBox.maxb = maxb;
-      volume = 0;
-      
+      volume = 0; // recalculate volume if needed
       switch (mode) {
       case 0:
-        for (int i = lst.size(); --i >= 0;)
-          if (lst.get(i).lab.x >= val)
-            newBox.addItem(lst.remove(i));
-//        maxr = val - 0.001f;
-//        newBox.minr = val;
+        for (int i = n; --i >= 0;)
+          if (get(i).x >= val)
+            newCell.addLast(remove(i));
         break;
       case 1:
-        for (int i = lst.size(); --i >= 0;)
-          if (lst.get(i).lab.y >= val)
-            newBox.addItem(lst.remove(i));
-//        maxg = val - 0.001f;
-//        newBox.ming = val;
+        for (int i = n; --i >= 0;)
+          if (get(i).y >= val)
+            newCell.addLast(remove(i));
         break;
       case 2:
-        for (int i = lst.size(); --i >= 0;)
-          if (lst.get(i).lab.z >= val)
-            newBox.addItem(lst.remove(i));
-//        maxb = val - 0.001f;
-//        newBox.minb = val;
+        for (int i = size(); --i >= 0;)
+          if (get(i).z >= val)
+            newCell.addLast(remove(i));
         break;
       }
       return true;
     }
-
-    @Override
-    public String toString() {
-      return index + " " + Integer.toHexString(rgb);
-    }
   }
 
   /**
-   * Generate a palette and quantize all colors into it. 
+   * Quantize all colors and create the final palette
    * 
    */
   private void createPalette() {
-    Lst<ColorItem> colors = new Lst<ColorItem>();
+
+    // catalog all pixel colors
+
+    Lst<ColorItem> tempColors = new Lst<ColorItem>();
     Map<Integer, ColorItem> ciHash = new Hashtable<Integer, ColorItem>();
     for (int i = 0, n = pixels.length; i < n; i++) {
       int rgb = pixels[i];
       Integer key = Integer.valueOf(rgb);
       ColorItem item = ciHash.get(key);
       if (item == null) {
-        item = new ColorItem(rgb);
+        item = new ColorItem(rgb, rgb == backgroundColor);
         ciHash.put(key, item);
-        colors.addLast(item);
+        tempColors.addLast(item);
       }
     }
+    int nColors = tempColors.size();
+    System.out.println("GIF total image colors: " + nColors);
     ciHash = null;
-    int nTotal = colors.size();
-    System.out.println("GIF total image colors: " + nTotal);
-    bitsPerPixel = (nTotal <= 2 ? 1 : nTotal <= 4 ? 2 : nTotal <= 16 ? 4 : 8);
+
+    // create a set of <= 256 color cells
+
+    Lst<ColorCell> cells = quantizeColors(tempColors);
+    nColors = cells.size();
+    System.out.println("GIF final color count: " + nColors);
+
+    // generate the palette and map each cell's rgb color to itself
+
+    Map<Integer, ColorCell> colorMap = new Hashtable<Integer, ColorCell>();
+    bitsPerPixel = (nColors <= 2 ? 1 : nColors <= 4 ? 2 : nColors <= 16 ? 4 : 8);
     palette = new P3[1 << bitsPerPixel];
-    quantizeColors(colors);
+    for (int i = 0; i < nColors; i++) {
+      ColorCell c = cells.get(i);
+      colorMap.put(
+          Integer.valueOf(CU.colorPtToFFRGB(palette[i] = c.setColor())), c);
+    }
+
+    // index all pixels to a pallete color
+
+    pixels = indexPixels(cells, colorMap);
   }
 
   /**
-   *  Quantize colors by generating a set of boxes containing all colors.
-   *  Start with just two boxes -- fixed background color and all others.
-   *  Keep splitting boxes while there are fewer than 256 and some with
-   *  multiple colors in them. 
-   *  
-   *  It is possible that we will end up with fewer than 256 colors.
-   *  
-   * @param colors
+   * Quantize colors by generating a set of cells in normalized L*a*b space
+   * containing all colors. Start with just two cells -- fixed background color
+   * and all others. Keep splitting cells while there are fewer than 256 and
+   * some with multiple colors in them.
+   * 
+   * It is possible that we will end up with fewer than 256 colors.
+   * 
+   * @param tempColors
+   * @return final list of colors
    */
-  private void quantizeColors(Lst<ColorItem> colors) {
-    Map<Integer, ColorCell> colorMap = new Hashtable<Integer, ColorCell>();
-    Lst<ColorCell> boxes = new Lst<ColorCell>();
+  private Lst<ColorCell> quantizeColors(Lst<ColorItem> tempColors) {
+    int n = tempColors.size();
+    Lst<ColorCell> cells = new Lst<ColorCell>();
     ColorCell cc = new ColorCell(0);
-    cc.addItem(new ColorItem(backgroundColor));
-    boxes.addLast(cc);
-    boxes.addLast(cc = new ColorCell(1));
-    for (int i = colors.size(); --i >= 0;) {
-      ColorItem c = colors.get(i);
-      if (c.rgb != backgroundColor)
-        cc.addItem(c);
-    }
-    colors.clear();
-    int n;
-    while ((n = boxes.size()) < 256) {
-      float maxVol = 0;
-      ColorCell maxCell = null;
-      for (int i = n; --i >= 1;) {
-        ColorCell b = boxes.get(i);
-        float v = b.getVolume();
-        if (v > maxVol) {
-          maxVol = v;
-          maxCell = b;
-        }
-      }
-      if (maxCell == null || !maxCell.splitBox(boxes))
-        break;
-    }
+    cc.addLast(new ColorItem(backgroundColor, true));
+    cells.addLast(cc);
+    cc = new ColorCell(1);
+    if (n > 256)
+      cells.addLast(cc);
     for (int i = 0; i < n; i++) {
-      ColorCell b = boxes.get(i);
-      palette[i] = b.setColor();
-      colorMap.put(Integer.valueOf(b.rgb), b);
+      ColorItem c = tempColors.get(i);
+      if (c.isBackground)
+        continue;
+      cc.addLast(c);
+      if (n <= 256) {
+        cells.addLast(cc);
+        cc = new ColorCell(cells.size());
+      }
     }
-    System.out.println("GIF final color count: " + boxes.size());
-    quantizePixels(colorMap, boxes);
+    tempColors.clear();
+    if (n > 256)
+      while ((n = cells.size()) < 256) {
+        float maxVol = 0;
+        ColorCell maxCell = null;
+        for (int i = n; --i >= 1;) {
+          ColorCell c = cells.get(i);
+          float v = c.getVolume(false);
+          if (v > maxVol) {
+            maxVol = v;
+            maxCell = c;
+          }
+        }
+        if (maxCell == null || !maxCell.splitCell(cells))
+          break;
+      }
+    return cells;
   }
 
   /**
@@ -488,13 +485,27 @@ public class GifEncoder extends ImageEncoder {
    * Floyd-Steinberg dithering, with error limiting to 75%. Finds the closest
    * known color and then spreads out the error over four leading pixels.
    * 
+   * @param cells
+   *        quantized color cells
    * @param colorMap
-   * @param boxes
+   *        map of quantized rgb to its cell
+   * @return array of color indexes, one for each pixel
    * 
    */
-  private void quantizePixels(Map<Integer, ColorCell> colorMap,
-                              Lst<ColorCell> boxes) {
-    P3[] pixelErr = new P3[pixels.length];
+  private int[] indexPixels(Lst<ColorCell> cells,
+                            Map<Integer, ColorCell> colorMap) {
+    // We need a strip only width+2 wide to process all the errors.
+    // Errors are added to the next pixel and the next row's pixels 
+    // only through p + width + 1:
+    //         p  +1
+    //   +w-1 +w  +w+1
+    // so including p as well, we need a total of width + 2 errors.
+    //
+    // as p moves through the pixels, we just use mod to cycle through
+    // this strip.
+    //
+    int w2 = width + 2;
+    P3[] errors = new P3[w2];
     // We should replace, not overwrite, pixels 
     // as this may be the raw canvas.buf32.
     int[] newPixels = new int[pixels.length];
@@ -505,13 +516,13 @@ public class GifEncoder extends ImageEncoder {
     for (int i = 0, p = 0; i < height; ++i) {
       boolean notLastRow = (i != height - 1);
       for (int j = 0; j < width; ++j, p++) {
-        if (pixelErr[p] == null) {
+        P3 pe = errors[p % w2];
+        if (pe == null || pe.x == Float.MAX_VALUE) {
           lab = null;
           rgb = pixels[p];
         } else {
-          lab = toLAB(pixels[p]);
-          err = pixelErr[p]; 
-          // it does not matter that we repurpose errors[p] here.
+          lab = toLABnorm(pixels[p]);
+          err = pe;
           // important not to round the clamp here -- full floating precision
           err.x = clamp(err.x, -75, 75);
           err.y = clamp(err.y, -75, 75);
@@ -522,68 +533,65 @@ public class GifEncoder extends ImageEncoder {
         Integer key = Integer.valueOf(rgb);
         ColorCell cell = colorMap.get(key);
         if (cell == null) {
-          // critical to generate lab from rgb here for nearestCell mapping.
-          lab = toLAB(rgb);
+          // critical to generate normalized L*a*b from RGB here for nearestCell mapping.
+          // otherwise future RGB keys may match the wrong cell
+          lab = toLABnorm(rgb);
           cell = nearestCell.get(key);
           if (cell == null) {
             // find nearest cell
             float maxerr = Float.MAX_VALUE;
             // skip 0 0 0
-            for (int ib = boxes.size(); --ib >= 1;) {
-              ColorCell b = boxes.get(ib);
-              err.sub2(lab, b.lab);
+            for (int ib = cells.size(); --ib >= 1;) {
+              ColorCell c = cells.get(ib);
+              err.sub2(lab, c.center);
               float d = err.lengthSquared();
               if (d < maxerr) {
                 maxerr = d;
-                cell = b;
+                cell = c;
               }
             }
             nearestCell.put(key, cell);
           }
           if (floydSteinberg) {
             // dither
-            err.sub2(lab, cell.lab);
+            err.sub2(lab, cell.center);
             boolean notLastCol = (j < width - 1);
             if (notLastCol)
-              addError(err, 7, pixelErr, p + 1);
+              addError(err, 7, errors, p + 1, w2);
             if (notLastRow) {
               if (j > 0)
-                addError(err, 3, pixelErr, p + width - 1);
-              addError(err, 5, pixelErr, p + width);
+                addError(err, 3, errors, p + width - 1, w2);
+              addError(err, 5, errors, p + width, w2);
               if (notLastCol)
-                addError(err, 1, pixelErr, p + width + 1);
+                addError(err, 1, errors, p + width + 1, w2);
             }
           }
+          err.x = Float.MAX_VALUE; // used; flag for resetting to 0
         }
         newPixels[p] = cell.index;
       }
     }
-    pixels = newPixels;
+    return newPixels;
   }
 
-  private void addError(P3 err, int f, P3[] pixelErr, int p) {
+  private void addError(P3 err, int f, P3[] errors, int p, int w2) {
     // GIMP will allow changing the background color.
     if (pixels[p] == backgroundColor)
       return;
-    P3 errp = pixelErr[p];
+    p %= w2;
+    P3 errp = errors[p];
     if (errp == null)
-      errp = pixelErr[p] = new P3();
+      errp = errors[p] = new P3();
+    else if (errp.x == Float.MAX_VALUE) // reuse
+      errp.set(0, 0, 0);
     errp.scaleAdd2(f / 16f, err, errp);
   }
 
-  //  protected void drawPt(int index, int i, int rgb, boolean isMain) {
-  //    P3 pt = toLAB(rgb);
-  //    System.out.println("draw id 'd" + index + "_" + i + "' width "
-  //        + (isMain ? 1.0 : 0.2) + " " + pt + " color "
-  //        + CU.colorPtFromInt(rgb, null) + " '" + index + "'");
-  //  }
-
   ///////////////////////// CIE L*a*b / XYZ / sRGB conversion methods /////////
 
-
   // these could be static, but that just makes for more JavaScript code
-  
-  protected P3 toLAB(int rgb) {
+
+  protected P3 toLABnorm(int rgb) {
     P3 lab = CU.colorPtFromInt(rgb, null);
     rgbToXyz(lab, lab);
     xyzToLab(lab, lab);
@@ -613,7 +621,7 @@ public class GifEncoder extends ImageEncoder {
         1.8758f, 0.0415f, 0.0557f, -0.2040f, 1.0570f });
   }
 
-  private P3 rgbToXyz(P3 rgb, P3 xyz) {
+  public P3 rgbToXyz(P3 rgb, P3 xyz) {
     // http://en.wikipedia.org/wiki/CIE_1931_color_space
     // http://rsb.info.nih.gov/ij/plugins/download/Color_Space_Converter.java
     if (xyz == null)
@@ -631,7 +639,7 @@ public class GifEncoder extends ImageEncoder {
         2.4)) * 100;
   }
 
-  private P3 xyzToRgb(P3 xyz, P3 rgb) {
+  public P3 xyzToRgb(P3 xyz, P3 rgb) {
     // http://en.wikipedia.org/wiki/CIE_1931_color_space
     // http://rsb.info.nih.gov/ij/plugins/download/Color_Space_Converter.java
     if (rgb == null)
@@ -650,7 +658,7 @@ public class GifEncoder extends ImageEncoder {
         : x * 12.92) * 255;
   }
 
-  private P3 xyzToLab(P3 xyz, P3 lab) {
+  public P3 xyzToLab(P3 xyz, P3 lab) {
     // http://en.wikipedia.org/wiki/Lab_color_space
     // http://rsb.info.nih.gov/ij/plugins/download/Color_Space_Converter.java
     // Lab([0..100], [-86.185..98.254], [-107.863..94.482])
@@ -672,7 +680,7 @@ public class GifEncoder extends ImageEncoder {
     );
   }
 
-  private P3 labToXyz(P3 lab, P3 xyz) {
+  public P3 labToXyz(P3 lab, P3 xyz) {
     // http://en.wikipedia.org/wiki/Lab_color_space
     // http://rsb.info.nih.gov/ij/plugins/download/Color_Space_Converter.java
     // XYZn = D65 = {95.0429, 100.0, 108.8900};
@@ -699,29 +707,6 @@ public class GifEncoder extends ImageEncoder {
     c = (c < min ? min : c > max ? max : c);
     return (min == 0 ? Math.round(c) : c);
   }
-
-  //static {
-  //  P3 x;
-  //  x = rgbToXyz(P3.new3(0,0,0), null);
-  //  System.out.println("xyz="+x);
-  //  x = xyzToLab(x, x);
-  //  System.out.println("lab="+x);
-  //  x = labToXyz(x, x);
-  //  System.out.println(x);
-  //  x = xyzToRgb(x, x);
-  //  System.out.println(x);
-  //  
-  //  x = rgbToXyz(P3.new3(254,1,253), null);
-  //  System.out.println("xyz="+x);
-  //  x = xyzToLab(x, x);
-  //  System.out.println("lab="+x);
-  //  x = labToXyz(x, x);
-  //  System.out.println(x);
-  //  x = xyzToRgb(x, x);
-  //  System.out.println(x);
-  //  
-  //  System.out.println(toRGB(toLAB(CU.colorPtToFFRGB(P3.new3(200,100,50)))));
-  //}
 
   ///////////////////////// GifEncoder writing methods ////////////////////////
 
