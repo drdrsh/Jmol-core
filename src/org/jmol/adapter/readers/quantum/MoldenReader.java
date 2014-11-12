@@ -514,7 +514,7 @@ max-force
     if (desiredModelNumber == 0 || desiredModelNumber == nGeom)
       desiredModelNumber = nGeom; 
     else if (asc.atomSetCount > 0)
-      finalizeMOData(null);
+      finalizeMOData(moData);
     for (int i = 0; i < nGeom; i++) {
       readLines(2);
       if (doGetModel(++modelNumber, null)) {
