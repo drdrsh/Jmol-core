@@ -81,7 +81,7 @@ class MsmsReader extends PmeshReader {
   }
 
   private void skipHeader() throws Exception {
-    while (readLine() != null && line.indexOf("#") >= 0) {      
+    while (rd() != null && line.indexOf("#") >= 0) {      
       // skip header
     }
     tokens = getTokens();

@@ -79,7 +79,7 @@ class NffReader extends PolygonFileReader {
   protected boolean readVerticesAndPolygons() {
     int color = 0xFF0000;
     try {
-      while(readLine() != null) {
+      while(rd() != null) {
         if (line.length() == 0)
           continue;
         String[] tokens = getTokens();
@@ -112,7 +112,7 @@ class NffReader extends PolygonFileReader {
   private final P3 pt = new P3();
     
   private int getVertex() throws Exception {
-    Integer i = vertexMap.get(readLine());
+    Integer i = vertexMap.get(rd());
     if (i == null) {
       String[] tokens = getTokens();
       pt.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]), parseFloatStr(tokens[2]));

@@ -81,14 +81,14 @@ class UhbdReader extends VolumeFileReader {
 
   @Override
   protected void readParameters() throws Exception {
-    readLine();
+    rd();
     //                                                        POTENTIAL (kT/e)
     jvxlFileHeaderBuffer = SB.newS(line);
     jvxlFileHeaderBuffer.append("UHBD format ").append(line).append("\n");
     jvxlFileHeaderBuffer.append("see http://sourceforge.net/p/apbs/code/ci/9527462a39126fb6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c\n");
-    readLine(); // ignored
+    rd(); // ignored
     // 1.00000e+00 0.00000e+00     -1      0    161      1    161
-    readLine();
+    rd();
     //    161    161    161 1.56250e+00-8.79940e+01-6.20705e+01-7.07875e+01
     voxelCounts[0] = parseIntStr(line.substring(0, 7));
     voxelCounts[1] = parseIntStr(line.substring(7,14));
@@ -101,9 +101,9 @@ class UhbdReader extends VolumeFileReader {
     volumetricVectors[1].set(0, dx, 0);
     volumetricVectors[2].set(dx, 0, 0);
     planeCount = voxelCounts[0]*voxelCounts[1]; 
-    readLine(); // ignored
+    rd(); // ignored
     // 0.00000e+00 0.00000e+00 0.00000e+00 0.00000e+00
-    readLine(); // ignored
+    rd(); // ignored
     // 0.00000e+00 0.00000e+00      0      0    
   }
 
@@ -112,12 +112,12 @@ class UhbdReader extends VolumeFileReader {
   @Override
   protected float nextVoxel() throws Exception {
     if (voxelCount % planeCount == 0) {
-      readLine();
+      rd();
       //      1    161    161
       pt = 0;
     }
     if (pt%78 == 0) {
-      readLine();
+      rd();
       // -4.19027e-06 -4.40880e-06 -4.63681e-06 -4.87457e-06 -5.12234e-06 -5.38038e-06
       pt = 0;
     }

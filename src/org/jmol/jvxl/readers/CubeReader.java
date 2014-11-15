@@ -43,9 +43,9 @@ class CubeReader extends VolumeFileReader {
   @Override
   protected void readParameters() throws Exception {
     jvxlFileHeaderBuffer = new SB();
-    jvxlFileHeaderBuffer.append(readLine()).appendC('\n');
-    jvxlFileHeaderBuffer.append(readLine()).appendC('\n');
-    String atomLine = readLine();
+    jvxlFileHeaderBuffer.append(rd()).appendC('\n');
+    jvxlFileHeaderBuffer.append(rd()).appendC('\n');
+    String atomLine = rd();
     String[] tokens = PT.getTokensAt(atomLine, 0);
     ac = parseIntStr(tokens[0]);
     negativeAtomCount = (ac < 0); // MO list
@@ -60,12 +60,12 @@ class CubeReader extends VolumeFileReader {
     for (int i = 0; i < 3; ++i)
       readVoxelVector(i);
     for (int i = 0; i < ac; ++i)
-      jvxlFileHeaderBuffer.append(readLine() + "\n");
+      jvxlFileHeaderBuffer.append(rd() + "\n");
 
     if (!negativeAtomCount) {
       nSurfaces = 1;
     } else {
-      readLine();
+      rd();
       Logger.info("Reading extra CUBE information line: " + line);
       nSurfaces = parseIntStr(line);
     }

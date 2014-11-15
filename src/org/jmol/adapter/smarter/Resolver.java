@@ -54,7 +54,7 @@ public class Resolver {
     "pymol.", ";PyMOL;",
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;ZMatrix;", 
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
-             "VaspPoscar;Wien2k;Xcrysden;",
+             "VaspPoscar;VaspChgcar;Wien2k;Xcrysden;",
     "xml.",  ";XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
@@ -364,8 +364,10 @@ public class Resolver {
         return "Crystal";
       if (checkCastep(lines))
         return "Castep";
-      if (checkVaspposcar(lines))
+      if (checkVasp(lines, true))
         return "VaspPoscar";
+      if (checkVasp(lines, false))
+        return "VaspChgcar";
     } else {
       if (nLines == 1 && lines[0].length() > 0
           && PT.isDigit(lines[0].charAt(0)))
@@ -456,17 +458,13 @@ public class Resolver {
     return false;
   }
 
-  private static boolean checkVaspposcar(String[] lines) {
-    String select = lines[8].trim().toLowerCase();
-    if (select.contains("direct") || select.contains("cartesian")
-        || select.contains("selective"))
-      return true;
-    String normal = lines[7].trim().toLowerCase();
-    if (normal.contains("direct") || normal.contains("cartesian"))
-      return true;
-    return false;
+  private static boolean checkVasp(String[] lines, boolean isPoscar) {
+    String line = lines[isPoscar ? 7 : 6].toLowerCase();
+    if (isPoscar && line.contains("selective"))
+      line = lines[7].toLowerCase();
+    return (line.contains("direct") || line.contains("cartesian"));
   }
-  
+
   private static boolean checkCrystal(String[] lines) {
     String s = lines[1].trim();
     if (s.equals("SLAB") ||s.equals("MOLECULE")

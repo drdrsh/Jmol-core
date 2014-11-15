@@ -46,6 +46,7 @@ public class SimpleUnitCell {
   protected float[] notionalUnitcell; //6 parameters + optional 16 matrix items
   public M4 matrixCartesianToFractional;
   public M4 matrixFractionalToCartesian;
+  public double volume;
 
   protected final static float toRadians = (float) Math.PI * 2 / 360;
 
@@ -58,7 +59,6 @@ public class SimpleUnitCell {
   protected double cosAlpha, sinAlpha;
   protected double cosBeta, sinBeta;
   protected double cosGamma, sinGamma;
-  protected double volume;
   protected double cA_, cB_;
   protected double a_;
   protected double b_, c_;

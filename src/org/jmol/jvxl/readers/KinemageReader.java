@@ -84,7 +84,7 @@ class KinemageReader extends PmeshReader {
   @Override
   protected boolean readVertices() throws Exception {
     // also reads polygons
-    readLine();
+    rd();
     int n0;
     while (line != null) {
       if (line.length() != 0 && line.charAt(0) == '@') {
@@ -107,7 +107,7 @@ class KinemageReader extends PmeshReader {
           }
         }
       }
-      readLine();
+      rd();
     }
     return true;
   }
@@ -120,7 +120,7 @@ class KinemageReader extends PmeshReader {
 
   private void readDots() throws Exception {
     int[] color = new int[1];
-    while (readLine() != null && line.indexOf('@') < 0) {
+    while (rd() != null && line.indexOf('@') < 0) {
       int i = getPoint(line, 2, color, true);
       if (i < 0)
         continue;
@@ -135,7 +135,7 @@ class KinemageReader extends PmeshReader {
    */
   private void readVectors() throws Exception {
     int[] color = new int[1];
-    while (readLine() != null && line.indexOf('@') < 0) {
+    while (rd() != null && line.indexOf('@') < 0) {
       int ia = getPoint(line, 3, color, true);
       int ib = getPoint(line.substring(line.lastIndexOf('{')), 2, color, false);
       if (ia < 0 || ib < 0)

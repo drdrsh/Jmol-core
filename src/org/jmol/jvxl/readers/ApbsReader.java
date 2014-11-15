@@ -52,10 +52,10 @@ class ApbsReader extends VolumeFileReader {
   protected void readParameters() throws Exception {
     jvxlFileHeaderBuffer = SB.newS(skipComments(false));
     while (line != null && line.length() == 0)
-      readLine();
+      rd();
     jvxlFileHeaderBuffer.append("APBS OpenDx DATA ").append(line).append("\n");
     jvxlFileHeaderBuffer.append("see http://apbs.sourceforge.net\n");
-    String atomLine = readLine();
+    String atomLine = rd();
     String[] tokens = PT.getTokens(atomLine);
     if (tokens.length >= 4) {
       volumetricOrigin.set(parseFloatStr(tokens[1]), parseFloatStr(tokens[2]),
@@ -66,7 +66,7 @@ class ApbsReader extends VolumeFileReader {
     readVoxelVector(0);
     readVoxelVector(1);
     readVoxelVector(2);
-    readLine();
+    rd();
     tokens = getTokens();
     /* see http://apbs.sourceforge.net/doc/user-guide/index.html#opendx-format
      object 2 class gridconnections counts nx ny nz
@@ -75,6 +75,6 @@ class ApbsReader extends VolumeFileReader {
      */
     for (int i = 0; i < 3; i++)
       voxelCounts[i] = parseIntStr(tokens[i + 5]);
-    readLine();
+    rd();
   }
 }

@@ -25,12 +25,11 @@ package org.jmol.jvxl.readers;
 
 import java.io.BufferedReader;
 
-
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
 
-class CastepDensityReader extends VolumeFileReader {
+class CastepDensityReader extends PeriodicVolumeFileReader {
 
   private int nFilePoints;
   
@@ -43,6 +42,13 @@ class CastepDensityReader extends VolumeFileReader {
     isAngstroms = true;
   }
 
+  private int nSkip;
+  
+  @Override
+  protected void gotoData(int n, int nPoints) throws Exception {
+    nSkip = n;
+  }
+  
   /*
    * 
   BEGIN header
@@ -62,16 +68,16 @@ class CastepDensityReader extends VolumeFileReader {
   @Override
   protected void readParameters() throws Exception {
     jvxlFileHeaderBuffer = new SB();
-    while (readLine() != null && line.indexOf(".") < 0) {
+    while (rd() != null && line.indexOf(".") < 0) {
       // skip front stuff
     }
     for (int i = 0; i < 3; ++i) {
       V3 voxelVector = volumetricVectors[i];
       voxelVector.set(parseFloatStr(line), parseFloat(), parseFloat());
-      readLine();
+      rd();
     }
-    nSurfaces = parseIntStr(readLine());
-    readLine();
+    nSurfaces = parseIntStr(rd());
+    rd();
     voxelCounts[0] = (nPointsX = parseIntStr(line)) + 1;
     voxelCounts[1] = (nPointsY = parseInt()) + 1;
     voxelCounts[2] = (nPointsZ = parseInt()) + 1;
@@ -82,30 +88,13 @@ class CastepDensityReader extends VolumeFileReader {
       if (isAnisotropic)
         setVectorAnisotropy(volumetricVectors[i]);
     }
-    while (readLine().trim().length() > 0) {
+    while (rd().trim().length() > 0) {
       //
     }
   }
 
-  private int nSkip;
-  
   @Override
-  protected void gotoData(int n, int nPoints) throws Exception {
-    nSkip = n;
-  }
-  
-  @Override
-  protected void readSurfaceData(boolean isMapData) throws Exception {
-    initializeSurfaceData();
-    voxelData = new float[nPointsX][nPointsY][nPointsZ];
-    readLine();
-    String[] tokens = getTokens();
-    if (nSkip > 0 && tokens.length < 3 + nSurfaces) {
-      for (int j = 0; j < nSkip; j++)
-        for (int i = 0; i < nFilePoints; i++)
-          readLine();
-      nSkip = 0;
-    }
+  protected void getPeriodicVoxels() throws Exception {
     for (int i = 0; i < nFilePoints; i++) {
       int x = parseIntStr(line) - 1;
       int y = parseInt() - 1;
@@ -113,43 +102,9 @@ class CastepDensityReader extends VolumeFileReader {
       if (nSkip > 0)
         skipPoints(nSkip);
       voxelData[x][y][z] = recordData(parseFloat());
-      readLine();
+      rd();
     }
 
-    // add in periodic face data
-
-    int n;
-    n = nPointsX - 1;
-    for (int i = 0; i < nPointsY; ++i)
-      for (int j = 0; j < nPointsZ; ++j)
-        voxelData[n][i][j] = voxelData[0][i][j];
-    n = nPointsY - 1;
-    for (int i = 0; i < nPointsX; ++i)
-      for (int j = 0; j < nPointsZ; ++j)
-        voxelData[i][n][j] = voxelData[i][0][j];
-    n = nPointsZ - 1;
-    for (int i = 0; i < nPointsX; ++i)
-      for (int j = 0; j < nPointsY; ++j)
-        voxelData[i][j][n] = voxelData[i][j][0];
-
-    // for map data, just pick out near points and get rid of voxelData
-
-    if (isMapData && volumeData.hasPlane()) {
-      volumeData.setVoxelMap();
-      for (int x = 0; x < nPointsX; ++x) {
-        for (int y = 0; y < nPointsY; ++y) {
-          for (int z = 0; z < nPointsZ; ++z) {
-            float f = volumeData.getToPlaneParameter();
-            if (volumeData.isNearPlane(x, y, z, f))
-              volumeData.setVoxelMapValue(x, y, z, voxelData[x][y][z]);
-          }
-        }
-      }
-      voxelData = null;
-    }
-    volumeData.setVoxelDataAsArray(voxelData);
-    if (dataMin > params.cutoff)
-      params.cutoff = 2 * dataMin;
   }
 
   private void skipPoints(int n) {
@@ -165,6 +120,18 @@ class CastepDensityReader extends VolumeFileReader {
     next[0] = pt;
   }
   
+
+  @Override
+  protected void readSkip() throws Exception {
+    rd();
+    String[] tokens = getTokens();
+    if (nSkip > 0 && tokens.length < 3 + nSurfaces) {
+      for (int j = 0; j < nSkip; j++)
+        for (int i = 0; i < nFilePoints; i++)
+          rd();
+      nSkip = 0;
+    }
+  }
 
 }
 

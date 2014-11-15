@@ -201,7 +201,7 @@ public class JvxlXmlReader extends VolumeFileReader {
   protected void jvxlSkipData(@SuppressWarnings("unused") int nPoints,
                               @SuppressWarnings("unused") boolean doSkipColorData)
       throws Exception {
-    readLine();
+    rd();
     xr.skipTag("jvxlSurface");
   }
 
@@ -480,7 +480,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     while (bsVoxelPtr < nPoints) {
       nThisValue = parseInt();
       if (nThisValue == Integer.MIN_VALUE) {
-        readLine();
+        rd();
         // note -- does not allow for empty lines;
         // must be a continuous block of numbers.
         if (line == null || (nThisValue = parseIntStr(line)) == Integer.MIN_VALUE) {

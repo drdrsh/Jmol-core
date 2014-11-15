@@ -100,7 +100,7 @@ class ObjReader extends PmeshReader {
     // pymol writes a crude file with much re-writing of vertices
 
     BS bsOK = new BS();
-    while (readLine() != null) {
+    while (rd() != null) {
       if (line.length() < 2 || line.charAt(1) != ' ') {
         if (params.readAllData && line.startsWith("usemtl"))
           // usemtl k00FF00

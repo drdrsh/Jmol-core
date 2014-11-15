@@ -155,9 +155,9 @@ MRC header: mapc,mapr,maps: 2,1,3
 
 
   private String getLine() throws Exception {
-    readLine();
+    rd();
     while (line != null && (line.length() == 0 || line.indexOf("REMARKS") >= 0 || line.indexOf("XPLOR:") >= 0))
-      readLine();
+      rd();
     return line;
   }
   
@@ -167,14 +167,14 @@ MRC header: mapc,mapr,maps: 2,1,3
   @Override
   protected float nextVoxel() throws Exception {
     if (linePt >= line.length()) {
-      readLine();
+      rd();
       //System.out.println(nRead + " " + line);
       linePt = 0;
       if ((nRead % nBlock) == 0) {
         //if (Logger.debugging)
           //Logger.info("XplorReader: block " + line + " min/max " 
            //+ dataMin + "/" + dataMax);
-        readLine();
+        rd();
       }
     }
     if (line == null)

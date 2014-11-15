@@ -151,13 +151,13 @@ abstract class SurfaceFileReader extends SurfaceReader {
 
   protected void skipTo(String info, String what) throws Exception {
     if (info != null)
-      while (readLine().indexOf(info) < 0) {
+      while (rd().indexOf(info) < 0) {
       }
     if (what != null)
       next[0] = line.indexOf(what) + what.length() + 2;
   }
 
-  protected String readLine() throws Exception {
+  protected String rd() throws Exception {
     line = br.readLine();
     if (line != null) {
       nBytes += line.length();

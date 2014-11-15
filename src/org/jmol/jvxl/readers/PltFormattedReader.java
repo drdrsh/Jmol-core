@@ -62,10 +62,10 @@ class PltFormattedReader extends VolumeFileReader {
   
   @Override
   protected void readParameters() throws Exception {
-    int n1 = parseIntStr(readLine());
+    int n1 = parseIntStr(rd());
     int n2 = parseInt();
     //yes, it's "Z Y X", but that doesn't matter. Our loop will be (X (Y (Z)))
-    nPointsX = parseIntStr(readLine());
+    nPointsX = parseIntStr(rd());
     nPointsY = parseInt();
     nPointsZ = parseInt();
     jvxlFileHeaderBuffer.append("Plt formatted data (" + n1 + "," + n2 + ") "
@@ -77,7 +77,7 @@ class PltFormattedReader extends VolumeFileReader {
 
     -0.41532E+01 0.78468E+01-0.40155E+01 0.79845E+01-0.38912E+01 0.71088E+01
 */
-    float xmin = parseFloatStr(readLine().substring(0, 12));
+    float xmin = parseFloatStr(rd().substring(0, 12));
     float xmax = parseFloatRange(line, 12, 24);
     float ymin = parseFloatRange(line, 24, 36);
     float ymax = parseFloatRange(line, 36, 48);

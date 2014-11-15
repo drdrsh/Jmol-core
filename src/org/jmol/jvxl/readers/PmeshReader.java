@@ -309,7 +309,7 @@ class PmeshReader extends PolygonFileReader {
   private String nextToken() throws Exception {
     while (iToken >= tokens.length) { 
       iToken = 0;
-      readLine();
+      rd();
       tokens = getTokens();
     }
     return tokens[iToken++];

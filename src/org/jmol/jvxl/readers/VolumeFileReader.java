@@ -174,14 +174,14 @@ abstract class VolumeFileReader extends SurfaceFileReader {
 
   protected String skipComments(boolean allowBlankLines) throws Exception {
     SB sb = new SB();
-    while (readLine() != null
+    while (rd() != null
         && (allowBlankLines && line.length() == 0 || line.indexOf("#") == 0))
       sb.append(line).appendC('\n');
     return sb.toString();
   }
 
   protected void readVoxelVector(int voxelVectorIndex) throws Exception {
-    readLine();
+    rd();
     V3 voxelVector = volumetricVectors[voxelVectorIndex];
     if ((voxelCounts[voxelVectorIndex] = parseIntStr(line)) == Integer.MIN_VALUE) //unreadable
       next[0] = line.indexOf(" ");
@@ -469,7 +469,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
   protected float nextVoxel() throws Exception {
     float voxelValue = parseFloat();
     if (Float.isNaN(voxelValue)) {
-      while (readLine() != null && Float.isNaN(voxelValue = parseFloatStr(line))) {
+      while (rd() != null && Float.isNaN(voxelValue = parseFloatStr(line))) {
       }
       if (line == null) {
         if (!endOfData)
@@ -500,7 +500,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
   protected void skipDataVFR(int nPoints) throws Exception {
     int iV = 0;
     while (iV < nPoints)
-      iV += countData(readLine());
+      iV += countData(rd());
   }
 
   private int countData(String str) {
@@ -610,6 +610,16 @@ abstract class VolumeFileReader extends SurfaceFileReader {
     volumetricVectors[0].scale(scale);
     volumetricVectors[1].scale(scale);
     volumetricVectors[2].scale(scale);
+  }
+
+  protected void swapXZ() {
+    V3 v = volumetricVectors[0];
+    volumetricVectors[0] = volumetricVectors[2];
+    volumetricVectors[2] = v;
+    int n = voxelCounts[0];
+    voxelCounts[0] = voxelCounts[2];
+    voxelCounts[2] = n;
+    params.insideOut = !params.insideOut;
   }
 
 }

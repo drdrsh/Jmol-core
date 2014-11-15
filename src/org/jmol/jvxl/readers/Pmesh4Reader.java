@@ -101,7 +101,7 @@ class Pmesh4Reader extends PolygonFileReader {
 
   @Override
   void getSurfaceData() throws Exception {
-    readLine();
+    rd();
     if (readVerticesAndPolygons())
       Logger.info(type  + " file contains "
           + nVertices + " 4D vertices and " + nPolygons + " polygons for "
@@ -168,7 +168,7 @@ class Pmesh4Reader extends PolygonFileReader {
   private String nextToken() throws Exception {
     while (iToken >= tokens.length) { 
       iToken = 0;
-      readLine();
+      rd();
       tokens = getTokens();
     }
     return tokens[iToken++];

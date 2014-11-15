@@ -89,7 +89,7 @@ class JaguarReader extends VolumeFileReader {
     jvxlFileHeaderBuffer.append("Jaguar data\n");
     jvxlFileHeaderBuffer.append("\n");
     String atomLine;
-    while ((atomLine = readLine()) != null
+    while ((atomLine = rd()) != null
         && atomLine.indexOf("origin=") < 0) {
     }
     String[] tokens = PT.getTokensAt(atomLine, 0);
@@ -107,7 +107,7 @@ class JaguarReader extends VolumeFileReader {
     readExtents(1);
     readExtents(2);
     
-    tokens = PT.getTokens(readLine());
+    tokens = PT.getTokens(rd());
     voxelCounts[0] = parseIntStr(tokens[1]);
     voxelCounts[1] = parseIntStr(tokens[2]);
     voxelCounts[2] = parseIntStr(tokens[3]);
@@ -129,7 +129,7 @@ class JaguarReader extends VolumeFileReader {
     // I think, because if you don't use -1 here, then the grid
     // distances are the same, but the surface is in the wrong place!
     
-    readLine();
+    rd();
 
   }
 
@@ -143,7 +143,7 @@ class JaguarReader extends VolumeFileReader {
    * @exception Exception -- generally a reader issue
    */
   private void readExtents(int voxelVectorIndex) throws Exception {
-    String[] tokens = PT.getTokens(readLine());
+    String[] tokens = PT.getTokens(rd());
     extents[voxelVectorIndex] = parseFloatStr(tokens[voxelVectorIndex + 1]);
   }
 }

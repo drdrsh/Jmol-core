@@ -54,7 +54,7 @@ class XsfReader extends VolumeFileReader {
     isAngstroms = true;
     String beginKey = "BEGIN_DATAGRID_3D";
     nSurfaces = 1;
-    while (readLine() != null && line.indexOf(beginKey) < 0) {
+    while (rd() != null && line.indexOf(beginKey) < 0) {
       Logger.info(line);
       if (line.indexOf("Fermi Energy:") >= 0) {
         isBXSF = true;
@@ -69,14 +69,14 @@ class XsfReader extends VolumeFileReader {
     if (needCutoff)
       params.cutoff = 0.05f;
     if (isBXSF)
-      nSurfaces = parseIntStr(readLine());
-    voxelCounts[0] = parseIntStr(readLine());
+      nSurfaces = parseIntStr(rd());
+    voxelCounts[0] = parseIntStr(rd());
     voxelCounts[1] = parseInt();
     voxelCounts[2] = parseInt();
-    volumetricOrigin.set(parseFloatStr(readLine()), parseFloat(), parseFloat());
+    volumetricOrigin.set(parseFloatStr(rd()), parseFloat(), parseFloat());
     // SPANNING vectors here.
     for (int i = 0; i < 3; ++i) {
-      volumetricVectors[i].set(parseFloatStr(readLine()), parseFloat(),
+      volumetricVectors[i].set(parseFloatStr(rd()), parseFloat(),
           parseFloat());
       volumetricVectors[i].scale(1.0f / (voxelCounts[i] - 1));
     }
@@ -92,13 +92,7 @@ class XsfReader extends VolumeFileReader {
     } else {
       // data are slowest-z
       // reversed order -- so we just reverse the vectors
-      V3 v = volumetricVectors[0];
-      volumetricVectors[0] = volumetricVectors[2];
-      volumetricVectors[2] = v;
-      int n = voxelCounts[0];
-      voxelCounts[0] = voxelCounts[2];
-      voxelCounts[2] = n;
-      params.insideOut = !params.insideOut;
+      swapXZ();
     }
   }
   
@@ -109,7 +103,7 @@ class XsfReader extends VolumeFileReader {
     if (n > 0)
       Logger.info("skipping " + n + " data sets, " + nPoints + " points each");
     if (isBXSF)
-      Logger.info(readLine()); //"BAND: <n>" line
+      Logger.info(rd()); //"BAND: <n>" line
     for (int i = 0; i < n; i++)
       skipData(nPoints);
   }
@@ -118,7 +112,7 @@ class XsfReader extends VolumeFileReader {
   protected void skipData(int nPoints) throws Exception {
     skipDataVFR(nPoints);
     if (isBXSF)
-      Logger.info(readLine()); //"BAND: <n>" line
+      Logger.info(rd()); //"BAND: <n>" line
   }
 
 }
