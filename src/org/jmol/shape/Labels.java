@@ -408,6 +408,8 @@ public class Labels extends AtomShape {
   private void setPymolOffset(int i, float[] value) {
     Text text = getLabel(i);
     if (text == null) {
+      if (strings == null || strings.length <= i || strings[i] == null)
+        return;
       byte fid = (bsFontSet != null && bsFontSet.get(i) ? fids[i] : -1);
       if (fid < 0)
         setFont(i, fid = defaultFontId);
