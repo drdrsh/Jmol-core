@@ -794,8 +794,9 @@ public class Quat {
     // http://www.swarthmore.edu/NatSci/mzucker1/e27/diebel2006attitude.pdf
     double rA, rB, rG;
     if (q1 == 0 && q2 == 0) {
+      float theta = getTheta();
       // pure Z rotation - ambiguous
-      return new float[] { getTheta(), 0, 0 };
+      return new float[] { q3 < 0 ? -theta : theta , 0, 0 };
     }
     rA = Math.atan2(2 * (q2 * q3 + q0 * q1), 2 * (-q1 * q3 + q0 * q2 ));
     rB = Math.acos(q3 * q3 - q2 * q2 - q1 * q1 + q0 * q0);
@@ -808,8 +809,9 @@ public class Quat {
     // http://www.swarthmore.edu/NatSci/mzucker1/e27/diebel2006attitude.pdf
     double rA, rB, rG;
     if (q1 == 0 && q2 == 0) {
+      float theta = getTheta();
       // pure Z rotation - ambiguous
-      return new float[] { getTheta(), 0, 0 };
+      return new float[] { q3 < 0 ? -theta : theta , 0, 0 };
     }
     rA = Math.atan2(2 * (q1 * q3 - q0 * q2), 2 * (q0 * q1 + q2 * q3 ));
     rB = Math.acos(q3 * q3 - q2 * q2 - q1 * q1 + q0 * q0);
