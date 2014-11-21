@@ -366,9 +366,10 @@ public class JmolUtil implements JmolZipUtilities {
     int nAtoms = PT.parseInt(line3);
     if (nAtoms == Integer.MIN_VALUE)
       return (line3.indexOf("+") == 0 ? "Jvxl+" : null);
+    if (line3.indexOf(".") > 0)
+      return (line3.length() >= 60 || PT.getTokens(line3).length != 3 ? null : "VaspChgcar"); // M40 files are > 60 char
     if (nAtoms >= 0)
-      return (line3.length() >= 60 ? null 
-          : line3.indexOf(".") > 0 ? "VaspChgcar" : "Cube"); //Can't be a Jvxl file; M40 files are > 60 char
+      return "Cube"; //Can't be a Jvxl file; 
     nAtoms = -nAtoms;
     for (int i = 4 + nAtoms; --i >= 0;)
       if ((line = br.readLineWithNewline()) == null)
