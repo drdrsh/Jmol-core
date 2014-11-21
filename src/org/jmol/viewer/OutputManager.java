@@ -107,7 +107,7 @@ abstract class OutputManager {
   /**
    * 
    * Creates an image of params.type form -- PNG, PNGJ, PNGT, JPG, JPG64, PDF,
-   * PPM.
+   * PPM, GIF, GIFT.
    * 
    * From createImage and getImageAsBytes
    * 
@@ -177,11 +177,11 @@ abstract class OutputManager {
           params.put("pngAppPrefix", "Jmol Type");
         }
       }
-      if (type.equals("PNGT") || type.equals("GIFT")) {
+      if (type.equals("PNGT") || type.equals("GIFT"))
         params.put("transparentColor",
             Integer.valueOf(vwr.getBackgroundArgb()));
-        type = type.substring(0, 3);
-      }
+      if (type.length() == 4) // PNGT PNGJ GIFT
+        type = type.substring(0, 3);        
       if (comment != null)
         params.put("comment", comment.length() == 0 ? Viewer.getJmolVersion()
             : comment);
