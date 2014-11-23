@@ -104,12 +104,12 @@ abstract class AtomDataReader extends VolumeDataReader {
       bsMyIgnored = params.bsIgnore;
     if (params.volumeData != null) {
       setVolumeDataV(params.volumeData);
-      setBBox(volumeData.volumetricOrigin);
+      setBBox(volumeData.volumetricOrigin, 0);
       ptV.setT(volumeData.volumetricOrigin);
       for (int i = 0; i < 3; i++)
         ptV.scaleAdd2(volumeData.voxelCounts[i] - 1,
             volumeData.volumetricVectors[i], ptV);
-      setBBox(ptV);
+      setBBox(ptV, 0);
     }
     havePlane = (params.thePlane != null);
     if (havePlane)
@@ -146,18 +146,12 @@ abstract class AtomDataReader extends VolumeDataReader {
   /**
    * 
    * @param bsSelected
-   *        TODO
    * @param doAddHydrogens
-   *        TODO
    * @param getRadii
-   *        TODO
    * @param getMolecules
-   *        TODO
    * @param getAllModels
-   *        TODO
    * @param addNearbyAtoms
    * @param getAtomMinMax
-   *        TODO
    * @param marginAtoms
    */
   protected void getAtoms(BS bsSelected, boolean doAddHydrogens,
@@ -265,11 +259,11 @@ abstract class AtomDataReader extends VolumeDataReader {
     Logger.info(myAtomCount + " atoms will be used in the surface calculation");
 
     if (myAtomCount == 0) {
-      setBBox(P3.new3(10, 10, 10));
-      setBBox(P3.new3(-10, -10, -10));
+      setBBox(P3.new3(10, 10, 10), 0);
+      setBBox(P3.new3(-10, -10, -10), 0);
     }
     for (int i = 0; i < myAtomCount; i++)
-      setBBox(atomXyz[i]);
+      setBBox(atomXyz[i], getRadii ? atomRadius[i] + 0.5f : 0); 
     if (!Float.isNaN(params.scale)) {
       V3 v = V3.newVsub(xyzMax, xyzMin);
       v.scale(0.5f);

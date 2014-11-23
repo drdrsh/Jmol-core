@@ -1094,12 +1094,12 @@ public abstract class SurfaceReader implements VertexDataServer {
     meshData.setBox(xyzMin, xyzMax);
   }
 
-  protected void setBBox(T3 pt) {
+  protected void setBBox(T3 pt, float margin) {
     if (xyzMin == null) {
       xyzMin = P3.new3(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
       xyzMax = P3.new3(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
     }
-    BoxInfo.addPoint(pt, xyzMin, xyzMax, 0);
+    BoxInfo.addPoint(pt, xyzMin, xyzMax, margin);
   }
 
   /**
