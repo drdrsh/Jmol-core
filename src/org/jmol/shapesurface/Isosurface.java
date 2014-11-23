@@ -487,6 +487,12 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return;
     }
 
+    if ("processLattice" == propertyName) {
+      if (thisMesh != null)
+        thisMesh.processLattice(vwr);
+      return;
+    }
+
     // Isosurface / SurfaceGenerator both interested
 
     if ("slab" == propertyName) {
@@ -1409,9 +1415,16 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     thisMesh.calculatedVolume = null;
     // from JVXL file:
     Parameters params = sg.getParams();
-    if (!thisMesh.isMerged)
+    if (!thisMesh.isMerged) {
       thisMesh.initialize(sg.isFullyLit() ? T.fullylit
         : T.frontlit, null, sg.getPlane());
+      if (jvxlData.processLattice != null) {
+        thisMesh.lattice = jvxlData.processLattice;
+        thisMesh.processLattice(vwr);
+      }
+        return;
+
+    }
     if (!params.allowVolumeRender)
       thisMesh.jvxlData.allowVolumeRender = false;
     thisMesh.setColorsFromJvxlData(sg.getParams().colorRgb);

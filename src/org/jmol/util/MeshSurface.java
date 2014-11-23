@@ -519,7 +519,6 @@ public class MeshSurface {
       vertexSets[vc] = set;
     }
     int i = addVCVal(vertex, value, true);
-    //int i = addVertexCopy(vertex, value, -4, true);
     mapEdge.put(key, Integer.valueOf(i));
     return i;
   }
@@ -1088,6 +1087,16 @@ public class MeshSurface {
     for (int i = 0; i < vertexCount; i++)
       vectors[i] = Geodesic.getVertexVector(i);
     return newMesh(true, vectors, 0, faces, vectors, 0);
+  }
+
+  public void setBox(P3 xyzMin, P3 xyzMax) {
+    xyzMin.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+    xyzMax.set(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
+    for (int i = 0; i < vc; i++) {
+      T3 p = vs[i];
+      if (!Float.isNaN(p.x))
+        BoxInfo.addPoint(p, xyzMin, xyzMax, 0);
+    }
   }
 
 }

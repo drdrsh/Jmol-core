@@ -40,8 +40,9 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
   void init2(SurfaceGenerator sg, BufferedReader br) {
     init2VFR(sg, br);
     isAngstroms = true;
+    isPeriodic = true;
+    isProgressive = false; // for now
     nSurfaces = 1;
-    canDownsample = isProgressive = false; // for now
   }
 
   //  pt                                      
@@ -71,7 +72,7 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
   @Override
   protected void readParameters() throws Exception {
     jvxlFileHeaderBuffer = new SB();
-    jvxlFileHeaderBuffer.append("Vasp CHGCAR format\n");
+    jvxlFileHeaderBuffer.append("Vasp CHGCAR format\n\n\n");
     rd(); // atoms
     float scale = parseFloatStr(rd());
     float[] data = new float[15];
@@ -108,14 +109,29 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
 
   @Override
   protected void getPeriodicVoxels() throws Exception {
+    // we are not reading the final periodic values
     int ni = voxelCounts[0] - 1;
     int nj = voxelCounts[1] - 1;
     int nk = voxelCounts[2] - 1;
-    for (int i = 0; i < ni; i++)
-      for (int j = 0; j < nj; j++)
-        for (int k = 0; k < nk; k++)
+    boolean downSampling = (nSkipX > 0);
+    for (int i = 0; i < ni; i++) {
+      for (int j = 0; j < nj; j++) {
+        for (int k = 0; k < nk; k++) {
           voxelData[i][j][k] = recordData(nextVoxel());
+          if (downSampling)
+            for (int m = nSkipX; --m >= 0;)
+              nextVoxel();
+        }
+        if (downSampling)
+          for (int m = nSkipY; --m >= 0;)
+            nextVoxel();
+      }
+      if (downSampling)
+        for (int m = nSkipZ; --m >= 0;)
+          nextVoxel();
+    }
   }
+
 
   @Override
   protected void readSkip() throws Exception {

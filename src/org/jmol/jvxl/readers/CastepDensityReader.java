@@ -95,6 +95,7 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
 
   @Override
   protected void getPeriodicVoxels() throws Exception {
+    // no downsampling (yet), because CASTEP writes x, y, z info.
     for (int i = 0; i < nFilePoints; i++) {
       int x = parseIntStr(line) - 1;
       int y = parseInt() - 1;

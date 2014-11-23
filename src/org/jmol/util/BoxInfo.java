@@ -281,7 +281,7 @@ public class BoxInfo {
     addPoint(pt, bbCorner0, bbCorner1, margin);
   }
 
-  public static void addPoint(T3 pt, P3 xyzMin, P3 xyzMax, float margin) {
+  public static void addPoint(T3 pt, T3 xyzMin, T3 xyzMax, float margin) {
     if (pt.x - margin < xyzMin.x)
       xyzMin.x = pt.x - margin;
     if (pt.x + margin > xyzMax.x)

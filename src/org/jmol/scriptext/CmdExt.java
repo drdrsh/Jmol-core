@@ -2876,6 +2876,7 @@ public class CmdExt implements JmolCmdExtension {
     P3 pt;
     P4 plane = null;
     P3 lattice = null;
+    boolean processLattice = false;
     P3[] pts;
     int color = 0;
     String str = null;
@@ -4276,6 +4277,11 @@ public class CmdExt implements JmolCmdExtension {
           propertyValue = pt;
         } else {
           lattice = pt;
+          if (tokAt(i + 1) == T.on) {
+            sbCommand.append(" true");
+            processLattice = true;
+            i++;
+          }            
         }
         break;
       default:
@@ -4385,8 +4391,11 @@ public class CmdExt implements JmolCmdExtension {
         sbCommand.append(" mesh nofill frontOnly");
       }
     }
-    if (lattice != null) // before MAP, this is a display option
+    if (lattice != null) { // before MAP, this is a display option
       setShapeProperty(iShape, "lattice", lattice);
+      if (processLattice)
+        setShapeProperty(iShape, "processLattice", Boolean.TRUE);
+    }
     if (symops != null) // before MAP, this is a display option
       setShapeProperty(iShape, "symops", symops);
     if (isFrontOnly)

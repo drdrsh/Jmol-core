@@ -270,7 +270,7 @@ public class Mesh extends MeshSurface {
   public boolean recalcAltVertices;
 
   public short[] symopColixes;
-  
+
   protected void sumVertexNormals(T3[] vertices, V3[] normals) {
     sumVertexNormals2(vertices, normals);
   }
@@ -515,7 +515,7 @@ public class Mesh extends MeshSurface {
    * @return unitcell
    */
   public SymmetryInterface getUnitCell(Viewer vwr) {
-    // isosurface only
+    // isosurfaceMesh only
     return null;
   }
 

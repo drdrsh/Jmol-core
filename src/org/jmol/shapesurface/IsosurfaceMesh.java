@@ -46,6 +46,7 @@ import javajs.util.CU;
 import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.P3i;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.T3;
@@ -913,8 +914,61 @@ public class IsosurfaceMesh extends Mesh {
 
   @Override
   public SymmetryInterface getUnitCell(Viewer vwr) {
-    return (spanningVectors == null ? null :
-    Interface.getSymmetry(vwr, "symmetry").getUnitCell(spanningVectors, true, null));
+    return (unitCell != null
+        || (unitCell = vwr.ms.am[modelIndex].biosymmetry) != null
+        || (unitCell = vwr.getModelUnitCell(modelIndex)) != null
+        || spanningVectors != null
+        && (unitCell = Interface.getSymmetry(vwr, "symmetry").getUnitCell(
+            spanningVectors, true, null)) != null ? unitCell : null);
+  }
+
+  void processLattice(Viewer vwr) {
+    if (getUnitCell(vwr) == null)
+      return;
+    P3i minXYZ = new P3i();
+    P3i maxXYZ = P3i.new3((int) lattice.x, (int) lattice.y, (int) lattice.z);
+    jvxlData.processLattice = lattice;
+    lattice = null;
+    unitCell.setMinMaxLatticeParameters(minXYZ, maxXYZ);
+    int nCells = (maxXYZ.x - minXYZ.x) * (maxXYZ.y - minXYZ.y)
+        * (maxXYZ.z - minXYZ.z);
+    P3 latticeOffset = new P3();
+    int vc0 = vc;
+    int vcNew = nCells * vc;
+    vs = AU.arrayCopyPt(vs, vcNew);
+    vvs = (vvs == null ? null : AU.ensureLengthA(vvs, vcNew));
+    int pc0 = pc;
+    int pcNew = nCells * pc;
+    pis = AU.arrayCopyII(pis, pcNew);
+    int off = 0;
+    normixes = AU.arrayCopyShort(normixes, vcNew);    
+    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++)
+      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++)
+        for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
+          if (tx == 0 && ty == 0 && tz == 0)
+            continue;
+          latticeOffset.set(tx, ty, tz);
+          unitCell.toCartesian(latticeOffset, false);
+          for (int i = 0; i < vc0; i++) {
+            normixes[vc] = normixes[i];
+            P3 v = P3.newP(vs[i]);
+            v.add(latticeOffset);
+            addVCVal(v, vvs[i], false);
+          }
+          off += vc0;
+          for (int i = 0; i < pc0; i++) {
+            int[] p = AU.arrayCopyI(pis[i], -1);
+            p[0] += off;
+            p[1] += off;
+            p[2] += off;
+            addPolygonC(p, 0, null);
+          }
+        }
+    P3 xyzMin = new P3();
+    P3 xyzMax = new P3();
+    setBox(xyzMin, xyzMax);
+    jvxlData.boundingBox = new P3[] { xyzMin, xyzMax };    
+
   }
 
   /**

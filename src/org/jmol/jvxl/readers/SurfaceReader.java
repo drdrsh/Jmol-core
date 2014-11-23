@@ -212,6 +212,7 @@ public abstract class SurfaceReader implements VertexDataServer {
   protected boolean isXLowToHigh = false; //can be overridden in some readers by --progressive
   private float assocCutoff = 0.3f;
   protected boolean isQuiet;
+  protected boolean isPeriodic;
   
   boolean vertexDataOnly;
   boolean hasColorData;
@@ -1088,20 +1089,17 @@ public abstract class SurfaceReader implements VertexDataServer {
   private void setBBoxAll() {
     if (meshDataServer != null)
       meshDataServer.fillMeshData(meshData, MeshData.MODE_GET_VERTICES, null);
-    xyzMin = null;
-    for (int i = 0; i < meshData.vc; i++) {
-      T3 p = meshData.vs[i];
-      if (!Float.isNaN(p.x))
-        setBBox(p, 0);
-    }
+    xyzMin = new P3();
+    xyzMax = new P3();
+    meshData.setBox(xyzMin, xyzMax);
   }
 
-  protected void setBBox(T3 pt, float margin) {
+  protected void setBBox(T3 pt) {
     if (xyzMin == null) {
       xyzMin = P3.new3(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
       xyzMax = P3.new3(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
     }
-    BoxInfo.addPoint(pt, xyzMin, xyzMax, margin);
+    BoxInfo.addPoint(pt, xyzMin, xyzMax, 0);
   }
 
   /**

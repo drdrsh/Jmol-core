@@ -49,7 +49,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
   protected int nSurfaces;
   protected boolean isAngstroms;
   protected boolean canDownsample;
-  private int[] downsampleRemainders;
+  protected int[] downsampleRemainders;
   private boolean preProcessPlanes;
   private int nData;
   private boolean readerClosed;
@@ -145,6 +145,10 @@ abstract class VolumeFileReader extends SurfaceFileReader {
           int n = voxelCounts[i];
           downsampleRemainders[i] = n % downsampleFactor;
           voxelCounts[i] /= downsampleFactor;
+          if (isPeriodic) {
+            voxelCounts[i]++;
+            downsampleRemainders[i]--;
+          }
           volumetricVectors[i].scale(downsampleFactor);
           Logger.info("downsampling axis " + (i + 1) + " from " + n + " to "
               + voxelCounts[i]);
@@ -191,7 +195,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
   }
 
   protected int downsampleFactor;
-  private int nSkipX, nSkipY, nSkipZ;
+  protected int nSkipX, nSkipY, nSkipZ;
 
   void initializeSurfaceData() {
     downsampleFactor = params.downsampleFactor;
@@ -201,9 +205,9 @@ abstract class VolumeFileReader extends SurfaceFileReader {
     if (canDownsample && downsampleFactor > 0) {
       nSkipX = downsampleFactor - 1;
       nSkipY = downsampleRemainders[2] + (downsampleFactor - 1)
-          * (nSkipZ = (nPointsZ * downsampleFactor + downsampleRemainders[2]));
+          * (nSkipZ = ((nPointsZ - (isPeriodic ? 1 : 0)) * downsampleFactor + downsampleRemainders[2]));
       nSkipZ = downsampleRemainders[1] * nSkipZ + (downsampleFactor - 1)
-          * nSkipZ * (nPointsY * downsampleFactor + downsampleRemainders[1]);
+          * nSkipZ * ((nPointsY - (isPeriodic ? 1 : 0)) * downsampleFactor + downsampleRemainders[1]);
     }
 
     if (params.thePlane != null) {

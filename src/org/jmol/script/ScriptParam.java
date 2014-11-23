@@ -288,12 +288,11 @@ abstract public class ScriptParam extends ScriptError {
       case T.string:
         String str = paramAsStr(i);
         if (str.equalsIgnoreCase("xy"))
-          return P4.new4(0, 0, 1, 0);
-        if (str.equalsIgnoreCase("xz"))
-          return P4.new4(0, 1, 0, 0);
-        if (str.equalsIgnoreCase("yz"))
-          return P4.new4(1, 0, 0, 0);
-        iToken += 2;
+          plane = P4.new4(0, 0, isNegated ? -1 : 1, 0);
+        else if (str.equalsIgnoreCase("xz"))
+          plane = P4.new4(0, isNegated ? -1 : 1, 0, 0);
+        else if (str.equalsIgnoreCase("yz"))
+          plane = P4.new4(isNegated ? -1 : 1, 0, 0, 0);
         break;
       case T.leftbrace:
       case T.point3f:

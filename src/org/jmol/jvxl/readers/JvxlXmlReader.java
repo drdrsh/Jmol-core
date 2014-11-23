@@ -236,6 +236,7 @@ public class JvxlXmlReader extends VolumeFileReader {
       params.nContours = (haveContourData ? nContourData : nContoursRead);
       //TODO ? params.contourFromZero = false; // MEP data to complete the plane
     }
+    
     jvxlData.nVertexColors = parseIntStr(XmlReader.getXmlAttrib(data, "nVertexColors"));
     params.isBicolorMap = XmlReader.getXmlAttrib(data, "bicolorMap").equals("true");
     if (params.isBicolorMap) {
@@ -296,6 +297,10 @@ public class JvxlXmlReader extends VolumeFileReader {
       params.thePlane = null;
       surfaceDataCount = parseIntStr(XmlReader.getXmlAttrib(data, "nSurfaceInts"));
       edgeDataCount = parseIntStr(XmlReader.getXmlAttrib(data, "nBytesUncompressedEdgeData"));
+      s = XmlReader.getXmlAttrib(data, "processLattice");
+      if (s.indexOf("{") >= 0)
+        jvxlData.processLattice = (P3) Escape.uP(s);
+        
     }
     excludedVertexCount = parseIntStr(XmlReader.getXmlAttrib(data, "nExcludedVertexes"));
     excludedTriangleCount = parseIntStr(XmlReader.getXmlAttrib(data, "nExcludedTriangles"));

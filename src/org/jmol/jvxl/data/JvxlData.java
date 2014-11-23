@@ -172,6 +172,7 @@ public class JvxlData {
   public boolean allowVolumeRender;
   public float voxelVolume;
   public P3 mapLattice;
+  public P3 processLattice;
   public String baseColor;
 
   public void clear() {
@@ -190,6 +191,7 @@ public class JvxlData {
     contourColors = null;
     isSlabbable = false;
     mapLattice = null;
+    processLattice = null;
     meshColor = null;
     nPointsX = 0;
     nVertexColors = 0;

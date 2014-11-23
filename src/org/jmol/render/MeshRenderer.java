@@ -97,54 +97,51 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (!doRender)
       return mesh.title != null;
     latticeOffset.set(0, 0, 0);
-    if (mesh.lattice == null && mesh.symops == null || mesh.modelIndex < 0) {
+    if (mesh.modelIndex < 0
+        || mesh.lattice == null && mesh.symops == null) {
       for (int i = vertexCount; --i >= 0;)
         if (vertices[i] != null)
           tm.transformPtScr(vertices[i], screens[i]);
       render2(isExport);
     } else {
       P3 vTemp = new P3();
-      SymmetryInterface unitcell;
-      if ((unitcell = mesh.unitCell) == null
-          && (unitcell = vwr.ms.am[mesh.modelIndex].biosymmetry) == null
-          && (unitcell = vwr.getModelUnitCell(mesh.modelIndex)) == null)
-        unitcell = mesh.getUnitCell(vwr);
-      if (mesh.symops != null) {
-        if (mesh.symopNormixes == null)
-          mesh.symopNormixes = AU.newShort2(mesh.symops.length);
-        P3[] verticesTemp = null;
-        int max = mesh.symops.length;
-        short c = mesh.colix;
-        for (int j = max; --j >= 0;) {
-          M4 m = mesh.symops[j];
-          if (m == null)
-            continue;
-          if (mesh.colorType == T.symop)
-            mesh.colix = mesh.symopColixes[j];
-          short[] normals = mesh.symopNormixes[j];
-          boolean needNormals = (normals == null);
-          verticesTemp = (needNormals ? new P3[vertexCount] : null);
-          for (int i = vertexCount; --i >= 0;) {
-            vTemp.setT(vertices[i]);
-            unitcell.toFractional(vTemp, true);
-            m.rotTrans(vTemp);
-            unitcell.toCartesian(vTemp, true);
-            tm.transformPtScr(vTemp, screens[i]);
-            if (needNormals) {
-              verticesTemp[i] = vTemp;
-              vTemp = new P3();
+      SymmetryInterface unitcell = mesh.getUnitCell(vwr);
+      if (unitcell != null) {
+        if (mesh.symops != null) {
+          if (mesh.symopNormixes == null)
+            mesh.symopNormixes = AU.newShort2(mesh.symops.length);
+          P3[] verticesTemp = null;
+          int max = mesh.symops.length;
+          short c = mesh.colix;
+          for (int j = max; --j >= 0;) {
+            M4 m = mesh.symops[j];
+            if (m == null)
+              continue;
+            if (mesh.colorType == T.symop)
+              mesh.colix = mesh.symopColixes[j];
+            short[] normals = mesh.symopNormixes[j];
+            boolean needNormals = (normals == null);
+            verticesTemp = (needNormals ? new P3[vertexCount] : null);
+            for (int i = vertexCount; --i >= 0;) {
+              vTemp.setT(vertices[i]);
+              unitcell.toFractional(vTemp, true);
+              m.rotTrans(vTemp);
+              unitcell.toCartesian(vTemp, true);
+              tm.transformPtScr(vTemp, screens[i]);
+              if (needNormals) {
+                verticesTemp[i] = vTemp;
+                vTemp = new P3();
+              }
             }
+            if (needNormals)
+              normixes = mesh.symopNormixes[j] = mesh.setNormixes(mesh
+                  .getNormals(verticesTemp, null));
+            else
+              normixes = mesh.normixes = mesh.symopNormixes[j];
+            render2(isExport);
           }
-          if (needNormals)
-            normixes = mesh.symopNormixes[j] = mesh.setNormixes(mesh.getNormals(
-                verticesTemp, null));
-          else
-            normixes = mesh.normixes = mesh.symopNormixes[j];
-          render2(isExport);
-        }
-        mesh.colix = c;
-      } else {
-        if (unitcell != null) {
+          mesh.colix = c;
+        } else {
           P3i minXYZ = new P3i();
           P3i maxXYZ = P3i.new3((int) mesh.lattice.x, (int) mesh.lattice.y,
               (int) mesh.lattice.z);

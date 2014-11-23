@@ -275,6 +275,7 @@ public class StatusManager {
                                         String callbackFunction) {
     // menu and language setting also use this route
     CBK callback = CBK.getCallback(callbackType);
+    System.out.println("callback set for " + callbackType + " " + callbackFunction + " " + callback);
     if (callback != null) {
       int pt = (callbackFunction == null ? 0
           : callbackFunction.length() > 7

@@ -104,12 +104,12 @@ abstract class AtomDataReader extends VolumeDataReader {
       bsMyIgnored = params.bsIgnore;
     if (params.volumeData != null) {
       setVolumeDataV(params.volumeData);
-      setBBox(volumeData.volumetricOrigin, 0);
+      setBBox(volumeData.volumetricOrigin);
       ptV.setT(volumeData.volumetricOrigin);
       for (int i = 0; i < 3; i++)
         ptV.scaleAdd2(volumeData.voxelCounts[i] - 1,
             volumeData.volumetricVectors[i], ptV);
-      setBBox(ptV, 0);
+      setBBox(ptV);
     }
     havePlane = (params.thePlane != null);
     if (havePlane)
@@ -265,11 +265,11 @@ abstract class AtomDataReader extends VolumeDataReader {
     Logger.info(myAtomCount + " atoms will be used in the surface calculation");
 
     if (myAtomCount == 0) {
-      setBBox(P3.new3(10, 10, 10), 0);
-      setBBox(P3.new3(-10, -10, -10), 0);
+      setBBox(P3.new3(10, 10, 10));
+      setBBox(P3.new3(-10, -10, -10));
     }
     for (int i = 0; i < myAtomCount; i++)
-      setBBox(atomXyz[i], getRadii ? atomRadius[i] + 0.5f : 0);
+      setBBox(atomXyz[i]);
     if (!Float.isNaN(params.scale)) {
       V3 v = V3.newVsub(xyzMax, xyzMin);
       v.scale(0.5f);
