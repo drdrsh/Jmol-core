@@ -38,7 +38,7 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
   @Override
   void init2(SurfaceGenerator sg, BufferedReader br) {
     init2VFR(sg, br);
-    canDownsample = isProgressive = false;
+    isProgressive = false;
     isAngstroms = true;
   }
 
@@ -95,7 +95,20 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
 
   @Override
   protected void getPeriodicVoxels() throws Exception {
-    // no downsampling (yet), because CASTEP writes x, y, z info.
+    int dsf = downsampleFactor;
+    if (dsf > 1) {
+      for (int i = 0; i < nFilePoints; i++) {
+        int x = parseIntStr(line) - 1;
+        int y = parseInt() - 1;
+        int z = parseInt() - 1;
+        if (x % dsf == 0 && y % dsf == 0 && z % dsf == 0) {
+          if (nSkip > 0)
+            skipPoints(nSkip);
+          voxelData[x / dsf][y / dsf][z / dsf] = recordData(parseFloat());
+        }
+        rd();
+      }
+    } else {
     for (int i = 0; i < nFilePoints; i++) {
       int x = parseIntStr(line) - 1;
       int y = parseInt() - 1;
@@ -104,6 +117,7 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
         skipPoints(nSkip);
       voxelData[x][y][z] = recordData(parseFloat());
       rd();
+    }
     }
 
   }
