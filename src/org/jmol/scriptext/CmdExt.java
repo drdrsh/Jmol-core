@@ -4078,6 +4078,7 @@ public class CmdExt implements JmolCmdExtension {
         propertyValue = Boolean.TRUE;
         sbCommand.append(" reversecolor");
         break;
+      case T.rmsd:
       case T.sigma:
         propertyName = "sigma";
         propertyValue = Float.valueOf(sigma = floatParameter(++i));
