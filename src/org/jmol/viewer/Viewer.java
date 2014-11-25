@@ -4307,22 +4307,14 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return (withPrefix ? "MOL3D::" : "")
           + PT.formatStringS(format, "FILE", f);
     case '_': // isosurface "=...", but we code that type as '_'
-      String diff = (f.startsWith("=") ? "_diff" : null);
-      if (diff != null)
+      boolean isDiff = f.startsWith("=");
+      if (isDiff)
         f = f.substring(1);
-      String server = FileManager.fixFileNameVariables(g.edsUrlFormat, f);
-      if (diff != null)
-        server = PT.rep(server, ".omap", "_diff.omap");
-        
-      String strCutoff = FileManager.fixFileNameVariables(g.edsUrlCutoff, f);
-      return new String[] { server, strCutoff, diff };
+      String server = FileManager.fixFileNameVariables(isDiff ? g.edsUrlFormatDiff : g.edsUrlFormat, f);
+      String strCutoff = (isDiff ? "" : FileManager.fixFileNameVariables(g.edsUrlCutoff, f));
+      return new String[] { server, strCutoff, isDiff ? "diff" : null };
     }
     return f;
-  }
-
-  public String[] getElectronDensityLoadInfo() {
-    return new String[] { g.edsUrlFormat, g.edsUrlCutoff,
-        g.edsUrlOptions };
   }
 
   public String getStandardLabelFormat(int type) {
@@ -5612,6 +5604,17 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   private void setStringPropertyTok(String key, int tok, String value) {
     switch (tok) {
+    // 14.3.10 (forgot to add these earlier)
+    case T.edsurlcutoff:
+      g.edsUrlCutoff = value;
+      break;
+    case T.edsurlformat:
+      g.edsUrlFormat = value;
+      break;
+    // 14.3.10 new
+    case T.edsurlformatdiff:
+      g.edsUrlFormatDiff = value;
+      break;
     // 13.3.6
     case T.animationmode:
       setAnimationMode(value);

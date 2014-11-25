@@ -271,6 +271,7 @@ public class GlobalSettings {
       setB("drawPicking", drawPicking);
       setB("dsspCalculateHydrogenAlways", dsspCalcHydrogen);
       setO("edsUrlFormat", edsUrlFormat);
+      setO("edsUrlFormatDiff", edsUrlFormatDiff);
       //setParameterValue("edsUrlOptions", edsUrlOptions);
       setO("edsUrlCutoff", edsUrlCutoff);
       setB("ellipsoidArcs", ellipsoidArcs);
@@ -469,6 +470,7 @@ public class GlobalSettings {
     String loadFormat, loadLigandFormat, nmrUrlFormat, nmrPredictFormat, smilesUrlFormat, nihResolverFormat, pubChemFormat;
 
     String edsUrlFormat = "http://eds.bmc.uu.se/eds/dfs/%LC13/%LCFILE/%LCFILE.omap";
+    String edsUrlFormatDiff = "http://eds.bmc.uu.se/eds/dfs/%LC13/%LCFILE/%LCFILE_diff.omap";
     String edsUrlCutoff = "http://eds.bmc.uu.se/eds/dfs/%LC13/%LCFILE/%LCFILE.sfdat";
     String edsUrlOptions = "within 2.0 {*}";
     float minBondDistance = JC.DEFAULT_MIN_BOND_DISTANCE;
@@ -1066,6 +1068,7 @@ public class GlobalSettings {
       app(str, "#set nihResolverFormat " + PT.esc(nihResolverFormat));
       app(str, "#set pubChemFormat " + PT.esc(pubChemFormat));
       app(str, "#set edsUrlFormat " + PT.esc(edsUrlFormat));
+      app(str, "#set edsUrlFormatDiff " + PT.esc(edsUrlFormatDiff));
       app(str, "#set edsUrlCutoff " + PT.esc(edsUrlCutoff));
       //    if (autoLoadOrientation)
       //      appendCmd(str, "set autoLoadOrientation true");

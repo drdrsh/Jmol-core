@@ -843,11 +843,12 @@ public class T {
   public final static int defaultvdw                     = strparam | 35;
   public final static int edsurlcutoff                   = strparam | 36;
   public final static int edsurlformat                   = strparam | 37;
-  public final static int energyunits                    = strparam | 38; 
-  public final static int filecachedirectory             = strparam | 39;
-  public final static int forcefield                     = strparam | 40;
-  public final static int helppath                       = strparam | 41;
-  public final static int hoverlabel                     = strparam | 42;
+  public final static int edsurlformatdiff               = strparam | 38;
+  public final static int energyunits                    = strparam | 39; 
+  public final static int filecachedirectory             = strparam | 40;
+  public final static int forcefield                     = strparam | 41;
+  public final static int helppath                       = strparam | 42;
+  public final static int hoverlabel                     = strparam | 43;
   public final static int language                       = strparam | 44;
   public final static int loadformat                     = strparam | 45;
   public final static int loadligandformat               = strparam | 46;
@@ -2341,6 +2342,7 @@ public class T {
        "drawFontSize",
        "edsUrlCutoff",
        "edsUrlFormat",
+       "edsUrlFormatDiff",
        "energyUnits",
        "fileCacheDirectory",
        "fontsize",
@@ -3361,6 +3363,7 @@ public class T {
         drawfontsize,                       //        "drawFontSize"
         edsurlcutoff,                       //        "edsUrlCutoff"
         edsurlformat,                       //        "edsUrlFormat"
+        edsurlformatdiff,                   //        "edsUrlFormatDiff"
         energyunits,                        //        "energyUnits"
         filecachedirectory,                 //        "fileCacheDirectory"
         fontsize,                           //        "fontsize"
