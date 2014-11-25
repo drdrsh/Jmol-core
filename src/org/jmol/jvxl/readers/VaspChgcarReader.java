@@ -25,6 +25,7 @@ package org.jmol.jvxl.readers;
 
 import java.io.BufferedReader;
 
+import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.SB;
@@ -94,6 +95,10 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     }
     swapXZ();
     volumetricOrigin.set(0, 0, 0);
+    if (params.thePlane == null && (params.cutoffAutomatic || !Float.isNaN(params.sigma))) {
+      params.cutoff = 0.5f;
+      Logger.info("Cutoff set to " + params.cutoff);
+    }
   }
   
   private int pt;

@@ -4368,12 +4368,28 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     shm.loadShape(JC.SHAPE_HOVER);
     setShapeProperty(JC.SHAPE_HOVER, "label", strLabel);
     hoverEnabled = (strLabel != null);
-    if (!hoverEnabled)
+    if (!hoverEnabled && !sm.haveHoverCallback())
       startHoverWatcher(false);
   }
 
+  /*
+   * hoverCallback reports information about the atom being hovered over.
+   * 
+   * jmolSetCallback("hoverCallback", "myHoverCallback") function
+   * myHoverCallback(strInfo, iAtom) {}
+   * 
+   * strInfo == the atom's identity, including x, y, and z coordinates iAtom ==
+   * the index of the atom being hovered over
+   * 
+   * Viewer.setStatusAtomHovered Hover.setProperty("target") Viewer.hoverOff
+   * Viewer.hoverOn
+   */
   void hoverOn(int atomIndex, boolean isLabel) {
-    setStatusAtomHovered(atomIndex, getAtomInfoXYZ(atomIndex, false));
+    g.removeParam("_objecthovered");
+    g.setI("_atomhovered", atomIndex);
+    g.setUserVariable("hovered", SV.getVariable(BSUtil.newAndSetBit(atomIndex)));
+    if (sm.haveHoverCallback())
+      sm.setStatusAtomHovered(atomIndex, getAtomInfoXYZ(atomIndex, false));
     if (!hoverEnabled)
       return;
     if (g.modelKitMode) {
@@ -4402,10 +4418,17 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public void hoverOnPt(int x, int y, String text, String id, T3 pt) {
-    if (!hoverEnabled)
-      return;
     // from draw for drawhover on
     if (eval != null && isScriptExecuting())
+      return;
+    if (id != null && pt != null) {
+      g.setO("_objecthovered", id);
+      g.setI("_atomhovered", -1);
+      g.setUserVariable("hovered", SV.getVariable(pt));
+      if (sm.haveHoverCallback())
+        sm.setStatusObjectHovered(id, text, pt);
+    }
+    if (!hoverEnabled)
       return;
     shm.loadShape(JC.SHAPE_HOVER);
     setShapeProperty(JC.SHAPE_HOVER, "xy", P3i.new3(x, y, 0));
@@ -4414,8 +4437,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     setShapeProperty(JC.SHAPE_HOVER, "text", text);
     hoverAtomIndex = -1;
     hoverText = text;
-    if (id != null && pt != null)
-      setStatusObjectHovered(id, text, pt);
     refresh(3, "hover on point");
   }
 
@@ -4870,30 +4891,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   public String jsEval(String strEval) {
     return sm.jsEval(strEval);
-  }
-
-  /*
-   * hoverCallback reports information about the atom being hovered over.
-   * 
-   * jmolSetCallback("hoverCallback", "myHoverCallback") function
-   * myHoverCallback(strInfo, iAtom) {}
-   * 
-   * strInfo == the atom's identity, including x, y, and z coordinates iAtom ==
-   * the index of the atom being hovered over
-   * 
-   * Viewer.setStatusAtomHovered Hover.setProperty("target") Viewer.hoverOff
-   * Viewer.hoverOn
-   */
-
-  private void setStatusAtomHovered(int atomIndex, String info) {
-    g.setI("_atomhovered", atomIndex);
-    g.setUserVariable("hovered", SV.getVariable(BSUtil.newAndSetBit(atomIndex)));
-    sm.setStatusAtomHovered(atomIndex, info);
-  }
-
-  private void setStatusObjectHovered(String id, String info, T3 pt) {
-    g.setO("_objecthovered", id);
-    sm.setStatusObjectHovered(id, info, pt);
   }
 
   /*

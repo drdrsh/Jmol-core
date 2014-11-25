@@ -344,6 +344,10 @@ public class StatusManager {
           new Object[] { sJmol, Integer.valueOf(width), Integer.valueOf(height) }); 
   }
 
+  boolean haveHoverCallback() {
+    return (jmolScriptCallbacks.containsKey(CBK.HOVER) || notifyEnabled(CBK.HOVER));
+  }
+  
   synchronized void setStatusAtomHovered(int iatom, String strInfo) {
     String sJmol = jmolScriptCallback(CBK.HOVER);
     if (notifyEnabled(CBK.HOVER))
