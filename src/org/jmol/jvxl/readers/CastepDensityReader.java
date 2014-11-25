@@ -109,15 +109,15 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
         rd();
       }
     } else {
-    for (int i = 0; i < nFilePoints; i++) {
-      int x = parseIntStr(line) - 1;
-      int y = parseInt() - 1;
-      int z = parseInt() - 1;
-      if (nSkip > 0)
-        skipPoints(nSkip);
-      voxelData[x][y][z] = recordData(parseFloat());
-      rd();
-    }
+      for (int i = 0; i < nFilePoints; i++) {
+        int x = parseIntStr(line) - 1;
+        int y = parseInt() - 1;
+        int z = parseInt() - 1;
+        if (nSkip > 0)
+          skipPoints(nSkip);
+        voxelData[x][y][z] = recordData(parseFloat());
+        rd();
+      }
     }
 
   }

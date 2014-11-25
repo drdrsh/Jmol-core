@@ -4147,8 +4147,11 @@ public class CmdExt implements JmolCmdExtension {
               Logger.error(key + " -- could  not read " + strCutoff);
             }
             if (cutoff > 0) {
-              if (diff != null && Float.isNaN(sigma))
-                sigma = 3;    
+              if (diff != null) {
+                if (Float.isNaN(sigma))
+                  sigma = 3;
+                addShapeProperty(propertyList, "sign", Boolean.TRUE);
+              }
               showString("using cutoff = " + cutoff + (Float.isNaN(sigma) ? "" : " sigma=" + sigma));
               if (!Float.isNaN(sigma)) {
                 cutoff *= sigma;

@@ -1462,11 +1462,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
   @Override
   public void notifySurfaceMappingCompleted() {
-    if (!thisMesh.isMerged) {
-      thisMesh.initialize(sg.isFullyLit() ? T.fullylit
-          : T.frontlit, null, sg.getPlane());
-      thisMesh.setJvxlDataRendering();
-    }
+    if (!thisMesh.isMerged)
+      thisMesh.initialize(sg.isFullyLit() ? T.fullylit : T.frontlit, null,
+          sg.getPlane());
     setBsVdw();
     thisMesh.isColorSolid = false;
     thisMesh.colorDensity = jvxlData.colorDensity;
@@ -1477,8 +1475,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       explicitContours = true;
     if (explicitContours && thisMesh.jvxlData.jvxlPlane != null)
       thisMesh.havePlanarContours = true;
-    setPropertySuper("token", Integer.valueOf(explicitContours ? T.nofill : T.fill), null);
-    setPropertySuper("token", Integer.valueOf(explicitContours ? T.contourlines : T.nocontourlines), null);
+    setPropertySuper("token",
+        Integer.valueOf(explicitContours ? T.nofill : T.fill), null);
+    setPropertySuper("token",
+        Integer.valueOf(explicitContours ? T.contourlines : T.nocontourlines),
+        null);
+    if (!thisMesh.isMerged)
+      thisMesh.setJvxlDataRendering();
     Lst<Object[]> slabInfo = sg.getSlabInfo();
     if (slabInfo != null) {
       thisMesh.slabPolygonsList(slabInfo, false);
