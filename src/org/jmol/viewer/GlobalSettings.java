@@ -472,7 +472,7 @@ public class GlobalSettings {
     String edsUrlFormat = "http://eds.bmc.uu.se/eds/dfs/%LC13/%LCFILE/%LCFILE.omap";
     String edsUrlFormatDiff = "http://eds.bmc.uu.se/eds/dfs/%LC13/%LCFILE/%LCFILE_diff.omap";
     String edsUrlCutoff = "http://eds.bmc.uu.se/eds/dfs/%LC13/%LCFILE/%LCFILE.sfdat";
-    String edsUrlOptions = "within 2.0 {*}";
+    // not implemented String edsUrlOptions = "within 2.0 {*}";
     float minBondDistance = JC.DEFAULT_MIN_BOND_DISTANCE;
     int minPixelSelRadius = 6;
     boolean pdbAddHydrogens = false; // true to add hydrogen atoms
