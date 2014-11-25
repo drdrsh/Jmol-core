@@ -4307,9 +4307,15 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       return (withPrefix ? "MOL3D::" : "")
           + PT.formatStringS(format, "FILE", f);
     case '_': // isosurface "=...", but we code that type as '_'
+      String diff = (f.startsWith("=") ? "_diff" : null);
+      if (diff != null)
+        f = f.substring(1);
       String server = FileManager.fixFileNameVariables(g.edsUrlFormat, f);
+      if (diff != null)
+        server = PT.rep(server, ".omap", "_diff.omap");
+        
       String strCutoff = FileManager.fixFileNameVariables(g.edsUrlCutoff, f);
-      return new String[] { server, strCutoff };
+      return new String[] { server, strCutoff, diff };
     }
     return f;
   }

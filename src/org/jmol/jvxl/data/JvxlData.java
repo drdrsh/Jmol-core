@@ -85,6 +85,7 @@ public class JvxlData {
   public JvxlData() {    
   }
  
+  public String msg = "";
   public boolean wasJvxl;
   public boolean wasCubic;
   
@@ -191,10 +192,11 @@ public class JvxlData {
     contourColors = null;
     isSlabbable = false;
     mapLattice = null;
-    processLattice = null;
     meshColor = null;
+    msg = "";
     nPointsX = 0;
     nVertexColors = 0;
+    processLattice = null;
     slabInfo = null;
     slabValue = Integer.MIN_VALUE;
     thisSet = Integer.MIN_VALUE;

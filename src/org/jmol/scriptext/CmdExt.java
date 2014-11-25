@@ -3191,8 +3191,8 @@ public class CmdExt implements JmolCmdExtension {
             if (tokProperty != T.color) {
               pt = new P3();
               for (int iAtom = ac; --iAtom >= 0;)
-                data[iAtom] = atoms[iAtom].atomPropertyFloat(vwr,
-                    tokProperty, pt);
+                data[iAtom] = atoms[iAtom].atomPropertyFloat(vwr, tokProperty,
+                    pt);
             }
           }
           if (tokProperty == T.color)
@@ -3870,10 +3870,9 @@ public class CmdExt implements JmolCmdExtension {
             if (xyzdata.length != nX || xyzdata[0].length != nY
                 || xyzdata[0][0].length != nZ) {
               eval.iToken = ptX;
-              eval.errorStr(ScriptError.ERROR_what, "xyzdata["
-                  + xyzdata.length + "][" + xyzdata[0].length + "]["
-                  + xyzdata[0][0].length + "] is not of size [" + nX + "]["
-                  + nY + "][" + nZ + "]");
+              eval.errorStr(ScriptError.ERROR_what, "xyzdata[" + xyzdata.length
+                  + "][" + xyzdata[0].length + "][" + xyzdata[0][0].length
+                  + "] is not of size [" + nX + "][" + nY + "][" + nZ + "]");
             }
             vxy.addLast(xyzdata); // (5) = float[][][] data
             //if (!surfaceObjectSeen)
@@ -4135,18 +4134,22 @@ public class CmdExt implements JmolCmdExtension {
           filename = info[0];
           String strCutoff = (!firstPass || !Float.isNaN(cutoff) ? null
               : info[1]);
+          String diff = info[2];
           if (strCutoff != null && !chk) {
             cutoff = Float.NaN;
+            String key = (diff == null ? "MAP_SIGMA_DENS" : "DIFF_SIGMA_DENS");
             try {
-            String sfdat = vwr.getFileAsString3(strCutoff, false, null);
-            Logger.info(sfdat);
-            sfdat = PT.split(sfdat,  "MAP_SIGMA_DENS")[1];
-            cutoff = PT.parseFloat(sfdat);
-            showString("using cutoff = " + cutoff);
+              String sfdat = vwr.getFileAsString3(strCutoff, false, null);
+              Logger.info(sfdat);
+              sfdat = PT.split(sfdat, key)[1];
+              cutoff = PT.parseFloat(sfdat);
             } catch (Exception e) {
-              Logger.error("MAP_SIGMA_DENS -- could  not read " + info[1]);
+              Logger.error(key + " -- could  not read " + strCutoff);
             }
             if (cutoff > 0) {
+              if (diff != null && Float.isNaN(sigma))
+                sigma = 3;    
+              showString("using cutoff = " + cutoff + (Float.isNaN(sigma) ? "" : " sigma=" + sigma));
               if (!Float.isNaN(sigma)) {
                 cutoff *= sigma;
                 sigma = Float.NaN;
@@ -4164,7 +4167,7 @@ public class CmdExt implements JmolCmdExtension {
             if (bs.nextSetBit(0) >= 0) {
               getWithinDistanceVector(propertyList, 2.0f, null, bs, false);
               sbCommand.append(" within 2.0 ").append(Escape.eBS(bs));
-            } 
+            }
           }
           if (firstPass)
             defaultMesh = true;
@@ -4281,7 +4284,7 @@ public class CmdExt implements JmolCmdExtension {
             sbCommand.append(" true");
             processLattice = true;
             i++;
-          }            
+          }
         }
         break;
       default:
@@ -4419,8 +4422,7 @@ public class CmdExt implements JmolCmdExtension {
     if (doCalcVolume) {
       volume = (doCalcVolume ? getShapeProperty(iShape, "volume") : null);
       if (volume instanceof Float)
-        vwr.setFloatProperty("isosurfaceVolume",
-            ((Float) volume).floatValue());
+        vwr.setFloatProperty("isosurfaceVolume", ((Float) volume).floatValue());
       else
         vwr.g.setUserVariable("isosurfaceVolume",
             SV.getVariableAD((double[]) volume));
@@ -4440,18 +4442,9 @@ public class CmdExt implements JmolCmdExtension {
         s = (String) getShapeProperty(iShape, "ID");
         if (s != null && !eval.tQuiet) {
           cutoff = ((Float) getShapeProperty(iShape, "cutoff")).floatValue();
-          if (Float.isNaN(cutoff) && !Float.isNaN(sigma)) {
+          if (Float.isNaN(cutoff) && !Float.isNaN(sigma))
             Logger.error("sigma not supported");
-          }
-          s += " created";
-          if (isIsosurface)
-            s += " with cutoff=" + cutoff;
-          float[] minMax = (float[]) getShapeProperty(iShape, "minMaxInfo");
-          if (minMax[0] != Float.MAX_VALUE)
-            s += " min=" + minMax[0] + " max=" + minMax[1];
-          s += "; " + JC.shapeClassBases[iShape].toLowerCase() + " count: "
-              + getShapeProperty(iShape, "count");
-          s += eval.getIsosurfaceDataRange(iShape, "\n");
+          s += " created " + getShapeProperty(iShape, "message");
         }
       }
       String sarea, svol;

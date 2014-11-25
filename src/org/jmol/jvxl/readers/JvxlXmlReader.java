@@ -80,7 +80,7 @@ public class JvxlXmlReader extends VolumeFileReader {
   void init2JXR(SurfaceGenerator sg, BufferedReader br) {
     init2VFR(sg, br);
     jvxlData.wasJvxl = isJvxl = true;
-    isXLowToHigh = false;
+    isXLowToHigh = canDownsample = false;
     xr = new XmlReader(br);
   }
 

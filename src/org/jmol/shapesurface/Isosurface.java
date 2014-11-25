@@ -853,14 +853,26 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     Object ret = getPropMC(property);
     if (ret != null)
       return ret;
+    if (property == "message") {
+      String s = "";
+      if (shapeID == JC.SHAPE_ISOSURFACE)
+        s += " with cutoff=" + jvxlData.cutoff;
+      if (jvxlData.dataMin != Float.MAX_VALUE)
+        s += " min=" + jvxlData.dataMin + " max=" + jvxlData.dataMax;
+      s += "; " + JC.shapeClassBases[shapeID].toLowerCase() + " count: "
+          + getPropMC("count");
+      return s + getPropI("dataRangeStr") + jvxlData.msg;
+    }
     if (property == "dataRange")
-      return (thisMesh == null || jvxlData.jvxlPlane != null 
-          && thisMesh.colorEncoder == null 
-          ? null 
-              : new float[] {
-          jvxlData.mappedDataMin, jvxlData.mappedDataMax,
-          (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue : jvxlData.valueMappedToRed),
-          (jvxlData.isColorReversed ? jvxlData.valueMappedToRed : jvxlData.valueMappedToBlue)});
+      return getDataRange();
+    if (property == "dataRangeStr") {
+      float[] dataRange = getDataRange();
+      return (dataRange != null && dataRange[0] != Float.MAX_VALUE
+          && dataRange[0] != dataRange[1] ? "\nisosurface"
+          + " full data range " + dataRange[0] + " to " + dataRange[1]
+          + " with color scheme spanning " + dataRange[2] + " to " + dataRange[3]
+          : "");
+    }
     if (property == "moNumber")
       return Integer.valueOf(moNumber);
     if (property == "moLinearCombination")
@@ -908,6 +920,17 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return sb.toString();
     }
     return null;
+  }
+
+  private float[] getDataRange() {
+    return (thisMesh == null || jvxlData.jvxlPlane != null
+        && thisMesh.colorEncoder == null ? null : new float[] {
+        jvxlData.mappedDataMin,
+        jvxlData.mappedDataMax,
+        (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue
+            : jvxlData.valueMappedToRed),
+        (jvxlData.isColorReversed ? jvxlData.valueMappedToRed
+            : jvxlData.valueMappedToBlue) });
   }
 
   private Object calculateVolumeOrArea(boolean isArea) {

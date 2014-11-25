@@ -8299,7 +8299,7 @@ public class ScriptEval extends ScriptExpr {
             if (max == Float.MAX_VALUE)
               ce.hi = max;
             setShapeProperty(shapeType, "remapColor", ce);
-            showString(getIsosurfaceDataRange(shapeType, ""));
+            showString(((String) getShapeProperty(JC.SHAPE_ISOSURFACE, "dataRangeStr")).replace('\n',' '));
             if (translucentLevel == Float.MAX_VALUE)
               return;
           } else if (max != Float.MAX_VALUE) {
@@ -8592,15 +8592,6 @@ public class ScriptEval extends ScriptExpr {
     if (filename == null)
       invArg();
     return filename;
-  }
-
-  public String getIsosurfaceDataRange(int iShape, String sep) {
-    float[] dataRange = (float[]) getShapeProperty(iShape, "dataRange");
-    return (dataRange != null && dataRange[0] != Float.MAX_VALUE
-        && dataRange[0] != dataRange[1] ? sep + "isosurface"
-        + " full data range " + dataRange[0] + " to " + dataRange[1]
-        + " with color scheme spanning " + dataRange[2] + " to " + dataRange[3]
-        : "");
   }
 
   private P3[] getObjectBoundingBox(String id) {
