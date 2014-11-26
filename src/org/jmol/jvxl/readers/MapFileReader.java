@@ -47,9 +47,10 @@ abstract class MapFileReader extends VolumeFileReader {
   protected void init2MFR(SurfaceGenerator sg, BufferedReader br) {
     init2VFR(sg, br);
     isAngstroms = true;
-    adjustment = sg.getParams().center;
-    if (adjustment == null || adjustment.x == Float.MAX_VALUE)
-      adjustment = new P3();
+// undocumented; for debugging, I think
+//    adjustment = center;
+//    if (adjustment == null || Float.isNaN(adjustment.x))
+//      adjustment = new P3();
   }
 
     /* 
@@ -78,7 +79,7 @@ abstract class MapFileReader extends VolumeFileReader {
   protected int na, nb, nc;
   protected float a, b, c, alpha, beta, gamma;
   protected P3 origin = new P3();
-  protected P3 adjustment = new P3();
+  //protected P3 adjustment = new P3();
   protected P3[] vectors = new P3[3];
 
   protected void getVectorsAndOrigin() {
@@ -174,9 +175,9 @@ abstract class MapFileReader extends VolumeFileReader {
       int yIndex = xyz2crs[1]; // yIndex = 0
       int zIndex = xyz2crs[2]; // zIndex = 2
 
-      origin.scaleAdd2(nxyzStart[xIndex] + adjustment.x, vectors[0], origin);
-      origin.scaleAdd2(nxyzStart[yIndex] + adjustment.y, vectors[1], origin);
-      origin.scaleAdd2(nxyzStart[zIndex] + adjustment.z, vectors[2], origin);
+      origin.scaleAdd2(nxyzStart[xIndex]/* + adjustment.x */, vectors[0], origin);
+      origin.scaleAdd2(nxyzStart[yIndex]/* + adjustment.y */, vectors[1], origin);
+      origin.scaleAdd2(nxyzStart[zIndex]/* + adjustment.z */, vectors[2], origin);
 
     }
 

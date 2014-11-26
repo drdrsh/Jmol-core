@@ -68,7 +68,7 @@ class MsmsReader extends PmeshReader {
     fileName = PT.rep(fileName, ".vert", ".face");
     Logger.info("reading from file " + fileName);
     try {
-      br = Rdr.getBufferedReader(sg.getAtomDataServer()
+      br = Rdr.getBufferedReader(sg.atomDataServer
           .getBufferedInputStream(fileName), null);
     } catch (Exception e) {
       Logger.info("Note: file " + fileName + " was not found");

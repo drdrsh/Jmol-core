@@ -7,15 +7,14 @@ public abstract class PeriodicVolumeFileReader extends VolumeFileReader {
     initializeSurfaceData();
     voxelData = new float[nPointsX][nPointsY][nPointsZ];
     getPeriodicVoxels();
-    if (params.extendLattice > 0) {
-      float f = params.extendLattice;
+    if (params.extendGrid != 0) {
       int[] n = new int[3];
       int nx = nPointsX - 1;
       int ny = nPointsY - 1;
       int nz = nPointsZ - 1;
       for (int i = 0; i < 3; i++) {
         int vi = voxelCounts[i] - 1;
-        n[i] = (int) (vi * f);
+        n[i] = (int) (vi * params.extendGrid);
         volumetricOrigin.scaleAdd2(-n[i], volumetricVectors[i],
             volumetricOrigin);
         vi += 2 * n[i];

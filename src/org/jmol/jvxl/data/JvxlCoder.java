@@ -371,6 +371,8 @@ public class JvxlCoder {
         addAttrib(attribs, "\n  contourValues", Escape.eAF(jvxlData.contourValuesUsed == null ? jvxlData.contourValues : jvxlData.contourValuesUsed));
         addAttrib(attribs, "\n  contourColors", jvxlData.contourColors);
       }
+      if (jvxlData.thisContour > 0)
+        addAttrib(attribs, "\n  thisContour", "" + jvxlData.thisContour);
     }
     //TODO: confusing flag insideOut:
     if (jvxlData.insideOut)

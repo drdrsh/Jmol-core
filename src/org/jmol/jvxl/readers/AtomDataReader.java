@@ -57,7 +57,6 @@ abstract class AtomDataReader extends VolumeDataReader {
   protected void initADR(SurfaceGenerator sg) {
     initVDR(sg);
     precalculateVoxelData = true;
-    atomDataServer = sg.getAtomDataServer();
   }
 
   protected String fileName;
@@ -98,7 +97,7 @@ abstract class AtomDataReader extends VolumeDataReader {
   protected void setup2() {
     //CANNOT BE IN HERE IF atomDataServer is not valid
     contactPair = params.contactPair;
-    doAddHydrogens = (sg.getAtomDataServer() != null && params.addHydrogens); //Jvxl cannot do this on its own
+    doAddHydrogens = (sg.atomDataServer != null && params.addHydrogens); //Jvxl cannot do this on its own
     modelIndex = params.modelIndex;
     if (params.bsIgnore != null)
       bsMyIgnored = params.bsIgnore;
@@ -210,7 +209,7 @@ abstract class AtomDataReader extends VolumeDataReader {
       P3[] hAtoms = null;
       if (doAddHydrogens) {
         atomData.bsSelected = atomSet;
-        atomDataServer.fillAtomData(atomData,
+        sg.atomDataServer.fillAtomData(atomData,
             AtomData.MODE_GET_ATTACHED_HYDROGENS);
         hAtoms = new P3[nH = atomData.hydrogenAtomCount];
         for (int i = 0; i < atomData.hAtoms.length; i++)

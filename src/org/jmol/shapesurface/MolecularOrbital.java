@@ -329,7 +329,7 @@ public class MolecularOrbital extends Isosurface {
       return moLinearCombination;
     if (propertyName == "showMO") {
       SB str = new SB();
-      Lst<Map<String, Object>> mos = (Lst<Map<String, Object>>) (sg.getMoData().get("mos"));
+      Lst<Map<String, Object>> mos = (Lst<Map<String, Object>>) (sg.params.moData.get("mos"));
       int nOrb = (mos == null ? 0 : mos.size());
       int thisMO = param;
       int currentMO = moNumber;
@@ -348,8 +348,7 @@ public class MolecularOrbital extends Isosurface {
       for (int i = i0; i <= nOrb; i++)
         if (thisMO == 0 || thisMO == i || !doOneMo && i == currentMO) {
           if (!doOneMo) {
-            Parameters params = sg.getParams();
-            setPropI("init", params, null);
+            setPropI("init", sg.params, null);
             setOrbital(i, null);
           }
           jvxlData.moleculeXml = vwr.getModelCml(vwr.getModelUndeletedAtomsBitSet(thisMesh.modelIndex), 100, true);
@@ -391,7 +390,7 @@ public class MolecularOrbital extends Isosurface {
     moPlane = (P4) thisModel.get("moPlane");
     moCutoff = (Float) thisModel.get("moCutoff");
     if (moCutoff == null)
-      moCutoff = (Float) sg.getMoData().get("defaultCutoff");
+      moCutoff = (Float) sg.params.moData.get("defaultCutoff");
     if (moCutoff == null) {
       moCutoff = Float.valueOf(Parameters.defaultQMOrbitalCutoff);
     }
@@ -494,7 +493,7 @@ public class MolecularOrbital extends Isosurface {
     if (modelCount > 1)
       appendCmd(s, "frame " + vwr.getModelNumberDotted(modelIndex));
     if (moCutoff != null)
-      appendCmd(s, "mo cutoff " + (sg.getIsPositiveOnly() ? "+" : "")
+      appendCmd(s, "mo cutoff " + (sg.params.isPositiveOnly ? "+" : "")
           + moCutoff);
     if (moScale != null)
       appendCmd(s, "mo scale " + moScale);

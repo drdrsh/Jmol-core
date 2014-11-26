@@ -84,7 +84,7 @@ class AtomPropertyMapper extends AtomDataReader {
       if (params.mep_calcType >= 0)
         calcType = params.mep_calcType;
       mepCalc = (MepCalculationInterface) Interface.getOption("quantum."
-          + mepType + "Calculation", (Viewer) sg.getAtomDataServer(), "file");
+          + mepType + "Calculation", (Viewer) sg.atomDataServer, "file");
     }
     if (!doSmoothProperty && maxDistance == Integer.MAX_VALUE)
       maxDistance = 5; // usually just local to a group
@@ -124,7 +124,7 @@ class AtomPropertyMapper extends AtomDataReader {
       Logger.startTimer("property mapping");
     if (bsNearby != null)
       bsMySelected.or(bsNearby);
-    iter = atomDataServer.getSelectedAtomIterator(bsMySelected, false, false, false);
+    iter = sg.atomDataServer.getSelectedAtomIterator(bsMySelected, false, false, false);
   }
   
   @Override
@@ -159,7 +159,7 @@ class AtomPropertyMapper extends AtomDataReader {
     float dminNearby = Float.MAX_VALUE;
     float value = (doSmoothProperty ? 0 : Float.NaN);
     float vdiv = 0;
-    atomDataServer.setIteratorForPoint(iter, modelIndex, pt, maxDistance);
+    sg.atomDataServer.setIteratorForPoint(iter, modelIndex, pt, maxDistance);
     iAtomSurface = -1;
     while (iter.hasNext()) {
       int ia = iter.next();

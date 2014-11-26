@@ -24,7 +24,6 @@
 package org.jmol.jvxl.readers;
 
 
-import org.jmol.atomdata.AtomDataServer;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.util.Logger;
 
@@ -32,7 +31,7 @@ import javajs.util.AU;
 import javajs.util.SB;
 import javajs.util.P3;
 
-abstract class VolumeDataReader extends SurfaceReader {
+class VolumeDataReader extends SurfaceReader {
 
   /*        (requires AtomDataServer)
    *                |-- IsoSolventReader
@@ -58,11 +57,18 @@ abstract class VolumeDataReader extends SurfaceReader {
   protected P3 point;
   protected float ptsPerAngstrom;
   protected int maxGrid;
-  protected AtomDataServer atomDataServer;
   protected boolean useOriginStepsPoints;
 
-  VolumeDataReader() {}
+  VolumeDataReader() {
+    // could be instantiated by map data from a reader
+    // but this is almost certainly not implemented
+  }
   
+  @Override
+  void init(SurfaceGenerator sg) {
+    initVDR(sg);
+  }
+
   protected void initVDR(SurfaceGenerator sg) {
     initSR(sg);
     useOriginStepsPoints = (params.origin != null && params.points != null && params.steps != null);
@@ -223,7 +229,7 @@ abstract class VolumeDataReader extends SurfaceReader {
       volumetricOrigin.z = min;
       if (isEccentric)
         eccentricityMatrix.rotate(volumetricOrigin);
-      if (center != null && center.x != Float.MAX_VALUE)
+      if (center != null && !Float.isNaN(center.x))
         volumetricOrigin.add(center);
       
       //System.out.println("/*volumeDatareader*/draw vector " + volumetricOrigin + " {" 

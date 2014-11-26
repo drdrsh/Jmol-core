@@ -182,6 +182,7 @@ public class Mesh extends MeshSurface {
     useColix = true;
     vertexCount0 = polygonCount0 = vc = pc = 0;
     vs = null;
+    vertexSource = null;
     volumeRenderPointSize = 0.15f;
     this.meshType = meshType;
   }

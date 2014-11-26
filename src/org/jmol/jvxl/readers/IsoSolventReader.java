@@ -195,7 +195,7 @@ class IsoSolventReader extends AtomDataReader {
       point = params.point;
       isCavity = (params.isCavity && meshDataServer != null); // Jvxl cannot do this calculation on its own.
       isPocket = (params.pocket != null && meshDataServer != null);
-      doCalculateTroughs = (!isMapData && atomDataServer != null && !isCavity // Jvxl needs an atom iterator to do this.
+      doCalculateTroughs = (!isMapData && sg.atomDataServer != null && !isCavity // Jvxl needs an atom iterator to do this.
           && sr > 0 && (dataType == Parameters.SURFACE_SOLVENT || dataType == Parameters.SURFACE_MOLECULAR));
       doUseIterator = doCalculateTroughs;
       getAtoms(params.bsSelected, doAddHydrogens, true, false, false, true,
@@ -582,7 +582,7 @@ class IsoSolventReader extends AtomDataReader {
       
       // solvent excluded surfaces only
 
-      iter = atomDataServer.getSelectedAtomIterator(bsMySelected, true, false, false);
+      iter = sg.atomDataServer.getSelectedAtomIterator(bsMySelected, true, false, false);
 
       // PHASE I: Construction of the surface edge and face data
 
@@ -681,7 +681,7 @@ class IsoSolventReader extends AtomDataReader {
     for (int iatomA = 0; iatomA < myAtomCount; iatomA++) {
       P3 ptA = atomXyz[iatomA];
       float rA = rs[iatomA];
-      atomDataServer.setIteratorForAtom(iter, atomIndex[iatomA], rA + maxRS);
+      sg.atomDataServer.setIteratorForAtom(iter, atomIndex[iatomA], rA + maxRS);
       while (iter.hasNext()) {
         int iB = iter.next();
         int iatomB = myIndex[iB];
@@ -859,7 +859,7 @@ class IsoSolventReader extends AtomDataReader {
      * 
      * 
      */
-    atomDataServer.setIteratorForPoint(iter, modelIndex, ptS, maxRS);
+    sg.atomDataServer.setIteratorForPoint(iter, modelIndex, ptS, maxRS);
     boolean isValid = true;
     while (iter.hasNext()) {
       int iia = iter.next();

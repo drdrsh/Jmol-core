@@ -212,11 +212,7 @@ public class VolumeData implements VolumeDataInterface {
   public float minGrid;
   public float maxGrid;
   public float voxelVolume;
-  private V3[] spanningVectors;
-
-  public V3[] getSpanningVectors() {
-    return spanningVectors;
-  }
+  public V3[] spanningVectors;
 
   public int getYzCount() {
 

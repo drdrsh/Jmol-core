@@ -141,6 +141,7 @@ public class JvxlData {
   public String contourColors;
   public float[] contourValues;
   public float[] contourValuesUsed;
+  public int thisContour = -1;
   public float scale3d;
 
   public short minColorIndex = -1;
@@ -200,7 +201,8 @@ public class JvxlData {
     slabInfo = null;
     slabValue = Integer.MIN_VALUE;
     thisSet = Integer.MIN_VALUE;
-    rendering = null;    
+    rendering = null;
+    thisContour = -1;
     translucency = 0;
     vContours = null;
     vertexColorMap = null;

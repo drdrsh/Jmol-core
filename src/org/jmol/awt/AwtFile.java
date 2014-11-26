@@ -8,8 +8,6 @@ import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.AccessControlException;
-import java.util.List;
-import java.util.Map;
 
 import javajs.api.GenericFileInterface;
 import javajs.util.PT;
@@ -56,7 +54,7 @@ class AwtFile extends File implements GenericFileInterface {
       conn = url.openConnection();
       String type = null;
       //conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-      Map<String, List<String>> x = conn.getRequestProperties();
+      //Map<String, List<String>> x = conn.getRequestProperties();
       if (outputBytes != null) {
         type = "application/octet-stream;";
       } else if (post != null) {

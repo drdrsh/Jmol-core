@@ -130,7 +130,6 @@ import org.jmol.jvxl.data.VolumeData;
 import org.jmol.jvxl.data.MeshData;
 import org.jmol.jvxl.api.MeshDataServer;
 import org.jmol.jvxl.calc.MarchingSquares;
-import org.jmol.util.ColorEncoder;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.util.AU;
@@ -148,29 +147,21 @@ import javajs.util.V3;
 
 public class SurfaceGenerator {
 
-  private JvxlData jvxlData;
-  private MeshData meshData;
-  private Parameters params;
-  private VolumeData volumeData;
-  private MeshDataServer meshDataServer;
-  private AtomDataServer atomDataServer;
-  private MarchingSquares marchingSquares;
-  private String version;
-  private boolean isValid = true;
-  public boolean isValid() {
-    return isValid;
-  }
-  private String fileType;
-  public String getFileType() {
-    return fileType;
-  }
-  private OC out;
-    
-  public void setVersion(String version) {
-    this.version = version;
-  }
+  public Parameters params;
+  public JvxlData jvxlData;
+  public MeshData meshData;
+  public VolumeData volumeDataTemp; 
+  public MeshDataServer meshDataServer;
+  public AtomDataServer atomDataServer;
+  public MarchingSquares marchingSquares;
+  public String version;
+  public boolean isValid = true;
+  public String fileType;
+  public BS bsVdw;
   
-  SurfaceReader surfaceReader;
+  private int colorPtr;
+  private SurfaceReader surfaceReader;
+  private OC out;
 
   public SurfaceGenerator(AtomDataServer atomDataServer, MeshDataServer meshDataServer,
                           MeshData meshData, JvxlData jvxlData) {
@@ -178,156 +169,36 @@ public class SurfaceGenerator {
     this.meshDataServer = meshDataServer;
     params = new Parameters();
     this.meshData = (meshData == null ? new MeshData() : meshData);
-    //System.out.println("SurfaceGenerator setup vertexColixs =" + this.meshData.vertexColixes);
     this.jvxlData = (jvxlData == null ? new JvxlData() : jvxlData);
-    volumeData = new VolumeData();
+    volumeDataTemp = new VolumeData();
+    // volumeDataTemp is used for some initial work, but it is sometimes
+    // replaced in surfaceReader by other sources of volume data. 
+    // Contact will re-use it.
     initializeIsosurface();
   }
   
-  public boolean isStateDataRead() {
-    return params.state == Parameters.STATE_DATA_READ;
-  }
-
-  public String getFileName() {
-    return params.fileName;
-  }
-  
-  MeshDataServer getMeshDataServer() {
-    return meshDataServer;
-  }
-
-  AtomDataServer getAtomDataServer() {
-    return atomDataServer;
-  }
-
-  public ColorEncoder getColorEncoder() {
-    return params.colorEncoder;
-  }
-
-  public int[] getVertexSource() {
-    return params.vertexSource;
-  }
-
   public void setJvxlData(JvxlData jvxlData) {
     this.jvxlData = jvxlData;
     if (jvxlData != null)
       jvxlData.version = version;
   }
 
-  public JvxlData getJvxlData() {
-    return jvxlData;
-  }
-
-  MeshData getMeshData() {
-    return meshData;
-  }
-/*
-  public void setMeshData(MeshData meshData) {
-    this.meshData = meshData;
-  }
-*/
-  void setMarchingSquares(MarchingSquares marchingSquares) {
-    this.marchingSquares = marchingSquares;  
-  }
-  
-  MarchingSquares getMarchingSquares() {
-    return marchingSquares;
-  }
-  
-  public Parameters getParams() {
-    return params;
-  }
-
-  public String getScript() {
-    //System.out.println("getting script " + params.script);
-    return params.script;
-  }
-  
-  public String[] getTitle() {
-    return params.title;
-  }
-  
-  public BS getBsSelected() {
-    return params.bsSelected;
-  }
-  
-  public BS getBsIgnore() {
-    return params.bsIgnore;
-  }
-  
-  public VolumeData getVolumeData() {
-    return volumeData;
-  }
-
-  public P4 getPlane() {
-    return params.thePlane;
-  }
-  
-  public int getColor(int which) {
-    switch(which) {
-    case -1:
-      return params.colorNeg;
-    case 1:
-      return params.colorPos;
-    }
-    return 0;
-  }
-/*  
-  public void setScript(String script) {
-    params.script = script;
-  }
-*/  
-  public void setModelIndex(int modelIndex) {
-    params.modelIndex = modelIndex;
-  }
-
-  public boolean getIAddGridPoints() {
-    return params.iAddGridPoints;
-  }
-
-  public boolean getIsPositiveOnly() {
-    return params.isPositiveOnly;
-  }
-  
   public boolean isInsideOut() {
     return params.insideOut != params.dataXYReversed;
   }
+  
+  public boolean isFullyLit() {
+    return (params.thePlane != null || params.fullyLit);
+  }
 
-  public float getCutoff() {
-    return params.cutoff;
-  }
-  
-  public Map<String, Object> getMoData() {
-    return params.moData;
-  }
-  
-  public boolean isCubeData() {
-    return jvxlData.wasCubic;
-  }
-  
   //////////////////////////////////////////////////////////////
-
-  int colorPtr;
-
-  /**
-   * setParameter is the main interface for surface generation. 
-   * 
-   * @param propertyName
-   * @param value
-   * @return         True if handled; False if not
-   * 
-   */
-
-  public boolean setParameter(String propertyName, Object value) {
-    return setProp(propertyName, value, null);
-  }
 
   /**
    * 
    * @param propertyName
    * @param value
    * @param bs
-   * @return TRUE if done processing
+   * @return TRUE if handled
    */
   @SuppressWarnings("unchecked")
   public boolean setProp(String propertyName, Object value, BS bs) {
@@ -623,10 +494,10 @@ public class SurfaceGenerator {
       return true;
     }
 
-    if ("volumeData" == propertyName) {
-      params.volumeData = (VolumeData) value;
-      return true;
-    }
+//    if ("volumeData" == propertyName) {
+//      params.volumeData = (VolumeData) value;
+//      return true;
+//    }
 
     if ("origin" == propertyName) {
       params.origin = (P3) value;
@@ -763,6 +634,7 @@ public class SurfaceGenerator {
         params.nContours = n;
       } else {
         n = ((Integer) value).intValue();
+        params.thisContour = 0; // flags as marked for JVXL reader
         if (n == 0)
           params.nContours = MarchingSquares.defaultContourCount;
         else if (n > 0)
@@ -803,8 +675,8 @@ public class SurfaceGenerator {
       return true;
     }
 
-    if ("extendLattice" == propertyName) {
-      params.extendLattice = ((Float) value).floatValue();
+    if ("extendGrid" == propertyName) {
+      params.extendGrid = ((Float) value).floatValue();
       return true;
     }
 
@@ -894,10 +766,10 @@ public class SurfaceGenerator {
 
     if ("functionXY" == propertyName) {
       params.setFunctionXY((Lst<Object>) value);
-      if (params.isContoured)
-        volumeData.setPlaneParameters(P4.new4(0, 0, 1, 0)); // xy plane
-      // through
-      // origin
+      if (params.isContoured)      // xy plane through origin
+        volumeDataTemp.setPlaneParameters(
+            params.thePlane == null ? params.thePlane = P4.new4(0, 0, 1, 0)
+            : params.thePlane); 
       if (((String) params.functionInfo.get(0)).indexOf("_xyz") >= 0)
         getFunctionZfromXY();
       processState();
@@ -1018,11 +890,6 @@ public class SurfaceGenerator {
       return true;
     }
 
-    if ("getSurfaceSets" == propertyName) {
-      getSurfaceSets();
-      return true;
-    }
-
     if ("mapColor" == propertyName) {
       if ((surfaceReader = setFileData((Viewer) atomDataServer, value)) == null) {
         Logger.error("Could not set the mapping data");
@@ -1030,6 +897,11 @@ public class SurfaceGenerator {
       }
       surfaceReader.setOutputChannel(out);
       mapSurface();
+      return true;
+    }
+
+    if ("getSurfaceSets" == propertyName) {
+      getSurfaceSets();
       return true;
     }
 
@@ -1179,7 +1051,7 @@ public class SurfaceGenerator {
       surfaceReader.hasColorData = false;
     }
     surfaceReader.jvxlUpdateInfo();
-    setMarchingSquares(surfaceReader.marchingSquares);
+    marchingSquares = surfaceReader.marchingSquares;
     surfaceReader.discardTempData(false);
     params.mappedDataMin = Float.MAX_VALUE;
     surfaceReader.closeReader();
@@ -1201,14 +1073,14 @@ public class SurfaceGenerator {
     //if (params.dataType == Parameters.SURFACE_FUNCTIONXY)
       //params.thePlane = new Point4f(0, 0, 1, 0);
     if (params.isPeriodic)
-      volumeData.isPeriodic = true;
+      surfaceReader.volumeData.isPeriodic = true;
     if (params.thePlane != null) {
       boolean isSquared = params.isSquared;
       params.isSquared = false;
       params.cutoff = 0;
-      volumeData.setMappingPlane(params.thePlane);
+      surfaceReader.volumeData.setMappingPlane(params.thePlane);
       surfaceReader.createIsosurface(!params.isPeriodic);//but don't read volume data yet
-      volumeData.setMappingPlane(null);
+      surfaceReader.volumeData.setMappingPlane(null);
       if (meshDataServer != null)
         meshDataServer.notifySurfaceGenerationCompleted();
       if (params.dataType == Parameters.SURFACE_NOMAP) {
@@ -1220,7 +1092,7 @@ public class SurfaceGenerator {
       params.mappedDataMin = Float.MAX_VALUE;
       surfaceReader.readVolumeData(true);
       if (params.mapLattice != null)
-        volumeData.isPeriodic = true;
+        surfaceReader.volumeData.isPeriodic = true;
     } else if (!params.colorBySets && !params.colorDensity) {
       surfaceReader.readAndSetVolumeParameters(true);
       params.mappedDataMin = Float.MAX_VALUE;
@@ -1231,10 +1103,6 @@ public class SurfaceGenerator {
     surfaceReader = null;
   }
 
-  public Lst<Object[]> getSlabInfo() {
-    return params.slabInfo;
-  }
-  
   void colorIsosurface() {
     surfaceReader.colorIsosurface();
     surfaceReader.jvxlUpdateInfo();
@@ -1255,21 +1123,21 @@ public class SurfaceGenerator {
 
   @SuppressWarnings("unchecked")
   private SurfaceReader setFileData(Viewer vwr, Object value) {
+    // comes from "readFile" or "mapColors"
     String fileType = this.fileType;
     this.fileType = null;
-    if (value instanceof VolumeData) {
-      volumeData = (VolumeData) value;
-      return newReader("VolumeDataReader");
-    }
     if (value instanceof Map) {
       Map<String, Object> map = (Map<String, Object>) value;
       if (map.containsKey("__pymolSurfaceData__")) {
         readerData = map;
         return newReaderBr("PyMOLMeshReader", null);
       }
-      volumeData = (VolumeData) map.get("volumeData");
+      value = map.get("volumeData");      
+    }
+    if (value instanceof VolumeData) {
+      // never implemented? 
+      volumeDataTemp = (VolumeData) value;
       return newReader("VolumeDataReader");
-      
     }
     String data = null;
     if (value instanceof String) {
@@ -1459,16 +1327,6 @@ public class SurfaceGenerator {
      meshDataServer.setOutputChannel(binaryDoc, out);    
   }
 
-  public boolean isFullyLit() {
-    return (params.thePlane != null || params.fullyLit);
-  }
-
-  BS bsVdw;
-  
-  public BS geVdwBitSet() {
-    return bsVdw;
-  }
-  
   void fillAtomData(AtomData atomData, int mode) {
     if ((mode & AtomData.MODE_FILL_RADII) != 0 
         && atomData.bsSelected != null) {
@@ -1480,7 +1338,7 @@ public class SurfaceGenerator {
   }
 
   public V3[] getSpanningVectors() {
-    return surfaceReader.getSpanningVectors();
+    return (surfaceReader.volumeData == null ? null : surfaceReader.volumeData.spanningVectors);
   }
 
 }

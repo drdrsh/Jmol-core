@@ -76,7 +76,7 @@ class IsoMOReader extends AtomDataReader {
     Map<String, Object> mo = (mos != null && linearCombination == null ? mos
         .get(params.qm_moNumber - 1) : null);
     boolean haveVolumeData = params.moData.containsKey("haveVolumeData");
-    if (haveVolumeData && mo != null)
+    if (haveVolumeData && mo != null) // from XmlChem3dReader
       params.volumeData = (VolumeData) mo.get("volumeData");
     setup2();
     doAddHydrogens = false;
@@ -97,7 +97,7 @@ class IsoMOReader extends AtomDataReader {
         fixTitleLine2(i, mo);
     } else {
       q = (MOCalculationInterface) Interface.getOption(className, 
-          (Viewer) sg.getAtomDataServer(), "file");
+          (Viewer) sg.atomDataServer, "file");
       if (isNci) {
         qpc = (QuantumPlaneCalculationInterface) q;
       } else if (linearCombination == null) {

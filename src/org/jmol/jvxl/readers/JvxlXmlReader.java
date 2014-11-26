@@ -220,8 +220,11 @@ public class JvxlXmlReader extends VolumeFileReader {
       if (nContoursRead <= 0) {
         nContoursRead = 0;
       } else {
+        if (params.thisContour < 0)
+          params.thisContour = parseIntStr(XmlReader.getXmlAttrib(data, "thisContour"));
         s = XmlReader.getXmlAttrib(data, "contourValues");
         if (s.length() > 0) {
+          s = s.replace('[',' ').replace(']',' ');
           jvxlData.contourValues = params.contoursDiscrete = parseFloatArrayStr(s);
           Logger.info("JVXL read: contourValues " + Escape.eAF(jvxlData.contourValues));            
         }

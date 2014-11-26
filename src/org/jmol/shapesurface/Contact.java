@@ -141,8 +141,6 @@ public class Contact extends Isosurface {
     thisMesh.setMerged(true);
     thisMesh.nSets = 0;
     thisMesh.info = null;
-    Parameters params = sg.getParams();
-
     String func = null;
     switch (displayType) {
     case T.full:
@@ -156,7 +154,7 @@ public class Contact extends Isosurface {
       func = "a+b";
       break;
     }
-    VolumeData volumeData;
+    //VolumeData volumeData;
     switch (displayType) {
     case T.nci:
       colorByType = false;
@@ -164,10 +162,10 @@ public class Contact extends Isosurface {
       bs.or(bsB); // for now -- TODO -- need to distinguish ligand
       if (parameters[0] < 0)
         parameters[0] = 0; // reset to default for density
-      params.colorDensity = colorDensity;
-      params.bsSelected = bs;
-      params.bsSolvent = bsB;
-      sg.setParameter("parameters", parameters);
+      sg.params.colorDensity = colorDensity;
+      sg.params.bsSelected = bs;
+      sg.params.bsSolvent = bsB;
+      sg.setProp("parameters", parameters, null);
       setPropI("nci", Boolean.TRUE, null);
       break;
     case T.sasurface:
@@ -181,10 +179,9 @@ public class Contact extends Isosurface {
       colorByType = false;
       thisMesh.nSets = 1;
       newSurface(T.slab, null, bsA, bsB, rd, null, null, false, null, 0);
-      volumeData = sg.getVolumeData();
       sg.initState();
       newSurface(T.plane, null, bsA, bsB, rd, parameters, func,
-          colorDensity, volumeData, 0);
+          colorDensity, sg.volumeDataTemp, 0);
       mergeMesh(null);
       break;
     case T.full:
@@ -290,7 +287,7 @@ public class Contact extends Isosurface {
     VolumeData volumeData = new VolumeData();
     int logLevel = Logger.getLogLevel();
     Logger.setLogLevel(0);
-    float resolution = sg.getParams().resolution;
+    float resolution = sg.params.resolution;
     int nContacts = pairs.size();
     double volume = 0;
     if (displayType == T.full && resolution == Float.MAX_VALUE)
@@ -512,7 +509,7 @@ public class Contact extends Isosurface {
   private void newSurface(int displayType, ContactPair cp, BS bs1, BS bs2,
                           RadiusData rd, float[] parameters, Object func,
                           boolean isColorDensity, VolumeData volumeData, float sasurfaceRadius) {
-    Parameters params = sg.getParams();
+    Parameters params = sg.params;
     params.isSilent = true;
     if (cp == null) {
       bs2.andNot(bs1);
@@ -574,7 +571,7 @@ public class Contact extends Isosurface {
     case T.plane:
     case T.connect:
       if (displayType == T.connect)
-        sg.setParameter("parameters", parameters);
+        sg.setProp("parameters", parameters, null);
       if (cp == null) {
         params.atomRadiusData = rd;
         params.bsIgnore = BSUtil.copyInvert(bs2, ac);

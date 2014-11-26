@@ -2431,7 +2431,7 @@ public class MathExt implements JmolMathExtension {
         break;
       return mp.addXMap(vwr.getFileAsMap(null));
     }
-    return mp.addXStr(e.getCmdExt().write(args));
+    return mp.addXStr(e.getCmdExt().dispatch(T.write, true, args));
   }
 
   ///////// private methods used by evaluateXXXXX ////////

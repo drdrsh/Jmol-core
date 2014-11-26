@@ -143,7 +143,7 @@ public class Parameters {
   public final static int STATE_DATA_COLORED = 3;
 
   
-  int state = STATE_UNINITIALIZED;
+  public int state = STATE_UNINITIALIZED;
 
   public int testFlags = 0;
   boolean logMessages = false;
@@ -205,9 +205,9 @@ public class Parameters {
     bsSelected = null;
     bsSolvent = null;
     calculationType = "";
-    center = P3.new3(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+    center = new P3();
+    resetForMapping(true);
     colorBySign = colorByPhase = colorBySets = false;
-    colorDensity = false;
     colorEncoder = null;
     colorNeg = defaultColorNegative;
     colorNegLCAO = defaultColorNegativeLCAO;
@@ -226,16 +226,14 @@ public class Parameters {
     distance = Float.MAX_VALUE;
     doFullMolecular = false;
     envelopeRadius = 10f;
-    extendLattice = 0;
+    extendGrid = 0;
     fileIndex = 1;
     readAllData = true;
     fileName = "";
     fullyLit = false;
-    func = null;
     functionInfo = null;
     iAddGridPoints = false;
     insideOut = false;
-    intersection = null;
     isAngstroms = false;
     isBicolorMap = isCutoffAbsolute = isPositiveOnly = false;
     isCavity = false;
@@ -243,14 +241,13 @@ public class Parameters {
     isSquared = false;
     isSquaredLinear = false;
     isContoured = false;
-    isEccentric = isAnisotropic = false;
+    isEccentric = false;
     isMapped = false;
     isPeriodic = false;
     isSilent = false;
     logCube = logCompression = false;
     logMessages = Logger.debugging;
     mapLattice = null;
-    mappedDataMin = Float.MAX_VALUE;
     mep_calcType = -1;
     minSet = 0;
     modelIndex = -1;
@@ -277,9 +274,31 @@ public class Parameters {
     title = null;
     usePropertyForColorRange = true; // except for MEP and MLP
     vertexSource = null;
-    volumeData = null;
   }
   
+  /**
+   * reset some parameters at the "MAP" keyword or initially
+   * 
+   * @param haveSurface
+   */
+  public void resetForMapping(boolean haveSurface) {
+    if (!haveSurface) 
+      state = Parameters.STATE_DATA_READ;
+    center.x = Float.NaN;
+    colorDensity = false;
+    func = null;
+    intersection = null;
+    isAnisotropic = false;
+    isMapped = true;
+    mappedDataMin = Float.MAX_VALUE;
+    origin = null;
+    parameters = null;
+    points = null;
+    qmOrbitalType = QM_TYPE_UNKNOWN; 
+    steps = null;
+    volumeData = null;
+  }
+
   String calculationType = "";
 
   //solvent/molecular-related:
@@ -338,8 +357,8 @@ public class Parameters {
   boolean colorByPhase;
   boolean colorBySets;
   public int colorRgb;
-  int colorNeg;
-  int colorPos;
+  public int colorNeg;
+  public int colorPos;
   int colorPosLCAO;
   int colorNegLCAO;
   int colorPhase;
@@ -347,7 +366,7 @@ public class Parameters {
 
    
   //special effects
-  boolean iAddGridPoints;
+  public boolean iAddGridPoints;
   
   /////////////////////////////
   
@@ -365,7 +384,7 @@ public class Parameters {
       anisotropy[1] = pt.y;
       anisotropy[2] = pt.z;
       isAnisotropic = true;
-      if (center.x == Float.MAX_VALUE)
+      if (Float.isNaN(center.x))
         center.set(0, 0, 0);
   }
   
@@ -405,7 +424,7 @@ public class Parameters {
     anisotropy[0] = fab_c * c;
     anisotropy[1] = fab_c * c;
     anisotropy[2] = c;
-    if (center.x == Float.MAX_VALUE)
+    if (Float.isNaN(center.x))
       center.set(0, 0, 0);
   }
 
@@ -666,7 +685,7 @@ public class Parameters {
   final static int QM_TYPE_NCI_SCF = 4;
   final static int QM_TYPE_VOLUME_DATA = 5;
   
-  Map<String, Object> moData;
+  public Map<String, Object> moData;
   public final static int MO_MAX_GRID = 80;
   int qm_gridMax = MO_MAX_GRID;
   float qm_ptsPerAngstrom = 10f;
@@ -754,7 +773,7 @@ public class Parameters {
   float distance;
   public boolean allowVolumeRender;
   
-  String script;
+  public String script;
   
   public BS bsSelected;
   public BS bsIgnore;
@@ -762,12 +781,12 @@ public class Parameters {
   
   public Object func;
 
-  String[] title;
+  public String[] title;
   boolean blockCubeData;
   boolean readAllData;
   int fileIndex = -1; //one-based, although efvet reader uses 0 for "indicated color"
-  String fileName;
-  int modelIndex = -1; // zero-based
+  public String fileName;
+  public int modelIndex = -1; // zero-based
   public boolean isXLowToHigh;
   
   boolean insideOut;
@@ -776,7 +795,7 @@ public class Parameters {
   public float sigma = Float.MAX_VALUE; // for MrcReader
   boolean cutoffAutomatic = true;
   public boolean isCutoffAbsolute;
-  boolean isPositiveOnly;
+  public boolean isPositiveOnly;
   
   boolean rangeAll;
   boolean rangeSelected;
@@ -819,10 +838,10 @@ public class Parameters {
   public P3 origin;
   public P3 steps;
   public P3 points;
-  public VolumeData volumeData;
+  public VolumeData volumeData; // can be set by Contact or MO reader
   public ContactPair contactPair;
   public P3 mapLattice;
-  public float extendLattice;
+  public float extendGrid;
   public boolean isMapped;
   public boolean showTiming;
   public float pointSize;
@@ -851,30 +870,7 @@ public class Parameters {
     }
   }
 
-  /**
-   * reset some parameters at the "MAP" keyword
-   * 
-   * @param haveSurface
-   */
-  public void resetForMapping(boolean haveSurface) {
-    if (!haveSurface) 
-      state = Parameters.STATE_DATA_READ;
-    isMapped = true;
-    qmOrbitalType = QM_TYPE_UNKNOWN; 
-    parameters = null;
-    colorDensity = false;
-    mappedDataMin = Float.MAX_VALUE;
-    intersection = null;
-    func = null;
-    points = null;
-    origin = null;
-    steps = null;
-    volumeData = null;
-    center.x = Float.MAX_VALUE;
-    isAnisotropic = false;
-  }
-
-    public void addSlabInfo(Object[] slabObject) {
+  public void addSlabInfo(Object[] slabObject) {
     if (slabInfo == null)
       slabInfo = new  Lst<Object[]>();
     slabInfo.addLast(slabObject);

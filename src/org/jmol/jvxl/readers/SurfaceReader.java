@@ -203,7 +203,7 @@ public abstract class SurfaceReader implements VertexDataServer {
   protected Parameters params;
   protected MeshData meshData;
   protected JvxlData jvxlData;
-  protected VolumeData volumeData;
+  VolumeData volumeData;
   private String edgeData;
 
   protected boolean haveSurfaceAtoms = false;
@@ -242,8 +242,7 @@ public abstract class SurfaceReader implements VertexDataServer {
 
   void initSR(SurfaceGenerator sg) {
     this.sg = sg;
-    params = sg.getParams();
-    marchingSquares = sg.getMarchingSquares();
+    params = sg.params;
     assocCutoff = params.assocCutoff;
     isXLowToHigh = params.isXLowToHigh;
     center = params.center;
@@ -254,10 +253,11 @@ public abstract class SurfaceReader implements VertexDataServer {
     isEccentric = params.isEccentric;
     eccentricityScale = params.eccentricityScale;
     eccentricityRatio = params.eccentricityRatio;
-    meshData = sg.getMeshData();
-    jvxlData = sg.getJvxlData();
-    setVolumeDataV(sg.getVolumeData());
-    meshDataServer = sg.getMeshDataServer();
+    marchingSquares = sg.marchingSquares;
+    meshData = sg.meshData;
+    jvxlData = sg.jvxlData;
+    setVolumeDataV(sg.volumeDataTemp); // initialize volume data to surfaceGenerator's
+    meshDataServer = sg.meshDataServer;
     cJvxlEdgeNaN = (char) (JvxlCoder.defaultEdgeFractionBase + JvxlCoder.defaultEdgeFractionRange);
   }
 
@@ -422,6 +422,7 @@ public abstract class SurfaceReader implements VertexDataServer {
       params.nContours = jvxlData.vContours.length;
     jvxlData.nContours = (params.contourFromZero ? params.nContours : -1
         - params.nContours);
+    jvxlData.thisContour = params.thisContour;
     jvxlData.nEdges = edgeCount;
     jvxlData.edgeFractionBase = edgeFractionBase;
     jvxlData.edgeFractionRange = edgeFractionRange;
@@ -479,7 +480,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     if (!discardAll)
       return;
     voxelData = null;
-    sg.setMarchingSquares(marchingSquares = null);
+    sg.marchingSquares = marchingSquares = null;
     marchingCubes = null;
   }
 
@@ -765,6 +766,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     applyColorScale();
     jvxlData.nContours = (params.contourFromZero 
         ? params.nContours : -1 - params.nContours);
+    jvxlData.thisContour = params.thisContour;
     jvxlData.jvxlFileMessage = "mapped: min = " + params.valueMappedToRed
         + "; max = " + params.valueMappedToBlue;
   }
@@ -1070,7 +1072,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     v.z *= anisotropy[2];
   }
 
-  private boolean haveSetAnisotropy = false;
+  private boolean haveSetAnisotropy;
   
   protected void setVolumetricAnisotropy() {
     if (haveSetAnisotropy)
@@ -1126,8 +1128,5 @@ public abstract class SurfaceReader implements VertexDataServer {
     return -1;
   }
 
-  public V3[] getSpanningVectors() {
-    return (volumeData == null ? null : volumeData.getSpanningVectors());
-  }
 }
 

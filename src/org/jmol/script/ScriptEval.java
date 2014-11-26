@@ -230,14 +230,18 @@ public class ScriptEval extends ScriptExpr {
   private static int iProcess;
 
   private JmolMathExtension mathExt;
-  private JmolSmilesExtension smilesExt;
-
   public JmolMathExtension getMathExt() {
     return (mathExt == null ? (mathExt = (JmolMathExtension) getExt("Math")).init(this) : mathExt);
   }
 
+  private JmolSmilesExtension smilesExt;
   public JmolSmilesExtension getSmilesExt() {
     return (smilesExt == null ? (smilesExt = (JmolSmilesExtension) getExt("Smiles")).init(this) : smilesExt);
+  }
+
+  private JmolCmdExtension cmdIso;
+  public JmolCmdExtension getIsoExt() {
+    return (cmdIso == null ? (cmdIso = (JmolCmdExtension) getExt("Iso")).init(this) : cmdIso);
   }
 
   public ShapeManager sm;
@@ -2520,13 +2524,13 @@ public class ScriptEval extends ScriptExpr {
     case T.mapproperty:
     case T.minimize:
     case T.modulation:
+    case T.data:
+    case T.navigate:
     case T.plot:
     case T.quaternion:
     case T.ramachandran:
-    case T.data:
-    case T.navigate:
     case T.show:
-    case T.write:
+    case T.write:      
       getCmdExt().dispatch(theToken.tok, false, st);
       break;
     default:
@@ -2701,21 +2705,23 @@ public class ScriptEval extends ScriptExpr {
     case T.unitcell:
       cmdUnitcell(1);
       return;
+    case T.ellipsoid:
+    case T.measurements:
+    case T.measure:
+    case T.polyhedra:
+    case T.struts:
+      getCmdExt().dispatch(iShape, false, st);
+      return;
     case T.cgo:
     case T.contact:
     case T.dipole:
     case T.draw:
-    case T.ellipsoid:
     case T.isosurface:
     case T.lcaocartoon:
-    case T.measurements:
-    case T.measure:
     case T.mo:
     case T.plot3d:
     case T.pmesh:
-    case T.polyhedra:
-    case T.struts:
-      getCmdExt().dispatch(iShape, false, st);
+      getIsoExt().dispatch(iShape, false, st);
       return;
     }
   }
@@ -8157,7 +8163,7 @@ public class ScriptEval extends ScriptExpr {
       }
     }
     if (!chk && shapeType == JC.SHAPE_MO
-        && !getCmdExt().dispatch(JC.SHAPE_MO, true, st))
+        && getCmdExt().dispatch(JC.SHAPE_MO, true, st) == null)
       return;
     boolean isTranslucent = (theTok == T.translucent);
     if (isTranslucent || theTok == T.opaque) {

@@ -7,9 +7,7 @@ public interface JmolCmdExtension {
 
   public JmolCmdExtension init(Object eval);
 
-  public boolean dispatch(int iShape, boolean b, T[] st) throws ScriptException;
-
-  public String plot(T[] args) throws ScriptException;
+  public String dispatch(int iShape, boolean b, T[] st) throws ScriptException;
 
   public Object getBitsetIdent(BS bs, String label, Object tokenValue,
                                boolean useAtomMap, int index,
@@ -17,7 +15,5 @@ public interface JmolCmdExtension {
 
   public boolean evalParallel(ScriptContext context,
                                   ShapeManager shapeManager);
-
-  public String write(T[] args) throws ScriptException;
 
 }

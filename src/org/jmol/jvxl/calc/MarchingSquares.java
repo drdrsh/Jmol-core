@@ -337,6 +337,8 @@ public class MarchingSquares {
   }
 
   private void checkContour(Triangle t, int i, float value) {
+    if (thisContour > 0 && i + 1 != thisContour)
+      return;
    //System.out.println(" ms  i=" + i + " " + contourVertexes[pts[0]].value + " " + contourVertexes[pts[1]].value + " " + contourVertexes[pts[2]].value + " " + value);
    //System.out.println(pts[0] + " " + pts[1] + " " + pts[2]);
    //System.out.println(contourVertexes[pts[0]] + "\n" + contourVertexes[pts[1]] + "\n" + contourVertexes[pts[2]]);

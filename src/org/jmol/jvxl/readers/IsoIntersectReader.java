@@ -79,7 +79,7 @@ class IsoIntersectReader extends AtomDataReader {
     if (params.func instanceof String) {
       funcType = (params.func.equals("a-b") ? TYPE_DIFF : params.func
           .equals("a+b") ? TYPE_SUM : TYPE_MAX);
-    } else if (params.func == null || atomDataServer == null) {
+    } else if (params.func == null || sg.atomDataServer == null) {
       funcType = TYPE_DIFF;
     } else {
       func = (Object[]) params.func;
@@ -168,7 +168,7 @@ class IsoIntersectReader extends AtomDataReader {
     default:
       values[0] = va;
       values[1] = vb;
-      return atomDataServer.evalFunctionFloat(func[0], func[1], values);
+      return sg.atomDataServer.evalFunctionFloat(func[0], func[1], values);
     }
   }
   

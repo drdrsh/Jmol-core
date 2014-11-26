@@ -58,7 +58,7 @@ class IsoMepReader extends AtomDataReader {
   protected void generateCube() {
     newVoxelDataCube();
     MepCalculationInterface m = (MepCalculationInterface) Interface.getOption("quantum." + type + "Calculation", 
-        (Viewer) sg.getAtomDataServer(), "file");
+        (Viewer) sg.atomDataServer, "file");
     m.calculate(volumeData, bsMySelected, atomData.atomXyz,
           params.theProperty, params.mep_calcType);
   }

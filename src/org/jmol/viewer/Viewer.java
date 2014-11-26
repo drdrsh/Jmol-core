@@ -3660,7 +3660,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       width = (width + 1) / 2;
     if (dimScreen.width == width && dimScreen.height == height)
       return;
-    //System.out.println("HMM " + width +  " " + height + " " + maximumSize);
     resizeImage(width, height, false, false, true);
   }
 

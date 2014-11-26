@@ -116,10 +116,6 @@ public abstract class Shape {
   public BS bsSizeSet;
   public BS bsColixSet;
   
-  public Viewer getViewer() {
-    return vwr;
-  }
-  
   final public void initializeShape(Viewer vwr, ModelSet modelSet,
                                int shapeID) {
     this.vwr = vwr;
@@ -138,6 +134,7 @@ public abstract class Shape {
     // only some atom-based shapes implement this.
   }
   /**
+   * overridden in Dots, CGOMesh, and AtomShape
    * 
    * @param atomIndex
    * @return size
@@ -147,6 +144,7 @@ public abstract class Shape {
   }
 
   /**
+   * BioShapeCollection only
    * 
    * @param group
    * @return size

@@ -267,27 +267,27 @@ public class Jvxl {
 
     // input file
 
-    sg.setVersion(VERSION);
+    sg.version = VERSION;
     if (blockData)
-      sg.setParameter("blockData", Boolean.TRUE);
+      sg.setProp("blockData", Boolean.TRUE, null);
     if (!Float.isNaN(cutoff))
-      sg.setParameter(isPositiveOnly ? "cutoffPositive" : "cutoff", Float.valueOf(
-          cutoff));
+      sg.setProp(isPositiveOnly ? "cutoffPositive" : "cutoff", Float.valueOf(
+          cutoff), null);
     if (bicolor)
-      sg.setParameter("sign", null);
+      sg.setProp("sign", null, null);
     if (reverseColor)
-      sg.setParameter("reverseColor", null);
+      sg.setProp("reverseColor", null, null);
     //if (phase != null)
-      //sg.setParameter("phase", phase);
+      //sg.setProp("phase", phase);
 
     if (progressive)
-      sg.setParameter("progressive", null);
+      sg.setProp("progressive", null, null);
 
     if (plane != null)
-      sg.setParameter("plane", plane);
+      sg.setProp("plane", plane, null);
     else {
       if (fileIndex != Integer.MAX_VALUE)
-        sg.setParameter("fileIndex", Integer.valueOf(fileIndex));
+        sg.setProp("fileIndex", Integer.valueOf(fileIndex), null);
       Object t = FileReader
       .getBufferedReaderOrErrorMessageFromName(inputFile);
       if (t instanceof String) {
@@ -295,7 +295,7 @@ public class Jvxl {
         return;
       }
       BufferedReader br = (BufferedReader) t;
-      sg.setParameter("readFile", br);
+      sg.setProp("readFile", br, null);
       try {
         br.close();
       } catch (Exception e) {
@@ -303,19 +303,19 @@ public class Jvxl {
       }
     }
 
-    sg.setParameter("title", line.toString());
+    sg.setProp("title", line.toString(), null);
 
     //color scheme is only for VMRL
 
     //if (colorScheme != null) {
      // ColorEncoder ce = new ColorEncoder(null);
      // ce.setColorScheme(colorScheme, false);
-     // sg.setParameter("colorScheme", ce);
+     // sg.setProp("colorScheme", ce);
    // }
     if (!Float.isNaN(min))
-      sg.setParameter("red", Float.valueOf(min));
+      sg.setProp("red", Float.valueOf(min), null);
     if (!Float.isNaN(max))
-      sg.setParameter("blue", Float.valueOf(max));
+      sg.setProp("blue", Float.valueOf(max), null);
     if (mapFile != null) {
       Object t = FileReader
       .getBufferedReaderOrErrorMessageFromName(mapFile);
@@ -324,7 +324,7 @@ public class Jvxl {
         return;
       }
       BufferedReader br2 = (BufferedReader) t;
-      sg.setParameter("mapColor", br2);
+      sg.setProp("mapColor", br2, null);
       try {
         br2.close();
       } catch (Exception e) {

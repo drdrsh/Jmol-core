@@ -43,7 +43,6 @@ class IsoFxyReader extends AtomDataReader {
     initADR(sg);
     isXLowToHigh = true;
     precalculateVoxelData = false;
-    atomDataServer = sg.getAtomDataServer();
     params.fullyLit = true;
     isPlanarMapping = (params.thePlane != null || params.state == Parameters.STATE_DATA_COLORED);
     if (params.func != null)
@@ -132,7 +131,7 @@ class IsoFxyReader extends AtomDataReader {
     values[0] = pt.x;
     values[1] = pt.y;
     values[2] = pt.z;
-    return atomDataServer.evalFunctionFloat(func[0], func[1], values);
+    return sg.atomDataServer.evalFunctionFloat(func[0], func[1], values);
   }
 
   protected float evaluateValue(int x, int y, int z) {

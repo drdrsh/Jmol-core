@@ -83,7 +83,7 @@ final class IsoShapeReader extends VolumeDataReader {
     volumeData.sr = this; // we will provide point data for mapping
     precalculateVoxelData = false;
     isQuiet = true;
-    if (center.x == Float.MAX_VALUE)
+    if (Float.isNaN(center.x))
       center.set(0, 0, 0);
     String type = "sphere";
     switch (dataType) {
