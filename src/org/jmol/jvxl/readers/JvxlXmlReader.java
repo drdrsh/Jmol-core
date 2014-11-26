@@ -297,9 +297,9 @@ public class JvxlXmlReader extends VolumeFileReader {
       params.thePlane = null;
       surfaceDataCount = parseIntStr(XmlReader.getXmlAttrib(data, "nSurfaceInts"));
       edgeDataCount = parseIntStr(XmlReader.getXmlAttrib(data, "nBytesUncompressedEdgeData"));
-      s = XmlReader.getXmlAttrib(data, "processLattice");
+      s = XmlReader.getXmlAttrib(data, "fixedLattice");
       if (s.indexOf("{") >= 0)
-        jvxlData.processLattice = (P3) Escape.uP(s);
+        jvxlData.fixedLattice = (P3) Escape.uP(s);
         
     }
     excludedVertexCount = parseIntStr(XmlReader.getXmlAttrib(data, "nExcludedVertexes"));

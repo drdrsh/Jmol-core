@@ -173,7 +173,7 @@ public class JvxlData {
   public boolean allowVolumeRender;
   public float voxelVolume;
   public P3 mapLattice;
-  public P3 processLattice;
+  public P3 fixedLattice;
   public String baseColor;
 
   public void clear() {
@@ -196,7 +196,7 @@ public class JvxlData {
     msg = "";
     nPointsX = 0;
     nVertexColors = 0;
-    processLattice = null;
+    fixedLattice = null;
     slabInfo = null;
     slabValue = Integer.MIN_VALUE;
     thisSet = Integer.MIN_VALUE;

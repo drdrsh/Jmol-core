@@ -308,8 +308,8 @@ public class JvxlCoder {
     if (!jvxlData.allowVolumeRender)
       addAttrib(attribs, "\n  allowVolumeRender", "false");
     if (jvxlData.jvxlPlane == null || vertexDataOnly) {
-      if (jvxlData.processLattice != null && !vertexDataOnly)
-        addAttrib(attribs, "\n  processLattice", "" + jvxlData.processLattice);
+      if (jvxlData.fixedLattice != null && !vertexDataOnly)
+        addAttrib(attribs, "\n  fixedLattice", "" + jvxlData.fixedLattice);
       if (jvxlData.isContoured) {
         addAttrib(attribs, "\n  contoured", "true"); 
         addAttrib(attribs, "\n  colorMapped", "true");

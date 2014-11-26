@@ -2876,7 +2876,7 @@ public class CmdExt implements JmolCmdExtension {
     P3 pt;
     P4 plane = null;
     P3 lattice = null;
-    boolean processLattice = false;
+    boolean fixLattice = false;
     P3[] pts;
     int color = 0;
     String str = null;
@@ -3724,14 +3724,9 @@ public class CmdExt implements JmolCmdExtension {
           sbCommand.append(" ").appendO(propertyValue);
         }
         break;
-      case T.decimal:
-      case T.integer:
-      case T.plus:
       case T.cutoff:
         sbCommand.append(" cutoff ");
-        if (eval.theTok == T.cutoff)
-          i++;
-        if (tokAt(i) == T.plus) {
+        if (tokAt(++i) == T.plus) {
           propertyName = "cutoffPositive";
           propertyValue = Float.valueOf(cutoff = floatParameter(++i));
           sbCommand.append("+").appendO(propertyValue);
@@ -4272,13 +4267,12 @@ public class CmdExt implements JmolCmdExtension {
       case T.lattice:
         if (iShape != JC.SHAPE_ISOSURFACE)
           invArg();
-        if (tokAt(i + 1) == T.plus) {
-          i += 2;
+        if (tokAt(++i) == T.plus) {
           propertyName = "extendLattice";
-          propertyValue = Float.valueOf(floatParameter(i));
+          propertyValue = Float.valueOf(floatParameter(++i));
           sbCommand.append(" lattice + " + propertyValue);
         } else {
-          pt = getPoint3f(i + 1, false);
+          pt = getPoint3f(i, false);
           i = eval.iToken;
           if (pt.x <= 0 || pt.y <= 0 || pt.z <= 0)
             break;
@@ -4291,9 +4285,9 @@ public class CmdExt implements JmolCmdExtension {
             propertyValue = pt;
           } else {
             lattice = pt;
-            if (tokAt(i + 1) == T.on) {
-              sbCommand.append(" true");
-              processLattice = true;
+            if (tokAt(i + 1) == T.fixed) {
+              sbCommand.append(" fixed");
+              fixLattice = true;
               i++;
             }
           }
@@ -4408,8 +4402,8 @@ public class CmdExt implements JmolCmdExtension {
     }
     if (lattice != null) { // before MAP, this is a display option
       setShapeProperty(iShape, "lattice", lattice);
-      if (processLattice)
-        setShapeProperty(iShape, "processLattice", Boolean.TRUE);
+      if (fixLattice)
+        setShapeProperty(iShape, "fixLattice", Boolean.TRUE);
     }
     if (symops != null) // before MAP, this is a display option
       setShapeProperty(iShape, "symops", symops);

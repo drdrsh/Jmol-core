@@ -922,12 +922,12 @@ public class IsosurfaceMesh extends Mesh {
             spanningVectors, true, null)) != null ? unitCell : null);
   }
 
-  void processLattice(Viewer vwr) {
+  void fixLattice(Viewer vwr) {
     if (getUnitCell(vwr) == null)
       return;
     P3i minXYZ = new P3i();
     P3i maxXYZ = P3i.new3((int) lattice.x, (int) lattice.y, (int) lattice.z);
-    jvxlData.processLattice = lattice;
+    jvxlData.fixedLattice = lattice;
     lattice = null;
     unitCell.setMinMaxLatticeParameters(minXYZ, maxXYZ);
     int nCells = (maxXYZ.x - minXYZ.x) * (maxXYZ.y - minXYZ.y)

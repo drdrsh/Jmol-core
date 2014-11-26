@@ -487,9 +487,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return;
     }
 
-    if ("processLattice" == propertyName) {
+    if ("fixLattice" == propertyName) {
       if (thisMesh != null)
-        thisMesh.processLattice(vwr);
+        thisMesh.fixLattice(vwr);
       return;
     }
 
@@ -1441,9 +1441,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if (!thisMesh.isMerged) {
       thisMesh.initialize(sg.isFullyLit() ? T.fullylit
         : T.frontlit, null, sg.getPlane());
-      if (jvxlData.processLattice != null) {
-        thisMesh.lattice = jvxlData.processLattice;
-        thisMesh.processLattice(vwr);
+      if (jvxlData.fixedLattice != null) {
+        thisMesh.lattice = jvxlData.fixedLattice;
+        thisMesh.fixLattice(vwr);
       }
         return;
 
