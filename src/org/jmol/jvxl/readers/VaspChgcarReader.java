@@ -137,13 +137,6 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     }
   }
 
-
-  @Override
-  protected void readSkip() throws Exception {
-    // n/a
-  }
-
-
 }
 
 

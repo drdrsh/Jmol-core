@@ -226,6 +226,7 @@ public class Parameters {
     distance = Float.MAX_VALUE;
     doFullMolecular = false;
     envelopeRadius = 10f;
+    extendLattice = 0;
     fileIndex = 1;
     readAllData = true;
     fileName = "";
@@ -246,9 +247,9 @@ public class Parameters {
     isMapped = false;
     isPeriodic = false;
     isSilent = false;
-    mapLattice = null;
     logCube = logCompression = false;
     logMessages = Logger.debugging;
+    mapLattice = null;
     mappedDataMin = Float.MAX_VALUE;
     mep_calcType = -1;
     minSet = 0;
@@ -821,6 +822,7 @@ public class Parameters {
   public VolumeData volumeData;
   public ContactPair contactPair;
   public P3 mapLattice;
+  public float extendLattice;
   public boolean isMapped;
   public boolean showTiming;
   public float pointSize;

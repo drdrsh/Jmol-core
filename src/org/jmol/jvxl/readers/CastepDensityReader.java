@@ -95,6 +95,14 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
 
   @Override
   protected void getPeriodicVoxels() throws Exception {
+    rd();
+    String[] tokens = getTokens();
+    if (nSkip > 0 && tokens.length < 3 + nSurfaces) {
+      for (int j = 0; j < nSkip; j++)
+        for (int i = 0; i < nFilePoints; i++)
+          rd();
+      nSkip = 0;
+    }
     int dsf = downsampleFactor;
     if (dsf > 1) {
       for (int i = 0; i < nFilePoints; i++) {
@@ -119,7 +127,6 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
         rd();
       }
     }
-
   }
 
   private void skipPoints(int n) {
@@ -135,18 +142,5 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
     next[0] = pt;
   }
   
-
-  @Override
-  protected void readSkip() throws Exception {
-    rd();
-    String[] tokens = getTokens();
-    if (nSkip > 0 && tokens.length < 3 + nSurfaces) {
-      for (int j = 0; j < nSkip; j++)
-        for (int i = 0; i < nFilePoints; i++)
-          rd();
-      nSkip = 0;
-    }
-  }
-
 }
 

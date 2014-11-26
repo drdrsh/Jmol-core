@@ -803,6 +803,11 @@ public class SurfaceGenerator {
       return true;
     }
 
+    if ("extendLattice" == propertyName) {
+      params.extendLattice = ((Float) value).floatValue();
+      return true;
+    }
+
     // / final actions ///
 
     if ("property" == propertyName) {

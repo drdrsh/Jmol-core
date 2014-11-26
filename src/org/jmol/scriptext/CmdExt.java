@@ -4153,7 +4153,8 @@ public class CmdExt implements JmolCmdExtension {
                   sigma = 3;
                 addShapeProperty(propertyList, "sign", Boolean.TRUE);
               }
-              showString("using cutoff = " + cutoff + (Float.isNaN(sigma) ? "" : " sigma=" + sigma));
+              showString("using cutoff = " + cutoff
+                  + (Float.isNaN(sigma) ? "" : " sigma=" + sigma));
               if (!Float.isNaN(sigma)) {
                 cutoff *= sigma;
                 sigma = Float.NaN;
@@ -4271,23 +4272,30 @@ public class CmdExt implements JmolCmdExtension {
       case T.lattice:
         if (iShape != JC.SHAPE_ISOSURFACE)
           invArg();
-        pt = getPoint3f(eval.iToken + 1, false);
-        i = eval.iToken;
-        if (pt.x <= 0 || pt.y <= 0 || pt.z <= 0)
-          break;
-        pt.x = (int) pt.x;
-        pt.y = (int) pt.y;
-        pt.z = (int) pt.z;
-        sbCommand.append(" lattice ").append(Escape.eP(pt));
-        if (isMapped) {
-          propertyName = "mapLattice";
-          propertyValue = pt;
+        if (tokAt(i + 1) == T.plus) {
+          i += 2;
+          propertyName = "extendLattice";
+          propertyValue = Float.valueOf(floatParameter(i));
+          sbCommand.append(" lattice + " + propertyValue);
         } else {
-          lattice = pt;
-          if (tokAt(i + 1) == T.on) {
-            sbCommand.append(" true");
-            processLattice = true;
-            i++;
+          pt = getPoint3f(i + 1, false);
+          i = eval.iToken;
+          if (pt.x <= 0 || pt.y <= 0 || pt.z <= 0)
+            break;
+          pt.x = (int) pt.x;
+          pt.y = (int) pt.y;
+          pt.z = (int) pt.z;
+          sbCommand.append(" lattice ").append(Escape.eP(pt));
+          if (isMapped) {
+            propertyName = "mapLattice";
+            propertyValue = pt;
+          } else {
+            lattice = pt;
+            if (tokAt(i + 1) == T.on) {
+              sbCommand.append(" true");
+              processLattice = true;
+              i++;
+            }
           }
         }
         break;
