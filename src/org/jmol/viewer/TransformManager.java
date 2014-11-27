@@ -434,8 +434,9 @@ public class TransformManager {
 
     if (dihedralList == null
         && (translation == null || translation.length() < 0.001)
-        && (!isSpin || endDegrees == 0 || Float.isNaN(degreesPerSecond) || degreesPerSecond == 0)
-        && (isSpin || endDegrees == 0))
+        && (isSpin ? Float.isNaN(degreesPerSecond) || degreesPerSecond == 0
+          : endDegrees == 0)
+        )
       return false;
 
     V3 axis = null;
@@ -455,14 +456,16 @@ public class TransformManager {
     if (isSpin) {
       // we need to adjust the degreesPerSecond to match a multiple of the frame rate
       if (dihedralList == null) {
-        int nFrames = (int) (Math.abs(endDegrees) / Math.abs(degreesPerSecond)
-            * spinFps + 0.5);
+        if (endDegrees == 0)
+          endDegrees = Float.NaN;
         if (Float.isNaN(endDegrees)) {
           rotationRate = degreesPerSecond;
         } else {
+          int nFrames = (int) (Math.abs(endDegrees) / Math.abs(degreesPerSecond)
+              * spinFps + 0.5);
           rotationRate = degreesPerSecond = endDegrees / nFrames * spinFps;
           if (translation != null)
-            internalTranslation.scale(1f / (nFrames));
+            internalTranslation.scale(1f / nFrames);
         }
         internalRotationAxis.setVA(axis,
             (Float.isNaN(rotationRate) ? 0 : rotationRate)
@@ -475,7 +478,7 @@ public class TransformManager {
       }
       setSpin(eval, true, endDegrees, finalPoints, dihedralList, bsAtoms,
           isGesture);
-      return (dihedralList != null || bsAtoms != null);
+      return !Float.isNaN(endDegrees);
     }
     float radians = endDegrees * JC.radiansPerDegree;
     internalRotationAxis.setVA(axis, radians);
@@ -2084,8 +2087,7 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
             Float.valueOf(endDegrees), endPositions, dihedralList,
             bsAtoms, isGesture ? Boolean.TRUE : null } );
         spinIsGesture = isGesture;
-        if (bsAtoms == null && dihedralList == null && 
-            (endDegrees == Float.MAX_VALUE || !vwr.g.waitForMoveTo)) {
+        if ((Float.isNaN(endDegrees) || endDegrees == Float.MAX_VALUE || !vwr.g.waitForMoveTo)) {
           spinThread.start();
         } else {
           spinThread.setEval(eval);
