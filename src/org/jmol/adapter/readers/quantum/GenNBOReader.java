@@ -72,6 +72,7 @@ public class GenNBOReader extends MOReader {
   private boolean isOutputFile;
   private String moType = "";
   private int nOrbitals0;
+  private boolean isArchive;
 
   
   @Override
@@ -89,11 +90,18 @@ public class GenNBOReader extends MOReader {
      * molname.40 MO 
      * molname.41 AO density matrix 
      * molname.46 Basis label file
+     * molname.47 archive file
      */
     String line1 = rd().trim();
+    isArchive = (line1.indexOf("$GENNBO  NATOMS") >= 0);
+    if (isArchive) {
+      readFile47();
+      continuing = false;
+      return;
+    }
+    boolean isOK;
     rd();
     isOutputFile = (line.indexOf("***") >= 0);
-    boolean isOK;
     if (isOutputFile) {
       isOK = readFile31();
       super.initializeReader();
@@ -116,6 +124,29 @@ public class GenNBOReader extends MOReader {
       readMOs();
     }
     continuing = false;
+  }
+
+//  $GENNBO  NATOMS=7  NBAS=28  UPPER  BODM  FORMAT  $END
+//      $NBO  $END
+//      $COORD
+//      Methylamine...RHF/3-21G//Pople-Gordon geometry
+//          6    6       0.745914       0.011106       0.000000
+//          7    7      -0.721743      -0.071848       0.000000
+//          1    1       1.042059       1.060105       0.000000
+//          1    1       1.129298      -0.483355       0.892539
+//          1    1       1.129298      -0.483355      -0.892539
+//          1    1      -1.076988       0.386322      -0.827032
+//          1    1      -1.076988       0.386322       0.827032
+//      $END
+
+  private void readFile47() throws Exception {
+    discardLinesUntilContains("$COORD");
+    asc.newAtomSet();
+    asc.setAtomSetName(rd().trim());
+    while (rd().indexOf("$END") < 0) {
+      String[] tokens = getTokens();
+      addAtomXYZSymName(tokens, 2, null, null).elementNumber = (short) parseIntStr(tokens[0]);
+    }
   }
 
   private void readMOs() throws Exception {
