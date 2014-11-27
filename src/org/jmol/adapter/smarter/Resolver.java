@@ -675,7 +675,7 @@ public class Resolver {
   {"TlsDataOnly", "REFMAC\n\nTL", "REFMAC\r\n\r\n", "REFMAC\r\rTL"};
   
   private final static String[] zMatrixFileStartRecords =
-  {"ZMatrix", "#ZMATRIX"};
+  {"ZMatrix", "#ZMATRIX", "%mem="};
   
   private final static String[] magresFileStartRecords =
   {"Magres", "#$magres", "# magres"};
@@ -847,6 +847,8 @@ public class Resolver {
   private final static String[] gaussianFchkContainsRecords =
   { "GaussianFchk", "Number of point charges in /Mol/" };
 
+  private final static String[] zmatrixContainsRecords =
+  { "ZMatrix", " ATOMS cartesian", "$molecule", "&zmat", "geometry={" };
   
   
   private final static String[][] headerContainsRecords =
@@ -860,6 +862,7 @@ public class Resolver {
     dmolContainsRecords, gulpContainsRecords, 
     espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
+    zmatrixContainsRecords
     
   };
 }

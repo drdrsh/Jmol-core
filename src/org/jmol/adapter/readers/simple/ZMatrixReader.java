@@ -46,7 +46,8 @@ import javajs.util.V3;
 
 public class ZMatrixReader extends AtomSetCollectionReader {
   /*
-   * a simple Z-matrix reader
+   * a simple Z-matrix reader, also serves as simple
+   * input file reader for Q-Chem, Jaguar, MolPro, and ADF, as produced by NBO6Pro
    * 
    * Can be invoked using ZMATRIX::   or with file starting with #ZMATRIX
    * # are comments; can include jmolscript: xxxx
@@ -217,6 +218,34 @@ No distinction between "Variable:" and "Constant:" is made by Jmol.
       line = line.substring(0, line.indexOf("#"));
     if (line.indexOf(":") >= 0)
       return true; // Variables: or Constants:
+    if (line.contains("$molecule")) {
+      // Q-Chem input 
+      rd(); // spin
+      return readBlock("$end");
+    }    
+    if (line.startsWith("$"))
+      return true; // $NBO
+    if (line.contains("%mem")) {
+      // Gaussian
+      discardLinesUntilBlank();
+      discardLinesUntilBlank();
+      rd(); // spin
+      return readBlock(null);
+    }
+    if (line.contains("ATOMS cartesian")) {
+      // ADF input 
+      return readBlock("END");
+    }
+    if (line.contains("&zmat")) {
+      // Jaguar input 
+      return readBlock("&");
+    }
+    if (line.contains("geometry={")) {
+      // MolPRO via NBO6
+      readLines(2);
+      return readBlock("}");
+    }
+    
     tokens = getTokensStr(line);
     if (tokens.length == 2) {
       getSymbolic();
@@ -226,13 +255,21 @@ No distinction between "Variable:" and "Constant:" is made by Jmol.
     return true;
   }
 
-  private void cleanLine() {
+  private boolean readBlock(String strEnd) throws Exception {
+    lineBuffer.clear();
+    while (rd() != null && cleanLine() != null 
+        && (strEnd == null ? line.length() > 0 : line.indexOf(strEnd) < 0))
+      lineBuffer.addLast(getTokens());
+    return (continuing = false);
+  }
+
+  private String cleanLine() {
     // remove commas for Gaussian and parenthetical expressions for MOPAC 
     line = line.replace(',', ' ');
     int pt1, pt2;
     while ((pt1 = line.indexOf('(')) >= 0 && (pt2 = line.indexOf('(', pt1)) >= 0)
       line = line.substring(0, pt1) + " " + line.substring(pt2 + 1);
-    line = line.trim();
+    return (line = line.trim());
   }
 
   @Override
