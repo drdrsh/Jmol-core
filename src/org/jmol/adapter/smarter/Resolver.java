@@ -791,7 +791,7 @@ public class Resolver {
   { "GamessUK", "GAMESS-UK", "G A M E S S - U K" };
 
   private final static String[] gamessUSContainsRecords =
-  { "GamessUS", "GAMESS" };
+  { "GamessUS", "GAMESS", "$CONTRL" };
 
   private final static String[] spartanBinaryContainsRecords =
   { "SpartanSmol" , "|PropertyArchive", "_spartan", "spardir", "BEGIN Directory Entry Molecule" };
@@ -849,7 +849,7 @@ public class Resolver {
   { "GaussianFchk", "Number of point charges in /Mol/" };
 
   private final static String[] zmatrixContainsRecords =
-  { "ZMatrix", " ATOMS cartesian", "$molecule", "&zmat", "geometry={" };
+  { "ZMatrix", " ATOMS cartesian", "$molecule", "&zmat", "geometry={", "$DATA" };
   
   
   private final static String[][] headerContainsRecords =

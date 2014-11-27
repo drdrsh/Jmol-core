@@ -240,6 +240,7 @@ No distinction between "Variable:" and "Constant:" is made by Jmol.
       // Jaguar input 
       return readBlock("&");
     }
+    
     if (line.contains("geometry={")) {
       // MolPRO via NBO6
       readLines(2);

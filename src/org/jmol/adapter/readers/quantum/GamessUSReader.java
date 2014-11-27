@@ -90,6 +90,10 @@ public class GamessUSReader extends GamessReader {
    */
   @Override
   protected boolean checkLine() throws Exception {
+    
+    if (line.startsWith(" $DATA"))
+      return readInputDeck();
+
     if (line.indexOf("***************") >= 0)
       Logger.info(rd());
     boolean isBohr;
@@ -177,6 +181,16 @@ public class GamessUSReader extends GamessReader {
     return checkNboLine();
   }
   
+  private boolean readInputDeck() throws Exception {
+    readLines(2);
+    asc.newAtomSet();
+    while (rd().indexOf("$END") < 0) {
+      String[] tokens = getTokens();
+      addAtomXYZSymName(tokens, 2, tokens[0], null).elementNumber = (short) parseIntStr(tokens[1]);
+    }
+    return (continuing = false);
+  }
+
   @Override
   protected void readMolecularOrbitals(int headerType) throws Exception {
     setCalculationType();
