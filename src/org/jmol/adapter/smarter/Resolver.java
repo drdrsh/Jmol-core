@@ -156,6 +156,9 @@ public class Resolver {
 
   private final static String getReaderFromType(String type) {
     type = ";" + type.toLowerCase() + ";";
+    if (";cfi;vfi;mnd;jag;adf;gms;g;c;mp;nw;orc;pqs;qc;v;".indexOf(type) >= 0)
+      return "ZMatrix";
+
     String set;
     int pt;
     for (int i = readerSets.length; --i >= 0;)
@@ -212,8 +215,6 @@ public class Resolver {
    * This is only necessary for a few file types, where only numbers are involved --
    * molecular dynamics coordinate files, for instance (mdcrd).
    * 
-   * We must do this in a very specific order. DON'T MESS WITH THIS!
-   * 
    * @param readerOrDocument
    * @param returnLines
    * @return readerName or a few lines, if requested, or null
@@ -221,24 +222,22 @@ public class Resolver {
    */
   private static String determineAtomSetCollectionReader(Object readerOrDocument, boolean returnLines)
       throws Exception {
+    
+    
+    // We must do this in a very specific order. DON'T MESS WITH THIS!
+    
     if (readerOrDocument instanceof GenericBinaryDocument) {
       // only binary type to date;      
       return "PyMOL";
     }
-    LimitedLineReader llr = new LimitedLineReader((BufferedReader) readerOrDocument, 16384);
     
-    // first check just the first 64 bytes
+    String readerName;
+    
+    LimitedLineReader llr = new LimitedLineReader((BufferedReader) readerOrDocument, 16384);
     
     String leader = llr.getHeader(LEADER_CHAR_MAX).trim();
 
-    for (int i = 0; i < fileStartsWithRecords.length; ++i) {
-      String[] recordTags = fileStartsWithRecords[i];
-      for (int j = 1; j < recordTags.length; ++j) {
-        String recordTag = recordTags[j];
-        if (leader.startsWith(recordTag))
-          return recordTags[0];
-      }
-    }
+    // Test 1. check magic number for embedded Jmol script or PNGJ
 
     // PNG or BCD-encoded JPG or JPEG
     if (leader.indexOf("PNG") == 1 && leader.indexOf("PNGJ") >= 0)
@@ -246,8 +245,11 @@ public class Resolver {
     if (leader.indexOf("PNG") == 1 || leader.indexOf("JPG") == 1
         || leader.indexOf("JFIF") == 6)
       return "spt"; // presume embedded script --- allows dragging into Jmol
-    if (leader.startsWith("##TITLE"))
-      return "Jcampdx";
+
+    // Test 2. check starting 64 bytes of file
+
+    if ((readerName = checkFileStart(leader)) != null)
+      return readerName;
 
     // now allow identification in first 16 lines
     // excluding those starting with "#"
@@ -260,149 +262,137 @@ public class Resolver {
         nLines++;
     }
 
-    String readerName;
-    if ((readerName = checkSpecial(nLines, lines, false)) != null)
+    // Test 3. check special file formats (pass 1) 
+    
+    if ((readerName = checkSpecial1(nLines, lines)) != null)
       return readerName;
 
+    // Test 4. check line starts 
+    
     if ((readerName = checkLineStarts(lines)) != null)
       return readerName;
 
+    // Test 5. check content of initial 16K bytes of file 
+    
     if ((readerName = checkHeaderContains(llr.getHeader(0))) != null)
       return readerName;
 
-    if ((readerName = checkSpecial(nLines, lines, true)) != null)
+    // Test 6. check special file formats (pass 2) 
+    
+    if ((readerName = checkSpecial2(lines)) != null)
       return readerName;
+    
+    // Failed to identify file type
     
     return (returnLines ? "\n" + lines[0] + "\n" + lines[1] + "\n" + lines[2] + "\n" : null);
   }
 
-  private static String checkHeaderContains(String header) throws Exception {
-    for (int i = 0; i < headerContainsRecords.length; ++i) {
-      String[] recordTags = headerContainsRecords[i];
+  ////////////////////////////////////////////////////////////////
+  // Test 2. check to see if first few bytes (trimmed) start with any of these strings
+  ////////////////////////////////////////////////////////////////
+
+  private static String checkFileStart(String leader) {
+    for (int i = 0; i < fileStartsWithRecords.length; ++i) {
+      String[] recordTags = fileStartsWithRecords[i];
       for (int j = 1; j < recordTags.length; ++j) {
         String recordTag = recordTags[j];
-        if (header.indexOf(recordTag) < 0)
-          continue;
-        String type = recordTags[0];
-        // for XML check for an error message from a server -- certainly not XML
-        // but new CML format includes xmlns:xhtml="http://www.w3.org/1999/xhtml" in <cml> tag.
-        return (!type.equals("Xml") ? type 
-            : header.indexOf("<!DOCTYPE HTML PUBLIC") < 0
-              && header.indexOf("XHTML") < 0 
-              && (header.indexOf("xhtml") < 0 || header.indexOf("<cml") >= 0) 
-              ? getXmlType(header) 
-            : null);
+        if (leader.startsWith(recordTag))
+          return recordTags[0];
       }
     }
     return null;
   }
 
-  private static String checkLineStarts(String[] lines) {
-    for (int i = 0; i < lineStartsWithRecords.length; ++i) {
-      String[] recordTags = lineStartsWithRecords[i];
-      for (int j = 1; j < recordTags.length; ++j) {
-        String recordTag = recordTags[j];
-        for (int k = 0; k < lines.length; k++) {
-          if (lines[k].startsWith(recordTag))
-            return recordTags[0];
-        }
-      }
-    }
-    return null;
-  }
-
-  private static String getXmlType(String header) throws Exception  {
-    if (header.indexOf("http://www.molpro.net/") >= 0) {
-      return "XmlMolpro";
-    }
-    if (header.indexOf("odyssey") >= 0) {
-      return "XmlOdyssey";
-    }
-    if (header.indexOf("C3XML") >= 0) {
-      return "XmlChem3d";
-    }
-    if (header.indexOf("arguslab") >= 0) {
-      return "XmlArgus";
-    }
-    if (header.indexOf("jvxl") >= 0 
-        || header.indexOf(CML_NAMESPACE_URI) >= 0
-        || header.indexOf("cml:") >= 0) {
-      return "XmlCml";
-    }
-    if (header.indexOf("XSD") >= 0) {
-      return "XmlXsd";
-    }
-    if (header.indexOf(">vasp") >= 0) {
-      return "XmlVasp";
-    }
-    if (header.indexOf("<GEOMETRY_INFO>") >= 0) {
-      return "XmlQE";
-    }
-    
-    return "XmlCml(unidentified)";
-  }
-
-
-//  
-//  private final static String checkType(String[][] typeTags, String type) {
-//    for (int i = 0; i < typeTags.length; ++i)
-//      if (typeTags[i][0].toLowerCase().equals(type))
-//        return typeTags[i][0];
-//    return null;
-//  }
-//
+  private final static int LEADER_CHAR_MAX = 64;
   
+  private final static String[] sptRecords = 
+  { "spt", "# Jmol state", "# Jmol script", "JmolManifest" };
   
-  private final static String checkSpecial(int nLines, String[] lines,
-                                           boolean isEnd) {
+  private final static String[] m3dStartRecords = 
+  { "Alchemy", "STRUCTURE  1.00     1" }; // M3D reader is very similar to Alchemy
+  
+  private final static String[] cubeFileStartRecords =
+  {"Cube", "JVXL", "#JVXL"};
+
+  private final static String[] mol2Records =
+  {"Mol2", "mol2", "@<TRIPOS>"};
+
+  private final static String[] webmoFileStartRecords =
+  {"WebMO", "[HEADER]"};
+  
+  private final static String[] moldenFileStartRecords =
+  {"Molden", "[Molden"};
+
+  private final static String[] dcdFileStartRecords =
+  {"BinaryDcd", "T\0\0\0CORD", "\0\0\0TCORD"};
+
+  private final static String[] tlsDataOnlyFileStartRecords =
+  {"TlsDataOnly", "REFMAC\n\nTL", "REFMAC\r\n\r\n", "REFMAC\r\rTL"};
+  
+  private final static String[] zMatrixFileStartRecords =
+  {"ZMatrix", "#ZMATRIX", "%mem=", "AM1"};
+  
+  private final static String[] magresFileStartRecords =
+  {"Magres", "#$magres", "# magres"};
+
+  private final static String[] pymolStartRecords =
+  {"PyMOL", "}q" };
+
+  private final static String[] janaStartRecords = 
+  { "Jana", "Version Jana" };
+
+  private final static String[] jsonStartRecords = 
+  { "JSON", "{\"mol\":" };
+  
+  private final static String[] jcampdxStartRecords = 
+  { "Jcampdx", "##TITLE" };
+  
+  private final static String[][] fileStartsWithRecords =
+  { sptRecords, m3dStartRecords, cubeFileStartRecords, 
+    mol2Records, webmoFileStartRecords, 
+    moldenFileStartRecords, dcdFileStartRecords, tlsDataOnlyFileStartRecords,
+    zMatrixFileStartRecords, magresFileStartRecords, pymolStartRecords, 
+    janaStartRecords, jsonStartRecords, jcampdxStartRecords };
+
+  ////////////////////////////////////////////////////////////////
+  // Test 3. check first time for special file types
+  ////////////////////////////////////////////////////////////////
+
+  private final static String checkSpecial1(int nLines, String[] lines) {
     // the order here is CRITICAL
-    
-    if (isEnd) {
-      if (checkGromacs(lines))
-        return "Gromacs";
-      if (checkCrystal(lines))
-        return "Crystal";
-      if (checkCastep(lines))
-        return "Castep";
-      if (checkVasp(lines, true))
-        return "VaspPoscar";
-      if (checkVasp(lines, false))
-        return "VaspChgcar";
-    } else {
-      if (nLines == 1 && lines[0].length() > 0
-          && PT.isDigit(lines[0].charAt(0)))
-        return "Jme"; //only one line, and that line starts with a number 
-      
-      if (checkMopacGraphf(lines))
-        return "MopacGraphf"; //must be prior to checkFoldingXyz and checkMol
-      if (checkOdyssey(lines))
-        return "Odyssey";
-      switch (checkMol(lines)) {
-      case 1:
-      case 3:
-      case 2000:
-      case 3000:
-        return "Mol";
-      }
-      switch(checkXyz(lines)) {
-      case 1:
-        return "Xyz";
-      case 2:
-        return "Bilbao";        
-      }
-      if (checkAlchemy(lines[0]))
-        return "Alchemy";
-      if (checkFoldingXyz(lines))
-        return "FoldingXyz";
-      if (checkCube(lines))
-        return "Cube";
-      if (checkWien2k(lines))
-        return "Wien2k";
-      if (checkAims(lines))
-        return "Aims";
-      if (checkGenNBO(lines))
-        return "GenNBO";
+
+    if (nLines == 1 && lines[0].length() > 0 && PT.isDigit(lines[0].charAt(0)))
+      return "Jme"; //only one line, and that line starts with a number 
+
+    if (checkMopacGraphf(lines))
+      return "MopacGraphf"; //must be prior to checkFoldingXyz and checkMol
+    if (checkOdyssey(lines))
+      return "Odyssey";
+    switch (checkMol(lines)) {
+    case 1:
+    case 3:
+    case 2000:
+    case 3000:
+      return "Mol";
     }
+    switch (checkXyz(lines)) {
+    case 1:
+      return "Xyz";
+    case 2:
+      return "Bilbao";
+    }
+    if (checkAlchemy(lines[0]))
+      return "Alchemy";
+    if (checkFoldingXyz(lines))
+      return "FoldingXyz";
+    if (checkCube(lines))
+      return "Cube";
+    if (checkWien2k(lines))
+      return "Wien2k";
+    if (checkAims(lines))
+      return "Aims";
+    if (checkGenNBO(lines))
+      return "GenNBO";
     return null;
   }
   
@@ -445,47 +435,6 @@ public class Resolver {
     return false;
   }
 
-  private static boolean checkCastep(String[] lines) {
-    for ( int i = 0; i<lines.length; i++ ) {
-      if (lines[i].indexOf("Frequencies in         cm-1") == 1
-          || lines[i].contains("CASTEP")
-          || lines[i].toUpperCase().startsWith("%BLOCK LATTICE_ABC")
-          || lines[i].toUpperCase().startsWith("%BLOCK LATTICE_CART")
-          || lines[i].toUpperCase().startsWith("%BLOCK POSITIONS_FRAC")
-          || lines[i].toUpperCase().startsWith("%BLOCK POSITIONS_ABS") 
-          || lines[i].contains("<-- E")) return true;
-    }
-    return false;
-  }
-
-  private static boolean checkVasp(String[] lines, boolean isPoscar) {
-    String line = lines[isPoscar ? 7 : 6].toLowerCase();
-    if (isPoscar && line.contains("selective"))
-      line = lines[7].toLowerCase();
-    return (line.contains("direct") || line.contains("cartesian"));
-  }
-
-  private static boolean checkCrystal(String[] lines) {
-    String s = lines[1].trim();
-    if (s.equals("SLAB") ||s.equals("MOLECULE")
-        || s.equals("CRYSTAL") 
-        || s.equals("POLYMER") || (s = lines[3]).equals("SLAB")
-        || s.equals("MOLECULE") || s.equals("POLYMER"))
-      return true;
-    for (int i = 0; i < lines.length; i++) {
-      if (lines[i].trim().equals("OPTGEOM") || lines[i].trim().equals("FREQCALC") ||
-          lines[i].contains("DOVESI") 
-          || lines[i].contains("TORINO") 
-          || lines[i].contains("http://www.crystal.unito.it")
-          //new lenghty scripts for CRYSTAL14  
-          || lines[i].contains("Pcrystal")
-          || lines[i].contains("MPPcrystal")
-          || lines[i].contains("crystal executable"))
-        return true;
-    }
-    return false;
-  }
-  
   private static boolean checkCube(String[] lines) {
     try {
       for (int j = 2; j <= 5; j++) {
@@ -543,16 +492,6 @@ public class Resolver {
       || lines[2].indexOf(" N A T U R A L   A T O M I C   O R B I T A L") >= 0);
   }
   
-  private static boolean checkGromacs(String[] lines) {
-    if (PT.parseInt(lines[1]) == Integer.MIN_VALUE)
-      return false;
-    int len = -1;
-    for (int i = 2; i < 16 && len != 0; i++)
-      if ((len = lines[i].length()) != 69 && len != 45 && len != 0)
-        return false;
-    return true;
-  }
-
   private static int checkMol(String[] lines) {
     String line4trimmed = ("X" + lines[3]).trim().toUpperCase();
     if (line4trimmed.length() < 7 || line4trimmed.indexOf(".") >= 0)
@@ -609,11 +548,11 @@ public class Resolver {
     return false;
   }
   
- private static boolean checkWien2k(String[] lines) {
-   return (lines[2].startsWith("MODE OF CALC=") 
-       || lines[2].startsWith("             RELA")
-       || lines[2].startsWith("             NREL"));
- }
+  private static boolean checkWien2k(String[] lines) {
+    return (lines[2].startsWith("MODE OF CALC=")
+        || lines[2].startsWith("             RELA") || lines[2]
+          .startsWith("             NREL"));
+  }
  
   private static int checkXyz(String[] lines) {
     // first and third lines numerical --> Bilbao format
@@ -631,75 +570,24 @@ public class Resolver {
     }
     return 0;
   }
+  
+  ////////////////////////////////////////////////////////////////
+  // Test 4. One of the first 16 lines starts with one of these strings
+  ////////////////////////////////////////////////////////////////
 
-
-/*
-  private void dumpLines(String[] lines) {
-      for (int i = 0; i < lines.length; i++) {
-        Logger.info("\nLine "+i + " len " + lines[i].length());
-        for (int j = 0; j < lines[i].length(); j++)
-          Logger.info("\t"+(int)lines[i].charAt(j));
+  private static String checkLineStarts(String[] lines) {
+    for (int i = 0; i < lineStartsWithRecords.length; ++i) {
+      String[] recordTags = lineStartsWithRecords[i];
+      for (int j = 1; j < recordTags.length; ++j) {
+        String recordTag = recordTags[j];
+        for (int k = 0; k < lines.length; k++) {
+          if (lines[k].startsWith(recordTag))
+            return recordTags[0];
+        }
       }
-      Logger.info("");
+    }
+    return null;
   }
-
-*/
-  
-  ////////////////////////////////////////////////////////////////
-  // these test files that startWith one of these strings
-  ////////////////////////////////////////////////////////////////
-
-  private final static int LEADER_CHAR_MAX = 64;
-  
-  private final static String[] sptRecords = 
-  { "spt", "# Jmol state", "# Jmol script", "JmolManifest" };
-  
-  private final static String[] m3dStartRecords = 
-  { "Alchemy", "STRUCTURE  1.00     1" }; // M3D reader is very similar to Alchemy
-  
-  private final static String[] cubeFileStartRecords =
-  {"Cube", "JVXL", "#JVXL"};
-
-  private final static String[] mol2Records =
-  {"Mol2", "mol2", "@<TRIPOS>"};
-
-  private final static String[] webmoFileStartRecords =
-  {"WebMO", "[HEADER]"};
-  
-  private final static String[] moldenFileStartRecords =
-  {"Molden", "[Molden"};
-
-  private final static String[] dcdFileStartRecords =
-  {"BinaryDcd", "T\0\0\0CORD", "\0\0\0TCORD"};
-
-  private final static String[] tlsDataOnlyFileStartRecords =
-  {"TlsDataOnly", "REFMAC\n\nTL", "REFMAC\r\n\r\n", "REFMAC\r\rTL"};
-  
-  private final static String[] zMatrixFileStartRecords =
-  {"ZMatrix", "#ZMATRIX", "%mem="};
-  
-  private final static String[] magresFileStartRecords =
-  {"Magres", "#$magres", "# magres"};
-
-  private final static String[] pymolStartRecords =
-  {"PyMOL", "}q" };
-
-  private final static String[] janaStartRecords = 
-  { "Jana", "Version Jana" };
-
-  private final static String[] jsonStartRecords = 
-  { "JSON", "{\"mol\":" };
-  
-  private final static String[][] fileStartsWithRecords =
-  { sptRecords, m3dStartRecords, cubeFileStartRecords, 
-    mol2Records, webmoFileStartRecords, 
-    moldenFileStartRecords, dcdFileStartRecords, tlsDataOnlyFileStartRecords,
-    zMatrixFileStartRecords, magresFileStartRecords, pymolStartRecords, 
-    janaStartRecords, jsonStartRecords };
-
-  ////////////////////////////////////////////////////////////////
-  // these test if one of the first 16 lines starts with one of these strings
-  ////////////////////////////////////////////////////////////////
 
   private final static String[] mmcifLineStartRecords =
   { "MMCif", "_entry.id", "_database_PDB_", "_pdbx_", "_chem_comp.pdbx_type", "_audit_author.name" };
@@ -763,8 +651,60 @@ public class Resolver {
 
  
   ////////////////////////////////////////////////////////////////
-  // contains formats
+  // Test 5. contents of first 16384 bytes  
   ////////////////////////////////////////////////////////////////
+
+  private static String checkHeaderContains(String header) throws Exception {
+    for (int i = 0; i < headerContainsRecords.length; ++i) {
+      String[] recordTags = headerContainsRecords[i];
+      for (int j = 1; j < recordTags.length; ++j) {
+        String recordTag = recordTags[j];
+        if (header.indexOf(recordTag) < 0)
+          continue;
+        String type = recordTags[0];
+        // for XML check for an error message from a server -- certainly not XML
+        // but new CML format includes xmlns:xhtml="http://www.w3.org/1999/xhtml" in <cml> tag.
+        return (!type.equals("Xml") ? type 
+            : header.indexOf("<!DOCTYPE HTML PUBLIC") < 0
+              && header.indexOf("XHTML") < 0 
+              && (header.indexOf("xhtml") < 0 || header.indexOf("<cml") >= 0) 
+              ? getXmlType(header) 
+            : null);
+      }
+    }
+    return null;
+  }
+
+  private static String getXmlType(String header) throws Exception  {
+    if (header.indexOf("http://www.molpro.net/") >= 0) {
+      return "XmlMolpro";
+    }
+    if (header.indexOf("odyssey") >= 0) {
+      return "XmlOdyssey";
+    }
+    if (header.indexOf("C3XML") >= 0) {
+      return "XmlChem3d";
+    }
+    if (header.indexOf("arguslab") >= 0) {
+      return "XmlArgus";
+    }
+    if (header.indexOf("jvxl") >= 0 
+        || header.indexOf(CML_NAMESPACE_URI) >= 0
+        || header.indexOf("cml:") >= 0) {
+      return "XmlCml";
+    }
+    if (header.indexOf("XSD") >= 0) {
+      return "XmlXsd";
+    }
+    if (header.indexOf(">vasp") >= 0) {
+      return "XmlVasp";
+    }
+    if (header.indexOf("<GEOMETRY_INFO>") >= 0) {
+      return "XmlQE";
+    }
+    
+    return "XmlCml(unidentified)";
+  }
 
   private final static String[] bilbaoContainsRecords =
   { "Bilbao", ">Bilbao Crystallographic Server<" };
@@ -849,7 +789,7 @@ public class Resolver {
   { "GaussianFchk", "Number of point charges in /Mol/" };
 
   private final static String[] zmatrixContainsRecords =
-  { "ZMatrix", " ATOMS cartesian", "$molecule", "&zmat", "geometry={", "$DATA" };
+  { "ZMatrix", " ATOMS cartesian", "$molecule", "&zmat", "geometry={", "$DATA", "%coords", "GEOM=PQS" };
   
   
   private final static String[][] headerContainsRecords =
@@ -866,5 +806,77 @@ public class Resolver {
     zmatrixContainsRecords
     
   };
+  
+  ////////////////////////////////////////////////////////////////
+  // Test 6. check second time for special file types
+  ////////////////////////////////////////////////////////////////
+
+  private final static String checkSpecial2(String[] lines) {
+    // the order here is CRITICAL
+    if (checkGromacs(lines))
+      return "Gromacs";
+    if (checkCrystal(lines))
+      return "Crystal";
+    if (checkCastep(lines))
+      return "Castep";
+    if (checkVasp(lines, true))
+      return "VaspPoscar";
+    if (checkVasp(lines, false))
+      return "VaspChgcar";
+    return null;
+  }
+  
+  private static boolean checkCrystal(String[] lines) {
+    String s = lines[1].trim();
+    if (s.equals("SLAB") ||s.equals("MOLECULE")
+        || s.equals("CRYSTAL") 
+        || s.equals("POLYMER") || (s = lines[3]).equals("SLAB")
+        || s.equals("MOLECULE") || s.equals("POLYMER"))
+      return true;
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].trim().equals("OPTGEOM") || lines[i].trim().equals("FREQCALC") ||
+          lines[i].contains("DOVESI") 
+          || lines[i].contains("TORINO") 
+          || lines[i].contains("http://www.crystal.unito.it")
+          //new lenghty scripts for CRYSTAL14  
+          || lines[i].contains("Pcrystal")
+          || lines[i].contains("MPPcrystal")
+          || lines[i].contains("crystal executable"))
+        return true;
+    }
+    return false;
+  }
+  
+  private static boolean checkGromacs(String[] lines) {
+    if (PT.parseInt(lines[1]) == Integer.MIN_VALUE)
+      return false;
+    int len = -1;
+    for (int i = 2; i < 16 && len != 0; i++)
+      if ((len = lines[i].length()) != 69 && len != 45 && len != 0)
+        return false;
+    return true;
+  }
+
+  private static boolean checkCastep(String[] lines) {
+    for ( int i = 0; i<lines.length; i++ ) {
+      if (lines[i].indexOf("Frequencies in         cm-1") == 1
+          || lines[i].contains("CASTEP")
+          || lines[i].toUpperCase().startsWith("%BLOCK LATTICE_ABC")
+          || lines[i].toUpperCase().startsWith("%BLOCK LATTICE_CART")
+          || lines[i].toUpperCase().startsWith("%BLOCK POSITIONS_FRAC")
+          || lines[i].toUpperCase().startsWith("%BLOCK POSITIONS_ABS") 
+          || lines[i].contains("<-- E")) return true;
+    }
+    return false;
+  }
+
+  private static boolean checkVasp(String[] lines, boolean isPoscar) {
+    String line = lines[isPoscar ? 7 : 6].toLowerCase();
+    if (isPoscar && line.contains("selective"))
+      line = lines[7].toLowerCase();
+    return (line.contains("direct") || line.contains("cartesian"));
+  }
+
+
 }
 

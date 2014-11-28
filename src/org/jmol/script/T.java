@@ -1000,6 +1000,7 @@ public class T {
   public final static int drawhover                      = booleanparam | 56;
   public final static int drawpicking                    = booleanparam | 57;
   public final static int dsspcalchydrogen               = booleanparam | 58;
+  public final static int dynamicmeasurements            = booleanparam | 59; //DEPRECATED; not implemented; leave here to avoid SET error
   public final static int ellipsoidarcs                  = booleanparam | 60;  
   public final static int ellipsoidarrows                = booleanparam | 61;  
   public final static int ellipsoidaxes                  = booleanparam | 62;  
@@ -1176,7 +1177,7 @@ public class T {
   public final static int dotted         = misc  | 102;
   public final static int downsample     = misc  | 104;
   public final static int drawing        = misc  | 105;
-  public final static int eccentricity   = misc  | 106;
+  public final static int eccentricity   = misc  | 107;
   public final static int ed             = misc  | 108 | expression;
   public final static int edges          = misc  | 109;
   public final static int energy         = misc  | 110;
@@ -2195,6 +2196,7 @@ public class T {
        "distanceFactor",
        "downsample",
        "drawing",
+       "dynamicMeasurements",
        "eccentricity",
        "ed",
        "edges",
@@ -3216,6 +3218,7 @@ public class T {
         distancefactor,                     //        "distanceFactor"
         downsample,                         //        "downsample"
         drawing,                            //        "drawing"
+        dynamicmeasurements,                //        "dynamicMeasurements"
         eccentricity,                       //        "eccentricity"
         ed,                                 //        "ed"
         edges,                              //        "edges"

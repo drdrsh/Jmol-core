@@ -370,7 +370,7 @@ public class JmolUtil implements JmolZipUtilities {
     if (tokens[0].indexOf(".") > 0)
       return (line3.length() >= 60 || tokens.length != 3 ? null : "VaspChgcar"); // M40 files are > 60 char
     if (nAtoms >= 0)
-      return "Cube"; //Can't be a Jvxl file; 
+      return (tokens.length == 4 ? "Cube" : null); //Can't be a Jvxl file; 
     nAtoms = -nAtoms;
     for (int i = 4 + nAtoms; --i >= 0;)
       if ((line = br.readLineWithNewline()) == null)
