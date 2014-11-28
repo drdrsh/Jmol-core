@@ -198,18 +198,15 @@ public class GenNBOReader extends MOReader {
    * ---------------------------------------------------------------------------
    * 36 90 162
    * ---------------------------------------------------------------------------
-   * 6 -2.992884000 -1.750577000 1.960024000 6 -2.378528000 -1.339374000
-   * 0.620578000
+   * 6 -2.992884000 -1.750577000 1.960024000 
+   * 6 -2.378528000 -1.339374000 0.620578000
    */
 
   private boolean readFile31() throws Exception {
     String data = getFileData(".31");
     BufferedReader readerSave = reader;
     reader = Rdr.getBR(data);
-    if (!readData31(null, null))
-      return false;
-    reader = readerSave;
-    return true;
+    return (readData31(null, null) && (reader = readerSave) != null);
   }
 
   private void readFile46() throws Exception {
@@ -255,6 +252,122 @@ public class GenNBOReader extends MOReader {
   //           301 307 310 304 302 303 306 309 308 305
 
   
+//
+//  private boolean readData47() throws Exception {
+//    readFile47();
+//    discardLinesUntilContains("$BASIS");
+//    int[] centers = getIntData();
+//    int[] labels = getIntData();
+//    
+//    discardLinesUntilContains("NSHELL =");
+//    shellCount = parseIntStr(line.substring(8));
+//    gaussianCount = parseIntStr(rd().substring(8));
+//    rd();
+//    int[] ncomp = getIntData();
+//    int[] nprim = getIntData();
+//    int[] nptr = getIntData();
+//    
+//
+//    // read basis functions
+//    shells = new  Lst<int[]>();
+//    gaussians = AU.newFloat2(gaussianCount);
+//    for (int i = 0; i < gaussianCount; i++)
+//      gaussians[i] = new float[6];
+//    nOrbitals = 0;
+//    int ptCenter = 0;
+//    for (int i = 0; i < shellCount; i++) {
+//      int[] slater = new int[4];
+//      int nc = ncomp[i];
+//      slater[0] = centers[ptCenter] - 1;
+//      line = "";
+//      for (int ii = 0; ii < nc; ii++)
+//        line += labels[ptCenter++] + " ";
+//      if (!fillSlater(slater, nc, nptr[i], nprim[i]))
+//        return false;
+//    }
+//    getAlphasAndExponents();
+//    return true;
+//  }
+
+//private int[] getIntData() throws Exception {
+//if (line.indexOf("=") < 0)
+//  rd();
+//String s = line.substring(line.indexOf("=") + 1);
+//line = "";
+//while (rd().indexOf("=") < 0 && line.indexOf("$") < 0)
+//  s += line;
+//String[] tokens = getTokensStr(s);
+//int[] f = new int[tokens.length];
+//for (int i = f.length; --i >= 0;)
+//  f[i] = parseIntStr(tokens[i]);
+//return f;
+//}
+
+  private boolean fillSlater(int[] slater, int n, int pt, int ng) {
+    nOrbitals += n;
+    switch (n) {
+    case 1:
+      slater[1] = JmolAdapter.SHELL_S;
+      break;
+    case 3:
+      if (!getDFMap(line, JmolAdapter.SHELL_P, P_LIST, 3))
+        return false;
+      slater[1] = JmolAdapter.SHELL_P;
+      break;
+    case 4:
+      if (!getDFMap(line, JmolAdapter.SHELL_SP, SP_LIST, 1))
+        return false;
+      slater[1] = JmolAdapter.SHELL_SP;
+      break;        
+    case 5:
+      if (!getDFMap(line, JmolAdapter.SHELL_D_SPHERICAL, DS_LIST, 3))
+        return false;
+      slater[1] = JmolAdapter.SHELL_D_SPHERICAL;
+      break;
+    case 6:
+      if (!getDFMap(line, JmolAdapter.SHELL_D_CARTESIAN, DC_LIST, 3))
+        return false;
+      slater[1] = JmolAdapter.SHELL_D_CARTESIAN;
+      break;
+    case 7:
+      if (!getDFMap(line, JmolAdapter.SHELL_F_SPHERICAL, FS_LIST, 3))
+        return false;
+      slater[1] = JmolAdapter.SHELL_F_SPHERICAL;
+      break;
+    case 10:
+      if (!getDFMap(line, JmolAdapter.SHELL_F_CARTESIAN, FC_LIST, 3))
+        return false;
+      slater[1] = JmolAdapter.SHELL_F_CARTESIAN;
+      break;
+    }
+    slater[2] = pt; // gaussian list pointer
+    slater[3] = ng; // number of gaussians
+    shells.addLast(slater);
+    return true;
+  }
+
+  private void getAlphasAndExponents() throws Exception {
+    for (int j = 0; j < 5; j++) {
+      rd();
+      line = line.substring(line.indexOf("=") + 1);
+      float[] temp = fillFloatArray(null, 0, new float[gaussianCount]);
+      for (int i = 0; i < gaussianCount; i++) {
+        gaussians[i][j] = temp[i];
+        if (j > 1)
+          gaussians[i][5] += temp[i];
+      }
+    }
+    // GenNBO lists S, P, D, F, G orbital coefficients separately
+    // we need all of them in [1] if [1] is zero (not S or SP)
+    for (int i = 0; i < gaussianCount; i++) {
+      if (gaussians[i][1] == 0)
+        gaussians[i][1] = gaussians[i][5];
+    }
+    if (Logger.debugging) {
+      Logger.debug(shells.size() + " slater shells read");
+      Logger.debug(gaussians.length + " gaussian primitives read");
+    }
+  }
 
   private boolean readData31(String line1, String line2) throws Exception {
     if (line1 == null)
@@ -295,69 +408,13 @@ public class GenNBOReader extends MOReader {
       int[] slater = new int[4];
       slater[0] = parseIntStr(tokens[0]) - 1; // atom pointer; 1-based
       int n = parseIntStr(tokens[1]);
-      nOrbitals += n;
+      int pt = parseIntStr(tokens[2]) - 1; // gaussian list pointer
+      int ng = parseIntStr(tokens[3]);     // number of gaussians
       line = rd().trim();
-      switch (n) {
-      case 1:
-        slater[1] = JmolAdapter.SHELL_S;
-        break;
-      case 3:
-        if (!getDFMap(line, JmolAdapter.SHELL_P, P_LIST, 3))
-          return false;
-        slater[1] = JmolAdapter.SHELL_P;
-        break;
-      case 4:
-        if (!getDFMap(line, JmolAdapter.SHELL_SP, SP_LIST, 1))
-          return false;
-        slater[1] = JmolAdapter.SHELL_SP;
-        break;        
-      case 5:
-        if (!getDFMap(line, JmolAdapter.SHELL_D_SPHERICAL, DS_LIST, 3))
-          return false;
-        slater[1] = JmolAdapter.SHELL_D_SPHERICAL;
-        break;
-      case 6:
-        if (!getDFMap(line, JmolAdapter.SHELL_D_CARTESIAN, DC_LIST, 3))
-          return false;
-        slater[1] = JmolAdapter.SHELL_D_CARTESIAN;
-        break;
-      case 7:
-        if (!getDFMap(line, JmolAdapter.SHELL_F_SPHERICAL, FS_LIST, 3))
-          return false;
-        slater[1] = JmolAdapter.SHELL_F_SPHERICAL;
-        break;
-      case 10:
-        if (!getDFMap(line, JmolAdapter.SHELL_F_CARTESIAN, FC_LIST, 3))
-          return false;
-        slater[1] = JmolAdapter.SHELL_F_CARTESIAN;
-        break;
-      }
-      slater[2] = parseIntStr(tokens[2]) - 1; // gaussian list pointer
-      slater[3] = parseIntStr(tokens[3]);     // number of gaussians
-      shells.addLast(slater);
+      if (!fillSlater(slater, n, pt, ng))
+        return false;
     }
-
-    // get alphas and exponents
-
-    for (int j = 0; j < 5; j++) {
-      rd();
-      float[] temp = fillFloatArray(null, 0, new float[gaussianCount]);
-      for (int i = 0; i < gaussianCount; i++) {
-        gaussians[i][j] = temp[i];
-        if (j > 1)
-          gaussians[i][5] += temp[i];
-      }
-    }
-    // GenNBO lists S, P, D, F, G orbital coefficients separately
-    // we need all of them in [1] if [1] is zero (not S or SP)
-    for (int i = 0; i < gaussianCount; i++) {
-      if (gaussians[i][1] == 0)
-        gaussians[i][1] = gaussians[i][5];
-    }
-    if (Logger.debugging) {
-      Logger.debug(shells.size() + " slater shells read");
-      Logger.debug(gaussians.length + " gaussian primitives read");
-    }
+    getAlphasAndExponents();
     return true;
   }
 
