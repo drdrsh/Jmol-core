@@ -52,7 +52,7 @@ public class Resolver {
                  "WebMO;",
     "pdb.", ";Pdb;Pqr;P2n;",
     "pymol.", ";PyMOL;",
-    "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;ZMatrix;", 
+    "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;", 
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
              "VaspPoscar;VaspChgcar;Wien2k;Xcrysden;",
     "xml.",  ";XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
@@ -156,8 +156,8 @@ public class Resolver {
 
   private final static String getReaderFromType(String type) {
     type = ";" + type.toLowerCase() + ";";
-    if (";cfi;vfi;mnd;jag;adf;gms;g;c;mp;nw;orc;pqs;qc;v;".indexOf(type) >= 0)
-      return "ZMatrix";
+    if (";zmatrix;cfi;c;vfi;v;mnd;jag;adf;gms;g;gau;mp;nw;orc;pqs;qc;".indexOf(type) >= 0)
+      return "Input";
 
     String set;
     int pt;
@@ -329,8 +329,8 @@ public class Resolver {
   private final static String[] tlsDataOnlyFileStartRecords =
   {"TlsDataOnly", "REFMAC\n\nTL", "REFMAC\r\n\r\n", "REFMAC\r\rTL"};
   
-  private final static String[] zMatrixFileStartRecords =
-  {"ZMatrix", "#ZMATRIX", "%mem=", "AM1"};
+  private final static String[] inputFileStartRecords =
+  {"Input", "#ZMATRIX", "%mem=", "AM1"};
   
   private final static String[] magresFileStartRecords =
   {"Magres", "#$magres", "# magres"};
@@ -351,7 +351,7 @@ public class Resolver {
   { sptRecords, m3dStartRecords, cubeFileStartRecords, 
     mol2Records, webmoFileStartRecords, 
     moldenFileStartRecords, dcdFileStartRecords, tlsDataOnlyFileStartRecords,
-    zMatrixFileStartRecords, magresFileStartRecords, pymolStartRecords, 
+    inputFileStartRecords, magresFileStartRecords, pymolStartRecords, 
     janaStartRecords, jsonStartRecords, jcampdxStartRecords };
 
   ////////////////////////////////////////////////////////////////
@@ -788,10 +788,9 @@ public class Resolver {
   private final static String[] gaussianFchkContainsRecords =
   { "GaussianFchk", "Number of point charges in /Mol/" };
 
-  private final static String[] zmatrixContainsRecords =
-  { "ZMatrix", " ATOMS cartesian", "$molecule", "&zmat", "geometry={", "$DATA", "%coords", "GEOM=PQS" };
-  
-  
+  private final static String[] inputContainsRecords =
+  { "Input", " ATOMS cartesian", "$molecule", "&zmat", "geometry={", "$DATA", "%coords", "GEOM=PQS", "geometry units angstroms" };
+    
   private final static String[][] headerContainsRecords =
   { sptRecords, bilbaoContainsRecords, xmlContainsRecords, gaussianContainsRecords, 
     ampacContainsRecords, mopacContainsRecords, qchemContainsRecords, 
@@ -803,7 +802,7 @@ public class Resolver {
     dmolContainsRecords, gulpContainsRecords, 
     espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
-    zmatrixContainsRecords
+    inputContainsRecords
     
   };
   
@@ -871,9 +870,10 @@ public class Resolver {
   }
 
   private static boolean checkVasp(String[] lines, boolean isPoscar) {
-    String line = lines[isPoscar ? 7 : 6].toLowerCase();
+    int i = (isPoscar ? (lines[5].length() < 2 ? 8 : 7) : 6);
+    String line = lines[i].toLowerCase();
     if (isPoscar && line.contains("selective"))
-      line = lines[7].toLowerCase();
+      line = lines[++i].toLowerCase();
     return (line.contains("direct") || line.contains("cartesian"));
   }
 

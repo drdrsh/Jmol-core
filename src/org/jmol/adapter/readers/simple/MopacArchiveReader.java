@@ -41,7 +41,7 @@ import javajs.util.P3;
  * 
  */
 
-public class MopacArchiveReader extends ZMatrixReader {
+public class MopacArchiveReader extends InputReader {
 
 
   @Override

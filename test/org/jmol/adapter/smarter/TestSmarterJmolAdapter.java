@@ -80,7 +80,7 @@ public class TestSmarterJmolAdapter extends TestSuite {
     result.addDirectory("dmol",  "outmol", "Dmol");
     result.addDirectory("folding", "xyz;xyz.gz", "FoldingXyz");
     result.addDirectory("../Jmol-FAH/projects", "xyz;xyz.gz", "FoldingXyz");
-    result.addDirectory("gamess", "log;out", ";Gamess;GamessUS;GamessUK;");
+    result.addDirectory("gamess", "log;out;txt", ";Gamess;GamessUS;GamessUK;");
     result.addDirectory("gaussian", "log;out", "Gaussian");
     result.addDirectory("gennbo", "out;36;37", "GenNBO");
     result.addDirectory("ghemical", "gpr", "GhemicalMM");
@@ -117,7 +117,7 @@ public class TestSmarterJmolAdapter extends TestSuite {
     result.addDirectory("webmo", "mo", "WebMO");
     result.addDirectory("xsd", "xsd", "XmlXsd");
     result.addDirectory("xyz", "xyz", "Xyz");
-    result.addDirectory("zmatrix", "txt;zmat", "ZMatrix");
+    result.addDirectory("zmatrix", "txt;zmat", "Input");
     return result;
   }
 

@@ -43,17 +43,17 @@ import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.V3;
 
-public class ZMatrixReader extends AtomSetCollectionReader {
+public class InputReader extends AtomSetCollectionReader {
   /*
    * A simple Z-matrix reader, also serves as simple input file reader for 
-   * CFILE, VFILE, PQS, Orca, GAMESS, Gaussian, MOPAC, Q-Chem, Jaguar, MolPro, 
+   * CFILE, VFILE, PQS, Orca, NWChem, GAMESS, Gaussian, MOPAC, Q-Chem, Jaguar, MolPro, 
    * and ADF, as produced by NBO6Pro
    * 
    * Can be invoked using ZMATRIX::   or with file starting with #ZMATRIX
    * 
-   * CFILE and VFILE require CFI:: and  VFI::, respectively, or just C:: and V::
+   * MOPAC, CFILE ,and VFILE require MND::, CFI:: (or C::), and  VFI:: (or V::) respectively
    * 
-   * Other invocations include: ADF::, G::, GMS::, JAG::, MND::, MP::, ORC::, PQS::, QC::,
+   * Other invocations include: ADF::, GAU::(or G::), GMS::, JAG::, MP::, ORC::, NW::, PQS::, QC::,
    * but those are optional. 
    * 
    * # are comments; can include jmolscript: xxxx
@@ -229,6 +229,7 @@ public class ZMatrixReader extends AtomSetCollectionReader {
     }
     if (line.startsWith("$"))
       return true; // $NBO
+    
     if (line.contains("%mem")) {
       // Gaussian
       discardLinesUntilBlank();
@@ -236,14 +237,22 @@ public class ZMatrixReader extends AtomSetCollectionReader {
       rd(); // spin
       return readBlock(null);
     }
+    
     if (line.contains("ATOMS cartesian")) {
       // ADF input 
       return readBlock("END");
     }
+    
+    if (line.contains("geometry units angstroms")) {
+      // NWChem input 
+      return readBlock("end");
+    }
+
     if (line.contains("&zmat")) {
       // Jaguar input 
       return readBlock("&");
     }
+
     if (line.contains("%coords")) {
       // ORCA input 
       discardLinesUntilContains("coords");
@@ -407,7 +416,7 @@ public class ZMatrixReader extends AtomSetCollectionReader {
   private void parseAtomTokens(Atom atom, String element) throws Exception {
     setElementAndIsotope(atom, element);
 
-    if (tokens.length > 1 && tokens[1].indexOf(".") >= 0) {
+    if (tokens.length > 5 && tokens[1].indexOf(".") >= 0) {
       //      C
       //      O  1.200000  1                                  1  0  0
       //      H  1.080000  1   120.000000  1                  1  2  0
