@@ -194,7 +194,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     super(f, false);
     this.vwr = vwr;
 
-    setTitle(GT._("Export Gaussian Input File"));
+    setTitle(GT._("Create Gaussian Input File"));
 
     container = new JPanel();
     container.setLayout(new BorderLayout());
@@ -290,7 +290,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     routeLabels.add(optsLabel);
     optsField = new JTextField(20);
     routeControls.add(optsField);
-    optsField.setText("opt");
+    optsField.setText("opt pop=full gfprint");
     optsField.addActionListener(this);
     
     routePanel.add(routeLabels, BorderLayout.LINE_START);
