@@ -462,8 +462,8 @@ public class SymmetryDesc {
     if (haveCentering)
       info1 += "|centering " + strCoord(op.centering, op.isBio);
 
-    if (op.timeReversal != 0)
-      info1 += "|spin " + (op.timeReversal == 1 ? "m" : "-m");
+    if (op.timeReversal != 0 && op.getSpinOp() == -1)
+      info1 += "|spin flipped";
 
     String cmds = null;
     String xyzNew = (op.isBio ? op.xyzOriginal : SymmetryOperation
@@ -762,8 +762,8 @@ public class SymmetryDesc {
     }
     xyzNew = (op.isBio ? m2.toString() : op.modDim > 0 ? op.xyzOriginal
         : SymmetryOperation.getXYZFromMatrix(m2, false, false, false));
-    if (op.timeReversal != 0)
-      xyzNew += (op.timeReversal == 1 ? ",m" : ",-m");
+    //if (op.timeReversal != 0)
+      //xyzNew += (op.timeReversal == 1 ? ",m" : ",-m");
     return new Object[] { xyzNew, op.xyzOriginal, info1, cmds, approx0(ftrans),
         approx0(trans), approx0(ipt), approx0(pa1), approx0(ax1),
         Integer.valueOf(ang1), m2, vtrans, op.centering };
@@ -846,14 +846,9 @@ public class SymmetryDesc {
     if (xyz == null) {
       SymmetryOperation[] ops = (SymmetryOperation[]) uc
           .getSymmetryOperations();
-      if (ops == null || op == 0 || Math.abs(op) > ops.length) {
+      if (ops == null || op == 0 || Math.abs(op) > ops.length)
         return (type == T.draw ? "draw ID sym_* delete" : "");
-      }
-      if (op > 0) {
-        xyz = ops[iop = op - 1].xyz;
-      } else {
-        xyz = ops[iop = -1 - op].xyz;
-      }
+      xyz = ops[iop = Math.abs(op) - 1].xyz;
       centering = ops[iop].centering;
     } else {
       iop = op = 0;

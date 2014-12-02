@@ -217,11 +217,7 @@ class SymmetryOperation extends M4 {
       return false;
     xyzOriginal = xyz;
     xyz = xyz.toLowerCase();
-    int n = (modDim + 4) * (modDim + 4);
-    this.modDim = modDim;
-    if (modDim > 0)
-      myLabels = labelsXn;
-    linearRotTrans = new float[n];
+    setModDim(modDim);
     boolean isReverse = (xyz.startsWith("!"));
     if (isReverse)
       xyz = xyz.substring(1);
@@ -243,22 +239,29 @@ class SymmetryOperation extends M4 {
        * 
        */
       this.xyz = xyz;
-      Parser.parseStringInfestedFloatArray(xyz, null, linearRotTrans);        
+      Parser.parseStringInfestedFloatArray(xyz, null, linearRotTrans);
       return setFromMatrix(null, isReverse);
     }
     if (xyz.indexOf("[[") == 0) {
-      xyz = xyz.replace('[',' ').replace(']',' ').replace(',',' ');
+      xyz = xyz.replace('[', ' ').replace(']', ' ').replace(',', ' ');
       Parser.parseStringInfestedFloatArray(xyz, null, linearRotTrans);
-      for (int i = 0; i < n; i++) {
-        float v = linearRotTrans[i];
-        if (Float.isNaN(v))
+      for (int i = linearRotTrans.length; --i >= 0;)
+        if (Float.isNaN(linearRotTrans[i]))
           return false;
-      }
       setMatrix(isReverse);
       isFinalized = true;
       isBio = (xyz.indexOf("bio") >= 0);
-      this.xyz = (isBio ? toString() : getXYZFromMatrix(this, false, false, false));
+      this.xyz = (isBio ? toString() : getXYZFromMatrix(this, false, false,
+          false));
       return true;
+    }
+    if (modDim == 0 && xyz.indexOf("x4") >= 0) {
+      for (int i = 14; --i >= 4;) {
+        if (xyz.indexOf("x" + i) >= 0) {
+          setModDim(i - 3);
+          break;
+        }
+      }
     }
     if (xyz.endsWith("m")) {
       timeReversal = (xyz.indexOf("-m") >= 0 ? -1 : 1);
@@ -277,6 +280,13 @@ class SymmetryOperation extends M4 {
     return true;
   }
 
+  private void setModDim(int dim) {
+    int n = (dim + 4) * (dim + 4);
+    modDim = dim;
+    if (dim > 0)
+      myLabels = labelsXn;
+    linearRotTrans = new float[n];
+  }
 
   private void setMatrix(boolean isReverse) {
     if (linearRotTrans.length > 16) {
