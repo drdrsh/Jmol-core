@@ -61,6 +61,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   private Matrix tFactorInv;
   private Matrix rsvs;
+  private float spinOp;
 
   @Override
   public float getScale() {
@@ -250,6 +251,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     gammaIinv = rsvs.getSubmatrix(3, 3, d, d).inverse();
     Matrix gammaM = rsvs.getSubmatrix(3, 0, d, 3);
     Matrix sI = rsvs.getSubmatrix(3, 3 + d, d, 1);
+    spinOp = symmetry.getSpinOp(iop);
+    System.out.println("spinOp " + iop + " " + strop + " " + spinOp);
 
     tau = gammaIinv.mul(sigma.mul(vR0).sub(gammaM.mul(vR00)).sub(sI));
 
@@ -322,8 +325,11 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       mods.get(i).apply(this, arI);
     // rotate by R3 rotation
     gammaE.rotate(this);
-    if (mxyz != null)
+    if (mxyz != null){
       gammaE.rotate(mxyz);
+      if (spinOp < 0)
+        mxyz.scale(spinOp);
+    }
     return this;
   }
 
@@ -451,6 +457,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       modTemp = new ModulationSet();
       modTemp.id = id;
       modTemp.tau = tau;
+      modTemp.spinOp = spinOp;
       modTemp.mods = mods;
       modTemp.gammaE = gammaE;
       modTemp.modDim = modDim;

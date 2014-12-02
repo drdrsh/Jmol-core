@@ -112,7 +112,7 @@ class SpaceGroup {
 
   boolean doNormalize = true;
 
-  public boolean isBio;
+  boolean isBio;
 
   boolean isBilbao;
 
@@ -1449,7 +1449,7 @@ class SpaceGroup {
     "230;oh^10;i a -3 d;-i 4bd 2c 3",  
   };
   
-  public boolean addLatticeVectors(Lst<float[]> lattvecs) {
+  boolean addLatticeVectors(Lst<float[]> lattvecs) {
     if (latticeOp >= 0 || lattvecs.size() == 0)
       return false;
     int nOps = latticeOp = operationCount;
@@ -1479,7 +1479,7 @@ class SpaceGroup {
     return true;
   }
 
-  public int getSiteMultiplicity(P3 pt, UnitCell unitCell) {
+  int getSiteMultiplicity(P3 pt, UnitCell unitCell) {
     int n = finalOperations.length;
     Lst<P3> pts = new Lst<P3>();
     for (int i = n; --i >= 0;) {

@@ -77,7 +77,7 @@ class SymmetryOperation extends M4 {
   private Matrix sigma;
   int index;
   String subsystemCode;
-  public int timeReversal;
+  int timeReversal;
   
   void setSigma(String subsystemCode, Matrix sigma) {
     this.subsystemCode = subsystemCode;
@@ -668,13 +668,13 @@ class SymmetryOperation extends M4 {
     return PT.approx(f, 100);
   }
 
-  public static void normalizeTranslation(M4 operation) {
+  static void normalizeTranslation(M4 operation) {
     operation.m03 = ((int)operation.m03 + 12) % 12;
     operation.m13 = ((int)operation.m13 + 12) % 12;
     operation.m23 = ((int)operation.m23 + 12) % 12;    
   }
 
-  public static String getXYZFromRsVs(Matrix rs, Matrix vs, boolean is12ths) {
+  static String getXYZFromRsVs(Matrix rs, Matrix vs, boolean is12ths) {
     double[][] ra = rs.getArray();
     double[][] va = vs.getArray();
     int d = ra.length;
@@ -697,33 +697,47 @@ class SymmetryOperation extends M4 {
     return (rsvs == null ? super.toString() : super.toString() + " " + rsvs.toString());
   }
 
-  float magOp = Float.MAX_VALUE;
-  boolean isCenteringOp;
   private boolean unCentered;
-  public float getSpinOp() {
+  boolean isCenteringOp;
+
+  private float magOp = Float.MAX_VALUE;
+  /**
+   * Magnetic spin operations have a flag m=1 or m=-1 (m or -m)
+   * that indicates how the vector quantity changes with symmetry.
+   * This we call "timeReversal." 
+   * 
+   * To apply, timeReversal must be multiplied by the 3x3 determinant, which
+   * is always 1 (standard rotation) or -1 (rotation-inversion). This we store
+   * as magOp. 
+   * 
+   * For example, a vector perpendicular to a plane of symmetry (det=-1) will be
+   * flipped (m=1), while a vector parallel to that plane will not be flipped (m=-1)
+   * 
+   * @return +1, -1, or 0
+   */
+  float getSpinOp() {
     if (magOp == Float.MAX_VALUE)
       magOp = determinant3() * timeReversal;
     //System.out.println("sym op " + index + " " + xyz + " has tr " + timeReversal + " and magop " + magOp);
     return magOp;
   }
 
-  public void setTimeReversal(int magRev) {
+  void setTimeReversal(int magRev) {
     timeReversal = magRev;
     if (xyz.indexOf("m") >= 0)
       xyz = xyz.substring(0, xyz.indexOf("m"));
     xyz += (magRev == 1 ? ",m" : magRev == -1 ? ",-m" : "");
   }
 
-  public static String cleanMatrix(M4 m4) {
-    SB sb = new SB();
+  static String getPrettyMatrix(SB sb, M4 m4) {
     sb.append("[ ");
     float[] row = new float[4];
     for (int i = 0; i < 3; i++) {
       m4.getRow(i, row);
       sb.append("[ ")
-        .appendI((int)row[0]).append(" ")
-        .appendI((int)row[1]).append(" ")
-        .appendI((int)row[2]).append(" ");      
+        .appendI((int)row[0]).appendC(' ')
+        .appendI((int)row[1]).appendC(' ')
+        .appendI((int)row[2]).appendC(' ');      
       sb.append(twelfthsOf(row[3]*12)).append(" ]");
     }
     return sb.append(" ]").toString();
@@ -737,7 +751,7 @@ class SymmetryOperation extends M4 {
    *        TODO
    * @return centering
    */
-  public V3 setCentering(V3 c, boolean isFinal) {
+  V3 setCentering(V3 c, boolean isFinal) {
     if (centering == null && !unCentered) {
       if (modDim == 0 && index > 1 && m00 == 1 && m11 == 1 && m22 == 1
           && m01 == 0 && m02 == 0 && m10 == 0 && m12 == 0 && m20 == 0

@@ -484,7 +484,7 @@ public class SymmetryDesc {
       draw1
           .append(
               ("// " + op.xyzOriginal + "|" + xyzNew + "|" + info1).replace(
-                  '\n', ' ')).append("\n").append(drawid).append("* delete");
+                  '\n', ' ')).appendC('\n').append(drawid).append("* delete");
 
       // draw the initial frame
 
@@ -957,12 +957,12 @@ public class SymmetryDesc {
       if (sb.length() > 0)
         sb.appendC('\n');
       if (prettyMat) {
-        sb.append(SymmetryOperation.cleanMatrix((M4) infolist[i][10])).append(
-            "\t");
+        SymmetryOperation.getPrettyMatrix(sb, (M4) infolist[i][10]);
+        sb.appendC('\t');
       } else if (!labelOnly) {
         if (symOp < 0)
-          sb.appendI(i + 1).append("\t");
-        sb.append((String) infolist[i][0]).append("\t"); //xyz
+          sb.appendI(i + 1).appendC('\t');
+        sb.append((String) infolist[i][0]).appendC('\t'); //xyz
       }
       sb.append((String) infolist[i][2]); //desc
     }

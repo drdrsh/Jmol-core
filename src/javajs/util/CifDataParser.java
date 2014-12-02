@@ -263,7 +263,7 @@ public class CifDataParser implements GenericCifDataParser {
     for (int i = 0; i < fieldCount; ++i)
       if ((loopData[i] = getNextDataToken()) == null)
         return false;
-    return true;
+    return (fieldCount > 0);
   }
 
   /**
