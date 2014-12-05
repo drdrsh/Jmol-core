@@ -1124,7 +1124,8 @@ public class MathExt implements JmolMathExtension {
 
   /**
    * array.add(x) array.add(sep, x) array.sub(x) array.mul(x) array.mul3(x)
-   * array.div(x) array.push() array.pop()
+   * array.div(x) array.push() array.pop() array.split("")
+   * array.split("\t",true)
    * 
    * @param mp
    * @param tok
@@ -1140,13 +1141,16 @@ public class MathExt implements JmolMathExtension {
     SV x2;
     switch (tok) {
     case T.push:
-      return (len == 2 && mp.addX(x1.pushPop(args[1], args[0])) || len == 1 && mp.addX(x1.pushPop(args[0], null)));
+      return (len == 2 && mp.addX(x1.pushPop(args[1], args[0])) || len == 1
+          && mp.addX(x1.pushPop(args[0], null)));
     case T.pop:
-      return (len == 1 && mp.addX(x1.pushPop(null, args[0])) || len == 0 && mp.addX(x1.pushPop(null, null)));
+      return (len == 1 && mp.addX(x1.pushPop(null, args[0])) || len == 0
+          && mp.addX(x1.pushPop(null, null)));
     case T.add:
       if (len != 1 && len != 2)
         return false;
       break;
+    case T.split:
     case T.join:
       break;
     default:
@@ -1156,14 +1160,89 @@ public class MathExt implements JmolMathExtension {
     String[] sList1 = null, sList2 = null, sList3 = null;
 
     if (len == 2) {
-      // [xxxx].add("\t", [...])
+      // [...].add("\t", [...])
+      // [...].split("\t", true) [split individual elements as strings]
+      // [...].split("", true) [CSV split]
+      // [...][...].join("x", true) [2D-array line join]
+      // [...][...].join("", true)  [CSV join]
       int itab = (args[0].tok == T.string ? 0 : 1);
       String tab = SV.sValue(args[itab]);
-      sList1 = (isArray1 ? SV.strListValue(x1) : PT.split(SV.sValue(x1),
-          "\n"));
+      if (len == 2) {
+        Lst<SV> l = x1.getList();
+        boolean isCSV = (tab.length() == 0);
+        if (isCSV)
+          tab = ",";
+        if (tok == T.join) {
+          SV[] s2 = new SV[l.size()];
+          for (int i = l.size(); --i >= 0;) {
+            Lst<SV> a = l.get(i).getList();
+            if (a == null)
+              s2[i] = l.get(i);
+            else {
+              SB sb = new SB();
+              for (int j = 0, n = a.size(); j < n; j++) {
+                if (j > 0)
+                  sb.append(tab);
+                SV sv = a.get(j);
+                sb.append(isCSV && sv.tok == T.string ? "\"" + PT.rep(
+                    (String) sv.value, "\"", "\"\"") + "\"" 
+                    : "" + sv.asString());
+              }
+              s2[i] = SV.newS(sb.toString());
+            }
+          }
+          return mp.addXAV(s2);
+        }
+        SV[] sa = new SV[l.size()];
+        if (isCSV)
+          tab = "\0";
+        int[] next = new int[2];
+        for (int i = l.size(); --i >= 0;) {
+          String line = l.get(i).asString();
+          if (isCSV) {
+            next[1] = 0;
+            next[0] = 0;
+            int last = 0;
+            while (true) {
+              String s = PT.getCSVString(line, next);
+              if (s == null) {
+                line = line.substring(0, last)
+                    + line.substring(last).replace(',', '\0');
+                break;
+              }
+              line = line.substring(0, last)
+                  + line.substring(last, next[0]).replace(',', '\0') + s
+                  + line.substring(next[1]);
+              next[1] = last = next[0] + s.length();
+            }
+          }
+          String[] linaa = line.split(tab);
+          Lst<SV> la = new Lst<SV>();
+          for (int j = 0, n = linaa.length; j < n; j++) {
+            String s = linaa[j];
+            if (s.indexOf(".") < 0)
+              try {
+                la.addLast(SV.newI(Integer.parseInt(s)));
+                continue;
+              } catch (Exception e) {
+              }
+            else
+              try {
+                la.addLast(SV.getVariable(Float.valueOf(Float.parseFloat(s))));
+                continue;
+              } catch (Exception ee) {
+              }
+            la.addLast(SV.newS(s));
+          }
+          sa[i] = SV.getVariableList(la);
+        }
+        return mp.addXObj(SV.getVariable(sa));
+      }
+
+      sList1 = (isArray1 ? SV.strListValue(x1) : PT.split(SV.sValue(x1), "\n"));
       x2 = args[1 - itab];
-      sList2 = (x2.tok == T.varray ? SV.strListValue(x2) : PT.split(SV.sValue(x2),
-          "\n"));
+      sList2 = (x2.tok == T.varray ? SV.strListValue(x2) : PT.split(
+          SV.sValue(x2), "\n"));
       sList3 = new String[len = Math.max(sList1.length, sList2.length)];
       for (int i = 0; i < len; i++)
         sList3[i] = (i >= sList1.length ? "" : sList1[i]) + tab
@@ -1230,7 +1309,7 @@ public class MathExt implements JmolMathExtension {
 
     SV[] olist = new SV[len];
     if (isArray1 && isAll) {
-      Lst<SV>  llist = new Lst<SV>();
+      Lst<SV> llist = new Lst<SV>();
       return mp.addXList(addAllLists(x1.getList(), llist));
     }
     SV a = (isScalar1 ? x1 : null);
@@ -1926,6 +2005,17 @@ public class MathExt implements JmolMathExtension {
         m4.getColumn(n, f);
         return mp.addXAF(f);
       }
+    case T.varray:
+      // column of a[][]
+      Lst<SV> l1 = x1.getList();
+      Lst<SV> l2 = new Lst<SV>();
+      for (int i = 0, len = l1.size(); i < len; i++) {
+        Lst<SV> l3 = l1.get(i).getList();
+        if (l3 == null)
+          return mp.addXStr("");
+        l2.addLast(n < l3.size() ? l3.get(n) : SV.newS(""));   
+      }
+      return mp.addXList(l2);
     }
     return false;
 
@@ -2086,17 +2176,31 @@ public class MathExt implements JmolMathExtension {
 
   private boolean evaluateString(ScriptMathProcessor mp, int tok, SV[] args)
       throws ScriptException {
-    if (args.length > 1)
-      return false;
     SV x = mp.getX();
-    if (x.tok == T.varray && tok != T.split && tok != T.trim) {
+    String sArg = (args.length > 0 ? SV.sValue(args[0]) : tok == T.trim ? ""
+        : "\n");
+    switch (args.length) {
+    case 0:
+    case 1:
+      break;
+    case 2:
+      if (x.tok == T.varray)
+        break;
+      if (tok == T.split) {
+        x = SV.getVariable(PT.split(PT.rep((String) x.value, "\n\r", "\n").replace('\r', '\n'), "\n"));
+        break;
+      }
+      //$FALL-THROUGH$
+    default:
+      return false;      
+    }
+      
+    if (x.tok == T.varray && tok != T.trim && (tok != T.split || args.length == 2)) {
       mp.addX(x);
       return evaluateList(mp, tok, args);
     }
-    String s = (tok == T.split && x.tok == T.bitset || tok == T.trim
-        && x.tok == T.varray ? null : SV.sValue(x));
-    String sArg = (args.length == 1 ? SV.sValue(args[0]) : tok == T.trim ? ""
-        : "\n");
+    String s = (tok == T.split && x.tok == T.bitset 
+        || tok == T.trim && x.tok == T.varray ? null : SV.sValue(x));
     switch (tok) {
     case T.split:
       if (x.tok == T.bitset) {
@@ -2110,7 +2214,7 @@ public class MathExt implements JmolMathExtension {
           bs.and(bsSelected);
           s += Escape.eBS(bs);
         }
-      }
+      }      
       return mp.addXAS(PT.split(s, sArg));
     case T.join:
       if (s.length() > 0 && s.charAt(s.length() - 1) == '\n')

@@ -8585,9 +8585,9 @@ public class ScriptEval extends ScriptExpr {
       if (key.startsWith("_"))
         invArg();
       if (key.indexOf("/") >= 0)
-        contextVariables.put(key, t = SV.newI(0));
+        contextVariables.put(key.toLowerCase(), t = SV.newI(0));
       else
-      t = vwr.g.getOrSetNewVariable(key, true);
+        t = vwr.g.getOrSetNewVariable(key, true);
     }
     return t;
   }

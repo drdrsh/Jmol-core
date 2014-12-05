@@ -742,10 +742,8 @@ public class T {
   
   public final static int div          = 0 | 1 << 9 | mathfunc | mathproperty;
   public final static int dot          = 1 | 1 << 9 | mathfunc | mathproperty;
-  public final static int join         = 2 | 1 << 9 | mathfunc | mathproperty;
   public final static int mul          = 3 | 1 << 9 | mathfunc | mathproperty;
   public final static int mul3         = 4 | 1 << 9 | mathfunc | mathproperty;
-  public final static int split        = 6 | 1 << 9 | mathfunc | mathproperty;
   public final static int sub          = 7 | 1 << 9 | mathfunc | mathproperty;
   public final static int trim         = 8 | 1 << 9 | mathfunc | mathproperty;  
   public final static int volume       = 9 | 1 << 9 | mathfunc | mathproperty | floatproperty;  
@@ -755,7 +753,7 @@ public class T {
   // xxx(a,b)
   
   public final static int cross = 1 | 2 << 9 | mathfunc;
-  public final static int load         = 2 | 2 << 9 | mathfunc | scriptCommand;
+  public final static int load         = 3 | 2 << 9 | mathfunc | scriptCommand;
   public final static int random       = 4 | 2 << 9 | mathfunc;
   public final static int script       = 5 | 2 << 9 | mathfunc | scriptCommand;
   public final static int substructure = 6 | 2 << 9 | mathfunc | intproperty | strproperty;
@@ -775,7 +773,9 @@ public class T {
   public final static int add          = 1 | 2 << 9 | mathfunc | mathproperty;
   public final static int distance     = 2 | 2 << 9 | mathfunc | mathproperty;
   public final static int push         = 3 | 2 << 9 | mathfunc | mathproperty | scriptCommand | noArgs; //internal only;
-
+  public final static int join         = 4 | 2 << 9 | mathfunc | mathproperty;
+  public final static int split        = 5 | 2 << 9 | mathfunc | mathproperty;
+  
   // xxx(a,b,c)
   
   public final static int hkl          = 1 | 3 << 9 | mathfunc;

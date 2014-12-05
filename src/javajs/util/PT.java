@@ -548,19 +548,53 @@ public class PT {
     return getQuotedStringNext(line, next);
   }
   
+  /**
+   * 
+   * @param line
+   * @param next passes [current pointer]
+   * @return quoted string -- does NOT unescape characters
+   */
   public static String getQuotedStringNext(String line, int[] next) {
-    String value = line;
     int i = next[0];
-    if (i < 0 || (i = value.indexOf("\"", i)) < 0)
+    if (i < 0 || (i = line.indexOf("\"", i)) < 0)
       return "";
-    next[0] = ++i;
-    value = value.substring(i);
-    i = -1;
-    while (++i < value.length() && value.charAt(i) != '"')
-      if (value.charAt(i) == '\\')
+    int pt = i + 1;
+    int len = line.length();
+    while (++i < len && line.charAt(i) != '"')
+      if (line.charAt(i) == '\\')
         i++;
-    next[0] += i + 1;
-    return value.substring(0, i);
+    next[0] = i + 1;
+    return line.substring(pt, i);
+  }
+  
+  /**
+   * CSV format -- escaped quote is "" WITHIN "..."
+   *
+   * 
+   * @param line
+   * @param next int[2] filled with [ptrQuote1, ptrAfterQuote2]
+   * @return unescaped string or null
+   */
+  public static String getCSVString(String line, int[] next) {
+    int i = next[1];
+    if (i < 0 || (i = line.indexOf("\"", i)) < 0)
+      return null;
+    int pt = next[0] = i;
+    int len = line.length();
+    boolean escaped = false;
+    boolean haveEscape = false;
+    while (++i < len 
+        && (line.charAt(i) != '"' || (escaped = (i + 1 < len && line.charAt(i + 1) == '"'))))
+      if (escaped) {
+        escaped = false;
+        haveEscape = true;
+        i++;
+      }
+    if (i >= len)
+      return null; // unmatched
+    next[1] = i + 1;
+    String s = line.substring(pt + 1, i);
+    return (haveEscape ? rep(rep(s, "\"\"", "\0"), "\0","\"") : s);
   }
   
   public static boolean isOneOf(String key, String semiList) {
@@ -581,11 +615,8 @@ public class PT {
   }
 
   /**
-   * Does a clean replace of strFrom in str with strTo. This method has far
-   * faster performance than just String.replace() when str does not contain
-   * strFrom, but is about 15% slower when it does. (Note that
-   * String.replace(CharSeq, CharSeq) was introduced in Java 1.5. Finally
-   * getting around to using it in Jmol!)
+   * Does a clean ITERATIVE replace of strFrom in str with strTo. 
+   * Thus, rep("Testttt", "tt","t") becomes "Test".
    * 
    * @param str
    * @param strFrom
