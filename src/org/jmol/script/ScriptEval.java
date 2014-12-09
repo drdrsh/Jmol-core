@@ -5028,6 +5028,8 @@ public class ScriptEval extends ScriptExpr {
     }
     boolean isPlay = false;
     boolean isRange = false;
+    String propName = null;
+    Object prop = null;
     boolean isAll = false;
     boolean isHyphen = false;
     int[] frameList = new int[] { -1, -1 };
@@ -5105,6 +5107,11 @@ public class ScriptEval extends ScriptExpr {
       case T.range:
         isRange = true;
         break;
+      case T.property:
+        propName = stringParameter(3);
+        prop = (isArrayParameter(4) ? stringParameterSet(4) : paramAsStr(4));
+        i = slen;
+        break;
       default:
         frameControl(offset);
         return;
@@ -5131,6 +5138,7 @@ public class ScriptEval extends ScriptExpr {
           frameList[i] %= 1000000;
     int modelIndex = vwr.ms.getModelNumberIndex(frameList[0], useModelNumber,
         false);
+    
     int modelIndex2 = -1;
     if (haveFileSet && modelIndex < 0 && frameList[0] != 0) {
       // may have frame 2.0 or frame 2 meaning the range of models in file 2
@@ -5166,6 +5174,11 @@ public class ScriptEval extends ScriptExpr {
       }
     }
 
+    if (propName != null) {
+      if (modelIndex < 0)
+        return;
+      vwr.ms.setInfo(modelIndex, propName, prop);
+    }
     if (!isPlay && !isRange || modelIndex >= 0)
       vwr.setCurrentModelIndexClear(modelIndex, false);
     if (isPlay && nFrames == 2 || isRange || isHyphen) {

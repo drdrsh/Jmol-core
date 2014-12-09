@@ -573,6 +573,7 @@ public class PT {
    * 
    * @param line
    * @param next int[2] filled with [ptrQuote1, ptrAfterQuote2]
+   *            next[1] will be -1 if unmatched quotes are found (continuation on next line)
    * @return unescaped string or null
    */
   public static String getCSVString(String line, int[] next) {
@@ -590,8 +591,10 @@ public class PT {
         haveEscape = true;
         i++;
       }
-    if (i >= len)
+    if (i >= len) {
+      next[1] = -1;
       return null; // unmatched
+    }
     next[1] = i + 1;
     String s = line.substring(pt + 1, i);
     return (haveEscape ? rep(rep(s, "\"\"", "\0"), "\0","\"") : s);

@@ -96,8 +96,6 @@ public class CmdExt implements JmolCmdExtension {
   protected T[] st;
   protected int slen;
 
-  private Object[] lastData;
-
   final static int ERROR_invalidArgument = 22;
 
   public CmdExt() {
@@ -1619,7 +1617,7 @@ public class CmdExt implements JmolCmdExtension {
           dataString.trim());
       return;
     }
-    Object[] d = lastData = new Object[4];
+    Object[] d = new Object[4];
     // not saving this data in the state?
     if (dataType.equals("element_vdw")) {
       // vdw for now
@@ -3600,7 +3598,6 @@ public class CmdExt implements JmolCmdExtension {
       }
       break;
     case T.symop:
-      String type;
       int iop = 0;
       P3 pt1 = null,
       pt2 = null;
@@ -3611,7 +3608,7 @@ public class CmdExt implements JmolCmdExtension {
         // show symop 3 "fmatrix"
         iop = (tokAt(2) == T.integer ? intParameter(2) : 0);
       }
-      type = (tokAt(eval.iToken + 1) == T.string ? stringParameter(++eval.iToken)
+      String type = (tokAt(eval.iToken + 1) == T.string ? stringParameter(++eval.iToken)
           : null);
       checkLength(len = ++eval.iToken);
       if (!chk)
@@ -3826,9 +3823,9 @@ public class CmdExt implements JmolCmdExtension {
         msg = vwr.stm.getSavedStructure(shape);
       break;
     case T.data:
-      type = ((len = slen) == 3 ? paramAsStr(2) : null);
+      String dtype = ((len = slen) == 3 ? paramAsStr(2) : null);
       if (!chk) {
-        Object[] data = (type == null ? this.lastData : vwr.getData(type));
+        Object[] data = vwr.getData(dtype);
         msg = (data == null ? "no data" : Escape.encapsulateData(
             (String) data[0], data[1], ((Integer) data[3]).intValue()));
       }

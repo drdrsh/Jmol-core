@@ -153,7 +153,7 @@ public class MathExt implements JmolMathExtension {
       return evaluateFind(mp, args);
     case T.format:
     case T.label:
-      return evaluateFormat(mp, op.intValue, args, tok == T.format);
+      return evaluateFormat(mp, op.intValue, args, tok == T.label);
     case T.function:
       return evaluateUserFunction(mp, (String) op.value, args, op.intValue,
           op.tok == T.propselector);
@@ -1122,19 +1122,27 @@ public class MathExt implements JmolMathExtension {
             asArray));
   }
 
-  /**
-   * array.add(x) array.add(sep, x) array.sub(x) array.mul(x) array.mul3(x)
-   * array.div(x) array.push() array.pop() array.split("")
-   * array.split("\t",true)
-   * 
-   * @param mp
-   * @param tok
-   * @param args
-   * @return T/F
-   * @throws ScriptException
-   */
   private boolean evaluateList(ScriptMathProcessor mp, int tok, SV[] args)
       throws ScriptException {
+    // array.add(x) 
+    // array.add(sep, x) 
+    // array.sub(x) 
+    // array.mul(x) 
+    // array.mul3(x)
+    // array.div(x) 
+    // array.push() 
+    // array.pop() 
+    
+    // array.join()
+    // array.join(sep)
+    // array.join(sep,true)
+    // array.join("",true) (CSV)
+    
+    // array.split()
+    // array.split(sep)
+    // array.split("\t",true)
+    // array.split("",true) (CSV)
+
     int len = args.length;
     SV x1 = mp.getX();
     boolean isArray1 = (x1.tok == T.varray);
@@ -1160,94 +1168,103 @@ public class MathExt implements JmolMathExtension {
     String[] sList1 = null, sList2 = null, sList3 = null;
 
     if (len == 2) {
-      // [...].add("\t", [...])
-      // [...].split("\t", true) [split individual elements as strings]
-      // [...].split("", true) [CSV split]
-      // [...][...].join("x", true) [2D-array line join]
-      // [...][...].join("", true)  [CSV join]
-      int itab = (args[0].tok == T.string ? 0 : 1);
-      String tab = SV.sValue(args[itab]);
-      if (len == 2) {
-        Lst<SV> l = x1.getList();
-        boolean isCSV = (tab.length() == 0);
-        if (isCSV)
-          tab = ",";
-        if (tok == T.join) {
-          SV[] s2 = new SV[l.size()];
-          for (int i = l.size(); --i >= 0;) {
-            Lst<SV> a = l.get(i).getList();
-            if (a == null)
-              s2[i] = l.get(i);
-            else {
-              SB sb = new SB();
-              for (int j = 0, n = a.size(); j < n; j++) {
-                if (j > 0)
-                  sb.append(tab);
-                SV sv = a.get(j);
-                sb.append(isCSV && sv.tok == T.string ? "\"" + PT.rep(
-                    (String) sv.value, "\"", "\"\"") + "\"" 
-                    : "" + sv.asString());
-              }
-              s2[i] = SV.newS(sb.toString());
-            }
-          }
-          return mp.addXAV(s2);
-        }
-        SV[] sa = new SV[l.size()];
-        if (isCSV)
-          tab = "\0";
-        int[] next = new int[2];
+      // special add, join, split
+      String tab = SV.sValue(args[0]);
+      x2 = args[1];
+      if (tok == T.add) {
+        // [...].add("\t", [...])
+        sList1 = (isArray1 ? SV.strListValue(x1) : PT
+            .split(SV.sValue(x1), "\n"));
+        sList2 = (x2.tok == T.varray ? SV.strListValue(x2) : PT.split(
+            SV.sValue(x2), "\n"));
+        sList3 = new String[len = Math.max(sList1.length, sList2.length)];
+        for (int i = 0; i < len; i++)
+          sList3[i] = (i >= sList1.length ? "" : sList1[i]) + tab
+              + (i >= sList2.length ? "" : sList2[i]);
+        return mp.addXAS(sList3);
+      }
+      if (x2.tok != T.on)
+        return false; // second parameter must be "true" for now.
+      Lst<SV> l = x1.getList();
+      boolean isCSV = (tab.length() == 0);
+      if (isCSV)
+        tab = ",";
+      if (tok == T.join) {
+        // [...][...].join(sep, true) [2D-array line join]
+        // [...][...].join("", true)  [CSV join]
+        SV[] s2 = new SV[l.size()];
         for (int i = l.size(); --i >= 0;) {
-          String line = l.get(i).asString();
-          if (isCSV) {
-            next[1] = 0;
-            next[0] = 0;
-            int last = 0;
-            while (true) {
-              String s = PT.getCSVString(line, next);
-              if (s == null) {
-                line = line.substring(0, last)
-                    + line.substring(last).replace(',', '\0');
-                break;
+          Lst<SV> a = l.get(i).getList();
+          if (a == null)
+            s2[i] = l.get(i);
+          else {
+            SB sb = new SB();
+            for (int j = 0, n = a.size(); j < n; j++) {
+              if (j > 0)
+                sb.append(tab);
+              SV sv = a.get(j);
+              sb.append(isCSV && sv.tok == T.string ? "\""
+                  + PT.rep((String) sv.value, "\"", "\"\"") + "\"" : ""
+                  + sv.asString());
+            }
+            s2[i] = SV.newS(sb.toString());
+          }
+        }
+        return mp.addXAV(s2);
+      }
+      // [...].split(sep, true) [split individual elements as strings]
+      // [...].split("", true) [CSV split]
+      Lst<SV> sa = new Lst<SV>();
+      if (isCSV)
+        tab = "\0";
+      int[] next = new int[2];
+      for (int i = 0, nl = l.size(); i < nl; i++) {
+        String line = l.get(i).asString();
+        if (isCSV) {
+          next[1] = 0;
+          next[0] = 0;
+          int last = 0;
+          while (true) {
+            String s = PT.getCSVString(line, next);
+            if (s == null) {
+              if (next[1] == -1) {
+                // unmatched -- continue with next line if present
+                // or just close quotes gracefully
+                line += (++i < nl ? "\n" + l.get(i).asString() : "\"");
+                next[1] = last;
+                continue;
               }
               line = line.substring(0, last)
-                  + line.substring(last, next[0]).replace(',', '\0') + s
-                  + line.substring(next[1]);
-              next[1] = last = next[0] + s.length();
+                  + line.substring(last).replace(',', '\0');
+              break;
             }
+            line = line.substring(0, last)
+                + line.substring(last, next[0]).replace(',', '\0') + s
+                + line.substring(next[1]);
+            next[1] = last = next[0] + s.length();
           }
-          String[] linaa = line.split(tab);
-          Lst<SV> la = new Lst<SV>();
-          for (int j = 0, n = linaa.length; j < n; j++) {
-            String s = linaa[j];
-            if (s.indexOf(".") < 0)
-              try {
-                la.addLast(SV.newI(Integer.parseInt(s)));
-                continue;
-              } catch (Exception e) {
-              }
-            else
-              try {
-                la.addLast(SV.getVariable(Float.valueOf(Float.parseFloat(s))));
-                continue;
-              } catch (Exception ee) {
-              }
-            la.addLast(SV.newS(s));
-          }
-          sa[i] = SV.getVariableList(la);
         }
-        return mp.addXObj(SV.getVariable(sa));
+        String[] linaa = line.split(tab);
+        Lst<SV> la = new Lst<SV>();
+        for (int j = 0, n = linaa.length; j < n; j++) {
+          String s = linaa[j];
+          if (s.indexOf(".") < 0)
+            try {
+              la.addLast(SV.newI(Integer.parseInt(s)));
+              continue;
+            } catch (Exception e) {
+            }
+          else
+            try {
+              la.addLast(SV.getVariable(Float.valueOf(Float.parseFloat(s))));
+              continue;
+            } catch (Exception ee) {
+            }
+          la.addLast(SV.newS(s));
+        }
+        sa.addLast(SV.getVariableList(la));
       }
-
-      sList1 = (isArray1 ? SV.strListValue(x1) : PT.split(SV.sValue(x1), "\n"));
-      x2 = args[1 - itab];
-      sList2 = (x2.tok == T.varray ? SV.strListValue(x2) : PT.split(
-          SV.sValue(x2), "\n"));
-      sList3 = new String[len = Math.max(sList1.length, sList2.length)];
-      for (int i = 0; i < len; i++)
-        sList3[i] = (i >= sList1.length ? "" : sList1[i]) + tab
-            + (i >= sList2.length ? "" : sList2[i]);
-      return mp.addXAS(sList3);
+      return mp.addXObj(SV.getVariableList(sa));
     }
     x2 = (len == 0 ? SV.newV(T.all, "all") : args[0]);
     boolean isAll = (x2.tok == T.all);

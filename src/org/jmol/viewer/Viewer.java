@@ -2685,6 +2685,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       chainList.clear();
       cm.clear();
       definedAtomSets.clear();
+      lastData = null;
       if (dm != null)
         dm.clear();
       setBooleanProperty("legacyjavafloat", false);
@@ -3208,15 +3209,17 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     cm.setPropertyColorRangeData(data, bs);
   }
 
+  private Object[] lastData;
+
   public void setData(String type, Object[] data, int arrayCount,
                       int matchField, int matchFieldColumnCount, int field,
                       int fieldColumnCount) {
-    getDataManager().setData(type, data, arrayCount, getAtomCount(), matchField,
+    getDataManager().setData(type, lastData = data, arrayCount, getAtomCount(), matchField,
         matchFieldColumnCount, field, fieldColumnCount);
   }
 
   public Object[] getData(String type) {
-    return getDataManager().getData(type);
+    return (type == null ? lastData : getDataManager().getData(type));
   }
 
   public float[] getDataFloat(String label) {
