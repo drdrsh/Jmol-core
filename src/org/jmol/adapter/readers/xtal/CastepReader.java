@@ -92,6 +92,7 @@ public class CastepReader extends AtomSetCollectionReader {
   private String[] tokens;
 
   private boolean isPhonon;
+  private boolean isTS;
   private boolean isOutput;
   private boolean isCell;
 
@@ -235,7 +236,7 @@ public class CastepReader extends AtomSetCollectionReader {
           continue;
         }
       }
-    if (isPhonon || isOutput) {
+    if (isPhonon || isOutput || isTS) {
       if (isPhonon) {
         isTrajectory = (desiredVibrationNumber <= 0);
         asc.allowMultiple = false;
@@ -262,11 +263,11 @@ public class CastepReader extends AtomSetCollectionReader {
       } else if (doProcessLines && line.contains("Born Effective Charges")) {
         readOutputBornChargeTensors();
       } else if (line.contains("Final energy ")) { // not "Final energy, E"
-        readEnergy(3);
+        readEnergy(3, null);
       } else if (line.contains("Dispersion corrected final energy*")) {
-        readEnergy(5);
+        readEnergy(5, null);
       } else if (line.contains("Total energy corrected")) {
-        readEnergy(8);
+        readEnergy(8, null);
       }
       return true;
     }
@@ -327,13 +328,13 @@ public class CastepReader extends AtomSetCollectionReader {
 
   }
 
-  private void readEnergy(int pt) throws Exception {
+  private void readEnergy(int pt, String prefix) throws Exception {
     if (isTrajectory)
       applySymmetryAndSetTrajectory();
     tokens = getTokens();
     try {
       Double energy = Double.valueOf(Double.parseDouble(tokens[pt]));
-      asc.setAtomSetName("Energy = " + energy + " eV");
+      asc.setAtomSetName(prefix + "Energy = " + energy + " eV");
       asc.setAtomSetEnergy("" + energy, energy.floatValue());
       asc.setAtomSetAuxiliaryInfo("Energy", energy);
     } catch (Exception e) {
@@ -357,12 +358,15 @@ public class CastepReader extends AtomSetCollectionReader {
   }
   
   private void readPhononTrajectories() throws Exception {
-    isTrajectory = (desiredVibrationNumber <= 0);
+    if (!isTS) // force this only for .phonon, not .ts
+      isTrajectory = (desiredVibrationNumber <= 0);
     if (isTrajectory)
       asc.setTrajectory();
     doApplySymmetry = true;
     while (line != null && line.contains("<-- E")) {
       asc.newAtomSetClear(false);
+      if (isTS)
+        readEnergy(0, getTokensStr(prevline + " -")[0] + " ");
       discardLinesUntilContains("<-- h");
       setSpaceGroupName("P1");
       abc = read3Vectors(true);
@@ -381,7 +385,7 @@ public class CastepReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    if (isPhonon || isOutput) {
+    if (isPhonon || isOutput || isTS) {
       isTrajectory = false;
     } else {
       doApplySymmetry = true;
@@ -529,6 +533,11 @@ public class CastepReader extends AtomSetCollectionReader {
         if (line.startsWith("%")) {
           isCell = true;
           break;
+        }
+        if (line.startsWith("LST")) {
+          isTS = true;
+          Logger.info("reading CASTEP .ts file");
+          return -1;
         }
         if (line.startsWith("BEGIN header")) {
           isPhonon = true;
