@@ -37,6 +37,7 @@ import javajs.util.SB;
 import javajs.util.T3;
 
 import org.jmol.script.T;
+import org.jmol.util.Edge;
 import org.jmol.viewer.Viewer;
 
 
@@ -284,8 +285,8 @@ public class LabelToken {
                                    LabelToken[] tokens,
                                    Map<String, Object> values, int[] indices, P3 ptTemp) {
     values.put("#", "" + (bond.index + 1));
-    values.put("ORDER", "" + bond.getOrderNumberAsString());
-    values.put("TYPE", bond.getOrderName());
+    values.put("ORDER", "" + Edge.getBondOrderNumberFromOrder(bond.order));
+    values.put("TYPE", Edge.getBondOrderNameFromOrder(bond.order));
     values.put("LENGTH", Float.valueOf(bond.atom1.distance(bond.atom2)));
     values.put("ENERGY", Float.valueOf(bond.getEnergy()));
     setValues(tokens, values);

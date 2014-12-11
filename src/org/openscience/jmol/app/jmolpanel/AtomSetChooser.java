@@ -62,7 +62,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Enumeration;
 
-import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
@@ -70,6 +69,7 @@ import org.jmol.util.Logger;
 import javajs.util.SB;
 import javajs.util.P3;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 
@@ -87,7 +87,7 @@ ActionListener, ChangeListener, Runnable {
   private JTextArea propertiesTextArea;
   private JTree tree;
   private DefaultTreeModel treeModel;
-  private JmolViewer vwr;
+  private Viewer vwr;
   private JCheckBox repeatCheckBox;
   private JSlider selectSlider;
   private JLabel infoLabel;
@@ -183,7 +183,7 @@ ActionListener, ChangeListener, Runnable {
 
  
   
-  public AtomSetChooser(JmolViewer vwr, JFrame frame) {
+  public AtomSetChooser(Viewer vwr, JFrame frame) {
  //   super(frame,"AtomSetChooser", false);
     super(GT._("AtomSetChooser"));
     this.vwr = vwr;
@@ -455,8 +455,8 @@ ActionListener, ChangeListener, Runnable {
       int atomSetIndex = indexes[index];
       script("frame " + vwr.getModelNumberDotted(atomSetIndex));
       infoLabel.setText(vwr.getModelName(atomSetIndex));
-      showProperties(vwr.getModelProperties(atomSetIndex));
-      showAuxiliaryInfo(vwr.getModelAuxiliaryInfo(atomSetIndex));
+      showProperties(vwr.ms.getModelProperties(atomSetIndex));
+      showAuxiliaryInfo(vwr.ms.getModelAuxiliaryInfo(atomSetIndex));
     } catch (Exception e) {
       // if this fails, ignore it.
     }
@@ -558,7 +558,7 @@ ActionListener, ChangeListener, Runnable {
           SB str = new SB();
           str.append(vwr.getModelName(modelIndex)).append("\n");
           int natoms=0;
-          int atomCount = vwr.getAtomCount();
+          int atomCount = vwr.ms.ac;
           for (int i = 0; i < atomCount;  i++) {
             if (vwr.getAtomModelIndex(i)==modelIndex) {
               natoms++;
@@ -705,7 +705,7 @@ ActionListener, ChangeListener, Runnable {
       for (int atomSetIndex = 0, count = vwr.getModelCount();
       atomSetIndex < count; ++atomSetIndex) {
         DefaultMutableTreeNode current = root;
-        String path = vwr.getModelProperty(atomSetIndex,key);
+        String path = vwr.ms.getModelProperty(atomSetIndex,key);
         // if the path is not null we need to find out where to add a leaf
         if (path != null) {
           DefaultMutableTreeNode child = null;

@@ -89,7 +89,7 @@ public class VectorsRenderer extends ShapeRenderer {
     if (vectorScale < 0)
       headScale = -headScale;
     boolean haveModulations = false;
-    for (int i = ms.getAtomCount(); --i >= 0;) {
+    for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
       if (!isVisibleForMe(atom))
         continue;
@@ -124,7 +124,7 @@ public class VectorsRenderer extends ShapeRenderer {
       }
     }
     if (haveModulations)
-      for (int i = ms.getAtomCount(); --i >= 0;) {
+      for (int i = ms.ac; --i >= 0;) {
         Atom atom = atoms[i];
         if (!isVisibleForMe(atom))
           continue;

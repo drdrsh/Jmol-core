@@ -57,7 +57,7 @@ public class Hover extends TextShape {
     short colix = C.BLACK;
     currentObject = hoverText = Text.newLabel(vwr, font3d, null, colix, bgcolix, JC.ALIGN_LEFT, 0,
         null);
-    hoverText.setAdjustForWindow(true);
+    hoverText.adjustForWindow = true;
   }
 
   @Override
@@ -92,7 +92,7 @@ public class Hover extends TextShape {
       String text = (String) value;
       if (text != null && text.length() == 0)
         text = null;
-      int count = vwr.getAtomCount();
+      int count = vwr.ms.ac;
       if (atomFormats == null || atomFormats.length < count)
         atomFormats = new String[count];
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected.nextSetBit(i + 1))

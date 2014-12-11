@@ -680,8 +680,8 @@ public class ForceFieldMMFF extends ForceField {
     // run through all bonds, adjusting formal charges as necessary
     Atom a1 = null;
     for (int i = bTypes.length; --i >= 0;) {
-      a1 = bonds[i].getAtom1();
-      Atom a2 = bonds[i].getAtom2();
+      a1 = bonds[i].atom1;
+      Atom a2 = bonds[i].atom2;
       // It's possible that some of our atoms are not in the atom set,
       // but we don't want both of them to be out of the set.
       
@@ -831,7 +831,7 @@ public class ForceFieldMMFF extends ForceField {
 
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      Bond[] bonds = a.getBonds();
+      Bond[] bonds = a.bonds;
       if (bonds != null)
         for (int j = bonds.length; --j >= 0;)
           if (bonds[j].isCovalent())
@@ -895,7 +895,7 @@ public class ForceFieldMMFF extends ForceField {
 
     for (int i = bsHydrogen.nextSetBit(0); i >= 0; i = bsHydrogen
         .nextSetBit(i + 1)) {
-      Bond[] bonds = atoms[i].getBonds();
+      Bond[] bonds = atoms[i].bonds;
       if (bonds != null) {
         int j = types[bonds[0].getOtherAtom(atoms[i]).i];
         if (j != 0)
@@ -921,8 +921,8 @@ public class ForceFieldMMFF extends ForceField {
   private int[] setBondTypes(Bond[] bonds, int bondCount, BS bsAtoms) {
      int[] bTypes = new int[bondCount];
      for (int i = bondCount; --i >= 0;) {
-       Atom a1 = bonds[i].getAtom1();
-       Atom a2 = bonds[i].getAtom2();
+       Atom a1 = bonds[i].atom1;
+       Atom a2 = bonds[i].atom2;
        boolean ok1 = bsAtoms.get(a1.i);
        boolean ok2 = bsAtoms.get(a2.i);
        if (!ok1 && !ok2)

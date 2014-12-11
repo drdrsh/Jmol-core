@@ -100,10 +100,10 @@ public class MeasuresRenderer extends LabelsRenderer {
       if (colix == 0)
         colix = measures.colix;
       if (colix == 0)
-        colix = vwr.getColixBackgroundContrast();
+        colix = vwr.cm.colixBackgroundContrast;
       labelColix = m.labelColix;
       if (labelColix == 0)
-        labelColix = vwr.getColixBackgroundContrast();
+        labelColix = vwr.cm.colixBackgroundContrast;
       else if (labelColix == -1)
         labelColix = colix;
       g3d.setC(colix);
@@ -158,7 +158,7 @@ public class MeasuresRenderer extends LabelsRenderer {
         s = null;
       } else if (m.text != null) {
         m.text.setText(s);
-        m.text.setColix(labelColix);
+        m.text.colix = labelColix;
       }
     }
     if (m.mad == 0) {

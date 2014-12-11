@@ -49,7 +49,7 @@ public class JSpecView implements JmolJSpecView {
     default:
       return null;
     }
-    Lst<String> peaks = (Lst<String>) vwr.getModelAuxiliaryInfoValue(iModel,
+    Lst<String> peaks = (Lst<String>) vwr.ms.getInfo(iModel,
         "jdxAtomSelect_" + type);
     if (peaks == null)
       return null;
@@ -100,7 +100,7 @@ public class JSpecView implements JmolJSpecView {
         : vwr.sm.getSyncMode());
     if (syncMode != StatusManager.SYNC_DRIVER)
       return;
-    String peak = (String) vwr.getModelAuxiliaryInfoValue(modelIndex, "jdxModelSelect");
+    String peak = (String) vwr.ms.getInfo(modelIndex, "jdxModelSelect");
     // problem is that SECOND load in jmol will not load new model in JSpecView
     if (peak != null)
       sendJSpecView(peak + " src=\"Jmol\"");
@@ -108,12 +108,12 @@ public class JSpecView implements JmolJSpecView {
 
   @Override
   public int getBaseModelIndex(int modelIndex) {
-    String baseModel = (String) vwr.getModelAuxiliaryInfoValue(modelIndex,
+    String baseModel = (String) vwr.ms.getInfo(modelIndex,
         "jdxBaseModel");
     if (baseModel != null)
       for (int i = vwr.getModelCount(); --i >= 0;)
         if (baseModel
-            .equals(vwr.getModelAuxiliaryInfoValue(i, "jdxModelID")))
+            .equals(vwr.ms.getInfo(i, "jdxModelID")))
           return i;
     return modelIndex;
   }
@@ -130,7 +130,7 @@ public class JSpecView implements JmolJSpecView {
     case JC.JSV_STRUCTURE:
       // application only -- NO! This is 2D -- does no good. We need
       // a full 3D model!
-      if (vwr.isApplet())
+      if (vwr.isApplet)
         return null;
       return null;//"~_thisModel = _modelNumber; load append DATA 'myfile'" + script.substring(7) + "\nEND 'myfile';model @~_thisModel info 'atomMap' @{compare({1.1} {2.1} 'MAP' 'H')}; zap {*}[0]";
       // these are Jmol atom indexes. The second number will be >= n, and all must be incremented by 1.
@@ -149,8 +149,8 @@ public class JSpecView implements JmolJSpecView {
       boolean isSimulation = filename
           .startsWith(FileManager.SIMULATION_PROTOCOL);
       // id='~1.1' is getting tucked into file="...." now
-      String id = (!isSimulation || vwr.isApplet() ? "" : PT.getQuotedAttribute(filename.replace('\'', '"'), "id"));
-      if (isSimulation && !vwr.isApplet() && filename.startsWith(FileManager.SIMULATION_PROTOCOL + "MOL="))
+      String id = (!isSimulation || vwr.isApplet ? "" : PT.getQuotedAttribute(filename.replace('\'', '"'), "id"));
+      if (isSimulation && !vwr.isApplet && filename.startsWith(FileManager.SIMULATION_PROTOCOL + "MOL="))
         filename = null; // from our sending; don't reload
       else
         filename = PT.rep(filename, "#molfile", "");
@@ -171,7 +171,7 @@ public class JSpecView implements JmolJSpecView {
         return null; // file was found, or no file was indicated, but not this model -- ignore
       if (modelIndex != -1 || filename == null) {
         script = "";
-      } else if (isSimulation && !vwr.isApplet()) {
+      } else if (isSimulation && !vwr.isApplet) {
         return null;
       } else {
         if (isSimulation)

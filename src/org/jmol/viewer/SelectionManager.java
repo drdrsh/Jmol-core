@@ -48,8 +48,8 @@ public class SelectionManager {
   private final BS bsSelection = new BS();
   final BS bsFixed = new BS();
 
-  BS bsSubset; // set in Eval and only pointed to here
-  BS bsDeleted;
+  public BS bsSubset; // set in Eval and only pointed to here
+  public BS bsDeleted;
 
 //  void deleteModelAtoms(BS bsDeleted) {
 //    BSUtil.deleteBits(bsHidden, bsDeleted);
@@ -181,7 +181,7 @@ public class SelectionManager {
   }
 
   void selectAll(boolean isQuiet) {
-    int count = vwr.getAtomCount();
+    int count = vwr.ms.ac;
     empty = (count == 0) ? TRUE : FALSE;
     for (int i = count; --i >= 0;)
       bsSelection.set(i);
@@ -233,7 +233,7 @@ public class SelectionManager {
   }
 
   void invertSelection() {
-    BSUtil.invertInPlace(bsSelection, vwr.getAtomCount());
+    BSUtil.invertInPlace(bsSelection, vwr.ms.ac);
     empty = (bsSelection.length() > 0 ? FALSE : TRUE);
     selectionChanged(false);
   }
@@ -247,7 +247,7 @@ public class SelectionManager {
 
   private final BS bsTemp = new BS();
 
-  int getSelectionCount() {
+  public int getSelectionCount() {
     if (empty == TRUE)
       return 0;
     empty = TRUE;
@@ -287,7 +287,7 @@ public class SelectionManager {
 
   private void selectionChanged(boolean isQuiet) {
     if (hideNotSelected)
-      hide(vwr.ms, BSUtil.copyInvert(bsSelection, vwr.getAtomCount()), 0, isQuiet);
+      hide(vwr.ms, BSUtil.copyInvert(bsSelection, vwr.ms.ac), 0, isQuiet);
     if (isQuiet || listeners.length == 0)
       return;
     for (int i = listeners.length; --i >= 0;)
@@ -308,10 +308,6 @@ public class SelectionManager {
     return bsNew.cardinality();
   }
 
-  BS getDeletedAtoms() {
-    return bsDeleted;
-  }
-
   BS getSelectedAtoms() {
     if (bsSubset == null)
       return bsSelection;
@@ -322,10 +318,6 @@ public class SelectionManager {
 
   BS getSelectedAtomsNoSubset() {
     return BSUtil.copy(bsSelection);
-  }
-
-  BS getSelectionSubset() {
-    return bsSubset;
   }
 
   void excludeAtoms(BS bs, boolean ignoreSubset) {

@@ -8,6 +8,7 @@ import java.util.Map;
 import org.jmol.java.BS;
 import org.jmol.modelset.Object2d;
 import org.jmol.modelset.Text;
+import org.jmol.util.C;
 import org.jmol.util.Logger;
 
 import javajs.api.GenericPlatform;
@@ -79,10 +80,10 @@ public abstract class Object2dShape extends Shape {
       if (currentObject == null) {
         if (isAll)
           for (Text t : objects.values())
-            t.setModel(modelIndex);
+            t.modelIndex = modelIndex;
         return;
       }
-      currentObject.setModel(modelIndex);
+      currentObject.modelIndex = modelIndex;
       return;
     }
 
@@ -105,12 +106,12 @@ public abstract class Object2dShape extends Shape {
         if (isAll) {
           Iterator<Text> e = objects.values().iterator();
           while (e.hasNext()) {
-            e.next().setBgColixO(value);
+            e.next().colix = C.getColixO(value);
           }
         }
         return;
       }
-      currentObject.setBgColixO(value);
+      currentObject.bgcolix = C.getColixO(value);
       return;
     }
 
@@ -124,13 +125,13 @@ public abstract class Object2dShape extends Shape {
             if (isAll
                 || PT.isMatch(text.target.toUpperCase(), thisID, true,
                     true)) {
-              text.setColixO(value);
+              text.colix = C.getColixO(value);
             }
           }
         }
         return;
       }
-      currentObject.setColixO(value);
+      currentObject.colix = C.getColixO(value);
       return;
     }
 
@@ -193,7 +194,7 @@ public abstract class Object2dShape extends Shape {
   public void setModelVisibilityFlags(BS bsModels) {
     if (!isHover)
       for (Text t : objects.values())
-        t.setVisibility(t.modelIndex < 0 || bsModels.get(t.modelIndex));
+        t.visible = (t.modelIndex < 0 || bsModels.get(t.modelIndex));
   }
 
   @Override
@@ -203,10 +204,8 @@ public abstract class Object2dShape extends Shape {
     boolean isAntialiased = vwr.antialiased;
     for (Object2d obj: objects.values()) {
       if (obj.checkObjectClicked(isAntialiased, x, y, bsVisible)) {
-        String s = obj.getScript();
-        if (s != null) {
-          vwr.evalStringQuiet(s);
-        }
+        if (obj.script != null)
+          vwr.evalStringQuiet(obj.script);
         Map<String, Object> map = new Hashtable<String, Object>();
         map.put("pt", (obj.xyz == null ? new P3() : obj.xyz));
         int modelIndex = obj.modelIndex;
@@ -229,8 +228,7 @@ public abstract class Object2dShape extends Shape {
     boolean haveScripts = false;
     boolean isAntialiased = vwr.antialiased;
     for (Object2d obj: objects.values()) {
-      String s = obj.getScript();
-      if (s != null) {
+      if (obj.script != null) {
         haveScripts = true;
         if (obj.checkObjectClicked(isAntialiased, x, y, bsVisible)) {
           vwr.setCursor(GenericPlatform.CURSOR_HAND);

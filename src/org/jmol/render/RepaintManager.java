@@ -133,7 +133,7 @@ public class RepaintManager implements JmolRepaintManager {
     if (!vwr.haveDisplay)
       return;    
       //System.out.println("RepaintMan repaintNow " + why);
-      vwr.apiPlatform.repaint(vwr.getDisplay());
+      vwr.apiPlatform.repaint(vwr.display);
   }
 
   @Override

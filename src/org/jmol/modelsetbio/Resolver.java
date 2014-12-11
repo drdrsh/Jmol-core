@@ -111,7 +111,7 @@ public final class Resolver implements JmolBioResolver {
 
     // go last to first so that FIRST confirmation is default
     for (int i = maxAtomIndex; --i >= firstAtomIndex;) {
-      int specialAtomID = atoms[i].getAtomID();
+      int specialAtomID = atoms[i].atomID;
       if (specialAtomID <= 0)
         continue;
       if (specialAtomID < JC.ATOMID_DISTINGUISHING_ATOM_MAX) {
@@ -223,7 +223,7 @@ public final class Resolver implements JmolBioResolver {
     nH = (nH1 < 0 ? -1 : nH1 + nH);
     Object model = null;
     int iFirst = ml.getFirstAtomIndex(iGroup);
-    int ac = ms.getAtomCount();
+    int ac = ms.ac;
     if (nH < 0) {
       if (ac - iFirst == 1) // CA or P-only, or simple metals, also HOH, DOD
         return;
@@ -414,7 +414,7 @@ public final class Resolver implements JmolBioResolver {
         String hName1,
         hName2;
         float d = -1;
-        Bond[] bonds = atom.getBonds();
+        Bond[] bonds = atom.bonds;
         if (bonds != null)
           switch (bonds.length) {
           case 2:
@@ -485,7 +485,7 @@ public final class Resolver implements JmolBioResolver {
       if (!atom.isHetero() || atom.getElementNumber() != 8 || atom.getFormalCharge() != 0
           || atom.getCovalentBondCount() != 2)
         continue;
-      Bond[] bonds = atom.getBonds();
+      Bond[] bonds = atom.bonds;
       Atom atom1 = bonds[0].getOtherAtom(atom);
       Atom atomH = bonds[1].getOtherAtom(atom);
       if (atom1.getElementNumber() == 1) {
@@ -499,7 +499,7 @@ public final class Resolver implements JmolBioResolver {
         continue;
       // If so, does it have an attached atom that is doubly bonded to O?
       // so this could be RSO4H or RPO3H2 or RCO2H
-      Bond[] bonds1 = atom1.getBonds();
+      Bond[] bonds1 = atom1.bonds;
       for (int j = 0; j < bonds1.length; j++) {
         if (bonds1[j].order == 2) {
           Atom atomO = bonds1[j].getOtherAtom(atom1);
@@ -589,8 +589,8 @@ public final class Resolver implements JmolBioResolver {
     int bondCount = ms.bondCount;
     Bond[] bonds = ms.bo;
     for (int i = baseBondIndex; i < bondCount; i++) {
-      Atom a1 = bonds[i].getAtom1();
-      Atom a2 = bonds[i].getAtom2();
+      Atom a1 = bonds[i].atom1;
+      Atom a2 = bonds[i].atom2;
       Group g = a1.group;
       if (g != a2.group)
         continue;
@@ -633,8 +633,8 @@ public final class Resolver implements JmolBioResolver {
     if (htKeysBad.isEmpty())
       return;
     for (int i = 0; i < bondCount; i++) {
-      Atom a1 = bonds[i].getAtom1();
-      Atom a2 = bonds[i].getAtom2();
+      Atom a1 = bonds[i].atom1;
+      Atom a2 = bonds[i].atom2;
       if (a1.group == a2.group)
         continue;
       String value;
@@ -656,7 +656,7 @@ public final class Resolver implements JmolBioResolver {
     ms.setAtomName(iAtom, name);
     atoms[iAtom].setT(pt);
     ms.setAtomNumber(iAtom, ++maxSerial);
-    atoms[iAtom].setAtomSymmetry(atoms[iTo].getAtomSymmetry());
+    atoms[iAtom].atomSymmetry = atoms[iTo].atomSymmetry;
     ml.undeleteAtom(iAtom);
 
     ms.bondAtoms(atoms[iTo], atoms[iAtom], Edge.BOND_COVALENT_SINGLE, 

@@ -101,7 +101,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     }
 
     if ("color" == propertyName) {
-      setColor(value == null ? C.INHERIT_ALL : C.getColixO(value));
+      setColor(C.getColixO(value));
       return;
     }
 

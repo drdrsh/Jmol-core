@@ -97,7 +97,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
   private void setup(Viewer vwr, Container externalContainer,
                      String enabledButtons) {
     setViewer(vwr);
-    Window w = Platform.getWindow((Container) vwr.getDisplay());
+    Window w = Platform.getWindow((Container) vwr.display);
     vwrFrame = (w instanceof JFrame ? (JFrame) w : null);
     if (externalContainer == null) {
       jcd = new JDialog(vwrFrame, null, false);

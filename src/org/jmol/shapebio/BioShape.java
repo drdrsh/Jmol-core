@@ -85,7 +85,7 @@ public class BioShape extends AtomShape {
       colixes = new short[monomerCount];
       paletteIDs = new byte[monomerCount];
       mads = new short[monomerCount + 1];
-      monomers = (Monomer[]) bioPolymer.getGroups();
+      monomers = bioPolymer.monomers;
       meshReady = new boolean[monomerCount];
       meshes = new Mesh[monomerCount];
       wingVectors = bioPolymer.getWingVectors();

@@ -35,7 +35,6 @@ public class TimeoutThread extends JmolThread {
   public String script;
   private int status;
   private boolean triggered = true;
-  private Map<String, Object> timeouts;
   
   /**
    * @param vwr 
@@ -71,7 +70,6 @@ public class TimeoutThread extends JmolThread {
       case INIT:
         if (!isJS)
           Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-        timeouts = vwr.getTimeouts();
         targetTime = System.currentTimeMillis() + Math.abs(sleepTime);
         mode = MAIN;
         break;
@@ -90,14 +88,14 @@ public class TimeoutThread extends JmolThread {
       case CHECK2:
         // Time's up!
         currentTime = System.currentTimeMillis();
-        if (timeouts.get(name) == null)
+        if (vwr.timeouts.get(name) == null)
           return;
         status++;
         boolean continuing = (sleepTime < 0);
         if (continuing)
           targetTime = System.currentTimeMillis() + Math.abs(sleepTime);
         else
-          timeouts.remove(name);
+          vwr.timeouts.remove(name);
         if (triggered) {
           triggered = false;
           // script execution of "timeout ID <name>;" triggers the timeout again
@@ -111,7 +109,7 @@ public class TimeoutThread extends JmolThread {
         mode = (continuing ? MAIN : FINISH);
         break;
       case FINISH:
-        timeouts.remove(name);
+        vwr.timeouts.remove(name);
         return;
       }
     }

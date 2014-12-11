@@ -87,7 +87,7 @@ class ModelManager {
       new ModelLoader(vwr, modelSetName, loadScript,
           atomSetCollection, (isAppend ? modelSet : null), bsNew);
     }
-    if (modelSet.getAtomCount() == 0 && !modelSet.getMSInfoB("isPyMOL"))
+    if (modelSet.ac == 0 && !modelSet.getMSInfoB("isPyMOL"))
       zap();
   }
 

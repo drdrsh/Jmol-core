@@ -490,7 +490,7 @@ public class SmilesSearch extends JmolMolecule {
         // in EACH case we need to ensure that the actual
         // bonds to the previously assigned atoms matches
 
-        SmilesAtom atom1 = patternBond.getAtom1();
+        SmilesAtom atom1 = patternBond.atom1;
         int matchingAtom = atom1.getMatchingAtom();
 
         // BIOSMILES/BIOSMARTS check is by group
@@ -625,7 +625,7 @@ public class SmilesSearch extends JmolMolecule {
       // have a connection in the real molecule between these two
       // particular atoms. So we just follow that connection. 
 
-      jmolAtom = jmolAtoms[newPatternBond.getAtom1().getMatchingAtom()];
+      jmolAtom = jmolAtoms[newPatternBond.atom1.getMatchingAtom()];
 
       // Option 2: The connecting bond is a bio sequence or
       // from ~GGC(T)C:ATTC...
@@ -1281,7 +1281,7 @@ public class SmilesSearch extends JmolMolecule {
         boolean isAtropisomer = false;
         for (int j = 0; j < nBonds; j++) {
           b = sAtom1.getBond(j);
-          boolean isAtom2 = (b.getAtom2() == sAtom1);
+          boolean isAtom2 = (b.atom2 == sAtom1);
           int type = b.order;
           switch (type) {
           case SmilesBond.TYPE_ATROPISOMER_1:
@@ -1289,7 +1289,7 @@ public class SmilesSearch extends JmolMolecule {
           case SmilesBond.TYPE_DOUBLE:
             if (isAtom2)
               continue;
-            sAtom2 = b.getAtom2();
+            sAtom2 = b.atom2;
             bondType = type;
             isAtropisomer = (type != SmilesBond.TYPE_DOUBLE);
             if (isAtropisomer)
@@ -1297,7 +1297,7 @@ public class SmilesSearch extends JmolMolecule {
             break;
           case SmilesBond.TYPE_DIRECTIONAL_1:
           case SmilesBond.TYPE_DIRECTIONAL_2:
-            sAtomDirected1 = (isAtom2 ? b.getAtom1() : b.getAtom2());
+            sAtomDirected1 = (isAtom2 ? b.atom1 : b.atom2);
             dir1 = (isAtom2 != (type == SmilesBond.TYPE_DIRECTIONAL_1) ? 1 : -1);
             break;
           }
@@ -1318,12 +1318,12 @@ public class SmilesSearch extends JmolMolecule {
           nBonds = sAtom2.getBondCount();
           for (int j = 0; j < nBonds && dir2 == 0; j++) {
             b = sAtom2.getBond(j);
-            boolean isAtom2 = (b.getAtom2() == sAtom2);
+            boolean isAtom2 = (b.atom2 == sAtom2);
             int type = b.order;
             switch (type) {
             case SmilesBond.TYPE_DIRECTIONAL_1:
             case SmilesBond.TYPE_DIRECTIONAL_2:
-              sAtomDirected2 = (isAtom2 ? b.getAtom1() : b.getAtom2());
+              sAtomDirected2 = (isAtom2 ? b.atom1 : b.atom2);
               dir2 = (isAtom2 != (type == SmilesBond.TYPE_DIRECTIONAL_1) ? 1
                   : -1);
               break;
@@ -1850,7 +1850,7 @@ public class SmilesSearch extends JmolMolecule {
       int n = sAtom.getBondCount();
       for (int j = 0; j < n; j++) {
         SmilesBond sBond = sAtom.getBond(j);
-        boolean firstAtom = (sBond.getAtom1() == sAtom);
+        boolean firstAtom = (sBond.atom1 == sAtom);
         //SmilesBond b;
         if (firstAtom) {
           int order = 1;
@@ -1886,13 +1886,13 @@ public class SmilesSearch extends JmolMolecule {
             order = Edge.BOND_COVALENT_TRIPLE;
             break;
           }
-          SmilesAtom atom2 = atoms[sBond.getAtom2().getMatchingAtom()];
+          SmilesAtom atom2 = atoms[sBond.atom2.getMatchingAtom()];
           SmilesBond b = new SmilesBond(atom1, atom2, order, false);
           // do NOT add this bond to the second atom -- we will do that later;
           atom2.bondCount--;
           Logger.info("" + b);
         } else {
-          SmilesAtom atom2 = atoms[sBond.getAtom1().getMatchingAtom()];
+          SmilesAtom atom2 = atoms[sBond.atom1.getMatchingAtom()];
           SmilesBond b = atom2.getBondTo(atom1);
           // NOW we can add this bond
           atom1.addBond(b);

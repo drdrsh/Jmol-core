@@ -776,7 +776,7 @@ public class IsoExt extends CmdExt {
             "MO isosurfaces");
     }
     Map<String, Object> moData = (Map<String, Object>) vwr
-        .getModelAuxiliaryInfoValue(modelIndex, "moData");
+        .ms.getInfo(modelIndex, "moData");
     Lst<Map<String, Object>> mos = null;
     Map<String, Object> mo;
     Float f;
@@ -986,7 +986,7 @@ public class IsoExt extends CmdExt {
         addShapeProperty(propertyList, "select", bsSelect);
         if (needIgnore) {
           bsIgnore = BSUtil.copy(bsSelect);
-          BSUtil.invertInPlace(bsIgnore, vwr.getAtomCount());
+          BSUtil.invertInPlace(bsIgnore, vwr.ms.ac);
           isFrontOnly = true;
           addShapeProperty(propertyList, "ignore", bsIgnore);
           sbCommand.append(" ignore ").append(Escape.eBS(bsIgnore));
@@ -1201,7 +1201,7 @@ public class IsoExt extends CmdExt {
         sbCommand.append(" ").append(str);
 
         if (str.toLowerCase().indexOf("property_") == 0) {
-          data = new float[vwr.getAtomCount()];
+          data = new float[vwr.ms.ac];
           if (chk)
             continue;
           data = vwr.getDataFloat(str);
@@ -1211,7 +1211,7 @@ public class IsoExt extends CmdExt {
           continue;
         }
 
-        int ac = vwr.getAtomCount();
+        int ac = vwr.ms.ac;
         data = new float[ac];
 
         if (isVariable) {
@@ -1278,7 +1278,7 @@ public class IsoExt extends CmdExt {
         if (isOnly) {
           i++;
           bsIgnore = BSUtil.copy(bs1);
-          BSUtil.invertInPlace(bsIgnore, vwr.getAtomCount());
+          BSUtil.invertInPlace(bsIgnore, vwr.ms.ac);
           addShapeProperty(propertyList, "ignore", bsIgnore);
           sbCommand.append(" ignore ").append(Escape.eBS(bsIgnore));
           isFrontOnly = true;
@@ -2232,7 +2232,7 @@ public class IsoExt extends CmdExt {
           if (modelIndex < 0)
             modelIndex = vwr.am.cmi;
           filename = eval.getFullPathName();
-          propertyValue = vwr.getModelAuxiliaryInfoValue(modelIndex,
+          propertyValue = vwr.ms.getInfo(modelIndex,
               "jmolSurfaceInfo"); // not implemented?
         }
         int fileIndex = -1;
@@ -2258,7 +2258,7 @@ public class IsoExt extends CmdExt {
                 stringParameter(eval.iToken = (i = i + 2)), false);
             fullPathNameOrError = vwr.getFullPathNameOrError(localName);
             localName = fullPathNameOrError[0];
-            if (vwr.getPathForAllFiles() != "") {
+            if (vwr.fm.getPathForAllFiles() != "") {
               // we use the LOCAL name when reading from a local path only (in the case of JMOL files)
               filename = localName;
               localName = null;
@@ -2278,7 +2278,7 @@ public class IsoExt extends CmdExt {
         showString("reading isosurface data from " + filename);
 
         if (stype != null) {
-          propertyValue = vwr.cacheGet(filename);
+          propertyValue = vwr.fm.cacheGet(filename, false);
           addShapeProperty(propertyList, "calculationType", stype);
         }
         if (propertyValue == null) {
@@ -3045,7 +3045,7 @@ public class IsoExt extends CmdExt {
    */
   private float[] getAtomicPotentials(BS bsSelected, BS bsIgnore,
                                       String fileName) throws Exception {
-    float[] potentials = new float[vwr.getAtomCount()];
+    float[] potentials = new float[vwr.ms.ac];
     MepCalculationInterface m = (MepCalculationInterface) Interface
         .getOption("quantum.MlpCalculation", vwr, "script");
     m.set(vwr);

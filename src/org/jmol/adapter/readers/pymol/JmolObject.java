@@ -148,7 +148,7 @@ class JmolObject {
     case T.restrict:
       // start of generating shapes; argb is modelIndex
       BS bs = sm.vwr.getModelUndeletedAtomsBitSet(argb);
-      BSUtil.invertInPlace(bs, sm.vwr.getAtomCount());
+      BSUtil.invertInPlace(bs, sm.vwr.ms.ac);
       sm.vwr.select(bs, false, 0, true);
       sm.restrictSelected(false, true);
       return;
@@ -216,7 +216,7 @@ class JmolObject {
     case JC.SHAPE_DOTS:
       sm.loadShape(id);
       sm.setShapePropertyBs(id, "ignore", BSUtil.copyInvert(bsAtoms, sm.vwr
-          .getAtomCount()), null);
+          .ms.ac), null);
       break;
     default:
       if (!visible)
@@ -265,8 +265,8 @@ class JmolObject {
         modelIndex = sm.vwr.am.cmi;
       if (bsAtoms == null) {
         // point display of map 
-        sb.append(" model ")
-            .append(m.am[modelIndex].getModelNumberDotted()).append(
+        sb.append(" model ")        
+            .append(m.getModelNumberDotted(modelIndex)).append(
                 " color density sigma 1.0 ").append(PT.esc(cacheID)).append(" ").append(
                 PT.esc(sID));
         if (doCache)
@@ -285,7 +285,7 @@ class JmolObject {
           resolution = " resolution 1.5";
         }
         boolean haveMep = PT.isOneOf(sID, mepList);
-        String model = m.am[modelIndex].getModelNumberDotted();
+        String model = m.getModelNumberDotted(modelIndex);
         //        BS bsIgnore = sm.vwr.getAtomsWithinRadius(0.1f, bsAtoms, true, 
         //            new RadiusData(null, 0.1f, EnumType.ABSOLUTE, null));
         //        bsIgnore.andNot(bsAtoms);
@@ -333,7 +333,7 @@ class JmolObject {
       sID = mesh.get(mesh.size() - 2).toString();
       sb = new SB();
       sb.append("isosurface ID ").append(PT.esc(sID)).append(" model ")
-          .append(m.am[modelIndex].getModelNumberDotted())
+          .append(m.getModelNumberDotted(modelIndex))
           .append(" color ").append(Escape.escapeColor(argb)).append("  ").append(PT.esc(cacheID)).append(" ")
           .append(PT.esc(sID)).append(" mesh nofill frontonly");
       float within = PyMOLScene.floatAt(PyMOLScene.listAt(PyMOLScene.listAt(

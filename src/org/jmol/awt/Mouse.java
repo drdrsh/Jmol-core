@@ -69,7 +69,7 @@ class Mouse implements MouseWheelListener, MouseListener,
   Mouse(double privateKey, PlatformViewer vwr, Object odisplay) {
     //this.privateKey = privateKey;
     this.vwr = (Viewer) vwr;
-    manager = this.vwr.getActionManager();
+    manager = this.vwr.acm;
     Component display = (Component) odisplay;
     display.addKeyListener(this);
     display.addMouseListener(this);
@@ -84,7 +84,7 @@ class Mouse implements MouseWheelListener, MouseListener,
 
   @Override
   public void dispose() {
-    Component display = (Component) vwr.getDisplay();
+    Component display = (Component) vwr.display;
     display.removeMouseListener(this);
     display.removeMouseMotionListener(this);
     display.removeMouseWheelListener(this);
@@ -257,7 +257,7 @@ class Mouse implements MouseWheelListener, MouseListener,
 
   @Override
   public void keyPressed(KeyEvent ke) {
-    if (vwr.isApplet())
+    if (vwr.isApplet)
       ke.consume();
     manager.keyPressed(ke.getKeyCode(), ke.getModifiers());
   }

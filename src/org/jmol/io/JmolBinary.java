@@ -220,7 +220,7 @@ public class JmolBinary {
         ? vwr.vwrOptions.get("codePath") + classPath + resourceName
             : url.getFile());
     if (vwr.async) {
-      Object bytes = vwr.cacheGet(resourceName);
+      Object bytes = vwr.fm.cacheGet(resourceName, false);
       if (bytes == null)
         throw new JmolAsyncException(resourceName);
       return Rdr.getBufferedReader(Rdr.getBIS((byte[]) bytes), null);

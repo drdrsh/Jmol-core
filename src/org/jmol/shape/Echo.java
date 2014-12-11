@@ -150,14 +150,14 @@ public class Echo extends TextShape {
           }
           text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE,
               FONTSIZE), target, COLOR, valign, halign, 0);
-          text.setAdjustForWindow(true);
+          text.adjustForWindow = true;
           objects.put(target, text);
           if (currentFont != null)
             text.setFont(currentFont, true);
           if (currentColor != null)
-            text.setColixO(currentColor);
+            text.colix = C.getColixO(currentColor);
           if (currentBgColor != null)
-            text.setBgColixO(currentBgColor);
+            text.bgcolix = C.getColixO(currentBgColor);
           if (currentTranslucentLevel != 0)
             text.setTranslucent(currentTranslucentLevel, false);
           if (currentBgTranslucentLevel != 0)

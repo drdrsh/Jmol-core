@@ -198,7 +198,7 @@ public class AminoMonomer extends AlphaMonomer {
   public P3 getExplicitNH() {
     Atom nitrogen = getNitrogenAtom();
     Atom h = null;
-    Bond[] bonds = nitrogen.getBonds();
+    Bond[] bonds = nitrogen.bonds;
     if (bonds == null)
       return null;
     for (int i = 0; i < bonds.length; i++)
@@ -268,7 +268,7 @@ public class AminoMonomer extends AlphaMonomer {
     case 'q': // Quine -- center of peptide bond
       if (monomerIndex == bioPolymer.monomerCount - 1)
         return null;
-      AminoMonomer mNext = ((AminoMonomer) bioPolymer.getGroups()[monomerIndex + 1]);
+      AminoMonomer mNext = ((AminoMonomer) bioPolymer.monomers[monomerIndex + 1]);
       P3 pt = new P3();
       pt.ave(getCarbonylCarbonAtom(), mNext.getNitrogenAtom());
       return pt;
@@ -361,7 +361,7 @@ public class AminoMonomer extends AlphaMonomer {
       if (monomerIndex == bioPolymer.monomerCount - 1)
         return null;
       vA.sub2(ptCa, ptC);
-      vB.sub2(((AminoMonomer) bioPolymer.getGroups()[monomerIndex + 1]).getNitrogenAtom(), ptC);
+      vB.sub2(((AminoMonomer) bioPolymer.monomers[monomerIndex + 1]).getNitrogenAtom(), ptC);
       break;
     case 'q': 
       // J. R. Quine, Journal of Molecular Structure: THEOCHEM, 
@@ -370,7 +370,7 @@ public class AminoMonomer extends AlphaMonomer {
       //vB = ptCa' - ptN'
       if (monomerIndex == bioPolymer.monomerCount - 1)
         return null;
-      AminoMonomer mNext = ((AminoMonomer) bioPolymer.getGroups()[monomerIndex + 1]);
+      AminoMonomer mNext = ((AminoMonomer) bioPolymer.monomers[monomerIndex + 1]);
       vB.sub2(mNext.getLeadAtom(), mNext.getNitrogenAtom());
       vA.sub2(ptCa, ptC);
       break;
@@ -416,7 +416,7 @@ public class AminoMonomer extends AlphaMonomer {
     bs.clear(a.i);
     if (!andH)
       return;
-    Bond[] b = a.getBonds();
+    Bond[] b = a.bonds;
     Atom h;
     for (int j = b.length; --j >= 0;)
       if ((h = b[j].getOtherAtom(a)).getElementNumber() == 1)

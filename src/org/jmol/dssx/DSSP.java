@@ -244,8 +244,8 @@ public class DSSP implements DSSPInterface {
     Model m = bioPolymers[0].model;
     SB sb = new SB();
     sb.append("Jmol ").append(Viewer.getJmolVersion()).append(
-        " DSSP analysis for model ").append(m.getModelNumberDotted()).append(
-        " - ").append(m.getModelTitle()).append("\n");
+        " DSSP analysis for model ").append(m.ms.getModelNumberDotted(m.modelIndex)).append(
+        " - ").append(m.ms.getModelTitle(m.modelIndex)).append("\n");
     if (m.modelIndex == 0)
       sb
           .append(

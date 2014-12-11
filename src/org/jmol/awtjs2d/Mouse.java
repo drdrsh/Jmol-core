@@ -61,7 +61,7 @@ public class Mouse implements GenericMouseInterface {
   public Mouse(double privateKey, PlatformViewer vwr, Object display) {
     //this.privateKey = privateKey; could be used for clipboard access
     this.vwr = (Viewer) vwr;
-    this.manager = this.vwr.getActionManager();
+    manager = this.vwr.acm;
   }
 
   @Override
@@ -281,7 +281,7 @@ public class Mouse implements GenericMouseInterface {
   }
 
   public void keyPressed(KeyEvent ke) {
-    if (vwr.isApplet())
+    if (vwr.isApplet)
       ke.consume();
     manager.keyPressed(ke.getKeyCode(), ke.getModifiers());
   }

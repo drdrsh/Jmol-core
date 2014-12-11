@@ -422,7 +422,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     pymolScene.finalizeVisibility();
     if (!isStateScript) {
       // same idea as for a Jmol state -- session reinitializes
-      vwr.initialize(true);
+      vwr.initialize(false);
       addJmolScript(pymolScene.getViewScript(getMapList(map, "view"))
           .toString());
     }

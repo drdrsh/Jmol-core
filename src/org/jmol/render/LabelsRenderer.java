@@ -89,7 +89,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     if (labelStrings == null)
       return false;
     Atom[] atoms = ms.at;
-    short backgroundColixContrast = vwr.getColixBackgroundContrast();
+    short backgroundColixContrast = vwr.cm.colixBackgroundContrast;
     int backgroundColor = vwr.getBackgroundArgb();
     sppm = vwr.getScalePixelsPerAngstrom(true);
     scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? sppm * 10000f
@@ -128,7 +128,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       zBox = zSlab;
       if (labelsGroup) {
         Group group = atom.group;
-        int ig = group.getGroupIndex();
+        int ig = group.groupIndex;
         if (ig != iGroup) {
           group.getMinZ(atoms, minZ);
           iGroup = ig;
@@ -167,8 +167,8 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       text.atomZ = zSlab;
       if (text.pymolOffset == null) {
         text.setXYZs(atomPt.sX, atomPt.sY, zBox, zSlab);
-        text.setColix(labelColix);
-        text.setBgColix(bgcolix);
+        text.colix = labelColix;
+        text.bgcolix = bgcolix;
       } else {
         if (text.pymolOffset[0] == 1)
           pTemp.setT(atomPt);
@@ -220,7 +220,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         if (textAlign != JC.ALIGN_NONE)
           text.setAlignment(textAlign);
       }
-      text.setPointer(pointer);
+      text.pointer = pointer;
       TextRenderer.render(text, g3d, scalePixelsPerMicron,
           imageFontScaling, isExact, boxXY, xy);
     }

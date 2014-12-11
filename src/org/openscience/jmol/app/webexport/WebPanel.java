@@ -73,7 +73,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.jmol.api.JmolViewer;
+import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
 import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
@@ -128,14 +128,14 @@ abstract class WebPanel extends JPanel implements ActionListener,
   protected Widgets theWidgets;
   protected int nWidgets;
   private Checkbox[] widgetCheckboxes;
-  protected JmolViewer vwr;
+  protected Viewer vwr;
   private int panelIndex;
   private WebPanel[] webPanels;
   private int errCount;
 
   private String htmlPath;
 
-  protected WebPanel(JmolViewer vwr, JFileChooser fc, WebPanel[] webPanels,
+  protected WebPanel(Viewer vwr, JFileChooser fc, WebPanel[] webPanels,
       int panelIndex) {
     this.vwr = vwr;
     this.fc = fc;
@@ -557,7 +557,7 @@ abstract class WebPanel extends JPanel implements ActionListener,
                                                                           // true
                                                                           // if
                                                                           // successful.
-    useAppletJS = JmolViewer.checkOption(vwr, "webMakerCreateJS");
+    useAppletJS = checkOption(vwr, "webMakerCreateJS");
     // JOptionPane.showMessageDialog(null, "Creating directory for data...");
     String datadirPath = file.getPath().replace('\\','/');
     String datadirName = file.getName();
@@ -967,6 +967,13 @@ abstract class WebPanel extends JPanel implements ActionListener,
       return this;
     }
   }
+
+  public static boolean checkOption(Viewer vwr, String option) {
+    Object o = vwr.getParameter(option);
+    return (o instanceof Boolean && ((Boolean) o).booleanValue()
+        || o instanceof Integer && ((Integer) o).intValue() != 0);
+  }
+
 
 }
 

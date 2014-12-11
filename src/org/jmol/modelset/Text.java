@@ -26,20 +26,15 @@ package org.jmol.modelset;
 import javajs.awt.Font;
 import javajs.util.P3;
 import javajs.util.PT;
+import javajs.util.SB;
 
+import org.jmol.shape.Shape;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public class Text extends Object2d {
 
   private static boolean isEcho;
-  @Override
-  public void setScalePixelsPerMicron(float scalePixelsPerMicron) {    
-    fontScale = 0;//fontScale * this.scalePixelsPerMicron / scalePixelsPerMicron;
-    this.scalePixelsPerMicron = scalePixelsPerMicron;    
-  }
-  
-  public float fontScale;
 
   public String textUnformatted;
   
@@ -439,6 +434,12 @@ public class Text extends Object2d {
       xy[0] = xy[2] - widths[i];
     }
     xy[1] += lineHeight;
+  }
+
+  public void appendFontCmd(SB s) {
+    s.append("  " + Shape.getFontCommand("echo", font));
+    if (scalePixelsPerMicron > 0)
+      s.append(" " + (10000f / scalePixelsPerMicron)); // Angstroms per pixel
   }
 
 }

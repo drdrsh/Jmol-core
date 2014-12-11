@@ -124,16 +124,32 @@ public class StateManager {
     this.vwr = vwr;
   }
   
-  GlobalSettings getGlobalSettings(GlobalSettings gsOld, boolean clearUserVariables) {
-    //saved.clear();
-    return new GlobalSettings(vwr, gsOld, clearUserVariables);
-  }
-
   void clear(GlobalSettings global) {
     vwr.setShowAxes(false);
     vwr.setShowBbcage(false);
     vwr.setShowUnitCell(false);
     global.clear();
+  }
+
+  /**
+   * Reset lighting to Jmol defaults
+   * 
+   */
+  public void resetLighting() {
+    vwr.setIntProperty("ambientPercent",  45);
+    vwr.setIntProperty("celShadingPower", 10);      
+    vwr.setIntProperty("diffusePercent",  84);
+    vwr.setIntProperty("phongExponent",   64);
+    vwr.setIntProperty("specularExponent", 6); // log2 of phongExponent
+    vwr.setIntProperty("specularPercent", 22);
+    vwr.setIntProperty("specularPower",   40);
+    vwr.setIntProperty("zDepth",           0);
+    vwr.setIntProperty("zShadePower",      3);
+    vwr.setIntProperty("zSlab",           50);
+    
+    vwr.setBooleanProperty("specular",    true);
+    vwr.setBooleanProperty("celShading", false);
+    vwr.setBooleanProperty("zshade",     false);
   }
 
   void setCrystallographicDefaults() {
@@ -421,8 +437,8 @@ class Connections {
     Bond[] bonds = modelSet.bo;
     for (int i = bondCount; --i >= 0;) {
       Bond b = bonds[i];
-      connections[i] = new Connection(b.getAtomIndex1(), b.getAtomIndex2(), b
-          .mad, b.colix, b.order, b.getEnergy(), b.getShapeVisibilityFlags());
+      connections[i] = new Connection(b.atom1.i, b.atom2.i, b
+          .mad, b.colix, b.order, b.getEnergy(), b.shapeVisibilityFlags);
     }
   }
 
@@ -433,16 +449,16 @@ class Connections {
     modelSet.deleteAllBonds();
     for (int i = bondCount; --i >= 0;) {
       Connection c = connections[i];
-      int ac = modelSet.getAtomCount();
+      int ac = modelSet.ac;
       if (c.atomIndex1 >= ac || c.atomIndex2 >= ac)
         continue;
       Bond b = modelSet.bondAtoms(modelSet.at[c.atomIndex1],
           modelSet.at[c.atomIndex2], c.order, c.mad, null, c.energy, false, true);
-      b.setColix(c.colix);
-      b.setShapeVisibilityFlags(c.shapeVisibilityFlags);
+      b.colix = c.colix;
+      b.shapeVisibilityFlags = c.shapeVisibilityFlags;
     }
     for (int i = bondCount; --i >= 0;)
-      modelSet.getBondAt(i).setIndex(i);
+      modelSet.bo[i].index = i;
     vwr.setShapeProperty(JC.SHAPE_STICKS, "reportAll", null);
     return true;
   }

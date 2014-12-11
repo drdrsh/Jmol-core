@@ -108,7 +108,7 @@ public class NMRCalculation implements JmolNMRInterface {
     Lst<Tensor> list = new Lst<Tensor>();
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
       Lst<Tensor> tensors = (Lst<Tensor>) vwr
-          .getModelAuxiliaryInfoValue(i, "interactionTensors");
+          .ms.getInfo(i, "interactionTensors");
       if (tensors == null)
         continue;
       int n = tensors.size();
@@ -223,7 +223,7 @@ public class NMRCalculation implements JmolNMRInterface {
 
   @SuppressWarnings("unchecked")
   private String getISCtype(Atom a1, String type) {
-    Lst<Tensor> tensors = (Lst<Tensor>) vwr.getModelAuxiliaryInfoValue(a1.mi, "interactionTensors");
+    Lst<Tensor> tensors = (Lst<Tensor>) vwr.ms.getInfo(a1.mi, "interactionTensors");
     if (tensors == null)
       return null;
     type = (type == null ? "" : type.toLowerCase());

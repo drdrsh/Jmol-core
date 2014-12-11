@@ -46,7 +46,7 @@ public enum HB {
     case 1:
       if (atom.getCovalentBondCount() == 0)
         return DONOR;
-      Bond[] bonds = atom.getBonds();
+      Bond[] bonds = atom.bonds;
       if (bonds == null)
         return NOT;
       switch (bonds[0].getOtherAtom(atom).getElementNumber()) {

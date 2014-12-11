@@ -300,7 +300,7 @@ public class Dots extends AtomShape {
       return "";
     SB s = new SB();
     Map<String, BS> temp = new Hashtable<String, BS>();
-    int ac = vwr.getAtomCount();
+    int ac = vwr.ms.ac;
     String type = (isSurface ? "geoSurface " : "dots ");
     for (int i = 0; i < ac; i++) {
       if (!bsOn.get(i) || dotsConvexMaps[i] == null)

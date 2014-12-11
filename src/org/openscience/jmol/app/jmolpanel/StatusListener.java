@@ -35,6 +35,7 @@ import javajs.awt.Dimension;
 import javajs.util.PT;
 
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.console.AppConsole;
 import org.openscience.jmol.app.webexport.WebExport;
 
@@ -429,7 +430,7 @@ System.out.println("StatusListener notifyFileLoaded: " + fileName);
     if (peaks.startsWith(":"))
       peaks = peaks.substring(1);
     if (jSpecViewFrame == null) {
-      jSpecViewFrame = new MainFrame((Component) vwr.getDisplay(), this);
+      jSpecViewFrame = new MainFrame((Component) ((Viewer) vwr).display, this);
       jSpecViewFrame.setSize(800, 500);
       jSpecViewFrame.setLocation(jmol.frame.getLocation().x + 10, jmol.frame
           .getLocation().y + 100);

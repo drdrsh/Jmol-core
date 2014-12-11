@@ -33,12 +33,12 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
-import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
+import org.jmol.viewer.Viewer;
 
 class ScriptButtons extends WebPanel {
 
-  ScriptButtons(JmolViewer vwr, JFileChooser fc, WebPanel[] webPanels,
+  ScriptButtons(Viewer vwr, JFileChooser fc, WebPanel[] webPanels,
       int panelIndex) {
     super(vwr, fc, webPanels, panelIndex);
     panelName = "script_btn";

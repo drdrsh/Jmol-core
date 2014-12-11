@@ -46,7 +46,7 @@ public class StarsRenderer extends ShapeRenderer {
     if (mar == 0 && (g3d.isAntialiased() || isExport))
       mar = 50;
     Atom[] atoms = ms.at;
-    for (int i = ms.getAtomCount(); --i >= 0;) {
+    for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
       if (!isVisibleForMe(atom))
         continue;

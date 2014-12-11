@@ -16,6 +16,7 @@ public abstract class Object2d {
   public short colix;
   public short bgcolix;
   public int pointer;
+  public float fontScale;
 
   public int align;
   public int valign;
@@ -36,7 +37,7 @@ public abstract class Object2d {
 
   protected int windowWidth;
   protected int windowHeight;
-  protected boolean adjustForWindow;
+  public boolean adjustForWindow;
   public float boxWidth;
   public float boxHeight;
   public float boxX;
@@ -50,23 +51,12 @@ public abstract class Object2d {
 
   public float scalePixelsPerMicron;
 
-  public float getScalePixelsPerMicron() {
-    return scalePixelsPerMicron;
-  }
-
   public void setScalePixelsPerMicron(float scalePixelsPerMicron) {
+    fontScale = 0;//fontScale * this.scalePixelsPerMicron / scalePixelsPerMicron;
     this.scalePixelsPerMicron = scalePixelsPerMicron;
   }
 
   abstract protected void recalc();
-
-  public void setModel(int modelIndex) {
-    this.modelIndex = modelIndex;
-  }
-
-  public void setVisibility(boolean TF) {
-    visible = TF;
-  }
 
   public void setXYZ(P3 xyz, boolean doAdjust) {
     this.xyz = xyz;
@@ -74,20 +64,8 @@ public abstract class Object2d {
       this.zSlab = Integer.MIN_VALUE;
     if (doAdjust) {
       valign = (xyz == null ? JC.VALIGN_XY : JC.VALIGN_XYZ);
-      setAdjustForWindow(xyz == null);
+     adjustForWindow = (xyz == null);
     }
-  }
-
-  public void setAdjustForWindow(boolean TF) {
-    adjustForWindow = TF;
-  }
-
-  public void setColix(short colix) {
-    this.colix = colix;
-  }
-
-  public void setColixO(Object value) {
-    colix = C.getColixO(value);
   }
 
   public void setTranslucent(float level, boolean isBackground) {
@@ -97,14 +75,6 @@ public abstract class Object2d {
     } else {
       colix = C.getColixTranslucent3(colix, !Float.isNaN(level), level);
     }
-  }
-
-  public void setBgColix(short colix) {
-    this.bgcolix = colix;
-  }
-
-  public void setBgColixO(Object value) {
-    bgcolix = (value == null ? (short) 0 : C.getColixO(value));
   }
 
   private void setMovableX(int x) {
@@ -160,10 +130,6 @@ public abstract class Object2d {
     this.script = (script == null || script.length() == 0 ? null : script);
   }
 
-  public String getScript() {
-    return script;
-  }
-
   public void setOffset(int offset) {
     //Labels only
     offsetX = JC.getXOffset(offset);
@@ -188,10 +154,6 @@ public abstract class Object2d {
       recalc();
     }
     return true;
-  }
-
-  public void setPointer(int pointer) {
-    this.pointer = pointer;
   }
 
   public void setBoxOffsetsInWindow(float margin, float vMargin, float vTop) {
@@ -221,7 +183,7 @@ public abstract class Object2d {
     windowHeight = height;
     if (pymolOffset == null && this.scalePixelsPerMicron < 0
         && scalePixelsPerMicron != 0)
-      this.scalePixelsPerMicron = scalePixelsPerMicron;
+      setScalePixelsPerMicron(scalePixelsPerMicron);
   }
 
   public boolean checkObjectClicked(boolean isAntialiased, int x, int y,

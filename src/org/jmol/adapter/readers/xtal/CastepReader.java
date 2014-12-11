@@ -114,6 +114,8 @@ public class CastepReader extends AtomSetCollectionReader {
 
   private boolean haveCharges;
 
+  private String tsType;
+
   @Override
   public void initializeReader() throws Exception {
     if (filter != null) {
@@ -123,6 +125,7 @@ public class CastepReader extends AtomSetCollectionReader {
       filter = filter.replace('(', '{').replace(')', '}');
       filter = PT.rep(filter, "  ", " ");
       isAllQ = checkFilterKey("Q=ALL");
+      tsType = getFilter("TSTYPE=");
       if (!isAllQ && filter.indexOf("{") >= 0)
         setDesiredQpt(filter.substring(filter.indexOf("{")));
       filter = PT.rep(filter, "-PT", "");
@@ -364,21 +367,24 @@ public class CastepReader extends AtomSetCollectionReader {
       asc.setTrajectory();
     doApplySymmetry = true;
     while (line != null && line.contains("<-- E")) {
-      asc.newAtomSetClear(false);
-      if (isTS)
-        readEnergy(0, getTokensStr(prevline + " -")[0] + " ");
-      discardLinesUntilContains("<-- h");
-      setSpaceGroupName("P1");
-      abc = read3Vectors(true);
-      setLatticeVectors();
-      setFractionalCoordinates(false);
-      discardLinesUntilContains("<-- R");
-      while (line != null && line.contains("<-- R")) {
-        tokens = getTokens();
-        setAtomCoordScaled(null, tokens, 2, ANGSTROMS_PER_BOHR).elementSymbol = tokens[0];
-        rd();
+      boolean skip = (isTS && tsType != null && prevline.indexOf(tsType) < 0);
+      if (!skip) {
+        asc.newAtomSetClear(false);
+        if (isTS)
+          readEnergy(0, getTokensStr(prevline + " -")[0] + " ");
+        discardLinesUntilContains("<-- h");
+        setSpaceGroupName("P1");
+        abc = read3Vectors(true);
+        setLatticeVectors();
+        setFractionalCoordinates(false);
+        discardLinesUntilContains("<-- R");
+        while (line != null && line.contains("<-- R")) {
+          tokens = getTokens();
+          setAtomCoordScaled(null, tokens, 2, ANGSTROMS_PER_BOHR).elementSymbol = tokens[0];
+          rd();
+        }
+        applySymmetryAndSetTrajectory();
       }
-      applySymmetryAndSetTrajectory();
       discardLinesUntilContains("<-- E");
     }
   }

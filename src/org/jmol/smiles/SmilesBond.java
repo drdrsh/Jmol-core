@@ -63,8 +63,8 @@ public class SmilesBond extends Edge {
     }
   }
 
-  private SmilesAtom atom1;
-  private SmilesAtom atom2;
+  SmilesAtom atom1;
+  SmilesAtom atom2;
 
   boolean isNot;
   Edge matchingBond;
@@ -192,14 +192,6 @@ public class SmilesBond extends Edge {
       return TYPE_BIO_SEQUENCE;
     }
     return TYPE_UNKNOWN;
-  }
-
-  public SmilesAtom getAtom1() {
-    return atom1;
-  }
-
-  public SmilesAtom getAtom2() {
-    return atom2;
   }
 
   void setAtom2(SmilesAtom atom) {

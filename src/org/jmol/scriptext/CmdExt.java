@@ -307,7 +307,7 @@ public class CmdExt implements JmolCmdExtension {
       case T.aromatic:
         checkLength(2);
         if (!chk)
-          vwr.ms.assignAromaticBonds();
+          vwr.ms.assignAromaticBondsBs(true, null);
         return;
       case T.hbond:
         if (eval.slen != 2) {
@@ -974,7 +974,7 @@ public class CmdExt implements JmolCmdExtension {
       if (chk)
         return;
       Atom[] atoms = vwr.ms.at;
-      int ac = vwr.getAtomCount();
+      int ac = vwr.ms.ac;
       int[][] maps = null;
       try {
         maps = vwr.getSmilesMatcher().getCorrelationMaps(smarts, atoms,
@@ -1169,7 +1169,7 @@ public class CmdExt implements JmolCmdExtension {
           nBitSets++;
           nAtoms++;
           BS bs2 = BSUtil.copy(bs);
-          BSUtil.invertInPlace(bs2, vwr.getAtomCount());
+          BSUtil.invertInPlace(bs2, vwr.ms.ac);
           bs2.and(vwr.ms.getAtomsWithinRadius(5, bs, false, null));
           points.addLast(bs2);
         }
@@ -1602,7 +1602,7 @@ public class CmdExt implements JmolCmdExtension {
       return;
     boolean isDefault = (dataLabel.toLowerCase().indexOf("(default)") >= 0);
     if (dataType.equals("connect_atoms")) {
-      vwr.connect((float[][]) parseDataArray(dataString, false));
+      vwr.ms.connect((float[][]) parseDataArray(dataString, false));
       return;
     }
     if (dataType.indexOf("ligand_") == 0) {
@@ -1682,7 +1682,7 @@ public class CmdExt implements JmolCmdExtension {
         atomNumberField = 0;
       if (propertyField < 0)
         propertyField = 0;
-      int ac = vwr.getAtomCount();
+      int ac = vwr.ms.ac;
       int[] atomMap = null;
       BS bsTemp = BS.newN(ac);
       if (atomNumberField > 0) {
@@ -1899,7 +1899,7 @@ public class CmdExt implements JmolCmdExtension {
         float[] data3 = eval.getBitsetPropertyFloat(bsTo, tokKey
             | T.selectedfloat, Float.NaN, Float.NaN);
         boolean isProperty = (tokProp2 == T.property);
-        float[] dataOut = new float[isProperty ? vwr.getAtomCount()
+        float[] dataOut = new float[isProperty ? vwr.ms.ac
             : data3.length];
         bsOut = new BS();
         if (data1.length == data2.length) {
@@ -1921,7 +1921,7 @@ public class CmdExt implements JmolCmdExtension {
           // note: this was DATA_TYPE_STRING ?? 
           if (isProperty)
             vwr.setData(property2, new Object[] { property2, dataOut, bsOut,
-                Integer.valueOf(JmolDataManager.DATA_TYPE_AF), Boolean.TRUE }, vwr.getAtomCount(), 0,
+                Integer.valueOf(JmolDataManager.DATA_TYPE_AF), Boolean.TRUE }, vwr.ms.ac, 0,
                 0, Integer.MAX_VALUE, 0);
           else
             vwr.setAtomProperty(bsOut, tokProp2, 0, 0, null, dataOut, null);
@@ -1938,7 +1938,7 @@ public class CmdExt implements JmolCmdExtension {
             sb.append(data[i]).appendC('\n');
         if (Logger.debugging)
           Logger.debug(sb.toString());
-        BS bsSubset = BSUtil.copy(vwr.getSelectionSubset());
+        BS bsSubset = BSUtil.copy(vwr.slm.bsSubset);
         vwr.setSelectionSubset(bsTo);
         try {
           eval.runScript(sb.toString());
@@ -2598,13 +2598,13 @@ public class CmdExt implements JmolCmdExtension {
 
     // create the new model
 
-    String[] savedFileInfo = vwr.getFileInfo();
+    String[] savedFileInfo = vwr.fm.getFileInfo();
     boolean oldAppendNew = vwr.getBoolean(T.appendnew);
     vwr.g.appendNew = true;
     boolean isOK = (data != null && vwr.openStringInlineParamsAppend(data,
         null, true) == null);
     vwr.g.appendNew = oldAppendNew;
-    vwr.setFileInfo(savedFileInfo);
+    vwr.fm.setFileInfo(savedFileInfo);
     if (!isOK)
       return "";
     int modelCount = vwr.getModelCount();
@@ -2649,7 +2649,7 @@ public class CmdExt implements JmolCmdExtension {
     case T.helix:
       vwr.setFrameTitle(modelCount - 1, type.replace('w', ' ') + qFrame
           + " for model " + vwr.getModelNumberDotted(modelIndex));
-      String color = (C.getHexCode(vwr.getColixBackgroundContrast()));
+      String color = (C.getHexCode(vwr.cm.colixBackgroundContrast));
       script = "frame 0.0; frame last; reset;"
           + "select visible; wireframe 0; spacefill 3.0; "
           + "isosurface quatSphere" + modelCount + " color " + color
@@ -2895,8 +2895,8 @@ public class CmdExt implements JmolCmdExtension {
       args = st;
       pt = pt0 = 1;
       isCommand = true;
-      isShow = (vwr.isApplet() && !vwr.isSignedApplet()
-          || !vwr.haveAccess(ACCESS.ALL) || vwr.getPathForAllFiles().length() > 0);
+      isShow = (vwr.isApplet && !vwr.isSignedApplet
+          || !vwr.haveAccess(ACCESS.ALL) || vwr.fm.getPathForAllFiles().length() > 0);
     } else {
       isCommand = false;
       isShow = true;
@@ -3531,7 +3531,7 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.cache:
       if (!chk)
-        msg = Escape.e(vwr.cacheList());
+        msg = Escape.e(vwr.fm.cacheList());
       break;
     case T.dssr:
       eval.checkLength23();
@@ -3555,7 +3555,7 @@ public class CmdExt implements JmolCmdExtension {
     case T.pathforallfiles:
       checkLength(2);
       if (!chk)
-        msg = vwr.getPathForAllFiles();
+        msg = vwr.fm.getPathForAllFiles();
       break;
     case T.nmr:
       if (eval.optParameterAsString(2).equalsIgnoreCase("1H")) {
@@ -3673,7 +3673,7 @@ public class CmdExt implements JmolCmdExtension {
       if (name.length() > 0)
         len = 3;
       if (!chk)
-        value = vwr.getColorSchemeList(name);
+        value = vwr.cm.getColorSchemeList(name);
       break;
     case T.variables:
       if (!chk)
@@ -3805,7 +3805,7 @@ public class CmdExt implements JmolCmdExtension {
         break;
       } else if (tokAt(2) == T.file && (len = slen) == 4) {
         if (!chk)
-          msg = vwr.getEmbeddedFileState(paramAsStr(3), true);
+          msg = vwr.fm.getEmbeddedFileState(paramAsStr(3), true);
         break;
       }
       len = 3;
@@ -4153,7 +4153,7 @@ public class CmdExt implements JmolCmdExtension {
     if (vwr.ms.at[atomIndex].mi != vwr.ms.mc - 1)
       return;
     vwr.clearModelDependentObjects();
-    int ac = vwr.ms.getAtomCount();
+    int ac = vwr.ms.ac;
     if (pt == null) {
       vwr.sm.modifySend(atomIndex,
           vwr.ms.at[atomIndex].mi, 1, e.fullCommand);
@@ -4189,7 +4189,7 @@ public class CmdExt implements JmolCmdExtension {
     int modelIndex = -1;
     try {
       modelIndex = vwr.getAtomModelIndex(vwr.ms.bo[bondIndex]
-          .getAtomIndex1());
+          .atom1.i);
       vwr.sm.modifySend(bondIndex, modelIndex, 2,
           e.fullCommand);
       BS bsAtoms = vwr.ms.setBondOrder(bondIndex, type);
@@ -4304,7 +4304,7 @@ public class CmdExt implements JmolCmdExtension {
       e.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK,
           "MO isosurfaces");
     Map<String, Object> moData = (Map<String, Object>) vwr
-        .getModelAuxiliaryInfoValue(modelIndex, "moData");
+        .ms.getInfo(modelIndex, "moData");
     if (moData == null)
       error(ScriptError.ERROR_moModelError);
     Integer n = (Integer) getShapeProperty(JC.SHAPE_MO, "moNumber");
@@ -4407,7 +4407,7 @@ public class CmdExt implements JmolCmdExtension {
     int n = 0;
     LabelToken labeler = modelSet.getLabeler();
     int[] indices = (isAtoms || !useAtomMap ? null : ((BondSet) tokenValue)
-        .getAssociatedAtoms());
+        .associatedAtoms);
     if (indices == null && label != null && label.indexOf("%D") > 0)
       indices = vwr.ms.getAtomIndices(bs);
     boolean asIdentity = (label == null || label.length() == 0);
@@ -4429,7 +4429,7 @@ public class CmdExt implements JmolCmdExtension {
           str = labeler.formatLabelAtomArray(vwr, modelSet.at[j], tokens,
               '\0', indices, ptTemp);
       } else {
-        Bond bond = modelSet.getBondAt(j);
+        Bond bond = modelSet.bo[j];
         if (asIdentity)
           str = bond.getIdentity();
         else

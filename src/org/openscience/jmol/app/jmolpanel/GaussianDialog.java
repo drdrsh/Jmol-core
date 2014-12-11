@@ -23,7 +23,6 @@
  */
 package org.openscience.jmol.app.jmolpanel;
 
-import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.Viewer;
 
@@ -73,7 +72,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
    * modified and integrated into Jmol by Bob Hanson, hansonr@stolaf.edu, 10/12/2008
    */
   
-  JmolViewer vwr;
+  Viewer vwr;
 
   private JPanel container;
   private JTextField checkField, optsField, fileField, selectField;
@@ -189,7 +188,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
     "LSDA BLYP BP86 BPW91 OLYP OP86 OPW91 PBEPBE VSXC HCTH93 NCTH147 HCTH407 TPSSTPSS B3LYP B3PW91";
 
   
-  public GaussianDialog(JFrame f, JmolViewer vwr) {
+  public GaussianDialog(JFrame f, Viewer vwr) {
 
     super(f, false);
     this.vwr = vwr;
@@ -625,7 +624,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
             if (Float.isNaN(PT.parseFloat(coord)))
               return;
             vwr.scriptWait("select on within(0.1,{" + coord + "})");
-            getCommand(vwr.getSelectedAtoms().nextSetBit(0), false);
+            getCommand(vwr.bsA().nextSetBit(0), false);
           } catch (Exception e) {
             // 
           }

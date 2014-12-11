@@ -98,7 +98,7 @@ public class SmilesExt implements JmolSmilesExtension {
       P3 c = new P3();
 
       Atom[] atoms = e.vwr.ms.at;
-      int ac = e.vwr.getAtomCount();
+      int ac = e.vwr.ms.ac;
       int[][] maps = sm.getCorrelationMaps(smiles,
           atoms, ac, bsA, isSmarts, true);
       if (maps == null)
@@ -188,7 +188,7 @@ public class SmilesExt implements JmolSmilesExtension {
       try {
         if (asAtoms)
           b = sm.getSubstructureSetArray(pattern,
-              e.vwr.ms.at, e.vwr.getAtomCount(), bsSelected, null,
+              e.vwr.ms.at, e.vwr.ms.ac, bsSelected, null,
               isSmarts, false);
         else
           b = sm.find(pattern, smiles, isSmarts, false);

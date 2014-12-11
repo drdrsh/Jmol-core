@@ -122,7 +122,7 @@ public class Contact extends Isosurface {
     }
 
     BS bs;
-    ac = vwr.getAtomCount();
+    ac = vwr.ms.ac;
     atoms = vwr.ms.at;
 
     int intramolecularMode = (int) (parameters == null || parameters.length < 2 ? 0
@@ -476,8 +476,8 @@ public class Contact extends Isosurface {
       return false;
     if (atomA.isCovalentlyBonded(atomB))
       return true;
-    Bond[] bondsOther = atomB.getBonds();
-    Bond[] bonds = atomA.getBonds();
+    Bond[] bondsOther = atomB.bonds;
+    Bond[] bonds = atomA.bonds;
     for (int i = 0; i < bondsOther.length; i++) {
       Atom atom2 = bondsOther[i].getOtherAtom(atomB);
       if (atomA.isCovalentlyBonded(atom2))

@@ -1251,7 +1251,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       boolean isBondOrMatrix = (script.charAt(ichToken) == '[');
       BS bs = lookingAtBitset();
       if (bs != null) {
-        addTokenToPrefix(T.o(T.bitset, isBondOrMatrix ? new BondSet(bs) : bs));
+        addTokenToPrefix(T.o(T.bitset, isBondOrMatrix ? BondSet.newBS(bs, null) : bs));
         return CONTINUE;
       }
       if (isBondOrMatrix) {

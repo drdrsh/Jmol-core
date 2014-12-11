@@ -85,7 +85,7 @@ public class Frank extends FontShape {
   void calcMetrics() {
     if (vwr.isJS)
       frankString = "JSmol";
-    else if (vwr.isSignedApplet())
+    else if (vwr.isSignedApplet)
       frankString = "Jmol_S";
     if (font3d == currentMetricsFont3d) 
       return;

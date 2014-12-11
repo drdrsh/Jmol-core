@@ -39,7 +39,7 @@ public class MolecularOrbitalRenderer extends IsosurfaceRenderer {
   protected void renderInfo() {
     if (isExport || vwr.am.cmi < 0
         || mesh.title == null 
-        || !g3d.setC(vwr.getColixBackgroundContrast()))
+        || !g3d.setC(vwr.cm.colixBackgroundContrast))
       return;
     vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Serif", 14 * imageFontScaling));
     int lineheight = Math.round(15 * imageFontScaling);

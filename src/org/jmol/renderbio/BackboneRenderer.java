@@ -65,8 +65,8 @@ public class BackboneRenderer extends BioShapeRenderer {
   }
 
   private void drawSegment(Atom atomA, Atom atomB, short colixA, short colixB, float max) {    
-    if (atomA.getNBackbonesDisplayed() == 0
-        || atomB.getNBackbonesDisplayed() == 0
+    if (atomA.nBackbonesDisplayed == 0
+        || atomB.nBackbonesDisplayed == 0
         || ms.isAtomHidden(atomB.i)
         || !isDataFrame && atomA.distanceSquared(atomB) > max)
       return;

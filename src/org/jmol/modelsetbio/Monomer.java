@@ -76,7 +76,7 @@ public abstract class Monomer extends Group {
 
   @Override
   public Group[] getGroups() {
-    return bioPolymer.getGroups();
+    return bioPolymer.monomers;
   }
   
   void setBioPolymer(BioPolymer polymer, int index) {
@@ -352,7 +352,7 @@ public abstract class Monomer extends Group {
     char ch = '\0';
     for (int i = firstAtomIndex; i <= lastAtomIndex; i++) {
       Atom atom = atoms[i];
-      char altloc = atom.getAlternateLocationID();
+      char altloc = atom.altloc;
       // ignore atoms that have no designation
       if (altloc == '\0')
         continue;
@@ -373,8 +373,8 @@ public abstract class Monomer extends Group {
           continue;
         int iThis = firstAtomIndex + offset;
         Atom atom = atoms[iThis];
-        byte thisID = atom.getAtomID();
-        if (atom.getAlternateLocationID() == 0)
+        byte thisID = atom.atomID;
+        if (atom.altloc == 0)
           continue;
         // scan entire group list to ensure including all of
         // this atom's alternate conformation locations.
@@ -388,7 +388,7 @@ public abstract class Monomer extends Group {
           if (offsetNew < 0 || offsetNew > 255 || iNew == iThis
               || !bsSelected.get(iNew))
             continue;
-          byte atomID = atoms[iNew].getAtomID();
+          byte atomID = atoms[iNew].atomID;
           if (atomID != thisID || atomID == 0 
                   && !atoms[iNew].getAtomName().equals(atom.getAtomName()))
             continue;
@@ -448,7 +448,7 @@ public abstract class Monomer extends Group {
     Atom a = getLeadAtom();
     String id = (a == null ? "" : "_" + a.mi) + "_" + getResno()
         + (cid == 0 ? "" : "_" + cid);
-    char aid = (a == null ? '\0' : getLeadAtom().getAlternateLocationID());
+    char aid = (a == null ? '\0' : getLeadAtom().altloc);
     if (aid != '\0')
       id += "_" + aid;
     return id;
@@ -478,7 +478,7 @@ public abstract class Monomer extends Group {
     // vReturn null --> just checking for connection to previous group
     // not obvious from PDB file for carbohydrates
     Atom atom = chain.getAtom(i);
-    Bond[] bonds = atom.getBonds();
+    Bond[] bonds = atom.bonds;
     int ibp = getBioPolymerIndexInModel();
     if (ibp < 0 || bonds == null)
       return false;

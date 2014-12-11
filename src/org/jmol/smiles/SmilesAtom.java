@@ -553,7 +553,7 @@ public class SmilesAtom extends P3 implements BNode {
     if (bondCount >= bonds.length)
       bonds = (SmilesBond[]) AU.doubleLength(bonds);
     //if (Logger.debugging)
-    //Logger.debug("adding bond to " + this + ": " + bond.getAtom1() + " " + bond.getAtom2());
+    //Logger.debug("adding bond to " + this + ": " + bond.atom1 + " " + bond.atom2);
     bonds[bondCount] = bond;
     bondCount++;
   }
@@ -568,7 +568,7 @@ public class SmilesAtom extends P3 implements BNode {
     for (int i = 0; i < bonds.length; i++) {
       if (isBioAtom && bonds[i].order == SmilesBond.TYPE_AROMATIC)
         bonds[i].order = SmilesBond.TYPE_BIO_PAIR;
-      if (bonds[i].getAtom1().index > bonds[i].getAtom2().index) {
+      if (bonds[i].atom1.index > bonds[i].atom2.index) {
         // it is possible, particularly for a connection to a an atom 
         // with a branch:   C(CCCN1)1
         // for the second assigned atom to not have the
@@ -617,7 +617,7 @@ public class SmilesAtom extends P3 implements BNode {
     if (i >= bondCount)
       return -1;
     SmilesBond b = bonds[i];
-    return (b.getAtom1() == this ? b.getAtom2() : b.getAtom1()).matchingAtom;
+    return (b.atom1 == this ? b.atom2 : b.atom1).matchingAtom;
   }
 
   @Override
@@ -652,7 +652,7 @@ public class SmilesAtom extends P3 implements BNode {
   }
 
   /**
-   * if atom is null, return bond TO this atom (bond.getAtom2() == this)
+   * if atom is null, return bond TO this atom (bond.atom2 == this)
    * otherwise, return bond connecting this atom with
    * that atom
    *  
@@ -666,7 +666,7 @@ public class SmilesAtom extends P3 implements BNode {
     for (int k = 0; k < bonds.length; k++) {
       if ((bond = bonds[k]) == null)
         continue;
-      if (atom == null ? bond.getAtom2() == this 
+      if (atom == null ? bond.atom2 == this 
           : bond.getOtherAtom(this) == atom)
         return bond;
     }

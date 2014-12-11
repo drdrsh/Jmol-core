@@ -611,7 +611,7 @@ public final class ModelLoader {
     models[modelIndex].bsAtoms.set(atoms.length + 1);
     models[modelIndex].bsAtoms.clear(atoms.length + 1);
     String codes = (String) ms.getInfo(modelIndex, "altLocs");
-    models[modelIndex].setNAltLocs(codes == null ? 0 : codes.length());
+    models[modelIndex].nAltLocs = (codes == null ? 0 : codes.length());
     if (codes != null) {
       char[] altlocs = codes.toCharArray();
       Arrays.sort(altlocs);
@@ -619,7 +619,7 @@ public final class ModelLoader {
       ms.setInfo(modelIndex, "altLocs", codes);
     }
     codes = (String) ms.getInfo(modelIndex, "insertionCodes");
-    models[modelIndex].setNInsertions(codes == null ? 0 : codes.length());
+    models[modelIndex].nInsertions = (codes == null ? 0 : codes.length());
     boolean isModelKit = (ms.modelSetName != null
         && ms.modelSetName.startsWith("Jmol Model Kit")
         || modelName.startsWith("Jmol Model Kit") || "Jme"
@@ -868,7 +868,7 @@ public final class ModelLoader {
     Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber,
         atomName, atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge, partialCharge, occupancy, bfactor, tensors,
         isHetero, specialAtomID, atomSymmetry);
-    atom.setAltLoc(alternateLocationID);
+    atom.altloc = alternateLocationID;
     htAtomMap.put(atomUid, atom);
   }
 
@@ -942,7 +942,7 @@ public final class ModelLoader {
           b.setMad((short) (radius * 2000));
         short colix = iterBond.getColix();
         if (colix >= 0)
-          b.setColix(colix);
+          b.colix = colix;
         b.order |= (iOrder & Edge.BOND_PYMOL_MULT);
       }
     }
@@ -1159,10 +1159,8 @@ public final class ModelLoader {
     // groups get defined going up
     groups = new Group[groupCount];
     if (merging)
-      for (int i = 0; i < mergeGroups.length; i++) {
-        groups[i] = mergeGroups[i];
-        groups[i].setModelSet(ms);
-      }
+      for (int i = 0; i < mergeGroups.length; i++)
+        (groups[i] = mergeGroups[i]).chain.model.ms = ms;
     for (int i = baseGroupIndex; i < groupCount; ++i)
       distinguishAndPropagateGroup(i, chainOf[i], group3Of[i], seqcodes[i],
           firstAtomIndexes[i], (i == groupCount - 1 ? ms.ac
@@ -1224,7 +1222,7 @@ public final class ModelLoader {
     }
     addGroup(chain, group);
     groups[groupIndex] = group;
-    group.setGroupIndex(groupIndex);
+    group.groupIndex = groupIndex;
 
     for (int i = maxAtomIndex; --i >= firstAtomIndex;)
       ms.at[i].setGroup(group);
@@ -1451,14 +1449,14 @@ public final class ModelLoader {
     if (modelSet.unitCells != null)
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
           .nextSetBit(i + 1))
-        if (atoms[i].getAtomSymmetry() != null) {
+        if (atoms[i].atomSymmetry != null) {
           tolerance = -tolerance;
           break;
         }
     int i = -1;
     int n = 0;
     boolean loadAllData = (BSUtil.cardinalityOf(bsSelected) == vwr
-        .getAtomCount());
+        .ms.ac);
     for (JmolAdapterAtomIterator iterAtom = adapter
         .getAtomIterator(asc); iterAtom.hasNext();) {
       P3 xyz = iterAtom.getXYZ();

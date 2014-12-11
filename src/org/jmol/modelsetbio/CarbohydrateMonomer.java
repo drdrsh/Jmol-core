@@ -37,7 +37,7 @@ public class CarbohydrateMonomer extends Monomer {
   private CarbohydrateMonomer() {
   }
   
-  final static byte[] alphaOffsets = { 0 };
+  private final static byte[] alphaOffsets = { 0 };
 
   static Monomer
     validateAndAllocate(Chain chain, String group3, int seqcode,

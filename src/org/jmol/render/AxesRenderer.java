@@ -184,7 +184,7 @@ public class AxesRenderer extends FontLineShapeRenderer {
       String label0 = (axes.labels == null || axes.labels.length == 3 || axes.labels[3] == null ? "0"
           : axes.labels[3]);
       if (label0 != null && label0.length() != 0) {
-        colix = vwr.getColixBackgroundContrast();
+        colix = vwr.cm.colixBackgroundContrast;
         g3d.setC(colix);
         renderLabel(label0, originScreen.x, originScreen.y, originScreen.z,
             xCenter, yCenter);

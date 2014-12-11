@@ -96,7 +96,7 @@ public class Dialog extends JPanel implements JmolDialogInterface {
       UIManager.put("FileChooser.fileNameLabelText", temp);
     }
     if (openPreview == null
-        && (vwr.isApplet() || Boolean.valueOf(
+        && (vwr.isApplet || Boolean.valueOf(
             System.getProperty("openFilePreview", "true")).booleanValue())) {
       openPreview = new FilePreview(vwr, openChooser, allowAppend, vwrOptions);
     }
@@ -554,7 +554,7 @@ public class Dialog extends JPanel implements JmolDialogInterface {
           if (dialogType.equals("Load")) {
             // may have #NOCARTOONS#; and/or "#APPEND#; prepended
             outputFileName = getOpenFileNameFromDialog(
-                vwr.getViewerOptions(), vwr, inputFileName, null, null, false);
+                vwr.vwrOptions, vwr, inputFileName, null, null, false);
             return; 
           }
           if (dialogType.equals("Save")) {

@@ -118,7 +118,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
 
   protected void initialize(Viewer vwr, PopupResource bundle, String title) {
     this.vwr = vwr;
-    initSwing(title, bundle, vwr.getHtml5Applet(), vwr.isJS, 
+    initSwing(title, bundle, vwr.html5Applet, vwr.isJS, 
         vwr.getBooleanProperty("_signedApplet"), vwr.isWebGL);
   }
 
@@ -327,7 +327,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     if (currentFrankId != null && currentFrankId == id && nFrankList > 0)
       return;
     if (frankPopup == null)
-      frankPopup = helper.menuCreatePopup("Frank", vwr.getHtml5Applet());
+      frankPopup = helper.menuCreatePopup("Frank", vwr.html5Applet);
     // thisPopup is needed by the JavaScript side of the operation
     thisPopup = frankPopup;
     menuRemoveAll(frankPopup, 0);
@@ -369,9 +369,9 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       modelSetRoot = "Jmol";
     modelIndex = vwr.am.cmi;
     modelCount = vwr.getModelCount();
-    ac = vwr.getAtomCountInModel(modelIndex);
+    ac = vwr.ms.getAtomCountInModel(modelIndex);
     modelSetInfo = vwr.getModelSetAuxiliaryInfo();
-    modelInfo = vwr.getModelAuxiliaryInfo(modelIndex);
+    modelInfo = vwr.ms.getModelAuxiliaryInfo(modelIndex);
     if (modelInfo == null)
       modelInfo = new Hashtable<String, Object>();
     isPDB = checkBoolean("isPDB");
@@ -442,7 +442,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     if (menu == null)
       return;
     menuEnable(menu, ac != 0);
-    menuSetLabel(menu, gti("selectMenuText", vwr.getSelectionCount()));
+    menuSetLabel(menu, gti("selectMenuText", vwr.slm.getSelectionCount()));
   }
 
   private void updateElementsComputedMenu(BS elementsPresentBitSet) {
@@ -818,7 +818,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       }
       String script = "" + vwr.getModelNumberDotted(i);
       String entryName = vwr.getModelName(i);
-      String spectrumTypes = (String) vwr.getModelAuxiliaryInfoValue(i,
+      String spectrumTypes = (String) vwr.ms.getInfo(i,
           "spectrumTypes");
       if (spectrumTypes != null && entryName.startsWith(spectrumTypes))
         spectrumTypes = null;
@@ -899,15 +899,15 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     // 100 here is totally arbitrary. You can do a minimization on any number of atoms
     menuEnable(htMenus.get("computationMenu"), ac <= 100);
     addMenuItem(menu, gti("atomsText", ac));
-    addMenuItem(menu, gti("bondsText", vwr.getBondCountInModel(modelIndex)));
+    addMenuItem(menu, gti("bondsText", vwr.ms.getBondCountInModel(modelIndex)));
     if (isPDB) {
       menuAddSeparator(menu);
       addMenuItem(menu,
-          gti("groupsText", vwr.getGroupCountInModel(modelIndex)));
+          gti("groupsText", vwr.ms.getGroupCountInModel(modelIndex)));
       addMenuItem(menu,
-          gti("chainsText", vwr.getChainCountInModel(modelIndex)));
+          gti("chainsText", vwr.ms.getChainCountInModelWater(modelIndex, false)));
       addMenuItem(menu,
-          gti("polymersText", vwr.getPolymerCountInModel(modelIndex)));
+          gti("polymersText", vwr.ms.getBioPolymerCountInModel(modelIndex)));
       SC submenu = htMenus.get("BiomoleculesMenu");
       if (submenu == null) {
         submenu = menuNewSubMenu(GT._(getMenuText("biomoleculesMenuText")),
@@ -919,7 +919,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       Lst<Map<String, Object>> biomolecules;
       if (modelIndex >= 0
           && (biomolecules = (Lst<Map<String, Object>>) vwr
-              .getModelAuxiliaryInfoValue(modelIndex, "biomolecules")) != null) {
+              .ms.getInfo(modelIndex, "biomolecules")) != null) {
         menuEnable(submenu, true);
         int nBiomolecules = biomolecules.size();
         for (int i = 0; i < nBiomolecules; i++) {

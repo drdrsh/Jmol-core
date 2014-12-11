@@ -1055,7 +1055,7 @@ public class SmilesParser {
     case SmilesBond.TYPE_UNKNOWN:
       bond.order = (bond0.order != SmilesBond.TYPE_UNKNOWN ? bond0.order
           : isSmarts || currentAtom.isAromatic()
-              && bond0.getAtom1().isAromatic() ? SmilesBond.TYPE_ANY
+              && bond0.atom1.isAromatic() ? SmilesBond.TYPE_ANY
               : SmilesBond.TYPE_SINGLE);
       break;
     case SmilesBond.TYPE_DIRECTIONAL_1:

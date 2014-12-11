@@ -82,7 +82,7 @@ public class FileDropper implements DropTargetListener {
         doDrop(evt);
       }
     }));
-    Component display = (Component) vwr.getDisplay();
+    Component display = (Component) vwr.display;
     display.setDropTarget(new DropTarget(display, this));
     display.setEnabled(true);
     //System.out.println("File dropper enabled for " + display);
@@ -114,7 +114,7 @@ public class FileDropper implements DropTargetListener {
     }
     if (statusListener != null) {
       try {
-        String data = vwr.getEmbeddedFileState(fname, false);
+        String data = vwr.fm.getEmbeddedFileState(fname, false);
         if (data.indexOf("preferredWidthHeight") >= 0)
           statusListener.resizeInnerPanel(data);
       } catch (Throwable e) {

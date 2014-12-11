@@ -26,7 +26,11 @@ package org.jmol.modelsetbio;
 class PhosphorusPolymer extends BioPolymer {
 
   PhosphorusPolymer(Monomer[] monomers) {
-    super(monomers);
+    setP(monomers);
+  }
+
+  protected void setP(Monomer[] monomers) {
+    set(monomers);
     hasStructure = true;
   }
   

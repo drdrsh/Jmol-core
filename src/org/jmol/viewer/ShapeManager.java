@@ -381,7 +381,7 @@ public class ShapeManager {
     
 //    todo: deleted atoms not showing up in state
     boolean showHydrogens = vwr.getBoolean(T.showhydrogens);
-    BS bsDeleted = vwr.getDeletedAtoms();
+    BS bsDeleted = vwr.slm.bsDeleted;
     Atom[] atoms = ms.at;
     for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
@@ -488,7 +488,7 @@ public class ShapeManager {
         }
       }
     }
-    if (ms.getAtomCount() == 0 || !vwr.getShowNavigationPoint())
+    if (ms.ac == 0 || !vwr.getShowNavigationPoint())
       return null;
     // set min/max for navigation crosshair rendering
     int minX = Integer.MAX_VALUE;
@@ -529,19 +529,19 @@ public class ShapeManager {
   }
 
   public void restrictSelected(boolean isBond, boolean doInvert) {
-    BS bsSelected = vwr.getSelectedAtomsNoSubset();
+    BS bsSelected = vwr.slm.getSelectedAtomsNoSubset();
     if (doInvert) {
-      vwr.invertSelection();
-      BS bsSubset = vwr.getSelectionSubset();
+      vwr.slm.invertSelection();
+      BS bsSubset = vwr.slm.bsSubset;
       if (bsSubset != null) {
-        bsSelected = vwr.getSelectedAtomsNoSubset();
+        bsSelected = vwr.slm.getSelectedAtomsNoSubset();
         bsSelected.and(bsSubset);
         vwr.select(bsSelected, false, 0, true);
-        BSUtil.invertInPlace(bsSelected, vwr.getAtomCount());
+        BSUtil.invertInPlace(bsSelected, vwr.ms.ac);
         bsSelected.and(bsSubset);
       }
     }
-    BSUtil.andNot(bsSelected, vwr.getDeletedAtoms());
+    BSUtil.andNot(bsSelected, vwr.slm.bsDeleted);
     boolean bondmode = vwr.getBoolean(T.bondmodeor);
 
     if (!isBond)

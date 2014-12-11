@@ -234,11 +234,6 @@ abstract public class AtomCollection {
     return v;
   }
 
-  public int getAtomCount() {
-    // not established until AFTER model loading
-    return ac;
-  }
-  
   public boolean modelSetHasVibrationVectors(){
     return (vibrations != null);
   }
@@ -285,45 +280,9 @@ abstract public class AtomCollection {
         : getLabeler().formatLabel(vwr, at[i], format, ptTemp));
   }
 
-  public String getAtomInfoXYZ(int i, boolean useChimeFormat, P3 ptTemp) {
-    return at[i].getInfoXYZ(!vwr.g.legacyJavaFloat, useChimeFormat, ptTemp);
-  }
-
-  public String getElementSymbol(int i) {
-    return at[i].getElementSymbol();
-  }
-
-  public int getElementNumber(int i) {
-    return at[i].getElementNumber();
-  }
-
   public String getElementName(int i) {
       return Elements.elementNameFromNumber(at[i]
           .getAtomicAndIsotopeNumber());
-  }
-
-  public String getAtomName(int i) {
-    return at[i].getAtomName();
-  }
-
-  public int getAtomNumber(int i) {
-    return at[i].getAtomNumber();
-  }
-
-  public P3 getAtomPoint3f(int i) {
-    return at[i];
-  }
-
-  public float getAtomRadius(int i) {
-    return at[i].getRadius();
-  }
-
-  public float getAtomVdwRadius(int i, VDW type) {
-    return at[i].getVanderwaalsRadiusFloat(vwr, type);
-  }
-
-  public String getAtomChain(int i) {
-    return at[i].getChainIDStr();
   }
 
   public Quat getQuaternion(int i, char qtype) {
@@ -735,9 +694,9 @@ abstract public class AtomCollection {
   protected void setElement(Atom atom, int atomicNumber) {
     taintAtom(atom.i, TAINT_ELEMENT);
     atom.setAtomicAndIsotopeNumber(atomicNumber);
-    atom.setPaletteID(PAL.CPK.id);
-    atom.setColixAtom(vwr.getColixAtomPalette(atom,
-        PAL.CPK.id));
+    atom.paletteID = PAL.CPK.id;
+    atom.colixAtom = vwr.cm.getColixAtomPalette(atom,
+        PAL.CPK.id);
   }
 
   public float getVibrationCoord(int atomIndex, char c) {
@@ -966,8 +925,8 @@ abstract public class AtomCollection {
           break;
         case TAINT_ELEMENT:
           atom.setAtomicAndIsotopeNumber((int)x);
-          atom.setPaletteID(PAL.CPK.id);
-          atom.setColixAtom(vwr.getColixAtomPalette(atom, PAL.CPK.id));
+          atom.paletteID = PAL.CPK.id;
+          atom.colixAtom = vwr.cm.getColixAtomPalette(atom, PAL.CPK.id);
           break;
         case TAINT_FORMALCHARGE:
           atom.setFormalCharge((int)x);          
@@ -1231,7 +1190,7 @@ abstract public class AtomCollection {
     V3 z = new V3();
     V3 x = new V3();
     P3[][] hAtoms = new P3[ac][];
-    BS bsDeleted = vwr.getDeletedAtoms();
+    BS bsDeleted = vwr.slm.bsDeleted;
     P3 pt;
     int nH = 0;
     
@@ -2214,9 +2173,9 @@ abstract public class AtomCollection {
       bsInfo = (BS) specInfo;
       bsTemp = new BS();
       for (i = bsInfo.nextSetBit(0); i >= 0; i = bsInfo.nextSetBit(i + 1))
-        bsTemp.set(getElementNumber(i));
+        bsTemp.set(at[i].getElementNumber());
       for (i = ac; --i >= 0;)
-        if (bsTemp.get(getElementNumber(i)))
+        if (bsTemp.get(at[i].getElementNumber()))
           bs.set(i);
       break;
     case T.site:
@@ -2354,7 +2313,7 @@ abstract public class AtomCollection {
       if (g >= JC.GROUPID_WATER && g < JC.GROUPID_SOLVENT_MIN) {
         bs.set(i);
       } else if ((a = at[i]).getElementNumber() == 8 && a.getCovalentBondCount() == 2) {
-        Bond[] bonds = a.getBonds();
+        Bond[] bonds = a.bonds;
         int n = 0;
         Atom b;
         for (int j = bonds.length; --j >= 0 && n < 3;)
@@ -2693,9 +2652,9 @@ abstract public class AtomCollection {
   public void getAtomIdentityInfo(int i, Map<String, Object> info, P3 ptTemp) {
     info.put("_ipt", Integer.valueOf(i));
     info.put("atomIndex", Integer.valueOf(i));
-    info.put("atomno", Integer.valueOf(getAtomNumber(i)));
+    info.put("atomno", Integer.valueOf(at[i].getAtomNumber()));
     info.put("info", getAtomInfo(i, null, ptTemp));
-    info.put("sym", getElementSymbol(i));
+    info.put("sym", at[i].getElementSymbol());
   }
 
   public Object[] getAtomTensorList(int i) {

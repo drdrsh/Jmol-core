@@ -903,7 +903,7 @@ public class ScriptMathProcessor {
         return addXBs(BSUtil.copyInvert(
             SV.bsSelectVar(x2),
             (x2.value instanceof BondSet ? vwr.getBondCount() : vwr
-                .getAtomCount())));
+                .ms.ac)));
       }
       return addXFloat(-x2.asFloat());
     case T.opNot:
@@ -924,7 +924,7 @@ public class ScriptMathProcessor {
         return addXBs(BSUtil.copyInvert(
             SV.bsSelectVar(x2),
             (x2.value instanceof BondSet ? vwr.getBondCount() : vwr
-                .getAtomCount())));
+                .ms.ac)));
       default:
         return addXBool(!x2.asBoolean());
       }
@@ -1764,7 +1764,7 @@ public class ScriptMathProcessor {
           x2.value, op.value, false, x2.index, true);
       if (op.intValue != T.bonds)
         return addXObj(val);
-      return addX(SV.newV(T.bitset, new BondSet(
+      return addX(SV.newV(T.bitset, BondSet.newBS(
           (BS) val, vwr.ms.getAtomIndices(bs))));
     }
     return false;

@@ -252,7 +252,7 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
     if (bOptions[OPT_BALL]) {
       renderBall();
       if (bOptions[OPT_ARCS] || bOptions[OPT_AXES]) {
-        g3d.setC(vwr.getColixBackgroundContrast());
+        g3d.setC(vwr.cm.colixBackgroundContrast);
         //setAxes(atom, 1.0f);
         if (bOptions[OPT_AXES])
           renderAxes();

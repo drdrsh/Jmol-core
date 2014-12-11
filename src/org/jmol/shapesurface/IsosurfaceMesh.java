@@ -39,6 +39,7 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
+import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
 
@@ -515,11 +516,12 @@ public class IsosurfaceMesh extends Mesh {
     jvxlData.vertexColors = new int[vc];
     jvxlData.nVertexColors = vc;
     Atom[] atoms = vwr.ms.at;
+    GData gdata = vwr.gdata;
     for (int i = mergeVertexCount0; i < vc; i++) {
       int iAtom = vertexSource[i];
       if (iAtom < 0 || !bs.get(iAtom))
         continue;
-      jvxlData.vertexColors[i] = vwr.getColorArgbOrGray(vcs[i] = C
+      jvxlData.vertexColors[i] = gdata.getColorArgbOrGray(vcs[i] = C
           .copyColixTranslucency(colix, atoms[iAtom].colixAtom));
 
       short colix = (colixes == null ? C.INHERIT_ALL : colixes[atomMap[iAtom]]);
@@ -756,10 +758,11 @@ public class IsosurfaceMesh extends Mesh {
       jvxlData.vertexColors = new int[vc];
       jvxlData.nVertexColors = vc;
       Atom[] atoms = vwr.ms.at;
+      GData gdata = vwr.gdata;
       for (int i = mergeVertexCount0; i < vc; i++) {
         int pt = vertexSource[i];
         if (pt >= 0 && pt < atoms.length)
-          jvxlData.vertexColors[i] = vwr.getColorArgbOrGray(vcs[i] = C.copyColixTranslucency(colix,
+          jvxlData.vertexColors[i] = gdata.getColorArgbOrGray(vcs[i] = C.copyColixTranslucency(colix,
             atoms[pt].colixAtom));
       }
       return;

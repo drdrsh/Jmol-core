@@ -115,7 +115,7 @@ public class Backbone extends BioShapeCollection {
       int[] atomIndices = bioShape.bioPolymer.getLeadAtomIndices();
       for (int i = bioShape.monomerCount; --i >= 0; ) {
         Atom atom = ms.at[atomIndices[i]];
-        if (atom.getNBackbonesDisplayed() > 0 && !ms.isAtomHidden(i))
+        if (atom.nBackbonesDisplayed > 0 && !ms.isAtomHidden(i))
           atom.setClickable(vf);
       }
     }

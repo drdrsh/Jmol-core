@@ -94,7 +94,7 @@ public class FileManager implements BytePoster {
 
   private String pathForAllFiles = "";
   
-  String getPathForAllFiles() {
+  public String getPathForAllFiles() {
     return pathForAllFiles;
   }
   
@@ -117,17 +117,17 @@ public class FileManager implements BytePoster {
     }
   }
 
-  String[] getFileInfo() {
+  public String[] getFileInfo() {
     // used by ScriptEvaluator dataFrame method
     return new String[] { fullPathName, fileName, nameAsGiven };
   }
 
-  String getFullPathName(boolean orPrevious) {
+  public String getFullPathName(boolean orPrevious) {
     String f =(fullPathName != null ? fullPathName : nameAsGiven);
     return (!orPrevious || !f.equals("zapped") ? f : lastFullPathName != null ? lastFullPathName : lastNameAsGiven);
   }
 
-  String getFileName() {
+  public String getFileName() {
     return fileName != null ? fileName : nameAsGiven;
   }
 
@@ -1074,9 +1074,9 @@ public class FileManager implements BytePoster {
     if (forDialog && localDir.length() == 0)
       localDir = (String) vwr.getP("defaultDirectoryLocal");
     if (localDir.length() == 0)
-      return (vwr.isApplet() ? null : vwr.apiPlatform.newFile(System
+      return (vwr.isApplet ? null : vwr.apiPlatform.newFile(System
           .getProperty("user.dir", ".")));
-    if (vwr.isApplet() && localDir.indexOf("file:/") == 0)
+    if (vwr.isApplet && localDir.indexOf("file:/") == 0)
       localDir = localDir.substring(6);
     GenericFileInterface f = vwr.apiPlatform.newFile(localDir);
     try {
@@ -1283,7 +1283,7 @@ public class FileManager implements BytePoster {
         : ((byte[]) data).length);
   }
 
-  Map<String, Integer> cacheList() {
+  public Map<String, Integer> cacheList() {
     Map<String, Integer> map = new Hashtable<String, Integer>();
     for (Map.Entry<String, Object> entry : cache.entrySet())
       map.put(entry.getKey(), Integer

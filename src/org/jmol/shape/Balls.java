@@ -72,10 +72,10 @@ public class Balls extends AtomShape {
       byte pid = PAL.pidOf(value);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         Atom atom = atoms[i];
-        atom.setColixAtom(getColixA(colix, pid, atom));
+        atom.colixAtom = getColixA(colix, pid, atom);
         bsColixSet.setBitTo(i, colix != C.USE_PALETTE
             || pid != PAL.NONE.id);
-        atom.setPaletteID(pid);
+        atom.paletteID = pid;
       }
       return;
     }
@@ -96,10 +96,10 @@ public class Balls extends AtomShape {
           colix = C.USE_PALETTE;
         byte pid = PAL.pidOf(color);
         Atom atom = atoms[i];
-        atom.setColixAtom(getColixA(colix, pid, atom));
+        atom.colixAtom = getColixA(colix, pid, atom);
         bsColixSet.setBitTo(i, colix != C.USE_PALETTE
             || pid != PAL.NONE.id);
-        atom.setPaletteID(pid);
+        atom.paletteID = pid;
       }
       return;
     }
@@ -112,8 +112,8 @@ public class Balls extends AtomShape {
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         if (i >= colixes.length)
           continue;
-        atoms[i].setColixAtom(colixes[i]);
-        atoms[i].setPaletteID(PAL.UNKNOWN.id);
+        atoms[i].colixAtom = colixes[i];
+        atoms[i].paletteID = PAL.UNKNOWN.id;
         bsColixSet.set(i);
       }
       return;
@@ -138,7 +138,7 @@ public class Balls extends AtomShape {
 
   @Override
   public void setAtomClickability() {
-    BS bsDeleted = vwr.getDeletedAtoms();
+    BS bsDeleted = vwr.slm.bsDeleted;
     for (int i = ac; --i >= 0;) {
       Atom atom = atoms[i];
       atom.setClickable(0);

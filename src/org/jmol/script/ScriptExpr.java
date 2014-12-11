@@ -658,7 +658,7 @@ abstract class ScriptExpr extends ScriptParam {
     boolean ignoreSubset = (pcStart < 0);
     boolean isInMath = false;
     int nExpress = 0;
-    int ac = vwr.getAtomCount();
+    int ac = vwr.ms.ac;
     if (ignoreSubset)
       pcStart = -pcStart;
     ignoreSubset |= chk;
@@ -794,7 +794,7 @@ abstract class ScriptExpr extends ScriptParam {
         allowRefresh = false;
         break;
       case T.spec_atom:
-        if (vwr.allowSpecAtom()) {
+        if (vwr.ms.allowSpecAtom()) {
           int atomID = instruction.intValue;
           if (atomID > 0)
             rpn.addXBs(compareInt(T.atomid, T.opEQ, atomID));
@@ -973,7 +973,7 @@ abstract class ScriptExpr extends ScriptParam {
     BS bs = (expressionResult instanceof BS ? (BS) expressionResult : new BS());
     isBondSet = (expressionResult instanceof BondSet);
     if (!isBondSet
-        && vwr.excludeAtoms(bs, ignoreSubset).length() > vwr.getAtomCount())
+        && vwr.excludeAtoms(bs, ignoreSubset).length() > vwr.ms.ac)
       bs.clearAll();
     if (tempStatement != null) {
       st = tempStatement;
@@ -988,7 +988,7 @@ abstract class ScriptExpr extends ScriptParam {
     if (tokValue == T.varray) {
       BS bs = new BS();
       if (tokOp != T.opEQ)
-        bs.setBits(0, vwr.getAtomCount());
+        bs.setBits(0, vwr.ms.ac);
       Lst<SV> lst = ((SV) t).getList();
       for (int i = lst.size(); --i >= 0;) {
         BS res = getComparison(lst.get(i), tokWhat, tokOp, strOp, data);
@@ -1175,7 +1175,7 @@ abstract class ScriptExpr extends ScriptParam {
   protected BS compareFloatData(int tokWhat, float[] data, int tokOperator,
                                 float comparisonFloat) {
     BS bs = new BS();
-    int ac = vwr.getAtomCount();
+    int ac = vwr.ms.ac;
     ModelSet modelSet = vwr.ms;
     Atom[] atoms = modelSet.at;
     float propertyFloat = 0;
@@ -1222,7 +1222,7 @@ abstract class ScriptExpr extends ScriptParam {
       throws ScriptException {
     BS bs = new BS();
     Atom[] atoms = vwr.ms.at;
-    int ac = vwr.getAtomCount();
+    int ac = vwr.ms.ac;
     boolean isCaseSensitive = (tokOperator == T.opLIKE || tokWhat == T.chain && vwr
         .getBoolean(T.chaincasesensitive));
     if (!isCaseSensitive)
@@ -1258,9 +1258,9 @@ abstract class ScriptExpr extends ScriptParam {
     BS propertyBitSet = null;
     int bitsetComparator = tokOperator;
     int bitsetBaseValue = ival;
-    int ac = vwr.getAtomCount();
     ModelSet modelSet = vwr.ms;
     Atom[] atoms = modelSet.at;
+    int ac = modelSet.ac;
     int imax = -1;
     int imin = 0;
     int iModel = -1;
@@ -1316,7 +1316,7 @@ abstract class ScriptExpr extends ScriptParam {
         return BSUtil.copy(vwr.getConformation(-1, ival - 1,
             false));
       case T.symop:
-        propertyBitSet = atom.getAtomSymmetry();
+        propertyBitSet = atom.atomSymmetry;
         if (propertyBitSet == null)
           continue;
         if (atom.mi != iModel) {
@@ -1500,7 +1500,7 @@ abstract class ScriptExpr extends ScriptParam {
 
     int minmaxtype = tok & T.minmaxmask;
     boolean selectedFloat = (minmaxtype == T.selectedfloat);
-    int ac = vwr.getAtomCount();
+    int ac = vwr.ms.ac;
     float[] fout = (minmaxtype == T.allfloat ? new float[ac] : null);
     boolean isExplicitlyAll = (minmaxtype == T.minmaxmask || selectedFloat);
     tok &= ~T.minmaxmask;
@@ -1554,7 +1554,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (chk)
         return bs;
       bsNew = (tok == T.atoms ? (isAtoms ? bs : vwr.ms.getAtoms(T.bonds, bs))
-          : (isAtoms ? (BS) new BondSet(vwr.getBondsForSelectedAtoms(bs))
+          : (isAtoms ? (BS) BondSet.newBS(vwr.getBondsForSelectedAtoms(bs), null)
               : bs));
       int i;
       switch (minmaxtype) {
@@ -1763,10 +1763,10 @@ abstract class ScriptExpr extends ScriptParam {
       for (int i = i0; i >= 0 && i < i1; i = (isAll ? i + 1 : bs
           .nextSetBit(i + 1))) {
         n++;
-        Bond bond = modelSet.getBondAt(i);
+        Bond bond = modelSet.bo[i];
         switch (tok) {
         case T.length:
-          float fv = bond.getAtom1().distance(bond.getAtom2());
+          float fv = bond.atom1.distance(bond.atom2);
           switch (minmaxtype) {
           case T.min:
             if (fv < fvMinMax)
@@ -1791,17 +1791,17 @@ abstract class ScriptExpr extends ScriptParam {
         case T.xyz:
           switch (minmaxtype) {
           case T.all:
-            pt.ave(bond.getAtom1(), bond.getAtom2());
+            pt.ave(bond.atom1, bond.atom2);
             vout.addLast(P3.newP(pt));
             break;
           default:
-            pt.add(bond.getAtom1());
-            pt.add(bond.getAtom2());
+            pt.add(bond.atom1);
+            pt.add(bond.atom2);
             n++;
           }
           break;
         case T.color:
-          CU.colorPtFromInt(vwr.getColorArgbOrGray(bond.colix), ptT);
+          CU.colorPtFromInt(vwr.gdata.getColorArgbOrGray(bond.colix), ptT);
           switch (minmaxtype) {
           case T.all:
             vout.addLast(P3.newP(ptT));
@@ -1906,7 +1906,7 @@ abstract class ScriptExpr extends ScriptParam {
 
   private BS bitSetForModelFileNumber(int m) {
     // where */1.0 or */1.1 or just 1.1 is processed
-    BS bs = BS.newN(vwr.getAtomCount());
+    BS bs = BS.newN(vwr.ms.ac);
     if (chk)
       return bs;
     int modelCount = vwr.getModelCount();
@@ -2074,7 +2074,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.bitset:
         propertyName = sel.asString();
         bs = SV.getBitSet(t, true);
-        int nAtoms = vwr.getAtomCount();
+        int nAtoms = vwr.ms.ac;
         int nbs = bs.cardinality();
         if (propertyName.startsWith("property_")) {
           Object obj = (tv.tok == T.varray ? SV.flistValue(tv, tv.getList()
@@ -2123,7 +2123,7 @@ abstract class ScriptExpr extends ScriptParam {
         vv = tv.asString();
       // very inefficient!
       vwr.setData(key, new Object[] { key, "" + vv, BSUtil.copy(vwr.bsA()),
-          Integer.valueOf(0) }, vwr.getAtomCount(), 0, 0, Integer.MIN_VALUE, 0);
+          Integer.valueOf(0) }, vwr.ms.ac, 0, 0, Integer.MIN_VALUE, 0);
       return null;
     }
 

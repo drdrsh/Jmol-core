@@ -51,7 +51,7 @@ import org.jmol.viewer.Viewer;
 
 abstract public class JmolViewer {
 
-  // several; methods were deprecated and removed in 13.1.15. All are accessible via "getXxxx" methods:
+  // several methods were deprecated and removed in 13.1.15. All are accessible via "getXxxx" methods:
   
   abstract public float getFloat(int tok);
   abstract public int getInt(int tok);
@@ -182,12 +182,6 @@ abstract public class JmolViewer {
     return Viewer.getJmolVersion();
   }
 
-  static public boolean checkOption(JmolViewer vwr, String option) {
-    Object testFlag = vwr.getParameter(option);
-    return (testFlag instanceof Boolean && ((Boolean) testFlag).booleanValue()
-        || testFlag instanceof Integer && ((Integer) testFlag).intValue() != 0);
-  }
-
   /**
    * for POV-Ray 
    * @param params
@@ -280,7 +274,7 @@ abstract public class JmolViewer {
   abstract public String getMeasurementStringValue(int i);
   abstract public int[] getMeasurementCountPlusIndices(int i);
 
-  abstract public Object getDisplay();
+  //abstract public Object getDisplay(); removed in Jmol 14.3.11
 
   abstract public BS getElementsPresentBitSet(int modelIndex);
 
@@ -323,38 +317,38 @@ abstract public class JmolViewer {
   abstract public int getModelNumber(int modelIndex);
   abstract public String getModelName(int modelIndex);
   abstract public String getModelNumberDotted(int modelIndex);
-  abstract public Properties getModelProperties(int modelIndex);
-  abstract public String getModelProperty(int modelIndex, String propertyName);
-  abstract public Map<String, Object> getModelAuxiliaryInfo(int modelIndex);
+  //abstract public Properties getModelProperties(int modelIndex);
+  //abstract public String getModelProperty(int modelIndex, String propertyName);
+  //abstract public Map<String, Object> getModelAuxiliaryInfo(int modelIndex);
   
-  /**
-   *  changed in Jmol 13.1.5 to remove ambiguity in JavaScript 
-   * @param modelIndex
-   * @param keyName
-   * @return some Object or null
-   */
-  abstract public Object getModelAuxiliaryInfoValue(int modelIndex, String keyName);
+//  /**
+//   *  changed in Jmol 13.1.5 to remove ambiguity in JavaScript 
+//   * @param modelIndex
+//   * @param keyName
+//   * @return some Object or null
+//   */
+  //abstract public Object getModelAuxiliaryInfoValue(int modelIndex, String keyName);
   abstract public boolean modelHasVibrationVectors(int modelIndex);
 
   abstract public int getModelCount();
   abstract public int getDisplayModelIndex();
   abstract public BS getVisibleFramesBitSet();
-  abstract public int getAtomCount();
+  //abstract public int getAtomCount();
   abstract public int getBondCount(); // NOT THE REAL BOND COUNT -- just an array maximum
-  abstract public int getGroupCount();
+  //abstract public int getGroupCount();
   abstract public int getChainCount();
-  abstract public int getPolymerCount();
-  abstract public int getAtomCountInModel(int modelIndex);
-  abstract public int getBondCountInModel(int modelIndex);  // use -1 here for "all"
-  abstract public int getGroupCountInModel(int modelIndex);
+  //abstract public int getPolymerCount();
+  //abstract public int getAtomCountInModel(int modelIndex);
+  //abstract public int getBondCountInModel(int modelIndex);  // use -1 here for "all"
+  //abstract public int getGroupCountInModel(int modelIndex);
   abstract public int getChainCountInModel(int modelIindex);
-  abstract public int getPolymerCountInModel(int modelIndex);
-  abstract public int getSelectionCount();
+  //abstract public int getPolymerCountInModel(int modelIndex);
+  //abstract public int getSelectionCount();
 
   abstract public void addSelectionListener(JmolSelectionListener listener);
   abstract public void removeSelectionListener(JmolSelectionListener listener);
   
-  abstract public BS getSelectedAtoms();
+  //abstract public BS getSelectedAtoms();
 
   abstract public void homePosition();
 
@@ -404,7 +398,7 @@ abstract public class JmolViewer {
   
   abstract public boolean havePartialCharges();
 
-  abstract public boolean isApplet();
+  //abstract public boolean isApplet(); removed in Jmol 14.3.11
 
   abstract public String getAltLocListInModel(int modelIndex);
 
@@ -551,7 +545,7 @@ abstract public class JmolViewer {
    * @return string from ScriptEvaluator#outputBuffer
    */
   abstract public String runScript(String script);
-  abstract public int modelGetLastVibrationIndex(int i, int tok);
+  //abstract public int modelGetLastVibrationIndex(int i, int tok);
   abstract public String extractMolData(String what);
   
   abstract public String getClipboardText();

@@ -56,7 +56,7 @@ public class AnimationManager {
     if (animationOn == this.animationOn)
       return;
     
-    if (!animationOn || !vwr.haveModelSet() || vwr.isHeadless()) {
+    if (!animationOn || !vwr.haveModelSet() || vwr.headless) {
       stopThread(false);
       return;
     }
@@ -362,7 +362,7 @@ public class AnimationManager {
     float nsec = 1f * (i1 - i0) / animationFps + firstFrameDelay
         + lastFrameDelay;
     for (int i = i0; i <= i1; i++)
-      nsec += vwr.getFrameDelayMs(modelIndexForFrame(i)) / 1000f;
+      nsec += vwr.ms.getFrameDelayMs(modelIndexForFrame(i)) / 1000f;
     return nsec;
   }
 

@@ -708,7 +708,7 @@ public class ActionManager implements EventManager {
   }
 
   synchronized public void startHoverWatcher(boolean isStart) {
-    if (vwr.isPreviewOnly())
+    if (vwr.isPreviewOnly)
       return;
     try {
       if (isStart) {
@@ -922,7 +922,7 @@ public class ActionManager implements EventManager {
       checkReleaseAction(x, y, time, dragRelease);
       return;
     case Event.WHEELED:
-      if (vwr.isApplet() && !vwr.hasFocus())
+      if (vwr.isApplet && !vwr.hasFocus())
         return;
       setCurrent(time, current.x, current.y, buttonMods);
       checkDragWheelAction(Binding.getMouseAction(0, buttonMods,
@@ -1002,7 +1002,7 @@ public class ActionManager implements EventManager {
       dragAtomIndex = vwr.findNearestAtomIndexMovable(x, y, true);
       if (dragAtomIndex >= 0
           && (apm == PICKING_ASSIGN_ATOM || apm == PICKING_INVERT_STEREO)
-          && vwr.isAtomAssignable(dragAtomIndex)) {
+          && vwr.ms.isAtomAssignable(dragAtomIndex)) {
         enterMeasurementMode(dragAtomIndex);
         mp.addPoint(dragAtomIndex, null, false);
       }

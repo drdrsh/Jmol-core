@@ -361,7 +361,7 @@ public class TransformManager {
     setSpinOff();
     setNavOn(false);
 
-    if (vwr.isHeadless()) {
+    if (vwr.headless) {
       if (isSpin && endDegrees == Float.MAX_VALUE)
         return false;
       isSpin = false;
@@ -1359,6 +1359,8 @@ Z increasing    \       /       it ends up screenWidthPixels wide.
   protected final static int MODE_PERSPECTIVE_PYMOL = 2;
 
   static final int DEFAULT_PERSPECTIVE_MODEL = 11;
+  static final boolean DEFAULT_PERSPECTIVE_DEPTH = true;
+  static final float DEFAULT_CAMERA_DEPTH = 3.0f;
 
   public int mode = MODE_STANDARD;
   public int defaultMode = MODE_STANDARD;

@@ -113,8 +113,9 @@ public class Sticks extends Shape {
       if (bsOrderSet == null)
         bsOrderSet = new BS();
       int order = ((Integer) value).shortValue();
-      BondIterator iter = (selectedBonds != null ? ms.getBondIterator(selectedBonds)
-          : ms.getBondIteratorForType(Edge.BOND_ORDER_ANY, bs));
+      BondIterator iter = (selectedBonds != null ? ms
+          .getBondIterator(selectedBonds) : ms.getBondIteratorForType(
+          Edge.BOND_ORDER_ANY, bs));
       while (iter.hasNext()) {
         bsOrderSet.set(iter.nextIndex());
         iter.next().setOrder(order);
@@ -129,30 +130,27 @@ public class Sticks extends Shape {
       if (pal == PAL.TYPE || pal == PAL.ENERGY) {
         //only for hydrogen bonds
         boolean isEnergy = (pal == PAL.ENERGY);
-        BondIterator iter = (selectedBonds != null ? ms.getBondIterator(selectedBonds)
-            : ms.getBondIteratorForType(myMask, bs));
+        BondIterator iter = (selectedBonds != null ? ms
+            .getBondIterator(selectedBonds) : ms.getBondIteratorForType(myMask,
+            bs));
         while (iter.hasNext()) {
           bsColixSet.set(iter.nextIndex());
           Bond bond = iter.next();
-          if (isEnergy) {
-              bond.setColix(getColixB(colix, pal.id, bond));
-              bond.setPaletteID(pal.id);
-          } else {
-            bond.setColix(C.getColix(Edge.getArgbHbondType(bond.order)));
-          }
+          bond.colix = (isEnergy ? getColixB(colix, pal.id, bond) : C
+              .getColix(Edge.getArgbHbondType(bond.order)));
         }
         return;
       }
       if (colix == C.USE_PALETTE && pal != PAL.CPK)
         return; //palettes not implemented for bonds
-      BondIterator iter = (selectedBonds != null ? ms.getBondIterator(selectedBonds)
-          : ms.getBondIteratorForType(myMask, bs));
+      BondIterator iter = (selectedBonds != null ? ms
+          .getBondIterator(selectedBonds) : ms.getBondIteratorForType(myMask,
+          bs));
       while (iter.hasNext()) {
         int iBond = iter.nextIndex();
-        Bond bond = iter.next();
-        bond.setColix(colix);
-        bsColixSet.setBitTo(iBond, (colix != C.INHERIT_ALL
-            && colix != C.USE_PALETTE));
+        iter.next().colix = colix;
+        bsColixSet.setBitTo(iBond,
+            (colix != C.INHERIT_ALL && colix != C.USE_PALETTE));
       }
       return;
     }
@@ -160,19 +158,20 @@ public class Sticks extends Shape {
       if (bsColixSet == null)
         bsColixSet = new BS();
       boolean isTranslucent = (((String) value).equals("translucent"));
-      BondIterator iter = (selectedBonds != null ? ms.getBondIterator(selectedBonds)
-          : ms.getBondIteratorForType(myMask, bs));
+      BondIterator iter = (selectedBonds != null ? ms
+          .getBondIterator(selectedBonds) : ms.getBondIteratorForType(myMask,
+          bs));
       while (iter.hasNext()) {
         bsColixSet.set(iter.nextIndex());
         iter.next().setTranslucent(isTranslucent, translucentLevel);
       }
       return;
     }
-    
+
     if ("deleteModelAtoms" == propertyName) {
       return;
     }
-    
+
     setPropS(propertyName, value, bs);
   }
 
@@ -190,12 +189,12 @@ public class Sticks extends Shape {
     Bond[] bonds = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
       Bond bond = bonds[i];
-      if ((bond.getShapeVisibilityFlags() & vf) == 0
-          || ms.isAtomHidden(bond.getAtomIndex1())
-          || ms.isAtomHidden(bond.getAtomIndex2()))
+      if ((bond.shapeVisibilityFlags & vf) == 0
+          || ms.isAtomHidden(bond.atom1.i)
+          || ms.isAtomHidden(bond.atom2.i))
         continue;
-      bond.getAtom1().setClickable(vf);
-      bond.getAtom2().setClickable(vf);
+      bond.atom1.setClickable(vf);
+      bond.atom2.setClickable(vf);
     }
   }
 
@@ -222,7 +221,7 @@ public class Sticks extends Shape {
     Bond bond = findPickedBond(x, y, bsVisible, pt);
     if (bond == null)
       return null;
-    int modelIndex = bond.getAtom1().mi;
+    int modelIndex = bond.atom1.mi;
     String info = bond.getIdentity();
     Map<String, Object> map = new Hashtable<String, Object>();
     map.put("pt", pt);
@@ -258,10 +257,10 @@ public class Sticks extends Shape {
     Bond[] bonds = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
       Bond bond = bonds[i];
-      if (bond.getShapeVisibilityFlags() == 0)
+      if (bond.shapeVisibilityFlags == 0)
         continue;
-      Atom atom1 = bond.getAtom1();
-      Atom atom2 = bond.getAtom2();
+      Atom atom1 = bond.atom1;
+      Atom atom2 = bond.atom2;
       if (!atom1.checkVisible() || !atom2.checkVisible())
         continue;
       v.ave(atom1, atom2);

@@ -83,7 +83,7 @@ class Image {
    */
   static void waitForDisplay(PlatformViewer vwr, Object image)
       throws InterruptedException {
-    Object display = ((Viewer) vwr).getDisplay();
+    Object display = ((Viewer) vwr).display;
     // this is important primarily for retrieving images from 
     // files, as in set echo ID myimage "image.gif"
     if (display == null)

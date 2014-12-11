@@ -444,10 +444,10 @@ public class Dipoles extends Shape {
       Bond bond = bonds[i];
       if (!bond.isCovalent())
         continue;
-      float c1 = partialCharges[bond.getAtomIndex1()];
-      float c2 = partialCharges[bond.getAtomIndex2()];
+      float c1 = partialCharges[bond.atom1.i];
+      float c2 = partialCharges[bond.atom2.i];
       if (c1 != c2)
-        setDipoleAtoms(bond.getAtom1(), bond.getAtom2(), c1, c2);
+        setDipoleAtoms(bond.atom1, bond.atom2, c1, c2);
     }
   }
   
@@ -551,7 +551,7 @@ public class Dipoles extends Shape {
   }
 
   private Dipole findBondDipole(Bond bond) {
-    Dipole d = findAtomDipole(bond.getAtom1(), bond.getAtom2(), false);
+    Dipole d = findAtomDipole(bond.atom1, bond.atom2, false);
     return (d == null || d.atoms[0] == null ? null : d);
   }
 

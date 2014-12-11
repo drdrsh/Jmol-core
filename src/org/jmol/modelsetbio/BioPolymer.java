@@ -27,7 +27,6 @@ import org.jmol.c.STR;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
-import org.jmol.modelset.Group;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
@@ -55,6 +54,11 @@ import java.util.Map;
 
 public abstract class BioPolymer {
 
+  protected BioPolymer() {
+    
+  }
+  
+  
   public Monomer[] monomers;
   protected boolean hasStructure;
 
@@ -80,11 +84,7 @@ public abstract class BioPolymer {
   protected final static int TYPE_NUCLEIC = 2;
   protected final static int TYPE_CARBOHYDRATE = 3;
 
-  public Group[] getGroups() {
-    return monomers;
-  }
-
-  BioPolymer(Monomer[] monomers) {
+  protected void set(Monomer[] monomers) {
     this.monomers = monomers;
     monomerCount = monomers.length;
     for (int i = monomerCount; --i >= 0;)

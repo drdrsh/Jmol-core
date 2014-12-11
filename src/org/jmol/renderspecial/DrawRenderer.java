@@ -456,7 +456,7 @@ public class DrawRenderer extends MeshRenderer {
 
   private void renderInfo() {
     if (isExport || mesh.title == null || vwr.getDrawHover()
-        || !g3d.setC(vwr.getColixBackgroundContrast()))
+        || !g3d.setC(vwr.cm.colixBackgroundContrast))
       return;
     for (int i = dmesh.pc; --i >= 0;)
       if (isPolygonDisplayable(i)) {

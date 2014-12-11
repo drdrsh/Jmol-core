@@ -90,7 +90,7 @@ public class AppletConsole extends JmolConsole {
   @Override
   public void start(Viewer vwr) {
     setViewer(vwr);
-    Component display = (Component) vwr.getDisplay();
+    Component display = (Component) vwr.display;
     this.vwrFrame = (display instanceof JFrame ? (JFrame) display : null);
     JFrame jf = new JFrame();
     jf.setSize(600, 400);

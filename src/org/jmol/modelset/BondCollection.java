@@ -85,10 +85,6 @@ abstract public class BondCollection extends AtomCollection {
     moleculeCount = 0;
   }
 
-  public Bond getBondAt(int bondIndex) {
-    return bo[bondIndex];
-  }
-
   public BondIterator getBondIteratorForType(int bondType, BS bsAtoms) {
     //Dipoles, Sticks
     return new BondIteratorSelected(bo, bondCount, bondType, bsAtoms, 
@@ -100,34 +96,14 @@ abstract public class BondCollection extends AtomCollection {
     return new BondIteratorSelected(bo, bondCount, Edge.BOND_ORDER_NULL, bsBonds, false);
   }
   
-  public Atom getBondAtom1(int i) {
-    return bo[i].atom1;
-  }
-
-  public Atom getBondAtom2(int i) {
-    return bo[i].atom2;
-  }
-
-  public float getBondRadius(int i) {
-    return bo[i].getRadius();
-  }
-
-  public int getBondOrder(int i) {
-    return bo[i].order;
-  }
-
   public short getBondColix1(int i) {
-    return bo[i].getColix1();
+    return C.getColixInherited(bo[i].colix, bo[i].atom1.colixAtom);
   }
 
   public short getBondColix2(int i) {
-    return bo[i].getColix2();
+    return C.getColixInherited(bo[i].colix, bo[i].atom2.colixAtom);
   }
   
-  public int getBondModelIndex(int i) {
-    return bo[i].atom1.mi;
-  }
-
   /**
    * for general use
    * 
@@ -468,10 +444,6 @@ abstract public class BondCollection extends AtomCollection {
     }
   }
   
-  public void assignAromaticBonds() {
-    assignAromaticBondsBs(true, null);
-  }
-
   /**
    * algorithm discussed above.
    * 
@@ -480,7 +452,7 @@ abstract public class BondCollection extends AtomCollection {
    *                            were a bondOrder command.
    * @param bsBonds  passed to us by autoBond routine
    */
-  protected void assignAromaticBondsBs(boolean isUserCalculation, BS bsBonds) {
+  public void assignAromaticBondsBs(boolean isUserCalculation, BS bsBonds) {
     // bsAromatic tracks what was originally in the file, but
     // individual bonds are cleared if the connect command has been used.
     // in this way, users can override the file designations.
@@ -780,16 +752,16 @@ abstract public class BondCollection extends AtomCollection {
       if (bondOrder == 0) {
         BS bs = new BS();
         bs.set(bond.index);
-        bsAtoms.set(bond.getAtomIndex1());
-        bsAtoms.set(bond.getAtomIndex2());
+        bsAtoms.set(bond.atom1.i);
+        bsAtoms.set(bond.atom2.i);
         dBm(bs, false);
         return bsAtoms;
       }
       bond.setOrder(bondOrder | Edge.BOND_NEW);
       removeUnnecessaryBonds(bond.atom1, false);
       removeUnnecessaryBonds(bond.atom2, false);
-      bsAtoms.set(bond.getAtomIndex1());
-      bsAtoms.set(bond.getAtomIndex2());
+      bsAtoms.set(bond.atom1.i);
+      bsAtoms.set(bond.atom2.i);
     } catch (Exception e) {
       Logger.error("Exception in seBondOrder: " + e.toString());
     }

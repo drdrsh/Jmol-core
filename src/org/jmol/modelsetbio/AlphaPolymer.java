@@ -39,7 +39,7 @@ import javajs.util.V3;
 public class AlphaPolymer extends BioPolymer {
 
   AlphaPolymer(Monomer[] monomers) {
-    super(monomers);
+    set(monomers);
     hasStructure = true;
   }
 

@@ -474,7 +474,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if ("connections" == propertyName) {
       if (currentMesh != null) {
         connections = (int[]) value;
-        if (connections[0] >= 0 && connections[0] < vwr.getAtomCount())
+        if (connections[0] >= 0 && connections[0] < vwr.ms.ac)
           currentMesh.connections = connections;
         else
           connections = currentMesh.connections = null;
@@ -746,7 +746,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       short colix = (thisMesh.isColorSolid ? thisMesh.colix : 0);
       setProperty("init", null, null);
       setProperty("map", Boolean.FALSE, null);
-      setProperty("property", new float[vwr.getAtomCount()], null);
+      setProperty("property", new float[vwr.ms.ac], null);
       if (colix != 0) {
         thisMesh.colorCommand = "color isosurface "
             + C.getHexCode(colix);

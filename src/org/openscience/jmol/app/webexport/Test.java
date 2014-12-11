@@ -127,7 +127,7 @@ public class Test extends JPanel implements ActionListener {
     }
     if (e.getSource() == FileButton) { // Handle getting the file name...
       String Str = null;
-      Str = vwr.getFileName();
+      Str = vwr.fm.getFileName();
       if (Str == null) {
         LogPanel
             .log("Something didn't work when selecting the file button in Test module");
@@ -137,7 +137,7 @@ public class Test extends JPanel implements ActionListener {
     }
     if (e.getSource() == PathButton) {// Handle getting the path to the file...
       String Str = null;
-      Str = vwr.getFullPathName(false);
+      Str = vwr.fm.getFullPathName(false);
       if (Str == null) {
         LogPanel
             .log("Something didn't work when selecting the Path button in Test module");

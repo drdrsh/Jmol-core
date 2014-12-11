@@ -561,7 +561,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_FILE_INFO:
       return getFileInfo(vwr.getFileData(), myParam.toString());
     case PROP_FILENAME:
-      return vwr.getFullPathName(false);
+      return vwr.fm.getFullPathName(false);
     case PROP_FILEHEADER:
       return vwr.getFileHeader();
     case PROP_FILECONTENTS:
@@ -885,7 +885,7 @@ public class PropertyManager implements JmolPropertyManager {
     SB mol = new SB();
     ModelSet ms = vwr.ms;
     if (!asXYZVIB && !asJSON) {
-      mol.append(isModelKit ? "Jmol Model Kit" : vwr.getFullPathName(false)
+      mol.append(isModelKit ? "Jmol Model Kit" : vwr.fm.getFullPathName(false)
           .replace('\\', '/'));
       String version = Viewer.getJmolVersion();
       mol.append("\n__Jmol-").append(version.substring(0, 2));
@@ -1319,7 +1319,7 @@ public class PropertyManager implements JmolPropertyManager {
     Map<String, Object> info = new Hashtable<String, Object>();
     ms.getAtomIdentityInfo(i, info, ptTemp);
     info.put("element", ms.getElementName(i));
-    info.put("elemno", Integer.valueOf(ms.getElementNumber(i)));
+    info.put("elemno", Integer.valueOf(ms.at[i].getElementNumber()));
     info.put("x", Float.valueOf(atom.x));
     info.put("y", Float.valueOf(atom.y));
     info.put("z", Float.valueOf(atom.z));
@@ -1337,7 +1337,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("visibilityFlags", Integer.valueOf(atom.shapeVisibilityFlags));
     info.put("spacefill", Float.valueOf(atom.getRadius()));
     String strColor = Escape.escapeColor(vwr
-        .getColorArgbOrGray(atom.colixAtom));
+        .gdata.getColorArgbOrGray(atom.colixAtom));
     if (strColor != null)
       info.put("color", strColor);
     info.put("colix", Integer.valueOf(atom.colixAtom));
@@ -1357,7 +1357,7 @@ public class PropertyManager implements JmolPropertyManager {
         info.put("resno", Integer.valueOf(seqNum));
       if (insCode != 0)
         info.put("insertionCode", "" + insCode);
-      info.put("name", ms.getAtomName(i));
+      info.put("name", ms.at[i].getAtomName());
       info.put("chain", atom.getChainIDStr());
       info.put("atomID", Integer.valueOf(atom.atomID));
       info.put("groupID", Integer.valueOf(atom.getGroupID()));
@@ -1427,7 +1427,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("radius", Float.valueOf((float) (bond.mad / 2000.)));
     info.put("length_Ang", Float.valueOf(atom1.distance(atom2)));
     info.put("visible", Boolean.valueOf(bond.shapeVisibilityFlags != 0));
-    String strColor = Escape.escapeColor(vwr.getColorArgbOrGray(bond.colix));
+    String strColor = Escape.escapeColor(vwr.gdata.getColorArgbOrGray(bond.colix));
     if (strColor != null)
       info.put("color", strColor);
     info.put("colix", Integer.valueOf(bond.colix));
@@ -1463,10 +1463,10 @@ public class PropertyManager implements JmolPropertyManager {
         for (int i = 0; i < nChains; i++) {
       Chain chain = model.getChainAt(i);
       Lst<Map<String, Object>> infoChain = new  Lst<Map<String, Object>>();
-      int nGroups = chain.getGroupCount();
+      int nGroups = chain.groupCount;
       Map<String, Lst<Map<String, Object>>> arrayName = new Hashtable<String, Lst<Map<String, Object>>>();
       for (int igroup = 0; igroup < nGroups; igroup++) {
-        Group group = chain.getGroup(igroup);
+        Group group = chain.groups[igroup];
         if (bs.get(group.firstAtomIndex))
           infoChain.addLast(group.getGroupInfo(igroup, ptTemp));
       }
@@ -1517,7 +1517,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("syncId", vwr.syncId);
     info.put("fullName", vwr.fullName);
     info.put("codeBase", "" + Viewer.appletCodeBase);
-    if (vwr.isApplet()) {
+    if (vwr.isApplet) {
       info.put("documentBase", Viewer.appletDocumentBase);
       info.put("registry", vwr.sm.getRegistryInfo());
     }
@@ -1614,7 +1614,7 @@ public class PropertyManager implements JmolPropertyManager {
       return null;
     Map<String, Object> info = new Hashtable<String, Object>();
     Lst<Object> list = new Lst<Object>();
-    ActionManager am = vwr.actionManager;
+    ActionManager am = vwr.acm;
     for (Object obj : am.b.getBindings().values()) {
       if (obj instanceof Boolean)
         continue;
@@ -1713,7 +1713,7 @@ public class PropertyManager implements JmolPropertyManager {
           .append(XX.length() == 1 ? " " + XX : XX.substring(0, 2))
           .append("  \n");
       if (!showModels && (!isBiomodel || isHetero || isMultipleBondPDB)) {
-        Bond[] bonds = a.getBonds();
+        Bond[] bonds = a.bonds;
         if (bonds != null)
           for (int j = 0; j < bonds.length; j++) {
             int iThis = a.getAtomNumber();

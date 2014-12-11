@@ -446,7 +446,7 @@ public class MolecularOrbital extends Isosurface {
     setPropI("squareData", moSquareData, null);
     setPropI("squareLinear", moSquareLinear, null);
     setPropI("title", moTitleFormat, null);
-    setPropI("fileName", vwr.getFileName(), null);
+    setPropI("fileName", vwr.fm.getFileName(), null);
     setPropI("molecularOrbital", linearCombination == null ? Integer
         .valueOf(moNumber) : linearCombination, null);
     if (moPlane != null && moColorNeg != null)

@@ -132,7 +132,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     JScrollPane editorPane = new JScrollPane(editor);
 
     consoleButton = setButton(GT._("Console"));
-    if (!vwr.isApplet() || vwr.getBooleanProperty("_signedApplet"))
+    if (!vwr.isApplet || vwr.getBooleanProperty("_signedApplet"))
       openButton = setButton(GT._("Open"));
     loadButton = setButton(GT._("Script"));
     checkButton = setButton(GT._("Check"));

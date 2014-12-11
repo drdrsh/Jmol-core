@@ -34,7 +34,7 @@ public class EchoRenderer extends LabelsRenderer {
 
   @Override
   protected boolean render() {
-    if (vwr.isPreviewOnly())
+    if (vwr.isPreviewOnly)
       return false;
     Echo echo = (Echo) shape;
     float scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? vwr
@@ -78,7 +78,7 @@ public class EchoRenderer extends LabelsRenderer {
     if (!isExport) {
       String frameTitle = vwr.getFrameTitle();
       if (frameTitle != null && frameTitle.length() > 0) {
-        if (g3d.setC(vwr.getColixBackgroundContrast())) {
+        if (g3d.setC(vwr.cm.colixBackgroundContrast)) {
           if (frameTitle.indexOf("%{") >= 0 || frameTitle.indexOf("@{") >= 0)
             frameTitle = vwr.formatText(frameTitle);
           renderFrameTitle(frameTitle);

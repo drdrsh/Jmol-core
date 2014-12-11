@@ -26,7 +26,6 @@ package org.openscience.jmol.app.jmolpanel;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolAdapter;
-import org.jmol.api.JmolViewer;
 import org.jmol.awt.FileDropper;
 import org.jmol.awt.Platform;
 import org.jmol.console.JmolButton;
@@ -108,7 +107,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   static HistoryFile historyFile;
 
-  public JmolViewer vwr;
+  public Viewer vwr;
 
   JmolAdapter modelAdapter;
   JmolApp jmolApp;
@@ -367,7 +366,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     //historyFile.repositionWindow(EDITOR_WINDOW_NAME, c, 150, 50);
 
     say(GT._("Setting up Drag-and-Drop..."));
-    new FileDropper(myStatusListener, (Viewer) vwr);
+    new FileDropper(myStatusListener, vwr);
     // it's important to set this up first, even though it consumes some memory
     // otherwise, loading a new model in a script that sets the vibration or vector parameters
     // can appear to skip those -- they aren't skipped, but creating the atomSetChooser
@@ -588,7 +587,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   protected boolean doClose(boolean saveSize) {
-    if (numWindows == 1 && vwr.getAtomCount() > 0 && JOptionPane.showConfirmDialog(frame, GT._("Exit Jmol?"),
+    if (numWindows == 1 && vwr.ms.ac > 0 && JOptionPane.showConfirmDialog(frame, GT._("Exit Jmol?"),
         "Exit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION)
       return false;
     dispose(frame, saveSize);
@@ -1294,7 +1293,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     public void actionPerformed(ActionEvent e) {
 
       Dialog sd = new Dialog();
-      String fileName = sd.getImageFileNameFromDialog((Viewer) vwr, null, imageType,
+      String fileName = sd.getImageFileNameFromDialog(vwr, null, imageType,
           imageChoices, imageExtensions, qualityJPG, qualityPNG);
       if (fileName == null)
         return;
@@ -1401,7 +1400,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      String fileName = (new Dialog()).getSaveFileNameFromDialog((Viewer) vwr,
+      String fileName = (new Dialog()).getSaveFileNameFromDialog(vwr,
           null, "SPT");
       if (fileName != null) {
         Map<String, Object> params = new Hashtable<String, Object>();
@@ -1513,7 +1512,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   void openFile() {
     String fileName = (new Dialog()).getOpenFileNameFromDialog(vwrOptions,
-        (Viewer) vwr, null, jmolApp, FILE_OPEN_WINDOW_NAME, true);
+        vwr, null, jmolApp, FILE_OPEN_WINDOW_NAME, true);
     if (fileName == null)
       return;
     int flags = 1+8; // cartoons+fileOpen

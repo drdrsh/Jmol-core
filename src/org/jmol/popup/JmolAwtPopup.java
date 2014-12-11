@@ -53,7 +53,7 @@ public class JmolAwtPopup extends JmolGenericPopup {
   @Override
   protected void menuShowPopup(SC popup, int x, int y) {
     try {
-      ((JPopupMenu)((AwtSwingComponent)popup).jc).show((Component) vwr.getDisplay(), x, y);
+      ((JPopupMenu)((AwtSwingComponent)popup).jc).show((Component) vwr.display, x, y);
     } catch (Exception e) {
       // ignore
     }

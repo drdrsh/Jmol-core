@@ -125,15 +125,7 @@ public class Model {
 
   public int trajectoryBaseIndex;
   public boolean isTrajectory;
-  private int selectedTrajectory = -1;
-
-  void setSelectedTrajectory(int i) {
-    selectedTrajectory = i;
-  }
-
-  public int getSelectedTrajectory() {
-    return selectedTrajectory;
-  }
+  public int selectedTrajectory = -1;
 
   private int bondCount = -1;
 
@@ -161,7 +153,7 @@ public class Model {
   int groupCount = -1;
 
   protected int chainCount = 0;
-  protected Chain[] chains = new Chain[8];
+  public Chain[] chains = new Chain[8];
 
   int biosymmetryCount;
 
@@ -206,35 +198,11 @@ public class Model {
     return this;
   }
 
-  void setNAltLocs(int nAltLocs) {
-    this.nAltLocs = nAltLocs;
-  }
-
-  void setNInsertions(int nInsertions) {
-    this.nInsertions = nInsertions;
-  }
-
-  protected boolean structureTainted;
+  public boolean structureTainted;
   public boolean isJmolDataFrame;
   public long frameDelay;
   public SymmetryInterface simpleCage;
   public Map<String, Object> dssrCache;
-
-  public String getModelNumberDotted() {
-    return ms.getModelNumberDotted(modelIndex);
-  }
-
-  public String getModelTitle() {
-    return ms.getModelTitle(modelIndex);
-  }
-
-  public boolean isStructureTainted() {
-    return structureTainted;
-  }
-
-  public Chain[] getChains() {
-    return chains;
-  }
 
   public int getChainCount(boolean countWater) {
     if (chainCount > 1 && !countWater)
@@ -262,7 +230,7 @@ public class Model {
     if (groupCount < 0) {
       groupCount = 0;
       for (int i = chainCount; --i >= 0;)
-        groupCount += chains[i].getGroupCount();
+        groupCount += chains[i].groupCount;
     }
     return groupCount;
   }

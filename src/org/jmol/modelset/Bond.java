@@ -36,7 +36,7 @@ public class Bond extends Edge {
   public Atom atom2;
 
   public short mad;
-  public short colix = C.INHERIT_ALL;
+  public short colix;
 
   /**
    * @j2sIgnoreSuperConstructor
@@ -62,14 +62,6 @@ public class Bond extends Edge {
 
   public int shapeVisibilityFlags;
   
-  public void setShapeVisibilityFlags(int shapeVisibilityFlags) {
-    this.shapeVisibilityFlags = shapeVisibilityFlags;
-  }
-
-  public int getShapeVisibilityFlags() {
-    return shapeVisibilityFlags;
-  }
-
   void setShapeVisibility(boolean isVisible) {
     boolean wasVisible = ((shapeVisibilityFlags & myVisibilityFlag) != 0);
     if (wasVisible == isVisible)
@@ -86,7 +78,7 @@ public class Bond extends Edge {
   public final static int myVisibilityFlag = JC.getShapeVisibilityFlag(JC.SHAPE_STICKS);
 
   public String getIdentity() {
-    return (index + 1) + " "+ getOrderNumberAsString() + " " + atom1.getInfo() + " -- "
+    return (index + 1) + " "+ Edge.getBondOrderNumberFromOrder(order) + " " + atom1.getInfo() + " -- "
         + atom2.getInfo() + " " + atom1.distance(atom2);
   }
 
@@ -120,14 +112,6 @@ public class Bond extends Edge {
     return (order & BOND_PYMOL_MULT) == BOND_PYMOL_MULT;
   }
 
-  /**
-   * 
-   * @param pid
-   */
-  public void setPaletteID(byte pid) {
-    // hbonds only
-  }
-
   public float getEnergy() {
     // hbonds only
     return 0;
@@ -147,10 +131,6 @@ public class Bond extends Edge {
     atom1 = atom2 = null;
   }
 
-  public void setColix(short colix) {
-    this.colix = colix;
-  }
-
   public void setTranslucent(boolean isTranslucent, float translucentLevel) {
     colix = C.getColixTranslucent3(colix, isTranslucent, translucentLevel);
   }
@@ -163,47 +143,21 @@ public class Bond extends Edge {
     this.order = order | (this.order & BOND_NEW);
   }
 
-  public Atom getAtom1() {
-    return atom1;
-  }
-
-  public Atom getAtom2() {
-    return atom2;
-  }
-
   @Override
   public int getAtomIndex1() {
+    // required for Smiles parser
     return atom1.i;
   }
   
   @Override
   public int getAtomIndex2() {
+    // required for Smiles parser
     return atom2.i;
   }
   
-  float getRadius() {
-    return mad / 2000f;
-  }
-
   @Override
   public int getCovalentOrder() {
     return Edge.getCovalentBondOrder(order);
-  }
-
-  String getOrderName() {
-    return Edge.getBondOrderNameFromOrder(order);
-  }
-
-  String getOrderNumberAsString() {
-    return Edge.getBondOrderNumberFromOrder(order);
-  }
-
-  short getColix1() {
-    return C.getColixInherited(colix, atom1.colixAtom);
-  }
-
-  short getColix2() {
-    return C.getColixInherited(colix, atom2.colixAtom);
   }
 
   public Atom getOtherAtom(Atom thisAtom) {
@@ -212,10 +166,6 @@ public class Bond extends Edge {
   
   ////////////////////////////////////////////////////////////////
   
-  public void setIndex(int i) {
-    index = i;
-  }
-
   public boolean is(int bondType) {
     return (order & ~BOND_NEW) == bondType;
   }

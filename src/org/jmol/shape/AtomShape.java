@@ -60,7 +60,7 @@ public abstract class AtomShape extends Shape {
   @Override
   protected void initModelSet() {
     atoms = ms.at;
-    ac = ms.getAtomCount();
+    ac = ms.ac;
     // in case this is due to "load append"
     if (mads != null)
       mads = AU.arrayCopyShort(mads, ac);
@@ -179,7 +179,7 @@ public abstract class AtomShape extends Shape {
     if (propertyName == "deleteModelAtoms") {
       atoms = (Atom[]) ((Object[]) value)[1];
       int[] info = (int[]) ((Object[]) value)[2];
-      ac = ms.getAtomCount();
+      ac = ms.ac;
       int firstAtomDeleted = info[1];
       int nAtomsDeleted = info[2];
       mads = (short[]) AU.deleteElements(mads, firstAtomDeleted,

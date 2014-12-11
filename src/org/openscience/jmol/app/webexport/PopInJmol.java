@@ -38,12 +38,12 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
+import org.jmol.viewer.Viewer;
 
 class PopInJmol extends WebPanel implements ChangeListener {
 
-  PopInJmol(JmolViewer vwr, JFileChooser fc, WebPanel[] webPanels,
+  PopInJmol(Viewer vwr, JFileChooser fc, WebPanel[] webPanels,
       int panelIndex) {
     super(vwr, fc, webPanels, panelIndex);
     panelName = "pop_in";

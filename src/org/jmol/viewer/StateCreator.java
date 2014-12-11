@@ -110,20 +110,21 @@ public class StateCreator extends JmolStateCreator {
 
 
   /////////////////// creating the state script ////////////////////
-  
+
   @Override
   String getStateScript(String type, int width, int height) {
     //System.out.println("vwr getStateInfo " + type);
     boolean isAll = (type == null || type.equalsIgnoreCase("all"));
     SB s = new SB();
     SB sfunc = (isAll ? new SB().append("function _setState() {\n") : null);
-    if (isAll)
+    if (isAll) {
       s.append(JC.STATE_VERSION_STAMP + Viewer.getJmolVersion() + ";\n");
-    if (vwr.isApplet() && isAll) {
-      app(s, "# fullName = " + PT.esc(vwr.fullName));
-      app(s, "# documentBase = " + PT.esc(Viewer.appletDocumentBase));
-      app(s, "# codeBase = " + PT.esc(Viewer.appletCodeBase));
-      s.append("\n");
+      if (vwr.isApplet) {
+        app(s, "# fullName = " + PT.esc(vwr.fullName));
+        app(s, "# documentBase = " + PT.esc(Viewer.appletDocumentBase));
+        app(s, "# codeBase = " + PT.esc(Viewer.appletCodeBase));
+        s.append("\n");
+      }
     }
 
     GlobalSettings global = vwr.g;
@@ -146,8 +147,8 @@ public class StateCreator extends JmolStateCreator {
       s.append(getDataState(sfunc));
     // connections, atoms, bonds, labels, echos, shapes
     if (isAll || type.equalsIgnoreCase("modelState"))
-      s.append(getModelState(sfunc, true, vwr
-          .getBooleanProperty("saveProteinStructureState")));
+      s.append(getModelState(sfunc, true,
+          vwr.getBooleanProperty("saveProteinStructureState")));
     // color scheme
     if (isAll || type.equalsIgnoreCase("colorState"))
       s.append(getColorState(vwr.cm, sfunc));
@@ -163,8 +164,7 @@ public class StateCreator extends JmolStateCreator {
     if (sfunc != null) {
       app(sfunc, "set refreshing true");
       app(sfunc, "set antialiasDisplay " + global.antialiasDisplay);
-      app(sfunc, "set antialiasTranslucent "
-          + global.antialiasTranslucent);
+      app(sfunc, "set antialiasTranslucent " + global.antialiasTranslucent);
       app(sfunc, "set antialiasImages " + global.antialiasImages);
       if (vwr.tm.spinOn)
         app(sfunc, "spin on");
@@ -742,7 +742,7 @@ public class StateCreator extends JmolStateCreator {
     addBs(commands, "subset ", sm.bsSubset);
     addBs(commands, "delete ", sm.bsDeleted);
     addBs(commands, "fix ", sm.bsFixed);
-    temp.put("-", vwr.getSelectedAtomsNoSubset());
+    temp.put("-", vwr.slm.getSelectedAtomsNoSubset());
     cmd = getCommands(temp, null, "select");
     if (cmd == null)
       app(commands, "select none");
@@ -765,7 +765,7 @@ public class StateCreator extends JmolStateCreator {
     if (m.trajectorySteps == null)
       return "";
     for (int i = m.mc; --i >= 0;) {
-      int t = m.am[i].getSelectedTrajectory();
+      int t = m.am[i].selectedTrajectory;
       if (t >= 0) {
         s = " or " + m.getModelNumberDotted(t) + s;
         i = m.am[i].trajectoryBaseIndex; //skip other trajectories
@@ -1186,7 +1186,7 @@ public class StateCreator extends JmolStateCreator {
       clearTemp();
       Hover h = (Hover) shape;
       if (h.atomFormats != null)
-        for (int i = vwr.getAtomCount(); --i >= 0;)
+        for (int i = vwr.ms.ac; --i >= 0;)
           if (h.atomFormats[i] != null)
             BSUtil.setMapBitSet(temp, i, i, "set hoverLabel "
                 + PT.esc(h.atomFormats[i]));
@@ -1217,7 +1217,7 @@ public class StateCreator extends JmolStateCreator {
           BSUtil.setMapBitSet(temp2, i, i, "background label "
               + Shape.encodeColor(l.bgcolixes[i]));
         Text text = l.getLabel(i);
-        float sppm = (text != null ? text.getScalePixelsPerMicron() : 0);
+        float sppm = (text != null ? text.scalePixelsPerMicron : 0);
         if (sppm > 0)
           BSUtil.setMapBitSet(temp2, i, i, "set labelScaleReference "
               + (10000f / sppm));
@@ -1261,7 +1261,7 @@ public class StateCreator extends JmolStateCreator {
       break;
     case JC.SHAPE_BALLS:
       clearTemp();
-      int ac = vwr.getAtomCount();
+      int ac = vwr.ms.ac;
       Atom[] atoms = vwr.ms.at;
       Balls balls = (Balls) shape;
       short[] colixes = balls.colixes;
@@ -1363,9 +1363,7 @@ public class StateCreator extends JmolStateCreator {
     //    if (isDefine != target.equals("top"))
     //      return s.toString();
     // these may not change much:
-    s.append("  " + Shape.getFontCommand("echo", t.font));
-    if (t.scalePixelsPerMicron > 0)
-      s.append(" " + (10000f / t.scalePixelsPerMicron)); // Angstroms per pixel
+    t.appendFontCmd(s);
     s.append("; color echo");
     if (C.isColixTranslucent(t.colix))
       s.append(" translucent " + C.getColixTranslucencyFractional(t.colix));
@@ -1718,7 +1716,7 @@ public class StateCreator extends JmolStateCreator {
         getInlineData(sb, vwr.getModelExtract(bs, false, true,
             "MOL"), true, null);
         sb.append("set refreshing false;").append(
-            vwr.actionManager.getPickingState()).append(
+            vwr.acm.getPickingState()).append(
             vwr.tm.getMoveToText(0, false)).append(
             "set refreshing true;");
 

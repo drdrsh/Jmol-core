@@ -48,7 +48,7 @@ public class HalosRenderer extends ShapeRenderer {
     BS bsSelected = (selectDisplayTrue ? vwr.bsA() : null);
     boolean needTranslucent = false;
     g3d.addRenderer(T.circle);
-    for (int i = ms.getAtomCount(); --i >= 0;) {
+    for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
       if ((atom.shapeVisibilityFlags & JC.ATOM_INFRAME) == 0)
         continue;

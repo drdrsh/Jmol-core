@@ -32,8 +32,8 @@ public final class Chain {
   public int index;
   public boolean isDna, isRna;
   
-  int groupCount;
-  Group[] groups = new Group[16];
+  public int groupCount;
+  public Group[] groups;
   int selectedGroupCount;
 
   public Atom getAtom(int index) {
@@ -44,17 +44,10 @@ public final class Chain {
     this.model = model;
     this.chainID = chainID;
     this.index = index;
+    groups = new Group[16];
   }
 
-  public Group getGroup(int groupIndex) {
-    return groups[groupIndex];
-  }
-  
-  public int getGroupCount() {
-    return groupCount;
-  }
-
-  /**
+   /**
    * prior to coloring by group, we need the chain count per chain that is
    * selected
    * 

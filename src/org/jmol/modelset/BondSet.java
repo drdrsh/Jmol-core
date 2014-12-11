@@ -9,18 +9,12 @@ public class BondSet extends BS {
   public BondSet() {
   }
 
-  private int[] associatedAtoms;
+  public int[] associatedAtoms;
   
-  public int[] getAssociatedAtoms() {
-    return associatedAtoms;
-  }
-
-  public BondSet(BS bs) {
-    BSUtil.copy2(bs, this);
-  }
-
-  public BondSet(BS bs, int[] atoms) {
-    this(bs);
-    associatedAtoms = atoms;
+  public static BondSet newBS(BS bs, int[] atoms) {
+    BondSet b = new BondSet();
+    BSUtil.copy2(bs, b);
+    b.associatedAtoms = atoms;
+    return b;
   }
 }

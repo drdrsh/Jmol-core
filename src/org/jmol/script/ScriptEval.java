@@ -568,7 +568,7 @@ public class ScriptEval extends ScriptExpr {
 
   @Override
   public void runScript(String script) throws ScriptException {
-    if (!vwr.isPreviewOnly())
+    if (!vwr.isPreviewOnly)
       runScriptBuffer(script, outputBuffer);
   }
 
@@ -1973,7 +1973,7 @@ public class ScriptEval extends ScriptExpr {
     // so we construct one and point to it in the scriptContext
     // with a key to this point in the script. 
     
-    if (vwr.cacheGet(filename) != null)
+    if (vwr.fm.cacheGet(filename, false) != null)
       return filename;
     if (prefix != null)
       prefix = "cache://local" + prefix;
@@ -1989,7 +1989,7 @@ public class ScriptEval extends ScriptExpr {
       fileLoadThread = null;
       popContext(false, false);
       vwr.queueOnHold = false;
-      if ("#CANCELED#".equals(cacheName) || "#CANCELED#".equals(vwr.cacheGet(cacheName)))
+      if ("#CANCELED#".equals(cacheName) || "#CANCELED#".equals(vwr.fm.cacheGet(cacheName, false)))
         evalError("#CANCELED#", null);
       return cacheName;
     }
@@ -2020,7 +2020,7 @@ public class ScriptEval extends ScriptExpr {
           : modelCount + " models") + "\n");
     for (int i = 0; i < modelCount; i++) {
       Map<String, Object> moData = (Map<String, Object>) vwr
-          .getModelAuxiliaryInfoValue(i, "moData");
+          .ms.getInfo(i, "moData");
       if (moData == null)
         continue;
       sb.appendI(((Lst<Map<String, Object>>) moData.get("mos")).size())
@@ -3297,7 +3297,7 @@ public class ScriptEval extends ScriptExpr {
       break;
     default:
       if (slen == 4 && tokAt(2) == T.bonds)
-        bs = new BondSet(BSUtil.newBitSet2(0, vwr.ms.bondCount));
+        bs = BondSet.newBS(BSUtil.newBitSet2(0, vwr.ms.bondCount), null);
       else
         bs = atomExpressionAt(i);
     }
@@ -3533,7 +3533,7 @@ public class ScriptEval extends ScriptExpr {
           if (tokAt(++i) == T.expressionBegin || tokAt(i) == T.bitset) {
             bsOrList = atomExpressionAt(i);
             if (isBondSet)
-              bsOrList = new BondSet((BS) bsOrList);
+              bsOrList = BondSet.newBS((BS) bsOrList, null);
           } else {
             Lst<SV> what = parameterExpressionList(-i, 1, false);
             if (what == null || what.size() < 1)
@@ -4056,8 +4056,8 @@ public class ScriptEval extends ScriptExpr {
     int i = (tokAt(0) == T.data ? 0 : 1);
     String filter = null;
     int modelCount0 = vwr.getModelCount()
-        - (vwr.getFileName().equals("zapped") ? 1 : 0);
-    int ac0 = vwr.getAtomCount();
+        - (vwr.fm.getFileName().equals("zapped") ? 1 : 0);
+    int ac0 = vwr.ms.ac;
     SB loadScript = new SB().append("load");
     int nFiles = 1;
     Map<String, Object> htParams = new Hashtable<String, Object>();
@@ -4166,7 +4166,7 @@ public class ScriptEval extends ScriptExpr {
           htParams.put("modelNumber", Integer.valueOf(1));
           if (tokType == T.vibration)
             tokType = T.vibxyz;
-          tempFileInfo = vwr.getFileInfo();
+          tempFileInfo = vwr.fm.getFileInfo();
           isAppend = true;
         }
       }
@@ -4251,7 +4251,7 @@ public class ScriptEval extends ScriptExpr {
     String localName = null;
     if (tokAt(filePt + 1) == T.as) {
       localName = stringParameter(i = i + 2);
-      if (vwr.getPathForAllFiles() != "") {
+      if (vwr.fm.getPathForAllFiles() != "") {
         // we use the LOCAL name when reading from a local path only (in the case of JMOL files)
         localName = null;
         filePt = i;
@@ -4502,7 +4502,7 @@ public class ScriptEval extends ScriptExpr {
     // close output channel
 
     if (out != null) {
-      vwr.setFileInfo(new String[] { localName });
+      vwr.fm.setFileInfo(new String[] { localName });
       Logger.info(GT.o(GT._("file {0} created"), localName));
       showString(vwr.getFilePath(localName, false) + " created");
       out.closeChannel();
@@ -4512,7 +4512,7 @@ public class ScriptEval extends ScriptExpr {
 
     if (tokType > 0) {
       // reset the file info in FileManager, check for errors, and return
-      vwr.setFileInfo(tempFileInfo);
+      vwr.fm.setFileInfo(tempFileInfo);
       if (errMsg != null && !isCmdLine_c_or_C_Option)
         evalError(errMsg, null);
       return;
@@ -4873,9 +4873,9 @@ public class ScriptEval extends ScriptExpr {
     if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2))
       vwr.showString((String) vwr.ms.getInfoM("modelLoadNote"), false);
     Object centroid = vwr.ms.getInfoM("centroidMinMax");
-    if (PT.isAI(centroid) && vwr.getAtomCount() > 0) {
-      BS bs = BSUtil.newBitSet2(isAppend ? ac0 : 0, vwr.getAtomCount());
-      vwr.setCentroid(bs, (int[]) centroid);
+    if (PT.isAI(centroid) && vwr.ms.ac > 0) {
+      BS bs = BSUtil.newBitSet2(isAppend ? ac0 : 0, vwr.ms.ac);
+      vwr.ms.setCentroid(bs, (int[]) centroid);
     }
     String script = vwr.g.defaultLoadScript;
     String msg = "";
@@ -5564,6 +5564,9 @@ public class ScriptEval extends ScriptExpr {
       return;
     case T.error:
       vwr.resetError();
+      return;
+    case T.lighting:
+      vwr.stm.resetLighting();
       return;
     case T.shape:
       vwr.resetShapes(true);
@@ -6466,7 +6469,7 @@ public class ScriptEval extends ScriptExpr {
     if (isBondSet) {
       vwr.selectBonds(bs);
     } else {
-      if (bs.length() > vwr.getAtomCount()) {
+      if (bs.length() > vwr.ms.ac) {
         BS bs1 = vwr.getAllAtoms();
         bs1.and(bs);
         bs = bs1;
@@ -6698,7 +6701,7 @@ public class ScriptEval extends ScriptExpr {
       int[] scale = new int[n];
       for (int i = n; --i >= 0;)
         scale[i] = v.get(i).intValue();
-      vwr.setUserScale(scale);
+      vwr.cm.ce.setUserScale(scale);
       return;
     case T.zslab:
       // sets zSlab either based on a percent value or an atom position
@@ -7763,11 +7766,11 @@ public class ScriptEval extends ScriptExpr {
         // parent, standard, conventional
         setCurrentCagePts(null, null);
         if (PT.isOneOf(s, ";parent;standard;primitive;")) {
-          newUC = vwr.getModelAuxiliaryInfoValue(vwr.am.cmi, "unitcell_conventional");
+          newUC = vwr.ms.getInfo(vwr.am.cmi, "unitcell_conventional");
           if (newUC != null)
             setCurrentCagePts(vwr.getV0abc(newUC), "" + newUC);
         }
-        s = (String) vwr.getModelAuxiliaryInfoValue(vwr.am.cmi, "unitcell_" + s);
+        s = (String) vwr.ms.getInfo(vwr.am.cmi, "unitcell_" + s);
         showString(s);
       }
       newUC = s;
@@ -8253,7 +8256,7 @@ public class ScriptEval extends ScriptExpr {
         } else if (pal == PAL.VARIABLE) {
           index++;
           name = paramAsStr(index++);
-          data = new float[vwr.getAtomCount()];
+          data = new float[vwr.ms.ac];
           Parser.parseStringInfestedFloatArray(
               "" + getParameter(name, T.string, true), null, (float[]) data);
           pal = PAL.PROPERTY;
@@ -8403,7 +8406,7 @@ public class ScriptEval extends ScriptExpr {
     if (doClearBondSet)
       vwr.selectBonds(null);
     if (shapeType == JC.SHAPE_BALLS)
-      vwr.checkInheritedShapes();
+      vwr.shm.checkInheritedShapes();
   }
 
   /*
@@ -8607,7 +8610,7 @@ public class ScriptEval extends ScriptExpr {
 
   public String getFullPathName() throws ScriptException {
     String filename = (!chk || isCmdLine_C_Option ? vwr
-        .getFullPathName(true) : "test.xyz");
+        .fm.getFullPathName(true) : "test.xyz");
     if (filename == null)
       invArg();
     return filename;

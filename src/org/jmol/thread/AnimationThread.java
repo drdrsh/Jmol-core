@@ -118,7 +118,7 @@ public class AnimationThread extends JmolThread {
         }
         isFirst = false;
         targetTime += (int) ((1000f / am.animationFps) + vwr
-            .getFrameDelayMs(am.cmi));
+            .ms.getFrameDelayMs(am.cmi));
         mode = CHECK3;
         break;
       case CHECK3:

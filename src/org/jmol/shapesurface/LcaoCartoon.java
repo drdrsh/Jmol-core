@@ -223,7 +223,7 @@ public class LcaoCartoon extends Isosurface {
     }
     // older method
 
-    int ac = vwr.getAtomCount();
+    int ac = vwr.ms.ac;
     for (int i = ac; --i >= 0;)
       if (lcaoID != null || thisSet.get(i))
         setLcaoOn(i, TF);
@@ -242,7 +242,7 @@ public class LcaoCartoon extends Isosurface {
       return;
     }
     // older method does not use * but still deletes multiple lobes
-    int ac = vwr.getAtomCount();
+    int ac = vwr.ms.ac;
     for (int i = ac; --i >= 0;)
       if (lcaoID != null || thisSet.get(i))
         deleteLcaoCartoon(i);

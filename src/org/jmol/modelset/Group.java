@@ -45,16 +45,8 @@ import java.util.Map;
 @J2SRequireImport({java.lang.Short.class,org.jmol.viewer.JC.class})
 public class Group {
 
-  protected int groupIndex;
+  public int groupIndex;
   public char group1; // set by modelLoader or possibly DSSRParser
-  
-  public int getGroupIndex() {
-    return groupIndex;
-  }
-  
-  public void setGroupIndex(int groupIndex) {
-    this.groupIndex = groupIndex;
-  }
 
   public Chain chain;
   public int firstAtomIndex = -1;
@@ -93,10 +85,6 @@ public class Group {
     return this;
   }
 
-  public void setModelSet(ModelSet modelSet) {
-    chain.model.ms = modelSet;  
-  }
-  
   public final void setShapeVisibility(int visFlag, boolean isVisible) {
     if(isVisible) {
       shapeVisibilityFlags |= visFlag;        

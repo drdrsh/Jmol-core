@@ -73,39 +73,23 @@ public class Atom extends Point3fi implements BNode {
   byte valence;
   
   private short atomicAndIsotopeNumber;
-  private BS atomSymmetry;
+  public BS atomSymmetry;
   private byte formalChargeAndFlags;
 
-  public byte getAtomID() {
-    return atomID;
-  }
-  
   public short madAtom;
 
   public short colixAtom;
   public byte paletteID = PAL.CPK.id;
 
-  Bond[] bonds;
-  
   /**
    * 
-   * @return  bonds -- WHICH MAY BE NULL
+   * MAY BE NULL
    * 
    */
-  public Bond[] getBonds() {
-    return bonds;
-  }
-
-  public void setBonds(Bond[] bonds) {
-    this.bonds = bonds;  // for Smiles equating
-  }
+  public Bond[] bonds;
   
-  int nBondsDisplayed = 0;
-  int nBackbonesDisplayed = 0;
-  
-  public int getNBackbonesDisplayed() {
-    return nBackbonesDisplayed;
-  }
+  private int nBondsDisplayed = 0;
+  public int nBackbonesDisplayed = 0;
   
   public int clickabilityFlags;
   public int shapeVisibilityFlags;
@@ -145,10 +129,6 @@ public class Atom extends Point3fi implements BNode {
     return this;
   }
 
-  public void setAltLoc(char altLoc) {
-    this.altloc = altLoc;
-  }
-  
   public final void setShapeVisibility(int flag, boolean isVisible) {
     if(isVisible)
       shapeVisibilityFlags |= flag;        
@@ -215,10 +195,6 @@ public class Atom extends Point3fi implements BNode {
     for ( ; j < newLength; ++j)
       bondsNew[j] = bonds[j + 1];
     bonds = bondsNew;
-  }
-
-  void clearBonds() {
-    bonds = null;
   }
 
   @Override
@@ -348,14 +324,6 @@ public class Atom extends Point3fi implements BNode {
     return (bonds == null ? new Edge[0] : bonds);
   }
   
-  public void setColixAtom(short colixAtom) {
-    this.colixAtom = colixAtom;
-  }
-
-  public void setPaletteID(byte paletteID) {
-    this.paletteID = paletteID;
-  }
-
   public void setTranslucent(boolean isTranslucent, float translucentLevel) {
     colixAtom = C.getColixTranslucent3(colixAtom, isTranslucent, translucentLevel);    
   }
@@ -393,10 +361,6 @@ public class Atom extends Point3fi implements BNode {
     return getElementSymbolIso(true);
   }
 
-  public char getAlternateLocationID() {
-    return altloc;
-  }
-  
   boolean isAltLoc(String strPattern) {
     if (strPattern == null)
       return (altloc == '\0');
@@ -594,7 +558,7 @@ public class Atom extends Point3fi implements BNode {
   }
 
   public float getRadius() {
-    return Math.abs(madAtom / (1000f * 2));
+    return Math.abs(madAtom / 2000f);
   }
 
   @Override
@@ -605,14 +569,6 @@ public class Atom extends Point3fi implements BNode {
   @Override
   public int getAtomSite() {
     return atomSite;
-  }
-
-  public void setAtomSymmetry(BS bsSymmetry) {
-    atomSymmetry = bsSymmetry;
-  }
-
-  public BS getAtomSymmetry() {
-    return atomSymmetry;
   }
 
    void setGroup(Group group) {
@@ -900,7 +856,7 @@ public class Atom extends Point3fi implements BNode {
     return getIdentity(true);
   } 
 
-  String getInfoXYZ(boolean fixJavaFloat, boolean useChimeFormat, P3 pt) {
+  public String getInfoXYZ(boolean fixJavaFloat, boolean useChimeFormat, P3 pt) {
     // for atom picking
     if (useChimeFormat) {
       String group3 = getGroup3(true);
@@ -1149,14 +1105,6 @@ public class Atom extends Point3fi implements BNode {
     return group.chain.model.ms.getModelNumber(mi) % 1000000;
   }
   
-  public int getModelFileIndex() {
-    return group.chain.model.fileIndex;
-  }
-  
-  public int getModelFileNumber() {
-    return group.chain.model.ms.getModelFileNumber(mi);
-  }
-  
   @Override
   public String getBioStructureTypeName() {
     return getProteinStructureType().getBioStructureTypeName(true);
@@ -1243,27 +1191,27 @@ public class Atom extends Point3fi implements BNode {
     case T.chainno:
       return group.chain.index + 1;
     case T.color:
-      return group.chain.model.ms.vwr.getColorArgbOrGray(colixAtom);
+      return group.chain.model.ms.vwr.gdata.getColorArgbOrGray(colixAtom);
     case T.element:
     case T.elemno:
       return getElementNumber();
     case T.elemisono:
       return atomicAndIsotopeNumber;
     case T.file:
-      return getModelFileIndex() + 1;
+      return group.chain.model.fileIndex + 1;
     case T.formalcharge:
       return getFormalCharge();
     case T.groupid:
       return getGroupID(); //-1 if no group
     case T.groupindex:
-      return group.getGroupIndex();
+      return group.groupIndex;
     case T.model:
       //integer model number -- could be PDB/sequential adapter number
       //or it could be a sequential model in file number when multiple files
       return getModelNumber();
     case -T.model:
       //float is handled differently
-      return getModelFileNumber();
+      return group.chain.model.ms.modelFileNumbers[mi];
     case T.modelindex:
       return mi;
     case T.molecule:
@@ -1402,7 +1350,7 @@ public class Atom extends Point3fi implements BNode {
     case T.screenz:
       return sZ;
     case T.selected:
-      return (vwr.isAtomSelected(i) ? 1 : 0);
+      return (vwr.slm.isAtomSelected(i) ? 1 : 0);
     case T.surfacedistance:
       group.chain.model.ms.getSurfaceDistanceMax();
       return getSurfaceDistance100() / 100f;
@@ -1528,7 +1476,7 @@ public class Atom extends Point3fi implements BNode {
       return this;
     case T.color:
       return CU.colorPtFromInt(
-          group.chain.model.ms.vwr.getColorArgbOrGray(colixAtom),
+          group.chain.model.ms.vwr.gdata.getColorArgbOrGray(colixAtom),
           ptTemp);
     }
     return null;

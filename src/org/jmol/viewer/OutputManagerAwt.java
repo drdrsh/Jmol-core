@@ -49,7 +49,7 @@ final public class OutputManagerAwt extends OutputManager {
 
   @Override
   protected String getLogPath(String fileName) {
-    return (vwr.isApplet() ? fileName
+    return (vwr.isApplet ? fileName
         : (new File(fileName).getAbsolutePath()));
   }
 

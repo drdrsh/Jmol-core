@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javajs.util.DF;
-import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -14,10 +13,8 @@ import org.jmol.c.AXES;
 import org.jmol.c.CBK;
 import org.jmol.c.STER;
 import org.jmol.c.STR;
-import org.jmol.java.BS;
 import org.jmol.script.SV;
 import org.jmol.script.T;
-import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
@@ -43,31 +40,8 @@ public class GlobalSettings {
      *  
      */
 
-    GlobalSettings(Viewer vwr, GlobalSettings gsOld, boolean clearUserVariables) {
+    GlobalSettings(Viewer vwr, GlobalSettings g, boolean clearUserVariables) {
       this.vwr = vwr;
-      registerAllValues(gsOld, clearUserVariables);
-    }
-
-    void clear() {
-      Iterator<String> e = htUserVariables.keySet().iterator();
-      while (e.hasNext()) {
-        String key = e.next();
-        if (key.charAt(0) == '@' || key.startsWith("site_"))
-          e.remove();
-      }
-
-      // PER-zap settings made
-      setPicked(-1);
-      setI("_atomhovered", -1);
-      setO("_pickinfo", "");
-      setB("selectionhalos", false);
-      setB("hidenotselected", false); // to synchronize with selectionManager
-      setB("measurementlabels", measurementLabels = true);
-      setB("drawHover", drawHover = false);
-      vwr.stm.saveScene("DELETE",null);
-    }
-
-    void registerAllValues(GlobalSettings g, boolean clearUserVariables) {
       htNonbooleanParameterValues = new Hashtable<String, Object>();
       htBooleanParameterFlags = new Hashtable<String, Boolean>();
       htPropertyFlagsRemoved = new Hashtable<String, Boolean>();
@@ -129,6 +103,7 @@ public class GlobalSettings {
       // we really just have to make sure that all these values are definitely
       // also initialized within the managers. 
 
+      setF("cameraDepth", TransformManager.DEFAULT_CAMERA_DEPTH);
       setI("depth", 0); // maintained by TransformManager
       setF("gestureSwipeFactor", ActionManager.DEFAULT_GESTURE_SWIPE_FACTOR);
       setB("hideNotSelected", false); //maintained by the selectionManager
@@ -145,6 +120,7 @@ public class GlobalSettings {
       setI("navY", 0); // maintained by TransformManager
       setI("navZ", 0); // maintained by TransformManager
       setO("pathForAllFiles", "");
+      setB("perspectiveDepth", TransformManager.DEFAULT_PERSPECTIVE_DEPTH);
       setI("perspectiveModel", TransformManager.DEFAULT_PERSPECTIVE_MODEL);
       setO("picking", "identify"); // maintained by ActionManager
       setO("pickingStyle", "toggle"); // maintained by ActionManager
@@ -166,14 +142,12 @@ public class GlobalSettings {
       setI("spinFps", TransformManager.DEFAULT_SPIN_FPS);
       setI("stereoDegrees", STER.DEFAULT_STEREO_DEGREES);
       setI("stateversion", 0); // only set by a saved state being recalled
-      setB("syncScript", vwr.getStatusManager().syncingScripts);
-      setB("syncMouse", vwr.getStatusManager().syncingMouse);
-      setB("syncStereo", vwr.getStatusManager().stereoSync);
+      setB("syncScript", vwr.sm.syncingScripts);
+      setB("syncMouse", vwr.sm.syncingMouse);
+      setB("syncStereo", vwr.sm.stereoSync);
       setB("windowCentered", true); // maintained by TransformManager
       setB("zoomEnabled", true); // maintained by TransformManager
-      setI("zDepth", 0); // maintained by TransformManager
-      setB("zShade", false); // maintained by TransformManager
-      setI("zSlab", 50); // maintained by TransformManager
+      
 
       // These next values have no other place than the global Hashtables.
       // This just means that a call to vwr.getXxxxProperty() is necessary.
@@ -211,7 +185,6 @@ public class GlobalSettings {
       setB("allowMultiTouch", allowMultiTouch);
       setB("allowRotateSelected", allowRotateSelected);
       setB("allowMoveAtoms", allowMoveAtoms);
-      setI("ambientPercent", ambientPercent);
       setI("animationFps", animationFps);
       setB("antialiasImages", antialiasImages);
       setB("antialiasDisplay", antialiasDisplay);
@@ -232,15 +205,12 @@ public class GlobalSettings {
       setB("bondPicking", bondPicking);
       setI("bondRadiusMilliAngstroms", bondRadiusMilliAngstroms);
       setF("bondTolerance", bondTolerance);
-      setF("cameraDepth", defaultCameraDepth);
       setB("cartoonBaseEdges", cartoonBaseEdges);
       setB("cartoonFancy", cartoonFancy);
       setB("cartoonLadders", cartoonLadders);
       setB("cartoonLadders", cartoonRibose);
       setB("cartoonRockets", cartoonRockets);
       setB("chainCaseSensitive", chainCaseSensitive);
-      setB("celShading", celShading);
-      setI("celShadingPower", celShadingPower);
       setI("bondingVersion", bondingVersion);
       setO("dataSeparator", dataSeparator);
       setB("debugScript", debugScript);
@@ -257,7 +227,6 @@ public class GlobalSettings {
       setO("defaultTorsionLabel", defaultTorsionLabel);
       setF("defaultTranslucent", defaultTranslucent);
       setI("delayMaximumMs", delayMaximumMs);
-      setI("diffusePercent", diffusePercent);
       setF("dipoleScale", dipoleScale);
       setB("disablePopupMenu", disablePopupMenu);
       setB("displayCellParameters", displayCellParameters);
@@ -345,9 +314,7 @@ public class GlobalSettings {
       setB("pdbAddHydrogens", pdbAddHydrogens); // new 12.1.51
       setB("pdbGetHeader", pdbGetHeader); // new 11.5.39
       setB("pdbSequential", pdbSequential); // new 11.5.39
-      setB("perspectiveDepth", defaultPerspectiveDepth);
       setI("percentVdwAtom", percentVdwAtom);
-      setI("phongExponent", phongExponent);
       setI("pickingSpinRate", pickingSpinRate);
       setO("pickLabel", pickLabel);
       setI("platformSpeed", platformSpeed);
@@ -386,10 +353,6 @@ public class GlobalSettings {
       setB("showUnitCellDetails", showUnitCellDetails);
       setB("solventProbe", solventOn);
       setF("solventProbeRadius", solventProbeRadius);
-      setB("specular", specular);
-      setI("specularExponent", specularExponent);
-      setI("specularPercent", specularPercent);
-      setI("specularPower", specularPower);
       setB("ssbondsBackbone", ssbondsBackbone);
       setF("starWidth", starWidth);
       setB("statusReporting", statusReporting);
@@ -426,15 +389,26 @@ public class GlobalSettings {
       setI("zSlab", zSlab);
     }
 
-    //lighting (see GData.Shade3D
 
-    int ambientPercent = 45;
-    int diffusePercent = 84;
-    boolean specular = true;
-    int specularExponent = 6;  // log2 of phongExponent
-    int phongExponent = 64;    // 2^specularExponent
-    int specularPercent = 22;
-    int specularPower = 40;
+    void clear() {
+      Iterator<String> e = htUserVariables.keySet().iterator();
+      while (e.hasNext()) {
+        String key = e.next();
+        if (key.charAt(0) == '@' || key.startsWith("site_"))
+          e.remove();
+      }
+
+      // PER-zap settings made
+      vwr.setPicked(-1);
+      setI("_atomhovered", -1);
+      setO("_pickinfo", "");
+      setB("selectionhalos", false);
+      setB("hidenotselected", false); // to synchronize with selectionManager
+      setB("measurementlabels", measurementLabels = true);
+      setB("drawHover", drawHover = false);
+      vwr.stm.saveScene("DELETE",null);
+    }
+
     int zDepth = 0;
     int zShadePower = 3;  // increased to 3 from 1 for Jmol 12.1.49
     int zSlab = 50; // increased to 50 from 0 in Jmol 12.3.6 and Jmol 12.2.6
@@ -490,7 +464,6 @@ public class GlobalSettings {
 
     boolean allowRotateSelected = false;
     boolean allowMoveAtoms = false;
-    boolean defaultPerspectiveDepth = true;
     float visualRange = 5f;
 
     //solvent
@@ -589,9 +562,6 @@ public class GlobalSettings {
     float axesScale = 2;
     float starWidth = 0.05f;
     boolean bondPicking = false;
-    float defaultCameraDepth = 3.0f;
-    boolean celShading = false;
-    int celShadingPower = 10;
     String dataSeparator = "~~~";
     boolean debugScript = false;
     float defaultDrawArrowScale = 0.5f;
@@ -917,31 +887,6 @@ public class GlobalSettings {
       return structureList;
     }
 
-    void setPicked(int atomIndex) {
-      SV pickedSet = null;
-      SV pickedList = null;
-      if (atomIndex >= 0) {
-        setI("_atompicked", atomIndex);
-        pickedSet = (SV) getParam("picked", true);
-        pickedList = (SV) getParam("pickedList", true);
-      }
-      if (pickedSet == null || pickedSet.tok != T.bitset) {
-        pickedSet = SV.newV(T.bitset, new BS());
-        pickedList = SV.getVariableList(new Lst<Object>());
-        setUserVariable("picked", pickedSet);
-        setUserVariable("pickedList", pickedList);
-      }
-      if (atomIndex < 0)
-        return;
-       SV.getBitSet(pickedSet, false).set(atomIndex);
-       SV p = pickedList.pushPop(null, null);
-       // don't allow double click
-       if (p.tok == T.bitset)
-         pickedList.pushPop(p, null);
-       if (p.tok != T.bitset || !((BS) p.value).get(atomIndex))
-         pickedList.pushPop(SV.newV(T.bitset, BSUtil.newAndSetBit(atomIndex)), null);
-    }
-
     String resolveDataBase(String database, String id) {
       String format = databases.get(database.toLowerCase());
       if (format == null)
@@ -1101,6 +1046,5 @@ public class GlobalSettings {
         return;
       s.append("  ").append(cmd).append(";\n");
     }
-
 
   }

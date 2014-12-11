@@ -28,17 +28,16 @@ import org.jmol.c.STR;
 class Turn extends ProteinStructure {
 
   /**
-   * @param apolymer 
-   * @param monomerIndex 
-   * @param monomerCount 
+   * @param apolymer
+   * @param monomerIndex
+   * @param monomerCount
    * @j2sIgnoreSuperConstructor
    * @j2sOverride
    * 
    */
   Turn(AlphaPolymer apolymer, int monomerIndex, int monomerCount) {
-    setupPS(apolymer, STR.TURN,
-          monomerIndex, monomerCount);
-    this.subtype = STR.TURN;
+    setupPS(apolymer, STR.TURN, monomerIndex, monomerCount);
+    subtype = STR.TURN;
   }
 }
 

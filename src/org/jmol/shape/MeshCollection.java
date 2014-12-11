@@ -580,7 +580,7 @@ public abstract class MeshCollection extends Shape {
      * set all fixed objects visible; others based on model being displayed
      * 
      */
-    BS bsDeleted = vwr.getDeletedAtoms();
+    BS bsDeleted = vwr.slm.bsDeleted;
     for (int i = meshCount; --i >= 0;) {
       Mesh mesh = meshes[i];
       mesh.visibilityFlags = (mesh.visible

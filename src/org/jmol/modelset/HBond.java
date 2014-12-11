@@ -30,7 +30,6 @@ import org.jmol.util.Logger;
 public class HBond extends Bond {
 
   float energy;
-  private byte paletteID;
   
   public HBond(Atom atom1, Atom atom2, int order, short mad, short colix, float energy) {
     super(atom1, atom2, order, mad, colix);
@@ -42,15 +41,6 @@ public class HBond extends Bond {
   @Override
   public float getEnergy() {
     return energy;
-  }
-  
-  public byte getPaletteId() {
-    return paletteID;
-  }
-  
-  @Override
-  public void setPaletteID(byte paletteID) {
-    this.paletteID = paletteID;
   }
   
   /*

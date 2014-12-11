@@ -75,11 +75,7 @@ public class ColorManager {
     //causes problems? flushCaches();
   }
 
-  private boolean isDefaultColorRasmol;
-
-  boolean getDefaultColorRasmol() {
-    return isDefaultColorRasmol;
-  }
+  boolean isDefaultColorRasmol;
 
   void resetElementColors() {
     setDefaultColors(false);
@@ -115,13 +111,13 @@ public class ColorManager {
    *
    * @return black or white colix value
    */
-  short colixBackgroundContrast;
+  public short colixBackgroundContrast;
 
   void setColixBackgroundContrast(int argb) {
     colixBackgroundContrast = C.getBgContrast(argb);
   }
 
-  short getColixBondPalette(Bond bond, int pid) {
+  public short getColixBondPalette(Bond bond, int pid) {
     int argb = 0;
     switch (pid) {
     case StaticConstants.PALETTE_ENERGY:
@@ -131,7 +127,7 @@ public class ColorManager {
     return (argb == 0 ? C.RED : C.getColix(argb));
   }
 
-  short getColixAtomPalette(Atom atom, byte pid) {
+  public short getColixAtomPalette(Atom atom, byte pid) {
     int argb = 0;
     int index;
     int id;
@@ -142,7 +138,7 @@ public class ColorManager {
     switch (pid) {
     case StaticConstants.PALETTE_PROPERTY:
       return (colorData == null || atom.i >= colorData.length ? C.GRAY
-          : getColixForPropertyValue(colorData[atom.i]));
+          : ce.getColorIndex(colorData[atom.i]));
     case StaticConstants.PALETTE_NONE:
     case StaticConstants.PALETTE_CPK:
       // Note that CPK colors can be changed based upon user preference
@@ -225,7 +221,7 @@ public class ColorManager {
       return ce
           .getColorIndexFromPalette(
               modelSet.getAltLocIndexInModel(modelIndex,
-                  atom.getAlternateLocationID()), 0,
+                  atom.altloc), 0,
               modelSet.getAltLocCountInModel(modelIndex), ColorEncoder.ROYGB,
               false);
     case StaticConstants.PALETTE_INSERTION:
@@ -296,9 +292,8 @@ public class ColorManager {
   ///////////////////  propertyColorScheme ///////////////
 
   float[] getPropertyColorRange() {
-    if (ce.isReversed)
-      return new float[] { ce.hi, ce.lo };
-    return new float[] { ce.lo, ce.hi };
+    return (ce.isReversed ? new float[] { ce.hi, ce.lo } : new float[] { ce.lo,
+        ce.hi });
   }
 
   public void setPropertyColorRangeData(float[] data, BS bs) {
@@ -342,21 +337,13 @@ public class ColorManager {
     ce.isTranslucent = isTranslucent;
   }
 
-  void setUserScale(int[] scale) {
-    ce.setUserScale(scale);
-  }
-
-  String getColorSchemeList(String colorScheme) {
+  public String getColorSchemeList(String colorScheme) {
     // isosurface sets ifDefault FALSE so that any default schemes are returned
     int iPt = (colorScheme == null || colorScheme.length() == 0) ? ce.currentPalette
         : ce
             .createColorScheme(colorScheme, true, false);
     return ColorEncoder.getColorSchemeList(ce
         .getColorSchemeArray(iPt));
-  }
-
-  short getColixForPropertyValue(float val) {
-    return ce.getColorIndex(val);
   }
 
   public ColorEncoder getColorEncoder(String colorScheme) {

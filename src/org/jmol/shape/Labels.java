@@ -532,7 +532,7 @@ public class Labels extends AtomShape {
     setColixAndPalette(colix, pid, i);
     // text is only created by labelsRenderer
     if (colixes != null && ((text = getLabel(i)) != null))
-      text.setColix(colixes[i]);
+      text.colix = colixes[i];
   }
 
   private void setBgcolix(int i, short bgcolix) {
@@ -545,7 +545,7 @@ public class Labels extends AtomShape {
     bsBgColixSet.setBitTo(i, bgcolix != 0);
     text = getLabel(i);
     if (text != null)
-      text.setBgColix(bgcolix);
+      text.bgcolix = bgcolix;
   }
 
   private void setOffsets(int i, int offset, boolean isExact) {
@@ -587,7 +587,7 @@ public class Labels extends AtomShape {
     offsets[i] = (offsets[i] & ~JC.LABEL_POINTER_FLAGS) + pointer;
     text = getLabel(i);
     if (text != null)
-      text.setPointer(pointer);
+      text.pointer = pointer;
   }
 
   private void setFront(int i, boolean TF) {

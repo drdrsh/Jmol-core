@@ -115,7 +115,7 @@ public final class BioModel extends Model{
     ms.proteinStructureTainted = structureTainted = true;
     if (setStructure)
       for (int i = bioPolymerCount; --i >= 0;)
-        if (!asDSSP || bioPolymers[i].getGroups()[0].getNitrogenAtom() != null)
+        if (!asDSSP || bioPolymers[i].monomers[0].getNitrogenAtom() != null)
           bioPolymers[i].clearStructures();
     if (!asDSSP || includeAlpha)
       for (int i = bioPolymerCount; --i >= 0;)
@@ -384,8 +384,8 @@ public final class BioModel extends Model{
     hasRasmolHBonds = true;
     for (int i = 0; i < vHBonds.size(); i++) {
       HBond bond = (HBond) vHBonds.get(i);
-      Atom atom1 = bond.getAtom1();
-      Atom atom2 = bond.getAtom2();
+      Atom atom1 = bond.atom1;
+      Atom atom2 = bond.atom2;
       if (atom1.isBonded(atom2))
         continue;
       int index = ms.addHBond(atom1, atom2, bond.order, bond.getEnergy());
@@ -404,7 +404,7 @@ public final class BioModel extends Model{
     Bond[] bonds = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
       Bond bond = bonds[i];
-      Atom atom1 = bond.getAtom1();
+      Atom atom1 = bond.atom1;
       Model m = models[atom1.mi];
       if (!m.isBioModel || m.trajectoryBaseIndex != modelIndex
           || (bond.order & Edge.BOND_H_CALC_MASK) == 0)
@@ -493,7 +493,7 @@ public final class BioModel extends Model{
     int n = 0;
     Model[] models = ms.am;
     int modelCount = ms.mc;
-    int ac = ms.getAtomCount();
+    int ac = ms.ac;
     Atom[] atoms = ms.at;
     sb.append("\nMolecule name ....... "
         + ms.getInfoM("COMPND"));
@@ -575,14 +575,14 @@ public final class BioModel extends Model{
     BS bsTainted = null;
     Model[] models = ms.am;
     Atom[] atoms = ms.at;
-    int ac = ms.getAtomCount();
+    int ac = ms.ac;
     
     if (taintedOnly) {
       if (!ms.proteinStructureTainted)
         return "";
       bsTainted = new BS();
       for (int i = firstAtomIndex; i < ac; i++)
-        if (models[atoms[i].mi].isStructureTainted())
+        if (models[atoms[i].mi].structureTainted)
           bsTainted.set(i);
       bsTainted.set(ac);
     }

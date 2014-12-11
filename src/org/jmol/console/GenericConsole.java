@@ -225,7 +225,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   protected void destroyConsole() {
     // if the vwr is an applet, when we close the console
     // we 
-    if (vwr.isApplet())
+    if (vwr.isApplet)
       vwr.getProperty("DATA_API", "getAppConsole", Boolean.FALSE);
   }
 

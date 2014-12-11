@@ -103,7 +103,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     else
       for (int i = ms.bondCount; --i >= 0;) {
         bond = bonds[i];
-        if ((bond.getShapeVisibilityFlags() & myVisibilityFlag) != 0
+        if ((bond.shapeVisibilityFlags & myVisibilityFlag) != 0
             && renderBond()) {
           needTranslucent = true;
           bsForPass2.set(i);
@@ -131,8 +131,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private boolean renderBond() {
     Atom atomA0, atomB0;
 
-    a = atomA0 = bond.getAtom1();
-    b = atomB0 = bond.getAtom2();
+    a = atomA0 = bond.atom1;
+    b = atomB0 = bond.atom2;
 
     int order = bond.order & ~Edge.BOND_NEW;
     if (bondsBackbone) {
@@ -175,11 +175,11 @@ public class SticksRenderer extends FontLineShapeRenderer {
       colix = (short) (colix & ~C.OPAQUE_MASK);
       colixA = C
           .getColixInherited(
-              (short) (colix | vwr.getColixAtomPalette(atomA0, PAL.CPK.id)),
+              (short) (colix | vwr.cm.getColixAtomPalette(atomA0, PAL.CPK.id)),
               colixA);
       colixB = C
           .getColixInherited(
-              (short) (colix | vwr.getColixAtomPalette(atomB0, PAL.CPK.id)),
+              (short) (colix | vwr.cm.getColixAtomPalette(atomB0, PAL.CPK.id)),
               colixB);
     } else {
       colixA = C.getColixInherited(colix, colixA);

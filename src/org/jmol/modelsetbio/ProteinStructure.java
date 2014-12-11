@@ -158,10 +158,6 @@ public abstract class ProteinStructure {
         && monomerIndex < monomerIndexLast);
   }
 
-  public int getMonomerIndex() {
-    return monomerIndexFirst;
-  }
-
   private Map<Monomer, Integer> resMap;
   public int getIndex(Monomer monomer) {
     if (resMap == null) {

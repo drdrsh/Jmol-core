@@ -188,7 +188,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
   }
 
   private boolean initializePolymer(BioShape bioShape) {
-    BS bsDeleted = vwr.getDeletedAtoms();
+    BS bsDeleted = vwr.slm.bsDeleted;
     if (vwr.ms.isJmolDataFrameForModel(bioShape.modelIndex)) {
       controlPoints = bioShape.bioPolymer.getControlPoints(true, 0, false);
     } else {

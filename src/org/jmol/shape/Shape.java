@@ -337,12 +337,12 @@ public abstract class Shape {
   }
 
   protected short getColixA(short colix, byte paletteID, Atom atom) {
-    return (colix == C.USE_PALETTE ? vwr.getColixAtomPalette(atom,
+    return (colix == C.USE_PALETTE ? vwr.cm.getColixAtomPalette(atom,
         paletteID) : colix);
   }
 
   protected short getColixB(short colix, int pid, Bond bond) {
-    return (colix == C.USE_PALETTE ? vwr.getColixBondPalette(bond,
+    return (colix == C.USE_PALETTE ? vwr.cm.getColixBondPalette(bond,
         pid) : colix);
   }
 

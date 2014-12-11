@@ -105,7 +105,7 @@ public class ActionManagerMT extends ActionManager implements JmolMultiTouchClie
       .getInterface("com.sparshui.inputdevice.JmolTouchSimulator", null, null);
       if (simulator != null) {
         Logger.info("ActionManagerMT simulating SparshUI");
-        simulator.startSimulator(vwr.getDisplay());
+        simulator.startSimulator(vwr.display);
       }
     }
   }

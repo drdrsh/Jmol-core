@@ -550,7 +550,7 @@ abstract class OutputManager {
     if (out == null)
       return "";
     fileName = fullPath[0];
-    String pathName = (type.equals("FILE") ? vwr.getFullPathName(false) : null);
+    String pathName = (type.equals("FILE") ? vwr.fm.getFullPathName(false) : null);
     boolean getCurrentFile = (pathName != null && (pathName.equals("string")
         || pathName.indexOf("[]") >= 0 || pathName.equals("JSNode")));
     boolean asBytes = (pathName != null && !getCurrentFile);
@@ -592,7 +592,7 @@ abstract class OutputManager {
     boolean useDialog = fileName.startsWith("?");
     if (useDialog)
     	fileName = fileName.substring(1);
-    useDialog |= vwr.isApplet() && (fileName.indexOf("http:") < 0);
+    useDialog |= vwr.isApplet && (fileName.indexOf("http:") < 0);
     fileName = FileManager.getLocalPathForWritingFile(vwr, fileName);
     if (useDialog)
       fileName = vwr.dialogAsk(quality == Integer.MIN_VALUE ? "Save"
@@ -820,14 +820,13 @@ abstract class OutputManager {
 
   String setLogFile(String value) {
     String path = null;
-    String logFilePath = vwr.getLogFilePath();
     /**
      * @j2sNative
      * 
      *            if (typeof value == "function") path = value;
      * 
      */
-    if (logFilePath == null || value.indexOf("\\") >= 0) {
+    if (vwr.logFilePath == null || value.indexOf("\\") >= 0) {
       value = null;
     } else if (value.startsWith("http://") || value.startsWith("https://")) {
       // allow for remote logging
@@ -837,7 +836,7 @@ abstract class OutputManager {
     } else if (value.length() > 0) {
       if (!value.startsWith("JmolLog_"))
         value = "JmolLog_" + value;
-      path = getLogPath(logFilePath + value);
+      path = getLogPath(vwr.logFilePath + value);
     }
     if (path == null)
       value = null;
@@ -848,7 +847,7 @@ abstract class OutputManager {
       value = null;
     } else {
       vwr.logFileName = path;
-      vwr.g.setO("_logFile", vwr.isApplet() ? value : path);
+      vwr.g.setO("_logFile", vwr.isApplet ? value : path);
     }
     return value;
   }

@@ -535,7 +535,7 @@ public class ScriptManager implements JmolScriptManager {
     }
     fileName = fileName.replace('\\', '/');
     boolean isCached = fileName.startsWith("cache://");
-    if (vwr.isApplet() && fileName.indexOf("://") < 0)
+    if (vwr.isApplet && fileName.indexOf("://") < 0)
       fileName = "file://" + (fileName.startsWith("/") ? "" : "/") + fileName;
     try {
       if (fileName.endsWith(".pse")) {
@@ -660,7 +660,7 @@ public class ScriptManager implements JmolScriptManager {
     vwr.g.appendNew = false;
     // BitSet bsB = getAtomBits(Token.hydrogen, null);
     // bsA.andNot(bsB);
-    int atomIndex = vwr.ms.getAtomCount();
+    int atomIndex = vwr.ms.ac;
     int atomno = vwr.ms.getAtomCountInModel(modelIndex);
     SB sbConnect = new SB();
     for (int i = 0; i < vConnections.size(); i++) {

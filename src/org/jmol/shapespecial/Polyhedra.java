@@ -283,17 +283,17 @@ public class Polyhedra extends AtomShape {
 
   private Polyhedron constructBondsPolyhedron(int atomIndex) {
     Atom atom = atoms[atomIndex];
-    Bond[] bonds = atom.getBonds();
+    Bond[] bonds = atom.bonds;
     if (bonds == null)
       return null;
     int bondCount = 0;
     for (int i = bonds.length; --i >= 0;) {
       Bond bond = bonds[i];
-      Atom otherAtom = bond.getAtom1() == atom ? bond.getAtom2() : bond
-          .getAtom1();
+      Atom otherAtom = bond.atom1 == atom ? bond.atom2 : bond
+          .atom1;
       if (bsVertices != null && !bsVertices.get(otherAtom.i))
         continue;
-      if (radius > 0f && bond.getAtom1().distance(bond.getAtom2()) > radius)
+      if (radius > 0f && bond.atom1.distance(bond.atom2) > radius)
         continue;
       otherAtoms[bondCount++] = otherAtom;
       if (bondCount == MAX_VERTICES)
@@ -321,9 +321,9 @@ public class Polyhedra extends AtomShape {
       if (bsVertices != null && !bsVertices.get(other.i)
           || atom.distance(other) > radius)
         continue;
-      if (other.getAlternateLocationID() != atom.getAlternateLocationID()
-          && other.getAlternateLocationID() != 0
-          && atom.getAlternateLocationID() != 0)
+      if (other.altloc != atom.altloc
+          && other.altloc != 0
+          && atom.altloc != 0)
         continue;
       if (otherAtomCount == MAX_VERTICES)
         break;

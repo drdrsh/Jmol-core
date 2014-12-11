@@ -121,7 +121,7 @@ import java.util.Properties;
    protected final Atom[] closest;
 
    protected int[] modelNumbers; // from adapter -- possibly PDB MODEL record; possibly modelFileNumber
-   protected int[] modelFileNumbers; // file * 1000000 + modelInFile (1-based)
+   public int[] modelFileNumbers; // file * 1000000 + modelInFile (1-based)
    public String[] modelNumbersForAtomLabel, modelNames, frameTitles;
 
    protected BS[] elementsPresent;
@@ -139,7 +139,7 @@ import java.util.Properties;
    ////////////////////////////////////////////
 
    private boolean isBbcageDefault;
-   private BS bboxModels;
+   public BS bboxModels;
    private BS bboxAtoms;
    private final BoxInfo boxInfo;
 
@@ -296,7 +296,7 @@ import java.util.Properties;
       return null;
     BS bsModels = new BS();
     for (int i = mc; --i >= 0;) {
-      int t = am[i].getSelectedTrajectory(); 
+      int t = am[i].selectedTrajectory; 
       if (t >= 0) {
         bsModels.set(t);
         i = am[i].trajectoryBaseIndex; //skip other trajectories
@@ -321,7 +321,7 @@ import java.util.Properties;
     if (at[am[modelIndex].firstAtomIndex].mi == modelIndex)
       return;
     int baseModelIndex = am[modelIndex].trajectoryBaseIndex;
-    am[baseModelIndex].setSelectedTrajectory(modelIndex);
+    am[baseModelIndex].selectedTrajectory = modelIndex;
     setAtomPositions(baseModelIndex, modelIndex, trajectorySteps.get(modelIndex),
         null, 0,
         (vibrationSteps == null ? null : vibrationSteps.get(modelIndex)), true);    
@@ -343,7 +343,7 @@ import java.util.Properties;
       return;
     }
     int baseModelIndex = am[m1].trajectoryBaseIndex;
-    am[baseModelIndex].setSelectedTrajectory(m1);
+    am[baseModelIndex].selectedTrajectory = m1;
     setAtomPositions(baseModelIndex, m1, trajectorySteps.get(m1),
         trajectorySteps.get(m2), f, (vibrationSteps == null ? null
             : vibrationSteps.get(m1)), true);
@@ -473,7 +473,7 @@ import java.util.Properties;
     switch (tokType) {
     default:
       return BSUtil.andNot(getAtomBitsMaybeDeleted(tokType, specInfo), vwr
-          .getDeletedAtoms());
+          .slm.bsDeleted);
     case T.spec_model:
       int modelNumber = ((Integer) specInfo).intValue();
       int modelIndex = getModelNumberIndex(modelNumber, true, true);
@@ -1066,10 +1066,6 @@ import java.util.Properties;
     return boxInfo.getBoundBoxVertices();
   }
 
-  public BS getBoundBoxModels() {
-    return bboxModels;
-  }
-
   public void setBoundBox(P3 pt1, P3 pt2, boolean byCorner, float scale) {
     isBbcageDefault = false;
     bboxModels = null;
@@ -1290,7 +1286,7 @@ import java.util.Properties;
     case T.valence:
     case T.formalcharge:
       if (vwr.getBoolean(T.smartaromatic))
-        assignAromaticBonds();
+        assignAromaticBondsBs(true, null);
       break;
     }
   }
@@ -1609,10 +1605,6 @@ import java.util.Properties;
     if (modelIndex == Integer.MAX_VALUE)
       modelIndex = mc - 1;
     return modelNumbers[modelIndex];
-  }
-
-  public int getModelFileNumber(int modelIndex) {
-    return modelFileNumbers[modelIndex];
   }
 
   public Properties getModelProperties(int modelIndex) {
@@ -2437,7 +2429,7 @@ import java.util.Properties;
       int nOps = 0;
       for (int i = ac; --i >= 0;) {
         Atom atom = at[i];
-        BS bsSym = atom.getAtomSymmetry();
+        BS bsSym = atom.atomSymmetry;
         if (bsSym != null) {
           if (atom.mi != modelIndex) {
             modelIndex = atom.mi;
@@ -2528,7 +2520,7 @@ import java.util.Properties;
                                  boolean withinAllModels, RadiusData rd) {
     BS bsResult = new BS();
     BS bsCheck = getIterativeModels(false);
-    bs = BSUtil.andNot(bs, vwr.getDeletedAtoms());
+    bs = BSUtil.andNot(bs, vwr.slm.bsDeleted);
     AtomIndexIterator iter = getSelectedAtomIterator(null, false, false, false,
         false);
     if (withinAllModels) {
@@ -3307,7 +3299,7 @@ import java.util.Properties;
         newModelCount);
     modelNames = AU.arrayCopyS(modelNames, newModelCount);
     frameTitles = AU.arrayCopyS(frameTitles, newModelCount);
-    int f = getModelFileNumber(mc - 1) / 1000000 + 1;
+    int f = modelFileNumbers[mc - 1] / 1000000 + 1;
     for (int i = mc, pt = 0; i < newModelCount; i++) {
       modelNumbers[i] = i + mc;
       modelFileNumbers[i] = f * 1000000 + (++pt);
@@ -3398,8 +3390,7 @@ import java.util.Properties;
       if (modelIndex >= 0 && m != modelIndex) {
         continue;
       }
-      Map<String, Object> moData = (Map<String, Object>) vwr
-          .getModelAuxiliaryInfoValue(m, "moData");
+      Map<String, Object> moData = (Map<String, Object>) getInfo(m, "moData");
       if (moData == null) {
         continue;
       }
@@ -3635,7 +3626,7 @@ import java.util.Properties;
     if (tensors != null)
       setAtomTensors(ac, tensors);
     atom.group = group;
-    atom.colixAtom = vwr.getColixAtomPalette(atom, PAL.CPK.id);
+    atom.colixAtom = vwr.cm.getColixAtomPalette(atom, PAL.CPK.id);
     if (atomName != null) {
       int i;
       if ((i = atomName.indexOf('\0')) >= 0) {

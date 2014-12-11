@@ -276,7 +276,7 @@ public class MathExt implements JmolMathExtension {
   private boolean evaluateCache(ScriptMathProcessor mp, SV[] args) {
     if (args.length > 0)
       return false;
-    return mp.addXMap(vwr.cacheList());
+    return mp.addXMap(vwr.fm.cacheList());
   }
 
   private boolean evaluateColor(ScriptMathProcessor mp, SV[] args) {
@@ -623,7 +623,7 @@ public class MathExt implements JmolMathExtension {
           bsBonds, isBonds, false, 0);
       return mp.addX(SV.newV(
           T.bitset,
-          new BondSet(bsBonds, vwr.ms.getAtomIndices(vwr.ms.getAtoms(
+          BondSet.newBS(bsBonds, vwr.ms.getAtomIndices(vwr.ms.getAtoms(
               T.bonds, bsBonds)))));
     }
     return mp.addXBs(vwr.ms.getAtomsConnected(min, max, order, atoms1));
@@ -949,7 +949,7 @@ public class MathExt implements JmolMathExtension {
           if (asBonds) {
             // this will return a single match
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
-                vwr.ms.at, vwr.getAtomCount(), (BS) x1.value,
+                vwr.ms.at, vwr.ms.ac, (BS) x1.value,
                 !isSmiles, true);
             ret = (map.length > 0 ? vwr.getDihedralMap(map[0]) : new int[0]);
           } else {
@@ -1401,7 +1401,7 @@ public class MathExt implements JmolMathExtension {
       return false;
     }
     if (asBytes)
-      return mp.addXMap(vwr.getFileAsMap(file));
+      return mp.addXMap(vwr.fm.getFileAsMap(file));
     boolean isQues = file.startsWith("?");
     if (vwr.isJS && (isQues || async)) {
       if (isFile && isQues)
@@ -2262,7 +2262,7 @@ public class MathExt implements JmolMathExtension {
         BS bsSelected = (args.length == 2 && args[1].tok == T.bitset ? SV
             .bsSelectVar(args[1]) : null);
         bs = vwr.getSmilesMatcher().getSubstructureSet(pattern,
-            vwr.ms.at, vwr.getAtomCount(), bsSelected,
+            vwr.ms.at, vwr.ms.ac, bsSelected,
             tok != T.smiles, false);
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
@@ -2550,7 +2550,7 @@ public class MathExt implements JmolMathExtension {
     case 1:
       if (!args[0].asString().toUpperCase().equals("PNGJ"))
         break;
-      return mp.addXMap(vwr.getFileAsMap(null));
+      return mp.addXMap(vwr.fm.getFileAsMap(null));
     }
     return mp.addXStr(e.getCmdExt().dispatch(T.write, true, args));
   }
@@ -2812,8 +2812,8 @@ public class MathExt implements JmolMathExtension {
     BS bs;
     if (bsB == null) {
       // default is within just one model when {B} is missing
-      bsB = BSUtil.setAll(vwr.getAtomCount());
-      BSUtil.andNot(bsB, vwr.getDeletedAtoms());
+      bsB = BSUtil.setAll(vwr.ms.ac);
+      BSUtil.andNot(bsB, vwr.slm.bsDeleted);
       bsB.andNot(bsA);
       withinAllModels = false;
     } else {

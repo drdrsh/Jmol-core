@@ -39,7 +39,7 @@ public class FrankRenderer extends ShapeRenderer {
     boolean allowKeys = vwr.getBooleanProperty("allowKeyStrokes");
     boolean modelKitMode = vwr.getBoolean(T.modelkitmode);
     colix = (modelKitMode ? C.MAGENTA 
-        : vwr.isSignedApplet() ? (allowKeys || vwr.isJS && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE : C.GRAY);
+        : vwr.isSignedApplet ? (allowKeys || vwr.isJS && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE : C.GRAY);
     if (isExport || !vwr.getShowFrank())
       return false;
     if (!g3d.setC(C.getColixTranslucent3(colix,
