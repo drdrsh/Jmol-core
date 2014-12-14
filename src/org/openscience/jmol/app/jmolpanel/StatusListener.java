@@ -28,7 +28,6 @@ import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolSyncInterface;
-import org.jmol.api.JmolViewer;
 import org.jmol.c.CBK;
 import org.jmol.dialog.Dialog;
 import javajs.awt.Dimension;
@@ -74,10 +73,10 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
   private JmolPanel jmol;
   private DisplayPanel display;
 
-  private JmolViewer vwr;
+  private Viewer vwr;
   private MainFrame jSpecViewFrame;
   private boolean jSpecViewForceNew;
-  void setViewer(JmolViewer vwr) {
+  void setViewer(Viewer vwr) {
     this.vwr = vwr;
   }
   
@@ -430,7 +429,7 @@ System.out.println("StatusListener notifyFileLoaded: " + fileName);
     if (peaks.startsWith(":"))
       peaks = peaks.substring(1);
     if (jSpecViewFrame == null) {
-      jSpecViewFrame = new MainFrame((Component) ((Viewer) vwr).display, this);
+      jSpecViewFrame = new MainFrame((Component) vwr.display, this);
       jSpecViewFrame.setSize(800, 500);
       jSpecViewFrame.setLocation(jmol.frame.getLocation().x + 10, jmol.frame
           .getLocation().y + 100);
@@ -441,10 +440,10 @@ System.out.println("StatusListener notifyFileLoaded: " + fileName);
       }
     }
     if (doLoadCheck || jSpecViewForceNew) {
-      String type = "" + vwr.getParameter("_modelType");
+      String type = "" + vwr.getP("_modelType");
       if (type.equalsIgnoreCase("jcampdx")) {
         jSpecViewForceNew = false;
-        String file = "" + vwr.getParameter("_modelFile");
+        String file = "" + vwr.getP("_modelFile");
         if (file.indexOf("/") < 0)
           return;
         peaks = "hidden true; load CHECK " + PT.esc(file) + ";hidden false";
@@ -452,7 +451,7 @@ System.out.println("StatusListener notifyFileLoaded: " + fileName);
         return;
       } else {
         jSpecViewForceNew = false;
-        String model = "" + vwr.getParameter("_modelNumber");
+        String model = "" + vwr.getP("_modelNumber");
         String data = vwr.extractMolData(null);
         if (data == null)
           return;

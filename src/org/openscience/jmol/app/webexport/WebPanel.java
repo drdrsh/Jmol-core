@@ -557,7 +557,7 @@ abstract class WebPanel extends JPanel implements ActionListener,
                                                                           // true
                                                                           // if
                                                                           // successful.
-    useAppletJS = checkOption(vwr, "webMakerCreateJS");
+    useAppletJS = checkOption(vwr.getP("webMakerCreateJS"));
     // JOptionPane.showMessageDialog(null, "Creating directory for data...");
     String datadirPath = file.getPath().replace('\\','/');
     String datadirName = file.getName();
@@ -762,7 +762,7 @@ abstract class WebPanel extends JPanel implements ActionListener,
     if (gzoutFile.exists())
       return gzname;
     try {
-      Object ret = vwr.getFileAsBytes(fullPathName, null);
+      Object ret = vwr.fm.getFileAsBytes(fullPathName, null);
       if (ret instanceof String){
         LogPanel
             .log(GT.o(GT
@@ -968,8 +968,7 @@ abstract class WebPanel extends JPanel implements ActionListener,
     }
   }
 
-  public static boolean checkOption(Viewer vwr, String option) {
-    Object o = vwr.getParameter(option);
+  public static boolean checkOption( Object o) {
     return (o instanceof Boolean && ((Boolean) o).booleanValue()
         || o instanceof Integer && ((Integer) o).intValue() != 0);
   }

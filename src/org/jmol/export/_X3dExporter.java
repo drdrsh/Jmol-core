@@ -61,7 +61,7 @@ public class _X3dExporter extends _VrmlExporter {
         + "\n");
     output("<head>\n");
     output("<meta name='title' content="
-        + PT.esc(vwr.getModelSetName()).replace('<', ' ').replace('>',
+        + PT.esc(vwr.ms.modelSetName).replace('<', ' ').replace('>',
             ' ').replace('&', ' ') + "/>\n");
     output("<meta name='description' content='Jmol rendering'/>\n");
     output("<meta name='creator' content=' '/>\n");

@@ -410,7 +410,7 @@ class PointGroup {
         int e1 = elements[i];
         if (q != null) {
           pt.sub2(a1, center);
-          q.transformP2(pt, pt).add(center);
+          q.transform2(pt, pt).add(center);
         } else {
           pt.setT(a1);
         }

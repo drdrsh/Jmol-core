@@ -44,7 +44,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.jmol.api.JmolViewer;
+import org.jmol.viewer.Viewer;
 import org.jmol.awt.JmolFrame;
 import org.jmol.i18n.GT;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
@@ -53,7 +53,7 @@ public class DisplayPanel extends JPanel
   implements JmolFrame, ComponentListener, Printable {
   
   StatusBar status;
-  JmolViewer vwr;
+  Viewer vwr;
     
   private String displaySpeed;
 
@@ -88,7 +88,7 @@ public class DisplayPanel extends JPanel
     setDoubleBuffered(false);
   }
 
-  void setViewer(JmolViewer vwr) {
+  void setViewer(Viewer vwr) {
     this.vwr = vwr;
     updateSize(false);
   }
@@ -403,7 +403,7 @@ public class DisplayPanel extends JPanel
     if (displaySpeed.equalsIgnoreCase("fps")) {
         status.setStatus(3, fmt(1000/timeLast) + "FPS : " + fmt(1000/timeAverage) + "FPS");
     } else {
-      status.setStatus(3, vwr.getParameter("_memory")+" Mb; " + fmt(timeLast) + "/" + timeAverage + " ms");
+      status.setStatus(3, vwr.getP("_memory")+" Mb; " + fmt(timeLast) + "/" + timeAverage + " ms");
     }
   }
 

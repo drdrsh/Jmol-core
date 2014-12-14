@@ -40,7 +40,7 @@ public class BallsRenderer extends ShapeRenderer {
     if (isExport || vwr.checkMotionRendering(T.atoms)) {
       Atom[] atoms = ms.at;
       short[] colixes = ((Balls) shape).colixes;
-      BS bsOK = vwr.getRenderableBitSet();
+      BS bsOK = vwr.shm.bsRenderableAtoms;
       for (int i = bsOK.nextSetBit(0); i >= 0; i = bsOK.nextSetBit(i + 1)) {
         Atom atom = atoms[i];
         if (atom.sD > 0

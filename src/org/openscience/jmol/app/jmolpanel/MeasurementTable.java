@@ -23,9 +23,9 @@
  */
 package org.openscience.jmol.app.jmolpanel;
 
-import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
@@ -48,7 +48,7 @@ import java.awt.event.ActionListener;
 
 public class MeasurementTable extends JDialog {
 
-  JmolViewer vwr;
+  Viewer vwr;
   private JTable measurementTable;
   private MeasurementTableModel measurementTableModel;
   int selectedMeasurementRow = -1;
@@ -61,7 +61,7 @@ public class MeasurementTable extends JDialog {
    * @param parentFrame the parent frame
    * @param vwr the JmolViewer in which the animation will take place (?)
    */
-  public MeasurementTable(JmolViewer vwr, JFrame parentFrame) {
+  public MeasurementTable(Viewer vwr, JFrame parentFrame) {
 
     super(parentFrame, GT._("Measurements"), false);
     this.vwr = vwr;

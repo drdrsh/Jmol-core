@@ -84,7 +84,7 @@ public class SpinThread extends JmolThread {
       endPositions = (Lst<P3>) options[1];
       dihedralList = (float[]) options[2];
       if (dihedralList != null)
-        bsBranches = vwr.getBsBranches(dihedralList);
+        bsBranches = vwr.ms.getBsBranches(dihedralList);
       bsAtoms = (BS) options[3];
       isGesture = (options[4] != null);
     }

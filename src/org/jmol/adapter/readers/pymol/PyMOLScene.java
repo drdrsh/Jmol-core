@@ -1700,7 +1700,7 @@ class PyMOLScene implements JmolSceneGenerator {
   private void finalizeUniqueBonds() {
     if (uniqueList == null)
       return;
-    int bondCount = vwr.getBondCount();
+    int bondCount = vwr.ms.bondCount;
     Bond[] bonds = vwr.ms.bo;
     for (int i = bsUniqueBonds.nextSetBit(0); i >= 0; i = bsUniqueBonds.nextSetBit(i + 1)) {
       float rad = Float.NaN;

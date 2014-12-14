@@ -951,7 +951,7 @@ public class MathExt implements JmolMathExtension {
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
                 vwr.ms.at, vwr.ms.ac, (BS) x1.value,
                 !isSmiles, true);
-            ret = (map.length > 0 ? vwr.getDihedralMap(map[0]) : new int[0]);
+            ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
             ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value, bsMatch3D,
                 !isSmiles, !isAll);
@@ -1414,7 +1414,7 @@ public class MathExt implements JmolMathExtension {
       // The evaluation will be repeated up to this point, so for example,
       // x = (i++) + load("?") would increment i twice.
     }
-    return mp.addXStr(isFile ? vwr.getFilePath(file, false) : vwr
+    return mp.addXStr(isFile ? vwr.fm.getFilePath(file, false, false) : vwr
         .getFileAsString4(file, nBytesMax, false, false, true, "script"));
   }
 
@@ -1884,7 +1884,7 @@ public class MathExt implements JmolMathExtension {
     P4 p4 = null;
     switch (nArgs) {
     case 0:
-      return mp.addXPt4(Quat.newQ(vwr.tm.getRotationQuaternion()).toPoint4f());
+      return mp.addXPt4(Quat.newM(vwr.tm.matrixRotate).toPoint4f());
     case 1:
     default:
       if (tok == T.quaternion && args[0].tok == T.varray) {
@@ -2223,7 +2223,7 @@ public class MathExt implements JmolMathExtension {
       if (x.tok == T.bitset) {
         BS bsSelected = SV.bsSelectVar(x);
         sArg = "\n";
-        int modelCount = vwr.getModelCount();
+        int modelCount = vwr.ms.mc;
         s = "";
         for (int i = 0; i < modelCount; i++) {
           s += (i == 0 ? "" : "\n");
@@ -2295,7 +2295,7 @@ public class MathExt implements JmolMathExtension {
     int iOp = (xyz == null ? args[0].asInt() : 0);
     P3 pt = (args.length > 1 ? mp.ptValue(args[1], true) : null);
     if (args.length == 2 && !Float.isNaN(pt.x))
-      return mp.addXObj(vwr.getSymmetryInfoAtom(bs, xyz, iOp, pt, null, null,
+      return mp.addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bs, xyz, iOp, pt, null, null,
           T.point));
     String desc = (args.length == 1 ? "" : SV.sValue(args[args.length - 1]))
         .toLowerCase();
@@ -2322,7 +2322,7 @@ public class MathExt implements JmolMathExtension {
       tok = T.center;
     }
     return mp
-        .addXObj(vwr.getSymmetryInfoAtom(bs, xyz, iOp, pt, null, desc, tok));
+        .addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bs, xyz, iOp, pt, null, desc, tok));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

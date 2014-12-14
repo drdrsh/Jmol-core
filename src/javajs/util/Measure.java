@@ -717,7 +717,7 @@ final public class Measure {
     
     for (int i = n + 1; --i >= 1;) {
       ptAnew.sub2(ptsA[i], cA);
-      q.transformP2(ptAnew, ptAnew).add(cB);
+      q.transform2(ptAnew, ptAnew).add(cB);
       sum2 += ptAnew.distanceSquared(ptsB[i]);
     }
     return (float) Math.sqrt(sum2 / n);

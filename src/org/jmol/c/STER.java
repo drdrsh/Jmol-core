@@ -49,8 +49,6 @@ public enum STER {
   public boolean isBiColor() {
     return isBiColor;
   }
-  public final static int DEFAULT_STEREO_DEGREES = -5;
-
 
   public static STER getStereoMode(String id) {
     for (STER item : values())

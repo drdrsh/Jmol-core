@@ -50,6 +50,8 @@ public class SelectionManager {
 
   public BS bsSubset; // set in Eval and only pointed to here
   public BS bsDeleted;
+  public Boolean noneSelected;
+
 
 //  void deleteModelAtoms(BS bsDeleted) {
 //    BSUtil.deleteBits(bsHidden, bsDeleted);
@@ -218,7 +220,7 @@ public class SelectionManager {
       empty = UNKNOWN;
   }
 
-  void setSelectionSubset(BS bs) {
+  public void setSelectionSubset(BS bs) {
 
     // for informational purposes only
     // the real copy is in Eval so that eval operations

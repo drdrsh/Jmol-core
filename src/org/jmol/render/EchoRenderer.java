@@ -28,6 +28,7 @@ import org.jmol.modelset.Text;
 import org.jmol.script.T;
 import org.jmol.shape.Echo;
 import org.jmol.util.C;
+import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 
 public class EchoRenderer extends LabelsRenderer {
@@ -80,7 +81,7 @@ public class EchoRenderer extends LabelsRenderer {
       if (frameTitle != null && frameTitle.length() > 0) {
         if (g3d.setC(vwr.cm.colixBackgroundContrast)) {
           if (frameTitle.indexOf("%{") >= 0 || frameTitle.indexOf("@{") >= 0)
-            frameTitle = vwr.formatText(frameTitle);
+            frameTitle = Txt.formatText(vwr, frameTitle);
           renderFrameTitle(frameTitle);
         }
       }

@@ -51,7 +51,7 @@ public class ColorManager {
    * 
    */
 
-  public ColorEncoder ce = new ColorEncoder(null);
+  public ColorEncoder ce;
   private Viewer vwr;
   private GData g3d;
 
@@ -66,20 +66,17 @@ public class ColorManager {
 
   ColorManager(Viewer vwr, GData gdata) {
     this.vwr = vwr;
+    ce = new ColorEncoder(null, vwr);
     g3d = gdata;
     argbsCpk = PAL.argbsCpk;
     altArgbsCpk = AU.arrayCopyRangeI(JC.altArgbsCpk, 0, -1);
   }
 
-  void clear() {
-    //causes problems? flushCaches();
-  }
+//  void clear() {
+//    //causes problems? flushCaches();
+//  }
 
   boolean isDefaultColorRasmol;
-
-  void resetElementColors() {
-    setDefaultColors(false);
-  }
 
   void setDefaultColors(boolean isRasmol) {
     if (isRasmol) {
@@ -245,12 +242,20 @@ public class ColorManager {
       break;
     case StaticConstants.PALETTE_CHAIN:
       int chain = atom.getChainID();
+      if (ColorEncoder.argbsChainAtom == null) {
+        ColorEncoder.argbsChainAtom = getArgbs(T.atoms);
+        ColorEncoder.argbsChainHetero = getArgbs(T.hetero);
+      }
       chain = ((chain < 0 ? 0 : chain >= 256 ? chain - 256 : chain) & 0x1F)
-          % JC.argbsChainAtom.length;
-      argb = (atom.isHetero() ? JC.argbsChainHetero : JC.argbsChainAtom)[chain];
+          % ColorEncoder.argbsChainAtom.length;
+      argb = (atom.isHetero() ? ColorEncoder.argbsChainHetero : ColorEncoder.argbsChainAtom)[chain];
       break;
     }
     return (argb == 0 ? C.HOTPINK : C.getColix(argb));
+  }
+
+  private int[] getArgbs(int tok) {
+    return vwr.getJBR().getArgbs(tok);
   }
 
   private int getJmolOrRasmolArgb(int id, int argb) {
@@ -349,7 +354,7 @@ public class ColorManager {
   public ColorEncoder getColorEncoder(String colorScheme) {
     if (colorScheme == null || colorScheme.length() == 0)
       return ce;
-    ColorEncoder c = new ColorEncoder(ce);
+    ColorEncoder c = new ColorEncoder(ce, vwr);
     c.currentPalette = c.createColorScheme(colorScheme, false, true);
     return (c.currentPalette == Integer.MAX_VALUE ? null : c);
   }

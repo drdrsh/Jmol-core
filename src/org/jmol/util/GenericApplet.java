@@ -117,8 +117,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
     vwrOptions.put("applet", Boolean.TRUE);
     if (getJmolParameter("statusListener") == null)
       vwrOptions.put("statusListener", this);
-    viewer = new Viewer(null);
-    viewer.setOptions(vwrOptions);
+    viewer = new Viewer(vwrOptions);
     viewer.pushHoldRepaint();
     String emulate = getValueLowerCase("emulate", "jmol");
     setStringProperty("defaults", emulate.equals("chime") ? "RasMol" : "Jmol");

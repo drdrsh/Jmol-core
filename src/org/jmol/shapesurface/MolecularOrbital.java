@@ -477,7 +477,7 @@ public class MolecularOrbital extends Isosurface {
     if (htModels == null)
       return "";
     SB s = new SB();
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     for (int i = 0; i < modelCount; i++)
       s.append(getMoState(i));
     //System.out.println("molecular orbital state " + s.length());
@@ -489,7 +489,7 @@ public class MolecularOrbital extends Isosurface {
     if (!getSettings(strID))
       return "";
     SB s = new SB();
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     if (modelCount > 1)
       appendCmd(s, "frame " + vwr.getModelNumberDotted(modelIndex));
     if (moCutoff != null)

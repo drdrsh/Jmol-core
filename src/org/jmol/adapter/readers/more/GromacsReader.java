@@ -26,7 +26,6 @@ package org.jmol.adapter.readers.more;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.api.JmolAdapter;
 
 
 import org.jmol.util.Logger;
@@ -114,7 +113,7 @@ public class GromacsReader extends AtomSetCollectionReader {
       return atomName;
     char ch1 = (atomName.length() == 4 ? atomName.charAt(0) : '\0');
     char ch2 = atomName.charAt(atomName.length() == 4 ? 1 : 0);
-    boolean isHetero = JmolAdapter.isHetero(group3);
+    boolean isHetero = vwr.getJBR().isHetero(group3);
     if (Atom.isValidSymNoCase(ch1, ch2))
       return (isHetero || ch1 != 'H' ? "" + ch1 + ch2 : "H");
     if (Atom.isValidSym1(ch2))

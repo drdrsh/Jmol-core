@@ -130,7 +130,7 @@ public class IsoExt extends CmdExt {
       if (tokAt(pt) == T.scale)
         scale = floatParameter(++pt);
       if (!chk)
-        eval.runScript(vwr.getPointGroupAsString(true, type, index, scale));
+        eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), true, type, index, scale));
       return false;
     case T.helix:
     case T.quaternion:
@@ -309,7 +309,7 @@ public class IsoExt extends CmdExt {
         }
         eval.checkLast(eval.iToken);
         if (!chk) {
-          String s = (String) vwr.getSymmetryInfoAtom(bsAtoms, xyz, iSym,
+          String s = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bsAtoms, xyz, iSym,
               center, target, thisId, T.draw);
           showString(s.substring(0, s.indexOf('\n') + 1));
           eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId + "*\" delete");
@@ -1288,7 +1288,7 @@ public class IsoExt extends CmdExt {
         } else {
           bsSelect = (BS) propertyValue;
           if (modelIndex < 0 && bsSelect.nextSetBit(0) >= 0)
-            modelIndex = vwr.getAtomModelIndex(bsSelect.nextSetBit(0));
+            modelIndex = vwr.ms.at[bsSelect.nextSetBit(0)].mi;
         }
         break;
       case T.set:
@@ -1508,11 +1508,11 @@ public class IsoExt extends CmdExt {
           if (atomIndex < 0)
             error(ScriptError.ERROR_expressionExpected);
           sbCommand.append(" ({").appendI(atomIndex).append("})");
-          modelIndex = vwr.getAtomModelIndex(atomIndex);
+          modelIndex = vwr.ms.at[atomIndex].mi;
           addShapeProperty(propertyList, "modelIndex",
               Integer.valueOf(modelIndex));
           V3[] axes = { new V3(), new V3(),
-              V3.newV(vwr.getAtomPoint3f(atomIndex)), new V3() };
+              V3.newV(vwr.ms.at[atomIndex]), new V3() };
           if (!lcaoType.equalsIgnoreCase("s")
               && vwr.getHybridizationAndAxes(atomIndex, axes[0], axes[1],
                   lcaoType) == null)
@@ -2254,8 +2254,8 @@ public class IsoExt extends CmdExt {
             if (tokAt(i + 1) == T.as)
               i += 2; // skip that
           } else if (tokAt(i + 1) == T.as) {
-            localName = vwr.getFilePath(
-                stringParameter(eval.iToken = (i = i + 2)), false);
+            localName = vwr.fm.getFilePath(
+                stringParameter(eval.iToken = (i = i + 2)), false, false);
             fullPathNameOrError = vwr.getFullPathNameOrError(localName);
             localName = fullPathNameOrError[0];
             if (vwr.fm.getPathForAllFiles() != "") {
@@ -3307,7 +3307,7 @@ public class IsoExt extends CmdExt {
       pts[0] = bbox.getBoundBoxVertices()[0];
       pts[1] = bbox.getBoundBoxVertices()[7];
       if (bs.cardinality() == 1)
-        v.addLast(vwr.getAtomPoint3f(bs.nextSetBit(0)));
+        v.addLast(vwr.ms.at[bs.nextSetBit(0)]);
     }
     if (v.size() == 1 && !isShow) {
       addShapeProperty(propertyList, "withinDistance", Float.valueOf(distance));

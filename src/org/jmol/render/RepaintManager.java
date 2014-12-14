@@ -182,7 +182,7 @@ public class RepaintManager implements JmolRepaintManager {
   /////////// actual rendering ///////////
   
   @Override
-  public void render(GData gdata, ModelSet modelSet, boolean isFirstPass, int[] minMax) {
+  public void render(GData gdata, ModelSet modelSet, boolean isFirstPass, int[] navMinMax) {
     JmolRendererInterface g3d = (JmolRendererInterface) gdata;
     if (renderers == null)
       renderers = new ShapeRenderer[JC.SHAPE_MAX];
@@ -192,9 +192,9 @@ public class RepaintManager implements JmolRepaintManager {
       g3d.renderBackground(null);
       if (isFirstPass)  {
         bsTranslucent.clearAll();
-        if (minMax != null)
-          g3d.renderCrossHairs(minMax, vwr.getScreenWidth(), vwr.getScreenHeight(), 
-              vwr.tm.getNavigationOffset(), vwr.tm.getNavigationDepthPercent());
+        if (navMinMax != null)
+          g3d.renderCrossHairs(navMinMax, vwr.getScreenWidth(), vwr.getScreenHeight(), 
+              vwr.tm.getNavigationOffset(), vwr.tm.navigationDepthPercent);
         Rectangle band = vwr.getRubberBandSelection();
           if (band != null && g3d.setC(vwr.cm.colixRubberband))
             g3d.drawRect(band.x, band.y, 0, 0, band.width, band.height);

@@ -259,8 +259,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       vwrOptions.put("codePath", JmolResourceHandler.codePath);
     if (modelAdapter != null)
       vwrOptions.put("modelAdapter", modelAdapter);
-    this.vwrOptions = vwrOptions;
-    vwr = new Viewer(vwrOptions);
+    vwr = new Viewer(this.vwrOptions = vwrOptions);
     display.setViewer(vwr);
     myStatusListener.setViewer(vwr);
 
@@ -972,7 +971,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   void setMenuState() {
-    guimap.setSelected("perspectiveCheck", vwr.getPerspectiveDepth());
+    guimap.setSelected("perspectiveCheck", vwr.tm.perspectiveDepth);
     guimap.setSelected("hydrogensCheck", vwr.getBoolean(T.showhydrogens));
     guimap.setSelected("measurementsCheck", vwr.getBoolean(T.showmeasurements));
     guimap.setSelected("axesCheck", vwr.getShowAxes());

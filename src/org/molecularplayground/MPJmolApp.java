@@ -36,6 +36,7 @@ import org.openscience.jmol.app.jmolpanel.JmolPanel;
 import org.openscience.jmol.app.jsonkiosk.BannerFrame;
 import org.openscience.jmol.app.jsonkiosk.JsonNioClient;
 import org.openscience.jmol.app.jsonkiosk.JsonNioServer;
+import org.openscience.jmol.app.jsonkiosk.JsonNioService;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
 
 /*
@@ -172,7 +173,7 @@ public class MPJmolApp implements JsonNioClient {
       }
       Logger.info("startJsonNioKiosk: " + defaultScript + script);
       viewer.scriptWait(defaultScript + script);
-      contentDisabled = JmolViewer.getJmolValueAsString(viewer, "NIOcontentDisabled").equals("true");
+      contentDisabled = JsonNioService.getJmolValueAsString(viewer, "NIOcontentDisabled").equals("true");
       Logger.info("startJsonNioKiosk: contentDisabled=" + contentDisabled);
       
       service = JmolPanel.getJsonNioServer();
@@ -201,9 +202,9 @@ public class MPJmolApp implements JsonNioClient {
   public synchronized void nioRunContent(JsonNioServer jns) {
     if (contentDisabled && (jns == null || !haveStarted)) {
       // needs to be run from the NIO thread, just once.
-      String script = (jns == null ? "; message testing nioRun2; cd \"\"; script \"" + JmolViewer.getJmolValueAsString(viewer, "NIOcontentScript") + "\"" : "");
+      String script = (jns == null ? "; message testing nioRun2; cd \"\"; script \"" + JsonNioService.getJmolValueAsString(viewer, "NIOcontentScript") + "\"" : "");
       haveStarted = true;
-      script += ";cd \"\";cd;script \"" + JmolViewer.getJmolValueAsString(viewer, "NIOcontentScript") + "\"";
+      script += ";cd \"\";cd;script \"" + JsonNioService.getJmolValueAsString(viewer, "NIOcontentScript") + "\"";
       System.out.println("nioRunContent " + Thread.currentThread() + " " + script);
       viewer.script(script);
       System.out.println("nioRunContent done");

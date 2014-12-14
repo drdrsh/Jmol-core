@@ -151,11 +151,11 @@ public class NMRCalculation implements JmolNMRInterface {
   public BS getUniqueTensorSet(BS bsAtoms) {
     BS bs = new BS();
     Atom[] atoms = vwr.ms.at;
-    for (int i = vwr.getModelCount(); --i >= 0;) {
+    for (int i = vwr.ms.mc; --i >= 0;) {
       BS bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(i);
       bsModelAtoms.and(bsAtoms);
       // exclude any models without symmetry
-      if (vwr.getModelUnitCell(i) == null)
+      if (vwr.ms.getUnitCell(i) == null)
         continue;
       // exclude any symmetry-
       for (int j = bsModelAtoms.nextSetBit(0); j >= 0; j = bsModelAtoms

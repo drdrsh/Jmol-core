@@ -136,7 +136,7 @@ public class WebExport extends JPanel implements WindowListener {
       //    Maintabs.addTab("Tests",Test);
     }
 
-    showMoleculesAndOrbitals = (runStatus == STAND_ALONE || WebPanel.checkOption(vwr, "webMakerAllTabs"));
+    showMoleculesAndOrbitals = (runStatus == STAND_ALONE || WebPanel.checkOption(vwr.getP("webMakerAllTabs")));
     if (showMoleculesAndOrbitals) {
       //mainTabs.addTab("Orbitals", (new Orbitals()).getPanel());
       //mainTabs.addTab("Molecules", (new Molecules()).getPanel());

@@ -545,7 +545,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_BOUNDBOX_INFO:
       return getBoundBoxInfo();
     case PROP_CENTER_INFO:
-      return vwr.tm.getRotationCenter();
+      return vwr.tm.fixedRotationCenter;
     case PROP_CHAIN_INFO:
       return getAllChainInfo(vwr.getAtomBitSet(myParam));
     case PROP_CONSOLE_TEXT:
@@ -606,7 +606,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_ORIENTATION_INFO:
       return vwr.tm.getOrientationInfo();
     case PROP_POINTGROUP_INFO:
-      return vwr.getPointGroupInfo(myParam);
+      return vwr.ms.getPointGroupInfo(vwr.getAtomBitSet(myParam));
     case PROP_POLYMER_INFO:
       return getAllPolymerInfo(vwr.getAtomBitSet(myParam));
     case PROP_SCRIPT_QUEUE_INFO:
@@ -929,7 +929,7 @@ public class PropertyManager implements JmolPropertyManager {
     if (!asXYZVIB && bsAtoms.cardinality() == 0)
       return "";
     boolean isOK = true;
-    Quat q = (doTransform ? vwr.tm.getRotationQuaternion() : null);
+    Quat q = (doTransform ? Quat.newM(vwr.tm.matrixRotate) : null);
     if (asSDF) {
       String header = mol.toString();
       mol = new SB();
@@ -1104,7 +1104,7 @@ public class PropertyManager implements JmolPropertyManager {
     else
       pTemp.setT(a);
     if (q != null)
-      q.transformP2(pTemp, pTemp);
+      q.transform2(pTemp, pTemp);
     int elemNo = a.getElementNumber();
     String sym = (a.isDeleted() ? "Xx" : Elements
         .elementSymbolFromNumber(elemNo));
@@ -1916,7 +1916,7 @@ public class PropertyManager implements JmolPropertyManager {
     XmlUtil.closeTag(sb, "atomArray");
     if (addBonds) {
       XmlUtil.openTag(sb, "bondArray");
-      int bondCount = vwr.getBondCount();
+      int bondCount = vwr.ms.bondCount;
       Bond[] bonds = vwr.ms.bo;
       for (int i = 0; i < bondCount; i++) {
         Bond bond = bonds[i];

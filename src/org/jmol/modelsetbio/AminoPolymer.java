@@ -403,7 +403,7 @@ public class AminoPolymer extends AlphaPolymer {
       }
 
       if (Logger.debugging)
-        Logger.debug((0 + this.monomers[0].getChainID()) + " aminopolymer:" + i
+        Logger.debug((0 + this.monomers[0].chain.chainID) + " aminopolymer:" + i
             + " " + trailingResidue.getGroupParameter(T.phi) + ","
             + leadingResidue.getGroupParameter(T.psi) + " "
             + structureTags[i]);

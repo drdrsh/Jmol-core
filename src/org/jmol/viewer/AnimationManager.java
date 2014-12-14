@@ -56,7 +56,7 @@ public class AnimationManager {
     if (animationOn == this.animationOn)
       return;
     
-    if (!animationOn || !vwr.haveModelSet() || vwr.headless) {
+    if (!animationOn || vwr.headless) {
       stopThread(false);
       return;
     }
@@ -396,20 +396,12 @@ public class AnimationManager {
     currentMorphModel = morphCount = 0;
   }
 
-  int[] getAnimationFrames() {
-    return animationFrames;
-  }
-
-  int getCurrentFrameIndex() {
-    return caf;
-  }
-
   int modelIndexForFrame(int i) {
     return (isMovie ? animationFrames[i] - 1 : i);
   }
 
   public int getFrameCount() {
-    return (isMovie ? animationFrames.length : vwr.getModelCount());
+    return (isMovie ? animationFrames.length : vwr.ms.mc);
   }
 
   public void setFrame(int i) {
@@ -442,7 +434,7 @@ public class AnimationManager {
     setFrameRangeVisible();
     vwr.setStatusFrameChanged(false, true);
     if (vwr.ms != null && !vwr.g.selectAllModels)
-        vwr.setSelectionSubset(vwr.getModelUndeletedAtomsBitSet(cmi));
+        vwr.slm.setSelectionSubset(vwr.getModelUndeletedAtomsBitSet(cmi));
   }
 
   private void setFrameRangeVisible() {
@@ -531,39 +523,5 @@ public class AnimationManager {
   private int getFrameStep(int direction) {
     return frameStep * direction * currentDirection;
   }
-
-//private JmolThread modulationThread;
-//public boolean modulationPlay;
-//public float modulationFps = 1;
-//public BS bsModulating;
-//
-//public void setModulationFps(float fps) {
-//  if (fps > 0)
-//    modulationFps = fps;
-//  else
-//    stopModulationThread();
-//}
-
-//public void setModulationPlay(int modT1, int modT2) {
-//if (modT1 == Integer.MAX_VALUE || !vwr.haveModelSet() || vwr.isHeadless()) {
-//  stopThread(false);
-//  return;
-//}
-//if (modulationThread == null) {
-//  modulationPlay = true;
-//  modulationThread = (JmolThread) Interface.getOptionInterface("thread.ModulationThread");
-//  modulationThread.setManager(this, vwr, new int[] {modT1, modT2} );
-//  modulationThread.start();
-//}
-//}
-//public void stopModulationThread() {
-//if (modulationThread != null) {
-//  modulationThread.interrupt();
-//  modulationThread = null;
-//}
-//modulationPlay = false;
-//}
-//
-
 
 }

@@ -278,7 +278,7 @@ public class LcaoCartoon extends Isosurface {
     if (lcaoScale != null)
       setPropI("scale", lcaoScale, null);
     if (isCpk) {
-      setPropI("colorRGB", Integer.valueOf(vwr.getAtomArgb(iAtom)), null);
+      setPropI("colorRGB", Integer.valueOf(vwr.gdata.getColorArgbOrGray(ms.at[iAtom].colixAtom)), null);
     } else if (lcaoColorNeg != null) {
       setPropI("colorRGB", lcaoColorNeg, null);
       setPropI("colorRGB", lcaoColorPos, null);

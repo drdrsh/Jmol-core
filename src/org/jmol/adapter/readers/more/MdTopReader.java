@@ -27,7 +27,6 @@ package org.jmol.adapter.readers.more;
 import javajs.util.Lst;
 
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 
 /**
@@ -93,7 +92,7 @@ public class MdTopReader extends ForceFieldReader {
     Atom atom;
     for (int i = 0; i < ac; i++) {
       atom = atoms[i];
-      atom.isHetero = JmolAdapter.isHetero(atom.group3);
+      atom.isHetero = vwr.getJBR().isHetero(atom.group3);
       String atomType = atomTypes[i];
       if (!getElementSymbol(atom, atomType))
         atom.elementSymbol = deducePdbElementSymbol(atom.isHetero,

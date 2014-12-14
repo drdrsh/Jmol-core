@@ -28,7 +28,6 @@ import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.Atom;
 
 import org.jmol.api.JmolAdapter;
-import org.jmol.viewer.JC;
 
 /**
  * A minimal multi-file reader for TRIPOS SYBYL mol2 files.
@@ -220,14 +219,13 @@ public class Mol2Reader extends ForceFieldReader {
       }
 
     // 3. If so, is there an identifiable group name? 
-
+    
     if (isPDB) {
       isPDB = false;
       for (int i = asc.ac; --i >= i0;) {
         Atom atom = atoms[i];
         if (atom.group3.length() <= 3
-            && (JC.knownPDBGroupID(atom.group3) >= 0 
-                || JC.checkCarbohydrate(atom.group3))) {
+            && vwr.isKnownPDBGroup(atom.group3)) {
           isPDB = this.isPDB = true;
           break;
         }
@@ -236,7 +234,7 @@ public class Mol2Reader extends ForceFieldReader {
 
     for (int i = asc.ac; --i >= i0;)
       if (isPDB)
-        atoms[i].isHetero = JmolAdapter.isHetero(atoms[i].group3);
+        atoms[i].isHetero = vwr.getJBR().isHetero(atoms[i].group3);
       else
         atoms[i].group3 = null;
   }

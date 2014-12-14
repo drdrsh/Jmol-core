@@ -9,6 +9,8 @@ import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelLoader;
+import org.jmol.modelsetbio.Resolver;
+import org.jmol.viewer.Viewer;
 
 public interface JmolBioResolver {
 
@@ -25,7 +27,7 @@ public interface JmolBioResolver {
 
   public void addImplicitHydrogenAtoms(JmolAdapter adapter, int i, int nH);
 
-  public void initialize(ModelLoader modelLoader);
+  public JmolBioResolver setLoader(ModelLoader modelLoader);
 
   public Object fixPropertyValue(BS bsAtoms, Object data, boolean toHydrogens);
 
@@ -37,5 +39,24 @@ public interface JmolBioResolver {
   public void iterateOverAllNewStructures(JmolAdapter adapter,
                                           Object atomSetCollection);
 
+  public void setGroupLists(int ipt);
+
+  public boolean isKnownPDBGroup(String g3);
+
+  public boolean isHetero(String g3);
+
+  public boolean getAminoAcidValenceAndCharge(String g3, String atomName,
+                                              int[] aaRet);
+
+  public byte lookupSpecialAtomID(String name);
+
+  public String[] getGroup3Names(boolean isPredefined);
+
+  public int[] getArgbs(int tok);
+
+  Resolver setViewer(Viewer vwr);
+
+  public short getGroupID(String g3);
+  
   }
 

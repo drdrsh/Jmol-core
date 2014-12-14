@@ -52,7 +52,7 @@ public class Orientation {
     xTrans = vwr.tm.getTranslationXPercent();
     yTrans = vwr.tm.getTranslationYPercent();
     zoom = vwr.tm.getZoomSetting();
-    center.setT(vwr.tm.getRotationCenter());
+    center.setT(vwr.tm.fixedRotationCenter);
     windowCenteredFlag = vwr.tm.isWindowCentered();
     rotationRadius = vwr.getFloat(T.rotationradius);
     navigationMode = vwr.getBoolean(T.navigationmode);
@@ -61,8 +61,8 @@ public class Orientation {
     if (navigationMode) {
       xNav = vwr.tm.getNavigationOffsetPercent('X');
       yNav = vwr.tm.getNavigationOffsetPercent('Y');
-      navDepth = vwr.tm.getNavigationDepthPercent();
-      navCenter = P3.newP(vwr.tm.getNavigationCenter());
+      navDepth = vwr.tm.navigationDepthPercent;
+      navCenter = P3.newP(vwr.tm.navigationCenter);
     }
     if (vwr.tm.camera.z != 0) { // PyMOL mode
       cameraDepth = vwr.tm.getCameraDepth();

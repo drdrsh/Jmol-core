@@ -412,7 +412,7 @@ public class Atom extends Point3fi implements BNode {
   private float getHydrophobicity() {
     float[] values = group.chain.model.ms.hydrophobicities;
     if (values == null)
-      return Elements.getHydrophobicity(group.getGroupID());
+      return Elements.getHydrophobicity(group.groupID);
     return values[i];
   }
 
@@ -582,7 +582,7 @@ public class Atom extends Point3fi implements BNode {
    
    @Override
   public String getAtomName() {
-     return (atomID > 0 ? JC.getSpecialAtomName(atomID) 
+     return (atomID > 0 ? Group.specialAtomNames[atomID]
          : group.chain.model.ms.atomNames[i]);
    }
    

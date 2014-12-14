@@ -188,7 +188,7 @@ public abstract class BioShapeCollection extends Shape {
   void initialize() {
     int modelCount = ms.mc;
     Model[] models = ms.am;
-    int n = ms.getBioPolymerCount();
+    int n = ms.getBioPolymerCountInModel(-1);
     BioShape[] shapes = new BioShape[n--];
     for (int i = modelCount; --i >= 0;)
       for (int j = ms.getBioPolymerCountInModel(i); --j >= 0; n--) {

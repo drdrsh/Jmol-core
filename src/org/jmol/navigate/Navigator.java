@@ -323,7 +323,7 @@ public final class Navigator extends JmolThread implements
       degrees = Float.NaN;
     if (totalSteps > 0) {
       frameTimeMillis = 1000 / fps;
-      depthStart = tm.getNavigationDepthPercent();
+      depthStart = tm.navigationDepthPercent;
       depthDelta = depthPercent - depthStart;
       xTransStart = tm.navigationOffset.x;
       xTransDelta = xTrans - xTransStart;
@@ -459,7 +459,7 @@ public final class Navigator extends JmolThread implements
     calcNavigationDepthPercent();
     if (!tm.navigating && tm.navMode != TransformManager.NAV_MODE_RESET) {
       // rotations are different from zoom changes
-      if (tm.navigationDepth < 100 && tm.navigationDepth > 0
+      if (tm.navigationDepthPercent < 100 && tm.navigationDepthPercent > 0
           && !Float.isNaN(tm.previousX)
           && tm.previousX == tm.fixedTranslation.x
           && tm.previousY == tm.fixedTranslation.y
@@ -601,13 +601,13 @@ public final class Navigator extends JmolThread implements
   //      navigateSurface(Integer.MAX_VALUE);
   //      return;
   //    }
-    if (tm.navigationDepth < 0 && tm.navZ > 0 || tm.navigationDepth > 100
+    if (tm.navigationDepthPercent < 0 && tm.navZ > 0 || tm.navigationDepthPercent > 100
         && tm.navZ < 0) {
       tm.navZ = 0;
     }
     tm.rotateXRadians(JC.radiansPerDegree * -.02f * tm.navY, null);
     tm.rotateYRadians(JC.radiansPerDegree * .02f * tm.navX, null);
-    P3 pt = tm.getNavigationCenter();
+    P3 pt = tm.navigationCenter;
     P3 pts = new P3();
     tm.transformPt3f(pt, pts);
     pts.z += tm.navZ;
@@ -785,7 +785,7 @@ public final class Navigator extends JmolThread implements
 
   private void calcNavigationDepthPercent() {
     tm.calcCameraFactors(); // current
-    tm.navigationDepth = (tm.modelRadiusPixels == 0 ? 50
+    tm.navigationDepthPercent = (tm.modelRadiusPixels == 0 ? 50
         : 50 * (1 + (tm.modelCenterOffset - tm.referencePlaneOffset)
             / tm.modelRadiusPixels));
   }
@@ -793,10 +793,10 @@ public final class Navigator extends JmolThread implements
   @Override
   public String getNavigationState() {
     return "# navigation state;\nnavigate 0 center "
-        + Escape.eP(tm.getNavigationCenter())
+        + Escape.eP(tm.navigationCenter)
         + ";\nnavigate 0 translate " + tm.getNavigationOffsetPercent('X') + " "
         + tm.getNavigationOffsetPercent('Y') + ";\nset navigationDepth "
-        + tm.getNavigationDepthPercent() + ";\nset navigationSlab "
+        + tm.navigationDepthPercent + ";\nset navigationSlab "
         + getNavigationSlabOffsetPercent() + ";\n\n";
   }
 

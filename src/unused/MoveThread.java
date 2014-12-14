@@ -70,7 +70,7 @@ public class MoveThread extends JmolThread {
     slab = transformManager.getSlabPercentSetting();
     transX = transformManager.getTranslationXPercent();
     transY = transformManager.getTranslationYPercent();
-    transZ = transformManager.getTranslationZPercent();
+    //transZ = transformManager.getTranslationZPercent();
 
     timePerStep = 1000 / fps;
     totalSteps = (int) (fps * floatSecondsTotal);

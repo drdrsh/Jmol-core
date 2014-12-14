@@ -29,6 +29,7 @@ import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.shape.Shape;
+import org.jmol.util.Txt;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -204,7 +205,7 @@ public class Text extends Object2d {
   }
 
   public void formatText() {
-    text = (isEcho ? vwr.formatText(textUnformatted) : textUnformatted);
+    text = (isEcho ? Txt.formatText(vwr, textUnformatted) : textUnformatted);
     recalc();
   }
 

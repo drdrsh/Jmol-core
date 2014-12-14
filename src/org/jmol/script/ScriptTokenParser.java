@@ -33,7 +33,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.P3;
-import org.jmol.viewer.JC;
+
 import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
 
@@ -1335,7 +1335,7 @@ abstract class ScriptTokenParser {
       // this one is a '*' as a prime, not a wildcard
       atomSpec += "'";
     }
-    int atomID = JC.lookupSpecialAtomID(atomSpec.toUpperCase());
+    int atomID = vwr.getJBR().lookupSpecialAtomID(atomSpec.toUpperCase());
     return generateResidueSpecCode(T.tv(T.spec_atom, atomID, atomSpec));
   }
   

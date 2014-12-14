@@ -421,7 +421,7 @@ abstract class OutputManager {
             return "ERROR WRITING FILE SET: \n" + info;
         }
       }
-      vwr.setVibrationOff();
+      vwr.tm.setVibrationPeriod(0);
     } else {
       for (int i = bsFrames.nextSetBit(0); i >= 0; i = bsFrames
           .nextSetBit(i + 1)) {
@@ -567,7 +567,7 @@ abstract class OutputManager {
     String msg = (type.equals("PDB") || type.equals("PQR") ?  vwr.getPdbAtomData(null, out) 
         : type.startsWith("PLOT") ? vwr.getPdbData(modelIndex, type.substring(5), null, parameters, out, true) 
         : getCurrentFile ? out.append(vwr.getCurrentFileAsString("write")).toString() 
-        : (String) vwr.getFileAsBytes(pathName, out));
+        : (String) vwr.fm.getFileAsBytes(pathName, out));
     out.closeChannel();
     if (msg != null)
       msg = "OK " + msg + " " + fileName;
@@ -917,7 +917,7 @@ abstract class OutputManager {
             .replaceAllCharacters(name, "/:?\"'=&", "_") : FileManager
             .stripPath(name));
         newName = PT.replaceAllCharacters(newName, "[]", "_");
-        Map<String, byte[]> spardirCache = fm.getSpardirCache();
+        Map<String, byte[]> spardirCache = fm.jmb.spardirCache;
         boolean isSparDir = (spardirCache != null && spardirCache
             .containsKey(name));
         if (isLocal && name.indexOf("|") < 0 && !isSparDir) {
@@ -927,7 +927,7 @@ abstract class OutputManager {
         } else {
           // all remote files, and any file that was opened from a ZIP collection
           Object ret = (isSparDir ? spardirCache.get(name) : fm.getFileAsBytes(
-              name, null, true));
+              name, null));
           if (!PT.isAB(ret))
             return (String) ret;
           newName = addPngFileBytes(name, (byte[]) ret, iFile, crcMap,
@@ -1088,7 +1088,7 @@ abstract class OutputManager {
           // data are already in byte form
           zos.write(bytes, 0, bytes.length);
           if (pngjName != null) 
-            vwr.fm.recachePngjBytes(pngjName + "|" + fnameShort, bytes);
+            vwr.fm.jmb.recachePngjBytes(pngjName + "|" + fnameShort, bytes);
           nOut += bytes.length;
         }
         nBytesOut += nOut;

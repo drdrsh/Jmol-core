@@ -80,8 +80,16 @@ public class Quat {
     return q;
   }
 
-  // create a new object with the given components
-  public static Quat new4(float q0, float q1, float q2, float q3) {
+  /**
+   * Note that q0 is the last parameter here
+   * 
+   * @param q1
+   * @param q2
+   * @param q3
+   * @param q0
+   * @return {q1 q2 q3 q0}
+   */
+  public static Quat new4(float q1, float q2, float q3, float q0) {
     Quat q = new Quat();
     if (q0 < -1) {
       q.q0 = -1;
@@ -418,16 +426,16 @@ public class Quat {
 
   public Quat mul(float x) {
     // scalar theta multiplication
-    return (x == 1 ? new4(q0, q1, q2, q3) : 
+    return (x == 1 ? new4(q1, q2, q3, q0) : 
       newVA(getNormal(), getTheta() * x));
   }
 
   public Quat mulQ(Quat p) {
     return new4(
-        q0 * p.q0 - q1 * p.q1 - q2 * p.q2 - q3 * p.q3, 
         q0 * p.q1 + q1 * p.q0 + q2 * p.q3 - q3 * p.q2, 
         q0 * p.q2 + q2 * p.q0 + q3 * p.q1 - q1 * p.q3, 
-        q0 * p.q3 + q3 * p.q0 + q1 * p.q2 - q2 * p.q1);
+        q0 * p.q3 + q3 * p.q0 + q1 * p.q2 - q2 * p.q1, 
+        q0 * p.q0 - q1 * p.q1 - q2 * p.q2 - q3 * p.q3);
   }
 
   public Quat div(Quat p) {
@@ -445,11 +453,11 @@ public class Quat {
   }
 
   public Quat inv() {
-    return new4(q0, -q1, -q2, -q3);
+    return new4(-q1, -q2, -q3, q0);
   }
 
   public Quat negate() {
-    return new4(-q0, -q1, -q2, -q3);
+    return new4(-q1, -q2, -q3, -q0);
   }
 
   /**
@@ -572,17 +580,18 @@ public class Quat {
     return theta;
   }
 
+  /**
+   *   Quaternions are saved as {q1, q2, q3, q0} 
+   * 
+   * While this may seem odd, it is so that for any point4 -- 
+   * planes, axisangles, and quaternions -- we can use the 
+   * first three coordinates to determine the relavent axis
+   * the fourth then gives us offset to {0,0,0} (plane), 
+   * rotation angle (axisangle), and cos(theta/2) (quaternion).
+   * @return {x y z w} (unnormalized)
+   */
   public P4 toPoint4f() {
-    // NO q0 normalization here
-
-    // note: for quaternions, we save them {q1, q2, q3, q0} 
-    // While this may seem odd, it is so that for any point4 -- 
-    // planes, axisangles, and quaternions -- we can use the 
-    // first three coordinates to determine the relavent axis
-    // the fourth then gives us offset to {0,0,0} (plane), 
-    // rotation angle (axisangle), and cos(theta/2) (quaternion).
-    
-    return P4.new4(q1, q2, q3, q0);
+    return P4.new4(q1, q2, q3, q0); // x,y,z,w
   }
 
   public A4 toAxisAngle4f() {
@@ -596,27 +605,11 @@ public class Quat {
     return A4.newVA(v, (float) theta);
   }
 
-  public P3 transformPt(P3 pt) {
-    if (mat == null)
-      setMatrix();
-    P3 ptNew = P3.newP(pt);
-    mat.rotate(ptNew);
-    return ptNew;
-  }
-
-  public T3 transformP2(T3 pt, T3 ptNew) {
+  public T3 transform2(T3 pt, T3 ptNew) {
     if (mat == null)
       setMatrix();
     mat.rotate2(pt, ptNew);
     return ptNew;
-  }
-
-  public V3 transform(V3 v) {
-    if (mat == null)
-      setMatrix();
-    V3 vNew = V3.newV(v);
-    mat.rotate(vNew);
-    return vNew;
   }
 
   public Quat leftDifference(Quat q2) {

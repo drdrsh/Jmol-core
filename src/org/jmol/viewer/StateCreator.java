@@ -477,7 +477,7 @@ public class StateCreator extends JmolStateCreator {
       commands.append("function _setFileState() {\n\n");
     }
     if (commands.indexOf("append") < 0
-        && vwr.getModelSetFileName().equals("zapped"))
+        && vwr.getModelSetFileName().equals(JC.ZAP_TITLE))
       commands.append("  zap;\n");
     appendLoadStates(commands);
     if (sfunc != null)
@@ -573,7 +573,7 @@ public class StateCreator extends JmolStateCreator {
   }
 
   private String getAnimState(AnimationManager am, SB sfunc) {
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     if (modelCount < 2)
       return "";
     SB commands = new SB();
@@ -588,9 +588,8 @@ public class StateCreator extends JmolStateCreator {
     if (am.backgroundModelIndex >= 0)
       app(commands, "set backgroundModel "
           + vwr.getModelNumberDotted(am.backgroundModelIndex));
-    BS bs = vwr.getFrameOffsets();
-    if (bs != null)
-      app(commands, "frame align " + Escape.eBS(bs));
+    if (vwr.bsFrameOffsets != null)
+      app(commands, "frame align " + Escape.eBS(vwr.bsFrameOffsets));
     app(commands, "frame RANGE "
         + am.getModelSpecial(AnimationManager.FRAME_FIRST) + " "
         + am.getModelSpecial(AnimationManager.FRAME_LAST));
@@ -601,11 +600,10 @@ public class StateCreator extends JmolStateCreator {
         + am.firstFrameDelay + " " + am.lastFrameDelay);
     if (am.morphCount > 0)
       app(commands, "animation MORPH " + am.morphCount);
-    int[] frames = am.getAnimationFrames();
     boolean showModel = true;
-    if (frames != null) {
-      app(commands, "anim frames " + Escape.eAI(frames));
-      int i = am.getCurrentFrameIndex();
+    if (am.animationFrames != null) {
+      app(commands, "anim frames " + Escape.eAI(am.animationFrames));
+      int i = am.caf;
       app(commands, "frame " + (i + 1));
       showModel = (am.cmi != am.modelIndexForFrame(i));
     }
@@ -788,7 +786,7 @@ public class StateCreator extends JmolStateCreator {
     app(commands, "set scaleAngstromsPerInch "
         + tm.scale3DAngstromsPerInch);
     app(commands, "set perspectiveDepth " + tm.perspectiveDepth);
-    app(commands, "set visualRange " + tm.visualRange);
+    app(commands, "set visualRange " + tm.visualRangeAngstroms);
     if (!tm.isWindowCentered())
       app(commands, "set windowCentered false");
     app(commands, "set cameraDepth " + tm.cameraDepth);

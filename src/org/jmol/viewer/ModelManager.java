@@ -36,8 +36,8 @@ class ModelManager {
   private final Viewer vwr;
   ModelSet modelSet;
 
-  private String modelSetPathName;
-  private String fileName;
+  String modelSetPathName;
+  String fileName;
 
   ModelManager(Viewer vwr) {
     this.vwr = vwr;
@@ -48,21 +48,13 @@ class ModelManager {
     new ModelLoader(vwr, vwr.getZapName(), null, null, null, null);
   }
   
-  String getModelSetFileName() {
-    return (fileName != null ? fileName : vwr.getZapName());
-  }
-
-  String getModelSetPathName() {
-    return modelSetPathName;
-  }
-  
   void createModelSet(String fullPathName, String fileName,
                           SB loadScript, Object atomSetCollection,
                           BS bsNew, boolean isAppend) {
     String modelSetName = null;
     if (isAppend) {
       modelSetName = modelSet.modelSetName;
-      if (modelSetName.equals("zapped"))
+      if (modelSetName.equals(JC.ZAP_TITLE))
         modelSetName = null;
       else if (modelSetName.indexOf(" (modified)") < 0)
         modelSetName += " (modified)";

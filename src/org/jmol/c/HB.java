@@ -38,7 +38,6 @@ public enum HB {
 
   public static HB getType(Atom atom) {
     Group group = atom.group;
-    int groupID = group.getGroupID();
     boolean considerHydrogens = !atom.isHetero();
     switch (atom.getElementNumber()) {
     default:
@@ -59,13 +58,13 @@ public enum HB {
     case 7:
       if (atom == group.getNitrogenAtom())
         return DONOR;
-      if (groupID == JC.GROUPID_HISTIDINE)
+      if (group.groupID == JC.GROUPID_HISTIDINE)
         return UNKNOWN;
       if (atom.getCovalentHydrogenCount() > 0)
         return DONOR;
       if (considerHydrogens)
         return ACCEPTOR;
-      switch (groupID) {
+      switch (group.groupID) {
       case JC.GROUPID_ARGININE:
       case JC.GROUPID_ASPARAGINE:
       case JC.GROUPID_LYSINE:
@@ -81,7 +80,7 @@ public enum HB {
         return UNKNOWN;
       if (considerHydrogens)
         return ACCEPTOR;       
-      switch (groupID) {
+      switch (group.groupID) {
       case JC.GROUPID_ASPARTATE:
       case JC.GROUPID_GLUTAMATE:
         return ACCEPTOR;

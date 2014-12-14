@@ -25,7 +25,7 @@ public interface JmolRepaintManager {
 
   void clear(int iShape);
 
-  void render(GData gdata, ModelSet modelSet, boolean isFirstPass, int[] minMax);
+  void render(GData gdata, ModelSet modelSet, boolean isFirstPass, int[] navMinMax);
 
   String renderExport(GData gdata, ModelSet modelSet, Map<String, Object> params);
 

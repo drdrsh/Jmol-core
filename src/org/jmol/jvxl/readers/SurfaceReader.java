@@ -879,7 +879,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     short minColorIndex = jvxlData.minColorIndex;
     short maxColorIndex = jvxlData.maxColorIndex;
     if (params.colorEncoder == null)
-      params.colorEncoder = new ColorEncoder(null);
+      params.colorEncoder = new ColorEncoder(null, null);
     params.colorEncoder.setRange(params.valueMappedToRed,
         params.valueMappedToBlue, params.isColorReversed);
     for (int i = meshData.vc; --i >= 0;) {

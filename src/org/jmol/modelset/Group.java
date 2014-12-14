@@ -33,7 +33,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import javajs.util.P3;
-import org.jmol.viewer.JC;
 import org.jmol.c.STR;
 import org.jmol.java.BS;
 
@@ -55,8 +54,7 @@ public class Group {
 
   public int seqcode;
   
-  protected short groupID;
-  protected boolean isProtein;
+  public short groupID;
   
   int selectedIndex;
   private final static int SEQUENCE_NUMBER_FLAG = 0x80;
@@ -74,15 +72,18 @@ public class Group {
         int firstAtomIndex, int lastAtomIndex) {
     this.chain = chain;
     this.seqcode = seqcode;
-    
-    if (group3 == null)
-      group3 = "";
-    groupID = JC.getGroupIdFor(group3);
-    isProtein = (groupID >= 1 && groupID < JC.GROUPID_AMINO_MAX); 
-
     this.firstAtomIndex = firstAtomIndex;
     this.lastAtomIndex = lastAtomIndex;
+    if (group3 != null && group3.length() > 0)
+      setGroupID(group3);
     return this;
+  }
+
+  /**
+   * @param group3  
+   */
+  protected void setGroupID(String group3) {
+    // monomer only
   }
 
   public final void setShapeVisibility(int visFlag, boolean isVisible) {
@@ -93,30 +94,14 @@ public class Group {
     }
   }
 
-  public final String getGroup3() {
-    return JC.group3Names[groupID];
+  public String getGroup3() {
+    return (groupID < 1 ? "" : group3Names[groupID]);
   }
 
-  public final char getGroup1() {    
-    return (groupID < JC.predefinedGroup1Names.length 
-        ? JC.predefinedGroup1Names[groupID] : 
-          group1 > 1 ? group1 
-              : group1 == 1 ? '?' 
-                  : (group1 = getGroup1b()));
-  }
-
-  protected char getGroup1b() {
+  public char getGroup1() {
     return '?';
   }
-
-  public final short getGroupID() {
-    return groupID;
-  }
-
-  public final int getChainID() {
-    return chain.chainID;
-  }
-
+  
   public int getBioPolymerLength() {
     return 0;
   }
@@ -157,12 +142,13 @@ public class Group {
   }
 
   public boolean isProtein() { 
-    return isProtein; 
+    return false; 
   }
   
-  public boolean isNucleic() { 
-    return (groupID >= JC.GROUPID_AMINO_MAX 
-        && groupID < JC.GROUPID_NUCLEIC_MAX); 
+  public boolean isNucleic() {
+    return false;
+    //return (groupID >= JC.GROUPID_AMINO_MAX 
+      //  && groupID < JC.GROUPID_NUCLEIC_MAX); 
   }
   public boolean isDna() { return false; }
   public boolean isRna() { return false; }
@@ -232,6 +218,9 @@ public class Group {
   }
   
   private BS bsAdded;
+  public static String group3List; // will be populated by org.jmol.biomodelset.Resolver
+  public static String[] group3Names = new String[128];
+  public static String[] specialAtomNames; // filled by Resolver
   
   public boolean isAdded(int atomIndex) {
     return bsAdded != null && bsAdded.get(atomIndex);
@@ -466,6 +455,5 @@ public class Group {
     // for now, AlphaMonomer only
     return new BS();
   }
-
 
 }

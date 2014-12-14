@@ -57,6 +57,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Txt;
 
 import javajs.util.PT;
 import org.jmol.util.Parser;
@@ -81,6 +82,7 @@ import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.StateManager;
+import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
 public class ScriptEval extends ScriptExpr {
@@ -968,7 +970,7 @@ public class ScriptEval extends ScriptExpr {
           debugScript);
     String[] data = new String[2];
     data[0] = filename;
-    if (!vwr.getFileAsStringBin(data, true)) { // first opening
+    if (!vwr.fm.getFileDataAsString(data, -1, false, true, false)) { // first opening
       setErrorMessage("io error reading " + data[0] + ": " + data[1]);
       return false;
     }
@@ -979,7 +981,7 @@ public class ScriptEval extends ScriptExpr {
         filename += "|";
       } else {
         data[0] = filename += "|JmolManifest.txt";
-        if (!vwr.getFileAsStringBin(data, true)) { // second entry
+        if (!vwr.fm.getFileDataAsString(data, -1, false, true, false)) { // second entry
           setErrorMessage("io error reading " + data[0] + ": " + data[1]);
           return false;
         }
@@ -988,7 +990,7 @@ public class ScriptEval extends ScriptExpr {
       if (path != null && path.length() > 0) {
         data[0] = filename = filename.substring(0, filename.lastIndexOf("|"))
             + path;
-        if (!vwr.getFileAsStringBin(data, true)) { // third entry
+        if (!vwr.fm.getFileDataAsString(data, -1, false, true, false)) { // third entry
           setErrorMessage("io error reading " + data[0] + ": " + data[1]);
           return false;
         }
@@ -998,7 +1000,7 @@ public class ScriptEval extends ScriptExpr {
     data[1] = JmolBinary.getEmbeddedScript(data[1]);
     String script = fixScriptPath(data[1], data[0]);
     if (scriptPath == null) {
-      scriptPath = vwr.getFilePath(filename, false);
+      scriptPath = vwr.fm.getFilePath(filename, false, false);
       scriptPath = scriptPath.substring(0,
           Math.max(scriptPath.lastIndexOf("|"), scriptPath.lastIndexOf("/")));
     }
@@ -1067,7 +1069,7 @@ public class ScriptEval extends ScriptExpr {
     thisContext.isFunction = !isTry;
     functionName = name;
     if (isTry) {
-      vwr.resetError();
+      resetError();
       thisContext.displayLoadErrorsSave = vwr.displayLoadErrors;
       thisContext.tryPt = ++vwr.tryPt;
       vwr.displayLoadErrors = false;
@@ -1105,7 +1107,7 @@ public class ScriptEval extends ScriptExpr {
     String err = (String) vwr.getP("_errormessage");
     if (err.length() > 0) {
       cv.put("_errorval", SV.newS(err));
-      vwr.resetError();
+      resetError();
     }
     cv.put("_tryret", cv.get("_retval"));
     SV ret = cv.get("_tryret");
@@ -1716,7 +1718,7 @@ public class ScriptEval extends ScriptExpr {
         continue;
       case T.spec_resid:
         sb.appendC('[');
-        sb.append(JC.getGroup3For((short) token.intValue));
+        sb.append(vwr.getJBR().getGroup3Names(false)[token.intValue]);
         sb.appendC(']');
         continue;
       case T.spec_name_pattern:
@@ -2014,7 +2016,7 @@ public class ScriptEval extends ScriptExpr {
     if (msg.length() > 0)
       Logger.info(msg);
     SB sb = new SB();
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     if (modelCount > 1)
       sb.append((vwr.am.isMovie ? vwr.am.getFrameCount() + " frames"
           : modelCount + " models") + "\n");
@@ -3381,7 +3383,7 @@ public class ScriptEval extends ScriptExpr {
         setShapeProperty(JC.SHAPE_ECHO, "text", text);
     }
     if (doRefresh && vwr.getRefreshing())
-      showString(vwr.formatText(text));
+      showString(Txt.formatText(vwr, text));
   }
 
   private void cmdFile() throws ScriptException {
@@ -3395,7 +3397,7 @@ public class ScriptEval extends ScriptExpr {
       modelIndex2 = vwr.ms.getModelNumberIndex((file + 1) * 1000000 + 1, false,
           false);
       if (modelIndex2 < 0)
-        modelIndex2 = vwr.getModelCount();
+        modelIndex2 = vwr.ms.mc;
       modelIndex2--;
     }
     vwr.setAnimationOn(false);
@@ -3740,7 +3742,7 @@ public class ScriptEval extends ScriptExpr {
             JC.LABEL_MAXIMUM_FONTSIZE - sizeAdjust);
         return;
       }
-      setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.getNoneSelected());
+      setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.slm.noneSelected);
     }
     if (chk)
       return;
@@ -4055,8 +4057,8 @@ public class ScriptEval extends ScriptExpr {
     BS bsModels;
     int i = (tokAt(0) == T.data ? 0 : 1);
     String filter = null;
-    int modelCount0 = vwr.getModelCount()
-        - (vwr.fm.getFileName().equals("zapped") ? 1 : 0);
+    int modelCount0 = vwr.ms.mc
+        - (vwr.fm.getFileName().equals(JC.ZAP_TITLE) ? 1 : 0);
     int ac0 = vwr.ms.ac;
     SB loadScript = new SB().append("load");
     int nFiles = 1;
@@ -4421,10 +4423,10 @@ public class ScriptEval extends ScriptExpr {
     OC out = null;
     if (localName != null) {
       if (localName.equals("."))
-        localName = vwr.getFilePath(filename, true);
+        localName = vwr.fm.getFilePath(filename, false, true);
       if (localName.length() == 0
-          || vwr.getFilePath(localName, false).equalsIgnoreCase(
-              vwr.getFilePath(filename, false)))
+          || vwr.fm.getFilePath(localName, false, false).equalsIgnoreCase(
+              vwr.fm.getFilePath(filename, false, false)))
         invArg();
       String[] fullPath = new String[] { localName };
       out = vwr.getOutputChannel(localName, fullPath);
@@ -4446,7 +4448,7 @@ public class ScriptEval extends ScriptExpr {
       } else if (!isData) {
         // check for AS
         if (localName != null)
-          localName = vwr.getFilePath(localName, false);
+          localName = vwr.fm.getFilePath(localName, false, false);
         if (!filename.equals("string") && !filename.equals("string[]"))
           loadScript.append("/*file*/").append(
               (localName != null ? PT.esc(localName) : "$FILENAME$"));
@@ -4504,7 +4506,7 @@ public class ScriptEval extends ScriptExpr {
     if (out != null) {
       vwr.fm.setFileInfo(new String[] { localName });
       Logger.info(GT.o(GT._("file {0} created"), localName));
-      showString(vwr.getFilePath(localName, false) + " created");
+      showString(vwr.fm.getFilePath(localName, false, false) + " created");
       out.closeChannel();
     }
 
@@ -4882,7 +4884,7 @@ public class ScriptEval extends ScriptExpr {
     if (script.length() > 0)
       msg += "\nUsing defaultLoadScript: " + script;
     String embeddedScript;
-    Map<String, Object> info = vwr.ms.getMSInfo();
+    Map<String, Object> info = vwr.ms.msInfo;
     if (info != null && vwr.allowEmbeddedScripts() 
         && (embeddedScript = (String) info.remove("jmolscript")) != null 
         && embeddedScript.length() > 0) {
@@ -4932,7 +4934,7 @@ public class ScriptEval extends ScriptExpr {
     String text = paramAsStr(checkLast(1));
     if (chk)
       return;
-    String s = vwr.formatText(text);
+    String s = Txt.formatText(vwr, text);
     if (outputBuffer == null)
       vwr.warn(s);
     if (!s.startsWith("_"))
@@ -5157,7 +5159,7 @@ public class ScriptEval extends ScriptExpr {
                       : frameList[1] + 1);
           modelIndex2 = vwr.ms.getModelNumberIndex(i2, false, false);
           if (modelIndex2 < 0)
-            modelIndex2 = vwr.getModelCount();
+            modelIndex2 = vwr.ms.mc;
           modelIndex2--;
           if (isRange)
             nFrames = 2;
@@ -5351,13 +5353,13 @@ public class ScriptEval extends ScriptExpr {
       checkLength(++i);
       switch ("xyz".indexOf(abc)) {
       case 0:
-        q = Quat.new4(-0.5f,0.5f,0.5f,0.5f);
+        q = Quat.new4(0.5f,0.5f,0.5f,-0.5f);
         break;
       case 1:
         q = Quat.new4(0.5f,0.5f,0.5f,0.5f);
         break;
       case 2:
-        q = Quat.new4(1, 0, 0, 0);
+        q = Quat.new4(0, 0, 0, 1);
         break;
       default:
          // a b c x y z
@@ -5423,7 +5425,7 @@ public class ScriptEval extends ScriptExpr {
       i = iToken + 1;
     }
     if (center != null) {
-      if (!isChange && center.distance(vwr.tm.getRotationCenter()) >= 0.1)
+      if (!isChange && center.distance(vwr.tm.fixedRotationCenter) >= 0.1)
         isChange = true;
       // optional {center} rotationRadius
       if (isFloatParameter(i))
@@ -5514,7 +5516,7 @@ public class ScriptEval extends ScriptExpr {
       return false;
     }
     msg = (msg.length() == 0 ? ": RESUME to continue." : ": "
-        + vwr.formatText(msg));
+        + Txt.formatText(vwr, msg));
     pauseExecution(true);
     vwr.scriptStatusMsg("script execution paused" + msg,
         "script paused for RESUME");
@@ -5563,7 +5565,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.cacheClear();
       return;
     case T.error:
-      vwr.resetError();
+      resetError();
       return;
     case T.lighting:
       vwr.stm.resetLighting();
@@ -5576,7 +5578,7 @@ public class ScriptEval extends ScriptExpr {
       return;
     case T.structure:
       BS bsAllAtoms = new BS();
-      runScript(vwr.getDefaultStructure(null, bsAllAtoms));
+      runScript(vwr.ms.getDefaultStructure(vwr.bsA(), bsAllAtoms));
       vwr.shm.resetBioshapes(bsAllAtoms);
       return;
     case T.vanderwaals:
@@ -5593,6 +5595,10 @@ public class ScriptEval extends ScriptExpr {
     if (var.charAt(0) == '_')
       invArg();
     vwr.unsetProperty(var);
+  }
+
+  private void resetError() {
+    vwr.g.removeParam("_errormessage");
   }
 
   private void cmdRestrict() throws ScriptException {
@@ -5810,7 +5816,7 @@ public class ScriptEval extends ScriptExpr {
         q = getQuaternionParameter(i);
         if (q != null) {
           if (tok == T.best && !(isMolecular = isSelected)) // yes, setting isMolecular here.
-            q = q.mulQ(vwr.tm.getRotationQuaternion().mul(-1));
+            q = q.mulQ(Quat.newM(vwr.tm.matrixRotate).mul(-1));
           rotAxis.setT(q.getNormal());
           endDegrees = q.getTheta();
         }
@@ -5839,8 +5845,8 @@ public class ScriptEval extends ScriptExpr {
           if (iAtom1 < 0 || iAtom2 < 0)
             return;
           bsAtoms = vwr.getBranchBitSet(iAtom2, iAtom1, true);
-          points[0] = vwr.getAtomPoint3f(iAtom1);
-          points[1] = vwr.getAtomPoint3f(iAtom2);
+          points[0] = vwr.ms.at[iAtom1];
+          points[1] = vwr.ms.at[iAtom2];
           nPoints = 2;
         }
         break;
@@ -5859,7 +5865,7 @@ public class ScriptEval extends ScriptExpr {
         int symop = intParameter(++i);
         if (chk)
           continue;
-        Map<String, Object> info = vwr.getSpaceGroupInfo(null);
+        Map<String, Object> info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(vwr.ms, null);
         Object[] op = (info == null ? null : (Object[]) info.get("operations"));
         if (symop == 0 || op == null || op.length < Math.abs(symop))
           invArg();
@@ -6393,7 +6399,7 @@ public class ScriptEval extends ScriptExpr {
       return; // coming from "cartoon only"
     // select beginexpr none endexpr
     int tok = tokAt(2);
-    vwr.setNoneSelected(slen == 4 && tok == T.none);
+    vwr.slm.noneSelected = Boolean.valueOf(slen == 4 && tok == T.none);
     BS bs = null;
     switch (tok) {
     case T.bitset:
@@ -6804,7 +6810,7 @@ public class ScriptEval extends ScriptExpr {
       if (ival == Integer.MIN_VALUE)
         invArg();
       if (!chk)
-        vwr.setFormalCharges(ival);
+        vwr.ms.setFormalCharges(vwr.bsA(), ival);
       return;
     case T.historylevel:
       // save value locally as well
@@ -7087,7 +7093,7 @@ public class ScriptEval extends ScriptExpr {
         break;
       case T.model:
         int modelIndex = (chk ? 0 : modelNumberParameter(pt++));
-        if (modelIndex >= vwr.getModelCount())
+        if (modelIndex >= vwr.ms.mc)
           invArg();
         propertyName = "model";
         propertyValue = Integer.valueOf(modelIndex);
@@ -7170,7 +7176,7 @@ public class ScriptEval extends ScriptExpr {
   private boolean cmdSetLabel(String str) throws ScriptException {
     sm.loadShape(JC.SHAPE_LABELS);
     Object propertyValue = null;
-    setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.getNoneSelected());
+    setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.slm.noneSelected);
     while (true) {
       if (str.equals("scalereference")) {
         float scaleAngstromsPerPixel = floatParameter(2);
@@ -7526,11 +7532,11 @@ public class ScriptEval extends ScriptExpr {
   private void cmdSubset() throws ScriptException {
     BS bs = null;
     if (!chk)
-      vwr.setSelectionSubset(null);
+      vwr.slm.setSelectionSubset(null);
     if (slen != 1 && (slen != 4 || !getToken(2).value.equals("off")))
       bs = atomExpressionAt(1);
     if (!chk)
-      vwr.setSelectionSubset(bs);
+      vwr.slm.setSelectionSubset(bs);
   }
 
   private void cmdSync() throws ScriptException {
@@ -7974,7 +7980,7 @@ public class ScriptEval extends ScriptExpr {
     if (chk)
       return;
     if (period == 0) {
-      vwr.setVibrationOff();
+      vwr.tm.setVibrationPeriod(0);
       return;
     }
     vwr.setVibrationPeriod(-period);
@@ -8091,7 +8097,7 @@ public class ScriptEval extends ScriptExpr {
           newZoom /= 2;
       }
     }
-    float max = vwr.getMaxZoomPercent();
+    float max = TransformManager.MAXIMUM_ZOOM_PERCENTAGE;
     if (newZoom < 5 || newZoom > max)
       numberOutOfRange(5, max);
     if (!vwr.tm.isWindowCentered()) {
@@ -8101,7 +8107,7 @@ public class ScriptEval extends ScriptExpr {
         if (!chk)
           vwr.setCenterBitSet(bs, false);
       }
-      center = vwr.tm.getRotationCenter();
+      center = vwr.tm.fixedRotationCenter;
       if (Float.isNaN(xTrans))
         xTrans = vwr.tm.getTranslationXPercent();
       if (Float.isNaN(yTrans))
@@ -8355,7 +8361,7 @@ public class ScriptEval extends ScriptExpr {
     if (typeMask == 0) {
       sm.loadShape(shapeType);
       if (shapeType == JC.SHAPE_LABELS)
-        setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.getNoneSelected());
+        setShapeProperty(JC.SHAPE_LABELS, "setDefaults", vwr.slm.noneSelected);
     } else {
       if (bs != null) {
         vwr.selectBonds(bs);

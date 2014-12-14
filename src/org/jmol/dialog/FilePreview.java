@@ -168,7 +168,7 @@ public class FilePreview extends JPanel implements PropertyChangeListener {
         script = "script " + script;
       } else {
         script = PT.rep((String) display.vwr
-            .getParameter("defaultdropscript"), "\"%FILE\"", script + " 1");
+            .getP("defaultdropscript"), "\"%FILE\"", script + " 1");
         script = PT.rep(script, "%ALLOWCARTOONS", ""
             + (isCartoonsSelected() && !isAppendSelected()));
         System.out.println(script);

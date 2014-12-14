@@ -646,7 +646,7 @@ public class JvxlXmlReader extends VolumeFileReader {
       return "-";
     }    
     if (params.colorEncoder == null)
-      params.colorEncoder = new ColorEncoder(null);
+      params.colorEncoder = new ColorEncoder(null, null);
     params.colorEncoder.setColorScheme(null, false);
     params.colorEncoder.setRange(params.valueMappedToRed,
         params.valueMappedToBlue, params.isColorReversed);

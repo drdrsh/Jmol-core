@@ -24,12 +24,12 @@
 package org.openscience.jmol.app.jmolpanel;
 
 import org.jmol.api.JmolAbstractButton;
-import org.jmol.api.JmolViewer;
 import org.jmol.i18n.GT;
 import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.GuiMap;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
@@ -132,11 +132,11 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   };
 
   JmolPanel jmol;
-  JmolViewer vwr;
+  Viewer vwr;
   GuiMap guimap;
 
   public PreferencesDialog(JmolPanel jmol, JFrame f, GuiMap guimap,
-                           JmolViewer vwr) {
+                           Viewer vwr) {
 
     super(f, false);
     this.jmol = jmol;
@@ -232,7 +232,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
     cbPerspectiveDepth =
       guimap.newJCheckBox("Prefs.perspectiveDepth",
-                          vwr.getPerspectiveDepth());
+                          vwr.tm.perspectiveDepth);
     cbPerspectiveDepth.addItemListener(checkBoxListener);
     fooPanel.add(cbPerspectiveDepth);
 
@@ -546,7 +546,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     cH.setSelected(vwr.getBoolean(T.showhydrogens));
     cM.setSelected(vwr.getBoolean(T.showmeasurements));
 
-    cbPerspectiveDepth.setSelected(vwr.getPerspectiveDepth());
+    cbPerspectiveDepth.setSelected(vwr.tm.perspectiveDepth);
     cbShowAxes.setSelected(vwr.getShowAxes());
     cbShowBoundingBox.setSelected(vwr.getShowBbcage());
 

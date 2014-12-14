@@ -185,7 +185,7 @@ abstract public class ScriptParam extends ScriptError {
     case T.expressionBegin:
       BS bs = atomExpression(st, i, 0, true, false, false, true);
       if (bs != null && bs.cardinality() == 1)
-        return vwr.getAtomPoint3f(bs.nextSetBit(0));
+        return vwr.ms.at[bs.nextSetBit(0)];
       if (bs != null)
         return vwr.ms.getAtomSetCenter(bs);
       if (expressionResult instanceof P3)

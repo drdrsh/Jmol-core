@@ -40,6 +40,7 @@ import org.jmol.api.JmolAnnotationParser;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
+import org.jmol.modelset.Group;
 import org.jmol.modelset.HBond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelsetbio.BasePair;
@@ -47,13 +48,13 @@ import org.jmol.modelsetbio.BioModel;
 import org.jmol.modelsetbio.BioPolymer;
 import org.jmol.modelsetbio.NucleicMonomer;
 import org.jmol.modelsetbio.NucleicPolymer;
+import org.jmol.modelsetbio.Resolver;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
-import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -1913,8 +1914,9 @@ public class AnnotationParser implements JmolAnnotationParser {
         assignPDBH(
             "",
             "N H H1 H2 H3 CB HB2 HB3 CD HD2 HD3 CG HG2 HG3 C2' H2'' H2' C5' H5'' H5' OXT HXT");
-        for (int i = JC.pdbBondInfo.length; --i >= 1;) {
-          assignPDBH(JC.group3Names[i], JC.pdbBondInfo[i]);
+        
+        for (int i = Resolver.pdbBondInfo.length; --i >= 1;) {
+          assignPDBH(Group.group3Names[i], Resolver.pdbBondInfo[i]);
         }
       }
       String a = pdbAtomForH.get(name);

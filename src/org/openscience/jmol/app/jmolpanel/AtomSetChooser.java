@@ -455,7 +455,7 @@ ActionListener, ChangeListener, Runnable {
       int atomSetIndex = indexes[index];
       script("frame " + vwr.getModelNumberDotted(atomSetIndex));
       infoLabel.setText(vwr.getModelName(atomSetIndex));
-      showProperties(vwr.ms.getModelProperties(atomSetIndex));
+      showProperties(vwr.ms.am[atomSetIndex].properties);
       showAuxiliaryInfo(vwr.ms.getModelAuxiliaryInfo(atomSetIndex));
     } catch (Exception e) {
       // if this fails, ignore it.
@@ -558,13 +558,12 @@ ActionListener, ChangeListener, Runnable {
           SB str = new SB();
           str.append(vwr.getModelName(modelIndex)).append("\n");
           int natoms=0;
-          int atomCount = vwr.ms.ac;
-          for (int i = 0; i < atomCount;  i++) {
-            if (vwr.getAtomModelIndex(i)==modelIndex) {
+          for (int i = 0, n = vwr.ms.ac; i < n;  i++) {
+            if (vwr.ms.at[i].mi == modelIndex) {
               natoms++;
-              P3 p = vwr.getAtomPoint3f(i);
+              P3 p = vwr.ms.at[i];
               // should really be getElementSymbol(i) in stead
-              str.append(vwr.getAtomName(i)).append("\t");
+              str.append(vwr.ms.at[i].getAtomName()).append("\t");
               str.appendF(p.x).append("\t").appendF(p.y).append("\t").appendF(p.z).append("\n");
               // not sure how to get the vibration vector and charge here...
             }
@@ -681,14 +680,15 @@ ActionListener, ChangeListener, Runnable {
    * Creates the treeModel of the AtomSets available in the JmolViewer
    */
   private void createTreeModel() {
-    String key=null;
-    String separator=null;
-    String name = vwr.getModelSetName();
-    DefaultMutableTreeNode root =
-      new DefaultMutableTreeNode(name == null ? "zapped" : name);
-    
+    String key = null;
+    String separator = null;
+    String name = vwr.ms.modelSetName;
+    DefaultMutableTreeNode root = new DefaultMutableTreeNode(
+        name == null ? JC.ZAP_TITLE : name);
+
     // first determine whether we have a PATH_KEY in the modelSetProperties
-    Properties modelSetProperties = (name == null ? null : vwr.getModelSetProperties());
+    Properties modelSetProperties = (name == null ? null : vwr
+        .getModelSetProperties());
     if (modelSetProperties != null) {
       key = modelSetProperties.getProperty("PATH_KEY");
       separator = modelSetProperties.getProperty("PATH_SEPARATOR");
@@ -696,53 +696,50 @@ ActionListener, ChangeListener, Runnable {
     if (key == null || separator == null) {
       // make a flat hierarchy if no key or separator are known
       if (name != null)
-        for (int atomSetIndex = 0, count = vwr.getModelCount();
-            atomSetIndex < count; ++atomSetIndex) {
-          root.add(new AtomSet(atomSetIndex,
-          vwr.getModelName(atomSetIndex)));
+        for (int atomSetIndex = 0, count = vwr.ms.mc; atomSetIndex < count; ++atomSetIndex) {
+          root.add(new AtomSet(atomSetIndex, vwr.getModelName(atomSetIndex)));
         }
     } else {
-      for (int atomSetIndex = 0, count = vwr.getModelCount();
-      atomSetIndex < count; ++atomSetIndex) {
+      for (int atomSetIndex = 0, count = vwr.ms.mc; atomSetIndex < count; ++atomSetIndex) {
         DefaultMutableTreeNode current = root;
-        String path = vwr.ms.getModelProperty(atomSetIndex,key);
+        String path = vwr.ms.getModelProperty(atomSetIndex, key);
         // if the path is not null we need to find out where to add a leaf
         if (path != null) {
           DefaultMutableTreeNode child = null;
           String[] folders = path.split(separator);
-          for (int i=0, nFolders=folders.length; --nFolders>=0; i++) {
+          for (int i = 0, nFolders = folders.length; --nFolders >= 0; i++) {
             boolean found = false; // folder is initially not found
             String lookForFolder = folders[i];
-            for (int childIndex = current.getChildCount(); --childIndex>=0;) {
+            for (int childIndex = current.getChildCount(); --childIndex >= 0;) {
               child = (DefaultMutableTreeNode) current.getChildAt(childIndex);
               found = lookForFolder.equals(child.toString());
-              if (found) break;
+              if (found)
+                break;
             }
             if (found) {
               current = child; // follow the found folder
             } else {
               // the 'folder' was not found: we need to add it
-              DefaultMutableTreeNode newFolder = 
-                new DefaultMutableTreeNode(lookForFolder);
+              DefaultMutableTreeNode newFolder = new DefaultMutableTreeNode(
+                  lookForFolder);
               current.add(newFolder);
               current = newFolder; // follow the new folder
             }
           }
         }
         // current is the folder where the AtomSet is to be added
-        current.add(new AtomSet(atomSetIndex,
-            vwr.getModelName(atomSetIndex)));
+        current.add(new AtomSet(atomSetIndex, vwr.getModelName(atomSetIndex)));
       }
     }
     treeModel.setRoot(root);
-    treeModel.reload(); 
+    treeModel.reload();
 
     // en/dis able the tree based on whether the root has children
-    tree.setEnabled(root.getChildCount()>0);
+    tree.setEnabled(root.getChildCount() > 0);
     // disable the slider and set it up so that we don't have anything selected..
     indexes = null;
     currentIndex = -1;
-    selectSlider.setEnabled(false);  
+    selectSlider.setEnabled(false);
   }
   
   /**

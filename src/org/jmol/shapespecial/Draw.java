@@ -194,7 +194,7 @@ public void initShape() {
     if ("modelIndex" == propertyName) {
       //from saved state -- used to set modelVertices
       indicatedModelIndex = ((Integer) value).intValue();
-      if (indicatedModelIndex < 0 || indicatedModelIndex >= vwr.getModelCount())
+      if (indicatedModelIndex < 0 || indicatedModelIndex >= vwr.ms.mc)
         return;
       vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_INDEX),
           (modelInfo = new int[] { indicatedModelIndex, 0 }) });
@@ -548,7 +548,7 @@ protected void resetObjects() {
     if (polygon == null && (lineData != null ? lineData.size() == 0 : (vData.size() == 0) == (connections == null))
         || !isArrow && connections != null)
       return false;  // connections only for arrows at this point
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     if (polygon != null || lineData != null || indicatedModelIndex < 0
         && (isFixed || isArrow || isCurve || isCircle || isCylinder || modelCount == 1)) {
       // make just ONE copy 
@@ -1277,7 +1277,7 @@ protected void resetObjects() {
       DrawMesh m = dmeshes[i];
       if (m.visibilityFlags != 0) {
         int mCount = (m.isTriangleSet ? m.pc
-            : m.modelFlags == null ? 1 : vwr.getModelCount());
+            : m.modelFlags == null ? 1 : vwr.ms.mc);
         for (int iModel = mCount; --iModel >= 0;) {
           if (m.modelFlags != null
               && !m.modelFlags.get(iModel)
@@ -1334,7 +1334,7 @@ protected void resetObjects() {
         )
       return "";
     SB str = new SB();
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     if (!dmesh.isFixed && iModel >= 0 && modelCount > 1)
       appendCmd(str, "frame " + vwr.getModelNumberDotted(iModel));
     str.append("  draw ID ").append(PT.esc(dmesh.thisID));
@@ -1506,7 +1506,7 @@ protected void resetObjects() {
       info.put("scale", Float.valueOf(mesh.scale));
       if (mesh.drawType == EnumDrawType.MULTIPLE) {
         Lst<Map<String, Object>> m = new  Lst<Map<String,Object>>();
-        int modelCount = vwr.getModelCount();
+        int modelCount = vwr.ms.mc;
         for (int k = 0; k < modelCount; k++) {
           if (mesh.ptCenters[k] == null)
             continue;

@@ -103,10 +103,6 @@ public abstract class JmolAdapter {
     return Elements.getNaturalIsotope(elementNumber);
   }
 
-  public static boolean isHetero(String group3) {
-    return JC.isHetero(group3);
-  }
-  
   public static String getQuantumShellTag(int id) {
     return QS.getQuantumShellTag(id);
   }

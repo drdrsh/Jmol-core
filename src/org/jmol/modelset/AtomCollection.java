@@ -784,9 +784,9 @@ abstract public class AtomCollection {
   }
 
   public void setAtomName(int atomIndex, String name) {
-    byte id = JC.lookupSpecialAtomID(name);
+    byte id = (((ModelSet)this).am[at[atomIndex].mi].isBioModel ? vwr.getJBR().lookupSpecialAtomID(name) : 0);
     at[atomIndex].atomID = id;
-    if (id > 0 && ((ModelSet)this).am[at[atomIndex].mi].isBioModel)
+    if (id > 0)
       return;
     if (atomNames == null)
       atomNames = new String[at.length];
@@ -1389,7 +1389,7 @@ abstract public class AtomCollection {
     Model model = ((ModelSet) this).am[atom.mi];
     String s = (model.isBioModel && !model.isPdbWithMultipleBonds ? atom.group.getGroup3() : null);
     if (s != null && charge == 0) {
-      if (JC.getAminoAcidValenceAndCharge(s, atom.getAtomName(),
+      if (vwr.getJBR().getAminoAcidValenceAndCharge(s, atom.getAtomName(),
           aaRet)) {
         targetValence = aaRet[0];
         charge = aaRet[1];

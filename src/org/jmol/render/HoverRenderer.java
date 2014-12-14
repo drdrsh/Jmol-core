@@ -28,6 +28,7 @@ import javajs.util.P3;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Text;
 import org.jmol.shape.Hover;
+import org.jmol.util.Txt;
 
 public class HoverRenderer extends ShapeRenderer {
   
@@ -64,7 +65,7 @@ public class HoverRenderer extends ShapeRenderer {
     }
     if (vwr != null &&(label.indexOf("%{") >= 0 || label
         .indexOf("@{") >= 0))
-      label = vwr.formatText(label);
+      label = Txt.formatText(vwr, label);
     text.setText(label);
     //System.out.println("hoverRenderer " + text.getText());
     TextRenderer.render(text, g3d, 0, antialias ? 2 : 1, false, null, tempXY );

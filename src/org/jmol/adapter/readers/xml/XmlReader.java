@@ -366,12 +366,14 @@ public class XmlReader extends AtomSetCollectionReader {
   }
 
   private Object jsObjectCall(Object[] jsObject, String method, Object[] args) {
-    return parent.vwr.getJsObjectInfo(jsObject, method,
+    return parent.vwr.apiPlatform.getJsObjectInfo(jsObject, method,
         args == null ? nullObj : args);
   }
+  
+  
 
   private Object jsObjectGetMember(Object[] jsObject, String name) {
-    return parent.vwr.getJsObjectInfo(jsObject, name, null);
+    return parent.vwr.apiPlatform.getJsObjectInfo(jsObject, name, null);
   }
 
 }

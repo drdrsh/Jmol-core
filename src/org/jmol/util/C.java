@@ -140,7 +140,7 @@ public final class C {
   public final static int TRANSLUCENT_SHIFT = 11;
   public final static int ALPHA_SHIFT = 24 - TRANSLUCENT_SHIFT;
   public final static int TRANSLUCENT_MASK = 0xF << TRANSLUCENT_SHIFT; //0x7800
-  public final static int TRANSLUCENT_SCREENED = TRANSLUCENT_MASK;
+  // abandoned in Jmol 14.3.11 public final static int TRANSLUCENT_SCREENED = TRANSLUCENT_MASK;
   public final static int TRANSPARENT = 8 << TRANSLUCENT_SHIFT; //0x4000
   //public final static int TRANSLUCENT_50 = 4 << TRANSLUCENT_SHIFT; //0x2000
   public final static short OPAQUE_MASK = ~TRANSLUCENT_MASK;
@@ -321,13 +321,14 @@ public final class C {
     if (translucentLevel == 0) //opaque
       return 0;
     if (translucentLevel < 0) //screened
-      return TRANSLUCENT_SCREENED;
+      translucentLevel = 128;//return TRANSLUCENT_SCREENED;
     if (Float.isNaN(translucentLevel) || translucentLevel >= 255
         || translucentLevel == 1.0)
       return TRANSPARENT;
     int iLevel = (int) Math.floor(translucentLevel < 1 ? translucentLevel * 256
+        : translucentLevel >= 15 ? translucentLevel
         : translucentLevel <= 9 ? ((int) Math.floor(translucentLevel - 1)) << 5
-            : translucentLevel < 15 ? 8 << 5 : translucentLevel);
+        : 8 << 5);
     return (((iLevel >> 5) & 0xF) << TRANSLUCENT_SHIFT);
   }
 

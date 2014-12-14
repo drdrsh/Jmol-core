@@ -246,9 +246,9 @@ public class SmilesExt implements JmolSmilesExtension {
         false, mapSet, null, false, false);
     if (mapSet[0] == null)
       return null;
-    int[][] bondMap1 = e.vwr.getDihedralMap(mapSet[0]);
+    int[][] bondMap1 = e.vwr.ms.getDihedralMap(mapSet[0]);
     int[][] bondMap2 = (bondMap1 == null ? null : e.vwr
-        .getDihedralMap(mapSet[1]));
+        .ms.getDihedralMap(mapSet[1]));
     if (bondMap2 == null || bondMap2.length != bondMap1.length)
       return null;
     float[][] angles = new float[bondMap1.length][3];

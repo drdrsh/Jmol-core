@@ -587,14 +587,14 @@ public class InputReader extends AtomSetCollectionReader {
     if (theta2 == Float.MAX_VALUE) {
       // just the first angle being set
       v2.set(0, 0, 1);
-      (Quat.newVA(v2, theta1)).transformP2(v1, v2);
+      (Quat.newVA(v2, theta1)).transform2(v1, v2);
     } else if (d >= 0) {
       // theta2 is a dihedral angle
       // just do two quaternion rotations
       v2.sub2(vAtoms.get(ic), pt0);
       v2.cross(v1, v2);
-      (Quat.newVA(v2, theta1)).transformP2(v1, v2);
-      (Quat.newVA(v1, -theta2)).transformP2(v2, v2);
+      (Quat.newVA(v2, theta1)).transform2(v1, v2);
+      (Quat.newVA(v1, -theta2)).transform2(v2, v2);
     } else {
       // d < 0
       // theta1 and theta2 are simple angles atom-ia-ib and atom-ia-ic 

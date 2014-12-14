@@ -209,7 +209,7 @@ public abstract class ___Exporter {
     this.gdata = g3d;
     this.privateKey = privateKey;
     backgroundColix = vwr.getObjectColix(StateManager.OBJ_BACKGROUND);
-    center.setT(tm.getRotationCenter());
+    center.setT(tm.fixedRotationCenter);
     exportScale = vwr.getFloat(T.exportscale);
 
     if ((screenWidth <= 0) || (screenHeight <= 0)) {
@@ -279,7 +279,7 @@ public abstract class ___Exporter {
     SB sb = new SB();
     sb.append(commentChar).append("Jmol perspective:");
     sb.append("\n").append(commentChar).append("screen width height dim: " + screenWidth + " " + screenHeight + " " + vwr.getScreenDim());
-    sb.append("\n").append(commentChar).append("perspectiveDepth: " + vwr.getPerspectiveDepth());
+    sb.append("\n").append(commentChar).append("perspectiveDepth: " + vwr.tm.perspectiveDepth);
     sb.append("\n").append(commentChar).append("cameraDistance(angstroms): " + cameraDistance);
     sb.append("\n").append(commentChar).append("aperatureAngle(degrees): " + aperatureAngle);
     sb.append("\n").append(commentChar).append("scalePixelsPerAngstrom: " + scalePixelsPerAngstrom);
@@ -289,7 +289,7 @@ public abstract class ___Exporter {
     sb.append("\n").append(commentChar).append("rotationRadius: " + vwr.getFloat(T.rotationradius));
     sb.append("\n").append(commentChar).append("boundboxCenter: " + vwr.getBoundBoxCenter());
     sb.append("\n").append(commentChar).append("translationOffset: " + tm.getTranslationScript());
-    sb.append("\n").append(commentChar).append("zoom: " + vwr.getZoomPercentFloat());
+    sb.append("\n").append(commentChar).append("zoom: " + vwr.tm.zmPct);
     sb.append("\n").append(commentChar).append("moveto command: " + vwr.getOrientationText(T.moveto, null));
     sb.append("\n");
     return sb.toString();

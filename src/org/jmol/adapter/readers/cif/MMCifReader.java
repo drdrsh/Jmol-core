@@ -511,7 +511,7 @@ public class MMCifReader extends CifReader {
   private Map<String, String> htHetero;
 
   private void addHetero(String groupName, String hetName) {
-    if (!JmolAdapter.isHetero(groupName))
+    if (!vwr.getJBR().isHetero(groupName))
       return;
     if (htHetero == null)
       htHetero = new Hashtable<String, String>();

@@ -139,7 +139,7 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
     bGlobals[OPT_WIREFRAME] = !isExport && !vwr.checkMotionRendering(T.ellipsoid);
     diameter0 = Math.round (((Float) vwr.getP("ellipsoidAxisDiameter"))
         .floatValue() * 1000);    
-    M4 m4 = tm.getMatrixtransform();
+    M4 m4 = tm.matrixTransform;
     mat.setRow(0, m4.m00, m4.m01, m4.m02);
     mat.setRow(1, m4.m10, m4.m11, m4.m12);
     mat.setRow(2, m4.m20, m4.m21, m4.m22);

@@ -85,7 +85,7 @@ class FileLoadThread extends JmolThread {
         return;
       case CHECK1:
         // vwr.testAsync only
-        Object data = vwr.getFileAsBytes(this.fileName, null);
+        Object data = vwr.fm.getFileAsBytes(this.fileName, null);
         setData(this.fileName, this.fileName, data, null);
         return;    
       case FINISH:

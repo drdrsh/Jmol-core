@@ -676,7 +676,7 @@ public class Dipoles extends Shape {
       return "";
     SB s = new SB();
     int thisModel = -1;
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     for (int i = 0; i < dipoleCount; i++) {
       Dipole dipole = dipoles[i];
       if (dipole.isValid) {

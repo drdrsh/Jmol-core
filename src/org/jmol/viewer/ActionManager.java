@@ -1287,8 +1287,6 @@ public class ActionManager implements EventManager {
   }
 
   private void checkClickAction(int x, int y, long time, int clickedCount) {
-    if (!vwr.haveModelSet())
-      return;
     // points are always picked up first, then atoms
     // so that atom picking can be superceded by draw picking
     // Binding.MOVED is used for some vwr methods.

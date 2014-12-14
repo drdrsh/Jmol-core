@@ -38,7 +38,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.jmol.api.JmolViewer;
 import org.jmol.script.SV;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
@@ -160,7 +159,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
   private NIOSocket inSocket;
   protected NIOSocket outSocket;
   private NIOServerSocket serverSocket;
-  JmolViewer jmolViewer;
+  Viewer vwr;
   private JsonNioClient client;
 
   private boolean wasSpinOn;
@@ -221,7 +220,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
           thread.interrupt();
           thread = null;
         }
-        startService(port, client, jmolViewer, myName, 1);
+        startService(port, client, vwr, myName, 1);
       }
       if (msg.startsWith("Mouse:"))
         msg = "{\"type\":\"sync\", \"sync\":\""
@@ -239,12 +238,12 @@ public class JsonNioService extends NIOService implements JsonNioServer {
    */
   @Override
   public void startService(int port, JsonNioClient client,
-                           JmolViewer jmolViewer, String name, int version)
+                           Viewer jmolViewer, String name, int version)
       throws IOException {
     this.version = version;
     this.port = Math.abs(port);
     this.client = client;
-    this.jmolViewer = jmolViewer;
+    this.vwr = jmolViewer;
     myName = (name == null ? "" : name);
 
     if (port < 0) {
@@ -253,13 +252,13 @@ public class JsonNioService extends NIOService implements JsonNioServer {
     }
 
     if (name != null) {
-      String s = JmolViewer.getJmolValueAsString(jmolViewer, "NIOcontentPath");
+      String s = getJmolValueAsString(jmolViewer, "NIOcontentPath");
       if (s != "")
         contentPath = s;
-      s = JmolViewer.getJmolValueAsString(jmolViewer, "NIOterminatorMessage");
+      s = getJmolValueAsString(jmolViewer, "NIOterminatorMessage");
       if (s != "")
         terminatorMessage = s;
-      s = JmolViewer.getJmolValueAsString(jmolViewer, "NIOresetMessage");
+      s = getJmolValueAsString(jmolViewer, "NIOresetMessage");
       if (s != "")
         resetMessage = s;
       
@@ -351,9 +350,13 @@ public class JsonNioService extends NIOService implements JsonNioServer {
   }
 
   private void setEnabled() {
-    contentDisabled = (JmolViewer.getJmolValueAsString(jmolViewer, "NIOcontentDisabled").equals("true"));
-    motionDisabled = (JmolViewer.getJmolValueAsString(jmolViewer, "NIOmotionDisabled").equals("true"));
+    contentDisabled = (getJmolValueAsString(vwr, "NIOcontentDisabled").equals("true"));
+    motionDisabled = (getJmolValueAsString(vwr, "NIOmotionDisabled").equals("true"));
   } 
+
+  public static String getJmolValueAsString(Viewer vwr, String var) {
+    return (vwr == null ? "" : "" + vwr.getP(var));
+  }
 
   protected class JsonNioThread implements Runnable {
 
@@ -501,7 +504,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
     try {
       String msg = new String(packet);
       Logger.info("JNIOS received " + msg);
-      if (jmolViewer == null) {
+      if (vwr == null) {
         return;
       }
       JSONObject json = new JSONObject(msg);
@@ -606,9 +609,9 @@ public class JsonNioService extends NIOService implements JsonNioServer {
         float dy = (float) json.getDouble("y");
         float dxdy = dx * dx + dy * dy;
         boolean isFast = (dxdy > swipeCutoff);
-        boolean disallowSpinGesture = jmolViewer
+        boolean disallowSpinGesture = vwr
             .getBooleanProperty("isNavigating")
-            || !jmolViewer.getBooleanProperty("allowGestures");
+            || !vwr.getBooleanProperty("allowGestures");
         if (disallowSpinGesture || isFast
             || now - swipeStartTime > swipeDelayMs) {
           // it's been a while since the last swipe....
@@ -637,12 +640,12 @@ public class JsonNioService extends NIOService implements JsonNioServer {
         previousMoveTime = now;
         break;
       case 10: // translate
-        jmolViewer.syncScript("Mouse: translateXYBy " + json.getString("x")
+        vwr.syncScript("Mouse: translateXYBy " + json.getString("x")
             + " " + json.getString("y"), "=", 0);
         break;
       case 20: // zoom
-        float zoomFactor = (float) (json.getDouble("scale") / (jmolViewer
-            .getZoomPercentFloat() / 100.0f));
+        float zoomFactor = (float) (json.getDouble("scale") / (vwr
+            .tm.zmPct / 100.0f));
         syncScript("Mouse: zoomByFactor " + zoomFactor);
         break;
       }
@@ -661,7 +664,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
       if (motionDisabled)
         break;
       // raw touch event
-      jmolViewer.processMultitouchEvent(0, json.getInt("eventType"), json
+      vwr.acm.processMultitouchEvent(0, json.getInt("eventType"), json
           .getInt("touchID"), json.getInt("iData"), P3.new3((float) json
           .getDouble("x"), (float) json.getDouble("y"), (float) json
           .getDouble("z")), json.getLong("time"));
@@ -671,12 +674,12 @@ public class JsonNioService extends NIOService implements JsonNioServer {
 
   private void sendScript(String script) {
     Logger.info("JsonNiosService sendScript " + script);
-    jmolViewer.evalStringQuiet(script);
+    vwr.evalStringQuiet(script);
   }
 
   private void syncScript(String script) {
     Logger.info("JsonNiosService syncScript " + script);
-    jmolViewer.syncScript(script, "=", 0);
+    vwr.syncScript(script, "=", 0);
   }
 
   private void setBanner(String bannerText, boolean andCenter) {
@@ -694,7 +697,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
     String script;
     if (isPause) {
       // Pause the script and save the state when interaction starts
-      wasSpinOn = jmolViewer.getBooleanProperty("spinOn");
+      wasSpinOn = vwr.getBooleanProperty("spinOn");
       script = "pause; save orientation 'JsonNios-save'; spin off";
       isPaused = true;
     } else {
@@ -737,7 +740,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
 
     @SuppressWarnings("unchecked")
     JSONObject(String msg) throws Exception {
-      SV o = ((Viewer) jmolViewer).evaluateExpressionAsVariable(msg);
+      SV o = vwr.evaluateExpressionAsVariable(msg);
       if (!(o.value instanceof Map<?,?>)) 
         throw new Exception("invalid JSON: " + msg);
       putAll((Map<String, Object>) o.value);

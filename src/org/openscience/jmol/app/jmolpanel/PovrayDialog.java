@@ -23,7 +23,7 @@
  */
 package org.openscience.jmol.app.jmolpanel;
 
-import org.jmol.api.JmolViewer;
+import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
 import org.jmol.util.Logger;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
@@ -65,7 +65,7 @@ import java.util.Map;
  */
 public class PovrayDialog extends JDialog {
 
-  private transient JmolViewer vwr;
+  private transient Viewer vwr;
   
   protected JButton    povrayPathButton;
   //protected JTextField commandLineField;
@@ -111,7 +111,7 @@ public class PovrayDialog extends JDialog {
    * @param f The frame assosiated with the dialog
    * @param vwr The interacting display we are reproducing (source of view angle info etc)
    */
-  public PovrayDialog(JFrame f, JmolViewer vwr) {
+  public PovrayDialog(JFrame f, Viewer vwr) {
 
     super(f, GT._("Render in POV-Ray"), true);
     this.vwr = vwr;
@@ -898,9 +898,9 @@ public class PovrayDialog extends JDialog {
     // Animation options
     if ((allFramesCheck != null) && (allFramesCheck.isSelected())) {
       commandLine += " +KFI1";
-      commandLine += " +KFF" + vwr.getModelCount();
+      commandLine += " +KFF" + vwr.ms.mc;
       commandLine += " +KI1";
-      commandLine += " +KF" + vwr.getModelCount();
+      commandLine += " +KF" + vwr.ms.mc;
     }
 
     // Mosaic preview options
@@ -948,9 +948,9 @@ public class PovrayDialog extends JDialog {
     // Animation options
     if ((allFramesCheck != null) && (allFramesCheck.isSelected())) {
       data.append("Initial_Frame=1\n");
-      data.append("Final_Frame=" + vwr.getModelCount() + "\n");
+      data.append("Final_Frame=" + vwr.ms.mc + "\n");
       data.append("Initial_Clock=1\n");
-      data.append("Final_Clock=" + vwr.getModelCount() + "\n");
+      data.append("Final_Clock=" + vwr.ms.mc + "\n");
     }
     
     // Output alpha options

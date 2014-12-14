@@ -33,7 +33,9 @@ import java.util.Hashtable;
 import java.util.Map;
 
 
+import org.jmol.script.T;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 import org.jmol.c.PAL;
 
 import javajs.util.P3;
@@ -53,18 +55,22 @@ import javajs.util.P3;
 
  public class ColorEncoder {
 
-   public ColorEncoder(ColorEncoder ce) {
+   private Viewer vwr;
+
+  public ColorEncoder(ColorEncoder ce, Viewer vwr) {
     if (ce == null) {
+      this.vwr = vwr;
       schemes = new Hashtable<String, int[]>();
       argbsCpk = PAL.argbsCpk;
       argbsRoygb = JC.argbsRoygbScale;
       argbsRwb = JC.argbsRwbScale;
-      argbsShapely = JC.argbsShapely;
-      argbsAmino = JC.argbsAmino;
+      argbsAmino = null;
+      argbsShapely = null;
       ihalf = JC.argbsRoygbScale.length / 3;
       this.ce = this;
     } else {
       this.ce = ce;
+      this.vwr = ce.vwr;
       schemes = ce.schemes;
     }
   }
@@ -155,6 +161,10 @@ import javajs.util.P3;
   
   ColorEncoder ce;
 
+
+  public static int[] argbsChainAtom;
+  public static int[] argbsChainHetero;
+
   /**
    * 
    * @param name
@@ -198,10 +208,10 @@ import javajs.util.P3;
           getRasmolScale();
           break;
         case AMINO:
-          argbsAmino = JC.argbsAmino;
+          getAmino();
           break;
         case SHAPELY:
-          argbsShapely = JC.argbsShapely;
+          getShapely();
           break;
         }
       return iScheme;
@@ -240,6 +250,15 @@ import javajs.util.P3;
       }
     return CUSTOM;
   }
+
+  private int[] getShapely() {
+    return (argbsShapely == null ? argbsShapely = vwr.getJBR().getArgbs(T.shapely) : argbsShapely);
+  }
+  
+  private int[] getAmino() {
+    return (argbsAmino == null ? argbsAmino = vwr.getJBR().getArgbs(T.amino) : argbsAmino);
+  }
+   
 
   /**
    * 
@@ -378,9 +397,9 @@ import javajs.util.P3;
     case RASMOL:
       return getRasmolScale();
     case SHAPELY:
-      return ce.argbsShapely;
+      return ce.getShapely();
     case AMINO:
-      return ce.argbsAmino;
+      return ce.getAmino();
     case USER:
       return ce.userScale;
     case RESU:
@@ -430,9 +449,9 @@ import javajs.util.P3;
     case RASMOL:
       return getRasmolScale().length;
     case SHAPELY:
-      return ce.argbsShapely.length;
+      return ce.getShapely().length;
     case AMINO:
-      return ce.argbsAmino.length;
+      return ce.getAmino().length;
     case FRIENDLY:
       return getPaletteAC().length;
     default:
@@ -476,9 +495,9 @@ import javajs.util.P3;
     case RASMOL:
       return getRasmolScale()[colorIndex(val, n)];
     case SHAPELY:
-      return ce.argbsShapely[colorIndex(val, n)];
+      return ce.getShapely()[colorIndex(val, n)];
     case AMINO:
-      return ce.argbsAmino[colorIndex(val, n)];
+      return ce.getAmino()[colorIndex(val, n)];
     case FRIENDLY:
       return getPaletteAC()[colorIndexRepeat(val, n)];
     default:

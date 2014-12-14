@@ -226,8 +226,8 @@ public class JmolBinary {
       return Rdr.getBufferedReader(Rdr.getBIS((byte[]) bytes), null);
     }
     // JavaScript only; here and not in JavaDoc to preserve Eclipse search reference
-    return (BufferedReader) vwr.getBufferedReaderOrErrorMessageFromName(
-        resourceName, new String[] { null, null }, false);
+    return (BufferedReader) vwr.fm.getBufferedReaderOrErrorMessageFromName(
+        resourceName, new String[] { null, null }, false, true);
   }
 
 

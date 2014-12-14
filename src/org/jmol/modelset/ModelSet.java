@@ -130,7 +130,7 @@ import java.util.Properties;
    protected boolean isPDB;
 
    public Properties modelSetProperties;
-   protected Map<String, Object> msInfo;
+   public Map<String, Object> msInfo;
 
    protected boolean someModelsHaveSymmetry;
    protected boolean someModelsHaveAromaticBonds;
@@ -216,7 +216,7 @@ import java.util.Properties;
     mat4 = new M4();
     mat4t = new M4();
     vTemp = new V3();
-    
+
     setupBC();
   }
 
@@ -1460,14 +1460,6 @@ import java.util.Properties;
         : (Map<String, String>) getInfoM("hetNames"));
   }
 
-  public Properties getMSProperties() {
-    return modelSetProperties;
-  }
-
-  public Map<String, Object> getMSInfo() {
-    return msInfo;
-  }
-
   public Object getInfoM(String keyName) {
     // the preferred method now
     return (msInfo == null ? null : msInfo
@@ -1500,14 +1492,14 @@ import java.util.Properties;
   }
 
   public boolean isTrajectoryMeasurement(int[] countPlusIndices) {
-    if (countPlusIndices == null)
-      return false;
-    int count = countPlusIndices[0];
-    int atomIndex;
-    for (int i = 1; i <= count; i++)
-      if ((atomIndex = countPlusIndices[i]) >= 0
-          && am[at[atomIndex].mi].isTrajectory)
-        return true;
+    if (countPlusIndices != null) {
+      int count = countPlusIndices[0];
+      int atomIndex;
+      for (int i = 1; i <= count; i++)
+        if ((atomIndex = countPlusIndices[i]) >= 0
+            && am[at[atomIndex].mi].isTrajectory)
+          return true;
+    }
     return false;
   }
 
@@ -1602,13 +1594,7 @@ import java.util.Properties;
   }
 
   public int getModelNumber(int modelIndex) {
-    if (modelIndex == Integer.MAX_VALUE)
-      modelIndex = mc - 1;
-    return modelNumbers[modelIndex];
-  }
-
-  public Properties getModelProperties(int modelIndex) {
-    return am[modelIndex].properties;
+    return modelNumbers[modelIndex == Integer.MAX_VALUE ? mc - 1 : modelIndex];
   }
 
   public String getModelProperty(int modelIndex, String property) {
@@ -1625,10 +1611,7 @@ import java.util.Properties;
   }
 
   public Object getInfo(int modelIndex, String key) {
-    if (modelIndex < 0) {
-      return null;
-    }
-    return am[modelIndex].auxiliaryInfo.get(key);
+    return (modelIndex < 0 ? null : am[modelIndex].auxiliaryInfo.get(key));
   }
 
   protected boolean getInfoB(int modelIndex, String keyName) {
@@ -1673,24 +1656,25 @@ import java.util.Properties;
     return am[modelIndex].nAltLocs;
   }
 
-  public int getChainCount(boolean addWater) {
-    int chainCount = 0;
-    for (int i = mc; --i >= 0;)
-      chainCount += am[i].getChainCount(addWater);
-    return chainCount;
-  }
-
-  public int getBioPolymerCount() {
-    int polymerCount = 0;
-    for (int i = mc; --i >= 0;)
-      if (!isTrajectorySubFrame(i))
-        polymerCount += am[i].getBioPolymerCount();
-    return polymerCount;
+  public int getChainCountInModelWater(int modelIndex, boolean countWater) {
+    if (modelIndex < 0) {
+      int chainCount = 0;
+      for (int i = mc; --i >= 0;)
+        chainCount += am[i].getChainCount(countWater);
+      return chainCount;
+    }
+    return am[modelIndex].getChainCount(countWater);
   }
 
   public int getBioPolymerCountInModel(int modelIndex) {
-    return (modelIndex < 0 ? getBioPolymerCount()
-        : isTrajectorySubFrame(modelIndex) ? 0 : am[modelIndex]
+    if (modelIndex < 0) {
+      int polymerCount = 0;
+      for (int i = mc; --i >= 0;)
+        if (!isTrajectorySubFrame(i))
+          polymerCount += am[i].getBioPolymerCount();
+      return polymerCount;
+    }
+    return (isTrajectorySubFrame(modelIndex) ? 0 : am[modelIndex]
             .getBioPolymerCount());
   }
 
@@ -1716,22 +1700,13 @@ import java.util.Properties;
     return am[iModel].getPolymerLeadMidPoints(iPolymer);
   }
 
-  public int getChainCountInModelWater(int modelIndex, boolean countWater) {
-    if (modelIndex < 0)
-      return getChainCount(countWater);
-    return am[modelIndex].getChainCount(countWater);
-  }
-
-  public int getGroupCount() {
-    int groupCount = 0;
-    for (int i = mc; --i >= 0;)
-      groupCount += am[i].getGroupCount();
-    return groupCount;
-  }
-
   public int getGroupCountInModel(int modelIndex) {
-    if (modelIndex < 0)
-      return getGroupCount();
+    if (modelIndex < 0) {
+      int groupCount = 0;
+      for (int i = mc; --i >= 0;)
+        groupCount += am[i].getGroupCount();
+      return groupCount;
+    }
     return am[modelIndex].getGroupCount();
   }
 
@@ -1931,8 +1906,6 @@ import java.util.Properties;
   }
 
   public String getAltLocListInModel(int modelIndex) {
-    if (modelIndex < 0)
-      return "";
     String str = (String) getInfo(modelIndex, "altLocs");
     return (str == null ? "" : str);
   }
@@ -2397,14 +2370,14 @@ import java.util.Properties;
         bs.andNot(uc.notInCentroid(this, am[i].bsAtoms, minmax));
       }
       return bs;
-    case T.sidechain:
-      int ia = ((BS) specInfo).nextSetBit(0);
-      if (ia < 0)
-        return new BS();
-      if (at[ia].group.isProtein)
-        return at[ia].group.getBSSideChain();
-      // treat as molecule if not PDB protein;
-      //$FALL-THROUGH$
+//    case T.sidechain:  -- can't reach this code -- sidechain is hardwired
+//      int ia = ((BS) specInfo).nextSetBit(0);
+//      if (ia < 0)
+//        return new BS();
+//      if (at[ia].group.isStandardProtein)
+//        return at[ia].group.getBSSideChain();
+//      // treat as molecule if not PDB protein;
+//      //$FALL-THROUGH$
     case T.molecule:
       return getMoleculeBitSet((BS) specInfo);
     case T.sequence:
@@ -3843,15 +3816,11 @@ import java.util.Properties;
     Map<String, Object> info = msInfo;
     if (info == null)
       return null;
-    Lst<Map<String, Object>> models = new Lst<Map<String, Object>>();
-    for (int i = 0; i < mc; ++i) {
-      if (bsModels != null && !bsModels.get(i)) {
-        continue;
-      }
-      Map<String, Object> modelinfo = getModelAuxiliaryInfo(i);
-      models.addLast(modelinfo);
-    }
-    info.put("models", models);
+    Lst<Map<String, Object>> minfo = new Lst<Map<String, Object>>();
+    for (int i = 0; i < mc; ++i)
+      if (bsModels == null || bsModels.get(i))
+        minfo.addLast(getModelAuxiliaryInfo(i));
+    info.put("models", minfo);
     return info;
   }
 
@@ -3954,7 +3923,7 @@ import java.util.Properties;
       BoxInfo b = new BoxInfo();
       b.setMargin(0);
       for (int j = j0; j >= 0; j = bsAtoms.nextSetBit(j + 1))
-        b.addBoundBoxPoint(q.transformP2(at[j], pt));
+        b.addBoundBoxPoint(q.transform2(at[j], pt));
       switch (type) {
       default:
       case T.volume:
@@ -4270,6 +4239,6 @@ import java.util.Properties;
     }
     return wts;
   }
-  
+
 }
 

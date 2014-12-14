@@ -386,7 +386,7 @@ public class StatusManager {
               new Object[] { sJmol, fullPathName, fileName, modelName,
                   errorMsg, Integer.valueOf(ptLoad),
                   vwr.getP("_modelNumber"),
-                  vwr.getModelNumberDotted(vwr.getModelCount() - 1),
+                  vwr.getModelNumberDotted(vwr.ms.mc - 1),
                   isAsync });
     }
   }

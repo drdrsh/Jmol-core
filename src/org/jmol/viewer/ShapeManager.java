@@ -56,6 +56,7 @@ public class ShapeManager {
 
   public ShapeManager(Viewer vwr) {
     this.vwr = vwr;
+    bsRenderableAtoms = new BS();
   }
 
   /**
@@ -306,12 +307,8 @@ public class ShapeManager {
     return null;
   }
 
-  private final BS bsRenderableAtoms = new BS();
+  public final BS bsRenderableAtoms;
 
-  BS getRenderableBitSet() {
-    return bsRenderableAtoms;
-  }
-  
   public Shape getShape(int i) {
     //RepaintManager
     return (shapes == null ? null : shapes[i]);
@@ -410,7 +407,7 @@ public class ShapeManager {
     }
   }
 
-  private final int[] navigationCrossHairMinMax = new int[4];
+  private final int[] navMinMax = new int[4];
 
   public int[] finalizeAtoms(BS bsAtoms, P3 ptOffset) {
     Viewer vwr = this.vwr;
@@ -473,8 +470,7 @@ public class ShapeManager {
           }
         }
       }
-      for (int i = bs.nextSetBit(0); i >= 0; i = bsRenderableAtoms
-          .nextSetBit(i + 1)) {
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         Atom atom = atoms[i];
         if (gdata.isClippedZ(atom.sZ - (slabByAtom ? atoms[i].sD >> 1 : 0))) {
           atom.setClickable(0);
@@ -506,11 +502,11 @@ public class ShapeManager {
       if (atom.sY > maxY)
         maxY = atom.sY;
     }
-    navigationCrossHairMinMax[0] = minX;
-    navigationCrossHairMinMax[1] = maxX;
-    navigationCrossHairMinMax[2] = minY;
-    navigationCrossHairMinMax[3] = maxY;
-    return navigationCrossHairMinMax;
+    navMinMax[0] = minX;
+    navMinMax[1] = maxX;
+    navMinMax[2] = minY;
+    navMinMax[3] = maxY;
+    return navMinMax;
   }
 
   public void setModelSet(ModelSet modelSet) {

@@ -734,7 +734,7 @@ public class IsosurfaceMesh extends Mesh {
     if (ce == null)
       ce = colorEncoder;
     if (ce == null)
-      ce = colorEncoder = new ColorEncoder(null);
+      ce = colorEncoder = new ColorEncoder(null, vwr);
     colorEncoder = ce;
     setColorCommand();
     if (Float.isNaN(translucentLevel)) {
@@ -919,7 +919,7 @@ public class IsosurfaceMesh extends Mesh {
   public SymmetryInterface getUnitCell(Viewer vwr) {
     return (unitCell != null
         || (unitCell = vwr.ms.am[modelIndex].biosymmetry) != null
-        || (unitCell = vwr.getModelUnitCell(modelIndex)) != null
+        || (unitCell = vwr.ms.getUnitCell(modelIndex)) != null
         || spanningVectors != null
         && (unitCell = Interface.getSymmetry(vwr, "symmetry").getUnitCell(
             spanningVectors, true, null)) != null ? unitCell : null);

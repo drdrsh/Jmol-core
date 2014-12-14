@@ -73,8 +73,8 @@ class CylinderRenderer {
   private boolean clipped;
   private boolean drawBackside;
 
-  void render(short colixA, short colixB, boolean isScreenedA,
-              boolean isScreenedB, byte endcaps, int diameter, int xa, int ya,
+  void render(short colixA, short colixB, 
+              byte endcaps, int diameter, int xa, int ya,
               int za, int xb, int yb, int zb) {
     //0 for colixA or colixB means ignore for this pass
     if (diameter > g3d.height * 3)
@@ -93,8 +93,8 @@ class CylinderRenderer {
     dyB = yb - ya;
     dzB = zb - za;
     if (diameter <= 1) {
-      line3d.plotLineDelta(g3d.getColorArgbOrGray(colixA), isScreenedA, g3d
-          .getColorArgbOrGray(colixB), isScreenedB, xa, ya, za, dxB, dyB, dzB,
+      line3d.plotLineDelta(g3d.getColorArgbOrGray(colixA), g3d
+          .getColorArgbOrGray(colixB), xa, ya, za, dxB, dyB, dzB,
           clipped);
       return;
     }
@@ -133,10 +133,10 @@ class CylinderRenderer {
               + z - 1);
         }
       }
-      line3d.plotLineDeltaA(shadesA, isScreenedA, shadesB, isScreenedB,
+      line3d.plotLineDeltaA(shadesA, shadesB,
           fpz, xA + x, yA + y, zA - z, dxB, dyB, dzB, clipped);
       if (drawBackside) {
-        line3d.plotLineDelta(shadesA[fpzBack], isScreenedA, shadesB[fpzBack], isScreenedB, xA
+        line3d.plotLineDelta(shadesA[fpzBack], shadesB[fpzBack], xA
             - x, yA - y, zA + z, dxB, dyB, dzB,clipped);
       }
     }
@@ -145,8 +145,8 @@ class CylinderRenderer {
       renderSphericalEndcaps();
   }
 
-  void renderBits(short colixA, short colixB, boolean isScreenedA,
-                  boolean isScreenedB, byte endcaps, int diameter, float xa,
+  void renderBits(short colixA, short colixB, 
+                  byte endcaps, int diameter, float xa,
                   float ya, float za, float xb, float yb, float zb) {
     // dipole cross, cartoonRockets, draw mesh nofill or width = -1
     if (diameter > g3d.height * 3)
@@ -172,8 +172,8 @@ class CylinderRenderer {
     dyBf = yb - ya;
     dzBf = zb - za;
     if (diameter == 0 || diameter == 1) {
-      line3d.plotLineDelta(g3d.getColorArgbOrGray(colixA), isScreenedA, g3d
-          .getColorArgbOrGray(colixB), isScreenedB, (int) xa, (int) ya, (int) za,
+      line3d.plotLineDelta(g3d.getColorArgbOrGray(colixA), g3d
+          .getColorArgbOrGray(colixB), (int) xa, (int) ya, (int) za,
           (int) dxBf, (int) dyBf, (int) dzBf, clipped);
       return;
     }
@@ -183,8 +183,8 @@ class CylinderRenderer {
       this.yAf = ya;
       this.zAf = za;
     }
-    drawBackside = (!isScreenedA && !isScreenedB && (clipped 
-        || endcaps == GData.ENDCAPS_FLAT || endcaps == GData.ENDCAPS_NONE));
+    drawBackside = (clipped 
+        || endcaps == GData.ENDCAPS_FLAT || endcaps == GData.ENDCAPS_NONE);
     this.xA = (int) xAf;
     this.yA = (int) yAf;
     this.zA = (int) zAf;
@@ -222,10 +222,10 @@ class CylinderRenderer {
               + z - 1);
         }
       }
-      line3d.plotLineDeltaBits(shadesA, isScreenedA, shadesB, isScreenedB,
+      line3d.plotLineDeltaBits(shadesA, shadesB,
           fpz, xA + x, yA + y, zA - z, dxB, dyB, dzB, clipped);
       if (drawBackside) {
-        line3d.plotLineDelta(shadesA[fpzBack], isScreenedA, shadesB[fpzBack], isScreenedB, xA
+        line3d.plotLineDelta(shadesA[fpzBack], shadesB[fpzBack], xA
             - x, yA - y, zA + z, dxB, dyB, dzB, clipped);
       }
     }
@@ -239,7 +239,7 @@ class CylinderRenderer {
 
   private float xTip, yTip, zTip;
 
-  void renderCone(short colix, boolean isScreenedA, byte endcap, int diameter, float xa, float ya,
+  void renderCone(short colix, byte endcap, int diameter, float xa, float ya,
                   float za, float xtip, float ytip, float ztip, boolean doFill, boolean isBarb) {
     if (diameter > g3d.height * 3)
       return;
@@ -258,13 +258,13 @@ class CylinderRenderer {
     colixA = colix;
     shadesA = g3d.getShades(colix);
     int shadeIndexTip = shader.getShadeIndex(dxB, dyB, -dzB);
-    g3d.plotPixelClippedScreened(shadesA[shadeIndexTip], isScreenedA, (int) xtip,
+    g3d.plotPixelClippedScreened(shadesA[shadeIndexTip], (int) xtip,
         (int) ytip, (int) ztip);
 
     this.diameter = diameter;
     if (diameter <= 1) {
       if (diameter == 1)
-        line3d.plotLineDelta(colixA, isScreenedA, colixA, isScreenedA, this.xA,
+        line3d.plotLineDelta(colixA, colixA, this.xA,
             this.yA, this.zA, dxB, dyB, dzB, clipped);
       return;
     }
@@ -284,29 +284,29 @@ class CylinderRenderer {
       float xDn = xAf - x, yDn = yAf - y, zDn = zAf + z;
       int argb = shadesA[0];
       if (tEndcapOpen && argbEndcap != 0) {
-        g3d.plotPixelClippedScreened(argbEndcap, isScreenedA, (int) xUp, (int) yUp,
+        g3d.plotPixelClippedScreened(argbEndcap, (int) xUp, (int) yUp,
             (int) zUp);
-        g3d.plotPixelClippedScreened(argbEndcap, isScreenedA, (int) xDn, (int) yDn,
+        g3d.plotPixelClippedScreened(argbEndcap, (int) xDn, (int) yDn,
             (int) zDn);
       }
       int fpz = fp8ShadeIndexUp[i] >> (8);
 
       if (argb != 0) {
-        line3d.plotLineDeltaA(shadesA, isScreenedA, shadesA, isScreenedA, fpz,
+        line3d.plotLineDeltaA(shadesA, shadesA, fpz,
             (int) xUp, (int) yUp, (int) zUp, (int) Math.ceil(xTip - xUp),
             (int) Math.ceil(yTip - yUp), (int) Math.ceil(zTip - zUp), true);
         
         if (doFill) { //rockets, not arrows
-          line3d.plotLineDeltaA(shadesA, isScreenedA, shadesA, isScreenedA, fpz,
+          line3d.plotLineDeltaA(shadesA, shadesA, fpz,
             (int) xUp, (int) yUp + 1, (int) zUp, (int) Math.ceil(xTip - xUp),
             (int) Math.ceil(yTip - yUp) + 1, (int) Math.ceil(zTip - zUp), true);
-          line3d.plotLineDeltaA(shadesA, isScreenedA, shadesA, isScreenedA, fpz,
+          line3d.plotLineDeltaA(shadesA, shadesA, fpz,
             (int) xUp + 1, (int) yUp, (int) zUp, (int) Math.ceil(xTip - xUp) + 1,
             (int) Math.ceil(yTip - yUp), (int) Math.ceil(zTip - zUp), true);
         }    
     
         if (!isBarb && !(endcaps != GData.ENDCAPS_FLAT && dzB > 0)) {
-          line3d.plotLineDelta(argb, isScreenedA, argb, isScreenedA, (int) xDn,
+          line3d.plotLineDelta(argb, argb, (int) xDn,
               (int) yDn, (int) zDn, (int) Math.ceil(xTip - xDn), (int) Math
                   .ceil(yTip - yDn), (int) Math.ceil(zTip - zDn), true);
         }

@@ -1313,7 +1313,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.subsystem:
       case T.configuration:
         // these are all-inclusive; no need to do a by-atom comparison
-        return BSUtil.copy(vwr.getConformation(-1, ival - 1,
+        return BSUtil.copy(vwr.ms.getConformation(-1, ival - 1,
             false));
       case T.symop:
         propertyBitSet = atom.atomSymmetry;
@@ -1759,7 +1759,7 @@ abstract class ScriptExpr extends ScriptParam {
     } else { // bonds
       boolean isAll = (bs == null);
       int i0 = (isAll ? 0 : bs.nextSetBit(0));
-      int i1 = vwr.getBondCount();
+      int i1 = vwr.ms.bondCount;
       for (int i = i0; i >= 0 && i < i1; i = (isAll ? i + 1 : bs
           .nextSetBit(i + 1))) {
         n++;
@@ -1909,7 +1909,7 @@ abstract class ScriptExpr extends ScriptParam {
     BS bs = BS.newN(vwr.ms.ac);
     if (chk)
       return bs;
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     boolean haveFileSet = vwr.haveFileSet();
     if (m < 1000000 && haveFileSet)
       m *= 1000000;

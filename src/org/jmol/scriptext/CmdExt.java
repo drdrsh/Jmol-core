@@ -86,6 +86,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.StateManager;
+import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.viewer.Viewer.ACCESS;
 
@@ -345,7 +346,7 @@ public class CmdExt implements JmolCmdExtension {
         return;
       case T.pointgroup:
         if (!chk)
-          showString(vwr.calculatePointGroup());
+          showString(vwr.ms.calculatePointGroup(vwr.bsA()));
         return;
       case T.straightness:
         checkLength(2);
@@ -937,7 +938,7 @@ public class CmdExt implements JmolCmdExtension {
       int n = intParameter(e.checkLast(1));
       if (chk)
         return;
-      bsAtoms = vwr.getConformation(vwr.am.cmi, n - 1,
+      bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1,
           true);
       vwr.addStateScript("configuration " + n + ";", true, false);
     }
@@ -1690,7 +1691,7 @@ public class CmdExt implements JmolCmdExtension {
         for (int j = 0; j <= ac; j++)
           atomMap[j] = -1;
         for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
-          int atomNo = vwr.getAtomNumber(j);
+          int atomNo = vwr.ms.at[j].getAtomNumber();
           if (atomNo > ac + 1 || atomNo < 0 || bsTemp.get(atomNo))
             continue;
           bsTemp.set(atomNo);
@@ -1939,17 +1940,17 @@ public class CmdExt implements JmolCmdExtension {
         if (Logger.debugging)
           Logger.debug(sb.toString());
         BS bsSubset = BSUtil.copy(vwr.slm.bsSubset);
-        vwr.setSelectionSubset(bsTo);
+        vwr.slm.setSelectionSubset(bsTo);
         try {
           eval.runScript(sb.toString());
         } catch (Exception ex) {
-          vwr.setSelectionSubset(bsSubset);
+          vwr.slm.setSelectionSubset(bsSubset);
           eval.errorStr(-1, "Error: " + ex.getMessage());
         } catch (Error er) {
-          vwr.setSelectionSubset(bsSubset);
+          vwr.slm.setSelectionSubset(bsSubset);
           eval.errorStr(-1, "Error: " + er.toString());
         }
-        vwr.setSelectionSubset(bsSubset);
+        vwr.slm.setSelectionSubset(bsSubset);
       }
       showString("DONE");
       return;
@@ -2135,7 +2136,7 @@ public class CmdExt implements JmolCmdExtension {
       invArg();
     }
     if (!chk) {
-      vwr.setVibrationOff();
+      vwr.tm.setVibrationPeriod(0);
       vwr.setModulation(bs, mod, qtOffset, isQ);
     }
   }
@@ -2607,7 +2608,7 @@ public class CmdExt implements JmolCmdExtension {
     vwr.fm.setFileInfo(savedFileInfo);
     if (!isOK)
       return "";
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     vwr.ms.setJmolDataFrame(stateScript, modelIndex, modelCount - 1);
     if (tok != T.property)
       stateScript += ";\n" + preSelected;
@@ -3026,7 +3027,7 @@ public class CmdExt implements JmolCmdExtension {
         if (nVibes == Integer.MAX_VALUE)
           return "";
         if (!chk) {
-          vwr.setVibrationOff();
+          vwr.tm.setVibrationPeriod(0);
           if (!eval.isJS)
             eval.delayScript(100);
         }
@@ -3265,7 +3266,7 @@ public class CmdExt implements JmolCmdExtension {
         } else if (data == "MENU") {
           data = vwr.getMenu("");
         } else if (data == "PGRP") {
-          data = vwr.getPointGroupAsString(type2.equals("draw"), null, 0, 1.0f);
+          data = vwr.ms.getPointGroupAsString(vwr.bsA(), type2.equals("draw"), null, 0, 1.0f);
         } else if (data == "PDB" || data == "PQR") {
           if (isShow) {
             data = vwr.getPdbAtomData(null, null);
@@ -3834,12 +3835,12 @@ public class CmdExt implements JmolCmdExtension {
       Map<String, Object> info = null;
       if ((len = slen) == 2) {
         if (!chk) {
-          info = vwr.getSpaceGroupInfo(null);
+          info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(vwr.ms, null);
         }
       } else {
         String sg = paramAsStr(2);
         if (!chk)
-          info = vwr.getSpaceGroupInfo(PT.rep(sg, "''", "\""));
+          info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(vwr.ms, PT.rep(sg, "''", "\""));
       }
       if (info != null)
         msg = "" + info.get("spaceGroupInfo") + info.get("symmetryInfo");
@@ -3855,7 +3856,7 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.center:
       if (!chk)
-        msg = "center " + Escape.eP(vwr.tm.getRotationCenter());
+        msg = "center " + Escape.eP(vwr.tm.fixedRotationCenter);
       break;
     case T.draw:
       if (!chk)
@@ -3953,11 +3954,11 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.pdbheader:
       if (!chk)
-        msg = vwr.getPDBHeader();
+        msg = vwr.ms.getPDBHeader(vwr.am.cmi);
       break;
     case T.pointgroup:
       if (!chk)
-        showString(vwr.getPointGroupAsString(false, null, 0, 0));
+        showString(vwr.ms.getPointGroupAsString(vwr.bsA(), false, null, 0, 0));
       return;
     case T.symmetry:
       if (!chk)
@@ -4012,7 +4013,7 @@ public class CmdExt implements JmolCmdExtension {
     case T.identifier:
       if (str.equalsIgnoreCase("fileHeader")) {
         if (!chk)
-          msg = vwr.getPDBHeader();
+          msg = vwr.ms.getPDBHeader(vwr.am.cmi);
       }
       break;
     case T.json:
@@ -4050,7 +4051,7 @@ public class CmdExt implements JmolCmdExtension {
     // stereo color1 color2 6
     // stereo redgreen 5
 
-    float degrees = STER.DEFAULT_STEREO_DEGREES;
+    float degrees = TransformManager.DEFAULT_STEREO_DEGREES;
     boolean degreesSeen = false;
     int[] colors = null;
     int colorpt = 0;
@@ -4188,8 +4189,7 @@ public class CmdExt implements JmolCmdExtension {
   private void assignBond(int bondIndex, char type) {
     int modelIndex = -1;
     try {
-      modelIndex = vwr.getAtomModelIndex(vwr.ms.bo[bondIndex]
-          .atom1.i);
+      modelIndex = vwr.ms.bo[bondIndex].atom1.mi;
       vwr.sm.modifySend(bondIndex, modelIndex, 2,
           e.fullCommand);
       BS bsAtoms = vwr.ms.setBondOrder(bondIndex, type);

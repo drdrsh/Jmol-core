@@ -902,7 +902,7 @@ public class ScriptMathProcessor {
       case T.bitset:
         return addXBs(BSUtil.copyInvert(
             SV.bsSelectVar(x2),
-            (x2.value instanceof BondSet ? vwr.getBondCount() : vwr
+            (x2.value instanceof BondSet ? vwr.ms.bondCount : vwr
                 .ms.ac)));
       }
       return addXFloat(-x2.asFloat());
@@ -923,7 +923,7 @@ public class ScriptMathProcessor {
       case T.bitset:
         return addXBs(BSUtil.copyInvert(
             SV.bsSelectVar(x2),
-            (x2.value instanceof BondSet ? vwr.getBondCount() : vwr
+            (x2.value instanceof BondSet ? vwr.ms.bondCount : vwr
                 .ms.ac)));
       default:
         return addXBool(!x2.asBoolean());
@@ -1457,7 +1457,7 @@ public class ScriptMathProcessor {
       case T.point4f:
         pt4 = (P4) x1.value;
         if (x2.tok == T.point3f)
-          return addXPt((Quat.newP4(pt4)).transformPt((P3) x2.value));
+          return addXPt((P3) (Quat.newP4(pt4)).transform2((P3) x2.value, new P3()));
         if (x2.tok == T.point4f) {
           P4 v4 = P4.newPt((P4) x2.value);
           (Quat.newP4(pt4)).getThetaDirected(v4);

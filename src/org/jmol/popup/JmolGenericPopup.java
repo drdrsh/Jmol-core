@@ -170,7 +170,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     updateSelectMenu();
     updateFileMenu();
     updateElementsComputedMenu(vwr.getElementsPresentBitSet(modelIndex));
-    updateHeteroComputedMenu(vwr.getHeteroList(modelIndex));
+    updateHeteroComputedMenu(vwr.ms.getHeteroList(modelIndex));
     updateSurfMoComputedMenu((Map<String, Object>) modelInfo.get("moData"));
     updateFileTypeDependentMenus();
     updatePDBComputedMenus();
@@ -355,10 +355,10 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
 
   @SuppressWarnings("unchecked")
   private void getViewerData() {
-    modelSetName = vwr.getModelSetName();
+    modelSetName = vwr.ms.modelSetName;
     modelSetFileName = vwr.getModelSetFileName();
     int i = modelSetFileName.lastIndexOf(".");
-    isZapped = ("zapped".equals(modelSetName));
+    isZapped = (JC.ZAP_TITLE.equals(modelSetName));
     if (isZapped || "string".equals(modelSetFileName)
         || "files".equals(modelSetFileName)
         || "string[]".equals(modelSetFileName))
@@ -368,7 +368,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     if (modelSetRoot.length() == 0)
       modelSetRoot = "Jmol";
     modelIndex = vwr.am.cmi;
-    modelCount = vwr.getModelCount();
+    modelCount = vwr.ms.mc;
     ac = vwr.ms.getAtomCountInModel(modelIndex);
     modelSetInfo = vwr.getModelSetAuxiliaryInfo();
     modelInfo = vwr.ms.getModelAuxiliaryInfo(modelIndex);
@@ -380,10 +380,10 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     isUnitCell = modelInfo.containsKey("notionalUnitcell");
     fileHasUnitCell = (isPDB && isUnitCell || checkBoolean("fileHasUnitCell"));
     isLastFrame = (modelIndex == modelCount - 1);
-    altlocs = vwr.getAltLocListInModel(modelIndex);
+    altlocs = vwr.ms.getAltLocListInModel(modelIndex);
     isMultiConfiguration = (altlocs.length() > 0);
     isVibration = (vwr.modelHasVibrationVectors(modelIndex));
-    haveCharges = (vwr.havePartialCharges());
+    haveCharges = (vwr.ms.getPartialCharges() != null);
     haveBFactors = (vwr.getBooleanProperty("haveBFactors"));
     cnmrPeaks = (Lst<String>) modelInfo.get("jdxAtomSelect_13CNMR");
     hnmrPeaks = (Lst<String>) modelInfo.get("jdxAtomSelect_1HNMR");
@@ -421,7 +421,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       return;
     String text = getMenuText("writeFileTextVARIABLE");
     menu = htMenus.get("writeFileTextVARIABLE");
-    boolean ignore = (modelSetFileName.equals("zapped") || modelSetFileName
+    boolean ignore = (modelSetFileName.equals(JC.ZAP_TITLE) || modelSetFileName
         .equals(""));
     if (ignore) {
       menuSetLabel(menu, "");
@@ -617,7 +617,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       return;
     menuRemoveAll(menu, 0);
     menuEnable(menu, false);
-    String[] scenes = vwr.getSceneList();
+    String[] scenes = (String[]) vwr.ms.getInfoM("scenes");
     if (scenes == null)
       return;
     for (int i = 0; i < scenes.length; i++)
@@ -657,8 +657,9 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       return;
     //next is correct as "<=" because it includes "UNK"
     int nItems = 0;
+    String[] names = vwr.getJBR().getGroup3Names(true);
     for (int i = 1; i < JC.GROUPID_AMINO_MAX; ++i)
-      nItems += updateGroup3List(menu, JC.predefinedGroup3Names[i]);
+      nItems += updateGroup3List(menu, names[i]);
     nItems += augmentGroup3List(menu, "p>", true);
     menuEnable(menu, (nItems > 0));
     menuEnable(htMenus.get("PDBproteinMenu"), (nItems > 0));
@@ -1022,9 +1023,9 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     else if (name.indexOf("captureFps") >= 0)
       info = "" + vwr.getInt(T.animationfps);
     else if (name.indexOf("captureMenu") >= 0)
-      info = (vwr.captureParams == null ? GT._("not capturing") : vwr
+      info = (vwr.captureParams == null ? GT._("not capturing") : vwr.fm
           .getFilePath((String) vwr.captureParams.get("captureFileName"),
-              true)
+              false, true)
           + " " + vwr.captureParams.get("captureCount"));
     return (info == null ? text : text.substring(0, pt) + " (" + info + ")");
   }

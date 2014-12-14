@@ -87,9 +87,9 @@ public final class ModelLoader {
   private boolean appendNew;
 
   private String jmolData; // from a PDB remark "Jmol PDB-encoded data"
-  private String[] group3Lists;
-  private int[][] group3Counts;
-  private final int[] specialAtomIndexes = new int[JC.ATOMID_MAX];
+  public String[] group3Lists;
+  public int[][] group3Counts;
+  public int[] specialAtomIndexes;
   
   public ModelLoader(Viewer vwr, String modelSetName,
       SB loadScript, Object asc, ModelSet mergeModelSet,
@@ -107,6 +107,7 @@ public final class ModelLoader {
     ms.preserveState = vwr.getPreserveState();
     ms.showRebondTimes = vwr.getBoolean(T.showtiming);
     if (bsNew == null) {
+      // zap
       initializeInfo(modelSetName, null);
       createModelSet(null, null, null);
       vwr.setStringProperty("_fileType", "");
@@ -118,6 +119,9 @@ public final class ModelLoader {
     info.put("loadScript", loadScript);
     initializeInfo(adapter.getFileTypeName(asc).toLowerCase().intern(), info);
     createModelSet(adapter, asc, bsNew);
+    if (jbr != null)
+      jbr.setLoader(null);
+    jbr = null;
     // dumpAtomSetNameDiagnostics(adapter, asc);
   }
 /*
@@ -165,11 +169,8 @@ public final class ModelLoader {
         .getInfoM("properties");
     //isMultiFile = getModelSetAuxiliaryInfoBoolean("isMultiFile"); -- no longer necessary
     isPDB = ms.isPDB = ms.getMSInfoB("isPDB");
-    if (isPDB) {
-      jbr = (JmolBioResolver) Interface
-          .getInterface("org.jmol.modelsetbio.Resolver", vwr, "file");
-      jbr.initialize(this);
-    }
+    if (isPDB)
+      jbr = vwr.getJBR().setLoader(this);
     jmolData = (String) ms.getInfoM("jmolData");
     fileHeader = (String) ms.getInfoM("fileHeader");
     ms.trajectorySteps = (Lst<P3[]>) ms
@@ -537,14 +538,8 @@ public final class ModelLoader {
       boolean isPDBModel = setModelNameNumberProperties(ipt, iTrajectory,
           modelName, modelNumber, modelProperties, modelAuxiliaryInfo,
           jmolData);
-      if (isPDBModel) {
-        group3Lists[ipt + 1] = JC.getGroup3List();
-        group3Counts[ipt + 1] = new int[JC.getGroup3Count() + 10];
-        if (group3Lists[0] == null) {
-          group3Lists[0] = JC.getGroup3List();
-          group3Counts[0] = new int[JC.getGroup3Count() + 10];
-        }
-      }
+      if (isPDBModel)
+        jbr.setGroupLists(ipt);
       if (ms.getInfo(ipt, "periodicOriginXyz") != null)
         ms.someModelsHaveSymmetry = true;
     }
@@ -852,22 +847,25 @@ public final class ModelLoader {
                        Object atomUid, int atomicAndIsotopeNumber,
                        String atomName, int formalCharge, float partialCharge,
                        Lst<Object> tensors, float occupancy, float bfactor,
-                       P3 xyz, boolean isHetero,
-                       int atomSerial, int atomSeqID, String group3,
-                       V3 vib,
-                       char alternateLocationID, float radius) {
+                       P3 xyz, boolean isHetero, int atomSerial, int atomSeqID,
+                       String group3, V3 vib, char alternateLocationID,
+                       float radius) {
     byte specialAtomID = 0;
     if (atomName != null) {
-      if (isPDB && atomName.indexOf('*') >= 0)
-        atomName = atomName.replace('*', '\'');
-      specialAtomID = JC.lookupSpecialAtomID(atomName);
-      if (isPDB && specialAtomID == JC.ATOMID_ALPHA_CARBON
-          && "CA".equalsIgnoreCase(group3)) // calcium
-        specialAtomID = 0;
+      // Q: Why were we looking up special atom names if it was not a PDB model?
+      if (isPDB) {
+        if (atomName.indexOf('*') >= 0)
+          atomName = atomName.replace('*', '\'');
+        specialAtomID = vwr.getJBR().lookupSpecialAtomID(atomName);
+        if (specialAtomID == JC.ATOMID_ALPHA_CARBON
+            && "CA".equalsIgnoreCase(group3)) // calcium
+          specialAtomID = 0;
+      }
     }
-    Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber,
-        atomName, atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge, partialCharge, occupancy, bfactor, tensors,
-        isHetero, specialAtomID, atomSymmetry);
+    Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber, atomName,
+        atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge,
+        partialCharge, occupancy, bfactor, tensors, isHetero, specialAtomID,
+        atomSymmetry);
     atom.altloc = alternateLocationID;
     htAtomMap.put(atomUid, atom);
   }
@@ -1207,6 +1205,8 @@ public final class ModelLoader {
     if (group == null) {
       group = new Group().setGroup(chain, group3, seqcode, firstAtomIndex,
           lastAtomIndex);
+      if (jbr != null)
+        group.groupID = jbr.getGroupID(group3);
       key = "o>";
     } else {
       key = (group.isProtein() ? "p>" : group.isNucleic() ? "n>" : group

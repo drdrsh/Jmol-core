@@ -11,7 +11,6 @@ import javajs.util.SB;
 
 import org.jmol.c.AXES;
 import org.jmol.c.CBK;
-import org.jmol.c.STER;
 import org.jmol.c.STR;
 import org.jmol.script.SV;
 import org.jmol.script.T;
@@ -140,7 +139,8 @@ public class GlobalSettings {
       setI("spinY", TransformManager.DEFAULT_SPIN_Y);
       setI("spinZ", 0); // maintained by TransformManager
       setI("spinFps", TransformManager.DEFAULT_SPIN_FPS);
-      setI("stereoDegrees", STER.DEFAULT_STEREO_DEGREES);
+      setF("visualRange", TransformManager.DEFAULT_VISUAL_RANGE);
+      setI("stereoDegrees", TransformManager.DEFAULT_STEREO_DEGREES);
       setI("stateversion", 0); // only set by a saved state being recalled
       setB("syncScript", vwr.sm.syncingScripts);
       setB("syncMouse", vwr.sm.syncingMouse);
@@ -378,7 +378,6 @@ public class GlobalSettings {
       setB("vectorSymmetry", vectorSymmetry);
       setF("vibrationPeriod", vibrationPeriod);
       setF("vibrationScale", vibrationScale);
-      setF("visualRange", visualRange);
       setB("waitForMoveTo", waitForMoveTo);
       setB("wireframeRotation", wireframeRotation);
       setI("zDepth", zDepth);
@@ -464,7 +463,6 @@ public class GlobalSettings {
 
     boolean allowRotateSelected = false;
     boolean allowMoveAtoms = false;
-    float visualRange = 5f;
 
     //solvent
 
@@ -725,7 +723,7 @@ public class GlobalSettings {
       htNonbooleanParameterValues.put(name, value);
     }
 
-    void removeParam(String key) {
+    public void removeParam(String key) {
       // used by resetError to remove _errorMessage
       // used by setSmilesString to remove _smilesString
       // used by setAxesModeMolecular to remove axesUnitCell

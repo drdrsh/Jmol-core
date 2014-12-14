@@ -111,7 +111,7 @@ public class JSpecView implements JmolJSpecView {
     String baseModel = (String) vwr.ms.getInfo(modelIndex,
         "jdxBaseModel");
     if (baseModel != null)
-      for (int i = vwr.getModelCount(); --i >= 0;)
+      for (int i = vwr.ms.mc; --i >= 0;)
         if (baseModel
             .equals(vwr.ms.getInfo(i, "jdxModelID")))
           return i;

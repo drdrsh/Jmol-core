@@ -104,7 +104,7 @@ public class MoveToThread extends JmolThread {
   private int slab;
   private float transX;
   private float transY;
-  private float transZ;
+  //private float transZ;
 
   @Override
   public int setManager(Object manager, Viewer vwr, Object params) {
@@ -157,7 +157,7 @@ public class MoveToThread extends JmolThread {
     slab = transformManager.getSlabPercentSetting();
     transX = transformManager.getTranslationXPercent();
     transY = transformManager.getTranslationYPercent();
-    transZ = transformManager.getTranslationZPercent();
+    //transZ = transformManager.getTranslationZPercent();
 
     timePerStep = 1000 / fps;
     totalSteps = (int) (fps * floatSecondsTotal);
@@ -207,11 +207,11 @@ public class MoveToThread extends JmolThread {
     yTrans = newSlider(transformManager.getTranslationYPercent(), f[3]);
     rotationRadius = newSlider(transformManager.modelRadius,
         (center == null || Float.isNaN(f[4]) ? transformManager.modelRadius
-            : f[4] <= 0 ? vwr.calcRotationRadius(center) : f[4]));
+            : f[4] <= 0 ? vwr.ms.calcRotationRadius(vwr.am.cmi, center) : f[4]));
     pixelScale = newSlider(transformManager.scaleDefaultPixelsPerAngstrom, f[5]);
     if (f[6] != 0) {
       navCenter = (P3) options[2];
-      navDepth = newSlider(transformManager.getNavigationDepthPercent(), f[6]);
+      navDepth = newSlider(transformManager.navigationDepthPercent, f[6]);
       xNav = newSlider(transformManager.getNavigationOffsetPercent('X'), f[7]);
       yNav = newSlider(transformManager.getNavigationOffsetPercent('Y'), f[8]);
     }
@@ -271,7 +271,7 @@ public class MoveToThread extends JmolThread {
           transformManager.translateToPercent('y', transY + dTrans.y * iStep
               / totalSteps);
         if (dTrans.z != 0)
-          transformManager.translateToPercent('z', transZ + dTrans.z * iStep
+          transformManager.translateToPercent('z', /*transZ + */dTrans.z * iStep
               / totalSteps);
         if (dSlab != 0)
           transformManager.slabToPercent((int) Math.floor(slab + dSlab * iStep

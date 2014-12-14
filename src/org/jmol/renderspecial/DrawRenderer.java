@@ -90,14 +90,12 @@ public class DrawRenderer extends MeshRenderer {
       // bond-atom [ a b   c -1 ]
       // atom-bond [ a -1  c d  ]
       // atom-atom [ a -1  c -1 ]
-      
+
       mesh.vs = new P3[4];
       mesh.vc = 4;
       int[] c = mesh.connections;
-      for (int i = 0; i < 4; i++) {
-        mesh.vs[i] = (c[i] < 0 ? mesh.vs[i - 1] : vwr
-            .getAtomPoint3f(c[i]));
-      }
+      for (int i = 0; i < 4; i++)
+        mesh.vs[i] = (c[i] < 0 ? mesh.vs[i - 1] : vwr.ms.at[c[i]]);
       mesh.recalcAltVertices = true;
     }
     return renderMesh2(mesh);

@@ -548,8 +548,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         // "fileName" property. We retrieve that from the surfaceGenerator
         // and open a BufferedReader for it. Or not. But that would be
         // unlikely since we have just checked it in ScriptEvaluator
-        value = vwr.getBufferedReaderOrErrorMessageFromName(sg.params.fileName,
-            null, true);
+        value = vwr.fm.getBufferedReaderOrErrorMessageFromName(sg.params.fileName,
+            null, true, true);
         if (value instanceof String) {
           Logger.error("Isosurface: could not open file " + sg.params.fileName
               + " -- " + value);
@@ -1001,7 +1001,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if (imesh == null || imesh.scriptCommand == null)
       return;
     String cmd = imesh.scriptCommand;
-    int modelCount = vwr.getModelCount();
+    int modelCount = vwr.ms.mc;
     if (modelCount > 1)
       appendCmd(sb, "frame " + vwr.getModelNumberDotted(imesh.modelIndex));
     cmd = PT.rep(cmd, ";; isosurface map"," map");
@@ -1157,7 +1157,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   private void setMeshI() {
     thisMesh.visible = true;
     if ((thisMesh.atomIndex = atomIndex) >= 0)
-      thisMesh.modelIndex = vwr.getAtomModelIndex(atomIndex);
+      thisMesh.modelIndex = vwr.ms.at[atomIndex].mi;
     else if (isFixed)
       thisMesh.modelIndex = -1;
     else if (modelIndex >= 0)
@@ -1310,7 +1310,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return;
     }
     if (lcaoCartoon.equals("spacefill") || lcaoCartoon.equals("cpk")) {
-      createLcaoLobe(null, 2 * vwr.getAtomRadius(atomIndex), nElectrons);
+      createLcaoLobe(null, 2 * vwr.ms.at[atomIndex].getRadius(), nElectrons);
       return;      
     }
 

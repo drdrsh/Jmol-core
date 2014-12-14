@@ -95,7 +95,7 @@ public class CarbohydrateMonomer extends Monomer {
       for (int i = firstAtomIndex; i <= lastAtomIndex; i++) {
         // called by subclassed getCrossLinkAtomIndexes in
         // AminoMonomer, NucleicMonomer, and CarbohydrateMonomer
-        if (getCrossLink(i, null))
+        if (getCrossLinkGroup(i, null, null))
           return true;
     }  
     return false;

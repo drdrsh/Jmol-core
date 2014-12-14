@@ -444,7 +444,7 @@ public abstract class Monomer extends Group {
   }
 
   public String getUniqueID() {
-    int cid = getChainID();
+    int cid = chain.chainID;
     Atom a = getLeadAtom();
     String id = (a == null ? "" : "_" + a.mi) + "_" + getResno()
         + (cid == 0 ? "" : "_" + cid);
@@ -465,16 +465,12 @@ public abstract class Monomer extends Group {
   @Override
   public boolean getCrossLinkLead(Lst<Integer> vReturn) {    
    for (int i = firstAtomIndex; i <= lastAtomIndex; i++)
-      if (getCrossLink(i, vReturn) && vReturn == null)
+      if (getCrossLinkGroup(i, vReturn, null) && vReturn == null)
           return true;
     return false;
   }  
 
-  protected boolean getCrossLink(int i, Lst<Integer> vReturn) {
-    return getCrossLinkGroup(i, vReturn, null);
-  }
-  
-  private boolean getCrossLinkGroup(int i, Lst<Integer> vReturn, Group group) {
+  protected boolean getCrossLinkGroup(int i, Lst<Integer> vReturn, Group group) {
     // vReturn null --> just checking for connection to previous group
     // not obvious from PDB file for carbohydrates
     Atom atom = chain.getAtom(i);
@@ -564,6 +560,24 @@ public abstract class Monomer extends Group {
     return Float.NaN;
   }
 
+  @Override
+  public char getGroup1() {    
+    return (groupID < Resolver.predefinedGroup1Names.length 
+        ? Resolver.predefinedGroup1Names[groupID] : 
+          group1 > 1 ? group1 
+              : group1 == 1 ? '?' 
+                  : (group1 = getGroup1b()));
+  }
+
+  protected char getGroup1b() {
+    // overridden in NucleicMonomer
+    return '?';
+  }
+
+  @Override
+  public void setGroupID(String group3) {
+    groupID = Resolver.getGroupIdFor(group3);
+  }
 }
   
 

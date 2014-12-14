@@ -2,7 +2,7 @@ package org.openscience.jmol.app.jsonkiosk;
 
 import java.io.IOException;
 
-import org.jmol.api.JmolViewer;
+import org.jmol.viewer.Viewer;
 
 public interface JsonNioServer {
 
@@ -24,7 +24,7 @@ public interface JsonNioServer {
   public abstract void send(int port, String msg);
 
   public abstract void startService(int port, JsonNioClient client,
-                                    JmolViewer jmolViewer, String name, int version)
+                                    Viewer jmolViewer, String name, int version)
       throws IOException;
 
   public abstract void close();

@@ -78,10 +78,6 @@ public class FileManager implements BytePoster {
    
   }
 
-  public Map<String, byte[]> getSpardirCache() {
-    return jmb.spardirCache;
-  }
-
   public void clearPngjCache(String fileName) {
     jmb.clearPngjCache(fileName == null ? null : getCanonicalName(Rdr.getZipRoot(fileName)));
   }
@@ -104,14 +100,14 @@ public class FileManager implements BytePoster {
     return pathForAllFiles = value;
   }
 
-  private String nameAsGiven = "zapped", fullPathName, lastFullPathName, lastNameAsGiven = "zapped", fileName;
+  private String nameAsGiven = JC.ZAP_TITLE, fullPathName, lastFullPathName, lastNameAsGiven = JC.ZAP_TITLE, fileName;
 
   public void setFileInfo(String[] fileInfo) {
     // used by ScriptEvaluator dataFrame and load methods to temporarily save the state here
     fullPathName = fileInfo[0];
     fileName = fileInfo[Math.min(1,  fileInfo.length - 1)];
     nameAsGiven = fileInfo[Math.min(2, fileInfo.length - 1)];
-    if (!nameAsGiven.equals("zapped")) {
+    if (!nameAsGiven.equals(JC.ZAP_TITLE)) {
       lastNameAsGiven = nameAsGiven;
       lastFullPathName = fullPathName;
     }
@@ -124,7 +120,7 @@ public class FileManager implements BytePoster {
 
   public String getFullPathName(boolean orPrevious) {
     String f =(fullPathName != null ? fullPathName : nameAsGiven);
-    return (!orPrevious || !f.equals("zapped") ? f : lastFullPathName != null ? lastFullPathName : lastNameAsGiven);
+    return (!orPrevious || !f.equals(JC.ZAP_TITLE) ? f : lastFullPathName != null ? lastFullPathName : lastNameAsGiven);
   }
 
   public String getFileName() {
@@ -489,7 +485,7 @@ public class FileManager implements BytePoster {
     for (int i = 0; i < dir.length; i++)
       if (dir[i].indexOf(".spt") >= 0) {
         String[] data = new String[] { fileName + "|" + dir[i], null };
-        getFileDataOrErrorAsString(data, -1, false, false, false);
+        getFileDataAsString(data, -1, false, false, false);
         return data[1];
       }
     return "";
@@ -517,7 +513,7 @@ public class FileManager implements BytePoster {
     return errMsg;
   }
 
-  Object getBufferedReaderOrErrorMessageFromName(String name,
+  public Object getBufferedReaderOrErrorMessageFromName(String name,
                                                  String[] fullPathNameReturn,
                                                  boolean isBinary,
                                                  boolean doSpecialLoad) {
@@ -770,8 +766,7 @@ public class FileManager implements BytePoster {
     return Rdr.getZipDirectoryAndClose(vwr.getJzt(), (BufferedInputStream) t, addManifest ? "JmolManifest" : null);
   }
 
-  public Object getFileAsBytes(String name, OC out,
-                               boolean allowZip) {
+  public Object getFileAsBytes(String name, OC out) {
     // ?? used by eval of "WRITE FILE"
     // will be full path name
     if (name == null)
@@ -781,7 +776,6 @@ public class FileManager implements BytePoster {
     if (name.indexOf("|") >= 0) {
       subFileList = PT.split(name, "|");
       name = subFileList[0];
-      allowZip = true;
     }
     Object t = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
         false, false, null, false, true);
@@ -790,7 +784,6 @@ public class FileManager implements BytePoster {
     try {
       BufferedInputStream bis = (BufferedInputStream) t;
       Object bytes = (out != null 
-          || !allowZip 
           || subFileList == null
           || subFileList.length <= 1 
           || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) 
@@ -852,7 +845,7 @@ public class FileManager implements BytePoster {
    * @return true if successful; false on error
    */
 
-  boolean getFileDataOrErrorAsString(String[] data, int nBytesMax,
+  public boolean getFileDataAsString(String[] data, int nBytesMax,
                                      boolean doSpecialLoad,
                                      boolean allowBinary, boolean checkProtected) {
     data[1] = "";
@@ -1270,7 +1263,7 @@ public class FileManager implements BytePoster {
     Object data;
     if (isAdd) {
       fileName = vwr.resolveDatabaseFormat(fileName);
-      data = getFileAsBytes(fileName, null, true);
+      data = getFileAsBytes(fileName, null);
       if (data instanceof String)
         return 0;
       cachePut(fileName, data);
@@ -1316,10 +1309,5 @@ public class FileManager implements BytePoster {
     }
     return (ret == null ? "" : Rdr.fixUTF((byte[]) ret));
   }
-
-  public void recachePngjBytes(String fname, byte[] bytes) {
-    jmb.recachePngjBytes(fname, bytes);
-  }
-
 
 }
