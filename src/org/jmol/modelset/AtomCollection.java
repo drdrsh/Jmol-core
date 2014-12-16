@@ -988,7 +988,7 @@ abstract public class AtomCollection {
 
   public void validateBspf(boolean isValid) {
     if (bspf != null)
-      bspf.validate(isValid);
+      bspf.isValid = isValid;
     averageAtomPoint = null;
   }
 

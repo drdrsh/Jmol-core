@@ -23,6 +23,8 @@
  */
 package org.jmol.adapter.readers.simple;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 
@@ -152,7 +154,7 @@ public class GhemicalMMReader extends AtomSetCollectionReader {
     Atom[] atoms = asc.atoms;
     int ac = asc.ac;
     for (int i = 0; i < ac; ++i)
-      setAtomCoordScaled(atoms[i], getTokensStr(rd()), 1, 10);
+      setAtomCoordScaled(atoms[i], PT.getTokens(rd()), 1, 10);
   }
 
   void processCharges() throws Exception {

@@ -22,6 +22,8 @@
  */
 package org.jmol.adapter.readers.xml;
 
+import javajs.util.PT;
+
 /**
  * A Molpro 2005 reader
  */
@@ -89,7 +91,7 @@ public class XmlMolproReader extends XmlCmlReader {
         return;
       int ac = asc.getLastAtomSetAtomCount();
       int baseAtomIndex = asc.getLastAtomSetAtomIndex();
-      tokens = getTokensStr(chars);
+      tokens = PT.getTokens(chars);
       for (int offset = tokens.length - ac * 3, i = 0; i < ac; i++) {
         asc.addVibrationVector(i + baseAtomIndex,
             parseFloatStr(tokens[offset++]),

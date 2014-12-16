@@ -219,7 +219,7 @@ public class StateCreator extends JmolStateCreator {
     for (int i = 0; i < len; i++) {
       StateScript ss = ms.stateScripts.get(i);
       if (ss.inDefinedStateBlock && (cmd = ss.toString()).length() > 0) {
-        commands.append("  ").append(cmd).append("\n");
+        app(commands, cmd);
         haveDefs = true;
       }
     }
@@ -258,7 +258,7 @@ public class StateCreator extends JmolStateCreator {
       for (int i = 0; i < len; i++) {
         StateScript ss = ms.stateScripts.get(i);
         if (!ss.inDefinedStateBlock && (cmd = ss.toString()).length() > 0) {
-          commands.append("  ").append(cmd).append("\n");
+          app(commands, cmd);
         }
       }
 
@@ -442,15 +442,15 @@ public class StateCreator extends JmolStateCreator {
           + (global.backgroundImageFileName.startsWith(";base64,") ? "" : "/*file*/")
           + PT.esc(global.backgroundImageFileName));
     }
-    str.append(getSpecularState());
-    app(str, "statusReporting  = " + global.statusReporting);
+    str.append(getLightingState(false));
+    //app(str, "statusReporting  = " + global.statusReporting);
     if (sfunc != null)
       str.append("}\n\n");
     return str.toString();
   }
 
   @Override
-  String getSpecularState() {
+  String getLightingState(boolean isAll) {
     SB str = new SB();
     GData g = vwr.gdata;
     app(str, "set ambientPercent " + g.getAmbientPercent());
@@ -458,15 +458,14 @@ public class StateCreator extends JmolStateCreator {
     app(str, "set specular " + g.getSpecular());
     app(str, "set specularPercent " + g.getSpecularPercent());
     app(str, "set specularPower " + g.getSpecularPower());
-    app(str, "set celShading " + g.getCel());
-    app(str, "set celShadingPower " + g.getCelPower());
     int se = g.getSpecularExponent();
     int pe = g.getPhongExponent();
-    if (Math.pow(2, se) == pe)
-      app(str, "set specularExponent " + se);
-    else
-      app(str, "set phongExponent " + pe);
-    app(str, "set zShadePower " + vwr.g.zShadePower);
+    app(str, (Math.pow(2, se) == pe ? "set specularExponent " + se :  "set phongExponent " + pe));
+    app(str, "set celShading " + g.getCel());
+    app(str, "set celShadingPower " + g.getCelPower());
+    app(str, "set zShadePower " + vwr.g.zShadePower);    
+    if (isAll)
+      getZshadeState(str, vwr.tm, true);
     return str.toString();
   }
 
@@ -810,21 +809,13 @@ public class StateCreator extends JmolStateCreator {
         .appendI(tm.depthPercentSetting).append(
             tm.slabEnabled && !navigating ? ";slab on" : "").append(";\n");
     commands.append("  set slabRange ").appendF(tm.slabRange).append(";\n");
-    if (tm.zShadeEnabled)
-      commands.append("  set zShade;\n");
-    try {
-      if (tm.zSlabPoint != null)
-        commands.append("  set zSlab ").append(Escape.eP(tm.zSlabPoint))
-            .append(";\n");
-    } catch (Exception e) {
-      // don't care
-    }
     if (tm.slabPlane != null)
       commands.append("  slab plane ").append(Escape.eP4(tm.slabPlane)).append(
           ";\n");
     if (tm.depthPlane != null)
       commands.append("  depth plane ").append(Escape.eP4(tm.depthPlane))
           .append(";\n");
+    getZshadeState(commands, tm, false);
     commands.append(getSpinState(true)).append("\n");
     if (vwr.ms.modelSetHasVibrationVectors() && tm.vibrationOn)
       app(commands, "set vibrationPeriod " + tm.vibrationPeriod
@@ -838,6 +829,25 @@ public class StateCreator extends JmolStateCreator {
       commands.append("}\n\n");
     return commands.toString();
   }
+
+  private void getZshadeState(SB s, TransformManager tm, boolean isAll) {
+    
+    if (isAll) {
+      app(s,"set zDepth " + tm.zDepthPercentSetting);
+      app(s,"set zSlab " + tm.zSlabPercentSetting);
+      if (!tm.zShadeEnabled)
+        app(s,"set zShade false");
+    }
+    if (tm.zShadeEnabled)
+      app(s, "set zShade true");
+    try {
+      if (tm.zSlabPoint != null)
+        app(s,"set zSlab " + Escape.eP(tm.zSlabPoint));
+    } catch (Exception e) {
+      // don't care
+    }
+  }
+
 
   /**
    * @param isAll
@@ -908,9 +918,8 @@ public class StateCreator extends JmolStateCreator {
   }
 
   private void app(SB s, String cmd) {
-    if (cmd.length() == 0)
-      return;
-    s.append("  ").append(cmd).append(";\n");
+    if (cmd.length() != 0)
+      s.append("  ").append(cmd).append(";\n");
   }
 
   private void addBs(SB sb, String key, BS bs) {

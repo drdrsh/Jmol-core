@@ -236,7 +236,7 @@ public class GulpReader extends AtomSetCollectionReader {
       //isPrimitive = false;
     rd();
     while (rd() != null && line.contains("="))  {
-      String[] tokens = getTokensStr(line.replace('=', ' '));
+      String[] tokens = PT.getTokens(line.replace('=', ' '));
       for (int i = i0; i < i0 + 4; i += 2)
         if (tokens.length > i + 1)
           setParameter(tokens[i], parseFloatStr(tokens[i + 1]));
@@ -279,7 +279,7 @@ public class GulpReader extends AtomSetCollectionReader {
           if (line.indexOf("Non-primitive lattice parameters") > 0) {
             rd();
             for (int i = 0; i < 2; i++) {
-              tokens = getTokensStr(rd().replace('=', ' '));
+              tokens = PT.getTokens(rd().replace('=', ' '));
               setParameter(tokens[0], parseFloatStr(tokens[1]));
               setParameter(tokens[2], parseFloatStr(tokens[3]));
               setParameter(tokens[4], parseFloatStr(tokens[5]));
@@ -416,7 +416,7 @@ public class GulpReader extends AtomSetCollectionReader {
     discardLinesUntilContains(sep);
     discardLinesUntilContains(sep);
     String[] tokens;
-    while ((tokens = getTokensStr(rd())).length > 5) {
+    while ((tokens = PT.getTokens(rd())).length > 5) {
       String species = tokens[0];
       Float charge = atomCharges.get(species);
       float f = (charge == null ? 0 : charge.floatValue());
@@ -450,7 +450,7 @@ public class GulpReader extends AtomSetCollectionReader {
     // note that in some cases this is in Kcal/mol
     if (line.indexOf("=") < 0)
       discardLinesUntilContains("=");
-    String[] tokens = getTokensStr(line.substring(line.indexOf("=")));
+    String[] tokens = PT.getTokens(line.substring(line.indexOf("=")));
     totEnergy = Double.valueOf(Double.parseDouble(tokens[1]));
     energyUnits = tokens[2];
     discardLinesUntilContains(sep);

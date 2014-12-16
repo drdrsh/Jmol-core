@@ -511,7 +511,7 @@ public class CrystalReader extends AtomSetCollectionReader {
           primitiveVolume = parseFloatStr(line.substring(43));
           primitiveDensity = parseFloatStr(line.substring(66));
         }
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       if (isSlab) {
         if (isPrimitive)
           setUnitCell(parseFloatStr(tokens[0]) * f, parseFloatStr(tokens[1]) * f, -1,
@@ -747,7 +747,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     ac = vCoords.size();
     for (int i = 0; i < ac; i++) {
       Atom atom = asc.addNewAtom();
-      String[] tokens = getTokensStr(vCoords.get(i));
+      String[] tokens = PT.getTokens(vCoords.get(i));
       atom.atomSerial = parseIntStr(tokens[0]);
       int atomicNumber, offset;
       if (tokens.length == 7) {
@@ -830,7 +830,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     while (rd() != null && line.indexOf("T") < 0)
       // TTTTT or SUMMED SPIN DENSITY
       data.append(line);
-    String[] tokens = getTokensStr(data.toString());
+    String[] tokens = PT.getTokens(data.toString());
     float[] charges = new float[tokens.length];
     if (nuclearCharges == null)
       nuclearCharges = charges;
@@ -882,7 +882,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       Sfrag += line;
     Sfrag = PT.rep(Sfrag, "(", " ");
     Sfrag = PT.rep(Sfrag, ")", " ");
-    String[] tokens = getTokensStr(Sfrag);
+    String[] tokens = PT.getTokens(Sfrag);
     for (int i = 0, pos = 0; i < numAtomsFrag; i++, pos += 3)
       atomFrag[i] = getAtomIndexFromPrimitiveIndex(parseIntStr(tokens[pos]) - 1);
 
@@ -946,7 +946,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     rd();
     int lastAtomCount = -1;
     while (rd() != null && line.startsWith(" FREQ(CM**-1)")) {
-      String[] tokens = getTokensStr(line.substring(15));
+      String[] tokens = PT.getTokens(line.substring(15));
       float[] frequencies = new float[tokens.length];
       int frequencyCount = frequencies.length;
       for (int i = 0; i < frequencyCount; i++) {
@@ -1054,7 +1054,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     while (rd() != null && (line.length() < 4 || PT.isDigit(line.charAt(3))))
       data += line;
     data = PT.rep(data, "-", " -");
-    String[] tokens = getTokensStr(data);
+    String[] tokens = PT.getTokens(data);
     for (int i = 0, pt = nfields - 1; i < ac; i++, pt += nfields) {
       int iConv = getAtomIndexFromPrimitiveIndex(i);
       if (iConv >= 0)
@@ -1090,7 +1090,7 @@ public class CrystalReader extends AtomSetCollectionReader {
      while (rd() != null  && line.startsWith(" *** ATOM")) {
        String[] tokens = getTokens();
        int index = parseIntStr(tokens[3]) - 1;
-       tokens = getTokensStr(readLines(3));
+       tokens = PT.getTokens(readLines(3));
        V3[] vectors = new V3[3];
        for (int i = 0; i < 3; i++) {
          vectors[i] = V3.newV(directLatticeVectors[i]);
@@ -1126,7 +1126,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       readLines(2);
       double[][] a = new double[3][3];
       for (int i = 0; i < 3; i++) {
-        String[] tokens = getTokensStr(rd());
+        String[] tokens = PT.getTokens(rd());
         for (int j = 0; j < 3; j++)
           a[i][j] = parseFloatStr(tokens[j + 1]);
       }

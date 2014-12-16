@@ -13,6 +13,7 @@ package org.jmol.adapter.readers.xtal;
  */
 
 import javajs.util.DF;
+import javajs.util.PT;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
@@ -56,7 +57,7 @@ public class DmolReader extends AtomSetCollectionReader {
   private void readCellParam() throws Exception {
     unitCellData = new float[9];
     for (int n = 0, i = 0; n < 3; n++) {
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       unitCellData[i++] = parseFloatStr(!geomOpt ? tokens[0] : tokens[4])
       * ANGSTROMS_PER_BOHR;
       unitCellData[i++] = parseFloatStr(!geomOpt ? tokens[1] : tokens[5])
@@ -120,7 +121,7 @@ public class DmolReader extends AtomSetCollectionReader {
   private void readEnergy() throws Exception {
     rd();
     if (line.contains("Ef"))
-      totE = Double.valueOf(Double.parseDouble(getTokensStr(line.substring(line.indexOf("Ef") +1 , line.indexOf("Ha")  ))[1]));
+      totE = Double.valueOf(Double.parseDouble(PT.getTokens(line.substring(line.indexOf("Ef") +1 , line.indexOf("Ha")  ))[1]));
   }
 
   private void setEnergy() {
@@ -150,7 +151,7 @@ public class DmolReader extends AtomSetCollectionReader {
     int lastAtomCount = 0;
     int ac = asc.getLastAtomSetAtomCount();
     while (rd() != null && line.charAt(1) == ' ') {
-      String[] tokens = getTokensStr(line);
+      String[] tokens = getTokens();
       int frequencyCount = tokens.length / 2;
       float[] frequencies = new float[frequencyCount];
       for (int i = 1, n = 0; i < tokens.length; i += 2, n++) {

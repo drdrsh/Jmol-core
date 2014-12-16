@@ -109,7 +109,7 @@ public class CsfReader extends MopacSlaterReader {
 
    */
   private void processLocalTransform() throws Exception {
-    String[] tokens = getTokensStr(rd() + " " + rd() + " "+ rd() + " " + rd());
+    String[] tokens = PT.getTokens(rd() + " " + rd() + " "+ rd() + " " + rd());
     setTransform(
         parseFloatStr(tokens[0]), parseFloatStr(tokens[1]), parseFloatStr(tokens[2]), 
         parseFloatStr(tokens[4]), parseFloatStr(tokens[5]), parseFloatStr(tokens[6]),
@@ -168,7 +168,7 @@ public class CsfReader extends MopacSlaterReader {
     for (int i = 0; i < n; i++) {
       int ipt = ioffset + i;
       if (ipt == tokens.length) {
-        tokens = getTokensStr(rd());
+        tokens = PT.getTokens(rd());
         ioffset -= ipt - i0;
         ipt = i0;
       }
@@ -578,7 +578,7 @@ public class CsfReader extends MopacSlaterReader {
   }
 
   private void processBasisObject(String sto_gto) throws Exception {
-    String[] atomNos = getTokensStr(strAtomicNumbers);
+    String[] atomNos = PT.getTokens(strAtomicNumbers);
     atomicNumbers = new int[atomNos.length];
     for (int i = 0; i < atomicNumbers.length; i++)
       atomicNumbers[i] = parseIntStr(atomNos[i]);

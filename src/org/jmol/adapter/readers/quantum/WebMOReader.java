@@ -29,6 +29,8 @@ import org.jmol.adapter.smarter.Bond;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.PT;
+
 import java.util.Hashtable;
 
 import java.util.Map;
@@ -261,14 +263,14 @@ public class WebMOReader extends MopacSlaterReader {
         throw new Exception("Error reading GTOs: missing atom index");
       int[] slater = new int[4];
       atomIndex = parseIntStr(tokens[0]) - 1;
-      tokens = getTokensStr(rd());
+      tokens = PT.getTokens(rd());
       int nGaussians = parseIntStr(tokens[1]);
       slater[0] = atomIndex;
       slater[1] = JmolAdapter.getQuantumShellTagID(tokens[0]);
       slater[2] = gaussianPtr;
       slater[3] = nGaussians;
       for (int i = 0; i < nGaussians; i++) {
-        String[] strData = getTokensStr(rd());
+        String[] strData = PT.getTokens(rd());
         int nData = strData.length;
         float[] data = new float[nData];
         for (int d = 0; d < nData; d++) {

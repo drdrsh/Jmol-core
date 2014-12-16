@@ -268,7 +268,7 @@ public class InputReader extends AtomSetCollectionReader {
       return readBlock("}");
     }
 
-    tokens = getTokensStr(line);
+    tokens = getTokens();
 
     if (tokens.length > 10)
       return readVFI();
@@ -307,7 +307,7 @@ public class InputReader extends AtomSetCollectionReader {
     int nBonds = (int) getValue(1);
     Map<String, Atom> map = new Hashtable<String, Atom>();
     for (int i = 0; i < nAtoms; i++) {
-      tokens = getTokensStr(rd());
+      tokens = PT.getTokens(rd());
       if (tokens[1].equals("0"))
         continue;
       Atom a = addAtomXYZSymName(tokens, 2, null, null);
@@ -346,7 +346,7 @@ public class InputReader extends AtomSetCollectionReader {
                   tokens[7], tokens[0], tokens[9] });
       Atom atom = getAtom();
       map.put(id, atom);
-      tokens = getTokensStr(rd());
+      tokens = PT.getTokens(rd());
     }
     for (int i = bonds.size(); --i >= 0;) {
       String[] b = bonds.get(i);

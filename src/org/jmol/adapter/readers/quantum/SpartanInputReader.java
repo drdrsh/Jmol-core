@@ -24,6 +24,8 @@
 
 package org.jmol.adapter.readers.quantum;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
@@ -87,7 +89,7 @@ public abstract class SpartanInputReader extends BasisFunctionReader {
 
   private void readTransform() throws Exception {
     rd();
-    String[] tokens = getTokensStr(rd() + " " + rd());
+    String[] tokens = PT.getTokens(rd() + " " + rd());
     //BEGINMOLSTATE
     //MODEL=3~HYDROGEN=1~LABELS=0
     //0.70925283  0.69996750 -0.08369886  0.00000000 -0.70480913  0.70649898 -0.06405880  0.00000000

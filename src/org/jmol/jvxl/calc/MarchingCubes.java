@@ -89,7 +89,7 @@ public class MarchingCubes extends TriangleData {
   
   protected boolean colorDensity;
   protected boolean integrateSquared = true;
-  protected BS bsVoxels;
+  public BS bsVoxels;
   protected BS bsExcludedVertices;
   protected BS bsExcludedTriangles;
   protected BS bsExcludedPlanes;
@@ -97,10 +97,6 @@ public class MarchingCubes extends TriangleData {
   protected SB edgeData = new SB();
   
   private boolean excludePartialCubes = true; // original way
-  
-  public BS getBsVoxels() {
-    return bsVoxels;
-  }
   
   public MarchingCubes() {
     // as triangleServer  

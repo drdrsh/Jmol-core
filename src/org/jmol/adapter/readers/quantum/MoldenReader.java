@@ -64,7 +64,7 @@ public class MoldenReader extends MopacSlaterReader {
     Logger.info(line);
     if (line.indexOf("[ATOMS]") == 0) {
       readAtoms();
-      modelAtomCount = asc.getFirstAtomSetAtomCount();
+      modelAtomCount = asc.atomSetAtomCounts[0];
       if (asc.atomSetCount == 1 && moData != null)
         finalizeMOData(moData);
       return false;
@@ -170,7 +170,7 @@ public class MoldenReader extends MopacSlaterReader {
      H     5    1        -0.4338802400       -0.3282176500       -0.9384614500
      H     6    1        -0.4338802400       -0.3282176500        0.9384614500
      */
-    String coordUnit = getTokensStr(line.replace(']', ' '))[1];
+    String coordUnit = PT.getTokens(line.replace(']', ' '))[1];
     
     boolean isFractional = (coordUnit.indexOf("FRACTIONAL") >= 0);
     boolean isAU = (!isFractional && coordUnit.indexOf("ANGS") < 0);
@@ -271,7 +271,7 @@ public class MoldenReader extends MopacSlaterReader {
         for (int ip = nPrimitives; --ip >= 0;) {
           // Read ip primitives, each containing an exponent and one (s,p,d,f)
           // or two (sp) contraction coefficient(s)
-          String[] primTokens = getTokensStr(rd());
+          String[] primTokens = PT.getTokens(rd());
           int nTokens = primTokens.length;
           float orbData[] = new float[nTokens];
 
@@ -405,7 +405,7 @@ public class MoldenReader extends MopacSlaterReader {
   }
 
   private String[] getMoTokens(String line) throws Exception {
-    return (line == null && (line = rd()) == null ? null : getTokensStr(line.replace('=',' ')));
+    return (line == null && (line = rd()) == null ? null : PT.getTokens(line.replace('=',' ')));
   }
 
   private boolean checkOrbitalType(String line) {
@@ -466,7 +466,7 @@ public class MoldenReader extends MopacSlaterReader {
       asc.setAtomSetFrequency(null, null, "" + PT.dVal(frequencies.get(nFreq)), null);
       int i0 = asc.getLastAtomSetAtomIndex();
       for (int i = 0; i < modelAtomCount; i++) {
-        tokens = getTokensStr(rd());
+        tokens = PT.getTokens(rd());
         asc.addVibrationVector(i + i0,
             parseFloatStr(tokens[0]) * ANGSTROMS_PER_BOHR,
             parseFloatStr(tokens[1]) * ANGSTROMS_PER_BOHR,
@@ -554,6 +554,6 @@ max-force
     Atom[] atoms = asc.atoms;
     int i0 = asc.getLastAtomSetAtomIndex();
     for (int i = 0; i < modelAtomCount; i++)
-      setAtomCoordScaled(atoms[i + i0], getTokensStr(rd()), 1, f);
+      setAtomCoordScaled(atoms[i + i0], PT.getTokens(rd()), 1, f);
   }
 }

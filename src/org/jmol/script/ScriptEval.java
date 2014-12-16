@@ -1718,7 +1718,8 @@ public class ScriptEval extends ScriptExpr {
         continue;
       case T.spec_resid:
         sb.appendC('[');
-        sb.append(vwr.getJBR().getGroup3Names(false)[token.intValue]);
+        int ptr = token.intValue * 6 + 1;
+        sb.append(Group.standardGroupList.substring(ptr, ptr + 3).trim());
         sb.appendC(']');
         continue;
       case T.spec_name_pattern:
@@ -5111,7 +5112,9 @@ public class ScriptEval extends ScriptExpr {
         break;
       case T.property:
         propName = stringParameter(3);
-        prop = (isArrayParameter(4) ? stringParameterSet(4) : paramAsStr(4));
+        SV sv = setVariable(4, -1, "", false);
+        if (sv != null)
+          prop = SV.oValue(sv);
         i = slen;
         break;
       default:
@@ -5177,9 +5180,9 @@ public class ScriptEval extends ScriptExpr {
     }
 
     if (propName != null) {
-      if (modelIndex < 0)
-        return;
-      vwr.ms.setInfo(modelIndex, propName, prop);
+      if (modelIndex >= 0)
+        vwr.ms.setInfo(modelIndex, propName, prop);
+      return;
     }
     if (!isPlay && !isRange || modelIndex >= 0)
       vwr.setCurrentModelIndexClear(modelIndex, false);
@@ -6722,7 +6725,7 @@ public class ScriptEval extends ScriptExpr {
         checkLength(iToken + 1);
       }
       if (!chk)
-        vwr.tm.setZslabPoint(pt);
+        vwr.tm.zSlabPoint = (pt == null ? null : P3.newP(pt));
       return;
     }
 

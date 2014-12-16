@@ -332,7 +332,7 @@ public class ScriptManager implements JmolScriptManager {
     // "+scriptStarted,+scriptStatus,+scriptEcho,+scriptTerminated"
     // set up first with applet.jmolGetProperty("jmolStatus",statusList)
     // flush list
-    String oldStatusList = vwr.sm.getStatusList();
+    String oldStatusList = vwr.sm.statusList;
     vwr.getStatusChanged(statusList);
     if (vwr.isSyntaxCheck)
       Logger.info("--checking script:\n" + eval.getScript() + "\n----\n");

@@ -2,6 +2,7 @@ package org.jmol.adapter.readers.xtal;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import javajs.util.Lst;
+import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.util.Logger;
@@ -50,9 +51,9 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
 
   private void readMolecularFormula() throws Exception {
     //   H    C    O    Be   C    H
-    String elementLabel[] = getTokensStr(discardLinesUntilNonBlank());
+    String elementLabel[] = PT.getTokens(discardLinesUntilNonBlank());
     //   6    24    18     6     6    24
-    String elementCounts[] = getTokensStr(rd());
+    String elementCounts[] = PT.getTokens(rd());
     SB mf = new SB();
     for (int i = 0; i < elementCounts.length; i++) { 
       int n = Integer.parseInt(elementCounts[i]);
@@ -76,7 +77,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     if (line.toLowerCase().contains("cartesian"))
       setFractionalCoordinates(false);
     for (int i = 0; i < ac; i++)
-      addAtomXYZSymName(getTokensStr(rd()), 0, null, atomLabels.get(i));
+      addAtomXYZSymName(PT.getTokens(rd()), 0, null, atomLabels.get(i));
   }
 
 }

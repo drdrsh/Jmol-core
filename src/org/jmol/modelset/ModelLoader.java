@@ -851,8 +851,14 @@ public final class ModelLoader {
                        String group3, V3 vib, char alternateLocationID,
                        float radius) {
     byte specialAtomID = 0;
+    String atomType = null;
     if (atomName != null) {
       // Q: Why were we looking up special atom names if it was not a PDB model?
+      int i;
+      if ((i = atomName.indexOf('\0')) >= 0) {
+        atomType = atomName.substring(i + 1);
+        atomName = atomName.substring(0, i);
+      }
       if (isPDB) {
         if (atomName.indexOf('*') >= 0)
           atomName = atomName.replace('*', '\'');
@@ -863,7 +869,7 @@ public final class ModelLoader {
       }
     }
     Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber, atomName,
-        atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge,
+        atomType, atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge,
         partialCharge, occupancy, bfactor, tensors, isHetero, specialAtomID,
         atomSymmetry);
     atom.altloc = alternateLocationID;

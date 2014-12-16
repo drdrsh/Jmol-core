@@ -32,6 +32,7 @@ package org.jmol.adapter.readers.quantum;
 
 
 import javajs.util.Lst;
+import javajs.util.PT;
 
 
 import org.jmol.adapter.smarter.Atom;
@@ -442,7 +443,7 @@ ATOM         MULL.POP.    CHARGE          LOW.POP.     CHARGE
     int startAtom = asc.getLastAtomSetAtomIndex();
     int endAtom = asc.ac;
     for (int i = startAtom; i < endAtom && rd() != null; ++i)
-      atoms[i].partialCharge = parseFloatStr(getTokensStr(prevline)[poploc]);
+      atoms[i].partialCharge = parseFloatStr(PT.getTokens(prevline)[poploc]);
   }
  /*
            ---------------------
@@ -460,12 +461,12 @@ ATOM         MULL.POP.    CHARGE          LOW.POP.     CHARGE
     while (line != null && ("".equals(line.trim()) || line.indexOf("DX") < 0)) {
       rd();
     }
-    tokens = getTokensStr(line);
+    tokens = getTokens();
     if (tokens.length != 5)
       return;
     if ("DX".equals(tokens[0]) && "DY".equals(tokens[1])
         && "DZ".equals(tokens[2])) {
-      tokens = getTokensStr(rd());
+      tokens = PT.getTokens(rd());
       V3 dipole = V3.new3(parseFloatStr(tokens[0]),
           parseFloatStr(tokens[1]), parseFloatStr(tokens[2]));
       Logger.info("Molecular dipole for model "

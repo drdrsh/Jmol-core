@@ -31,7 +31,6 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
 import javajs.util.P3;
 
-
 public class GromacsReader extends AtomSetCollectionReader {
   
   @Override
@@ -126,7 +125,7 @@ public class GromacsReader extends AtomSetCollectionReader {
   private void readUnitCell() throws Exception {
     if (rd() == null)
       return;
-    String[] tokens = getTokensStr(line);
+    String[] tokens = getTokens();
     if (tokens.length < 3 || !doApplySymmetry)
       return;
     float a = 10 * parseFloatStr(tokens[0]);

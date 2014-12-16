@@ -1,5 +1,7 @@
 package org.jmol.adapter.readers.xtal;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
 /**
@@ -78,7 +80,7 @@ public class XcrysdenReader extends AtomSetCollectionReader {
       6  -4.773254987  4.300512942  6.348687286
   */
   private void readCoordinates() throws Exception {
-    String[] atomStr = getTokensStr(rd());
+    String[] atomStr = PT.getTokens(rd());
     nAtoms = Integer.parseInt(atomStr[0]);
 
     setFractionalCoordinates(false);

@@ -59,8 +59,8 @@ public class Shader {
   public final static byte SHADE_INDEX_NOISY_LIMIT = 56;
 
   // the vwr vector is always {0 0 1}
-
   // the light source vector normalized
+  
   private float xLight, yLight, zLight;
   
   public Shader() {
@@ -77,43 +77,43 @@ public class Shader {
     zLight = lightSource.z;
   }
 
-  public boolean specularOn = true; 
-  public boolean usePhongExponent = false;
+  boolean specularOn = true; 
+  boolean usePhongExponent = false;
   
   //fractional distance from black for ambient color
-  public int ambientPercent = 45;
+  int ambientPercent = 45;
   
   // df in I = df * (N dot L) + sf * (R dot V)^p
-  public int diffusePercent = 84;
+  int diffusePercent = 84;
 
   // log_2(p) in I = df * (N dot L) + sf * (R dot V)^p
   // for faster calculation of shades
-  public int specularExponent = 6;
+  int specularExponent = 6;
 
   // sf in I = df * (N dot L) + sf * (R dot V)^p
   // not a percent of anything, really
-  public int specularPercent = 22;
+  int specularPercent = 22;
   
   // fractional distance to white for specular dot
-  public int specularPower = 40;
+  int specularPower = 40;
 
   // p in I = df * (N dot L) + sf * (R dot V)^p
-  public int phongExponent = 64;
+  int phongExponent = 64;
   
-  public float ambientFraction = ambientPercent / 100f;
-  public float diffuseFactor = diffusePercent / 100f;
-  public float intenseFraction = specularPower / 100f;
-  public float specularFactor = specularPercent / 100f;
+  float ambientFraction = ambientPercent / 100f;
+  float diffuseFactor = diffusePercent / 100f;
+  float intenseFraction = specularPower / 100f;
+  float specularFactor = specularPercent / 100f;
   
   private int[][] ashades = AU.newInt2(128);
   private int[][] ashadesGreyscale;
-  public boolean celOn;
-  public int celPower = 10;
+  boolean celOn;
+  int celPower = 10;
   private int celRGB;
   private float celZ;
   private boolean useLight;
 
-  public void setCel(boolean celShading, int celShadingPower, int argb) {
+  void setCel(boolean celShading, int celShadingPower, int argb) {
     celShading = celShading && celShadingPower != 0;
     argb = C.getArgb(C.getBgContrast(argb));
  // problem here is with antialiasDisplay on white background
@@ -130,9 +130,14 @@ public class Shader {
     flushCaches();
   }
   
-  public void flushCaches() {
-    flushShades();
-    flushSphereCache();
+  void flushCaches() {
+    checkShades();
+    for (int i = C.colixMax; --i >= 0; )
+      ashades[i] = null;
+    calcSphereShading();
+    for (int i =  maxSphereCache; --i >= 0;)
+      sphereShapeCache[i] = null;
+    ellipsoidShades = null;
   }
   
   public void setLastColix(int argb, boolean asGrey) {
@@ -143,7 +148,7 @@ public class Shader {
     ashades[C.LAST_AVAILABLE_COLIX] = getShades2(argb, false);
   }
 
-  public int[] getShades(short colix) {
+  int[] getShades(short colix) {
     checkShades();
     colix &= C.OPAQUE_MASK;
     int[] shades = ashades[colix];
@@ -152,7 +157,7 @@ public class Shader {
     return shades;
   }
 
-  public int[] getShadesG(short colix) {
+  int[] getShadesG(short colix) {
     checkShades();
     colix &= C.OPAQUE_MASK;
     if (ashadesGreyscale == null)
@@ -172,13 +177,6 @@ public class Shader {
       ashadesGreyscale = AU.arrayCopyII(ashadesGreyscale, C.colixMax);
   }
   
-  public void flushShades() {
-    checkShades();
-    for (int i = C.colixMax; --i >= 0; )
-      ashades[i] = null;
-    calcSphereShading();
-  }
-
   /*
    * intensity calculation:
    * 
@@ -531,53 +529,47 @@ public class Shader {
               - SLIM, kk);
   }
 
-  public synchronized void flushSphereCache() {
-    for (int i =  maxSphereCache; --i >= 0;)
-      sphereShapeCache[i] = null;
-    ellipsoidShades = null;
-  }
-
-  /**
-   * not implemented; just experimenting here
-   * @param pbuf
-   * @param zbuf
-   * @param aobuf
-   * @param width
-   * @param height
-   * @param ambientOcclusion
-   */
-  public void occludePixels(int[] pbuf, int[] zbuf, int[] aobuf, int width,
-                            int height, int ambientOcclusion) {
-    int n = zbuf.length;
-    for (int x = 0, y = 0, offset = 0; offset < n; offset++) {
-      int z = zbuf[offset];
-      int xymax = Math.min(z >> 5, 0);
-      if (xymax == 0)
-        continue;
-      int r2max = xymax * xymax;
-      int pxmax = Math.min(width, x + xymax);
-      int pymax = Math.min(height, y + xymax);
-      for (int px = Math.max(0, x - xymax); px < pxmax; px++) {
-        for (int py = Math.max(0, y - xymax); py < pymax; py++) {
-          int dx = px - x;
-          int dy = py - y;
-          int r2 = dx * dx + dy * dy;
-          if (r2 > r2max)
-            continue;
-          int pt = offset + width * dy + dx;
-          int dz = zbuf[pt] - z;
-          if(dz <= z || dz * dz > r2)
-            continue;
-          // TODO
-        }
-      }
-      
-      
-      if (++x == width) {
-        x = 0;
-        y++;
-      }
-    }
-  }
+//  /**
+//   * not implemented; just experimenting here
+//   * @param pbuf
+//   * @param zbuf
+//   * @param aobuf
+//   * @param width
+//   * @param height
+//   * @param ambientOcclusion
+//   */
+//  public void occludePixels(int[] pbuf, int[] zbuf, int[] aobuf, int width,
+//                            int height, int ambientOcclusion) {
+//    int n = zbuf.length;
+//    for (int x = 0, y = 0, offset = 0; offset < n; offset++) {
+//      int z = zbuf[offset];
+//      int xymax = Math.min(z >> 5, 0);
+//      if (xymax == 0)
+//        continue;
+//      int r2max = xymax * xymax;
+//      int pxmax = Math.min(width, x + xymax);
+//      int pymax = Math.min(height, y + xymax);
+//      for (int px = Math.max(0, x - xymax); px < pxmax; px++) {
+//        for (int py = Math.max(0, y - xymax); py < pymax; py++) {
+//          int dx = px - x;
+//          int dy = py - y;
+//          int r2 = dx * dx + dy * dy;
+//          if (r2 > r2max)
+//            continue;
+//          int pt = offset + width * dy + dx;
+//          int dz = zbuf[pt] - z;
+//          if(dz <= z || dz * dz > r2)
+//            continue;
+//          // TODO
+//        }
+//      }
+//      
+//      
+//      if (++x == width) {
+//        x = 0;
+//        y++;
+//      }
+//    }
+//  }
 
 }

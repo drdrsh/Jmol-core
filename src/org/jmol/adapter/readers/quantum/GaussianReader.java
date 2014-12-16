@@ -209,7 +209,7 @@ public class GaussianReader extends MOReader {
    *           If an error occurs
    **/
   private void readSCFDone() throws Exception {
-    String tokens[] = getTokensAt(line, 11);
+    String tokens[] = PT.getTokensAt(line, 11);
     if (tokens.length < 4)
       return;
     energyKey = tokens[0];
@@ -221,14 +221,14 @@ public class GaussianReader extends MOReader {
     // also set the properties for them
     asc.setAtomSetPropertyForSets(energyKey, energyString,
         equivalentAtomSets);
-    tokens = getTokensStr(rd());
+    tokens = PT.getTokens(rd());
     if (tokens.length > 2) {
       asc.setAtomSetPropertyForSets(tokens[0], tokens[2],
           equivalentAtomSets);
       if (tokens.length > 5)
         asc.setAtomSetPropertyForSets(tokens[3], tokens[5],
             equivalentAtomSets);
-      tokens = getTokensStr(rd());
+      tokens = PT.getTokens(rd());
     }
     if (tokens.length > 2)
       asc.setAtomSetPropertyForSets(tokens[0], tokens[2],
@@ -430,7 +430,7 @@ public class GaussianReader extends MOReader {
         shells.addLast(slater);
         gaussianCount += nGaussians;
         for (int i = 0; i < nGaussians; i++) {
-          gdata.addLast(getTokensStr(rd()));
+          gdata.addLast(PT.getTokens(rd()));
         }
       }
     }
@@ -488,11 +488,11 @@ public class GaussianReader extends MOReader {
       if (line.indexOf("                    ") == 0) {
         addMOData(nThisLine, data, mos);
         if (isNOtype) {
-          tokens = getTokensStr(line);
+          tokens = getTokens();
           nThisLine = tokens.length;
-          tokens = getTokensStr(rd());
+          tokens = PT.getTokens(rd());
         } else {
-          tokens = getTokensStr(rd());
+          tokens = PT.getTokens(rd());
           nThisLine = tokens.length;
         }
         for (int i = 0; i < nThisLine; i++) {
@@ -609,14 +609,14 @@ public class GaussianReader extends MOReader {
       throw (new Exception("No frequencies encountered"));
     while ((line= rd()) != null && line.length() > 15) {
       // we now have the line with the vibration numbers in them, but don't need it
-      String[] symmetries = getTokensStr(rd());
-      String[] frequencies = getTokensAt(
+      String[] symmetries = PT.getTokens(rd());
+      String[] frequencies = PT.getTokensAt(
           discardLinesUntilStartsWith(" Frequencies"), 15);
-      String[] red_masses = getTokensAt(
+      String[] red_masses = PT.getTokensAt(
           discardLinesUntilStartsWith(" Red. masses"), 15);
-      String[] frc_consts = getTokensAt(
+      String[] frc_consts = PT.getTokensAt(
           discardLinesUntilStartsWith(" Frc consts"), 15);
-      String[] intensities = getTokensAt(
+      String[] intensities = PT.getTokensAt(
           discardLinesUntilStartsWith(" IR Inten"), 15);
       int iAtom0 = asc.ac;
       int ac = asc.getLastAtomSetAtomCount();
@@ -645,7 +645,7 @@ public class GaussianReader extends MOReader {
   
   void readDipoleMoment() throws Exception {
     //  X=     0.0000    Y=     0.0000    Z=    -1.2917  Tot=     1.2917
-    String tokens[] = getTokensStr(rd());
+    String tokens[] = PT.getTokens(rd());
     if (tokens.length != 8)
       return;
     V3 dipole = V3.new3(parseFloatStr(tokens[1]),
@@ -683,7 +683,7 @@ public class GaussianReader extends MOReader {
       while (atoms[i].elementNumber == 0)
         ++i;
       // assign the partial charge
-      float charge = parseFloatStr(getTokensStr(rd())[2]);
+      float charge = parseFloatStr(PT.getTokens(rd())[2]);
       atoms[i].partialCharge = charge;
     }
     Logger.info("Mulliken charges found for Model " + asc.atomSetCount);

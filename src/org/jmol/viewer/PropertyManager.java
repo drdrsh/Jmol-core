@@ -594,7 +594,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_MENU:
       return vwr.getMenu(myParam.toString());
     case PROP_MESSAGE_QUEUE:
-      return vwr.sm.getMessageQueue();
+      return vwr.sm.messageQueue;
     case PROP_MINIMIZATION_INFO:
       return vwr.getMinimizationInfo();
     case PROP_MODEL_INFO:
@@ -616,7 +616,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_STATE_INFO:
       return vwr.getStateInfo3(myParam.toString(), 0, 0);
     case PROP_TRANSFORM_INFO:
-      return vwr.tm.getMatrixRotate();
+      return M3.newM3(vwr.tm.matrixRotate);
     case PROP_DOM_INFO:
       return getAnnotationInfo(myParam, T.domains);
     case PROP_VAL_INFO:

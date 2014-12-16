@@ -24,6 +24,8 @@
 
 package org.jmol.adapter.readers.molxyz;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.JmolAdapter;
@@ -266,7 +268,7 @@ public class MolReader extends AtomSetCollectionReader {
         try {
           Atom[] atoms = asc.atoms;
           for (int i = parseIntStr(rd()); --i >= 0;) {
-            String[] tokens = getTokensStr(rd());
+            String[] tokens = PT.getTokens(rd());
             int atomIndex = parseIntStr(tokens[0]) + iatom0 - 1;
             float partialCharge = parseFloatStr(tokens[1]);
             if (!Float.isNaN(partialCharge))

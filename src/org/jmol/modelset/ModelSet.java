@@ -877,7 +877,7 @@ import java.util.Properties;
       // something like within(group,...) will not select these atoms!
       Atom atom2 = addAtom(
           modelIndex, atom1.group, 
-          1, "H" + n, n, atom1.getSeqID(), n, 
+          1, "H" + n, null, n, atom1.getSeqID(), n, 
           pts[i], Float.NaN, null, 
           0, 0, 100, Float.NaN, null, 
           false, (byte) 0, null);
@@ -1628,15 +1628,6 @@ import java.util.Properties;
     return Integer.MIN_VALUE;
   }
 
-  public String getAtomProp(Atom atom, String text) {
-    Object data = getInfo(atom.mi, text);
-    if (!(data instanceof Object[]))
-      return "";
-    Object[] sdata = (Object[]) data;
-    int iatom = atom.i - am[atom.mi].firstAtomIndex;
-    return (iatom < sdata.length ? sdata[iatom].toString() : "");
-  }
-
   public int getInsertionCountInModel(int modelIndex) {
     return am[modelIndex].nInsertions;
   }
@@ -2148,7 +2139,7 @@ import java.util.Properties;
   //////////// iterators //////////
 
   protected void initializeBspf() {
-    if (bspf != null && bspf.isInitialized())
+    if (bspf != null && bspf.isValid)
       return;
     if (showRebondTimes)
       Logger.startTimer("build bspf");
@@ -2173,7 +2164,7 @@ import java.util.Properties;
     }
     for (int i = bsNew.nextSetBit(0); i >= 0; i = bsNew.nextSetBit(i + 1))
       bspf.validateModel(i, true);
-    bspf.validate(true);
+    bspf.isValid = true;
     this.bspf = bspf;
 
   }
@@ -3576,7 +3567,7 @@ import java.util.Properties;
 
   public Atom addAtom(int modelIndex, Group group, 
                       int atomicAndIsotopeNumber,
-                      String atomName, int atomSerial, int atomSeqID, 
+                      String atomName, String atomType, int atomSerial, int atomSeqID, 
                       int atomSite, P3 xyz,
                       float radius, V3 vib, int formalCharge,
                       float partialCharge, float occupancy, float bfactor,
@@ -3601,12 +3592,10 @@ import java.util.Properties;
     atom.group = group;
     atom.colixAtom = vwr.cm.getColixAtomPalette(atom, PAL.CPK.id);
     if (atomName != null) {
-      int i;
-      if ((i = atomName.indexOf('\0')) >= 0) {
+      if (atomType != null) {
         if (atomTypes == null)
           atomTypes = new String[at.length];
-        atomTypes[ac] = atomName.substring(i + 1);
-        atomName = atomName.substring(0, i);
+        atomTypes[ac] = atomType;
       }
       atom.atomID = specialAtomID;
       if (specialAtomID == 0) {

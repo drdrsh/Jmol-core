@@ -61,7 +61,7 @@ public class AtomSetCollection {
     this.collectionName = collectionName;
   }
 
-  Map<String, Object> ascAuxiliaryInfo = new Hashtable<String, Object>();
+  public Map<String, Object> atomSetInfo = new Hashtable<String, Object>();
 
   private final static String[] globalBooleans = {
       "someModelsHaveFractionalCoordinates", "someModelsHaveSymmetry",
@@ -77,7 +77,7 @@ public class AtomSetCollection {
   
 
   public void clearGlobalBoolean(int globalIndex) {
-    ascAuxiliaryInfo.remove(globalBooleans[globalIndex]);
+    atomSetInfo.remove(globalBooleans[globalIndex]);
   }
 
   public void setGlobalBoolean(int globalIndex) {
@@ -85,7 +85,7 @@ public class AtomSetCollection {
   }
 
   boolean getGlobalBoolean(int globalIndex) {
-    return (getAtomSetCollectionAuxiliaryInfo(globalBooleans[globalIndex]) == Boolean.TRUE);
+    return (atomSetInfo.get(globalBooleans[globalIndex]) == Boolean.TRUE);
   }
 
   public Atom[] atoms = new Atom[256];
@@ -99,7 +99,7 @@ public class AtomSetCollection {
 
   private int[] atomSetNumbers = new int[16];
   public int[] atomSetAtomIndexes = new int[16];
-  private int[] atomSetAtomCounts = new int[16];
+  public int[] atomSetAtomCounts = new int[16];
   private int[] atomSetBondCounts = new int[16];
   private Map<String, Object>[] atomSetAuxiliaryInfo = new Hashtable[16];
 
@@ -218,7 +218,7 @@ public class AtomSetCollection {
 
     // auxiliary info
     setInfo("loadState",
-        collection.getAtomSetCollectionAuxiliaryInfo("loadState"));
+        collection.atomSetInfo.get("loadState"));
 
     // append to bsAtoms if necessary (CIF reader molecular mode)
     if (collection.bsAtoms != null) {
@@ -423,7 +423,7 @@ public class AtomSetCollection {
     atoms = null;
     atomSetAtomCounts = new int[16];
     atomSetAuxiliaryInfo = new Hashtable[16];
-    ascAuxiliaryInfo = new Hashtable<String, Object>();
+    atomSetInfo = new Hashtable<String, Object>();
     atomSetCount = 0;
     atomSetNumbers = new int[16];
     atomSymbolicMap = new Hashtable<String, Atom>();
@@ -441,7 +441,7 @@ public class AtomSetCollection {
     for (int i = ac; --i >= 0;)
       atoms[i] = null;
     ac = 0;
-    clearSymbolicMap();
+    atomSymbolicMap.clear();
     atomSetCount = 0;
     iSet = -1;
     for (int i = atomSetAuxiliaryInfo.length; --i >= 0;) {
@@ -558,10 +558,6 @@ public class AtomSetCollection {
         atom.setT(pts[i]);
     }
     return count;
-  }
-
-  public int getFirstAtomSetAtomCount() {
-    return atomSetAtomCounts[0];
   }
 
   public int getLastAtomSetAtomCount() {
@@ -710,10 +706,6 @@ public class AtomSetCollection {
     return (atoms[iatom].vib = V3.new3(x, y, z));
   }
 
-  void setAtomSetSpaceGroupName(String spaceGroupName) {
-    setAtomSetAuxiliaryInfo("spaceGroup", spaceGroupName + "");
-  }
-
   public void setCoordinatesAreFractional(boolean tf) {
     coordinatesAreFractional = tf;
     setAtomSetAuxiliaryInfo("coordinatesAreFractional", Boolean.valueOf(tf));
@@ -764,17 +756,9 @@ public class AtomSetCollection {
 
   int bondIndex0;
 
-  boolean checkSpecial = true;
-
-  public void setCheckSpecial(boolean TF) {
-    checkSpecial = TF;
-  }
+  public boolean checkSpecial = true;
 
   public Map<String, Atom> atomSymbolicMap = new Hashtable<String, Atom>();
-
-  public void clearSymbolicMap() {
-    atomSymbolicMap.clear();
-  }
 
   public boolean haveUnitCell;
 
@@ -782,9 +766,9 @@ public class AtomSetCollection {
 
   public void setInfo(String key, Object value) {
     if (value == null)
-      ascAuxiliaryInfo.remove(key);
+      atomSetInfo.remove(key);
     else
-      ascAuxiliaryInfo.put(key, value);
+      atomSetInfo.put(key, value);
   }
 
   /**
@@ -796,10 +780,9 @@ public class AtomSetCollection {
    */
 
   public boolean setAtomSetCollectionPartialCharges(String auxKey) {
-    if (!ascAuxiliaryInfo.containsKey(auxKey)) {
+    if (!atomSetInfo.containsKey(auxKey))
       return false;
-    }
-    Lst<Float> atomData = (Lst<Float>) ascAuxiliaryInfo.get(auxKey);
+    Lst<Float> atomData = (Lst<Float>) atomSetInfo.get(auxKey);
     for (int i = atomData.size(); --i >= 0;)
       atoms[i].partialCharge = atomData.get(i).floatValue();
     Logger.info("Setting partial charges type " + auxKey);
@@ -808,10 +791,6 @@ public class AtomSetCollection {
 
   public void mapPartialCharge(String atomName, float charge) {
     getAtomFromName(atomName).partialCharge = charge;
-  }
-
-  public Object getAtomSetCollectionAuxiliaryInfo(String key) {
-    return ascAuxiliaryInfo.get(key);
   }
 
   ////////////////////////////////////////////////////////////////
@@ -1103,28 +1082,6 @@ public class AtomSetCollection {
       setAtomSetModelPropertyForSet(key, value, idx);
   }
 
-  /**
-   * Clones the properties of the last atom set and associates it with the
-   * current atom set.
-   */
-  public void cloneLastAtomSetProperties() {
-    cloneAtomSetProperties(iSet - 1);
-  }
-
-  /**
-   * Clones the properties of an atom set and associated it with the current
-   * atom set.
-   * 
-   * @param index
-   *        The index of the atom set whose properties are to be cloned.
-   */
-  void cloneAtomSetProperties(int index) {
-    Properties p = (Properties) getAtomSetAuxiliaryInfoValue(index,
-        "modelProperties");
-    if (p != null)
-      setAtomSetAuxiliaryInfoForSet("modelProperties", p.clone(), iSet);
-  }
-
   int getAtomSetNumber(int atomSetIndex) {
     return atomSetNumbers[atomSetIndex >= atomSetCount ? 0 : atomSetIndex];
   }
@@ -1144,17 +1101,6 @@ public class AtomSetCollection {
   }
 
   //// for XmlChem3dReader, but could be for CUBE
-
-  public Properties setAtomNames(Properties atomIdNames) {
-    // for CML reader "a3" --> "N3"
-    if (atomIdNames == null)
-      return null;
-    String s;
-    for (int i = 0; i < ac; i++)
-      if ((s = atomIdNames.getProperty(atoms[i].atomName)) != null)
-        atoms[i].atomName = s;
-    return null;
-  }
 
   public void setAtomSetEnergy(String energyString, float value) {
     if (iSet < 0)
@@ -1178,11 +1124,6 @@ public class AtomSetCollection {
         : pathKey + SmarterJmolAdapter.PATH_SEPARATOR + "Frequencies")
         + "Frequencies");
     return name;
-  }
-
-  void toCartesian(SymmetryInterface symmetry) {
-    for (int i = getLastAtomSetAtomIndex(); i < ac; i++)
-      symmetry.toCartesian(atoms[i], true);
   }
 
   public String[][] getBondList() {

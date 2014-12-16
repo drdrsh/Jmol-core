@@ -26,6 +26,7 @@ package org.jmol.popup;
 import org.jmol.i18n.GT;
 import org.jmol.i18n.Language;
 import org.jmol.java.BS;
+import org.jmol.modelset.Group;
 import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.viewer.JC;
@@ -657,9 +658,9 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       return;
     //next is correct as "<=" because it includes "UNK"
     int nItems = 0;
-    String[] names = vwr.getJBR().getGroup3Names(true);
+    String groupList = Group.standardGroupList;
     for (int i = 1; i < JC.GROUPID_AMINO_MAX; ++i)
-      nItems += updateGroup3List(menu, names[i]);
+      nItems += updateGroup3List(menu, groupList.substring(i * 6 - 4, i * 6 - 1).trim());
     nItems += augmentGroup3List(menu, "p>", true);
     menuEnable(menu, (nItems > 0));
     menuEnable(htMenus.get("PDBproteinMenu"), (nItems > 0));
@@ -676,6 +677,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
   private int updateGroup3List(SC menu, String name) {
     int nItems = 0;
     int n = group3Counts[group3List.indexOf(name) / 6];
+    name = name.trim();
     String script = null;
     if (n > 0) {
       script = "SELECT " + name;

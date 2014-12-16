@@ -12,6 +12,8 @@ package org.jmol.adapter.readers.xtal;
  * @version 1.0
  */
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 
@@ -105,7 +107,7 @@ public class EspressoReader extends AtomSetCollectionReader {
 
     cellParams = new float[9];
     for (int n = 0, i = 0; n < 3; n++) {
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       cellParams[i++] = parseFloatStr(tokens[i0]) * aPar;
       cellParams[i++] = parseFloatStr(tokens[i0 + 1]) * aPar;
       cellParams[i++] = parseFloatStr(tokens[i0 + 2]) * aPar;
@@ -197,7 +199,7 @@ public class EspressoReader extends AtomSetCollectionReader {
   //!    total energy              =   -1668.20791579 Ry
 
   private void readEnergy() throws Exception {
-    totEnergy = Double.valueOf(Double.parseDouble(getTokensStr(line.substring(line
+    totEnergy = Double.valueOf(Double.parseDouble(PT.getTokens(line.substring(line
         .indexOf("=") + 1))[0]));
   }
 

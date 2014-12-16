@@ -84,7 +84,6 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean isMolecular;
   private boolean filterAssembly;
   private boolean allowRotations = true;
-  private boolean checkSpecial = true;
   private boolean readIdeal = true;
   private int configurationPtr = Integer.MIN_VALUE;
   private boolean useAuthorChainID = true;
@@ -135,8 +134,7 @@ public class CifReader extends AtomSetCollectionReader {
       forceSymmetry(false);
       molecularType = "filter \"MOLECULAR\"";
     }
-    checkSpecial = !checkFilterKey("NOSPECIAL");
-    asc.setCheckSpecial(checkSpecial);
+    asc.checkSpecial = !checkFilterKey("NOSPECIAL");
     allowRotations = !checkFilterKey("NOSYM");
     if (strSupercell != null && strSupercell.indexOf(",") >= 0)
       addCellType("conventional", strSupercell, true);
@@ -401,7 +399,7 @@ public class CifReader extends AtomSetCollectionReader {
     // be no center of symmetry, no rotation-inversions, 
     // no atom-centered rotation axes, and no mirror or glide planes.
     if (isMMCIF)
-      asc.setCheckSpecial(false);
+      asc.checkSpecial = false;
     boolean doCheckBonding = doCheckUnitCell && !isMMCIF;
     if (isMMCIF) {
       int modelIndex = asc.iSet;

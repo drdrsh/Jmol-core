@@ -36,6 +36,7 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
 
+import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.Edge;
 import org.jmol.viewer.Viewer;
@@ -402,13 +403,11 @@ public class LabelToken {
         }
         String propertyName = strFormat.substring(ich, ichClose).toLowerCase();
         if (propertyName.startsWith("property_")) {
-          lt.text = propertyName;
           lt.tok = T.data;
-          lt.data = vwr.getDataFloat(lt.text);
+          lt.data = vwr.getDataFloat(propertyName);
         } else if (propertyName.startsWith("validation.")) {
-          lt.text = propertyName.substring(11);
           lt.tok = T.validation;
-          lt.data = vwr.getDataFloat("property_" + lt.text);
+          lt.data = vwr.getDataFloat("property_" + propertyName.substring(11));
         } else {
           T token = T.getTokenFromName(propertyName);
           if (token != null && isLabelPropertyTok(token.tok))
@@ -426,11 +425,11 @@ public class LabelToken {
           ich = cch;
           break;
         }
-        lt.text = strFormat.substring(ich, ichCloseBracket);
-        lt.data = vwr.getDataFloat(lt.text);
+        String s = strFormat.substring(ich, ichCloseBracket);
+        lt.data = vwr.getDataFloat(s);
         // TODO untested j2s issue fix
         if (lt.data == null) {
-          lt.data = vwr.getData(lt.text);
+          lt.data = vwr.getData(s);
           if (lt.data instanceof Object[]) {// either that or it is null
             lt.data = ((Object[]) lt.data)[1];
             if (lt.data instanceof String)
@@ -438,7 +437,12 @@ public class LabelToken {
             if (!(PT.isAS(lt.data)))
               lt.data = null;
           }
-          lt.tok = (lt.data == null ? T.string : T.array);
+          if (lt.data == null) {
+            lt.tok = T.property;
+            lt.data = s;
+          } else {
+            lt.tok = T.array;
+          }
         } else {
           lt.tok = T.data;
         }
@@ -505,6 +509,34 @@ public class LabelToken {
           }
         }
         break;
+      case T.property:
+        // label %{altName}
+        Object data = vwr.ms.getInfo(atom.mi, (String) t.data);
+        int iatom = atom.i - vwr.ms.am[atom.mi].firstAtomIndex;
+        Object o = null;
+        if (iatom >= 0)
+          if ((data instanceof Object[])) {
+            // unlikely that this will be the case.
+            // it would have to be 
+            Object[] sdata = (Object[]) data;
+            o = (iatom < sdata.length ? sdata[iatom] : null);
+          } else if (data instanceof Lst<?>) {
+            @SuppressWarnings("unchecked")
+            Lst<SV> list = (Lst<SV>) data;
+            o = (iatom < list.size() ? SV.oValue(list.get(iatom)) : null);
+          }
+        if (o == null) {
+          strT = "";
+        } else if (o instanceof Float) {
+          floatT = ((Float) o).floatValue();
+        } else if (o instanceof Integer) {
+          floatT = ((Integer) o).intValue();
+        } else if (o instanceof T3) {
+          ptT = (T3) o;
+        } else {
+          strT = o.toString();
+        }
+        break;
       case T.array:
         if (t.data != null) {
           String[] sdata = (String[]) t.data;
@@ -513,12 +545,8 @@ public class LabelToken {
         break;
       case T.formalcharge:
         int formalCharge = atom.getFormalCharge();
-        if (formalCharge > 0)
-          strT = "" + formalCharge + "+";
-        else if (formalCharge < 0)
-          strT = "" + -formalCharge + "-";
-        else
-          strT = "";
+        strT = (formalCharge > 0 ? "" + formalCharge + "+"
+            : formalCharge < 0 ? "" + -formalCharge + "-" : "");
         break;
       case 'g':
         strT = "" + atom.getSelectedGroupIndexWithinChain();
@@ -549,14 +577,8 @@ public class LabelToken {
         strT = (id <= 0 ? "" : "" + id);
         break;
       case T.straightness:
-        floatT = atom.getGroupParameter(T.straightness);
-        if (Float.isNaN(floatT))
+        if (Float.isNaN(floatT = atom.getGroupParameter(T.straightness)))
           strT = "null";
-        break;
-      case T.string:
-        // label %{altName}
-        strT = vwr.ms.getAtomProp(atom,
-            t.text.substring(2, t.text.length() - 1));
         break;
       case T.vibx:
       case T.viby:

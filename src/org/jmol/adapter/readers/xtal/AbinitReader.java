@@ -55,7 +55,7 @@ public class AbinitReader extends AtomSetCollectionReader {
   private int nAtom;
 
   private void readNoatom() throws Exception {
-    String[] tokens = getTokensStr(line);
+    String[] tokens = getTokens();
     if (tokens.length <= 2)
       nAtom = parseIntStr(tokens[1]);
   }
@@ -63,7 +63,7 @@ public class AbinitReader extends AtomSetCollectionReader {
   private int nType;
 
   private void readNotypes() throws Exception {
-    String[] tokens = getTokensStr(line);
+    String[] tokens = getTokens();
     if (tokens.length <= 2)
       nType = parseIntStr(tokens[1]);
   }
@@ -139,7 +139,7 @@ public class AbinitReader extends AtomSetCollectionReader {
     line = line.substring(12);
     while (line != null && !line.contains("x")) {
       Atom atom = asc.addNewAtom();
-      setAtomCoordScaled(atom, getTokensStr(line), 0, ANGSTROMS_PER_BOHR);
+      setAtomCoordScaled(atom, getTokens(), 0, ANGSTROMS_PER_BOHR);
       rd();
     }
     discardLinesUntilContains("z");

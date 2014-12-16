@@ -28,6 +28,7 @@ package org.jmol.adapter.readers.xml;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.JmolAdapter;
 import javajs.util.P3;
+import javajs.util.PT;
 
 /**
  * An Odyssey xodydata reader
@@ -69,7 +70,7 @@ public class XmlOdysseyReader extends XmlReader {
         atom.atomName = atts.get("id");
       if (atts.containsKey("xyz")) {
         String xyz = atts.get("xyz");
-        String[] tokens = getTokensStr(xyz);
+        String[] tokens = PT.getTokens(xyz);
         atom.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]),
             parseFloatStr(tokens[2]));
       }
@@ -90,7 +91,7 @@ public class XmlOdysseyReader extends XmlReader {
     }
 
     if ("boundary".equals(localName)) {
-      String[] boxDim = getTokensStr(atts.get("box"));
+      String[] boxDim = PT.getTokens(atts.get("box"));
       float x = parseFloatStr(boxDim[0]);
       float y = parseFloatStr(boxDim[1]);
       float z = parseFloatStr(boxDim[2]);

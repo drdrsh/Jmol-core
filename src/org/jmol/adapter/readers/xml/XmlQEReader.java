@@ -25,6 +25,8 @@
 package org.jmol.adapter.readers.xml;
 
 
+import javajs.util.PT;
+
 import org.jmol.util.Logger;
 
 /**
@@ -77,7 +79,7 @@ public class XmlQEReader extends XmlReader {
     }
 
     if (localName.startsWith("ATOM.")) {
-      parent.setAtomCoordScaled(null, getTokensStr(atts.get("TAU")), 0,
+      parent.setAtomCoordScaled(null, PT.getTokens(atts.get("TAU")), 0,
           ANGSTROMS_PER_BOHR).elementSymbol = atts.get("SPECIES").trim();
     }
     if ("structure".equals(localName)) {

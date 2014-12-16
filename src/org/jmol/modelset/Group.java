@@ -218,7 +218,8 @@ public class Group {
   }
   
   private BS bsAdded;
-  public static String group3List; // will be populated by org.jmol.biomodelset.Resolver
+  public static Map<String, Short> htGroup = new Hashtable<String, Short>();
+  public static String standardGroupList; // will be populated by org.jmol.biomodelset.Resolver
   public static String[] group3Names = new String[128];
   public static String[] specialAtomNames; // filled by Resolver
   

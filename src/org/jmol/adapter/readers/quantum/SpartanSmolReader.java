@@ -139,12 +139,11 @@ public class SpartanSmolReader extends SpartanInputReader {
   protected void finalizeSubclassReader() throws Exception {
     finalizeReaderASCR();
     // info out of order -- still a chance, at least for first model
-    if (ac > 0 && spartanArchive != null
-        && asc.bondCount == 0 && bondData != null)
+    if (ac > 0 && spartanArchive != null && asc.bondCount == 0
+        && bondData != null)
       spartanArchive.addBonds(bondData, 0);
     if (moData != null) {
-      Float n = (Float) asc
-          .getAtomSetCollectionAuxiliaryInfo("HOMO_N");
+      Float n = (Float) asc.atomSetInfo.get("HOMO_N");
       if (n != null)
         moData.put("HOMO", Integer.valueOf(n.intValue()));
     }
@@ -154,7 +153,7 @@ public class SpartanSmolReader extends SpartanInputReader {
     float[] mat;
     String binaryCodes = rd();
     // last 16x4 bytes constitutes the 4x4 matrix, using doubles
-    String[] tokens = getTokensStr(binaryCodes.trim());
+    String[] tokens = PT.getTokens(binaryCodes.trim());
     if (tokens.length < 16)
       return;
     byte[] bytes = new byte[tokens.length];

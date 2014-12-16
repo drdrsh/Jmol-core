@@ -399,7 +399,7 @@ Orbital energies (a.u.):
       if (line.indexOf("                    ") == 0) {
         addMOData(nThisLine, data, mos);
         nThisLine = tokens.length;
-        tokens = getTokensStr(rd());
+        tokens = PT.getTokens(rd());
         for (int i = 0; i < nThisLine; i++) {
           mos[i] = new Hashtable<String, Object>();
           data[i] = new  Lst<String>();

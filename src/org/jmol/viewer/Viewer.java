@@ -792,15 +792,14 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
     am.setAnimationOn(false);
     am.setAnimationFps(g.animationFps);
-    sm.setAllowStatusReporting(g.statusReporting);
+    sm.allowStatusReporting = g.statusReporting;
     setBooleanProperty("antialiasDisplay", g.antialiasDisplay);
     stm.resetLighting();
     tm.setDefaultPerspective();
   }
 
   void saveModelOrientation() {
-    ms.saveModelOrientation(am.cmi,
-        stm.getOrientation());
+    ms.saveModelOrientation(am.cmi, stm.getOrientation());
   }
 
   void restoreModelOrientation(int modelIndex) {
@@ -1281,8 +1280,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     cm.setPropertyColorScheme(scheme, isTranslucent, isOverloaded);
   }
 
-  public String getSpecularState() {
-    return getStateCreator().getSpecularState();
+  public String getLightingState() {
+    return getStateCreator().getLightingState(true);
   }
 
   public P3 getColorPointForPropertyValue(float val) {
@@ -6391,7 +6390,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     case T.statusreporting:
       doRepaint = false;
       // not part of the state
-      sm.setAllowStatusReporting(value);
+      sm.allowStatusReporting = value;
       break;
     case T.chaincasesensitive:
       doRepaint = false;
@@ -9181,10 +9180,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     }
   }
   
-  public boolean isKnownPDBGroup(String group3) {
-    return getJBR().isKnownPDBGroup(group3);
-  }
-
   JmolBioResolver jbr;
   
   public JmolBioResolver getJBR() {

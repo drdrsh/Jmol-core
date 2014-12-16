@@ -203,7 +203,7 @@ public class XtalSymmetry {
     asc.setCoordinatesAreFractional(acr.iHaveFractionalCoordinates);
     setNotionalUnitCell(acr.notionalUnitCell, acr.matUnitCellOrientation,
         acr.unitCellOffset);
-    asc.setAtomSetSpaceGroupName(acr.sgName);
+    setAtomSetSpaceGroupName(acr.sgName);
     setSymmetryRange(acr.symmetryRange);
     if (acr.doConvertToFractional || acr.fileCoordinatesAreFractional) {
       setLatticeCells();
@@ -225,18 +225,26 @@ public class XtalSymmetry {
         //parameters are counts of unit cells as [a b c]
         applySymmetryLattice(acr.ms, acr.strSupercell);
         if (readerSymmetry != null && filterSymop == null)
-          asc.setAtomSetSpaceGroupName(readerSymmetry.getSpaceGroupName());
+          setAtomSetSpaceGroupName(readerSymmetry.getSpaceGroupName());
       }
     }
     if (acr.iHaveFractionalCoordinates && acr.merging && readerSymmetry != null) {
+      
       // when merging (with appendNew false), we must return cartesians
-      asc.toCartesian(readerSymmetry);
+      Atom[] atoms = asc.atoms;
+      for (int i = asc.getLastAtomSetAtomIndex(), n = asc.ac; i < n; i++)
+          readerSymmetry.toCartesian(atoms[i], true);
       asc.setCoordinatesAreFractional(false);
+      
       // We no longer allow merging of multiple-model files
       // when the file to be appended has fractional coordinates and vibrations
       acr.addVibrations = false;
     }
     return symmetry;
+  }
+
+  private void setAtomSetSpaceGroupName(String spaceGroupName) {
+    asc.setAtomSetAuxiliaryInfo("spaceGroup", spaceGroupName + "");
   }
 
   private void applySymmetryLattice(MSInterface ms, String supercell)
@@ -386,7 +394,7 @@ public class XtalSymmetry {
       symmetry = getSymmetry();
       setNotionalUnitCell(new float[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z,
           vb.x, vb.y, vb.z, vc.x, vc.y, vc.z }, null, offset);
-      asc.setAtomSetSpaceGroupName(oabc == null ? "P1" : "cell=" + supercell);
+      setAtomSetSpaceGroupName(oabc == null ? "P1" : "cell=" + supercell);
       symmetry.setSpaceGroup(doNormalize);
       symmetry.addSpaceGroupOperation("x,y,z", 0);
 
@@ -934,7 +942,7 @@ public class XtalSymmetry {
     symmetry.setFinalOperations(name, asc.atoms, firstSymmetryAtom,
         noSymmetryCount, doNormalize, filterSymop);
     if (filterSymop != null || name == null || name.equals("unspecified!"))
-      asc.setAtomSetSpaceGroupName(symmetry.getSpaceGroupName());
+      setAtomSetSpaceGroupName(symmetry.getSpaceGroupName());
   }
 
   private void setSymmetryOps() {
@@ -984,7 +992,7 @@ public class XtalSymmetry {
     //symmetry.setUnitCell(null);
     addSpaceGroupOperation("x,y,z", false);
     String name = (String) thisBiomolecule.get("name");
-    asc.setAtomSetSpaceGroupName(name);
+    setAtomSetSpaceGroupName(name);
     int len = biomts.size();
     this.applySymmetryToBonds = applySymmetryToBonds;
     bondCount0 = asc.bondCount;

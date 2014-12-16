@@ -171,7 +171,7 @@ abstract public class MOReader extends BasisFunctionReader {
       while (atoms[i].elementNumber == 0)
         ++i;
       // assign the partial charge
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       float charge;
       if (tokens == null || tokens.length < 3 || Float.isNaN(charge = parseFloatStr(tokens[2]))) {
         Logger.info("Error reading NBO charges: " + line);
@@ -501,7 +501,7 @@ abstract public class MOReader extends BasisFunctionReader {
       // this is the original functionality
       tokens = getTokens();
       if (tokens.length == 0)
-        tokens = getTokensStr(rd());
+        tokens = PT.getTokens(rd());
       for (int i = 0; i < nThisLine; i++) {
         mos[i].put("energy", Float.valueOf(PT.fVal(tokens[i])));
       }

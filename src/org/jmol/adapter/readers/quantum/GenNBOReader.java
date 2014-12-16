@@ -296,7 +296,7 @@ public class GenNBOReader extends MOReader {
 //line = "";
 //while (rd().indexOf("=") < 0 && line.indexOf("$") < 0)
 //  s += line;
-//String[] tokens = getTokensStr(s);
+//String[] tokens = PT.getTokens(s);
 //int[] f = new int[tokens.length];
 //for (int i = f.length; --i >= 0;)
 //  f[i] = parseIntStr(tokens[i]);
@@ -377,7 +377,7 @@ public class GenNBOReader extends MOReader {
 
     // read ac, shellCount, and gaussianCount
     rd(); // ----------
-    String[] tokens = getTokensStr(rd());
+    String[] tokens = PT.getTokens(rd());
     int ac = parseIntStr(tokens[0]);
     shellCount = parseIntStr(tokens[1]);
     gaussianCount = parseIntStr(tokens[2]);
@@ -387,7 +387,7 @@ public class GenNBOReader extends MOReader {
     asc.newAtomSet();
     asc.setAtomSetName(moType + "s: " + line1.trim());
     for (int i = 0; i < ac; i++) {
-      tokens = getTokensStr(rd());
+      tokens = PT.getTokens(rd());
       int z = parseIntStr(tokens[0]);
       if (z < 0) // dummy atom
         continue;
@@ -404,7 +404,7 @@ public class GenNBOReader extends MOReader {
     rd(); // ----------
     nOrbitals = 0;
     for (int i = 0; i < shellCount; i++) {
-      tokens = getTokensStr(rd());
+      tokens = PT.getTokens(rd());
       int[] slater = new int[4];
       slater[0] = parseIntStr(tokens[0]) - 1; // atom pointer; 1-based
       int n = parseIntStr(tokens[1]);
@@ -419,12 +419,12 @@ public class GenNBOReader extends MOReader {
   }
 
   private boolean readData46() throws Exception {
-    String[] tokens = getTokensStr(rd());
+    String[] tokens = PT.getTokens(rd());
     int ipt = 1;
     if (tokens[1].equals("ALPHA")) {
       ipt = 2;
       if (haveNboOrbitals) {
-        tokens = getTokensStr(discardLinesUntilContains("BETA"));
+        tokens = PT.getTokens(discardLinesUntilContains("BETA"));
         alphaBeta = "beta";
       } else {
         alphaBeta = "alpha";
@@ -475,7 +475,7 @@ public class GenNBOReader extends MOReader {
       sb.appendC(c);
     }
     Logger.info(sb.toString());
-    tokens = getTokensStr(sb.toString());
+    tokens = PT.getTokens(sb.toString());
     for (int i = 0; i < tokens.length; i++) {
       Map<String, Object> mo = new Hashtable<String, Object>();
       setMO(mo);

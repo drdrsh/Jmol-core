@@ -43,20 +43,12 @@ import javajs.util.P3;
 public final class Bspf {
 
   int dimMax;
-  Bspt[] bspts;
-  protected boolean isValid = false;
+  public Bspt[] bspts;
+  public boolean isValid = false;
   boolean[] bsptsValid;
   
-  public void validate(boolean isValid) {
-    this.isValid = isValid;
-  }
-
   public void validateModel(int i, boolean isValid) {
     bsptsValid[i] = isValid;
-  }
-
-  public boolean isInitialized() {
-    return isValid;
   }
 
   public boolean isInitializedIndex(int bsptIndex) {
@@ -73,10 +65,6 @@ public final class Bspf {
     cubeIterators = new CubeIterator[0];
   }
 
-  public int getBsptCount() {
-    return bspts.length;
-  }
-  
   public void addTuple(int bsptIndex, P3 tuple) {
     if (bsptIndex >= bspts.length) {
       bspts = (Bspt[]) AU.arrayCopyObject(bspts, bsptIndex + 1);

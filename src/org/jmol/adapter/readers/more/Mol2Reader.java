@@ -24,6 +24,8 @@
 
 package org.jmol.adapter.readers.more;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.Atom;
 
@@ -168,7 +170,7 @@ public class Mol2Reader extends ForceFieldReader {
     int i0 = asc.ac;
     for (int i = 0; i < ac; ++i) {
       Atom atom = asc.addNewAtom();
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       String atomType = tokens[5];
       atom.atomName = tokens[1] + '\0' + atomType;
       int pt = atomType.indexOf(".");
@@ -207,43 +209,62 @@ public class Mol2Reader extends ForceFieldReader {
     String g3 = atoms[i0].group3;
     if (g3 == null)
       return;
-
     boolean isPDB = false;
 
     // 2. If so, is there more than one kind of group?
 
-    for (int i = asc.ac; --i >= i0;)
-      if (!g3.equals(atoms[asc.ac - 1].group3)) {
-        isPDB = true;
-        break;
-      }
+    if (!g3.equals("UNK") && !g3.startsWith("RES")) {
 
-    // 3. If so, is there an identifiable group name? 
-    
-    if (isPDB) {
-      isPDB = false;
-      for (int i = asc.ac; --i >= i0;) {
-        Atom atom = atoms[i];
-        if (atom.group3.length() <= 3
-            && vwr.isKnownPDBGroup(atom.group3)) {
-          isPDB = this.isPDB = true;
+      for (int i = asc.ac; --i >= i0;)
+        if (!g3.equals(atoms[asc.ac - 1].group3)) {
+          isPDB = true;
           break;
         }
+
+      // 3. If so, is there an identifiable group name? 
+
+      if (isPDB) {
+        isPDB = false;
+        for (int i = asc.ac; --i >= i0;) {
+          int pt = getPDBGroupLength(atoms[i].group3);
+          if (pt == 0 || pt > 3)
+            break;
+          if (vwr.getJBR().isKnownPDBGroup(g3.substring(0, pt))) {
+            isPDB = this.isPDB = true;
+            break;
+          }
+        }
       }
+
     }
 
-    for (int i = asc.ac; --i >= i0;)
-      if (isPDB)
-        atoms[i].isHetero = vwr.getJBR().isHetero(atoms[i].group3);
-      else
-        atoms[i].group3 = null;
+    // remove group3 entry if not PDB; fix if it is like THR13
+    for (int i = asc.ac; --i >= i0;) {
+      if (isPDB) {
+        g3 = atoms[i].group3;
+        g3 = g3.substring(0, getPDBGroupLength(g3));
+        atoms[i].isHetero = vwr.getJBR().isHetero(g3);
+      } else {
+        g3 = null;
+      }
+      atoms[i].group3 = g3;
+    }
+  }
+
+  private int getPDBGroupLength(String g3) {
+    int pt0 = g3.length();
+    int pt = pt0;
+    while (--pt > 0 && Character.isDigit(g3.charAt(pt))) {
+      // continue
+    }
+    return ++pt;
   }
 
   private void readBonds(int bondCount) throws Exception {
     //     6     1    42    1
     // free format, but no blank lines
     for (int i = 0; i < bondCount; ++i) {
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       int atomIndex1 = parseIntStr(tokens[1]);
       int atomIndex2 = parseIntStr(tokens[2]);
       int order = parseIntStr(tokens[3]);

@@ -28,6 +28,7 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 
 import javajs.util.Lst;
+import javajs.util.PT;
 
 import java.util.Map;
 
@@ -189,7 +190,7 @@ public class GamessUKReader extends GamessReader {
      symmetries = new  Lst<String>();
      occupancies = new  Lst<Float>();
      while (rd() != null && line.indexOf("====") < 0) {
-       String[] tokens = getTokensStr(line.substring(20));
+       String[] tokens = PT.getTokens(line.substring(20));
        symmetries.addLast(tokens[0] + " " + tokens[1]);
        occupancies.addLast(Float.valueOf(parseFloatStr(tokens[5])));
      }

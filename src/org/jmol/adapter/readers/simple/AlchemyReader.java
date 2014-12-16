@@ -24,6 +24,8 @@
 
 package org.jmol.adapter.readers.simple;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.JmolAdapter;
@@ -126,7 +128,7 @@ public class AlchemyReader extends AtomSetCollectionReader {
   private void readAtoms() throws Exception {
     int pt = (isM3D ? 3 : 2);
     for (int i = ac; --i >= 0;) {
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       Atom atom = new Atom();
       atom.atomSerial = parseIntStr(tokens[0]);
       String name = tokens[1];
@@ -152,7 +154,7 @@ public class AlchemyReader extends AtomSetCollectionReader {
 
   private void readBonds() throws Exception {
     for (int i = bondCount; --i >= 0;) {
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       String atomSerial1 = tokens[1];
       String atomSerial2 = tokens[2];
       String sOrder = (tokens.length < 4 ? "1" : tokens[3].toUpperCase());

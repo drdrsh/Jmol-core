@@ -55,7 +55,7 @@ public class MarchingSquares {
   private final static int nContourMax = 100;
   public final static int defaultContourCount = 9; //odd is better
   private int nContourSegments;
-  private int contourType;//0, 1, or 2
+  public int contourType;//0, 1, or 2
   int thisContour = 0;
   private float valueMin, valueMax;
 
@@ -95,10 +95,6 @@ public class MarchingSquares {
     }
   }
 
-  public int getContourType() {
-    return contourType;
-  }
-
   public void setMinMax(float valueMin, float valueMax) {
     this.valueMin = valueMin;
     this.valueMax = valueMax;
@@ -136,11 +132,7 @@ public class MarchingSquares {
   float contourPlaneMinimumValue;
   float contourPlaneMaximumValue;
 
-  private float[] contourValuesUsed;
-
-  public float[] getContourValues() {
-    return contourValuesUsed;
-  }
+  public float[] contourValuesUsed;
 
   /* save - was used previously
    * 

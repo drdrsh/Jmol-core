@@ -27,6 +27,8 @@ package org.jmol.adapter.readers.molxyz;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
 /**
@@ -104,7 +106,7 @@ public class V3000Rdr {
         String endpts = getField("ENDPTS");
         if (endpts != null && line.indexOf("ATTACH=ALL") >= 0) {
           // not "ATTACH=ANY"
-          tokens = AtomSetCollectionReader.getTokensStr(endpts);
+          tokens = PT.getTokens(endpts);
           int n = mr.parseIntStr(tokens[0]);
           int o = mr.fixOrder(order, 0);
           for (int k = 1; k <= n; k++)
@@ -149,7 +151,7 @@ public class V3000Rdr {
         else if ((a = userData.get(name)) == null)
           userData.put(name, a = new String[ac]);
         try {
-          String[] tokens = AtomSetCollectionReader.getTokensStr(atoms);
+          String[] tokens = PT.getTokens(atoms);
           for (int i = tokens.length; --i >= 1;) {
             String atom = tokens[i];
             if (isPartial)

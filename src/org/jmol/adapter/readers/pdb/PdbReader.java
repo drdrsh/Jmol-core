@@ -1320,7 +1320,7 @@ REMARK 290 REMARK: NULL
     // No special-position atoms in mmCIF files, because there will
     // be no center of symmetry, no rotation-inversions, 
     // no atom-centered rotation axes, and no mirror or glide planes. 
-    asc.setCheckSpecial(!isPDB);
+    asc.checkSpecial = !isPDB;
     setModelPDB(isPDB);
     nUNK = nRes = 0;
     currentGroup3 = null;
@@ -1334,7 +1334,7 @@ REMARK 290 REMARK: NULL
     setUnitCell(a, getFloat(15, 9), getFloat(24, 9), getFloat(33,
         7), getFloat(40, 7), getFloat(47, 7));
     if (sgName == null)
-      setSpaceGroupName(parseTrimmedRange(line, 55, 66));
+      setSpaceGroupName(PT.parseTrimmedRange(line, 55, 66));
   }
 
   private float getFloat(int ich, int cch) throws Exception {
@@ -1363,14 +1363,14 @@ REMARK 290 REMARK: NULL
 
   private void formul() {
     String groupName = parseTokenRange(line, 12, 15);
-    String formula = parseTrimmedRange(line, 19, 70);
+    String formula = PT.parseTrimmedRange(line, 19, 70);
     int ichLeftParen = formula.indexOf('(');
     if (ichLeftParen >= 0) {
       int ichRightParen = formula.indexOf(')');
       if (ichRightParen < 0 || ichLeftParen >= ichRightParen ||
           ichLeftParen + 1 == ichRightParen ) // pick up () case in 1SOM.pdb
         return; // invalid formula;
-      formula = parseTrimmedRange(formula, ichLeftParen + 1, ichRightParen);
+      formula = PT.parseTrimmedRange(formula, ichLeftParen + 1, ichRightParen);
     }
     Map<String, Boolean> htElementsInGroup = htFormul.get(groupName);
     if (htElementsInGroup == null)
@@ -1401,7 +1401,7 @@ REMARK 290 REMARK: NULL
     if (htHetero.containsKey(groupName)) {
       return;
     }
-    String hetName = parseTrimmedRange(line, 30, 70);
+    String hetName = PT.parseTrimmedRange(line, 30, 70);
     htHetero.put(groupName, hetName);
   }
   
@@ -1410,7 +1410,7 @@ REMARK 290 REMARK: NULL
       htHetero = new Hashtable<String, String>();
     }
     String groupName = parseTokenRange(line, 11, 14);
-    String hetName = parseTrimmedRange(line, 15, 70);
+    String hetName = PT.parseTrimmedRange(line, 15, 70);
     if (groupName == null) {
       Logger.error("ERROR: HETNAM record does not contain a group name: " + line);
       return;
@@ -1543,7 +1543,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
     }
     //int seqNum = parseInt(line, 7, 10);
     int nResidues = parseIntRange(line, 15, 17);
-    String siteID = parseTrimmedRange(line, 11, 14);
+    String siteID = PT.parseTrimmedRange(line, 11, 14);
     Map<String, Object> htSite = htSites.get(siteID);
     if (htSite == null) {
       htSite = new Hashtable<String, Object>();
@@ -1555,12 +1555,12 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
     String groups = (String)htSite.get("groups");
     for (int i = 0; i < 4; i++) {
       int pt = 18 + i * 11;
-      String resName = parseTrimmedRange(line, pt, pt + 3);
+      String resName = PT.parseTrimmedRange(line, pt, pt + 3);
       if (resName.length() == 0)
         break;
-      String chainID = parseTrimmedRange(line, pt + 4, pt + 5);
-      String seq = parseTrimmedRange(line, pt + 5, pt + 9);
-      String iCode = parseTrimmedRange(line, pt + 9, pt + 10);
+      String chainID = PT.parseTrimmedRange(line, pt + 4, pt + 5);
+      String seq = PT.parseTrimmedRange(line, pt + 5, pt + 9);
+      String iCode = PT.parseTrimmedRange(line, pt + 9, pt + 10);
       groups += (groups.length() == 0 ? "" : ",") + "[" + resName + "]" + seq;
       if (iCode.length() > 0)
         groups += "^" + iCode;
@@ -1615,7 +1615,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
     String remark = line.substring(0, 11);
     while (readHeader(true) != null && line.startsWith(remark)) {
       try {
-        String[] tokens = getTokensStr(line.substring(10).replace(':', ' '));
+        String[] tokens = PT.getTokens(line.substring(10).replace(':', ' '));
         if (tokens.length < 2)
           continue;
         Logger.info(line);
@@ -1727,7 +1727,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
               + readHeader(true).substring(10) + readHeader(true).substring(10)).replace(
                   tensorType, ' ').replace(':', ' ');
           //System.out.println("Tensor data = " + s);
-          tokens = getTokensStr(s);
+          tokens = PT.getTokens(s);
           float[][] data = new float[3][3];
           tlsGroup.put("t" + tensorType, data);
           for (int i = 0; i < tokens.length; i++) {

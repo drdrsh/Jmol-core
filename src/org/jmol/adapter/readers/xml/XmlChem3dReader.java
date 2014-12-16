@@ -28,6 +28,8 @@ import org.jmol.api.Interface;
 import org.jmol.api.VolumeDataInterface;
 
 import javajs.util.Lst;
+import javajs.util.PT;
+
 import java.util.Hashtable;
 
 import java.util.Map;
@@ -79,7 +81,7 @@ public class XmlChem3dReader extends XmlReader {
       atom.elementSymbol = atts.get("symbol");
       if (atts.containsKey("cartCoords")) {
         String xyz = atts.get("cartCoords");
-        tokens = getTokensStr(xyz);
+        tokens = PT.getTokens(xyz);
         atom.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]),
             parseFloatStr(tokens[2]));
       }
@@ -96,8 +98,8 @@ public class XmlChem3dReader extends XmlReader {
     }
 
     if ("electronicStructureCalculation".equalsIgnoreCase(localName)) {
-      tokens = getTokensStr(atts.get("calcPartialCharges"));
-      String[] tokens2 = getTokensStr(atts.get("calcAtoms"));
+      tokens = PT.getTokens(atts.get("calcPartialCharges"));
+      String[] tokens2 = PT.getTokens(atts.get("calcAtoms"));
       for (int i = parseIntStr(tokens[0]); --i >= 0;)
         asc.mapPartialCharge(tokens2[i + 1],
             parseFloatStr(tokens[i + 1]));
@@ -110,12 +112,12 @@ public class XmlChem3dReader extends XmlReader {
       float xStep = parseFloatStr(atts.get("gridDatXSize")) / (nPointsX);
       float yStep = parseFloatStr(atts.get("gridDatYSize")) / (nPointsY);
       float zStep = parseFloatStr(atts.get("gridDatZSize")) / (nPointsZ);
-      tokens = getTokensStr(atts.get("gridDatOrigin"));
+      tokens = PT.getTokens(atts.get("gridDatOrigin"));
       float ox = parseFloatStr(tokens[0]);
       float oy = parseFloatStr(tokens[1]);
       float oz = parseFloatStr(tokens[2]);
 
-      tokens = getTokensStr(atts.get("gridDatData"));
+      tokens = PT.getTokens(atts.get("gridDatData"));
       int pt = 1;
       float[][][] voxelData = new float[nPointsX][nPointsY][nPointsZ];
 

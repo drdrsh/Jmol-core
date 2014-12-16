@@ -79,7 +79,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
   @Override
   protected boolean render() {
     fidPrevious = 0;
-    zCutoff = tm.getZShadeStart();
+    zCutoff =(tm.zShadeEnabled ? tm.zDepthValue : 0);
 
     Labels labels = (Labels) shape;
 

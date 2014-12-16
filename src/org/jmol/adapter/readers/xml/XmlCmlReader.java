@@ -441,7 +441,7 @@ public class XmlCmlReader extends XmlReader {
         if (--moduleNestingLevel == 0) {
           if (parent.iHaveUnitCell)
             applySymmetryAndSetTrajectory();
-          atomIdNames = asc.setAtomNames(atomIdNames);
+          setAtomNames();
         }
       }
       break;
@@ -454,7 +454,7 @@ public class XmlCmlReader extends XmlReader {
           state = START;
         }
       } else if (name.equalsIgnoreCase("cellParameter") && keepChars) {
-        String[] tokens = getTokensStr(chars);
+        String[] tokens = PT.getTokens(chars);
         setKeepChars(false);
         if (tokens.length != 3 || cellParameterType == null) {
         } else if (cellParameterType.equals("length")) {
@@ -515,7 +515,7 @@ public class XmlCmlReader extends XmlReader {
           // we have to wait until the end of all <molecule>s to
           // apply symmetry.
           applySymmetryAndSetTrajectory();
-          atomIdNames = asc.setAtomNames(atomIdNames);
+          setAtomNames();
           state = START;
         } else {
           state = MOLECULE;
@@ -596,6 +596,18 @@ public class XmlCmlReader extends XmlReader {
       break;
     }
   }
+
+  private void setAtomNames() {
+      // for CML reader "a3" --> "N3"
+      if (atomIdNames == null)
+        return;
+      String s;
+      Atom[] atoms = asc.atoms;
+      for (int i = 0; i < ac; i++)
+        if ((s = atomIdNames.getProperty(atoms[i].atomName)) != null)
+          atoms[i].atomName = s;
+      atomIdNames = null;
+    }
 
   private void addNewBond(String a1, String a2, int order) {
     parent.applySymmetryToBonds = true;

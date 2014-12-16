@@ -140,6 +140,13 @@ class Node extends Element {
     }
   
   static float getDimensionValue(P3 pt, int dim) {
-    return (dim == 0 ? pt.x : dim == 1 ? pt.y : pt.z);
+    switch (dim) {
+    case 0:
+      return pt.x;
+    case 1:
+      return pt.y;
+    default:
+      return pt.z;
+    }
   }
 }

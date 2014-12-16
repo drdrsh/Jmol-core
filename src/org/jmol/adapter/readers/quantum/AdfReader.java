@@ -30,6 +30,7 @@ import org.jmol.util.Logger;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.PT;
 
 import java.util.Hashtable;
 
@@ -93,14 +94,14 @@ public class AdfReader extends SlaterReader {
     }
     if (line.indexOf(" ======  Eigenvectors (rows) in BAS representation") >= 0) {
       if (doReadMolecularOrbitals)
-        readMolecularOrbitals(getTokensStr(symLine)[1]);
+        readMolecularOrbitals(PT.getTokens(symLine)[1]);
       return true;
     }
     if (!doProcessLines)
       return true;
     
     if (line.indexOf("Energy:") >= 0) {
-      String[] tokens = getTokensStr(line.substring(line.indexOf("Energy:")));
+      String[] tokens = PT.getTokens(line.substring(line.indexOf("Energy:")));
       energy = tokens[1];
       return true;
     }
@@ -113,7 +114,7 @@ public class AdfReader extends SlaterReader {
       return true;
     }
     if (line.indexOf(" ======  Eigenvectors (rows) in BAS representation") >= 0) {
-      readMolecularOrbitals(getTokensStr(symLine)[1]);
+      readMolecularOrbitals(PT.getTokens(symLine)[1]);
       return true;
     }
     return true;
@@ -234,7 +235,7 @@ OR
     String syms = "";
     while (rd() != null && line.length() > 1)
       syms += line;
-    String[] tokens = getTokensStr(syms);
+    String[] tokens = PT.getTokens(syms);
     for (int i = 0; i < tokens.length; i++) {
       SymmetryData sd = new SymmetryData(index++, tokens[i]);
       htSymmetries.put(tokens[i], sd);
@@ -284,7 +285,7 @@ OR
       String funcList = "";
       while (rd() != null && line.length() > 1)
         funcList += line;
-      String[] tokens = getTokensStr(funcList);
+      String[] tokens = PT.getTokens(funcList);
       if (tokens.length != sd.nBF)
         return;
       sd.basisFunctions = new int[tokens.length];
@@ -325,7 +326,7 @@ OR
       String data = line;
       while (rd().indexOf("---") < 0)
         data += line;
-      String[] tokens = getTokensStr(data);
+      String[] tokens = PT.getTokens(data);
       int nAtoms = tokens.length - 1;
       int[] atomList = new int[nAtoms];
       for (int i = 1; i <= nAtoms; i++)
@@ -335,7 +336,7 @@ OR
         data = line;
         while (rd().length() > 35 && line.substring(0, 35).trim().length() == 0)
           data += line;
-        tokens = getTokensStr(data);
+        tokens = PT.getTokens(data);
         boolean isCore = tokens[0].equals("Core");
         int pt = (isCore ? 1 : 0);
         int x = parseIntStr(tokens[pt++]);
@@ -372,7 +373,7 @@ OR
     sd.coefs = new float[sd.nSFO][nBF];
     while (n < sd.nBF) {
       rd();
-      int nLine = getTokensStr(rd()).length;
+      int nLine = PT.getTokens(rd()).length;
       rd();
       sd.mos = AU.createArrayOfHashtable(sd.nSFO);
       String[][] data = new String[sd.nSFO][];

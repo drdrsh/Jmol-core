@@ -88,7 +88,7 @@ public class FileManager implements BytePoster {
     }
   }
 
-  private String pathForAllFiles = "";
+  private String pathForAllFiles = ""; // leave private because of setPathForAllFiles
   
   public String getPathForAllFiles() {
     return pathForAllFiles;

@@ -101,7 +101,7 @@ class SpaceGroup {
   String intlTableNumberExt;
   HallInfo hallInfo;
   int latticeParameter;
-  char latticeCode = '\0';
+  //char latticeCode = '\0';
   SymmetryOperation[] operations;
   SymmetryOperation[] finalOperations;
   int operationCount;
@@ -316,7 +316,7 @@ class SpaceGroup {
   }
 */ 
   String getLatticeDesignation() {    
-    return latticeCode + ": " + HallTranslation.getLatticeDesignation(latticeParameter);
+    return HallTranslation.getLatticeDesignation(latticeParameter);
   }  
  
   void setLatticeParam(int latticeParameter) {
@@ -326,10 +326,8 @@ class SpaceGroup {
     // The idea here is that we can represent any LATT number
     // as a simple set of rotation/translation operations
     this.latticeParameter = latticeParameter;
-    latticeCode = HallTranslation.getLatticeCode(latticeParameter);
-    if (latticeParameter > 10) { // use negative
-      this.latticeParameter = -HallTranslation.getLatticeIndex(latticeCode);
-    }
+    if (latticeParameter > 10) // use negative
+      this.latticeParameter = -HallTranslation.getLatticeIndex(HallTranslation.getLatticeCode(latticeParameter));
   }
 
   ///// private methods /////
@@ -411,7 +409,7 @@ class SpaceGroup {
   }
    
   private void setLattice(char latticeCode, boolean isCentrosymmetric) {
-    this.latticeCode = latticeCode;
+    //this.latticeCode = latticeCode;
     latticeParameter = HallTranslation.getLatticeIndex(latticeCode);
     if (!isCentrosymmetric)
       latticeParameter = -latticeParameter;

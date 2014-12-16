@@ -26,7 +26,10 @@ package org.jmol.adapter.readers.quantum;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.PT;
+
 import java.util.Hashtable;
+import java.util.Properties;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -231,7 +234,7 @@ public class NWChemReader extends MOReader {
    * @throws Exception If an error occurs.
    */
   private void readSymmetry() throws Exception {
-    String tokens[] = getTokensStr(readLines(3));
+    String tokens[] = PT.getTokens(readLines(3));
     asc.setAtomSetPropertyForSets("Symmetry group name",
         tokens[tokens.length - 1], equivalentAtomSets);
   }
@@ -335,18 +338,25 @@ public class NWChemReader extends MOReader {
   // must have been the input structure for the optimizition?
   /**
    * Reads the energy gradients section into a new AtomSet.
-   *
-   * <p>One could consider not adding a new AtomSet for this, but just
-   * adding the gradient vectors to the last AtomSet read (if that was
-   * indeed the same nuclear arrangement).
-   * @throws Exception If an error occurs.
+   * 
+   * <p>
+   * One could consider not adding a new AtomSet for this, but just adding the
+   * gradient vectors to the last AtomSet read (if that was indeed the same
+   * nuclear arrangement).
+   * 
+   * @throws Exception
+   *         If an error occurs.
    **/
   private void readGradients() throws Exception {
     readLines(3); // skip blank line, titles and dashes
     String tokens[];
     asc.newAtomSet();
-    if (equivalentAtomSets > 1)
-      asc.cloneLastAtomSetProperties();
+    if (equivalentAtomSets > 1) {
+      Properties p = (Properties) asc.getAtomSetAuxiliaryInfoValue(
+          asc.iSet - 1, "modelProperties");
+      if (p != null)
+        asc.setAtomSetAuxiliaryInfo("modelProperties", p.clone());
+    }
     asc.setAtomSetModelProperty("vector", "gradient");
     asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "Task "
         + taskNumber + SmarterJmolAdapter.PATH_SEPARATOR + "Gradients");
@@ -356,13 +366,12 @@ public class NWChemReader extends MOReader {
         break; // make sure I have enough tokens
       Atom atom = setAtomCoordScaled(null, tokens, 2, ANGSTROMS_PER_BOHR);
       atom.atomName = fixTag(tokens[1]);
-      
+
       // Keep gradients in a.u. (larger value that way)
       // need to multiply with -1 so the direction is in the direction the
       // atom needs to move to lower the energy
-      asc.addVibrationVector(atom.index,
-          -parseFloatStr(tokens[5]), -parseFloatStr(tokens[6]),
-          -parseFloatStr(tokens[7]));
+      asc.addVibrationVector(atom.index, -parseFloatStr(tokens[5]),
+          -parseFloatStr(tokens[6]), -parseFloatStr(tokens[7]));
     }
   }
 
@@ -479,7 +488,7 @@ public class NWChemReader extends MOReader {
 
     boolean firstTime = true;
     while (rd() != null && line.indexOf("P.Frequency") >= 0) {
-      tokens = getTokensAt(line, 12);
+      tokens = PT.getTokensAt(line, 12);
       int frequencyCount = tokens.length;
       int iAtom0 = asc.ac;
       int ac = asc.getLastAtomSetAtomCount();

@@ -178,10 +178,6 @@ public class GData implements JmolGraphicsInterface {
       changeableColixMap[id] = C.getColix(argb);
   }
 
-  public short[] getBgColixes(short[] bgcolixes) {
-    return bgcolixes;
-  }
-
   public int getColorArgbOrGray(short colix) {
     if (colix < 0)
       colix = changeableColixMap[colix & C.UNMASK_CHANGEABLE_TRANSLUCENT];

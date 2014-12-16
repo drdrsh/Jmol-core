@@ -24,6 +24,8 @@
 
 package org.jmol.adapter.readers.simple;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
 /**
@@ -90,7 +92,7 @@ public class CubeReader extends AtomSetCollectionReader {
   private void readAtoms() throws Exception {
     float f = (isAngstroms ? 1 : ANGSTROMS_PER_BOHR);
     for (int i = 0; i < ac; ++i) {
-      String[] tokens = getTokensStr(rd());
+      String[] tokens = PT.getTokens(rd());
       //allowing atomicAndIsotope for JVXL format
       setAtomCoordScaled(null, tokens, 2, f).elementNumber = (short)parseIntStr(tokens[0]);
     }

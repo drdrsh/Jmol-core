@@ -84,21 +84,13 @@ public class StatusManager {
   protected Viewer vwr;
   private JmolStatusListener jsl;
   private JmolCallbackListener cbl;
-  private String statusList = "";
+  public String statusList = "";
 
   StatusManager(Viewer vwr) {
     this.vwr = vwr;
   }
 
-  private boolean allowStatusReporting; // set in StateManager.global
-  
-  void setAllowStatusReporting(boolean TF){
-     allowStatusReporting = TF;
-  }
-  
-  public String getStatusList() {
-    return statusList;
-  }
+  public boolean allowStatusReporting; // set in StateManager.global
   
   /*
    * the messageQueue provided a mechanism for saving and recalling
@@ -181,10 +173,7 @@ public class StatusManager {
    * 
    */
   
-  private Map<String, Lst<Lst<Object>>> messageQueue = new Hashtable<String, Lst<Lst<Object>>>();
-  Map<String, Lst<Lst<Object>>> getMessageQueue() {
-    return messageQueue;
-  }
+  public Map<String, Lst<Lst<Object>>> messageQueue = new Hashtable<String, Lst<Lst<Object>>>();
   
   private int statusPtr = 0;
   private static int MAXIMUM_QUEUE_LENGTH = 16;

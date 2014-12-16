@@ -28,6 +28,8 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 
 import javajs.util.Lst;
+import javajs.util.PT;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -66,7 +68,7 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
     String ucline = line.toUpperCase();
     if (filterTokens == null) {
       filterIsNot = (filter.indexOf("!") >= 0);
-      filterTokens = getTokensStr(filter.replace('!', ' ').replace(',', ' ')
+      filterTokens = PT.getTokens(filter.replace('!', ' ').replace(',', ' ')
           .replace(';', ' '));
     }
     for (int i = 0; i < filterTokens.length; i++)
@@ -174,7 +176,7 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
     //                    [4     0     0     0    -4]
     // meaning add that number to the pointer for this coef.
    getDfCoefMaps();
-    String[] tokens = getTokensStr(fileList);
+    String[] tokens = PT.getTokens(fileList);
     boolean isOK = true;
     for (int i = 0; i < dfCoefMaps[shellType].length && isOK; i++) {
       String key = tokens[i];

@@ -284,7 +284,7 @@ public abstract class ___Exporter {
     sb.append("\n").append(commentChar).append("aperatureAngle(degrees): " + aperatureAngle);
     sb.append("\n").append(commentChar).append("scalePixelsPerAngstrom: " + scalePixelsPerAngstrom);
     sb.append("\n").append(commentChar).append("light source: " + lightSource);
-    sb.append("\n").append(commentChar).append("lighting: " + vwr.getSpecularState().replace('\n', ' '));
+    sb.append("\n").append(commentChar).append("lighting: " + vwr.getLightingState().replace('\n', ' '));
     sb.append("\n").append(commentChar).append("center: " + center);
     sb.append("\n").append(commentChar).append("rotationRadius: " + vwr.getFloat(T.rotationradius));
     sb.append("\n").append(commentChar).append("boundboxCenter: " + vwr.getBoundBoxCenter());

@@ -371,7 +371,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
   
   @Override
   public Map<String, Object> getAtomSetCollectionAuxiliaryInfo(Object asc) {
-    return ((AtomSetCollection)asc).ascAuxiliaryInfo;
+    return ((AtomSetCollection)asc).atomSetInfo;
   }
 
   @Override

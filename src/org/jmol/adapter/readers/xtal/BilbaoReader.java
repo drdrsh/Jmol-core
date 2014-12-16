@@ -183,7 +183,7 @@ public class BilbaoReader extends AtomSetCollectionReader {
     i0 = asc.ac;
     nAtoms = parseIntStr(rdLine());
     for (int i = nAtoms; --i >= 0;) {
-      String[] tokens = getTokensStr(rdLine());
+      String[] tokens = PT.getTokens(rdLine());
       if (!getSym && tokens[1].contains("_"))
         continue;
       if (tokens.length == 3)

@@ -373,15 +373,15 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       if (isPass2 && pbufT != null)
         for (int offset = pbufT.length; --offset >= 0;)
           mergeBufferPixel(pbuf, offset, pbufT[offset], bgcolor);
-      if (ambientOcclusion != 0) {
-        if (aobuf == null)
-          aobuf = new int[pbuf.length];
-        else
-          for (int offset = pbuf.length; --offset >= 0;)
-            aobuf[offset] = 0;
-        shader
-            .occludePixels(pbuf, zbuf, aobuf, width, height, ambientOcclusion);
-      }
+//      if (ambientOcclusion != 0) {
+//        if (aobuf == null)
+//          aobuf = new int[pbuf.length];
+//        else
+//          for (int offset = pbuf.length; --offset >= 0;)
+//            aobuf[offset] = 0;
+//        shader
+//            .occludePixels(pbuf, zbuf, aobuf, width, height, ambientOcclusion);
+//      }
       if (antialiasThisFrame)
         downsampleFullSceneAntialiasing(false);
     }
@@ -764,8 +764,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   @Override
   public void volumeRender(boolean TF) {
     if (TF) {
-      saveAmbient = shader.ambientPercent;
-      saveDiffuse = shader.diffusePercent;
+      saveAmbient = getAmbientPercent();
+      saveDiffuse = getDiffusePercent();
       setAmbientPercent(100);
       setDiffusePercent(0);
       addRenderer(T.circle);

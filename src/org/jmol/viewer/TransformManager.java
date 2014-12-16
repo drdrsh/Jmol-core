@@ -571,7 +571,6 @@ public class TransformManager {
   protected float prevZoomSetting;
 
   public float previousX;
-
   public float previousY;
 
   void setTranslationFractions() {
@@ -677,9 +676,9 @@ public class TransformManager {
     info.put("center", "center " + getCenterText());
     info.put("centerPt", fixedRotationCenter);
     A4 aa = new A4();
-    getAxisAngle(aa);
+    aa.setM(matrixRotate);
     info.put("axisAngle", aa);
-    info.put("quaternion", Quat.newAA(aa).toPoint4f());
+    info.put("quaternion", Quat.newM(matrixRotate).toPoint4f());
     info.put("rotationMatrix", matrixRotate);
     info.put("rotateZYZ", getRotateZyzText(false));
     info.put("rotateXYZ", getRotateXyzText());
@@ -698,18 +697,6 @@ public class TransformManager {
           Float.valueOf(navigationDepthPercent));
     }
     return info;
-  }
-
-  public void getAxisAngle(A4 axisAngle) {
-    axisAngle.setM(matrixRotate);
-  }
-
-  public String getTransformText() {
-    return matrixRotate.toString();
-  }
-
-  public M3 getMatrixRotate() {
-    return M3.newM3(matrixRotate);
   }
 
   public void getRotation(M3 m) {
@@ -741,6 +728,11 @@ public class TransformManager {
    */
   float zmPctSet = 100;
   
+  public void setZoomHeight(boolean zoomHeight, boolean zoomLarge) {
+    this.zoomHeight = zoomHeight;
+    scaleFitToScreen(false, zoomLarge, false, true);
+  }
+
   private float zoomRatio;
 
   /**
@@ -758,6 +750,18 @@ public class TransformManager {
       deltaPercent = (pixels > 0 ? 1 : (deltaPercent < 0 ? -1 : 0));
     zoomRatio = (deltaPercent + zmPctSet) / zmPctSet;
     zmPctSet += deltaPercent;
+  }
+
+  void zoomByFactor(float factor, int x, int y) {
+    if (factor <= 0 || !zoomEnabled)
+      return;
+    if (mode != MODE_NAVIGATION) {
+      zoomRatio = factor;
+      zmPctSet *= factor;
+      resetXYCenter(x, y);
+    } else if (getNav()) {
+      nav.zoomByFactor(factor, x, y);
+    }
   }
 
   public void zoomToPercent(float percentZoom) {
@@ -824,28 +828,21 @@ public class TransformManager {
    - 0% (nothing, nada, nil, null) gets shown
    */
 
-  public boolean slabEnabled = false;
-  boolean internalSlab = false;
-  boolean zShadeEnabled = false;
+  public boolean slabEnabled;
+  public boolean zShadeEnabled;
+
+  boolean internalSlab;
 
   int slabPercentSetting;
   int depthPercentSetting;
-  public int zSlabPercentSetting = 50; // new default for 12.3.6 and 12.2.6
-  public int zDepthPercentSetting = 0;
-  P3 zSlabPoint;
-
-  public void setZslabPoint(P3 pt) {
-    zSlabPoint = (pt == null ? null : P3.newP(pt));
-  }
-
   public int slabValue;
   public int depthValue;
-  public int zSlabValue;
-  int zDepthValue;
 
-  public int getZShadeStart() {
-    return (zShadeEnabled ? zDepthValue : 0);
-  }
+  public int zSlabPercentSetting = 50; // new default for 12.3.6 and 12.2.6
+  public int zDepthPercentSetting = 0;
+  public P3 zSlabPoint;
+  public int zSlabValue;
+  public int zDepthValue;
 
   float slabRange = 0f;
 
@@ -1836,6 +1833,39 @@ public class TransformManager {
     }
   }
 
+  public void setAll(P3 center, M3 m, P3 navCenter, float zoom, float xTrans,
+                     float yTrans, float rotationRadius, float pixelScale,
+                     float navDepth, float xNav, float yNav, float cameraDepth,
+                     float cameraX, float cameraY) {
+    if (!Float.isNaN(m.m00))
+      setRotation(m);
+    if (center != null)
+      moveRotationCenter(center, !windowCentered);
+    if (navCenter != null && mode == MODE_NAVIGATION)
+      navigationCenter.setT(navCenter);
+    if (!Float.isNaN(cameraDepth))
+      setCameraDepthPercent(cameraDepth, false);
+    if (!Float.isNaN(cameraX) && !Float.isNaN(cameraY))
+      setCamera(cameraX, cameraY);
+    if (!Float.isNaN(zoom))
+      zoomToPercent(zoom);
+    if (!Float.isNaN(rotationRadius))
+      modelRadius = rotationRadius;
+    if (!Float.isNaN(pixelScale))
+      scaleDefaultPixelsPerAngstrom = pixelScale;
+    if (!Float.isNaN(xTrans) && !Float.isNaN(yTrans)) {
+      translateToPercent('x', xTrans);
+      translateToPercent('y', yTrans);
+    }
+
+    if (mode == MODE_NAVIGATION) {
+      if (!Float.isNaN(xNav) && !Float.isNaN(yNav))
+        navTranslatePercentOrTo(0, xNav, yNav);
+      if (!Float.isNaN(navDepth))
+        setNavigationDepthPercent(navDepth);
+    }
+  }
+
   public void stopMotion() {
     movetoThread = null;
     //setSpinOff();// trouble here with Viewer.checkHalt
@@ -2640,18 +2670,6 @@ public class TransformManager {
       nav.navigateAxis(rotAxis, degrees);
   }
 
-  void zoomByFactor(float factor, int x, int y) {
-    if (factor <= 0 || !zoomEnabled)
-      return;
-    if (mode != MODE_NAVIGATION) {
-      zoomRatio = factor;
-      zmPctSet *= factor;
-      resetXYCenter(x, y);
-    } else if (getNav()) {
-      nav.zoomByFactor(factor, x, y);
-    }
-  }
-
   public void setNavigationOffsetRelative() {//boolean navigatingSurface) {
     if (getNav())
       nav.setNavigationOffsetRelative();//navigatingSurface);
@@ -2709,44 +2727,6 @@ public class TransformManager {
    */
   protected String getNavigationState() {
     return (mode == MODE_NAVIGATION && getNav() ? nav.getNavigationState() : "");
-  }
-
-  public void setZoomHeight(boolean zoomHeight, boolean zoomLarge) {
-    this.zoomHeight = zoomHeight;
-    scaleFitToScreen(false, zoomLarge, false, true);
-  }
-
-  public void setAll(P3 center, M3 m, P3 navCenter, float zoom, float xTrans,
-                     float yTrans, float rotationRadius, float pixelScale,
-                     float navDepth, float xNav, float yNav, float cameraDepth,
-                     float cameraX, float cameraY) {
-    if (!Float.isNaN(m.m00))
-      setRotation(m);
-    if (center != null)
-      moveRotationCenter(center, !windowCentered);
-    if (navCenter != null && mode == MODE_NAVIGATION)
-      navigationCenter.setT(navCenter);
-    if (!Float.isNaN(cameraDepth))
-      setCameraDepthPercent(cameraDepth, false);
-    if (!Float.isNaN(cameraX) && !Float.isNaN(cameraY))
-      setCamera(cameraX, cameraY);
-    if (!Float.isNaN(zoom))
-      zoomToPercent(zoom);
-    if (!Float.isNaN(rotationRadius))
-      modelRadius = rotationRadius;
-    if (!Float.isNaN(pixelScale))
-      scaleDefaultPixelsPerAngstrom = pixelScale;
-    if (!Float.isNaN(xTrans) && !Float.isNaN(yTrans)) {
-      translateToPercent('x', xTrans);
-      translateToPercent('y', yTrans);
-    }
-
-    if (mode == MODE_NAVIGATION) {
-      if (!Float.isNaN(xNav) && !Float.isNaN(yNav))
-        navTranslatePercentOrTo(0, xNav, yNav);
-      if (!Float.isNaN(navDepth))
-        setNavigationDepthPercent(navDepth);
-    }
   }
 
 }

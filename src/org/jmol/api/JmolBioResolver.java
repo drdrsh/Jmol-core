@@ -50,8 +50,6 @@ public interface JmolBioResolver {
 
   public byte lookupSpecialAtomID(String name);
 
-  public String[] getGroup3Names(boolean isPredefined);
-
   public int[] getArgbs(int tok);
 
   Resolver setViewer(Viewer vwr);

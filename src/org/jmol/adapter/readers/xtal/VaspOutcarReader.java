@@ -29,6 +29,7 @@ package org.jmol.adapter.readers.xtal;
 
 import javajs.util.DF;
 import javajs.util.Lst;
+import javajs.util.PT;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
@@ -120,7 +121,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
   private void readAtomCountAndSetNames() throws Exception {
     int[] numofElement = new int[100];
     //    readLine();
-    String[] tokens = getTokensStr(line.substring(line.indexOf("=") + 1));
+    String[] tokens = PT.getTokens(line.substring(line.indexOf("=") + 1));
     ac = 0;
     for (int i = 0; i < tokens.length; i++)
       ac += (numofElement[i] = parseIntStr(tokens[i].trim()));
@@ -213,10 +214,10 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
 
   private void readEnergy() throws Exception {
     rd();
-    String[] tokens = getTokensStr(rd());
+    String[] tokens = PT.getTokens(rd());
     gibbsEnergy = Double.valueOf(Double.parseDouble(tokens[4]));
     rd();
-    tokens = getTokensStr(rd());
+    tokens = PT.getTokens(rd());
     /* please double-check:
 
     entropy T*S    EENTRO =        -0.01255935
@@ -263,13 +264,13 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
   private void readMdyn() throws Exception {
     String[] tokens = getTokens();
     rd();
-    tokens = getTokensStr(rd());
+    tokens = PT.getTokens(rd());
     electronEne = Double.valueOf(Double.parseDouble(tokens[4]));
-    tokens = getTokensStr(rd());
+    tokens = PT.getTokens(rd());
     kinEne = Double.valueOf(Double.parseDouble(tokens[4]));
     temp = parseFloatStr(tokens[6]);
     readLines(3);
-    tokens = getTokensStr(rd());
+    tokens = PT.getTokens(rd());
     totEne = Double.valueOf(Double.parseDouble(tokens[4]));
     setAtomSetInfoMd();
   }

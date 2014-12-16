@@ -27,6 +27,7 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 
 import javajs.util.AU;
+import javajs.util.PT;
 
 import org.jmol.util.Logger;
 
@@ -128,7 +129,7 @@ public class ShelxReader extends AtomSetCollectionReader {
       setSymmetryOperator("x,y,z");
       break;
     case 2: // SPGR
-      setSpaceGroupName(parseTrimmedAt(line, 4));
+      setSpaceGroupName(PT.parseTrimmedAt(line, 4));
       break;
     case 3: // SFAC
       parseSfacRecord();
@@ -185,7 +186,7 @@ public class ShelxReader extends AtomSetCollectionReader {
       String token = tokens[i];
       allElementSymbols = isValidElementSymbolNoCaseSecondChar(token);
     }
-    String[] sfacTokens = getTokensStr(line.substring(4));
+    String[] sfacTokens = PT.getTokens(line.substring(4));
     if (allElementSymbols)
       parseSfacElementSymbols(sfacTokens);
     else

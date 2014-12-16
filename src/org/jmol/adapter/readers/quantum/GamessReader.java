@@ -43,7 +43,7 @@ abstract public class GamessReader extends MOReader {
  
   protected void readEnergy() {
     //  ... ENERGY IS   or    ... ENERGY = 
-    String[] tokens = getTokensStr(line.substring(line.indexOf("ENERGY")));
+    String[] tokens = PT.getTokens(line.substring(line.indexOf("ENERGY")));
     if (tokens.length < 3)
       return;
     String strEnergy = tokens[2];
@@ -383,7 +383,7 @@ $SYSTEM OPTIONS
     while (rd() != null && (line = line.trim()).length() > 0) {
       if (line.indexOf("=") < 0)
         continue;
-      String[] tokens = getTokensStr(PT.rep(line, "="," = ") + " ?");
+      String[] tokens = PT.getTokens(PT.rep(line, "="," = ") + " ?");
       for (int i = 0; i < tokens.length; i++) {
         if (!tokens[i].equals("="))
           continue;

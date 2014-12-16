@@ -116,7 +116,7 @@ public class FoldingXyzReader extends AtomSetCollectionReader {
       discardLinesUntilNonBlank();
       if (line == null)
         break; // no problem.
-      String[] tokens = getTokensStr(line);
+      String[] tokens = getTokens();
       String sIndex = tokens[0];
       if (sIndex.equals(lastAtom)) {
         readNextLine = false;

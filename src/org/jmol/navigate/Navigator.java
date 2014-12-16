@@ -391,7 +391,7 @@ public final class Navigator extends JmolThread implements
   private void alignZX(P3 pt0, P3 pt1, P3 ptVectorWing) {
     P3 pt0s = new P3();
     P3 pt1s = new P3();
-    M3 m = tm.getMatrixRotate();
+    M3 m = tm.matrixRotate;
     m.rotate2(pt0, pt0s);
     m.rotate2(pt1, pt1s);
     V3 vPath = V3.newVsub(pt0s, pt1s);

@@ -170,7 +170,7 @@ public class CgdReader extends AtomSetCollectionReader {
     Atom a;
     V3[] atomEdges;
     for (int j = 0; j < edgeData.size(); j++) {
-      tokens = getTokensStr(line = edgeData.get(j));
+      tokens = PT.getTokens(line = edgeData.get(j));
       switch (tokens.length) {
       case 3:
         //EDGE 2 3

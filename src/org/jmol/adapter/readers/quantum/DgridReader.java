@@ -28,6 +28,7 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.quantum.SlaterData;
 import org.jmol.util.Logger;
 
+import javajs.util.PT;
 import javajs.util.SB;
 
 import java.util.Hashtable;
@@ -147,7 +148,7 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
       data.append(line.substring(15));
       while (rd() != null && line.length() >= 15)
         data.append(line);
-      String[] tokens = getTokensStr(data.toString());
+      String[] tokens = PT.getTokens(data.toString());
       int nFuncs = tokens.length / 2;
       int[] ptSlater = new int[nFuncs];
       Atom[] atoms = asc.atoms;
@@ -178,7 +179,7 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
           cData.append(line);
         }
         float[] list = new float[slaters.size()];
-        tokens = getTokensStr(cData.toString());
+        tokens = PT.getTokens(cData.toString());
         if (tokens.length != nFuncs)
           Logger
               .error("DgridReader: number of coefficients (" + tokens.length + ") does not equal number of functions (" + nFuncs + ")");

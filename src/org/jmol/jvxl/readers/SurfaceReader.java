@@ -596,7 +596,7 @@ public abstract class SurfaceReader implements VertexDataServer {
       marchingSquares = new MarchingSquares(this, volumeData, params.thePlane,
           params.contoursDiscrete, params.nContours, params.thisContour,
           params.contourFromZero);
-      contourType = marchingSquares.getContourType();
+      contourType = marchingSquares.contourType;
       marchingSquares.setMinMax(params.valueMappedToRed,
           params.valueMappedToBlue);
     }
@@ -606,7 +606,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     String data = marchingCubes.getEdgeData();
     if (params.thePlane == null)
       edgeData = data;
-    jvxlData.setSurfaceInfoFromBitSetPts(marchingCubes.getBsVoxels(),
+    jvxlData.setSurfaceInfoFromBitSetPts(marchingCubes.bsVoxels,
         params.thePlane, params.mapLattice);
     jvxlData.jvxlExcluded = params.bsExcluded;
     if (isJvxl)
@@ -756,7 +756,7 @@ public abstract class SurfaceReader implements VertexDataServer {
       jvxlData.saveVertexCount = marchingSquares.contourVertexCount;
       contourVertexCount = marchingSquares
           .generateContourData(jvxlDataIs2dContour, (params.isSquared ? 1e-8f : 1e-4f));      
-      jvxlData.contourValuesUsed = marchingSquares.getContourValues();
+      jvxlData.contourValuesUsed = marchingSquares.contourValuesUsed;
       minMax = marchingSquares.getMinMax();
       if (meshDataServer != null)
         meshDataServer.notifySurfaceGenerationCompleted();

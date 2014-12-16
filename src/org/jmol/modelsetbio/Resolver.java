@@ -99,7 +99,6 @@ public final class Resolver implements JmolBioResolver {
     lastSetH = Integer.MIN_VALUE;
     maxSerial = 0;
     haveHsAlready = false;
-    Group.specialAtomNames = specialAtomNames;
     if (modelLoader == null) {
       ms = null;
       bsAddedHydrogens = bsAtomsForHs = null;
@@ -107,6 +106,7 @@ public final class Resolver implements JmolBioResolver {
       htGroupBonds = null;
       hNames = null;
     } else {
+      Group.specialAtomNames = specialAtomNames;
       ms = modelLoader.ms;
       vwr = modelLoader.ms.vwr;
       modelLoader.specialAtomIndexes = new int[ATOMID_MAX];
@@ -117,6 +117,18 @@ public final class Resolver implements JmolBioResolver {
   @Override
   public Resolver setViewer(Viewer vwr) {
     this.vwr = vwr;
+    if (Group.standardGroupList == null) {
+      //generate a static list of common amino acids, nucleic acid bases, and solvent components
+      SB s = new SB();
+      //for menu presentation order      
+      for (int i = 1; i < JC.GROUPID_WATER; i++)
+        s.append(",[").append(predefinedGroup3Names[i]).append("]");
+      s.append(allCarbohydrates);
+      group3Count = s.length() / 6;
+      Group.standardGroupList = s.toString();
+      for (int i = 0, n = predefinedGroup3Names.length; i < n; ++i)
+        addGroup3Name(predefinedGroup3Names[i]);
+    }
     return this;
   }
   
@@ -275,7 +287,7 @@ public final class Resolver implements JmolBioResolver {
     P3 xyz = P3.new3(Float.NaN, Float.NaN, Float.NaN);
     Atom a = ms.at[iFirst];
     for (int i = 0; i < nH; i++)
-      ms.addAtom(a.mi, a.group, 1, "H", 0, a.getSeqID(), 0, xyz,
+      ms.addAtom(a.mi, a.group, 1, "H", null, 0, a.getSeqID(), 0, xyz,
           Float.NaN, null, 0, 0, 1, 0, null, isHetero, (byte) 0, null)
           .deleteBonds(null);
   }
@@ -856,44 +868,35 @@ public final class Resolver implements JmolBioResolver {
 
   @Override
   public void setGroupLists(int ipt) {
-    ml.group3Lists[ipt + 1] = getGroup3List();
-    ml.group3Counts[ipt + 1] = new int[getGroup3Count() + 10];
+    ml.group3Lists[ipt + 1] = Group.standardGroupList;
+    ml.group3Counts[ipt + 1] = new int[group3Count + 10];
     if (ml.group3Lists[0] == null) {
-      ml.group3Lists[0] = getGroup3List();
-      ml.group3Counts[0] = new int[getGroup3Count() + 10];
+      ml.group3Lists[0] = Group.standardGroupList;
+      ml.group3Counts[0] = new int[group3Count + 10];
     }
   }
 
   @Override
   public boolean isKnownPDBGroup(String g3) {
-    return knownPDBGroupID(g3) >= 0 
+    // mol2 reader only
+    return knownGroupID(g3) >= 0 
         || checkCarbohydrate(g3);
   }
 
   @Override
   public byte lookupSpecialAtomID(String name) {
-    if (htSpecialAtoms == null)
-      getSpecialAtomNames();
-    Byte boxedAtomID = htSpecialAtoms.get(name);
-    return (boxedAtomID == null ? 0 :  boxedAtomID.byteValue());
-  }
-
-  private void getSpecialAtomNames() {
-    htSpecialAtoms = new Hashtable<String, Byte>();
-    for (int i = specialAtomNames.length; --i >= 0; ) {
-      String specialAtomName = specialAtomNames[i];
-      if (specialAtomName != null)
-        htSpecialAtoms.put(specialAtomName,  Byte.valueOf((byte) i));
+    if (htSpecialAtoms == null) {
+      htSpecialAtoms = new Hashtable<String, Byte>();
+      for (int i = specialAtomNames.length; --i >= 0;) {
+        String specialAtomName = specialAtomNames[i];
+        if (specialAtomName != null)
+          htSpecialAtoms.put(specialAtomName, Byte.valueOf((byte) i));
+      }
     }
+    Byte boxedAtomID = htSpecialAtoms.get(name);
+    return (boxedAtomID == null ? 0 : boxedAtomID.byteValue());
   }
 
-  @Override
-  public String[] getGroup3Names(boolean isPredefined) {
-    return (isPredefined ? predefinedGroup3Names : Group.group3Names);
-  }
-
-  
-  private static Map<String, Short> htGroup = new Hashtable<String, Short>();
   private static Map<String, String[][]> htPdbBondInfo;
 
   private String[][] getPdbBondInfo(String group3, boolean isLegacy) {
@@ -902,7 +905,7 @@ public final class Resolver implements JmolBioResolver {
     String[][] info = htPdbBondInfo.get(group3);
     if (info != null)
       return info;
-    int pt = knownPDBGroupID(group3);
+    int pt = knownGroupID(group3);
     if (pt < 0 || pt > pdbBondInfo.length)
       return null;
     String s = pdbBondInfo[pt];
@@ -1051,11 +1054,11 @@ public final class Resolver implements JmolBioResolver {
     ",[XYL],[A2G],[LBT],[NGA],[SIA],[SLB]" + 
     ",[AFL],[AGC],[GLB],[NAN],[RAA]"; //these 4 are deprecated in PDB
     // from Eric Martz; revision by Angel Herraez
-  private static short knownPDBGroupID(String group3) {
+  public static short knownGroupID(String group3) {
     if (group3 != null) {
       if (group3.length() == 0)
         return 0;
-      Short boxedGroupID = htGroup.get(group3);
+      Short boxedGroupID = Group.htGroup.get(group3);
       if (boxedGroupID != null)
         return boxedGroupID.shortValue();
     }
@@ -1070,12 +1073,6 @@ public final class Resolver implements JmolBioResolver {
         && allCarbohydrates.indexOf("[" + group3.toUpperCase() + "]") >= 0);
   }
   private static int group3Count;
-  private static int getGroup3Count() {
-    if (group3Count > 0)
-      return group3Count;
-    getGroup3List();
-    return group3Count = Group.group3List.length() / 6;
-  }
   final static char[] predefinedGroup1Names = {
   /* rmh
    * 
@@ -1137,41 +1134,33 @@ public final class Resolver implements JmolBioResolver {
   'U',
   'I',
   };
-  private static int getGroup3Pt(String group3) {
-    getGroup3List();
-    SB sb = new SB().append("[");
-    sb.append(group3);
-    switch (group3.length()){
-    case 1:
-      sb.append("  ");
-      break;
-    case 2:
-      sb.append(" ");
-      break;
-    }
-    int pt = Group.group3List.indexOf(sb.toString());
-    return (pt < 0 ? Integer.MAX_VALUE : pt / 6 + 1);
-  }
-  private static String getGroup3List() {
-    if (Group.group3List != null)
-      return Group.group3List;
-    SB s = new SB();
-    //for menu presentation order
-    for (int i = 1; i < JC.GROUPID_WATER; i++)
-      s.append(",[").append((predefinedGroup3Names[i]+"   ").substring(0,3)+"]");
-    s.append(allCarbohydrates);
-    group3Count = s.length() / 6;
-    return Group.group3List = s.toString();
-  }
-  
+
+
+  /**
+   * MMCif, Gromacs, MdTop, Mol2 readers only
+   * 
+   */
   @Override
   public boolean isHetero(String group3) {
-    return getGroup3Pt(group3) >= JC.GROUPID_WATER;
+    switch (group3.length()) {
+    case 1:
+      group3 += "  ";
+      break;
+    case 2:
+      group3 += " ";
+      break;
+    case 3:
+      break;
+    default:
+      return true;
+    }
+    int pt = Group.standardGroupList.indexOf(group3);
+    return (pt < 0 || pt / 6 + 1 >= JC.GROUPID_WATER);
   }
-  private static short group3NameCount;
+  public static short group3NameCount;
   private final static String[] predefinedGroup3Names = {
     // taken from PDB spec
-    "", //  0 this is the null group
+    "   ", //  0 this is the null group
     "ALA", // 1
     "ARG", // 2 arginine -- hbond donor
     "ASN", // 3 asparagine -- hbond donor
@@ -1202,26 +1191,26 @@ public final class Resolver implements JmolBioResolver {
     // with the deprecation of +X, we will need a new
     // way to handle these. 
     
-    "G", // 24 starts nucleics 
-    "C", 
-    "A",
-    "T", 
-    "U", 
-    "I", 
+    "G  ", // 24 starts nucleics 
+    "C  ", 
+    "A  ",
+    "T  ", 
+    "U  ", 
+    "I  ", 
     
-    "DG", // 30 
-    "DC",
-    "DA",
-    "DT",
-    "DU",
-    "DI",
+    "DG ", // 30 
+    "DC ",
+    "DA ",
+    "DT ",
+    "DU ",
+    "DI ",
     
-    "+G", // 36
-    "+C",
-    "+A",
-    "+T",
-    "+U",
-    "+I",
+    "+G ", // 36
+    "+C ",
+    "+A ",
+    "+T ",
+    "+U ",
+    "+I ",
     /* removed bh 7/1/2011 this is isolated inosine, not a polymer "NOS", // inosine */
     
     // solvent types: -- if these numbers change, also change GROUPID_WATER,_SOLVENT,and_SULFATE
@@ -1237,7 +1226,7 @@ public final class Resolver implements JmolBioResolver {
   
   };
   private static int getStandardPdbHydrogenCount(String group3) {
-    int pt = knownPDBGroupID(group3);
+    int pt = knownGroupID(group3);
     return (pt < 0 || pt >= pdbHydrogenCount.length ? -1 : pdbHydrogenCount[pt]);
   }
   /**
@@ -1346,30 +1335,6 @@ public final class Resolver implements JmolBioResolver {
   // static stuff for group ids
   ////////////////////////////////////////////////////////////////
 
-  static {
-    // The following note was for when this code was part of Group.java:
-    //   This is acceptable for J2S compilation SPECIFICALLY 
-    //   because even though this class is not final, 
-    //   group3Names is a private field.
-    for (int i = 0; i < predefinedGroup3Names.length; ++i) {
-      addGroup3Name(predefinedGroup3Names[i]);
-    }
-  }
-
-  private synchronized static short addGroup3Name(String group3) {
-    if (group3NameCount == Group.group3Names.length)
-      Group.group3Names = AU.doubleLengthS(Group.group3Names);
-    short groupID = group3NameCount++;
-    Group.group3Names[groupID] = group3;
-    htGroup.put(group3, Short.valueOf(groupID));
-    return groupID;
-  }
-
-  static short getGroupIdFor(String group3) {
-    short groupID = knownPDBGroupID(group3);
-    return (groupID == -1 ? addGroup3Name(group3) : groupID);
-  }
-  
   private final static String[] specialAtomNames = {
     
     ////////////////////////////////////////////////////////////////
@@ -1757,6 +1722,26 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
   @Override
   public short getGroupID(String g3) {
     return getGroupIdFor(g3);
+  }
+
+  /**
+   * These can overrun 3 characters; that is not significant.
+   * 
+   * @param group3
+   * @return  a short group ID
+   */
+  public synchronized static short addGroup3Name(String group3) {
+    if (group3NameCount == Group.group3Names.length)
+      Group.group3Names = AU.doubleLengthS(Group.group3Names);
+    short groupID = group3NameCount++;
+    Group.group3Names[groupID] = group3;
+    Group.htGroup.put(group3, Short.valueOf(groupID));
+    return groupID;
+  }
+
+  public static short getGroupIdFor(String group3) {
+    short groupID = knownGroupID(group3);
+    return (groupID == -1 ? addGroup3Name(group3) : groupID);
   }
 
 }

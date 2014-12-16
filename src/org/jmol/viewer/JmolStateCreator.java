@@ -22,7 +22,7 @@ public abstract class JmolStateCreator {
 
   abstract String getSpinState(boolean b);
   
-  abstract String getSpecularState();
+  abstract String getLightingState(boolean isAll);
   
   abstract String getModelState(SB sfunc, boolean isAll,
                                boolean withProteinStructure);

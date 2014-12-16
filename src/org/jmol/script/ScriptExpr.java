@@ -1976,7 +1976,7 @@ abstract class ScriptExpr extends ScriptParam {
     boolean settingData = key.startsWith("property_");
     boolean isThrown = key.equals("thrown_value");
     boolean isExpression = (tokAt(1) == T.expressionBegin);
-    SV t = (settingData ? null : getContextVariableAsVariable(key));
+    SV t = (settingData ? null : key.length() == 0 ? new SV() : getContextVariableAsVariable(key));
     // determine whether this is some sort of 
     // special assignment of a known variable
 

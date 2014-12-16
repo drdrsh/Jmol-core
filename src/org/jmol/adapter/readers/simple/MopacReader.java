@@ -259,7 +259,7 @@ void processAtomicCharges() throws Exception {
     while (discardLinesUntilContains("VIBRATION") != null) {
       tokens = getTokens();
       int freqNo = parseIntStr(tokens[1]); 
-      tokens[0] = getTokensStr(rd())[1]; // FREQ
+      tokens[0] = PT.getTokens(rd())[1]; // FREQ
       if (tokens[2].equals("ATOM"))
         tokens[2] = null;
       info[freqNo - 1] = tokens;

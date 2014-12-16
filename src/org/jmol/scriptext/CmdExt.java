@@ -3763,7 +3763,7 @@ public class CmdExt implements JmolCmdExtension {
     case T.specularexponent:
     case T.lighting:
       if (!chk)
-        msg = vwr.getSpecularState();
+        msg = vwr.getLightingState();
       break;
     case T.saved:
     case T.save:
@@ -3966,7 +3966,7 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.transform:
       if (!chk)
-        msg = "transform:\n" + vwr.tm.getTransformText();
+        msg = "transform:\n" + vwr.tm.matrixRotate.toString();
       break;
     case T.zoom:
       msg = "zoom "

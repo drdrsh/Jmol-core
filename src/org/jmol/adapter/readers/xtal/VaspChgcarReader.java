@@ -27,6 +27,8 @@
 
 package org.jmol.adapter.readers.xtal;
 
+import javajs.util.PT;
+
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
 /**
@@ -72,7 +74,7 @@ public class VaspChgcarReader extends AtomSetCollectionReader {
     addPrimitiveLatticeVector(0, unitCellData, 0);
     addPrimitiveLatticeVector(1, unitCellData, 3);
     addPrimitiveLatticeVector(2, unitCellData, 6);
-    String[] tokens = getTokensStr(rd());
+    String[] tokens = PT.getTokens(rd());
     int[] atomCounts = new int[tokens.length];
     for (int i = tokens.length; --i >= 0;)
       atomCounts[i] = parseIntStr(tokens[i]);
@@ -82,7 +84,7 @@ public class VaspChgcarReader extends AtomSetCollectionReader {
     // type should be "direct"
     for (int i = 0; i < atomCounts.length; i++)
       for (int j = atomCounts[i]; --j >= 0;)
-        addAtomXYZSymName(getTokensStr(rd()), 0, (atomSym == null ? "Xx" : atomSym[i]), null);
+        addAtomXYZSymName(PT.getTokens(rd()), 0, (atomSym == null ? "Xx" : atomSym[i]), null);
     continuing = false;
     return false;
   }

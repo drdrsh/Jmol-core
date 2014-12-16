@@ -371,7 +371,7 @@ public class CastepReader extends AtomSetCollectionReader {
       if (!skip) {
         asc.newAtomSetClear(false);
         if (isTS)
-          readEnergy(0, getTokensStr(prevline + " -")[0] + " ");
+          readEnergy(0, PT.getTokens(prevline + " -")[0] + " ");
         discardLinesUntilContains("<-- h");
         setSpaceGroupName("P1");
         abc = read3Vectors(true);
@@ -579,7 +579,7 @@ public class CastepReader extends AtomSetCollectionReader {
 
 
   private int readOutputAtomIndex() {
-    tokens = getTokensStr(line);
+    tokens = getTokens();
     return asc.getAtomIndex(tokens[0] + tokens[1]);
   }
 

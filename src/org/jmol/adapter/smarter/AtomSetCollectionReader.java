@@ -468,7 +468,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           + "\ntype " + name;
     if ((asc.bsAtoms == null ? asc.ac
         : asc.bsAtoms.cardinality()) == 0
-        && fileType.indexOf("DataOnly") < 0 && asc.getAtomSetCollectionAuxiliaryInfo("dataOnly") == null)
+        && fileType.indexOf("DataOnly") < 0 && asc.atomSetInfo.get("dataOnly") == null)
       return "No atoms found\nfor file " + filePath + "\ntype " + name;
     fixBaseIndices();
     return asc;
@@ -1285,7 +1285,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected void fillDataBlock(String[][] data, int minLineLen) throws Exception {
     int nLines = data.length;
     for (int i = 0; i < nLines; i++) { 
-      data[i] = getTokensStr(discardLinesUntilNonBlank());
+      data[i] = PT.getTokens(discardLinesUntilNonBlank());
       if (data[i].length < minLineLen)
         --i;
     }
@@ -1309,7 +1309,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         if (s == null)
           s = rd();
         if (width == 0) {
-          tokens = getTokensStr(s);
+          tokens = PT.getTokens(s);
         } else {
           tokens = new String[s.length() / width];
           for (int j = 0; j < tokens.length; j++)
@@ -1465,8 +1465,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         // ramachandran, or other sort of plot.
 
         float[] data = new float[15];
-        parseStringInfestedFloatArray(line.substring(10).replace('=', ' ')
-            .replace('{', ' ').replace('}', ' '), data);
+        Parser.parseStringInfestedFloatArray(line.substring(10).replace('=', ' ')
+            .replace('{', ' ').replace('}', ' '), null, data);
         P3 minXYZ = P3.new3(data[0], data[1], data[2]);
         P3 maxXYZ = P3.new3(data[3], data[4], data[5]);
         fileScaling = P3.new3(data[6], data[7], data[8]);
@@ -1568,23 +1568,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return PT.getTokens(line);
   }
 
-  protected void parseStringInfestedFloatArray(String s, float[] data) {
-    Parser.parseStringInfestedFloatArray(s, null, data);
-  }
-
   public static float[] getTokensFloat(String s, float[] f, int n) {
     if (f == null)
       f = new float[n];
-    PT.parseFloatArrayDataN(getTokensStr(s), f, n);
+    PT.parseFloatArrayDataN(PT.getTokens(s), f, n);
     return f;
-  }
-
-  public static String[] getTokensStr(String s) {
-    return PT.getTokens(s);
-  }
-
-  public static String[] getTokensAt(String s, int iStart) {
-    return PT.getTokensAt(s, iStart);
   }
 
   protected float parseFloat() {
@@ -1636,14 +1624,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected String parseTokenRange(String s, int iStart, int iEnd) {
     next[0] = iStart;
     return PT.parseTokenRange(s, iEnd, next);
-  }
-
-  protected static String parseTrimmedAt(String s, int iStart) {
-    return PT.parseTrimmedAt(s, iStart);
-  }
-
-  protected static String parseTrimmedRange(String s, int iStart, int iEnd) {
-    return PT.parseTrimmedRange(s, iStart, iEnd);
   }
 
   /**

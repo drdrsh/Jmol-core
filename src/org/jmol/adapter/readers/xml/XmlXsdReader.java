@@ -61,7 +61,7 @@ public class XmlXsdReader extends XmlReader {
                             Object saxReader) throws Exception {
     parent.htParams.put("backboneAtoms", bsBackbone);
     PX(parent, saxReader);
-    asc.clearSymbolicMap(); 
+    asc.atomSymbolicMap.clear(); 
   }
 
   @Override
@@ -97,7 +97,7 @@ public class XmlXsdReader extends XmlReader {
       atom.sequenceNumber = iGroup;
       String xyz = atts.get("XYZ");
       if (xyz != null) {
-        tokens = getTokensStr(xyz.replace(',',' '));
+        tokens = PT.getTokens(xyz.replace(',',' '));
         atom.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]), parseFloatStr(tokens[2]));
       }
       boolean isBackbone = "1".equals(atts.get("IsBackboneAtom"));

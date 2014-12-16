@@ -29,6 +29,8 @@ import org.jmol.util.Logger;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.PT;
+
 import java.util.Hashtable;
 
 import java.util.Map;
@@ -191,7 +193,7 @@ public class JaguarReader extends MOReader {
             parseFloatStr(tokens[8]) * factor });
         gaussianCount += jCont;
         for (int i = jCont - 1; --i >= 0;) {
-          tokens = getTokensStr(rd());
+          tokens = PT.getTokens(rd());
           sgdata[iFunc].addLast(new float[] { parseFloatStr(tokens[6]),
               parseFloatStr(tokens[8]) * factor });
         }

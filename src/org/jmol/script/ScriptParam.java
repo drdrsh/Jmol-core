@@ -179,6 +179,13 @@ abstract public class ScriptParam extends ScriptError {
     return paramAsStr(index);
   }
 
+  /**
+   * 
+   * @param i
+   * @return point -- ORIGINAL, non-copied atom, if a single atom
+   * 
+   * @throws ScriptException
+   */
   protected P3 atomCenterOrCoordinateParameter(int i) throws ScriptException {
     switch (getToken(i).tok) {
     case T.bitset:
