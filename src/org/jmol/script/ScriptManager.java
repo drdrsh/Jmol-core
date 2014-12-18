@@ -497,7 +497,7 @@ public class ScriptManager implements JmolScriptManager {
       if (eval == null)
         eval = evalTemp = newScriptEvaluator();
     }
-    return vwr.excludeAtoms(eval.getAtomBitSet(atomExpression), false);
+    return vwr.slm.excludeAtoms(eval.getAtomBitSet(atomExpression), false);
   }
 
   @Override

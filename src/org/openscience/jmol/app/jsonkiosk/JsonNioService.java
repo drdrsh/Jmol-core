@@ -93,7 +93,8 @@ import naga.packetwriter.RawPacketWriter;
  * 
  *   {"type" : "banner", "mode" : "ON" or "OFF" }   (set banner for kiosk)
  *   {"type" : "banner", "text" : bannerText }      (set banner for kiosk)
- *   {"type" : "command", "command" : command }  (script command request)
+ *   {"type" : "command", "command" : command, "var": vname, "data":vdata}
+ *       (script command request, with optional definition of a Jmol user variable prior to execution)
  *   {"type" : "content", "id" : id }            (load content request)
  *   {"type" : "move", "style" : (see below) }   (mouse command request)
  *   {"type" : "quit" }                          (shut down request)
@@ -542,6 +543,8 @@ public class JsonNioService extends NIOService implements JsonNioServer {
     case 10: // command
       if (contentDisabled)
         break;
+      if (json.containsKey("var") && json.containsKey("data"))
+        vwr.g.setUserVariable(json.get("var").toString(), SV.getVariable(json.get("data")));
       sendScript(json.getString("command"));
       break;
     case 20: // content
@@ -771,7 +774,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
 
     public Object get(String key) {
       Object o = super.get(key);
-      return (o instanceof SV ? ((SV) o).value : o);
+      return (o instanceof SV ? SV.oValue((SV) o) : o);
     }
     
     public long getLong(String key) throws Exception {

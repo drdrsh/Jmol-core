@@ -29,6 +29,8 @@ package org.jmol.thread;
 import org.jmol.java.BS;
 import org.jmol.script.T;
 import javajs.util.Lst;
+import javajs.util.M4;
+
 import org.jmol.util.Logger;
 import javajs.util.P3;
 import org.jmol.viewer.JC;
@@ -54,6 +56,7 @@ public class SpinThread extends JmolThread {
   //private boolean navigatingSurface;
   private BS[] bsBranches;
   private boolean isDone = false;
+  private M4 m4;
   
   /**
    * @j2sIgnore
@@ -223,7 +226,7 @@ public class SpinThread extends JmolThread {
           : transformManager.fixedRotationAxis).angle
           / myFps;
       if (transformManager.isSpinInternal) {
-        transformManager.rotateAxisAngleRadiansInternal(angle, bsAtoms);
+        transformManager.rotateAxisAngleRadiansInternal(angle, bsAtoms, m4);
       } else {
         transformManager.rotateAxisAngleRadiansFixed(angle, bsAtoms);
       }

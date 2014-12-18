@@ -110,6 +110,7 @@ import javajs.util.P3;
 import javajs.util.P4;
 import org.jmol.util.Rectangle;
 
+import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.Rdr;
 import javajs.util.CU;
@@ -2581,16 +2582,11 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public BS getModelUndeletedAtomsBitSet(int modelIndex) {
-    return excludeAtoms(ms.getModelAtomBitSetIncludingDeleted(modelIndex, true), false);
+    return slm.excludeAtoms(ms.getModelAtomBitSetIncludingDeleted(modelIndex, true), false);
  }
 
   public BS getModelUndeletedAtomsBitSetBs(BS bsModels) {
-    return excludeAtoms(ms.getModelAtomBitSetIncludingDeletedBs(bsModels), false);
-  }
-
-  public BS excludeAtoms(BS bs, boolean ignoreSubset) {
-    slm.excludeAtoms(bs, ignoreSubset);
-    return bs;
+    return slm.excludeAtoms(ms.getModelAtomBitSetIncludingDeletedBs(bsModels), false);
   }
 
   @Override
@@ -7134,7 +7130,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
                                            float endDegrees, boolean isSpin,
                                            BS bsSelected, V3 translation,
                                            Lst<P3> finalPoints,
-                                           float[] dihedralList) {
+                                           float[] dihedralList, M4 m4) {
     // Eval: rotate INTERNAL
     
     if (headless) {
@@ -7145,7 +7141,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
     boolean isOK = tm.rotateAboutPointsInternal(eval, point1,
         point2, degreesPerSecond, endDegrees, false, isSpin, bsSelected, false,
-        translation, finalPoints, dihedralList);
+        translation, finalPoints, dihedralList, m4);
     if (isOK)
       setSync();
     return isOK;
@@ -7161,7 +7157,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     }
     tm.rotateAboutPointsInternal(null, pt1, pt2,
         g.pickingSpinRate, Float.MAX_VALUE, isClockwise, true, null,
-        false, null, null, null);
+        false, null, null, null, null);
   }
 
   public V3 getModelDipole() {
@@ -7305,12 +7301,12 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     sm.setStatusAtomMoved(bs);
   }
 
-  public void moveAtoms(M3 mNew, M3 rotation, V3 translation,
+  public void moveAtoms(M4 m4, M3 mNew, M3 rotation, V3 translation,
                         P3 center, boolean isInternal, BS bsAtoms, boolean translationOnly) {
     // from TransformManager exclusively
     if (bsAtoms.cardinality() == 0)
       return;
-    ms.moveAtoms(mNew, rotation, translation, bsAtoms, center,
+    ms.moveAtoms(m4, mNew, rotation, translation, bsAtoms, center,
         isInternal, translationOnly);
     checkMinimization();
     sm.setStatusAtomMoved(bsAtoms);
@@ -7474,7 +7470,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     bs.andNot(slm.getMotionFixedAtoms());
 
     rotateAboutPointsInternal(eval, atom1, atom2, 0, degrees, false, bs, null,
-        null, null);
+        null, null, null);
   }
 
   public void refreshMeasures(boolean andStopMinimization) {
@@ -8916,7 +8912,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     // used for set picking SELECT
 
     if (atomExpression instanceof BS)
-      return excludeAtoms((BS) atomExpression, false);
+      return slm.excludeAtoms((BS) atomExpression, false);
     getScriptManager();
     return getAtomBitSetEval(eval, atomExpression);
   }

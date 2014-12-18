@@ -973,7 +973,7 @@ abstract class ScriptExpr extends ScriptParam {
     BS bs = (expressionResult instanceof BS ? (BS) expressionResult : new BS());
     isBondSet = (expressionResult instanceof BondSet);
     if (!isBondSet
-        && vwr.excludeAtoms(bs, ignoreSubset).length() > vwr.ms.ac)
+        && (bs = vwr.slm.excludeAtoms(bs, ignoreSubset)).length() > vwr.ms.ac)
       bs.clearAll();
     if (tempStatement != null) {
       st = tempStatement;

@@ -4059,20 +4059,27 @@ import java.util.Properties;
             */
   }
 
-
-  public void moveAtoms(M3 mNew, M3 rotation, V3 translation, BS bs,
+  public void moveAtoms(M4 m4, M3 mNew, M3 rotation, V3 translation, BS bs,
                         P3 center, boolean isInternal, boolean translationOnly) {
-    if (!translationOnly) {
+    if (m4 != null) {
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+        m4.rotTrans(at[i]);
+      mat4.setM4(m4);
+      translation = null;
+    } else if (!translationOnly) {
       if (mNew == null) {
         matTemp.setM3(rotation);
       } else {
+        // screen frame?
+        // must do inv(currentRot) * mNew * currentRot
+        ptTemp.set(0, 0, 0);
         matInv.setM3(rotation);
         matInv.invert();
-        ptTemp.set(0, 0, 0);
         matTemp.mul2(mNew, rotation);
         matTemp.mul2(matInv, matTemp);
       }
       if (isInternal) {
+        // adjust rotation to be around center of this set of atoms
         vTemp.setT(center);
         mat4.setIdentity();
         mat4.setTranslation(vTemp);
@@ -4206,7 +4213,7 @@ import java.util.Properties;
       pt = Measure.getCenterAndPoints(vNot)[0];
       V3 v = V3.newVsub(thisAtom, pt);
       Quat q = Quat.newVA(v, 180);
-      moveAtoms(null, q.getMatrix(), null, bsAtoms, thisAtom, true, false);
+      moveAtoms(null, null, q.getMatrix(), null, bsAtoms, thisAtom, true, false);
     }
   }
 

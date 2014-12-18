@@ -416,7 +416,7 @@ final public class Measure {
     for (int i = 0; i < vPts.size(); i++) {
       P3 pt = P3.newP(vPts.get(i));
       pt.sub(center);
-      m4.rotTrans2(pt, pt);
+      m4.rotTrans(pt);
       pt.add(center);
       v.addLast(pt);
     }

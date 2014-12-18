@@ -182,14 +182,14 @@ public class MathExt implements JmolMathExtension {
       return evaluateRandom(mp, args);
     case T.in:
       return evaluateIn(mp, args);
+    case T.modulation:
+      return evaluateModulation(mp, args);
     case T.replace:
       return evaluateReplace(mp, args);
     case T.search:
     case T.smiles:
     case T.substructure:
       return evaluateSubstructure(mp, args, tok);
-    case T.modulation:
-      return evaluateModulation(mp, args);
     case T.sort:
     case T.count:
       return evaluateSort(mp, args, tok);

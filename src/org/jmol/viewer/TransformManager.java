@@ -260,7 +260,7 @@ public class TransformManager {
     unTransformPoint(pt2, pt2);
     vwr.setInMotion(false);
     rotateAboutPointsInternal(null, pt2, pt1, 10 * speed, Float.NaN, false,
-        true, null, true, null, null, null);
+        true, null, true, null, null, null, null);
   }
 
   //  final V3 arcBall0 = new V3();
@@ -311,12 +311,12 @@ public class TransformManager {
   }
 
   private void applyRotation(M3 mNew, boolean isInternal, BS bsAtoms,
-                             V3 translation, boolean translationOnly) {
+                             V3 translation, boolean translationOnly, M4 m4) {
     if (bsAtoms == null) {
       matrixRotate.mul2(mNew, matrixRotate);
       return;
     }
-    vwr.moveAtoms(mNew, matrixRotate, translation, internalRotationCenter,
+    vwr.moveAtoms(m4, mNew, matrixRotate, translation, internalRotationCenter,
         isInternal, bsAtoms, translationOnly);
     if (translation != null) {
       internalRotationCenter.add(translation);
@@ -335,22 +335,22 @@ public class TransformManager {
     // the signs of both screen Y and screen Z in the end.
 
     if (matrixTemp3.setAsBallRotation(JC.radiansPerDegree, -yDeg, -xDeg))
-      applyRotation(matrixTemp3, false, bsAtoms, null, false);
+      applyRotation(matrixTemp3, false, bsAtoms, null, false, null);
   }
 
   public synchronized void rotateXRadians(float angleRadians, BS bsAtoms) {
     applyRotation(matrixTemp3.setAsXRotation(angleRadians), false, bsAtoms,
-        null, false);
+        null, false, null);
   }
 
   public synchronized void rotateYRadians(float angleRadians, BS bsAtoms) {
     applyRotation(matrixTemp3.setAsYRotation(angleRadians), false, bsAtoms,
-        null, false);
+        null, false, null);
   }
 
   public synchronized void rotateZRadians(float angleRadians) {
     applyRotation(matrixTemp3.setAsZRotation(angleRadians), false, null, null,
-        false);
+        false, null);
   }
 
   public void rotateAxisAngle(V3 rotAxis, float radians) {
@@ -359,7 +359,7 @@ public class TransformManager {
   }
 
   private synchronized void rotateAxisAngle2(A4 axisAngle, BS bsAtoms) {
-    applyRotation(matrixTemp3.setAA(axisAngle), false, bsAtoms, null, false);
+    applyRotation(matrixTemp3.setAA(axisAngle), false, bsAtoms, null, false, null);
   }
 
   /*
@@ -436,6 +436,7 @@ public class TransformManager {
    * @param translation
    * @param finalPoints
    * @param dihedralList
+   * @param m4 
    * @return true if synchronous so that JavaScript can restart properly
    */
   boolean rotateAboutPointsInternal(JmolScriptEvaluator eval, T3 point1,
@@ -443,7 +444,7 @@ public class TransformManager {
                                     float endDegrees, boolean isClockwise,
                                     boolean isSpin, BS bsAtoms,
                                     boolean isGesture, V3 translation,
-                                    Lst<P3> finalPoints, float[] dihedralList) {
+                                    Lst<P3> finalPoints, float[] dihedralList, M4 m4) {
 
     // *THE* Viewer INTERNAL frame rotation entry point
 
@@ -463,11 +464,7 @@ public class TransformManager {
         axis.scale(-1f);
       internalRotationCenter.setT(point1);
       rotationAxis.setT(axis);
-      if (translation == null) {
-        internalTranslation = null;
-      } else {
-        internalTranslation = V3.newV(translation);
-      }
+      internalTranslation = (translation == null ? null : V3.newV(translation));
     }
     boolean isSelected = (bsAtoms != null);
     if (isSpin) {
@@ -498,12 +495,12 @@ public class TransformManager {
     }
     float radians = endDegrees * JC.radiansPerDegree;
     internalRotationAxis.setVA(axis, radians);
-    rotateAxisAngleRadiansInternal(radians, bsAtoms);
+    rotateAxisAngleRadiansInternal(radians, bsAtoms, m4);
     return false;
   }
 
   public synchronized void rotateAxisAngleRadiansInternal(float radians,
-                                                          BS bsAtoms) {
+                                                          BS bsAtoms, M4 m4) {
 
     // final matrix rotation when spinning or just rotating
 
@@ -518,7 +515,7 @@ public class TransformManager {
     // NOW apply that rotation  
 
     applyRotation(matrixTemp3.setAA(axisangleT), true, bsAtoms,
-        internalTranslation, radians > 1e6f);
+        internalTranslation, radians > 1e6f, m4);
     if (bsAtoms == null)
       getNewFixedRotationCenter();
   }

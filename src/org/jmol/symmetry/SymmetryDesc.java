@@ -797,7 +797,7 @@ public class SymmetryDesc {
                                  P3 pt00, V3 vtrans) {
     P3 p0 = P3.newP(pt00);
     uc.toFractional(p0, false);
-    op.rotTrans2(p0, p0);
+    op.rotTrans(p0);
     p0.add(vtrans);
     uc.toCartesian(p0, false);
     return p0;

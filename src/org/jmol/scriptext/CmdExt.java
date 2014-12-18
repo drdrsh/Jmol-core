@@ -918,7 +918,7 @@ public class CmdExt implements JmolCmdExtension {
       if (!eval.useThreads())
         doAnimate = false;
       if (vwr.rotateAboutPointsInternal(eval, center, pt1, endDegrees / nSeconds,
-          endDegrees, doAnimate, bsFrom, translation, ptsB, null)
+          endDegrees, doAnimate, bsFrom, translation, ptsB, null, null)
           && doAnimate
           && eval.isJS)
         throw new ScriptInterruption(eval, "compare", 1);

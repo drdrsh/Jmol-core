@@ -5711,6 +5711,7 @@ public class ScriptEval extends ScriptExpr {
     V3 translation = null;
     M4 m4 = null;
     M3 m3 = null;
+    boolean is4x4 = false;
     int direction = 1;
     int tok;
     Quat q = null;
@@ -5896,37 +5897,39 @@ public class ScriptEval extends ScriptExpr {
         isSelected = true;
         continue;
       case T.compare:
+        bsCompare = atomExpressionAt(++i);
+        ptsA = vwr.ms.getAtomPointVector(bsCompare);
+        if (ptsA == null) {
+          iToken = i;
+          invArg();
+        }
+        i = iToken;
+        ptsB = getPointVector(getToken(++i), i);
+        if (ptsB == null || ptsA.size() != ptsB.size()) {
+          iToken = i;
+          invArg();
+        }
+        m4 = new M4();
+        points[0] = new P3();
+        nPoints = 1;
+        Interface.getInterface("javajs.util.Eigen", vwr, "script");
+        float stddev = (chk ? 0 : Measure.getTransformMatrix4(ptsA, ptsB, m4,
+            points[0]));
+        // if the standard deviation is very small, we leave ptsB
+        // because it will be used to set the absolute final positions
+        if (stddev > 0.001)
+          ptsB = null;
+        //$FALL-THROUGH$
       case T.matrix4f:
       case T.matrix3f:
         haveRotation = true;
-        if (tok == T.compare) {
-          bsCompare = atomExpressionAt(++i);
-          ptsA = vwr.ms.getAtomPointVector(bsCompare);
-          if (ptsA == null) {
-            iToken = i;
-            invArg();
-          }
-          i = iToken;
-          ptsB = getPointVector(getToken(++i), i);
-          if (ptsB == null || ptsA.size() != ptsB.size()) {
-            iToken = i;
-            invArg();
-          }
-          m4 = new M4();
-          points[0] = new P3();
-          nPoints = 1;
-          Interface.getInterface("javajs.util.Eigen", vwr, "script");
-          float stddev = (chk ? 0 : Measure.getTransformMatrix4(ptsA, ptsB, m4,
-              points[0]));
-          // if the standard deviation is very small, we leave ptsB
-          // because it will be used to set the absolute final positions
-          if (stddev > 0.001)
-            ptsB = null;
-        } else if (tok == T.matrix4f) {
+        m3 = new M3();
+        if (tok == T.matrix4f) {
+          is4x4 = true;
           m4 = (M4) theToken.value;
         }
-        m3 = new M3();
         if (m4 != null) {
+          // translation and rotation are calculated
           translation = new V3();
           m4.getTranslation(translation);
           m4.getRotationScale(m3);
@@ -5977,9 +5980,9 @@ public class ScriptEval extends ScriptExpr {
     }
 
     if (q != null) {
-      // only when there is a translation (4x4 matrix or TRANSLATE)
+      // only when there is a translation but not a 4x4 matrix)
       // do we set the rotation to be the center of the selected atoms or model
-      if (nPoints == 0 && translation != null)
+      if (nPoints == 0 && translation != null && !is4x4)
         points[0] = vwr.ms.getAtomSetCenter(bsAtoms != null ? bsAtoms
             : isSelected ? vwr.bsA() : vwr.getAllAtoms());
       if (helicalPath && translation != null) {
@@ -6080,6 +6083,7 @@ public class ScriptEval extends ScriptExpr {
     }
     if (bsAtoms != null && isSpin && ptsB == null && m4 != null) {
       ptsA = vwr.ms.getAtomPointVector(bsAtoms);
+      // note that this m4 is NOT through 
       ptsB = Measure.transformPoints(ptsA, m4, points[0]);
     }
     if (bsAtoms != null && !isSpin && ptsB != null) {
@@ -6088,7 +6092,7 @@ public class ScriptEval extends ScriptExpr {
       if (requiresThread && !useThreads())
         return;
       if (vwr.rotateAboutPointsInternal(this, points[0], points[1], rate,
-          endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList)
+          endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList, is4x4 ? m4 : null)
           && isJS
           && isSpin)
         throw new ScriptInterruption(this, "rotate", 1);
@@ -7544,11 +7548,11 @@ public class ScriptEval extends ScriptExpr {
 
   private void cmdSync() throws ScriptException {
     // new 11.3.9
-    checkLength(-3);
     String text = "";
     String applet = "";
     int port = PT.parseInt(optParameterAsString(1));
     if (port == Integer.MIN_VALUE) {
+      checkLength(-3);
       port = 0;
       switch (slen) {
       case 1:
@@ -7578,7 +7582,10 @@ public class ScriptEval extends ScriptExpr {
         break;
       }
     } else {
-      text = (slen == 2 ? null : paramAsStr(2));
+      SV v = null;
+      if (slen > 2 && (v = setVariable(2, -1, "", false)) == null)
+        return;
+      text = (slen == 2 ? null : v.tok == T.hash ?  v.toJSON() : v.asString());
       applet = null;
     }
     if (chk)

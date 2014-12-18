@@ -322,11 +322,12 @@ public class SelectionManager {
     return BSUtil.copy(bsSelection);
   }
 
-  void excludeAtoms(BS bs, boolean ignoreSubset) {
+  public BS excludeAtoms(BS bs, boolean ignoreSubset) {
     if (bsDeleted != null)
       bs.andNot(bsDeleted);
     if (!ignoreSubset && bsSubset != null)
-      bs.and(bsSubset);
+      (bs = BSUtil.copy(bs)).and(bsSubset);
+    return bs;
   }
 
   void setMotionFixedAtoms(BS bs) {
