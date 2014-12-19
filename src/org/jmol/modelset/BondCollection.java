@@ -53,7 +53,7 @@ abstract public class BondCollection extends AtomCollection {
 
   private BS bsAromaticSingle;
   private BS bsAromaticDouble;
-  protected BS bsAromatic = new BS();
+  protected BS bsAromatic;
 
   public boolean haveHiddenBonds;
   
@@ -63,6 +63,7 @@ abstract public class BondCollection extends AtomCollection {
   protected final static int MAX_NUM_TO_CACHE = 200;
 
   protected void setupBC() {
+    bsAromatic = new BS();
     numCached = new int[MAX_BONDS_LENGTH_TO_CACHE];
     freeBonds = new Bond[MAX_BONDS_LENGTH_TO_CACHE][][];
     for (int i = MAX_BONDS_LENGTH_TO_CACHE; --i > 0;) // NOT >= 0
