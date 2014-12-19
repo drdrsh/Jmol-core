@@ -37,6 +37,7 @@ import org.jmol.viewer.JC;
 
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -63,10 +64,8 @@ public class IsosurfaceRenderer extends MeshRenderer {
     return renderIso();
   }
 
-  protected boolean renderIso() {
-    
+  protected boolean renderIso() {    
     setGlobals();
-
     for (int i = isosurface.meshCount; --i >= 0;) {
       mesh = imesh = (IsosurfaceMesh) isosurface.meshes[i];
       if (imesh.connections != null && !vwr.ms.at[imesh.connections[0]].checkVisible())
@@ -166,7 +165,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
           && imesh.jvxlData.isSlabbable) {
         P3[] points = imesh.jvxlData.boundingBox;
         float z0 = Float.MAX_VALUE;
-        float z1 = Float.MIN_VALUE;
+        float z1 = PT.FLOAT_MIN_SAFE;
         for (int i = points.length; --i >= 0;) {
           pt2f.setT(points[i]);
           tm.transformPt3f(pt2f, pt2f);

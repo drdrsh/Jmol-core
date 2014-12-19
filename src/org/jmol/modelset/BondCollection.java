@@ -62,6 +62,9 @@ abstract public class BondCollection extends AtomCollection {
   protected final static int MAX_BONDS_LENGTH_TO_CACHE = 5;
   protected final static int MAX_NUM_TO_CACHE = 200;
 
+  // J2S note 12/19/2014: J2S fails to instantiate fields for superclasses such as this
+  // thus, using protected bsAromatic = new BS();  fails
+  
   protected void setupBC() {
     bsAromatic = new BS();
     numCached = new int[MAX_BONDS_LENGTH_TO_CACHE];

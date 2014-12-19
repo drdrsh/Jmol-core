@@ -73,9 +73,6 @@ import org.jmol.viewer.Viewer;
 
 abstract public class AtomCollection {
   
-  private static final Float MINUSZERO = Float.valueOf(-0.0f);
-
-
   public Viewer vwr;
   protected GData g3d;
 
@@ -831,7 +828,7 @@ abstract public class AtomCollection {
     if (Float.isNaN(partialCharge))
       return false;
     if (partialCharges == null) {
-      if (partialCharge == 0 && !Float.valueOf(partialCharge).equals(MINUSZERO))
+      if (partialCharge == 0)
         return false; // no need to store a 0.
       partialCharges = new float[at.length];
     }
