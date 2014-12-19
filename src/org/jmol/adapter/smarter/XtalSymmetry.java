@@ -1045,6 +1045,7 @@ public class XtalSymmetry {
       a.scale(1f / (atomMax - firstSymmetryAtom));
       a.atomName = "Pt";
       a.radius = 16;
+      asc.addAtom(a);
       firstSymmetryAtom = atomMax++;
       break;
     }

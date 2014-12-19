@@ -1053,16 +1053,13 @@ public final class Resolver implements JmolBioResolver {
     ",[SUC],[TRE],[GCU],[MTL],[NAG],[NDG],[RHA],[SOR],[SOL],[SOE]" +  
     ",[XYL],[A2G],[LBT],[NGA],[SIA],[SLB]" + 
     ",[AFL],[AGC],[GLB],[NAN],[RAA]"; //these 4 are deprecated in PDB
-    // from Eric Martz; revision by Angel Herraez
+
+  // from Eric Martz; revision by Angel Herraez
   public static short knownGroupID(String group3) {
-    if (group3 != null) {
-      if (group3.length() == 0)
-        return 0;
-      Short boxedGroupID = Group.htGroup.get(group3);
-      if (boxedGroupID != null)
-        return boxedGroupID.shortValue();
-    }
-    return -1;
+    if (group3 == null || group3.length() == 0)
+      return 0;
+    Short boxedGroupID = Group.htGroup.get(group3);
+    return (boxedGroupID == null ? -1 : boxedGroupID.shortValue());
   }
   /**
    * @param group3 a potential group3 name

@@ -74,7 +74,7 @@ public class MMCifReader extends CifReader {
     byChain = checkFilterKey("BYCHAIN");
     bySymop = checkFilterKey("BYSYMOP");
     isCourseGrained = byChain || bySymop;
-    if (byChain) {
+    if (isCourseGrained) {
       chainAtomMap = new Hashtable<String, P3>();
       chainAtomCounts = new Hashtable<String, int[]>();
     }
@@ -113,7 +113,8 @@ public class MMCifReader extends CifReader {
         if (note != null)
           appendLoadNote(note);
       }
-      applySymmetryAndSetTrajectory();
+      if (!isCourseGrained)
+        applySymmetryAndSetTrajectory();
     }
     
     if (htSites != null)
@@ -307,7 +308,7 @@ public class MMCifReader extends CifReader {
     int iMolecule = parseIntStr(id);
     String list = assem[ASSEM_LIST];
     appendLoadNote("found biomolecule " + id + ": " + list);
-    if (!checkFilterKey("ASSEMBLY " + id + ";"))
+    if (!checkFilterKey("ASSEMBLY " + id + ";") && !checkFilterKey("ASSEMBLY=" + id + ";"))
       return;
     if (vBiomolecules == null) {
       vBiomolecules = new Lst<Map<String, Object>>();
@@ -348,7 +349,7 @@ public class MMCifReader extends CifReader {
       if (ops.indexOf("-") >= 0)
         ops = BS.unescape(
             "({" + ops.substring(1, ops.length() - 1).replace('-', ':') + "})")
-            .toString();
+            .toJSON();
       ops = PT.rep(ops, " ", "");
       ops = ops.substring(1, ops.length() - 1);
     }
@@ -841,6 +842,7 @@ public class MMCifReader extends CifReader {
         a1.setT(sum);
         a1.scale(1f / count);
         a1.radius = 16;
+        asc.addAtom(a1);
       }
     } else {
       nAtoms = bsAll.cardinality();

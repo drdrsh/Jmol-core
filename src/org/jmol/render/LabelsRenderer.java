@@ -49,7 +49,6 @@ public class LabelsRenderer extends FontLineShapeRenderer {
 
   byte fidPrevious;
   
-  private int zCutoff;
   private P3 pTemp = new P3();
 
   protected short bgcolix;
@@ -70,6 +69,8 @@ public class LabelsRenderer extends FontLineShapeRenderer {
 
   protected int zSlab = Integer.MIN_VALUE;
 
+  protected int zCutoff;
+
   private int zBox;
 
   private float[] boxXY;
@@ -79,8 +80,6 @@ public class LabelsRenderer extends FontLineShapeRenderer {
   @Override
   protected boolean render() {
     fidPrevious = 0;
-    zCutoff =(tm.zShadeEnabled ? tm.zDepthValue : 0);
-
     Labels labels = (Labels) shape;
 
     String[] labelStrings = labels.strings;
@@ -88,6 +87,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     int[] offsets = labels.offsets;
     if (labelStrings == null)
       return false;
+    setZcutoff();
     Atom[] atoms = ms.at;
     short backgroundColixContrast = vwr.cm.colixBackgroundContrast;
     int backgroundColor = vwr.getBackgroundArgb();
@@ -121,7 +121,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       textAlign = Labels.getAlignment(offsetFull);
       pointer = offsetFull & JC.LABEL_POINTER_FLAGS;
       zSlab = atom.sZ - atom.sD / 2 - 3;
-      if (zCutoff > 0 && zSlab > zCutoff)
+      if (zSlab > zCutoff)
         continue;
       if (zSlab < 1)
         zSlab = 1;
@@ -155,6 +155,10 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       boxXY[4] = zBox;
     }
     return false;
+  }
+
+  protected void setZcutoff() {
+    zCutoff =(tm.zShadeEnabled ? tm.zSlabValue : Integer.MAX_VALUE);
   }
 
   protected Text renderLabelOrMeasure(Text text, String label) {
