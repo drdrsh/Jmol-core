@@ -37,6 +37,7 @@ import java.util.Map.Entry;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
+import org.jmol.quantum.QS;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 
@@ -355,7 +356,7 @@ public class NWChemReader extends MOReader {
       Properties p = (Properties) asc.getAtomSetAuxiliaryInfoValue(
           asc.iSet - 1, "modelProperties");
       if (p != null)
-        asc.setAtomSetAuxiliaryInfo("modelProperties", p.clone());
+        asc.setCurrentModelInfo("modelProperties", p.clone());
     }
     asc.setAtomSetModelProperty("vector", "gradient");
     asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "Task "
@@ -685,11 +686,11 @@ public class NWChemReader extends MOReader {
     nBasisFunctions = 0;
     boolean isD6F10 = (line.indexOf("cartesian") >= 0);
     if (isD6F10) {
-      getDFMap(DC_LIST, JmolAdapter.SHELL_D_CARTESIAN, CANONICAL_DC_LIST, 3);
-      getDFMap(FC_LIST, JmolAdapter.SHELL_F_CARTESIAN, CANONICAL_FC_LIST, 3);
+      getDFMap(DC_LIST, QS.DC, CANONICAL_DC_LIST, 3);
+      getDFMap(FC_LIST, QS.FC, CANONICAL_FC_LIST, 3);
     } else {
-      getDFMap(DS_LIST, JmolAdapter.SHELL_D_SPHERICAL, CANONICAL_DS_LIST, 2);
-      getDFMap(FS_LIST, JmolAdapter.SHELL_F_SPHERICAL, CANONICAL_FS_LIST, 2);
+      getDFMap(DS_LIST, QS.DS, CANONICAL_DS_LIST, 2);
+      getDFMap(FS_LIST, QS.FS, CANONICAL_FS_LIST, 2);
     }
     shells = new  Lst<int[]>();
     Map<String, Lst<Lst<Object[]>>> atomInfo = new Hashtable<String, Lst<Lst<Object[]>>>();
@@ -754,8 +755,8 @@ public class NWChemReader extends MOReader {
         }
         int[] slater = new int[4];
         slater[0] = i;
-        slater[1] = (isD6F10 ? JmolAdapter.getQuantumShellTagID(type)
-            : JmolAdapter.getQuantumShellTagIDSpherical(type));
+        slater[1] = (isD6F10 ? BasisFunctionReader.getQuantumShellTagID(type)
+            : BasisFunctionReader.getQuantumShellTagIDSpherical(type));
         slater[2] = gaussianCount;
         slater[3] = nGaussians;
         shells.addLast(slater);

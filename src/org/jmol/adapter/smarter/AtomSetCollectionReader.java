@@ -434,7 +434,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       asc.setGlobalBoolean(AtomSetCollection.GLOBAL_ISPDB);
     else  
       asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_ISPDB);
-    asc.setAtomSetAuxiliaryInfo("isPDB", isPDB ? Boolean.TRUE : null);
+    asc.setCurrentModelInfo("isPDB", isPDB ? Boolean.TRUE : null);
   }
 
   private Object finish() {
@@ -459,8 +459,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (fileType.indexOf("(") >= 0)
       fileType = fileType.substring(0, fileType.indexOf("("));
     for (int i = asc.atomSetCount; --i >= 0;) {
-      asc.setAtomSetAuxiliaryInfoForSet("fileName", filePath, i);
-      asc.setAtomSetAuxiliaryInfoForSet("fileType", fileType, i);
+      asc.setModelInfoForSet("fileName", filePath, i);
+      asc.setModelInfoForSet("fileType", fileType, i);
     }
     asc.freeze(reverseModels);
     if (asc.errorMessage != null)
@@ -712,7 +712,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     } else {
       asc.setCollectionName(name);
     }
-    asc.setAtomSetAuxiliaryInfoForSet("name", name, Math.max(0, asc.iSet));
+    asc.setModelInfoForSet("name", name, Math.max(0, asc.iSet));
   }
 
   protected int cloneLastAtomSet(int ac, P3[] pts) throws Exception {
@@ -979,7 +979,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     filterAltLoc = checkFilterKey("%");
     filterEveryNth = checkFilterKey("/=");
     if (filterEveryNth)
-      filterN = parseIntStr(filter.substring(filter.indexOf("/=") + 2));
+      filterN = parseIntAt(filter, filter.indexOf("/=") + 2);
     else
       filterAtomType = checkFilterKey("=");
     if (filterN == Integer.MIN_VALUE)
@@ -1171,7 +1171,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   public void addSites(Map<String, Map<String, Object>> htSites) {
-    asc.setAtomSetAuxiliaryInfo("pdbSites", htSites);
+    asc.setCurrentModelInfo("pdbSites", htSites);
     String sites = "";
     for (Map.Entry<String, Map<String, Object>> entry : htSites.entrySet()) {
       String name = entry.getKey();
@@ -1210,7 +1210,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (isTrajectory)
       asc.setTrajectory();
     if (moreUnitCellInfo != null) {
-      asc.setAtomSetAuxiliaryInfo("moreUnitCellInfo", moreUnitCellInfo);
+      asc.setCurrentModelInfo("moreUnitCellInfo", moreUnitCellInfo);
       moreUnitCellInfo = null;
     }
     finalizeSubclassSymmetry(sym != null);
@@ -1234,7 +1234,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   @SuppressWarnings("unchecked")
   public void finalizeMOData(Map<String, Object> moData) {
-    asc.setAtomSetAuxiliaryInfo("moData", moData);
+    asc.setCurrentModelInfo("moData", moData);
     if (moData == null)
       return;
     Lst<Map<String, Object>> orbitals = (Lst<Map<String, Object>>) moData
@@ -1598,7 +1598,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return PT.parseIntNext(s, next);
   }
 
-  protected int parseIntAt(String s, int iStart) {
+  public int parseIntAt(String s, int iStart) {
     next[0] = iStart;
     return PT.parseIntNext(s, next);
   }

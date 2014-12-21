@@ -1020,8 +1020,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       pt = text.length();
     String info = null;
     if (name.indexOf("captureLooping") >= 0)
-      info = (vwr.am.animationReplayMode.name().equals("ONCE") ? "ONCE"
-          : "LOOP");
+      info = (vwr.am.animationReplayMode == T.once ? "ONCE" : "LOOP");
     else if (name.indexOf("captureFps") >= 0)
       info = "" + vwr.getInt(T.animationfps);
     else if (name.indexOf("captureMenu") >= 0)

@@ -75,8 +75,6 @@ import org.jmol.atomdata.AtomDataServer;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 
-import org.jmol.c.ANIM;
-import org.jmol.c.AXES;
 import org.jmol.c.FIL;
 import org.jmol.c.STER;
 import org.jmol.c.STR;
@@ -751,7 +749,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (ms.setCrystallographicDefaults())
       stm.setCrystallographicDefaults();
     else
-      setAxesModeMolecular(false);
+      setAxesMode(T.axeswindow);
     prevFrame = Integer.MIN_VALUE;
     if (!tm.spinOn)
       setSync();
@@ -2329,7 +2327,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   //  }
 
   public void calculateStraightness() {
-    ms.setHaveStraightness(false);
+    ms.haveStraightness = false;
     ms.calculateStraightness();
   }
 
@@ -3021,11 +3019,11 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   private void setAnimationMode(String mode) {
     if (mode.equalsIgnoreCase("once")) {
-      am.setAnimationReplayMode(ANIM.ONCE, 0, 0);
+      am.setAnimationReplayMode(T.once, 0, 0);
     } else if (mode.equalsIgnoreCase("loop")) {
-      am.setAnimationReplayMode(ANIM.LOOP, 1, 1);
+      am.setAnimationReplayMode(T.loop, 1, 1);
     } else if (mode.startsWith("pal")) {
-      am.setAnimationReplayMode(ANIM.PALINDROME, 1, 1);
+      am.setAnimationReplayMode(T.palindrome, 1, 1);
     }
   }
   
@@ -3096,7 +3094,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   void setFrameVariables() {
-    g.setO("animationMode", am.animationReplayMode.name());
+    g.setO("animationMode", T.nameOf(am.animationReplayMode));
     g.setI("animationFps", am.animationFps);
     g.setO("_firstFrame", am.getModelSpecial(-1));
     g.setO("_lastFrame", am.getModelSpecial(1));
@@ -5299,7 +5297,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         g.quaternionFrame = "" + (value.toLowerCase() + "p").charAt(0);
       if (!PT.isOneOf(g.quaternionFrame, JC.allowedQuaternionFrames))
         g.quaternionFrame = "p";
-      ms.setHaveStraightness(false);
+      ms.haveStraightness = false;
       break;
     case T.defaultvdw:
       // /11.5.11//
@@ -5700,7 +5698,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     case T.helixstep:
       // 11.8.RC3
       g.helixStep = value;
-      ms.setHaveStraightness(false);
+      ms.haveStraightness = false;
       break;
     case T.dotscale:
       // 12.0.RC25
@@ -5723,17 +5721,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         eval.setDebugging();
       return;
     case T.axesmode:
-      switch (AXES.getAxesMode(value)) {
-      case MOLECULAR:
-        setAxesModeMolecular(true);
-        return;
-      case BOUNDBOX:
-        setAxesModeMolecular(false);
-        return;
-      case UNITCELL:
-        setAxesModeUnitCell(true);
-        return;
-      }
+      setAxesMode(value ==  2 ? T.axesunitcell : value == 1 ? T.axesmolecular : T.axeswindow);
       return;
     case T.strandcount:
       // /11.1///
@@ -6322,16 +6310,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       g.measurementLabels = value;
       break;
     case T.axeswindow:
-      // remove parameters, so don't set htParameter key here
-      setAxesModeMolecular(!value);
-      return;
     case T.axesmolecular:
-      // remove parameters, so don't set htParameter key here
-      setAxesModeMolecular(value);
-      return;
     case T.axesunitcell:
-      // remove parameters, so don't set htParameter key here
-      setAxesModeUnitCell(value);
+      setAxesMode(tok);
       return;
     case T.axesorientationrasmol:
       // public; no need to set here
@@ -6598,32 +6579,38 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     // for uccage renderer
     shm.loadShape(JC.SHAPE_AXES);
     return (getObjectMad(StateManager.OBJ_AXIS1) == 0
-        || g.axesMode != AXES.UNITCELL
+        || g.axesMode != T.axesunitcell
         || ((Boolean) getShapeProperty(JC.SHAPE_AXES, "axesTypeXY"))
             .booleanValue()
         || getShapeProperty(JC.SHAPE_AXES, "origin") != null ? null
         : (P3[]) getShapeProperty(JC.SHAPE_AXES, "axisPoints"));
   }
 
-  private void setAxesModeMolecular(boolean TF) {
-    g.axesMode = (TF ? AXES.MOLECULAR : AXES.BOUNDBOX);
+  void setAxesMode(int mode) {
+    g.axesMode = mode;
     axesAreTainted = true;
-    g.removeParam("axesunitcell");
-    g.removeParam(TF ? "axeswindow" : "axesmolecular");
-    g.setI("axesMode", g.axesMode.getCode());
-    g.setB(TF ? "axesMolecular" : "axesWindow", true);
-
-  }
-
-  void setAxesModeUnitCell(boolean TF) {
-    // stateManager
-    // setBooleanproperty
-    g.axesMode = (TF ? AXES.UNITCELL : AXES.BOUNDBOX);
-    axesAreTainted = true;
-    g.removeParam("axesmolecular");
-    g.removeParam(TF ? "axeswindow" : "axesunitcell");
-    g.setB(TF ? "axesUnitcell" : "axesWindow", true);
-    g.setI("axesMode", g.axesMode.getCode());
+    switch (mode) {
+    case T.axesunitcell:
+      // stateManager
+      // setBooleanproperty
+      g.removeParam("axesmolecular");
+      g.removeParam("axeswindow");
+      g.setB("axesUnitcell", true);
+      mode = 2;
+      break;
+    case T.axesmolecular:
+      g.removeParam("axesunitcell");
+      g.removeParam("axeswindow");
+      g.setB("axesMolecular", true);
+      mode = 1;
+      break;
+    case T.axeswindow:
+      g.removeParam("axesunitcell");
+      g.removeParam("axesmolecular");
+      g.setB("axesWindow", true);
+      mode = 0;
+    }
+    g.setI("axesMode", mode);
   }
 
   public void setSelectionHalos(boolean TF) {
@@ -8137,10 +8124,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public void warn(String s) {
     if (!isPrintOnly)
       Logger.warn(s);
-  }
-
-  public String getMoInfo(int modelIndex) {
-    return ms.getMoInfo(modelIndex);
   }
 
   /**

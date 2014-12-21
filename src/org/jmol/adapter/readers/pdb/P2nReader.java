@@ -57,7 +57,7 @@ public class P2nReader extends PdbReader {
   protected void finalizeSubclassReader() throws Exception {
     finalizeReaderPDB();
     if (!useAltNames)
-      asc.setAtomSetAuxiliaryInfo("altName", altNames
+      asc.setCurrentModelInfo("altName", altNames
           .toArray(new String[altNames.size()]));
   }
 

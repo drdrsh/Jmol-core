@@ -25,7 +25,6 @@ package org.jmol.quantum;
 
 import org.jmol.api.MOCalculationInterface;
 import org.jmol.api.VolumeDataInterface;
-import org.jmol.c.QS;
 import org.jmol.java.BS;
 
 import javajs.util.Lst;
@@ -273,11 +272,11 @@ public class MOCalculation extends QuantumCalculation implements
   private double normalizeShell(int iShell) {
     double c = 0;
     int[] shell = shells.get(iShell);
-    basisType = QS.getItem(shell[1]);
+    int basisType = shell[1];
     gaussianPtr = shell[2];
     nGaussians = shell[3];
     doShowShellType = doDebug;
-    if (!setCoeffs(false))
+    if (!setCoeffs(basisType, false))
       return 0;
     for (int i = map.length; --i >= 0;)
       c += coeffs[i] * coeffs[i];
@@ -286,46 +285,45 @@ public class MOCalculation extends QuantumCalculation implements
 
   private int nGaussians;
   private boolean doShowShellType;
-  private QS basisType;
   
   private void processShell(int iShell) {
     int lastAtom = atomIndex;
     int[] shell = shells.get(iShell);
     atomIndex = shell[0] + firstAtomOffset;
-    basisType = QS.getItem(shell[1]);
+    int basisType = shell[1];
     gaussianPtr = shell[2];
     nGaussians = shell[3];
     doShowShellType = doDebug;
     if (atomIndex != lastAtom && (thisAtom = qmAtoms[atomIndex]) != null)
       thisAtom.setXYZ(this, true);
-    if (!setCoeffs(true))
+    if (!setCoeffs(shell[1], true))
       return;
     if (havePoints)
       setMinMax(-1);
     switch (basisType) {
-    case S:
+    case QS.S:
       addDataS();
       break;
-    case P:
+    case QS.P:
       addDataP();
       break;
-    case SP:
+    case QS.SP:
       addDataSP();
       break;
-    case D_SPHERICAL:
+    case QS.DS:
       addData5D();
       break;
-    case D_CARTESIAN:
+    case QS.DC:
         addData6D();
       break;
-    case F_SPHERICAL:
+    case QS.FS:
       addData7F();
       break;
-    case F_CARTESIAN:
+    case QS.FC:
         addData10F();
       break;
     default:
-      Logger.warn(" Unsupported basis type for atomno=" + (atomIndex + 1) + ": " + basisType.tag);
+      Logger.warn(" Unsupported basis type for atomno=" + (atomIndex + 1) + ": " + QS.getQuantumShellTag(basisType));
       break;
     }
   }
@@ -375,10 +373,9 @@ public class MOCalculation extends QuantumCalculation implements
   private final double[] coeffs = new double[10];
   private int[] map;
   
-  private boolean setCoeffs(boolean isProcess) {
+  private boolean setCoeffs(int type, boolean isProcess) {
     boolean isOK = false;
-    int mapType = basisType.id;
-    map = dfCoefMaps[mapType];
+    map = dfCoefMaps[type];
     if (isProcess && thisAtom == null) {
       moCoeff += map.length;
       return false;
@@ -387,13 +384,12 @@ public class MOCalculation extends QuantumCalculation implements
       isOK |= ((coeffs[i] = moCoefficients[map[i] + moCoeff++]) != 0);
     isOK &= (coeffs[0] != Integer.MIN_VALUE);
     if (isOK && doDebug && isProcess)
-      dumpInfo(mapType);
+      dumpInfo(type);
     return isOK;
   }
   
   private void addDataS() {
     double norm, c1;
-    
     if (doNormalize) {
       if (nwChemMode) {
         // contraction needs to be normalized

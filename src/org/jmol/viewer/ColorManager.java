@@ -32,7 +32,6 @@ import org.jmol.util.Elements;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.c.PAL;
-import org.jmol.c.StaticConstants;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
@@ -117,7 +116,7 @@ public class ColorManager {
   public short getColixBondPalette(Bond bond, int pid) {
     int argb = 0;
     switch (pid) {
-    case StaticConstants.PALETTE_ENERGY:
+    case PAL.PALETTE_ENERGY:
       return ce.getColorIndexFromPalette(bond.getEnergy(),
           -2.5f, -0.5f, ColorEncoder.BWR, false);
     }
@@ -133,11 +132,11 @@ public class ColorManager {
     float lo, hi;
     // we need to use the byte form here for speed
     switch (pid) {
-    case StaticConstants.PALETTE_PROPERTY:
+    case PAL.PALETTE_PROPERTY:
       return (colorData == null || atom.i >= colorData.length ? C.GRAY
           : ce.getColorIndex(colorData[atom.i]));
-    case StaticConstants.PALETTE_NONE:
-    case StaticConstants.PALETTE_CPK:
+    case PAL.PALETTE_NONE:
+    case PAL.PALETTE_CPK:
       // Note that CPK colors can be changed based upon user preference
       // therefore, a changeable colix is allocated in this case
       id = atom.getAtomicAndIsotopeNumber();
@@ -150,19 +149,19 @@ public class ColorManager {
             altArgbsCpk[id]);
       id = Elements.getElementNumber(id0);
       return g3d.getChangeableColix(id, argbsCpk[id]);
-    case StaticConstants.PALETTE_PARTIAL_CHARGE:
+    case PAL.PALETTE_PARTIAL_CHARGE:
       // This code assumes that the range of partial charges is [-1, 1].
       index = ColorEncoder.quantize4(atom.getPartialCharge(), -1, 1,
           JC.PARTIAL_CHARGE_RANGE_SIZE);
       return g3d.getChangeableColix(JC.PARTIAL_CHARGE_COLIX_RED + index,
           JC.argbsRwbScale[index]);
-    case StaticConstants.PALETTE_FORMAL_CHARGE:
+    case PAL.PALETTE_FORMAL_CHARGE:
       index = atom.getFormalCharge() - Elements.FORMAL_CHARGE_MIN;
       return g3d.getChangeableColix(JC.FORMAL_CHARGE_COLIX_RED + index,
           JC.argbsFormalCharge[index]);
-    case StaticConstants.PALETTE_TEMP:
-    case StaticConstants.PALETTE_FIXEDTEMP:
-      if (pid == StaticConstants.PALETTE_TEMP) {
+    case PAL.PALETTE_TEMP:
+    case PAL.PALETTE_FIXEDTEMP:
+      if (pid == PAL.PALETTE_TEMP) {
         lo = vwr.ms.getBfactor100Lo();
         hi = vwr.ms.getBfactor100Hi();
       } else {
@@ -171,21 +170,21 @@ public class ColorManager {
       }
       return ce.getColorIndexFromPalette(
           atom.getBfactor100(), lo, hi, ColorEncoder.BWR, false);
-    case StaticConstants.PALETTE_STRAIGHTNESS:
+    case PAL.PALETTE_STRAIGHTNESS:
       return ce.getColorIndexFromPalette(
           atom.getGroupParameter(T.straightness), -1, 1, ColorEncoder.BWR,
           false);
-    case StaticConstants.PALETTE_SURFACE:
+    case PAL.PALETTE_SURFACE:
       hi = vwr.ms.getSurfaceDistanceMax();
       return ce.getColorIndexFromPalette(
           atom.getSurfaceDistance100(), 0, hi, ColorEncoder.BWR, false);
-    case StaticConstants.PALETTE_AMINO:
+    case PAL.PALETTE_AMINO:
       return ce.getColorIndexFromPalette(atom.getGroupID(),
           0, 0, ColorEncoder.AMINO, false);
-    case StaticConstants.PALETTE_SHAPELY:
+    case PAL.PALETTE_SHAPELY:
       return ce.getColorIndexFromPalette(atom.getGroupID(),
           0, 0, ColorEncoder.SHAPELY, false);
-    case StaticConstants.PALETTE_GROUP:
+    case PAL.PALETTE_GROUP:
       // vwr.calcSelectedGroupsCount() must be called first ...
       // before we call getSelectedGroupCountWithinChain()
       // or getSelectedGropuIndexWithinChain
@@ -196,23 +195,23 @@ public class ColorManager {
           atom.getSelectedGroupIndexWithinChain(), 0,
           atom.getSelectedGroupCountWithinChain() - 1, ColorEncoder.BGYOR,
           false);
-    case StaticConstants.PALETTE_POLYMER:
+    case PAL.PALETTE_POLYMER:
       Model m = vwr.ms.am[atom.mi];
       return ce.getColorIndexFromPalette(
           atom.getPolymerIndexInModel(), 0, m.getBioPolymerCount() - 1,
           ColorEncoder.BGYOR, false);
-    case StaticConstants.PALETTE_MONOMER:
+    case PAL.PALETTE_MONOMER:
       // vwr.calcSelectedMonomersCount() must be called first ...
       return ce.getColorIndexFromPalette(
           atom.getSelectedMonomerIndexWithinPolymer(), 0,
           atom.getSelectedMonomerCountWithinPolymer() - 1, ColorEncoder.BGYOR,
           false);
-    case StaticConstants.PALETTE_MOLECULE:
+    case PAL.PALETTE_MOLECULE:
       return ce.getColorIndexFromPalette(
           modelSet.getMoleculeIndex(atom.i, true), 0,
           modelSet.getMoleculeCountInModel(atom.mi) - 1,
           ColorEncoder.ROYGB, false);
-    case StaticConstants.PALETTE_ALTLOC:
+    case PAL.PALETTE_ALTLOC:
       //very inefficient!
       modelIndex = atom.mi;
       return ce
@@ -221,7 +220,7 @@ public class ColorManager {
                   atom.altloc), 0,
               modelSet.getAltLocCountInModel(modelIndex), ColorEncoder.ROYGB,
               false);
-    case StaticConstants.PALETTE_INSERTION:
+    case PAL.PALETTE_INSERTION:
       //very inefficient!
       modelIndex = atom.mi;
       return ce.getColorIndexFromPalette(
@@ -229,18 +228,18 @@ public class ColorManager {
               atom.getInsertionCode()), 0,
           modelSet.getInsertionCountInModel(modelIndex), ColorEncoder.ROYGB,
           false);
-    case StaticConstants.PALETTE_JMOL:
+    case PAL.PALETTE_JMOL:
       id = atom.getAtomicAndIsotopeNumber();
       argb = getJmolOrRasmolArgb(id, T.jmol);
       break;
-    case StaticConstants.PALETTE_RASMOL:
+    case PAL.PALETTE_RASMOL:
       id = atom.getAtomicAndIsotopeNumber();
       argb = getJmolOrRasmolArgb(id, T.rasmol);
       break;
-    case StaticConstants.PALETTE_STRUCTURE:
+    case PAL.PALETTE_STRUCTURE:
       argb = atom.getProteinStructureSubType().getColor();
       break;
-    case StaticConstants.PALETTE_CHAIN:
+    case PAL.PALETTE_CHAIN:
       int chain = atom.getChainID();
       if (ColorEncoder.argbsChainAtom == null) {
         ColorEncoder.argbsChainAtom = getArgbs(T.atoms);

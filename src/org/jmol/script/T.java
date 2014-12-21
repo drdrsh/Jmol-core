@@ -384,7 +384,8 @@ public class T {
   public final static int isosurface   = shapeCommand | 12;
   public final static int lcaocartoon  = shapeCommand | 14;
   public final static int measurements = shapeCommand | 16 | setparam;
-  public final static int mo           = shapeCommand | 18 | expression;
+  public final static int mo           = shapeCommand | 18 | misc;
+  public final static int nbo          = shapeCommand | 19 | misc;
   public final static int pmesh        = shapeCommand | 20;
   public final static int plot3d       = shapeCommand | 22;
   public final static int polyhedra    = shapeCommand | 24;
@@ -1757,6 +1758,7 @@ public class T {
         "moveTo",
         "navigate",
         "navigation",
+        "nbo",
         "origin",
         "out",
         "parallel",
@@ -2779,6 +2781,7 @@ public class T {
         moveto,                             // "moveTo"
         navigate,                           // "navigate"
         -1,                                 // "navigation"
+        nbo,                                // "nbo"
         origin,                             // "origin"
         out,                                // "out"
         parallel,                           // "parallel"

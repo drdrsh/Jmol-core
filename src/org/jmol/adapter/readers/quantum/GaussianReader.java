@@ -36,9 +36,9 @@ import java.util.Hashtable;
 import java.util.Map;
 
 
-import org.jmol.api.JmolAdapter;
 import org.jmol.java.BS;
 
+import org.jmol.quantum.QS;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import javajs.util.V3;
@@ -387,9 +387,9 @@ public class GaussianReader extends MOReader {
           String oType = tokens[0];
           if (doSphericalF && oType.indexOf("F") >= 0 || doSphericalD
               && oType.indexOf("D") >= 0)
-            slater[1] = JmolAdapter.getQuantumShellTagIDSpherical(oType);
+            slater[1] = BasisFunctionReader.getQuantumShellTagIDSpherical(oType);
           else
-            slater[1] = JmolAdapter.getQuantumShellTagID(oType);
+            slater[1] = BasisFunctionReader.getQuantumShellTagID(oType);
 
           int nGaussians = parseIntStr(tokens[1]);
           slater[2] = gaussianCount; // or parseInt(tokens[7]) - 1
@@ -420,9 +420,9 @@ public class GaussianReader extends MOReader {
         String oType = tokens[4];
         if (doSphericalF && oType.indexOf("F") >= 0 || doSphericalD
             && oType.indexOf("D") >= 0)
-          slater[1] = JmolAdapter.getQuantumShellTagIDSpherical(oType);
+          slater[1] = BasisFunctionReader.getQuantumShellTagIDSpherical(oType);
         else
-          slater[1] = JmolAdapter.getQuantumShellTagID(oType);
+          slater[1] = BasisFunctionReader.getQuantumShellTagID(oType);
 
         int nGaussians = parseIntStr(tokens[5]);
         slater[2] = gaussianCount; // or parseInt(tokens[7]) - 1
@@ -533,10 +533,10 @@ public class GaussianReader extends MOReader {
         String type = tokens[tokens.length - nThisLine - 1].substring(1);
         if (PT.isDigit(type.charAt(0)))
           type = type.substring(1); // "11XX"
-        if (!isQuantumBasisSupported(type.charAt(0))
+        if (!QS.isQuantumBasisSupported(type.charAt(0))
             && "XYZ".indexOf(type.charAt(0)) >= 0)
           type = (type.length() == 2 ? "D" : "F") + type;
-        if (!isQuantumBasisSupported(type.charAt(0)))
+        if (!QS.isQuantumBasisSupported(type.charAt(0)))
           continue;
         tokens = getStrings(line.substring(line.length() - 10 * nThisLine),
             nThisLine, 10);
@@ -652,7 +652,7 @@ public class GaussianReader extends MOReader {
         parseFloatStr(tokens[3]), parseFloatStr(tokens[5]));
     Logger.info("Molecular dipole for model " + asc.atomSetCount
         + " = " + dipole);
-    asc.setAtomSetAuxiliaryInfo("dipole", dipole);
+    asc.setCurrentModelInfo("dipole", dipole);
   }
 
   

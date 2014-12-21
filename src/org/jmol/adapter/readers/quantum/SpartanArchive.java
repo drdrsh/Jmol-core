@@ -39,6 +39,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 
+import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
 import javajs.util.V3;
 
@@ -57,10 +58,6 @@ class SpartanArchive {
   private String endCheck;
   
   private BasisFunctionReader r;
-
-  SpartanArchive(BasisFunctionReader r) {
-    initialize(r, "");
-  }
 
   SpartanArchive(BasisFunctionReader r, String bondData, String endCheck) {
     initialize(r, bondData);
@@ -108,7 +105,7 @@ class SpartanArchive {
   private void readEnergy() throws Exception {
     String[] tokens = PT.getTokens(readLine());
     float value = parseFloat(tokens[0]);
-    r.asc.setAtomSetAuxiliaryInfo("energy", Float.valueOf(value));
+    r.asc.setCurrentModelInfo("energy", Float.valueOf(value));
     if (r instanceof SpartanSmolReader) {
       String prefix = ((SpartanSmolReader)r).constraints;
       r.asc.setAtomSetName(prefix + (prefix.length() == 0 ? "" : " ") + "Energy=" + value + " KJ");
@@ -202,7 +199,6 @@ class SpartanArchive {
   //private static String DC_LIST = "DXX   DXY   DYY   DXZ   DYZ   DZZ";
   //private static String FC_LIST = "XXX   XXY   XYY   YYY   XXZ   XYZ   YYZ   XZZ   YZZ   ZZZ";
 
-  @SuppressWarnings("incomplete-switch")
   void readBasis() throws Exception {
     /*
      * standard Gaussian format:
@@ -233,22 +229,22 @@ class SpartanArchive {
     // }
     for (int i = 0; i < shellCount; i++) {
       String[] tokens = PT.getTokens(readLine());
-      boolean flag4 = (tokens[4].charAt(0) == '1');
+      boolean isSpherical = (tokens[4].charAt(0) == '1');
       int[] slater = new int[4];
       slater[0] = parseInt(tokens[3]) - 1; //atom pointer; 1-based
       int iBasis = parseInt(tokens[0]); //0 = S, 1 = SP, 2 = D, 3 = F
       switch (iBasis) {
       case 0:
-        iBasis = JmolAdapter.SHELL_S;
+        iBasis = QS.S;
         break;
       case 1:
-        iBasis = JmolAdapter.SHELL_SP;
+        iBasis = QS.SP;
         break;
       case 2:
-        iBasis = (flag4 ? JmolAdapter.SHELL_D_SPHERICAL : JmolAdapter.SHELL_D_CARTESIAN);
+        iBasis = (isSpherical ? QS.DS : QS.DC);
         break;
       case 3:
-        iBasis = (flag4 ? JmolAdapter.SHELL_F_SPHERICAL : JmolAdapter.SHELL_F_CARTESIAN);
+        iBasis = (isSpherical ? QS.FS : QS.FC);
         break;
       }
       slater[1] = iBasis;
@@ -266,24 +262,24 @@ class SpartanArchive {
       data[0] = alpha;
       //we put D and F into coef 1. This may change if I find that Gaussian output
       //lists D and F in columns 3 and 4 as well.
-      switch (JmolAdapter.getShellEnumeration(typeArray[i])) {
-      case S:
+      switch (typeArray[i]) {
+      case QS.S:
         data[1] = parseFloat(tokens[0]);
         break;
-      case SP:
+      case QS.SP:
         data[1] = parseFloat(tokens[0]);
         data[2] = parseFloat(tokens[1]);
         if (data[1] == 0) {
           data[1] = data[2];
-          typeArray[i] = JmolAdapter.SHELL_P;
+          typeArray[i] = QS.SP;
         }
         break;
-      case D_CARTESIAN:
-      case D_SPHERICAL:
+      case QS.DC:
+      case QS.DS:
         data[1] = parseFloat(tokens[2]);
         break;
-      case F_CARTESIAN:
-      case F_SPHERICAL:
+      case QS.FC:
+      case QS.FS:
         data[1] = parseFloat(tokens[3]);
         break;
       }
@@ -292,27 +288,27 @@ class SpartanArchive {
     int nCoeff = 0;
     for (int i = 0; i < shellCount; i++) {
       int[] slater = shells.get(i);
-      switch(JmolAdapter.getShellEnumeration(typeArray[slater[2]])) {
-      case S:
+      switch(typeArray[slater[2]]) {
+      case QS.S:
         nCoeff++;
         break;
-      case P:
-        slater[1] = JmolAdapter.SHELL_P;
+      case QS.P:
+        slater[1] = QS.P;
         nCoeff += 3;
         break;
-      case SP:
+      case QS.SP:
         nCoeff += 4;
         break;
-      case D_SPHERICAL:
+      case QS.DS:
         nCoeff += 5;
         break;
-      case D_CARTESIAN:
+      case QS.DC:
         nCoeff += 6;
         break;
-      case F_SPHERICAL:
+      case QS.FS:
         nCoeff += 7;
         break;
-      case F_CARTESIAN:
+      case QS.FC:
         nCoeff += 10;
         break;
       }
@@ -321,12 +317,12 @@ class SpartanArchive {
     if (isD5F7)
     for (int i = 0; i < shellCount; i++) {
       int[] slater = shells.get(i);
-      switch (JmolAdapter.getShellEnumeration(typeArray[i])) {
-      case D_CARTESIAN:
-        slater[1] = JmolAdapter.SHELL_D_SPHERICAL;
+      switch (typeArray[i]) {
+      case QS.DC:
+        slater[1] = QS.DS;
         break;
-      case F_CARTESIAN:
-        slater[1] = JmolAdapter.SHELL_F_SPHERICAL;
+      case QS.FC:
+        slater[1] = QS.FS;
         break;
       }
     }
@@ -398,7 +394,7 @@ class SpartanArchive {
       return;
     V3 dipole = V3.new3(parseFloat(tokens[0]),
         parseFloat(tokens[1]), parseFloat(tokens[2]));
-    r.asc.setAtomSetAuxiliaryInfo("dipole", dipole);
+    r.asc.setCurrentModelInfo("dipole", dipole);
   }
 
   private void readProperty() throws Exception {

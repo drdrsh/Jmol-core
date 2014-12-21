@@ -24,6 +24,7 @@
 
 package org.jmol.scriptext;
 
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.Interface;
@@ -34,6 +35,7 @@ import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.VDW;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
+import org.jmol.quantum.QS;
 import org.jmol.script.JmolCmdExtension;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptError;
@@ -48,6 +50,7 @@ import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
 import org.jmol.util.Parser;
 
+import javajs.J2SIgnoreImport;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.SB;
@@ -65,6 +68,7 @@ import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.TempArray;
 import org.jmol.viewer.JC;
 
+@J2SIgnoreImport(org.jmol.quantum.QS.class)
 public class IsoExt extends CmdExt {
 
   public IsoExt() {}
@@ -101,7 +105,8 @@ public class IsoExt extends CmdExt {
       lcaoCartoon();
       break;
     case JC.SHAPE_MO:
-      mo(b);
+    case JC.SHAPE_NBO:
+      mo(b, iTok);
       break;
     }
     return null;
@@ -578,10 +583,11 @@ public class IsoExt extends CmdExt {
     return true;
   }
 
-  private void mo(boolean isInitOnly) throws ScriptException {
+  private void mo(boolean isInitOnly, int iShape) throws ScriptException {
     ScriptEval eval = e;
     int offset = Integer.MAX_VALUE;
     boolean isNegOffset = false;
+    String nboType = null; 
     BS bsModels = vwr.getVisibleFramesBitSet();
     Lst<Object[]> propertyList = new Lst<Object[]>();
     int i0 = 1;
@@ -593,17 +599,17 @@ public class IsoExt extends CmdExt {
       bsModels.set(i0);
       i0 = 3;
     }
+    eval.sm.loadShape(iShape);
     for (int iModel = bsModels.nextSetBit(0); iModel >= 0; iModel = bsModels
         .nextSetBit(iModel + 1)) {
-      eval.sm.loadShape(JC.SHAPE_MO);
       int i = i0;
-      if (tokAt(i) == T.list && listIsosurface(JC.SHAPE_MO))
+      if (tokAt(i) == T.list && listIsosurface(iShape))
         return;
-      setShapeProperty(JC.SHAPE_MO, "init", Integer.valueOf(iModel));
+      setShapeProperty(iShape, "init", Integer.valueOf(iModel));
       String title = null;
-      int moNumber = ((Integer) getShapeProperty(JC.SHAPE_MO, "moNumber"))
+      int moNumber = ((Integer) getShapeProperty(iShape, "moNumber"))
           .intValue();
-      float[] linearCombination = (float[]) getShapeProperty(JC.SHAPE_MO,
+      float[] linearCombination = (float[]) getShapeProperty(iShape,
           "moLinearCombination");
       if (isInitOnly)
         return;// (moNumber != 0);
@@ -613,6 +619,13 @@ public class IsoExt extends CmdExt {
       Object propertyValue = null;
 
       switch (getToken(i).tok) {
+      case T.type:
+        if (iShape == T.mo) {
+          mo(isInitOnly, JC.SHAPE_NBO);
+          return;
+        }
+        nboType = paramAsStr(++i).toUpperCase(); 
+        break;
       case T.cap:
       case T.slab:
         propertyName = (String) eval.theToken.value;
@@ -657,12 +670,11 @@ public class IsoExt extends CmdExt {
         linearCombination = moCombo(propertyList);
         break;
       case T.color:
-        setColorOptions(null, i + 1, JC.SHAPE_MO, 2);
+        setColorOptions(null, i + 1, iShape, 2);
         break;
       case T.plane:
-        // plane {X, Y, Z, W}
         propertyName = "plane";
-        propertyValue = eval.planeParameter(i);
+        propertyValue = (tokAt(e.iToken = ++i) == T.none ? null : eval.planeParameter(i));
         break;
       case T.point:
         addShapeProperty(propertyList, "randomSeed",
@@ -718,28 +730,91 @@ public class IsoExt extends CmdExt {
           break;
         }
         int ipt = eval.iToken;
-        if (!eval.setMeshDisplayProperty(JC.SHAPE_MO, 0, eval.theTok))
+        if (!eval.setMeshDisplayProperty(iShape, 0, eval.theTok))
           invArg();
-        setShapeProperty(JC.SHAPE_MO, "setProperties", propertyList);
-        eval.setMeshDisplayProperty(JC.SHAPE_MO, ipt, tokAt(ipt));
+        setShapeProperty(iShape, "setProperties", propertyList);
+        eval.setMeshDisplayProperty(iShape, ipt, tokAt(ipt));
         return;
       }
       if (propertyName != null)
         addShapeProperty(propertyList, propertyName, propertyValue);
-      if (moNumber != Integer.MAX_VALUE || linearCombination != null) {
-        if (tokAt(eval.iToken + 1) == T.string)
+      boolean haveMO = (moNumber != Integer.MAX_VALUE || linearCombination != null);
+      if (chk)
+        return;        
+      if (nboType != null || haveMO) {
+        if (haveMO && tokAt(eval.iToken + 1) == T.string)
           title = paramAsStr(++eval.iToken);
         eval.setCursorWait(true);
         setMoData(propertyList, moNumber, linearCombination, offset,
-            isNegOffset, iModel, title);
-        addShapeProperty(propertyList, "finalize", null);
+            isNegOffset, iModel, title, nboType);
+        if (haveMO)
+          addShapeProperty(propertyList, "finalize", null);
       }
       if (propertyList.size() > 0)
-        setShapeProperty(JC.SHAPE_MO, "setProperties", propertyList);
+        setShapeProperty(iShape, "setProperties", propertyList);
       propertyList.clear();
     }
   }
 
+
+  @SuppressWarnings("unchecked")
+  private void setNBOType(Map<String, Object> moData, String type)
+      throws ScriptException {
+    //         31    32    33    34    35    36    37    38    39    40    41
+    int ext = ";AO;  ;PNAO;;NAO; ;PNHO;;NHO; ;PNBO;;NBO; ;PNLMO;NLMO;;MO;  ;NO;"
+        .indexOf(";" + type + ";");
+    if (ext < 0)
+      invArg();
+    ext = ext / 6 + 31;
+    String[] nboLabels = (String[]) moData.get("nboLabels");
+    if (nboLabels == null)
+      error(ScriptError.ERROR_moModelError);
+    if (chk)
+      return;
+    try {
+      Lst<Map<String, Object>> orbitals = (Lst<Map<String, Object>>) moData.get(type + "_coefs");
+      if (orbitals == null) {
+        String fileName = moData.get("nboRoot") + "." + ext;
+        String data = vwr.getFileAsString3(fileName, true, null);
+        if (data == null)
+          error(ScriptError.ERROR_moModelError);
+        orbitals = (Lst<Map<String, Object>>) moData.get("mos");
+        Object dfCoefMaps = orbitals.get(0).get("dfCoefMaps");
+        int n = orbitals.size();
+        orbitals = new Lst<Map<String, Object>>();
+        for (int i = n; --i >= 0;) {
+          Map<String, Object> mo = new Hashtable<String, Object>();
+          orbitals.addLast(mo);
+          mo.put("dfCoefMaps", dfCoefMaps);
+        }
+        ((QS) Interface.getInterface("org.jmol.quantum.QS", vwr, "script")).setNboLabels(nboLabels, n, orbitals, 0, type);
+        data = data.substring(data.lastIndexOf("--") + 2);
+        int len = data.length();
+        int[] next = new int[1];
+        for (int i = 0; i < n; i++) {
+          Map<String, Object> mo = orbitals.get(i);
+          float[] coefs = new float[n];
+          mo.put("coefficients", coefs);
+          for (int j = 0; j < n; j++)
+            coefs[j] = PT.parseFloatChecked(data, len, next, false);
+        }
+        if (type.equals("NBO")) {
+          float[] occupancies = new float[n];
+          for (int j = 0; j < n; j++)
+            occupancies[j] = PT.parseFloatChecked(data, len, next, false);
+          for (int i = 0; i < n; i++) {
+            Map<String, Object> mo = orbitals.get(i);
+            mo.put("occupancy", Float.valueOf(occupancies[i]));
+          }
+        }
+        moData.put(type + "_coefs", orbitals);
+      }
+      moData.put("nboType", type);
+      moData.put("mos", orbitals);
+    } catch (Exception e) {
+      error(ScriptError.ERROR_moModelError);
+    }
+  }
 
   private float[] moCombo(Lst<Object[]> propertyList) {
     if (tokAt(e.iToken + 1) != T.squared)
@@ -765,10 +840,8 @@ public class IsoExt extends CmdExt {
   @SuppressWarnings("unchecked")
   private void setMoData(Lst<Object[]> propertyList, int moNumber, float[] lc,
                          int offset, boolean isNegOffset, int modelIndex,
-                         String title) throws ScriptException {
+                         String title, String nboType) throws ScriptException {
     ScriptEval eval = e;
-    if (chk)
-      return;
     if (modelIndex < 0) {
       modelIndex = vwr.am.cmi;
       if (modelIndex < 0)
@@ -777,6 +850,13 @@ public class IsoExt extends CmdExt {
     }
     Map<String, Object> moData = (Map<String, Object>) vwr
         .ms.getInfo(modelIndex, "moData");
+    if (moData == null)
+      error(ScriptError.ERROR_moModelError);
+    if (nboType != null) {
+      setNBOType(moData, nboType);
+      if (lc == null && moNumber == Integer.MAX_VALUE)
+        return;
+    }
     Lst<Map<String, Object>> mos = null;
     Map<String, Object> mo;
     Float f;
@@ -784,8 +864,6 @@ public class IsoExt extends CmdExt {
     if (lc == null || lc.length < 2) {
       if (lc != null && lc.length == 1)
         offset = 0;
-      if (moData == null)
-        error(ScriptError.ERROR_moModelError);
       int lastMoNumber = (moData.containsKey("lastMoNumber") ? ((Integer) moData
           .get("lastMoNumber")).intValue() : 0);
       int lastMoCount = (moData.containsKey("lastMoCount") ? ((Integer) moData
@@ -1584,7 +1662,7 @@ public class IsoExt extends CmdExt {
               .appendI(seed);
         }
         setMoData(propertyList, moNumber, linearCombination, offset,
-            isNegOffset, modelIndex, null);
+            isNegOffset, modelIndex, null, null);
         surfaceObjectSeen = true;
         continue;
       case T.nci:
@@ -1808,7 +1886,7 @@ public class IsoExt extends CmdExt {
       case T.ed:
         sbCommand.append(" ed");
         // electron density - never documented
-        setMoData(propertyList, -1, null, 0, false, modelIndex, null);
+        setMoData(propertyList, -1, null, 0, false, modelIndex, null, null);
         surfaceObjectSeen = true;
         continue;
       case T.debug:
@@ -2972,12 +3050,26 @@ public class IsoExt extends CmdExt {
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
-      switch (getToken(i).tok) {
-      case T.varray:
+      int tok = getToken(i).tok;
+      switch (tok) {
       case T.leftsquare:
       case T.spacebeforesquare:
+      case T.varray:
         if (data != null || isWild)
           invArg();
+        int pt = (tok == T.leftsquare ? i + 1 : i + 2);
+        if (eval.optParameterAsString(pt).toUpperCase().equals("BEGIN")) {
+          Object[] key = new Object[1];
+          for (int j = pt; j < slen; j++) {
+            if (tokAt(j) != T.rightsquare && !isFloatParameter(j)) {
+              key[0] = getToken(j).value.toString();
+              if (eval.getShapePropertyData(JC.SHAPE_CGO, "key", key))
+                st[j] = SV.newI(((Integer)key[0]).intValue());
+              else
+                Logger.error("CGO unknown: " + st[j].value);
+            }
+          }
+        }
         data = eval.listParameter(i, 2, Integer.MAX_VALUE);
         i = eval.iToken;
         continue;

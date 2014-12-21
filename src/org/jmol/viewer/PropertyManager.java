@@ -1546,7 +1546,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("displayModelNumber", vwr.getModelNumberDotted(am.cmi));
     info.put("displayModelName", (am.cmi >= 0 ? vwr.getModelName(am.cmi) : ""));
     info.put("animationFps", Integer.valueOf(am.animationFps));
-    info.put("animationReplayMode", am.animationReplayMode.name());
+    info.put("animationReplayMode", T.nameOf(am.animationReplayMode));
     info.put("firstFrameDelay", Float.valueOf(am.firstFrameDelay));
     info.put("lastFrameDelay", Float.valueOf(am.lastFrameDelay));
     info.put("animationOn", Boolean.valueOf(am.animationOn));

@@ -595,7 +595,7 @@ public class StateCreator extends JmolStateCreator {
     app(commands, "animation DIRECTION "
         + (am.animationDirection == 1 ? "+1" : "-1"));
     app(commands, "animation FPS " + am.animationFps);
-    app(commands, "animation MODE " + am.animationReplayMode.name() + " "
+    app(commands, "animation MODE " + T.nameOf(am.animationReplayMode) + " "
         + am.firstFrameDelay + " " + am.lastFrameDelay);
     if (am.morphCount > 0)
       app(commands, "animation MORPH " + am.morphCount);
@@ -660,14 +660,14 @@ public class StateCreator extends JmolStateCreator {
         list[n++] = key + " " + value;
       }
     switch (global.axesMode) {
-    case UNITCELL:
+    case T.axesunitcell:
       list[n++] = "set axes unitcell";
       break;
-    case BOUNDBOX:
-      list[n++] = "set axes window";
+    case T.axesmolecular:
+      list[n++] = "set axes molecular";
       break;
     default:
-      list[n++] = "set axes molecular";
+      list[n++] = "set axes window";
     }
 
     Arrays.sort(list, 0, n);

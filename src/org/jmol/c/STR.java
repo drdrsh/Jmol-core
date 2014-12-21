@@ -25,8 +25,6 @@
 
 package org.jmol.c;
 
-
-
 public enum STR {
   
   // Note: These id numbers are non-negotiable. They are documented and 

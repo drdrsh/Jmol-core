@@ -102,7 +102,7 @@ public class XmlOdysseyReader extends XmlReader {
       parent.setUnitCellItem(4, 90);
       parent.setUnitCellItem(5, 90);
       P3 pt = P3.new3(-x / 2, -y / 2, -z / 2);
-      asc.setAtomSetAuxiliaryInfo("periodicOriginXyz", pt);
+      asc.setCurrentModelInfo("periodicOriginXyz", pt);
       Atom[] atoms = asc.atoms;
       for (int i = asc.ac; --i >= 0;) {
         atoms[i].sub(pt);
@@ -122,7 +122,7 @@ public class XmlOdysseyReader extends XmlReader {
       if (modelName != null)
         asc.setAtomSetName(modelName);
       if (formula != null)
-        asc.setAtomSetAuxiliaryInfo("formula", formula);
+        asc.setCurrentModelInfo("formula", formula);
     }
     if ("title".equals(localName) || "formula".equals(localName)
         || "phase".equals(localName))

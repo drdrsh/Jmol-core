@@ -144,8 +144,14 @@ public class SpartanSmolReader extends SpartanInputReader {
       spartanArchive.addBonds(bondData, 0);
     if (moData != null) {
       Float n = (Float) asc.atomSetInfo.get("HOMO_N");
-      if (n != null)
-        moData.put("HOMO", Integer.valueOf(n.intValue()));
+      if (n != null) {
+        int i = n.intValue();
+        moData.put("HOMO", Integer.valueOf(i));
+        // TODO: This would take some work -- SOMO, degenerate HOMO etc.
+        //for (int j = orbitals.size(); --j >= 0;)
+          //orbitals.get(j).put("occupancy", Float.valueOf(j > i ? 0 : 2));
+
+      }
     }
   }
 

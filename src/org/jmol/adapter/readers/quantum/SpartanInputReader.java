@@ -82,7 +82,7 @@ public abstract class SpartanInputReader extends BasisFunctionReader {
     rd();
     if (constraints.length() == 0)
       return;
-    asc.setAtomSetAuxiliaryInfo("constraints", constraints);
+    asc.setCurrentModelInfo("constraints", constraints);
     asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "EnergyProfile");
     asc.setAtomSetModelProperty("Constraint", constraints);
   }

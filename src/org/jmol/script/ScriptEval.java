@@ -37,7 +37,6 @@ import org.jmol.api.JmolScriptFunction;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
-import org.jmol.c.ANIM;
 import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
@@ -2605,6 +2604,9 @@ public class ScriptEval extends ScriptExpr {
     case T.mo:
       iShape = JC.SHAPE_MO;
       break;
+    case T.nbo:
+      iShape = JC.SHAPE_NBO;
+      break;
     case T.plot3d:
       iShape = JC.SHAPE_PLOT3D;
       break;
@@ -2722,6 +2724,7 @@ public class ScriptEval extends ScriptExpr {
     case T.isosurface:
     case T.lcaocartoon:
     case T.mo:
+    case T.nbo:
     case T.plot3d:
     case T.pmesh:
       getIsoExt().dispatch(iShape, false, st);
@@ -2772,17 +2775,13 @@ public class ScriptEval extends ScriptExpr {
       endDelay = 1;
       if (slen > 5)
         bad();
-      ANIM animationMode = null;
-      switch (T.getTokFromName(paramAsStr(2))) {
+      int animationMode = T.getTokFromName(paramAsStr(2));
+      switch (animationMode) {
       case T.once:
-        animationMode = ANIM.ONCE;
         startDelay = endDelay = 0;
         break;
       case T.loop:
-        animationMode = ANIM.LOOP;
-        break;
       case T.palindrome:
-        animationMode = ANIM.PALINDROME;
         break;
       default:
         invArg();
@@ -4308,7 +4307,7 @@ public class ScriptEval extends ScriptExpr {
         cmdZap(false);
         return;
       }
-      if (filePt == i)
+      if (filePt == i || localName != null)
         i++;
 
       // for whatever reason, we don't allow a filename with [] in it.
@@ -4353,10 +4352,8 @@ public class ScriptEval extends ScriptExpr {
         }
         htParams.put(appendedKey, appendedData);
       }
-
       if (tokAt(i) == T.filter)
         filter = stringParameter(++i);
-
     } else {
       Lst<String> fNames = new Lst<String>();
       if (i == 1) {
@@ -8194,8 +8191,8 @@ public class ScriptEval extends ScriptExpr {
         break;
       }
     }
-    if (!chk && shapeType == JC.SHAPE_MO
-        && getCmdExt().dispatch(JC.SHAPE_MO, true, st) == null)
+    if (!chk && (shapeType == JC.SHAPE_MO || shapeType == JC.SHAPE_NBO)
+        && getCmdExt().dispatch(shapeType, true, st) == null)
       return;
     boolean isTranslucent = (theTok == T.translucent);
     if (isTranslucent || theTok == T.opaque) {
@@ -8637,6 +8634,7 @@ public class ScriptEval extends ScriptExpr {
     return (getShapePropertyData(JC.SHAPE_ISOSURFACE, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_PMESH, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_CONTACT, "getBoundingBox", data)
+        || getShapePropertyData(JC.SHAPE_NBO, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_MO, "getBoundingBox", data) ? (P3[]) data[2]
         : null);
   }
@@ -8652,12 +8650,13 @@ public class ScriptEval extends ScriptExpr {
         || getShapePropertyData(JC.SHAPE_ISOSURFACE, "getCenter", data)
         || getShapePropertyData(JC.SHAPE_PMESH, "getCenter", data)
         || getShapePropertyData(JC.SHAPE_CONTACT, "getCenter", data)
+        || getShapePropertyData(JC.SHAPE_NBO, "getCenter", data)
         || getShapePropertyData(JC.SHAPE_MO, "getCenter", data) ? (P3) data[2]
         : null);
   }
 
   @Override
-  protected P4 getPlaneForObject(String id, V3 vAB, V3 vAC) {
+  protected P4 getPlaneForObject(String id, V3 vAB) {
 
     // called by ScriptParam
     
@@ -8669,10 +8668,8 @@ public class ScriptEval extends ScriptExpr {
       if (points == null || points.length < 3 || points[0] == null
           || points[1] == null || points[2] == null)
         break;
-      P4 plane = new P4();
-      Measure.getPlaneThroughPoints(points[0], points[1], points[2],
-          new V3(), vAB, vAC, plane);
-      return plane;
+      return Measure.getPlaneThroughPoints(points[0], points[1], points[2],
+          new V3(), vAB, new P4());
     case JC.SHAPE_ISOSURFACE:
       setShapeProperty(JC.SHAPE_ISOSURFACE, "thisID", id);
       return (P4) getShapeProperty(JC.SHAPE_ISOSURFACE, "plane");
@@ -9017,10 +9014,17 @@ public class ScriptEval extends ScriptExpr {
       case JC.SHAPE_ELLIPSOIDS:
         iShape = JC.SHAPE_MAX_HAS_ID;
       }
-      if (--iShape < JC.SHAPE_MIN_HAS_ID)
-        break;
-      if (iShape == JC.SHAPE_MO)
+      switch (--iShape) {
+      // skip MO and NBO?
+      case JC.SHAPE_MO:
         iShape--;
+        break;
+      case JC.SHAPE_NBO:
+        iShape -= 2;
+        break;
+      }
+      if (iShape < JC.SHAPE_MIN_HAS_ID)
+        break;        
     }
     return s;
   }

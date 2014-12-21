@@ -155,7 +155,6 @@ class IsoSolventReader extends AtomDataReader {
   
   final private P3 ptS1 = new P3();
   final private P3 ptS2 = new P3();
-  final private V3 vTemp3 = new V3();
   final protected V3 vTemp = new V3();
   final protected P4 plane = new P4();
   final protected P3 ptTemp2 = new P3();
@@ -939,7 +938,7 @@ class IsoSolventReader extends AtomDataReader {
             if (firstPass && value > 0)
               bsSurfaceDone.set(ipt);
             if (Measure.isInTetrahedron(ptV, ptA, ptB, ptC, ptS, plane, vTemp,
-                vTemp2, vTemp3, false)) {
+                vTemp2, false)) {
               if (!firstPass ? !bsSurfaceDone.get(ipt) && value < 0
                   && value > -volumeData.maxGrid * 1.8f
                   && (value > v) == bsThisPass.get(ipt)

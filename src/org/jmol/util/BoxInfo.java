@@ -121,7 +121,6 @@ public class BoxInfo {
     P4[] faces = new P4[6];
     V3 vNorm = new V3();
     V3 vAB = new V3();
-    V3 vAC = new V3();
     P3 va = new P3();
     P3 vb = new P3();
     P3 vc = new P3();
@@ -141,7 +140,7 @@ public class BoxInfo {
       va.setT(vertices[facePoints[i].x]);
       vb.setT(vertices[facePoints[i].y]);
       vc.setT(vertices[facePoints[i].z]);
-      Measure.getPlaneThroughPoints(va, vb, vc, vNorm, vAB, vAC, faces[i] = new P4());
+      faces[i] = Measure.getPlaneThroughPoints(va, vb, vc, vNorm, vAB, new P4());
     }
     return faces;
   }

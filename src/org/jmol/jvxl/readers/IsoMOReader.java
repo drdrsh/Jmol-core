@@ -35,6 +35,7 @@ import javajs.util.Measure;
 import javajs.util.PT;
 import javajs.util.T3;
 
+import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
@@ -43,7 +44,6 @@ import javajs.util.V3;
 import org.jmol.api.Interface;
 import org.jmol.api.MOCalculationInterface;
 import org.jmol.api.QuantumPlaneCalculationInterface;
-import org.jmol.c.QS;
 import org.jmol.jvxl.data.VolumeData;
 
 class IsoMOReader extends AtomDataReader {
@@ -94,7 +94,7 @@ class IsoMOReader extends AtomDataReader {
         : "quantum.MOCalculation");
     if (haveVolumeData) {
       for (int i = params.title.length; --i >= 0;)
-        fixTitleLine2(i, mo);
+        fixTitleLine(i, mo);
     } else {
       q = (MOCalculationInterface) Interface.getOption(className, 
           (Viewer) sg.atomDataServer, "file");
@@ -102,7 +102,7 @@ class IsoMOReader extends AtomDataReader {
         qpc = (QuantumPlaneCalculationInterface) q;
       } else if (linearCombination == null) {
         for (int i = params.title.length; --i >= 0;)
-          fixTitleLine2(i, mo);
+          fixTitleLine(i, mo);
         coef = (float[]) mo.get("coefficients");
         dfCoefMaps = (int[][]) mo.get("dfCoefMaps");
       } else {
@@ -114,7 +114,7 @@ class IsoMOReader extends AtomDataReader {
           coefs[j - 1] = (float[]) mos.get(j - 1).get("coefficients");
         }
         for (int i = params.title.length; --i >= 0;)
-          fixTitleLine2(i, null);
+          fixTitleLine(i, null);
       }
       isElectronDensityCalc = (coef == null && linearCombination == null && !isNci);
     }
@@ -141,11 +141,21 @@ class IsoMOReader extends AtomDataReader {
     return true;
   }
 
-  private void fixTitleLine2(int iLine, Map<String, Object> mo) {
-    // see Parameters.Java for defaults here. 
-    if (!fixTitleLine(iLine))
+  private void fixTitleLine(int iLine, Map<String, Object> mo) {
+    // see Parameters.Java for defaults here.
+    if (params.title == null)
       return;
     String line = params.title[iLine];
+    if (line.indexOf(" MO ") >= 0) {
+      String nboType = (String) params.moData.get("nboType");
+      if (nboType != null)
+        line = PT.rep(line, " MO ", " " + nboType + " ");
+    }
+    if (line.indexOf("%M") > 0)
+      line = params.title[iLine] = PT.formatStringS(line, "M", atomData.modelName);
+    if (line.indexOf("%F") > 0)
+      line = params.title[iLine] = PT.formatStringS(line, "F",
+          atomData.fileName);
     int pt = line.indexOf("%");
     if (line.length() == 0 || pt < 0)
       return;
@@ -190,10 +200,12 @@ class IsoMOReader extends AtomDataReader {
       line = PT.formatStringS(line, "S", mo != null
           && mo.containsKey("symmetry") && ++rep != 0 ? "" + mo.get("symmetry")
           : "");
-    if (line.indexOf("%O") >= 0)
-      line = PT.formatStringS(line, "O", mo != null
-          && mo.containsKey("occupancy") && ++rep != 0 ? ""
-          + mo.get("occupancy") : "");
+    if (line.indexOf("%O") >= 0) {
+      Float obj = (mo == null ? null : (Float) mo.get("occupancy"));
+      float o = (obj == null ? 0 : obj.floatValue());
+      line = PT.formatStringS(line, "O", obj != null && ++rep != 0 ? (o == (int) o ? "" + (int) o : 
+               PT.formatF(o, 0, 4, false, false)) : "");
+    }
     if (line.indexOf("%T") >= 0)
       line = PT.formatStringS(line, "T", mo != null
           && mo.containsKey("type") && ++rep != 0 ? "" + mo.get("type") : "");

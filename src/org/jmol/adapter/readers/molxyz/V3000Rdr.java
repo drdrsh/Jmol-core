@@ -80,9 +80,9 @@ public class V3000Rdr {
       for (int j = 7; j < tokens.length; j++) {
         String s = tokens[j].toUpperCase();
         if (s.startsWith("CHG="))
-          charge = mr.parseIntStr(tokens[j].substring(4));
+          charge = mr.parseIntAt(tokens[j], 4);
         else if (s.startsWith("MASS="))
-          isotope = mr.parseIntStr(tokens[j].substring(5));
+          isotope = mr.parseIntAt(tokens[j], 5);
       }
       if (isotope > 1 && elementSymbol.equals("H"))
         isotope = 1 - isotope;

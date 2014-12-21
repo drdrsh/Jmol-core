@@ -164,12 +164,13 @@ final public class Measure {
     return new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
   }
 
-  public static void getPlaneThroughPoints(T3 pointA,
+  public static P4 getPlaneThroughPoints(T3 pointA,
                                               T3 pointB,
                                               T3 pointC, V3 vNorm,
-                                              V3 vAB, V3 vAC, P4 plane) {
-    float w = getNormalThroughPoints(pointA, pointB, pointC, vNorm, vAB, vAC);
+                                              V3 vAB, P4 plane) {
+    float w = getNormalThroughPoints(pointA, pointB, pointC, vNorm, vAB);
     plane.set4(vNorm.x, vNorm.y, vNorm.z, w);
+    return plane;
   }
   
   public static void getPlaneThroughPoint(T3 pt, V3 normal, P4 plane) {
@@ -195,19 +196,27 @@ final public class Measure {
             * norm.z));
   }
 
+  /**
+   * note that if vAB or vAC is dispensible, vNormNorm can be one of them
+   * @param pointA
+   * @param pointB
+   * @param pointC
+   * @param vNormNorm
+   * @param vAB
+   */
   public static void calcNormalizedNormal(T3 pointA, T3 pointB,
-         T3 pointC, V3 vNormNorm, V3 vAB, V3 vAC) {
+         T3 pointC, V3 vNormNorm, V3 vAB) {
     vAB.sub2(pointB, pointA);
-    vAC.sub2(pointC, pointA);
-    vNormNorm.cross(vAB, vAC);
+    vNormNorm.sub2(pointC, pointA);
+    vNormNorm.cross(vAB, vNormNorm);
     vNormNorm.normalize();
   }
 
   public static float getDirectedNormalThroughPoints(T3 pointA, 
          T3 pointB, T3 pointC, T3 ptRef, V3 vNorm, 
-         V3 vAB, V3 vAC) {
+         V3 vAB) {
     // for x = plane({atomno=1}, {atomno=2}, {atomno=3}, {atomno=4})
-    float nd = getNormalThroughPoints(pointA, pointB, pointC, vNorm, vAB, vAC);
+    float nd = getNormalThroughPoints(pointA, pointB, pointC, vNorm, vAB);
     if (ptRef != null) {
       P3 pt0 = P3.newP(pointA);
       pt0.add(vNorm);
@@ -221,14 +230,23 @@ final public class Measure {
     return nd;
   }
   
+  /**
+   * if vAC is dispensible vNorm can be vAC
+   * @param pointA
+   * @param pointB
+   * @param pointC
+   * @param vNorm
+   * @param vTemp
+   * @return w
+   */
   public static float getNormalThroughPoints(T3 pointA, T3 pointB,
-                                   T3 pointC, V3 vNorm, V3 vAB, V3 vAC) {
+                                   T3 pointC, V3 vNorm, V3 vTemp) {
     // for Polyhedra
-    calcNormalizedNormal(pointA, pointB, pointC, vNorm, vAB, vAC);
+    calcNormalizedNormal(pointA, pointB, pointC, vNorm, vTemp);
     // ax + by + cz + d = 0
     // so if a point is in the plane, then N dot X = -d
-    vAB.setT(pointA);
-    return -vAB.dot(vNorm);
+    vTemp.setT(pointA);
+    return -vTemp.dot(vNorm);
   }
 
   public static void getPlaneProjection(P3 pt, P4 plane, P3 ptProj, V3 vNorm) {
@@ -253,8 +271,7 @@ final public class Measure {
                             P3 ptC, boolean isOutward, V3 normal) {
     // for Polyhedra
     V3 vAB = new V3();
-    V3 vAC = new V3();
-    float d = getNormalThroughPoints(ptA, ptB, ptC, normal, vAB, vAC);
+    float d = getNormalThroughPoints(ptA, ptB, ptC, normal, vAB);
     boolean isReversed = (distanceToPlaneV(normal, d, ptCenter) > 0);
     if (isReversed == isOutward)
       normal.scale(-1f);
@@ -275,7 +292,7 @@ final public class Measure {
   }
   
   public static void getBisectingPlane(P3 pointA, V3 vAB,
-                                                 P3 ptTemp, V3 vTemp, P4 plane) {
+                                                 T3 ptTemp, V3 vTemp, P4 plane) {
     ptTemp.scaleAdd2(0.5f, vAB, pointA);
     vTemp.setT(vAB);
     vTemp.normalize();
@@ -426,17 +443,13 @@ final public class Measure {
   public static boolean isInTetrahedron(P3 pt, P3 ptA, P3 ptB,
                                         P3 ptC, P3 ptD,
                                         P4 plane, V3 vTemp,
-                                        V3 vTemp2, V3 vTemp3, boolean fullyEnclosed) {
-    getPlaneThroughPoints(ptC, ptD, ptA, vTemp, vTemp2, vTemp3, plane);
-    boolean b = (distanceToPlane(plane, pt) >= 0);
-    getPlaneThroughPoints(ptA, ptD, ptB, vTemp, vTemp2, vTemp3, plane);
-    if (b != (distanceToPlane(plane, pt) >= 0))
+                                        V3 vTemp2, boolean fullyEnclosed) {
+    boolean b = (distanceToPlane(getPlaneThroughPoints(ptC, ptD, ptA, vTemp, vTemp2, plane), pt) >= 0);
+    if (b != (distanceToPlane(getPlaneThroughPoints(ptA, ptD, ptB, vTemp, vTemp2, plane), pt) >= 0))
       return false;
-    getPlaneThroughPoints(ptB, ptD, ptC, vTemp, vTemp2, vTemp3, plane);
-    if (b != (distanceToPlane(plane, pt) >= 0))
+    if (b != (distanceToPlane(getPlaneThroughPoints(ptB, ptD, ptC, vTemp, vTemp2, plane), pt) >= 0))
       return false;
-    getPlaneThroughPoints(ptA, ptB, ptC, vTemp, vTemp2, vTemp3, plane);
-    float d = distanceToPlane(plane, pt);
+    float d = distanceToPlane(getPlaneThroughPoints(ptA, ptB, ptC, vTemp, vTemp2, plane), pt);
     if (fullyEnclosed)
       return (b == (d >= 0));
     float d1 = distanceToPlane(plane, ptD);

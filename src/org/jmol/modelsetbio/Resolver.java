@@ -80,7 +80,6 @@ public final class Resolver implements JmolBioResolver {
   }
 
   private V3 vAB;
-  private V3 vAC;
   private V3 vNorm;
   private P4 plane;
 
@@ -253,7 +252,6 @@ public final class Resolver implements JmolBioResolver {
     htGroupBonds = new Hashtable<String, Boolean>();
     hNames = new String[3];
     vAB = new V3();
-    vAC = new V3();
     vNorm = new V3();
     plane = new P4();
   }
@@ -370,7 +368,7 @@ public final class Resolver implements JmolBioResolver {
         String name1 = bondInfo[pt + nH][1];
         String name2 = bondInfo[pt + nH + 1][1];
         int factor = name1.compareTo(name2);
-        Measure.getPlaneThroughPoints(htAtoms.get(name1), htAtoms.get(name), htAtoms.get(name2), vNorm, vAB, vAC,
+        Measure.getPlaneThroughPoints(htAtoms.get(name1), htAtoms.get(name), htAtoms.get(name2), vNorm, vAB,
             plane);
         float d = Measure.distanceToPlane(plane, htAtoms.get(bondInfo[pt][1])) * factor;
         bondInfo[pt][1] = (d > 0 ? bondInfo[pt][1] + "@" + bondInfo[pt + 1][1]
@@ -464,9 +462,8 @@ public final class Resolver implements JmolBioResolver {
             Atom atom1 = bonds[0].getOtherAtom(atom);
             Atom atom2 = bonds[1].getOtherAtom(atom);
             int factor = atom1.getAtomName().compareTo(atom2.getAtomName());
-            Measure.getPlaneThroughPoints(atom1, atom, atom2, vNorm, vAB, vAC,
-                plane);
-            d = Measure.distanceToPlane(plane, pts[i][0]) * factor;
+            d = Measure.distanceToPlane(Measure.getPlaneThroughPoints(atom1, atom, atom2, vNorm, vAB,
+                plane), pts[i][0]) * factor;
             break;
           }
         if (pt < 0) {
@@ -581,7 +578,7 @@ public final class Resolver implements JmolBioResolver {
         mapOldToNew[i] = n++;
       }
     }
-    ms.setMSInfo("bsDeletedAtoms", bsDeletedAtoms);
+    ms.msInfo.put("bsDeletedAtoms", bsDeletedAtoms);
     // adjust group pointers
     for (int i = ml.baseGroupIndex; i < ml.groups.length; i++) {
       Group g = ml.groups[i];

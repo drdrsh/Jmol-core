@@ -811,7 +811,6 @@ protected void resetObjects() {
   }
 
   private final V3 vAB = new V3();
-  private final V3 vAC = new V3();
 
   private void setPolygon(int nPoly) {
     int nVertices = nPoints;
@@ -857,7 +856,7 @@ protected void resetObjects() {
     if (isArc || plane != null && isCircle) {
       if (plane != null) {
         dist = Measure.distanceToPlane(plane, ptList[0]);
-        vAC.set(-plane.x, -plane.y, -plane.z);
+        V3 vAC = V3.new3(-plane.x, -plane.y, -plane.z);
         vAC.normalize();
         if (dist < 0)
           vAC.scale(-1);
@@ -917,7 +916,7 @@ protected void resetObjects() {
       } else if (nVertices >= 3 && !isPlane && isPerpendicular) {
         // normal to plane
         Measure.calcNormalizedNormal(ptList[0], ptList[1], ptList[2], normal,
-            vAB, vAC);
+            vAB);
         center = new P3();
         Measure.calcAveragePointN(ptList, nVertices, center);
         dist = (length == Float.MAX_VALUE ? ptList[0].distance(center) : length);
@@ -946,7 +945,7 @@ protected void resetObjects() {
           // |
           // 2
           Measure.calcNormalizedNormal(ptList[0], ptList[1], ptList[2], normal,
-              vAB, vAC);
+              vAB);
           normal.scale(dist);
           ptList[3] = P3.newP(center);
           ptList[3].add(normal);
@@ -1082,7 +1081,7 @@ protected void resetObjects() {
       } else {
         Measure.calcNormalizedNormal(m.vs[p[0]],
             m.vs[p[1]],
-            m.vs[p[2]], m.axes[i], m.vAB, m.vAC);
+            m.vs[p[2]], m.axes[i], m.vAB);
         n++;
       }
       m.axis.add(m.axes[i]);

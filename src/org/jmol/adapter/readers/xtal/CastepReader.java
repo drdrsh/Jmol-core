@@ -339,7 +339,7 @@ public class CastepReader extends AtomSetCollectionReader {
       Double energy = Double.valueOf(Double.parseDouble(tokens[pt]));
       asc.setAtomSetName(prefix + "Energy = " + energy + " eV");
       asc.setAtomSetEnergy("" + energy, energy.floatValue());
-      asc.setAtomSetAuxiliaryInfo("Energy", energy);
+      asc.setCurrentModelInfo("Energy", energy);
     } catch (Exception e) {
       appendLoadNote("CASTEP Energy could not be read: " + line);
     }

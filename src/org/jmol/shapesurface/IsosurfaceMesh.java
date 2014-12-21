@@ -221,13 +221,11 @@ public class IsosurfaceMesh extends Mesh {
     return centers;
   }
 
-  P4 getFacePlane(int i, V3 vNorm) {
-    P4 plane = new P4();
-    Measure.getPlaneThroughPoints(vs[pis[i][0]],
-        vs[pis[i][1]], vs[pis[i][2]], vNorm,
-        vAB, vAC, plane);
-    return plane;
-  }
+//  P4 getFacePlane(int i, V3 vNorm) {
+//    return Measure.getPlaneThroughPoints(vs[pis[i][0]],
+//        vs[pis[i][1]], vs[pis[i][2]], vNorm,
+//        vAB, new P4());
+//  }
 
   /**
    * create a set of contour data.

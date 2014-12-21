@@ -1611,13 +1611,8 @@ public class MathExt implements JmolMathExtension {
         BS bs = SV.getBitSet(args[0], false);
         if (bs.cardinality() == 3) {
           Lst<P3> pts = vwr.ms.getAtomPointVector(bs);
-          V3 vNorm = new V3();
-          V3 vAB = new V3();
-          V3 vAC = new V3();
-          plane = new P4();
-          Measure.getPlaneThroughPoints(pts.get(0), pts.get(1), pts.get(2),
-              vNorm, vAB, vAC, plane);
-          return mp.addXPt4(plane);
+          return mp.addXPt4(Measure.getPlaneThroughPoints(pts.get(0), pts.get(1), pts.get(2),
+              new V3(), new V3(), new P4()));
         }
       }
       Object pt = Escape.uP(SV.sValue(args[0]));
@@ -1727,9 +1722,14 @@ public class MathExt implements JmolMathExtension {
             pt3.scale(0.5f);
             norm.sub(pt1);
             norm.normalize();
-          } else {
+          } else if (args[2].tok == T.on){
             // plane(<point1>,<vLine>,true)
             pt3 = pt1;
+          } else {
+            // plane(<point1>,<point2>,f)
+            norm.sub(pt1);
+            pt3 = new P3();
+            pt3.scaleAdd2(args[2].asFloat(), norm, pt1);
           }
           Measure.getPlaneThroughPoint(pt3, norm, plane);
           return mp.addXPt4(plane);
@@ -1737,10 +1737,8 @@ public class MathExt implements JmolMathExtension {
         // plane(<point1>,<point2>,<point3>)
         // plane(<point1>,<point2>,<point3>,<pointref>)
         V3 vAB = new V3();
-        V3 vAC = new V3();
         float nd = Measure.getDirectedNormalThroughPoints(pt1, pt2, pt3,
-            (args.length == 4 ? mp.ptValue(args[3], true) : null), norm, vAB,
-            vAC);
+            (args.length == 4 ? mp.ptValue(args[3], true) : null), norm, vAB);
         return mp.addXPt4(P4.new4(norm.x, norm.y, norm.z, nd));
       }
     }

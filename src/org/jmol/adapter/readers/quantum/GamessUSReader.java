@@ -471,7 +471,7 @@ ATOM         MULL.POP.    CHARGE          LOW.POP.     CHARGE
           parseFloatStr(tokens[1]), parseFloatStr(tokens[2]));
       Logger.info("Molecular dipole for model "
           + asc.atomSetCount + " = " + dipole);
-      asc.setAtomSetAuxiliaryInfo("dipole", dipole);
+      asc.setCurrentModelInfo("dipole", dipole);
     }
   }
 }

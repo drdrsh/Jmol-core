@@ -186,7 +186,6 @@ public abstract class ___Exporter {
   final protected P3 center = new P3();
   final protected V3 tempV1 = new V3();
   final protected V3 tempV2 = new V3();
-  final protected V3 tempV3 = new V3();
   private boolean isWebGL;
   
   public ___Exporter() {

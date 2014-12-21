@@ -1356,7 +1356,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       // otherwise ignore
       return CONTINUE;
     case T.end:
-      if (tokCommand == T.capture && nTokens == 1)
+      if (tokCommand == T.cgo || tokCommand == T.capture && nTokens == 1)
         return OK;
       //$FALL-THROUGH$
     case T.endifcmd:

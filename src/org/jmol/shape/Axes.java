@@ -26,7 +26,6 @@ package org.jmol.shape;
 
 
 import org.jmol.api.SymmetryInterface;
-import org.jmol.c.AXES;
 import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.util.Escape;
@@ -117,12 +116,12 @@ public class Axes extends FontLineShape {
     super.initShape();
     myType = "axes";
     font3d = vwr.gdata.getFont3D(JC.AXES_DEFAULT_FONTSIZE);
-    AXES axesMode = vwr.g.axesMode;
+    int axesMode = vwr.g.axesMode;
     if (fixedOrigin == null)
       originPoint.set(0, 0, 0);
     else
       originPoint.setT(fixedOrigin);
-    if (axesMode == AXES.UNITCELL
+    if (axesMode == T.axesunitcell
         && ms.unitCells != null) {
       SymmetryInterface unitcell = vwr.getCurrentUnitCell();
       if (unitcell != null) {
@@ -142,7 +141,7 @@ public class Axes extends FontLineShape {
         axisPoints[2].scaleAdd2(scale, vertices[1], offset);
         return;
       }
-    } else if (axesMode == AXES.BOUNDBOX) {
+    } else if (axesMode == T.axeswindow) {
       if (fixedOrigin == null)
         originPoint.setT(vwr.getBoundBoxCenter());
     }

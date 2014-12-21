@@ -62,7 +62,7 @@ public class MagresReader extends AtomSetCollectionReader {
         header.toString());
     finalizeReaderASCR();
     if (interactionTensors.size() > 0)
-      asc.setAtomSetAuxiliaryInfo("interactionTensors", interactionTensors);
+      asc.setCurrentModelInfo("interactionTensors", interactionTensors);
   }
 
   /**
@@ -158,7 +158,7 @@ public class MagresReader extends AtomSetCollectionReader {
       if (currentBlock == BLOCK_NONE) {
         currentBlock = BLOCK_MAGRES;
         magresUnits = new Hashtable<String, String>();
-        asc.setAtomSetAuxiliaryInfo("magresUnits",
+        asc.setCurrentModelInfo("magresUnits",
             magresUnits);
       }
       break;
@@ -287,7 +287,7 @@ public class MagresReader extends AtomSetCollectionReader {
       for (int i = 0; i < 9;)
         data[i] = parseFloatStr(tokens[++i]);
       Logger.info("Magres reader creating magres_" + type + ": " + Escape.eAF(data));
-      asc.setAtomSetAuxiliaryInfo("magres_" + type, data);
+      asc.setCurrentModelInfo("magres_" + type, data);
     }
     String atomName1 = getAtomName(tokens[1], tokens[2]);
     int pt = 3;

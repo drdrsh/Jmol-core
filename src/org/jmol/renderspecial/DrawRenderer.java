@@ -49,7 +49,7 @@ import org.jmol.viewer.ActionManager;
 public class DrawRenderer extends MeshRenderer {
 
   private EnumDrawType drawType;
-  private DrawMesh dmesh;
+  protected DrawMesh dmesh;
 
   private P3[] controlHermites;
   protected P3 pt0 = new P3();

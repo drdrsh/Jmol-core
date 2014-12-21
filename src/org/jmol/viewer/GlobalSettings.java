@@ -9,7 +9,6 @@ import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
 
-import org.jmol.c.AXES;
 import org.jmol.c.CBK;
 import org.jmol.c.STR;
 import org.jmol.script.SV;
@@ -197,7 +196,7 @@ public class GlobalSettings {
       setB("autoBond", autoBond);
       setB("autoFps", autoFps);
       //      setParameterValue("autoLoadOrientation", autoLoadOrientation);
-      setI("axesMode", axesMode.getCode());
+      setI("axesMode", axesMode == T.axesunitcell ? 2 : axesMode == T.axesmolecular ? 1 : 0);
       setF("axesScale", axesScale);
       setB("axesOrientationRasmol", axesOrientationRasmol);
       setB("backboneSteps", backboneSteps);
@@ -556,7 +555,7 @@ public class GlobalSettings {
     int animationFps = 10;
     boolean atomPicking = true;
     boolean autoFps = false;
-    public AXES axesMode = AXES.BOUNDBOX;
+    public int axesMode = T.axeswindow;
     float axesScale = 2;
     float starWidth = 0.05f;
     boolean bondPicking = false;

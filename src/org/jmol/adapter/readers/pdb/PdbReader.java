@@ -425,7 +425,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
     SymmetryInterface symmetry;
     if (vBiomolecules != null && vBiomolecules.size() > 0
         && asc.ac > 0) {
-      asc.setAtomSetAuxiliaryInfo("biomolecules", vBiomolecules);
+      asc.setCurrentModelInfo("biomolecules", vBiomolecules);
       setBiomoleculeAtomCounts();
       if (thisBiomolecule != null && applySymmetry) {
         asc.getXSymmetry().applySymmetryBio(thisBiomolecule, notionalUnitCell, applySymmetryToBonds, filter);
@@ -458,7 +458,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
     if (vCompnds != null) {
       asc.setInfo("compoundSource", vCompnds);
       for (int i = asc.iSet + 1; --i >= 0;) 
-        asc.setAtomSetAuxiliaryInfoForSet("compoundSource", vCompnds, i);  
+        asc.setModelInfoForSet("compoundSource", vCompnds, i);  
     }
     if (htSites != null) {
       addSites(htSites);
@@ -694,7 +694,7 @@ REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
           needLine = false;
           while (readHeader(true) != null && line.indexOf("BIOMT") < 0 && line.indexOf("350") == 7)
             chainlist += ":" + line.substring(11).trim().replace(' ', ':');
-          if (checkFilterKey("BIOMOLECULE " + id + ";")) {
+          if (checkFilterKey("BIOMOLECULE " + id + ";") || checkFilterKey("BIOMOLECULE=" + id + ";")) {
             setFilter(filter.replace(':', '_') + chainlist);
             Logger.info("filter set to \"" + filter + "\"");
             thisBiomolecule = info;
@@ -905,7 +905,7 @@ REMARK 290 REMARK: NULL
     // note that values are +1 in this serial map
     if (atom.isHetero) {
       if (htHetero != null) {
-        asc.setAtomSetAuxiliaryInfo("hetNames", htHetero);
+        asc.setCurrentModelInfo("hetNames", htHetero);
         htHetero = null;
       }
     }
@@ -1311,7 +1311,7 @@ REMARK 290 REMARK: NULL
       setModelPDB(true);
     asc.setCurrentAtomSetNumber(modelNumber);
     if (isCourseGrained)
-      asc.setAtomSetAuxiliaryInfo("courseGrained", Boolean.TRUE);
+      asc.setCurrentModelInfo("courseGrained", Boolean.TRUE);
   }
 
   private void checkNotPDB() {
@@ -1847,7 +1847,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
       }
     }
     asc.setAtomProperties("tlsGroup", data, iModel, true);
-    asc.setAtomSetAuxiliaryInfoForSet("TLS", tlsGroupInfo, iModel);
+    asc.setModelInfoForSet("TLS", tlsGroupInfo, iModel);
     asc.setTensors();
   }
 
@@ -1989,10 +1989,10 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
     int firstAtom = connectNextAtomIndex;
     for (int i = connectNextAtomSet; i < asc.atomSetCount; i++) {
       int count = asc.getAtomSetAtomCount(i);
-      asc.setAtomSetAuxiliaryInfoForSet("PDB_CONECT_firstAtom_count_max",
+      asc.setModelInfoForSet("PDB_CONECT_firstAtom_count_max",
           new int[] { firstAtom, count, maxSerial }, i);
       if (vConnect != null) {
-        asc.setAtomSetAuxiliaryInfoForSet("PDB_CONECT_bonds", vConnect, i);
+        asc.setModelInfoForSet("PDB_CONECT_bonds", vConnect, i);
         asc.setGlobalBoolean(AtomSetCollection.GLOBAL_CONECT);
       }
       firstAtom += count;
@@ -2011,7 +2011,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
       connectAllBad(maxSerial);
       return;
     }
-    a.setAtomSetAuxiliaryInfo(
+    a.setCurrentModelInfo(
         "PDB_CONECT_firstAtom_count_max",
         new int[] { a.getAtomSetAtomIndex(index),
             a.getAtomSetAtomCount(index), maxSerial });
@@ -2019,7 +2019,7 @@ COLUMNS       DATA TYPE         FIELD            DEFINITION
       return;
     int firstAtom = connectNextAtomIndex;
     for (int i = a.atomSetCount; --i >= connectNextAtomSet;) {
-      a.setAtomSetAuxiliaryInfoForSet("PDB_CONECT_bonds", vConnect, i);
+      a.setModelInfoForSet("PDB_CONECT_bonds", vConnect, i);
       a.setGlobalBoolean(AtomSetCollection.GLOBAL_CONECT);
       firstAtom += a.getAtomSetAtomCount(i);
     }

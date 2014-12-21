@@ -32,7 +32,6 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
-import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 
 abstract public class GamessReader extends MOReader {
@@ -95,7 +94,7 @@ abstract public class GamessReader extends MOReader {
           thisShell = tokens[0];
           shellCount++;
           slater = new int[] {
-              JmolAdapter.getQuantumShellTagID(fixShellTag(tokens[1])), gaussianCount,
+              BasisFunctionReader.getQuantumShellTagID(fixShellTag(tokens[1])), gaussianCount,
               0 };
           nGaussians = 0;
         }

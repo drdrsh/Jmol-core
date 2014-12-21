@@ -129,7 +129,7 @@ abstract public class AtomCollection {
   protected boolean preserveState = true;
   public boolean canSkipLoad = true;
 
-  protected boolean haveStraightness;
+  public boolean haveStraightness;
 
   // be sure to add the name to the list below as well!
   final public static byte TAINT_ATOMNAME = 0;
@@ -209,16 +209,8 @@ abstract public class AtomCollection {
     atomTensors = mergeModelSet.atomTensors;
     atomTensorList = mergeModelSet.atomTensorList;
     bsModulated = mergeModelSet.bsModulated;
-    setHaveStraightness(false);
+    haveStraightness = false;
     surfaceDistance100s = null;
-  }
-  
-  public void setHaveStraightness(boolean TF) {
-    haveStraightness = TF;
-  }
-  
-  protected boolean getHaveStraightness() {
-    return haveStraightness;
   }
   
   public Lst<P3> getAtomPointVector(BS bs) {

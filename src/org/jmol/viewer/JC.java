@@ -666,30 +666,33 @@ public final class JC {
 
   public final static int SHAPE_ISOSURFACE  = 24;
   public final static int SHAPE_CONTACT     = 25;
-  public final static int SHAPE_LCAOCARTOON = 26;    
-  public final static int SHAPE_MO          = 27;  //but no ID for MO
 
-  private final static int SHAPE_LAST_ATOM_VIS_FLAG = 27; 
+  public final static int SHAPE_LCAOCARTOON = 26;
+
+  private final static int SHAPE_LAST_ATOM_VIS_FLAG = 26; // LCAO 
   // no setting of atom.shapeVisibilityFlags after this point
-    
-  public final static int SHAPE_PMESH       = 28;
-  public final static int SHAPE_PLOT3D      = 29;
 
-  public final static int SHAPE_MAX_SURFACE         = 29; //////////
-  public final static int SHAPE_MAX_MESH_COLLECTION = 29; //////////
-  
-  public final static int SHAPE_ECHO       = 30;
-  
-  public final static int SHAPE_MAX_HAS_ID = 31;
-  
-  public final static int SHAPE_BBCAGE     = 31;
+  public final static int SHAPE_MO          = 27;  //but no ID for MO
+  public final static int SHAPE_NBO         = 28;  //but no ID for MO
 
-  public final static int SHAPE_MAX_HAS_SETVIS = 32;
+  public final static int SHAPE_PMESH       = 29;
+  public final static int SHAPE_PLOT3D      = 30;
 
-  public final static int SHAPE_UCCAGE     = 32;
-  public final static int SHAPE_AXES       = 33;
-  public final static int SHAPE_HOVER      = 34;
-  public final static int SHAPE_FRANK      = 35;
+  public final static int SHAPE_MAX_SURFACE         = 30; //////////
+  public final static int SHAPE_MAX_MESH_COLLECTION = 30; //////////
+  
+  public final static int SHAPE_ECHO       = 31;
+  
+  public final static int SHAPE_MAX_HAS_ID = 32;
+  
+  public final static int SHAPE_BBCAGE     = 32;
+
+  public final static int SHAPE_MAX_HAS_SETVIS = 33;
+
+  public final static int SHAPE_UCCAGE     = 33;
+  public final static int SHAPE_AXES       = 34;
+  public final static int SHAPE_HOVER      = 35;
+  public final static int SHAPE_FRANK      = 36;
   public final static int SHAPE_MAX        = SHAPE_FRANK + 1;
 
   public final static boolean isShapeSecondary(int i ) {
@@ -733,7 +736,7 @@ public final class JC {
     "Labels", "Measures", "Stars", "Halos",
     "Backbone", "Trace", "Cartoon", "Strands", "MeshRibbon", "Ribbons", "Rockets", 
     "Dots", "Dipoles", "Vectors", "GeoSurface", "Ellipsoids", "Polyhedra", 
-    "Draw", "CGO", "Isosurface", "Contact", "LcaoCartoon", "MolecularOrbital", "Pmesh", "Plot3D", 
+    "Draw", "CGO", "Isosurface", "Contact", "LcaoCartoon", "MolecularOrbital", "NBO", "Pmesh", "Plot3D", 
     "Echo", "Bbcage", "Uccage", "Axes", "Hover", 
     "Frank"
      };
@@ -803,6 +806,8 @@ public final class JC {
       return SHAPE_LCAOCARTOON;
     case T.mo:
       return SHAPE_MO;
+    case T.nbo:
+      return SHAPE_NBO;
     case T.pmesh:
       return SHAPE_PMESH;
     case T.plot3d:

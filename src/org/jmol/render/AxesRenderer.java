@@ -23,7 +23,6 @@
  */
 package org.jmol.render;
 
-import org.jmol.c.AXES;
 import org.jmol.script.T;
 import org.jmol.shape.Axes;
 import org.jmol.util.GData;
@@ -69,7 +68,6 @@ public class AxesRenderer extends FontLineShapeRenderer {
     boolean isXY = (axes.axisXY.z != 0);
     if (!isXY && tm.isNavigating() && vwr.getBoolean(T.navigationperiodic))
       return false;
-    AXES axesMode = vwr.g.axesMode;
     imageFontScaling = vwr.getImageFontScaling();
     if (vwr.areAxesTainted()) {
       Font f = axes.font3d;
@@ -81,7 +79,7 @@ public class AxesRenderer extends FontLineShapeRenderer {
 
     int modelIndex = vwr.am.cmi;
     // includes check here for background model present
-    boolean isUnitCell = (axesMode == AXES.UNITCELL);
+    boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
     if (vwr.ms.isJmolDataFrameForModel(modelIndex)
         && !vwr.ms.getJmolFrameType(modelIndex).equals(
             "plot data"))
@@ -98,7 +96,7 @@ public class AxesRenderer extends FontLineShapeRenderer {
     } else if (isXY) {
       nPoints = 3;
       labelPtr = 9;
-    } else if (axesMode == AXES.BOUNDBOX) {
+    } else if (vwr.g.axesMode == T.axeswindow) {
       nPoints = 6;
       labelPtr = (vwr.getBoolean(T.axesorientationrasmol) ? 15 : 9);
     }

@@ -627,7 +627,7 @@ public class MSRdr implements MSInterface {
 
   @Override
   public double[] getQCoefs(String key) {
-    int fn = Math.max(0, cr.parseIntStr(key.substring(2)));        
+    int fn = Math.max(0, cr.parseIntAt(key, 2));        
     if (fn == 0) {
       if (qlist100 == null) {
         qlist100 = new double[modDim];

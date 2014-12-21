@@ -239,7 +239,7 @@ public class AtomSetCollection {
       int[] atomInfo = (int[]) info.get("PDB_CONECT_firstAtom_count_max");
       if (atomInfo != null)
         atomInfo[0] += existingAtomsCount;
-      setAtomSetAuxiliaryInfo("title", collection.collectionName);
+      setCurrentModelInfo("title", collection.collectionName);
       setAtomSetName(collection.getAtomSetName(atomSetNum));
       for (int atomNum = 0; atomNum < collection.atomSetAtomCounts[atomSetNum]; atomNum++) {
         try {
@@ -298,9 +298,9 @@ public class AtomSetCollection {
     getList(true);
     getList(false);
     for (int i = 0; i < atomSetCount; i++) {
-      setAtomSetAuxiliaryInfoForSet("initialAtomCount",
+      setModelInfoForSet("initialAtomCount",
           Integer.valueOf(atomSetAtomCounts[i]), i);
-      setAtomSetAuxiliaryInfoForSet("initialBondCount",
+      setModelInfoForSet("initialBondCount",
           Integer.valueOf(atomSetBondCounts[i]), i);
     }
   }
@@ -411,7 +411,7 @@ public class AtomSetCollection {
     String type = (isAltLoc ? "altLocs" : "insertionCodes");
     for (i = 0; i < atomSetCount; i++)
       if (lists[i].length() > 0)
-        setAtomSetAuxiliaryInfoForSet(type, lists[i], i);
+        setModelInfoForSet(type, lists[i], i);
   }
 
   void finish() {
@@ -708,7 +708,7 @@ public class AtomSetCollection {
 
   public void setCoordinatesAreFractional(boolean tf) {
     coordinatesAreFractional = tf;
-    setAtomSetAuxiliaryInfo("coordinatesAreFractional", Boolean.valueOf(tf));
+    setCurrentModelInfo("coordinatesAreFractional", Boolean.valueOf(tf));
     if (tf)
       setGlobalBoolean(GLOBAL_FRACTCOORD);
   }
@@ -881,7 +881,7 @@ public class AtomSetCollection {
     }
     if (doClearMap) // false for CASTEP reader
       atomSymbolicMap.clear();
-    setAtomSetAuxiliaryInfo("title", collectionName);
+    setCurrentModelInfo("title", collectionName);
   }
 
   public int getAtomSetAtomIndex(int i) {
@@ -907,7 +907,7 @@ public class AtomSetCollection {
       setTrajectoryName(atomSetName);
       return;
     }
-    setAtomSetAuxiliaryInfoForSet("name", atomSetName, iSet);
+    setModelInfoForSet("name", atomSetName, iSet);
     // TODO -- trajectories could have different names. Need this for vibrations?
     if (!allowMultiple)
       setCollectionName(atomSetName);
@@ -936,7 +936,7 @@ public class AtomSetCollection {
   public void setAtomSetNames(String atomSetName, int n, BS namedSets) {
     for (int i = iSet; --n >= 0 && i >= 0; --i)
       if (namedSets == null || !namedSets.get(i))
-        setAtomSetAuxiliaryInfoForSet("name", atomSetName, i);
+        setModelInfoForSet("name", atomSetName, i);
   }
 
   /**
@@ -983,7 +983,7 @@ public class AtomSetCollection {
     Properties p = (Properties) getAtomSetAuxiliaryInfoValue(atomSetIndex,
         "modelProperties");
     if (p == null)
-      setAtomSetAuxiliaryInfoForSet("modelProperties", p = new Properties(),
+      setModelInfoForSet("modelProperties", p = new Properties(),
           atomSetIndex);
     p.put(key, value);
     if (key.startsWith(".")) //.PATH will not be usable in Jmol
@@ -1004,7 +1004,7 @@ public class AtomSetCollection {
     Map<String, Object> p = (Map<String, Object>) getAtomSetAuxiliaryInfoValue(
         atomSetIndex, "atomProperties");
     if (p == null)
-      setAtomSetAuxiliaryInfoForSet("atomProperties",
+      setModelInfoForSet("atomProperties",
           p = new Hashtable<String, Object>(), atomSetIndex);
     p.put(key, data);
   }
@@ -1041,8 +1041,8 @@ public class AtomSetCollection {
    * @param value
    *        The value to be associated with the key
    */
-  public void setAtomSetAuxiliaryInfo(String key, Object value) {
-    setAtomSetAuxiliaryInfoForSet(key, value, iSet);
+  public void setCurrentModelInfo(String key, Object value) {
+    setModelInfoForSet(key, value, iSet);
   }
 
   /**
@@ -1055,7 +1055,7 @@ public class AtomSetCollection {
    * @param atomSetIndex
    *        The index of the AtomSet to get the property
    */
-  public void setAtomSetAuxiliaryInfoForSet(String key, Object value,
+  public void setModelInfoForSet(String key, Object value,
                                             int atomSetIndex) {
     if (atomSetIndex < 0)
       return;
@@ -1106,8 +1106,8 @@ public class AtomSetCollection {
     if (iSet < 0)
       return;
     Logger.info("Energy for model " + (iSet + 1) + " = " + energyString);
-    setAtomSetAuxiliaryInfo("EnergyString", energyString);
-    setAtomSetAuxiliaryInfo("Energy", Float.valueOf(value));
+    setCurrentModelInfo("EnergyString", energyString);
+    setCurrentModelInfo("Energy", Float.valueOf(value));
     setAtomSetModelProperty("Energy", "" + value);
   }
 

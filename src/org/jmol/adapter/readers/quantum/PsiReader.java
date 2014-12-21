@@ -215,7 +215,7 @@ public class PsiReader extends MOReader {
           }
           ipt = 1;
           slater = new int[3];
-          slater[0] = JmolAdapter.getQuantumShellTagID(tokens[0]);
+          slater[0] = BasisFunctionReader.getQuantumShellTagID(tokens[0]);
           slater[1] = gaussianCount;
           shellCount++;
           break;

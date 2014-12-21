@@ -70,7 +70,7 @@ public class JanaReader extends AtomSetCollectionReader {
     modAxes = getFilter("MODAXES=");
     setFractionalCoordinates(true);
     asc.newAtomSet();
-    asc.setAtomSetAuxiliaryInfo("autoBondUsingOccupation", Boolean.TRUE);
+    asc.setCurrentModelInfo("autoBondUsingOccupation", Boolean.TRUE);
   }
   
   /////////////////////////////// M50 file reading ///////////////////////////////////

@@ -24,7 +24,6 @@
 
 package org.jmol.adapter.readers.quantum;
 
-import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 
 import javajs.util.AU;
@@ -65,7 +64,7 @@ public class JaguarReader extends MOReader {
       return true;
     }
     if (line.startsWith("  number of basis functions....")) {
-      moCount = parseIntStr(line.substring(32).trim());
+      moCount = parseIntAt(line, 32);
       return true;
     }
     if (line.startsWith("  basis set:")) {
@@ -266,7 +265,7 @@ public class JaguarReader extends MOReader {
         iAtom++;
       lastAtom = tokens[0];
       id = tokens[2];
-      int iType = JmolAdapter.getQuantumShellTagID(id);
+      int iType = BasisFunctionReader.getQuantumShellTagID(id);
       iFunc = parseIntStr(tokens[3]) - 1;
       if (iFunc == iFuncLast) {
       } else {
@@ -329,6 +328,7 @@ public class JaguarReader extends MOReader {
       String[] eigenValues = getTokens();
       int n = eigenValues.length - 1;
       fillDataBlock(dataBlock, 0);
+      float occ = 2;
       for (int iOrb = 0; iOrb < n; iOrb++) {
         float[] coefs = new float[moCount];
         Map<String, Object> mo = new Hashtable<String, Object>();
@@ -337,7 +337,10 @@ public class JaguarReader extends MOReader {
         if (Math.abs(energy - lumoEnergy) < 0.0001) {
           moData.put("HOMO", Integer.valueOf(nMo));
           lumoEnergy = Float.MAX_VALUE;
+          occ = 0;
         }
+        //TODO: SOMO? 
+        // mo.put("occupancy", Float.valueOf(occ));
         nMo++;
         for (int i = 0, pt =0; i < moCount; i++) {
           //String type = dataBlock[i][2];

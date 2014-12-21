@@ -85,6 +85,7 @@ public final class BioModel extends Model{
       String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
     set(modelSet, modelIndex, trajectoryBaseIndex, jmolData, properties, auxiliaryInfo);
     isBioModel = true;
+    modelSet.bioModel = this;
     clearBioPolymers();
   }
 
@@ -165,12 +166,6 @@ public final class BioModel extends Model{
     return bioPolymerCount;
   }
 
-  @Override
-  public void calcSelectedMonomersCount(BS bsSelected) {
-    for (int i = bioPolymerCount; --i >= 0; )
-      bioPolymers[i].calcSelectedMonomersCount(bsSelected);
-  }
-
   public BioPolymer getBioPolymer(int polymerIndex) {
     return bioPolymers[polymerIndex];
   }
@@ -219,58 +214,12 @@ public final class BioModel extends Model{
   }
 
   @Override
-  public int calculateStruts(ModelSet modelSet, BS bs1, BS bs2) {
-
-    // only check the atoms in THIS model
-    Lst<Atom> vCA = new  Lst<Atom>();
-    Atom a1 = null;
-    BS bsCheck;
-    if (bs1.equals(bs2)) {
-      bsCheck = bs1;
-    } else {
-      bsCheck = BSUtil.copy(bs1);
-      bsCheck.or(bs2);
-    }
-    Atom[] atoms = modelSet.at;
-    Viewer vwr = modelSet.vwr;
-    bsCheck.and(vwr.getModelUndeletedAtomsBitSet(modelIndex));
-    for (int i = bsCheck.nextSetBit(0); i >= 0; i = bsCheck.nextSetBit(i + 1))
-      if (atoms[i].checkVisible()
-          && atoms[i].atomID == JC.ATOMID_ALPHA_CARBON
-          && atoms[i].getGroupID() != JC.GROUPID_CYSTEINE)
-        vCA.addLast((a1 = atoms[i]));
-    if (vCA.size() == 0)
-      return 0;    
-    float thresh = vwr.getFloat(T.strutlengthmaximum);
-    short mad = (short) (vwr.getFloat(T.strutdefaultradius) * 2000);
-    int delta = vwr.getInt(T.strutspacing);
-    boolean strutsMultiple = vwr.getBoolean(T.strutsmultiple);
-    Lst<Atom[]> struts = getBioPolymer(a1.getPolymerIndexInModel())
-        .calculateStruts(modelSet, bs1, bs2, vCA, thresh, delta, strutsMultiple);
-    for (int i = 0; i < struts.size(); i++) {
-      Atom[] o = struts.get(i);
-      modelSet.bondAtoms(o[0], o[1], Edge.BOND_STRUT, mad, null, 0, false, true);
-    }
-    return struts.size(); 
-  }
-  
-  @Override
   public void setStructureList(Map<STR, float[]> structureList) {
     bioPolymers = (BioPolymer[])AU.arrayCopyObject(bioPolymers, bioPolymerCount);
     for (int i = bioPolymerCount; --i >= 0; )
       bioPolymers[i].setStructureList(structureList);
   }
 
-  @Override
-  public void calculateStraightness(Viewer vwr, char ctype, char qtype,
-                                    int mStep) {
-    P3 ptTemp = new P3();
-    for (int p = 0; p < bioPolymerCount; p++)
-      bioPolymers[p].getPdbData(vwr, ctype, qtype, mStep, 2, null, 
-          null, false, false, false, null, null, null, new BS(), ptTemp);
-  }
-  
-  
   @Override
   public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList,
                                          boolean isTraceAlpha,
@@ -281,18 +230,6 @@ public final class BioModel extends Model{
           .getPolymerPointsAndVectors(last, bs, vList, isTraceAlpha, sheetSmoothing);
   }
 
-  @Override
-  public P3[] getPolymerLeadMidPoints(int iPolymer) {
-    return bioPolymers[iPolymer].getLeadMidpoints();
-  }
-
-  @Override
-  public void recalculateLeadMidpointsAndWingVectors() {
-    for (int ip = 0; ip < bioPolymerCount; ip++)
-      bioPolymers[ip].recalculateLeadMidpointsAndWingVectors();
-  }
-
-  
   @Override
   public Lst<BS> getBioBranches(Lst<BS> biobranches) {
     // scan through biopolymers quickly -- 
@@ -309,149 +246,6 @@ public final class BioModel extends Model{
     }
     return biobranches;
   }
-
-  @Override
-  public void getGroupsWithin(int nResidues, BS bs, BS bsResult) {
-    for (int i = bioPolymerCount; --i >= 0;)
-      bioPolymers[i].getRangeGroups(nResidues, bs, bsResult);
-  }
-  
-  @Override
-  public void getSequenceBits(String specInfo, BS bs, BS bsResult) {
-    int lenInfo = specInfo.length();
-    for (int ip = 0; ip < bioPolymerCount; ip++) {
-      String sequence = bioPolymers[ip].getSequence();
-      int j = -1;
-      while ((j = sequence.indexOf(specInfo, ++j)) >=0)
-        bioPolymers[ip].getPolymerSequenceAtoms(j, lenInfo, bs, bsResult);
-    }
-  }
-
-  @Override
-  public void selectSeqcodeRange(int seqcodeA, int seqcodeB, int chainID,
-                                 BS bs, boolean caseSensitive) {
-    int id;
-    for (int i = chainCount; --i >= 0;) {
-      Chain chain = chains[i];
-      if (chainID == -1 
-          || chainID == (id = chain.chainID) 
-          || !caseSensitive && id > 0 && id < 300 && chainID == AtomCollection.chainToUpper(id))
-        for (int index = 0; index >= 0;)
-          index = chains[i].selectSeqcodeRange(index, seqcodeA, seqcodeB, bs);
-    }
-  }
-
-  @Override
-  public void getRasmolHydrogenBonds(BS bsA, BS bsB,
-                                     Lst<Bond> vHBonds, boolean nucleicOnly,
-                                     int nMax, boolean dsspIgnoreHydrogens,
-                                     BS bsHBonds) {    
-    boolean doAdd = (vHBonds == null);
-    if (doAdd)
-      vHBonds = new  Lst<Bond>();
-    if (nMax < 0)
-      nMax = Integer.MAX_VALUE;
-    boolean asDSSX = (bsB == null);
-    BioPolymer bp, bp1;
-    if (asDSSX && bioPolymerCount > 0) {
-      
-      calculateDssx(vHBonds, false, dsspIgnoreHydrogens, false);
-      
-    } else {
-      for (int i = bioPolymerCount; --i >= 0;) {
-        bp = bioPolymers[i];
-        int type = bp.getType();
-        if ((nucleicOnly || type != BioPolymer.TYPE_AMINO)
-            && type != BioPolymer.TYPE_NUCLEIC)
-          continue;
-        boolean isRNA = bp.isRna();
-        boolean isAmino = (type == BioPolymer.TYPE_AMINO);
-        if (isAmino)
-          bp.calcRasmolHydrogenBonds(null, bsA, bsB, vHBonds, nMax, null, true,
-              false);
-        for (int j = bioPolymerCount; --j >= 0;) {
-          if ((bp1 = bioPolymers[j]) != null && (isRNA || i != j)
-              && type == bp1.getType()) {
-            bp1.calcRasmolHydrogenBonds(bp, bsA, bsB, vHBonds, nMax, null,
-                true, false);
-          }
-        }
-      }
-    }
-    
-    if (vHBonds.size() == 0 || !doAdd)
-      return;
-    hasRasmolHBonds = true;
-    for (int i = 0; i < vHBonds.size(); i++) {
-      HBond bond = (HBond) vHBonds.get(i);
-      Atom atom1 = bond.atom1;
-      Atom atom2 = bond.atom2;
-      if (atom1.isBonded(atom2))
-        continue;
-      int index = ms.addHBond(atom1, atom2, bond.order, bond.getEnergy());
-      if (bsHBonds != null)
-        bsHBonds.set(index);
-    }
-  }
-
-  @Override
-  public void clearRasmolHydrogenBonds(BS bsAtoms) {
-    //called by calcRasmolHydrogenBonds (bsAtoms not null) from autoHBond
-    //      and setAtomPositions (bsAtoms null)
-    BS bsDelete = new BS();
-    hasRasmolHBonds = false;
-    Model[] models = ms.am;
-    Bond[] bonds = ms.bo;
-    for (int i = ms.bondCount; --i >= 0;) {
-      Bond bond = bonds[i];
-      Atom atom1 = bond.atom1;
-      Model m = models[atom1.mi];
-      if (!m.isBioModel || m.trajectoryBaseIndex != modelIndex
-          || (bond.order & Edge.BOND_H_CALC_MASK) == 0)
-        continue;
-      if (bsAtoms != null && !bsAtoms.get(atom1.i)) {
-        hasRasmolHBonds = true;
-        continue;
-      }
-      bsDelete.set(i);
-    }
-    if (bsDelete.nextSetBit(0) >= 0)
-      ms.deleteBonds(bsDelete, false);
-  }
-
-  @Override
-  public void calculatePolymers(Group[] groups, int groupCount,
-                                int baseGroupIndex, BS modelsExcluded, 
-                                boolean checkConnections) {
-    if (groups == null) {
-      groups = ms.getGroups();
-      groupCount = groups.length;
-    }
-    if (modelsExcluded != null)
-      for (int i = 0; i < groupCount; ++i) {
-        Group group = groups[i];
-        if (group instanceof Monomer) {
-          Monomer monomer = (Monomer) group;
-          if (monomer.bioPolymer != null
-              && (!modelsExcluded.get(monomer.getModelIndex())))
-            monomer.setBioPolymer(null, -1);
-        }
-      }
-    for (int i = baseGroupIndex; i < groupCount; ++i) {
-      Group g = groups[i];
-      Model model = g.getModel();
-      if (!model.isBioModel || ! (g instanceof Monomer))
-        continue;
-      boolean doCheck = checkConnections 
-        && !ms.isJmolDataFrameForModel(ms.at[g.firstAtomIndex].mi);
-      BioPolymer bp = (((Monomer) g).bioPolymer == null ?
-          Resolver.allocateBioPolymer(groups, i, doCheck) : null);
-      if (bp == null || bp.monomerCount == 0)
-        continue;
-      ((BioModel) model).addBioPolymer(bp);
-      i += bp.monomerCount - 1;
-    }
-  }  
 
   private void addBioPolymer(BioPolymer polymer) {
     if (bioPolymers.length == 0)
@@ -543,9 +337,239 @@ public final class BioModel extends Model{
     sb.append("\nNumber of Turns ..... " + nT);
   }
 
-  @SuppressWarnings("incomplete-switch")
+  private final static String[] pdbRecords = { "ATOM  ", "MODEL ", "HETATM" };
+
   @Override
-  public String getProteinStructureState(BS bsAtoms, boolean taintedOnly,
+  public String getFullPDBHeader() {
+    if (modelIndex < 0)
+      return "";
+    String info = (String) auxiliaryInfo.get("fileHeader");
+    if (info != null)
+      return info;
+    info = ms.vwr.getCurrentFileAsString("biomodel");
+    int ichMin = info.length();
+    for (int i = pdbRecords.length; --i >= 0;) {
+      int ichFound;
+      String strRecord = pdbRecords[i];
+      switch (ichFound = (info.startsWith(strRecord) ? 0 : info.indexOf("\n"
+          + strRecord))) {
+      case -1:
+        continue;
+      case 0:
+        auxiliaryInfo.put("fileHeader", "");
+        return "";
+      default:
+        if (ichFound < ichMin)
+          ichMin = ++ichFound;
+      }
+    }
+    info = info.substring(0, ichMin);
+    auxiliaryInfo.put("fileHeader", info);
+    return info;
+  }
+
+  @Override
+  public void getPdbData(Viewer vwr, String type, char ctype,
+                         boolean isDraw, BS bsSelected,
+                         OC out, LabelToken[] tokens, SB pdbCONECT, BS bsWritten) {
+    boolean bothEnds = false;
+    char qtype = (ctype != 'R' ? 'r' : type.length() > 13
+        && type.indexOf("ramachandran ") >= 0 ? type.charAt(13) : 'R');
+    if (qtype == 'r')
+      qtype = vwr.getQuaternionFrame();
+    int mStep = vwr.getInt(T.helixstep);
+    int derivType = (type.indexOf("diff") < 0 ? 0 : type.indexOf("2") < 0 ? 1
+        : 2);
+    if (!isDraw) {
+      out.append("REMARK   6 Jmol PDB-encoded data: " + type + ";");
+      if (ctype != 'R') {
+        out.append("  quaternionFrame = \"" + qtype + "\"");
+        bothEnds = true; //???
+      }
+      out.append("\nREMARK   6 Jmol Version ").append(Viewer.getJmolVersion())
+          .append("\n");
+      if (ctype == 'R')
+        out
+            .append("REMARK   6 Jmol data min = {-180 -180 -180} max = {180 180 180} "
+                + "unScaledXyz = xyz * {1 1 1} + {0 0 0} plotScale = {100 100 100}\n");
+      else
+        out
+            .append("REMARK   6 Jmol data min = {-1 -1 -1} max = {1 1 1} "
+                + "unScaledXyz = xyz * {0.1 0.1 0.1} + {0 0 0} plotScale = {100 100 100}\n");
+    }
+    
+    P3 ptTemp = new P3();
+    for (int p = 0; p < bioPolymerCount; p++)
+      bioPolymers[p].getPdbData(vwr, ctype, qtype, mStep, derivType,
+          bsAtoms, bsSelected, bothEnds, isDraw, p == 0, tokens, out, 
+          pdbCONECT, bsWritten, ptTemp);
+  }
+  
+  @Override
+  public BS getSequenceBits(ModelSet ms, String specInfo, BS bs) {
+    BS bsResult = new BS();
+    if (bs == null)
+      bs = ms.vwr.getAllAtoms();
+    Model[] am = ms.am;
+    for (int i = ms.mc; --i >= 0;)
+      if (am[i].isBioModel) {
+        BioModel m = (BioModel) am[i];
+        int lenInfo = specInfo.length();
+        for (int ip = 0; ip < m.bioPolymerCount; ip++) {
+          String sequence = m.bioPolymers[ip].getSequence();
+          int j = -1;
+          while ((j = sequence.indexOf(specInfo, ++j)) >= 0)
+            m.bioPolymers[ip].getPolymerSequenceAtoms(j, lenInfo, bs, bsResult);
+        }
+      }
+    return bsResult;
+  }
+  
+  @Override
+  public BS getBasePairBits(ModelSet ms, String specInfo) {
+    BS bsA = null;
+    BS bsB = null;
+    Lst<Bond> vHBonds = new Lst<Bond>();
+    if (specInfo.length() == 0) {
+      bsA = bsB = ms.vwr.getAllAtoms();
+      ms.calcRasmolHydrogenBonds(bsA, bsB, vHBonds, true, 1, false, null);
+    } else {
+      for (int i = 0; i < specInfo.length();) {
+        bsA = ms.getSequenceBits(specInfo.substring(i, ++i), null);
+        if (bsA.cardinality() == 0)
+          continue;
+        bsB = ms.getSequenceBits(specInfo.substring(i, ++i), null);
+        if (bsB.cardinality() == 0)
+          continue;
+        ms.calcRasmolHydrogenBonds(bsA, bsB, vHBonds, true, 1, false, null);
+      }
+    }
+    BS bsAtoms = new BS();
+    for (int i = vHBonds.size(); --i >= 0;) {
+      Bond b = vHBonds.get(i);
+      bsAtoms.set(b.atom1.i);
+      bsAtoms.set(b.atom2.i);
+    }
+    return bsAtoms;
+  }
+
+  @Override
+  public void resetRasmolBonds(Model model, BS bs) {
+    BioModel m = (BioModel) model;
+    clearRasmolHydrogenBonds(model.ms, m, null);
+    m.getRasmolHydrogenBonds(bs, bs, null, false,
+        Integer.MAX_VALUE, false, null);
+  }
+
+  @Override
+  public void calcRasmolHydrogenBonds(ModelSet ms, BS bsA, BS bsB, Lst<Bond> vHBonds,
+                                      boolean nucleicOnly, int nMax,
+                                      boolean dsspIgnoreHydrogens, BS bsHBonds) {
+    boolean isSame = (bsB == null || bsA.equals(bsB));
+    Model[] am = ms.am;
+    for (int i = ms.mc; --i >= 0;)
+      if (am[i].isBioModel && am[i].trajectoryBaseIndex == i) {
+        BioModel m = (BioModel) am[i];
+        if (vHBonds == null) {
+          clearRasmolHydrogenBonds(ms, m, bsA);
+          if (!isSame)
+            clearRasmolHydrogenBonds(ms, m, bsB);
+        }
+        m.getRasmolHydrogenBonds(bsA, bsB, vHBonds, nucleicOnly, nMax,
+            dsspIgnoreHydrogens, bsHBonds);
+      }
+  }
+
+  private void getRasmolHydrogenBonds(BS bsA, BS bsB,
+                                      Lst<Bond> vHBonds, boolean nucleicOnly,
+                                      int nMax, boolean dsspIgnoreHydrogens,
+                                      BS bsHBonds) {    
+     boolean doAdd = (vHBonds == null);
+     if (doAdd)
+       vHBonds = new  Lst<Bond>();
+     if (nMax < 0)
+       nMax = Integer.MAX_VALUE;
+     boolean asDSSX = (bsB == null);
+     BioPolymer bp, bp1;
+     if (asDSSX && bioPolymerCount > 0) {
+       
+       calculateDssx(vHBonds, false, dsspIgnoreHydrogens, false);
+       
+     } else {
+       for (int i = bioPolymerCount; --i >= 0;) {
+         bp = bioPolymers[i];
+         int type = bp.getType();
+         if ((nucleicOnly || type != BioPolymer.TYPE_AMINO)
+             && type != BioPolymer.TYPE_NUCLEIC)
+           continue;
+         boolean isRNA = bp.isRna();
+         boolean isAmino = (type == BioPolymer.TYPE_AMINO);
+         if (isAmino)
+           bp.calcRasmolHydrogenBonds(null, bsA, bsB, vHBonds, nMax, null, true,
+               false);
+         for (int j = bioPolymerCount; --j >= 0;) {
+           if ((bp1 = bioPolymers[j]) != null && (isRNA || i != j)
+               && type == bp1.getType()) {
+             bp1.calcRasmolHydrogenBonds(bp, bsA, bsB, vHBonds, nMax, null,
+                 true, false);
+           }
+         }
+       }
+     }
+     
+     if (vHBonds.size() == 0 || !doAdd)
+       return;
+     hasRasmolHBonds = true;
+     for (int i = 0; i < vHBonds.size(); i++) {
+       HBond bond = (HBond) vHBonds.get(i);
+       Atom atom1 = bond.atom1;
+       Atom atom2 = bond.atom2;
+       if (atom1.isBonded(atom2))
+         continue;
+       int index = ms.addHBond(atom1, atom2, bond.order, bond.getEnergy());
+       if (bsHBonds != null)
+         bsHBonds.set(index);
+     }
+   }
+
+  private static void clearRasmolHydrogenBonds(ModelSet ms, BioModel bm, BS bsAtoms) {
+    //called by calcRasmolHydrogenBonds (bsAtoms not null) from autoHBond
+    //      and setAtomPositions (bsAtoms null)
+    BS bsDelete = new BS();
+    bm.hasRasmolHBonds = false;
+    Model[] models = ms.am;
+    Bond[] bonds = ms.bo;
+    for (int i = ms.bondCount; --i >= 0;) {
+      Bond bond = bonds[i];
+      Atom atom1 = bond.atom1;
+      Model m = models[atom1.mi];
+      if (!m.isBioModel || m.trajectoryBaseIndex != m.modelIndex
+          || (bond.order & Edge.BOND_H_CALC_MASK) == 0)
+        continue;
+      if (bsAtoms != null && !bsAtoms.get(atom1.i)) {
+        ((BioModel) m).hasRasmolHBonds = true;
+        continue;
+      }
+      bsDelete.set(i);
+    }
+    if (bsDelete.nextSetBit(0) >= 0)
+      ms.deleteBonds(bsDelete, false);
+  }
+
+
+  @Override
+  public String getFullProteinStructureState(ModelSet ms, BS bsAtoms2,
+                                             boolean taintedOnly,
+                                             boolean needPhiPsi, int mode) {
+    for (int i = 0, mc = ms.mc; i < mc; i++)
+      if (ms.am[i].isBioModel)
+        return getProteinStructureState(ms, (BioModel) ms.am[i], bsAtoms, taintedOnly,
+            needPhiPsi, mode);
+    return "";
+  }
+
+  @SuppressWarnings("incomplete-switch")
+  public static String getProteinStructureState(ModelSet ms, BioModel m, BS bsAtoms, boolean taintedOnly,
                                          boolean needPhiPsi, int mode) {
     boolean showMode = (mode == 3);
     boolean pdbFileMode = (mode == 1);
@@ -581,7 +605,7 @@ public final class BioModel extends Model{
       if (!ms.proteinStructureTainted)
         return "";
       bsTainted = new BS();
-      for (int i = firstAtomIndex; i < ac; i++)
+      for (int i = m.firstAtomIndex; i < ac; i++)
         if (models[atoms[i].mi].structureTainted)
           bsTainted.set(i);
       bsTainted.set(ac);
@@ -714,72 +738,189 @@ public final class BioModel extends Model{
         sbTurn).appendSB(cmd).toString());
   }
 
-  private final static String[] pdbRecords = { "ATOM  ", "MODEL ", "HETATM" };
 
   @Override
-  public String getFullPDBHeader() {
-    if (modelIndex < 0)
-      return "";
-    String info = (String) auxiliaryInfo.get("fileHeader");
-    if (info != null)
-      return info;
-    info = ms.vwr.getCurrentFileAsString("biomodel");
-    int ichMin = info.length();
-    for (int i = pdbRecords.length; --i >= 0;) {
-      int ichFound;
-      String strRecord = pdbRecords[i];
-      switch (ichFound = (info.startsWith(strRecord) ? 0 : info.indexOf("\n"
-          + strRecord))) {
-      case -1:
-        continue;
-      case 0:
-        auxiliaryInfo.put("fileHeader", "");
-        return "";
-      default:
-        if (ichFound < ichMin)
-          ichMin = ++ichFound;
+  public void calculateAllPolymers(ModelSet ms, Group[] groups, int groupCount,
+                                   int baseGroupIndex, BS modelsExcluded) {
+    for (int i = 0, mc = ms.mc; i < mc; i++)
+      if ((modelsExcluded == null || !modelsExcluded.get(i))
+          && ms.am[i].isBioModel) {
+        calculatePolymers(ms, groups, groupCount, baseGroupIndex,
+            modelsExcluded);
+        return;
       }
+  }
+  
+  private static void calculatePolymers(ModelSet ms, Group[] groups,
+                                        int groupCount, int baseGroupIndex,
+                                        BS modelsExcluded) {
+    boolean checkConnections = !ms.vwr.getBoolean(T.pdbsequential);
+    if (groups == null) {
+      groups = ms.getGroups();
+      groupCount = groups.length;
     }
-    info = info.substring(0, ichMin);
-    auxiliaryInfo.put("fileHeader", info);
-    return info;
+    if (modelsExcluded != null)
+      for (int j = 0; j < groupCount; ++j) {
+        Group group = groups[j];
+        if (group instanceof Monomer) {
+          Monomer monomer = (Monomer) group;
+          if (monomer.bioPolymer != null
+              && (!modelsExcluded.get(monomer.getModelIndex())))
+            monomer.setBioPolymer(null, -1);
+        }
+      }
+    for (int j = baseGroupIndex; j < groupCount; ++j) {
+      Group g = groups[j];
+      Model model = g.getModel();
+      if (!model.isBioModel || !(g instanceof Monomer))
+        continue;
+      boolean doCheck = checkConnections
+          && !ms.isJmolDataFrameForModel(ms.at[g.firstAtomIndex].mi);
+      BioPolymer bp = (((Monomer) g).bioPolymer == null ? Resolver
+          .allocateBioPolymer(groups, j, doCheck) : null);
+      if (bp == null || bp.monomerCount == 0)
+        continue;
+      ((BioModel) model).addBioPolymer(bp);
+      j += bp.monomerCount - 1;
+    }
+  }  
+
+  @Override
+  public BS getGroupsWithinAll(ModelSet ms, int nResidues, BS bs) {
+    BS bsResult = new BS();
+    BS bsCheck = ms.getIterativeModels(false);
+    for (int iModel = ms.mc; --iModel >= 0;)
+      if (bsCheck.get(iModel) && ms.am[iModel].isBioModel) {
+        BioModel m = (BioModel) ms.am[iModel];
+        for (int i = m.bioPolymerCount; --i >= 0;)
+          m.bioPolymers[i].getRangeGroups(nResidues, bs, bsResult);
+      }
+    return bsResult;
   }
 
   @Override
-  public void getPdbData(Viewer vwr, String type, char ctype,
-                         boolean isDraw, BS bsSelected,
-                         OC out, LabelToken[] tokens, SB pdbCONECT, BS bsWritten) {
-    boolean bothEnds = false;
-    char qtype = (ctype != 'R' ? 'r' : type.length() > 13
-        && type.indexOf("ramachandran ") >= 0 ? type.charAt(13) : 'R');
-    if (qtype == 'r')
-      qtype = vwr.getQuaternionFrame();
-    int mStep = vwr.getInt(T.helixstep);
-    int derivType = (type.indexOf("diff") < 0 ? 0 : type.indexOf("2") < 0 ? 1
-        : 2);
-    if (!isDraw) {
-      out.append("REMARK   6 Jmol PDB-encoded data: " + type + ";");
-      if (ctype != 'R') {
-        out.append("  quaternionFrame = \"" + qtype + "\"");
-        bothEnds = true; //???
+  public BS getSelectCodeRange(ModelSet ms, int[] info) {
+    BS bs = new BS();
+    int seqcodeA = info[0];
+    int seqcodeB = info[1];
+    int chainID = info[2];
+    boolean caseSensitive = ms.vwr.getBoolean(T.chaincasesensitive);
+    if (chainID >= 0 && chainID < 300 && !caseSensitive)
+      chainID = AtomCollection.chainToUpper(chainID);
+    for (int iModel = ms.mc; --iModel >= 0;)
+      if (ms.am[iModel].isBioModel) {
+        BioModel m = (BioModel) ms.am[iModel];
+        int id;
+        for (int i = m.chainCount; --i >= 0;) {
+          Chain chain = m.chains[i];
+          if (chainID == -1 || chainID == (id = chain.chainID) || !caseSensitive
+              && id > 0 && id < 300 && chainID == AtomCollection.chainToUpper(id))
+            for (int index = 0; index >= 0;)
+              index = chain.selectSeqcodeRange(index, seqcodeA, seqcodeB, bs);
+        }
       }
-      out.append("\nREMARK   6 Jmol Version ").append(Viewer.getJmolVersion())
-          .append("\n");
-      if (ctype == 'R')
-        out
-            .append("REMARK   6 Jmol data min = {-180 -180 -180} max = {180 180 180} "
-                + "unScaledXyz = xyz * {1 1 1} + {0 0 0} plotScale = {100 100 100}\n");
-      else
-        out
-            .append("REMARK   6 Jmol data min = {-1 -1 -1} max = {1 1 1} "
-                + "unScaledXyz = xyz * {0.1 0.1 0.1} + {0 0 0} plotScale = {100 100 100}\n");
+    return bs;
+  }
+
+  @Override
+  public int calculateStruts(ModelSet ms, BS bs1, BS bs2) {
+    ms.vwr.setModelVisibility();
+    // select only ONE model
+    ms.makeConnections2(0, Float.MAX_VALUE, Edge.BOND_STRUT, T.delete, bs1,
+        bs2, null, false, false, 0);
+    int iAtom = bs1.nextSetBit(0);
+    if (iAtom < 0)
+      return 0;
+    Model m = ms.am[ms.at[iAtom].mi];
+    if (!m.isBioModel)
+      return 0;
+    // only check the atoms in THIS model
+    Lst<Atom> vCA = new  Lst<Atom>();
+    Atom a1 = null;
+    BS bsCheck;
+    if (bs1.equals(bs2)) {
+      bsCheck = bs1;
+    } else {
+      bsCheck = BSUtil.copy(bs1);
+      bsCheck.or(bs2);
     }
-    
-    P3 ptTemp = new P3();
-    for (int p = 0; p < bioPolymerCount; p++)
-      bioPolymers[p].getPdbData(vwr, ctype, qtype, mStep, derivType,
-          bsAtoms, bsSelected, bothEnds, isDraw, p == 0, tokens, out, 
-          pdbCONECT, bsWritten, ptTemp);
+    Atom[] atoms = ms.at;
+    Viewer vwr = ms.vwr;
+    bsCheck.and(vwr.getModelUndeletedAtomsBitSet(m.modelIndex));
+    for (int i = bsCheck.nextSetBit(0); i >= 0; i = bsCheck.nextSetBit(i + 1))
+      if (atoms[i].checkVisible()
+          && atoms[i].atomID == JC.ATOMID_ALPHA_CARBON
+          && atoms[i].getGroupID() != JC.GROUPID_CYSTEINE)
+        vCA.addLast((a1 = atoms[i]));
+    if (vCA.size() == 0)
+      return 0;    
+    float thresh = vwr.getFloat(T.strutlengthmaximum);
+    short mad = (short) (vwr.getFloat(T.strutdefaultradius) * 2000);
+    int delta = vwr.getInt(T.strutspacing);
+    boolean strutsMultiple = vwr.getBoolean(T.strutsmultiple);
+    Lst<Atom[]> struts = ((BioModel) m).getBioPolymer(a1.getPolymerIndexInModel())
+        .calculateStruts(ms, bs1, bs2, vCA, thresh, delta, strutsMultiple);
+    for (int i = 0; i < struts.size(); i++) {
+      Atom[] o = struts.get(i);
+      ms.bondAtoms(o[0], o[1], Edge.BOND_STRUT, mad, null, 0, false, true);
+    }
+    return struts.size(); 
+  }
+
+  @Override
+  public void recalculatePoints(ModelSet ms, int modelIndex) {
+    if (modelIndex < 0) {
+      for (int i = ms.mc; --i >= 0;)
+        if (!ms.isTrajectorySubFrame(i) && ms.am[i].isBioModel)
+          ((BioModel) ms.am[i]).recalculateLeadMidpointsAndWingVectors();
+      return;
+    }
+    if (!ms.isTrajectorySubFrame(modelIndex) && ms.am[modelIndex].isBioModel)
+      ((BioModel) ms.am[modelIndex]).recalculateLeadMidpointsAndWingVectors();
+    // biomodel only
+  }
+
+  private void recalculateLeadMidpointsAndWingVectors() {
+    for (int ip = 0; ip < bioPolymerCount; ip++)
+      bioPolymers[ip].recalculateLeadMidpointsAndWingVectors();
+  }
+
+  
+  @Override
+  public void calcSelectedMonomersCount(BS bsSelected) {
+    for (int i = bioPolymerCount; --i >= 0; )
+      bioPolymers[i].calcSelectedMonomersCount(bsSelected);
+  }
+  
+  @Override
+  public int getBioPolymerCountInModel(ModelSet ms, int modelIndex) {
+    if (modelIndex < 0) {
+      int polymerCount = 0;
+      for (int i = ms.mc; --i >= 0;)
+        if (!ms.isTrajectorySubFrame(i))
+          polymerCount += ms.am[i].getBioPolymerCount();
+      return polymerCount;
+    }
+    return (ms.isTrajectorySubFrame(modelIndex) ? 0 : ms.am[modelIndex]
+        .getBioPolymerCount());
+  }
+
+  @Override
+  public void calculateStraightnessAll(ModelSet ms) {
+    char ctype = 'S';//(vwr.getTestFlag3() ? 's' : 'S');
+    char qtype = ms.vwr.getQuaternionFrame();
+    int mStep = ms.vwr.getInt(T.helixstep);
+    // testflag3 ON  --> preliminary: Hanson's original normal-based straightness
+    // testflag3 OFF --> final: Kohler's new quaternion-based straightness
+    for (int i = ms.mc; --i >= 0;)
+      if (ms.am[i].isBioModel) {
+        BioModel m = (BioModel)ms.am[i];
+        P3 ptTemp = new P3();
+        for (int p = 0; p < m.bioPolymerCount; p++)
+          m.bioPolymers[p].getPdbData(ms.vwr, ctype, qtype, mStep, 2, null, 
+              null, false, false, false, null, null, null, new BS(), ptTemp);        
+      }
+    ms.haveStraightness = true;
   }
 
 }

@@ -280,8 +280,8 @@ OR
      36    48    34    46    42    54    39    51    37    40
      49    52
      */
-      sd.nSFO = parseIntStr(rd().substring(15)); 
-      sd.nBF = parseIntStr(rd().substring(75));
+      sd.nSFO = parseIntAt(rd(), 15); 
+      sd.nBF = parseIntAt(rd(), 75);
       String funcList = "";
       while (rd() != null && line.length() > 1)
         funcList += line;

@@ -34,6 +34,7 @@ import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelset.Orientation;
 import org.jmol.script.SV;
+import org.jmol.script.T;
 
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
@@ -154,7 +155,7 @@ public class StateManager {
 
   void setCrystallographicDefaults() {
     //axes on and mode unitCell; unitCell on; perspective depth off;
-    vwr.setAxesModeUnitCell(true);
+    vwr.setAxesMode(T.axesunitcell);
     vwr.setShowAxes(true);
     vwr.setShowUnitCell(true);
     vwr.setBooleanProperty("perspectiveDepth", false);

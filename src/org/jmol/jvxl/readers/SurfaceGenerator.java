@@ -1263,16 +1263,15 @@ public class SurfaceGenerator {
     params.functionInfo.set(5, data2);
   }
 
-  final V3 vAC = new V3();
-  final V3 vAB = new V3();
-  final V3 vNorm = new V3();
-  final P3 ptRef = P3.new3(0, 0, 1e15f);
+  private final V3 vAB = new V3();
+  private final V3 vNorm = new V3();
+  private final P3 ptRef = P3.new3(0, 0, 1e15f);
   
   private float distanceVerticalToPlane(float x, float y, P3 pta,
                                               P3 ptb, P3 ptc) {
     // ax + by + cz + d = 0
 
-    float d = Measure.getDirectedNormalThroughPoints(pta, ptb, ptc, ptRef, vNorm, vAB, vAC);
+    float d = Measure.getDirectedNormalThroughPoints(pta, ptb, ptc, ptRef, vNorm, vAB);
     return (vNorm.x * x + vNorm.y * y + d) / -vNorm.z;
   }
   

@@ -340,7 +340,7 @@ public class CifReader extends AtomSetCollectionReader {
     thisFormula = "";
     iHaveDesiredModel = isLastModel(modelNumber);
     if (isCourseGrained)
-      asc.setAtomSetAuxiliaryInfo("courseGrained", Boolean.TRUE);
+      asc.setCurrentModelInfo("courseGrained", Boolean.TRUE);
     if (nAtoms0 == asc.ac) {
       // we found no atoms -- must revert
       modelNumber--;
@@ -403,14 +403,14 @@ public class CifReader extends AtomSetCollectionReader {
     boolean doCheckBonding = doCheckUnitCell && !isMMCIF;
     if (isMMCIF) {
       int modelIndex = asc.iSet;
-      asc.setAtomSetAuxiliaryInfo(
+      asc.setCurrentModelInfo(
           "PDB_CONECT_firstAtom_count_max",
           new int[] { asc.getAtomSetAtomIndex(modelIndex),
               asc.getAtomSetAtomCount(modelIndex), maxSerial });
     }
     if (htCellTypes != null) {
       for (Entry<String, String> e : htCellTypes.entrySet())
-        asc.setAtomSetAuxiliaryInfo("unitcell_" + e.getKey(), e.getValue());
+        asc.setCurrentModelInfo("unitcell_" + e.getKey(), e.getValue());
       htCellTypes = null;
     }
     if (!haveCellWaveVector)
@@ -418,7 +418,7 @@ public class CifReader extends AtomSetCollectionReader {
     applySymTrajASCR();
     if (doCheckBonding && (bondTypes.size() > 0 || isMolecular))
       setBondingAndMolecules();
-    asc.setAtomSetAuxiliaryInfo("fileHasUnitCell", Boolean.TRUE);
+    asc.setCurrentModelInfo("fileHasUnitCell", Boolean.TRUE);
     asc.xtalSymmetry = null;
   }
 
@@ -471,7 +471,7 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private void nextAtomSet() {
-    asc.setAtomSetAuxiliaryInfo("isCIF", Boolean.TRUE);
+    asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
     if (asc.iSet >= 0) {
       // note that there can be problems with multi-data mmCIF sets each with
       // multiple models; and we could be loading multiple files!
@@ -689,9 +689,9 @@ public class CifReader extends AtomSetCollectionReader {
       if (!processAtomSiteLoopBlock(isLigand))
         return;
       asc.setAtomSetName(thisDataSetName);
-      asc.setAtomSetAuxiliaryInfo("chemicalName", chemicalName);
-      asc.setAtomSetAuxiliaryInfo("structuralFormula", thisStructuralFormula);
-      asc.setAtomSetAuxiliaryInfo("formula", thisFormula);  
+      asc.setCurrentModelInfo("chemicalName", chemicalName);
+      asc.setCurrentModelInfo("structuralFormula", thisStructuralFormula);
+      asc.setCurrentModelInfo("formula", thisFormula);  
       return;
     }
     if (key.startsWith(FAMILY_SGOP)
@@ -1303,7 +1303,7 @@ public class CifReader extends AtomSetCollectionReader {
       if (modDim > 0 && siteMult != 0)
         atom.vib = V3.new3(siteMult, 0, Float.NaN);
     }
-    asc.setAtomSetAuxiliaryInfo("isCIF", Boolean.TRUE);
+    asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
     if (isMMCIF)
       setModelPDB(true);
     if (isMMCIF && skipping)
@@ -1716,7 +1716,7 @@ public class CifReader extends AtomSetCollectionReader {
           Logger.debug(molecularType + " removing " + i + " "
               + atoms[i].atomName + " " + atoms[i]);
       }
-      asc.setAtomSetAuxiliaryInfo("notionalUnitcell", null);
+      asc.setCurrentModelInfo("notionalUnitcell", null);
       if (nMolecular++ == asc.iSet) {
         asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_FRACTCOORD);
         asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_SYMMETRY);
@@ -1728,7 +1728,7 @@ public class CifReader extends AtomSetCollectionReader {
     // Set return info to enable desired defaults.
 
     if (bondTypes.size() > 0)
-      asc.setAtomSetAuxiliaryInfo("hasBonds", Boolean.TRUE);
+      asc.setCurrentModelInfo("hasBonds", Boolean.TRUE);
 
     // Clear temporary fields.
 

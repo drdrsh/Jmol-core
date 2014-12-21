@@ -84,7 +84,7 @@ public class Mesh extends MeshSurface {
   public Mesh linkedMesh; //for lcaoOrbitals
   public Map<String, BS> vertexColorMap;
   
-  public V3 vAB, vAC, vTemp;
+  public V3 vAB, vTemp;
 
   public int color;
   public boolean useColix = true;
@@ -129,7 +129,6 @@ public class Mesh extends MeshSurface {
     this.index = index;
     ptCenter = new P3();
     vAB = new V3();
-    vAC = new V3();
     vTemp = new V3();
 
     //System.out.println("Mesh " + this + " constructed");
@@ -291,7 +290,7 @@ public class Mesh extends MeshSurface {
         if (vA.distanceSquared(vB) < min || vB.distanceSquared(vC) < min
             || vA.distanceSquared(vC) < min)
           continue;
-        Measure.calcNormalizedNormal(vA, vB, vC, vTemp, vAB, vAC);
+        Measure.calcNormalizedNormal(vA, vB, vC, vTemp, vAB);
         if (isTriangleSet) {
           normals[i].setT(vTemp);
           continue;
@@ -319,7 +318,7 @@ public class Mesh extends MeshSurface {
       //if (sxml != null)
       //s.append("/** XML ** ").append(sxml).append(" ** XML **/\n");
       s.append(type);
-      if (!type.equals("mo"))
+      if (!type.equals("mo") && !type.equals("nbo"))
         s.append(" ID ").append(PT.esc(thisID));
       if (lattice != null)
         s.append(" lattice ").append(Escape.eP(lattice));
@@ -330,7 +329,7 @@ public class Mesh extends MeshSurface {
         s.append(" hidden");
       if (bsDisplay != null) {
         s.append(";\n  ").append(type);
-        if (!type.equals("mo"))
+        if (!type.equals("mo") && !type.equals("nbo"))
           s.append(" ID ").append(PT.esc(thisID));
         s.append(" display " + Escape.eBS(bsDisplay));
       }

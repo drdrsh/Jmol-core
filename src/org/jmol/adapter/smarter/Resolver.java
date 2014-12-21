@@ -34,7 +34,6 @@ import javajs.util.PT;
 
 
 import org.jmol.api.Interface;
-import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -130,7 +129,7 @@ public class Resolver {
         errMsg = "unrecognized file format for file\n" + fullName + "\n"
             + split(readerName, 50);
       else if (readerName.equals("spt"))
-        errMsg = JmolAdapter.NOTE_SCRIPT_FILE + fullName + "\n";
+        errMsg = JC.NOTE_SCRIPT_FILE + fullName + "\n";
       else if (!fullName.equals("ligand"))
         Logger.info("The Resolver thinks " + readerName);
     }

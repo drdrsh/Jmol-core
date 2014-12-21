@@ -25,10 +25,6 @@
 
 package org.jmol.c;
 
-
-
-
-
 public enum VDW {
 
   JMOL(0, "Jmol",null),  //OpenBabel-1.0

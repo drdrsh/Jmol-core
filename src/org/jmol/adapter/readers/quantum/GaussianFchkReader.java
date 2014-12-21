@@ -61,7 +61,7 @@ public class GaussianFchkReader extends GaussianReader {
     fileData.put("title",  rd().trim());
     calculationType = PT.rep(rd(), "  ", " ");
     asc.newAtomSet();
-    asc.setAtomSetAuxiliaryInfo("fileData", fileData);
+    asc.setCurrentModelInfo("fileData", fileData);
     readAllData();
     readAtoms();
     readBonds();
@@ -192,7 +192,7 @@ public class GaussianFchkReader extends GaussianReader {
     V3 dipole = V3.new3(data[0], data[1], data[2]);
     Logger.info("Molecular dipole for model " + asc.atomSetCount
         + " = " + dipole);
-    asc.setAtomSetAuxiliaryInfo("dipole", dipole);
+    asc.setCurrentModelInfo("dipole", dipole);
   }
 
   @Override
@@ -292,9 +292,9 @@ public class GaussianFchkReader extends GaussianReader {
       int[] slater = new int[4];
       slater[0] = iatom - 1;
       if (oType.equals("F7") || oType.equals("D5"))
-        slater[1] = JmolAdapter.getQuantumShellTagIDSpherical(oType.substring(0, 1));
+        slater[1] = BasisFunctionReader.getQuantumShellTagIDSpherical(oType.substring(0, 1));
       else
-        slater[1] = JmolAdapter.getQuantumShellTagID(oType);      
+        slater[1] = BasisFunctionReader.getQuantumShellTagID(oType);      
       slater[2] = gaussianCount;
       slater[3] = nGaussians;
       if (Logger.debugging)

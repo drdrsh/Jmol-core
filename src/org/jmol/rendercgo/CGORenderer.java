@@ -60,6 +60,8 @@ public class CGORenderer extends DrawRenderer {
   @Override
   public boolean renderMesh(Mesh mesh) {
     this.mesh = mesh;
+    diameter = cgoMesh.diameter;
+    width = cgoMesh.width;
     cmds = cgoMesh.cmds;
     if (cmds == null || !cgoMesh.visible)
       return false;
@@ -70,6 +72,7 @@ public class CGORenderer extends DrawRenderer {
     int nPts = 0;
     ptNormal = 0;
     ptColor = 0;
+    width = 0;
     doColor = !mesh.useColix;
     P3 pt;
     P3i spt;
@@ -103,11 +106,11 @@ public class CGORenderer extends DrawRenderer {
         break;
       case CGOMesh.END:
         if (glMode == CGOMesh.GL_LINE_LOOP && nPts >= 3)
-          drawLine(1, 2, false, pt1, pt3, pt1i, pt3i);
+          drawLine(1, 2, true, pt0, pt3, pt0i, pt3i);
         nPts = 0;
         break;
-      case CGOMesh.LINEWIDTH:
-        //diameter = cgoMesh.getInt(i + 1);
+      case CGOMesh.JMOL_DIAMETER:
+        width = cgoMesh.getFloat(i + 1);
         break;
       case CGOMesh.COLOR:
         getColix(true);
@@ -127,7 +130,7 @@ public class CGORenderer extends DrawRenderer {
         case CGOMesh.GL_LINES:
           if (nPts == 2) {
             getPoint(i, pt1, pt1i);
-            drawLine(1, 2, false, pt0, pt0, pt1i, pt1i);
+            drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
             nPts = 0;
           }
           break;
@@ -147,7 +150,7 @@ public class CGORenderer extends DrawRenderer {
           spt = pt0i;
           pt0i = pt1i;
           pt1i = spt;
-          drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
+          drawLine(1, 2, true, pt0, pt1, pt0i, pt1i);
           break;
         case CGOMesh.GL_TRIANGLES:
           switch (nPts) {

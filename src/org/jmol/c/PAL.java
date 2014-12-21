@@ -25,42 +25,64 @@
 
 package org.jmol.c;
 
-
-
-
 /**
  * Enum for animation mode.
  */
 public enum PAL {
 
   UNKNOWN(null, (byte) 0xFF),
-  NONE("none",StaticConstants.PALETTE_NONE),
-  CPK("cpk",StaticConstants.PALETTE_CPK),
-  PARTIAL_CHARGE("partialcharge",StaticConstants.PALETTE_PARTIAL_CHARGE),
-  FORMAL_CHARGE("formalcharge",StaticConstants.PALETTE_FORMAL_CHARGE),
-  TEMP("temperature",StaticConstants.PALETTE_TEMP),
-  FIXEDTEMP("fixedtemperature",StaticConstants.PALETTE_FIXEDTEMP),
-  SURFACE("surfacedistance",StaticConstants.PALETTE_SURFACE),
-  STRUCTURE("structure",StaticConstants.PALETTE_STRUCTURE),
-  AMINO("amino",StaticConstants.PALETTE_AMINO),
-  SHAPELY("shapely",StaticConstants.PALETTE_SHAPELY),
-  CHAIN("chain",StaticConstants.PALETTE_CHAIN),
-  GROUP("group",StaticConstants.PALETTE_GROUP),
-  MONOMER("monomer",StaticConstants.PALETTE_MONOMER),
-  MOLECULE("molecule",StaticConstants.PALETTE_MOLECULE),
-  ALTLOC("altloc",StaticConstants.PALETTE_ALTLOC),
-  INSERTION("insertion",StaticConstants.PALETTE_INSERTION),
-  JMOL("jmol",StaticConstants.PALETTE_JMOL),
-  RASMOL("rasmol",StaticConstants.PALETTE_RASMOL),
-  TYPE("type",StaticConstants.PALETTE_TYPE),
-  ENERGY("energy",StaticConstants.PALETTE_ENERGY),
-  PROPERTY("property",StaticConstants.PALETTE_PROPERTY),
-  VARIABLE("variable",StaticConstants.PALETTE_VARIABLE),
-  STRAIGHTNESS("straightness",StaticConstants.PALETTE_STRAIGHTNESS),
-  POLYMER("polymer",StaticConstants.PALETTE_POLYMER);
+  NONE("none",PAL.PALETTE_NONE),
+  CPK("cpk",PAL.PALETTE_CPK),
+  PARTIAL_CHARGE("partialcharge",PAL.PALETTE_PARTIAL_CHARGE),
+  FORMAL_CHARGE("formalcharge",PAL.PALETTE_FORMAL_CHARGE),
+  TEMP("temperature",PAL.PALETTE_TEMP),
+  FIXEDTEMP("fixedtemperature",PAL.PALETTE_FIXEDTEMP),
+  SURFACE("surfacedistance",PAL.PALETTE_SURFACE),
+  STRUCTURE("structure",PAL.PALETTE_STRUCTURE),
+  AMINO("amino",PAL.PALETTE_AMINO),
+  SHAPELY("shapely",PAL.PALETTE_SHAPELY),
+  CHAIN("chain",PAL.PALETTE_CHAIN),
+  GROUP("group",PAL.PALETTE_GROUP),
+  MONOMER("monomer",PAL.PALETTE_MONOMER),
+  MOLECULE("molecule",PAL.PALETTE_MOLECULE),
+  ALTLOC("altloc",PAL.PALETTE_ALTLOC),
+  INSERTION("insertion",PAL.PALETTE_INSERTION),
+  JMOL("jmol",PAL.PALETTE_JMOL),
+  RASMOL("rasmol",PAL.PALETTE_RASMOL),
+  TYPE("type",PAL.PALETTE_TYPE),
+  ENERGY("energy",PAL.PALETTE_ENERGY),
+  PROPERTY("property",PAL.PALETTE_PROPERTY),
+  VARIABLE("variable",PAL.PALETTE_VARIABLE),
+  STRAIGHTNESS("straightness",PAL.PALETTE_STRAIGHTNESS),
+  POLYMER("polymer",PAL.PALETTE_POLYMER);
 
   private String name;
   public byte id;
+  public final static byte PALETTE_VOLATILE = 0x40;
+  public final static byte PALETTE_NONE = 0;
+  public final static byte PALETTE_CPK = 1;
+  public final static byte PALETTE_PARTIAL_CHARGE = 2;
+  public final static byte PALETTE_FORMAL_CHARGE = 3;
+  public final static byte PALETTE_TEMP = 4 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_FIXEDTEMP = 5;
+  public final static byte PALETTE_SURFACE = 6 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_STRUCTURE = 7;
+  public final static byte PALETTE_AMINO = 8;
+  public final static byte PALETTE_SHAPELY = 9;
+  public final static byte PALETTE_CHAIN = 10;
+  public final static byte PALETTE_GROUP = 11 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_MONOMER = 12 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_MOLECULE = 13 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_ALTLOC = 14;
+  public final static byte PALETTE_INSERTION = 15;
+  public final static byte PALETTE_JMOL = 16;
+  public final static byte PALETTE_RASMOL = 17;
+  public final static byte PALETTE_TYPE = 18;
+  public final static byte PALETTE_ENERGY = 19;
+  public final static byte PALETTE_PROPERTY = 20 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_VARIABLE = 21 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_STRAIGHTNESS = 22 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_POLYMER = 23 | PAL.PALETTE_VOLATILE;
 
   private PAL(String name, int id) {
     this.name = name;
@@ -75,7 +97,7 @@ public enum PAL {
   }
 
   public static boolean isPaletteVariable(byte pid) {
-    return ((pid & StaticConstants.PALETTE_VOLATILE) != 0);
+    return ((pid & PAL.PALETTE_VOLATILE) != 0);
   }
 
   public static PAL getPalette(String paletteName) {

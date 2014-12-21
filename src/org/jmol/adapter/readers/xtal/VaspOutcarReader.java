@@ -124,7 +124,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
     String[] tokens = PT.getTokens(line.substring(line.indexOf("=") + 1));
     ac = 0;
     for (int i = 0; i < tokens.length; i++)
-      ac += (numofElement[i] = parseIntStr(tokens[i].trim()));
+      ac += (numofElement[i] = parseIntStr(tokens[i]));
     //this is to reconstruct the atomMappedarray containing the atom
     atomNames = new String[ac];
     int nElements = elementNames.size();
@@ -249,8 +249,8 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
       return;
     asc.setAtomSetEnergy("" + gibbsEnergy,
         gibbsEnergy.floatValue());
-    asc.setAtomSetAuxiliaryInfo("Energy", gibbsEnergy);
-    asc.setAtomSetAuxiliaryInfo("Entropy", gibbsEntropy);
+    asc.setCurrentModelInfo("Energy", gibbsEnergy);
+    asc.setCurrentModelInfo("Entropy", gibbsEntropy);
     asc.setInfo("Energy", gibbsEnergy);
     asc
         .setInfo("Entropy", gibbsEntropy);
@@ -278,14 +278,14 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
   private void setAtomSetInfoMd() {
     asc.setAtomSetName("Temp. = " + DF.formatDecimal((temp), 2)
         + " K, Energy = " + totEne + " eV");
-    asc.setAtomSetAuxiliaryInfo("Energy", totEne);
+    asc.setCurrentModelInfo("Energy", totEne);
     asc.setInfo("Energy", totEne);
-    asc.setAtomSetAuxiliaryInfo("EleEnergy", kinEne);
+    asc.setCurrentModelInfo("EleEnergy", kinEne);
     asc.setInfo("EleEnergy",
         electronEne);
-    asc.setAtomSetAuxiliaryInfo("Kinetic", electronEne);
+    asc.setCurrentModelInfo("Kinetic", electronEne);
     asc.setInfo("Kinetic", kinEne);
-    asc.setAtomSetAuxiliaryInfo("Temperature",
+    asc.setCurrentModelInfo("Temperature",
         DF.formatDecimal((temp), 2));
     asc.setInfo("Temperature",
         DF.formatDecimal((temp), 2));

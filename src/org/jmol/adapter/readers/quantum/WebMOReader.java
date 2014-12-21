@@ -35,7 +35,7 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
-import org.jmol.api.JmolAdapter;
+import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
 
 /**
@@ -209,16 +209,16 @@ public class WebMOReader extends MopacSlaterReader {
         isOK = true;
         break;
       case 5:
-        isOK = (tokens[0].equals("DOrbitals") && getDFMap(data, JmolAdapter.SHELL_D_SPHERICAL, DS_LIST, 99));
+        isOK = (tokens[0].equals("DOrbitals") && getDFMap(data, QS.DS, DS_LIST, 99));
         break;
       case 6:
-        isOK = (tokens[0].equals("DOrbitals") && getDFMap(data, JmolAdapter.SHELL_D_CARTESIAN, DC_LIST, 2));
+        isOK = (tokens[0].equals("DOrbitals") && getDFMap(data, QS.DC, DC_LIST, 2));
         break;
       case 7:
-        isOK = (tokens[0].equals("FOrbitals") && getDFMap(data, JmolAdapter.SHELL_F_SPHERICAL, FS_LIST, 99));
+        isOK = (tokens[0].equals("FOrbitals") && getDFMap(data, QS.FS, FS_LIST, 99));
         break;
       case 10:
-        isOK = (tokens[0].equals("FOrbitals") && getDFMap(data, JmolAdapter.SHELL_F_CARTESIAN, FC_LIST, 3));
+        isOK = (tokens[0].equals("FOrbitals") && getDFMap(data, QS.FC, FC_LIST, 3));
         break;
       }      
       if (!isOK) {
@@ -266,7 +266,7 @@ public class WebMOReader extends MopacSlaterReader {
       tokens = PT.getTokens(rd());
       int nGaussians = parseIntStr(tokens[1]);
       slater[0] = atomIndex;
-      slater[1] = JmolAdapter.getQuantumShellTagID(tokens[0]);
+      slater[1] = BasisFunctionReader.getQuantumShellTagID(tokens[0]);
       slater[2] = gaussianPtr;
       slater[3] = nGaussians;
       for (int i = 0; i < nGaussians; i++) {
@@ -291,7 +291,7 @@ public class WebMOReader extends MopacSlaterReader {
       Logger.debug(sdata.size() + " slater shells read");
       Logger.debug(garray.length + " gaussian primitives read");
     }
-    asc.setAtomSetAuxiliaryInfo("moData", moData);
+    asc.setCurrentModelInfo("moData", moData);
   }
 
   void readSlaterBasis() throws Exception {

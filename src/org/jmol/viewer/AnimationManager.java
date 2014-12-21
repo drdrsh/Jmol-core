@@ -27,12 +27,12 @@ package org.jmol.viewer;
 import java.util.Map;
 
 
+import org.jmol.script.T;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.BSUtil;
 //import javajs.util.List;
 
 import org.jmol.api.Interface;
-import org.jmol.c.ANIM;
 import org.jmol.java.BS;
 import org.jmol.modelset.ModelSet;
 
@@ -106,7 +106,7 @@ public class AnimationManager {
 
   final BS bsVisibleModels = new BS();
 
-  public ANIM animationReplayMode = ANIM.ONCE;
+  public int animationReplayMode = T.once;
 
   BS bsDisplay;
 
@@ -147,7 +147,7 @@ public class AnimationManager {
     cai = -1;
     setAnimationDirection(1);
     setAnimationFps(10);
-    setAnimationReplayMode(ANIM.ONCE, 0, 0);
+    setAnimationReplayMode(T.once, 0, 0);
     initializePointers(0);
   }
   
@@ -281,7 +281,7 @@ public class AnimationManager {
   // 1 = loop
   // 2 = palindrome
   
-  public void setAnimationReplayMode(ANIM animationReplayMode,
+  public void setAnimationReplayMode(int animationReplayMode,
                                      float firstFrameDelay,
                                      float lastFrameDelay) {
     this.firstFrameDelay = firstFrameDelay > 0 ? firstFrameDelay : 0;
@@ -489,13 +489,13 @@ public class AnimationManager {
     }
     if (isDone) {
       switch (animationReplayMode) {
-      case ONCE:
+      case T.once:
         return false;
-      case LOOP:
+      case T.loop:
         nextMorphFrame = frameNext = (animationDirection == currentDirection ? firstFrameIndex
             : lastFrameIndex);
         break;
-      case PALINDROME:
+      case T.palindrome:
         currentDirection = -currentDirection;
         frameNext -= 2 * frameStep;
         nextMorphFrame -= 2 * frameStep * morphStep;

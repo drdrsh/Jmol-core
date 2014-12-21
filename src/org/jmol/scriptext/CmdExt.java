@@ -449,7 +449,7 @@ public class CmdExt implements JmolCmdExtension {
     int mode = 0;
     int slen = e.slen;
     String fileName = "";
-    boolean looping = !vwr.am.animationReplayMode.name().equals("ONCE");
+    boolean looping = (vwr.am.animationReplayMode != T.once);
     int i = 1;
     int tok = tokAt(i);
     boolean isTransparent = (tok == T.translucent);
@@ -3000,6 +3000,7 @@ public class CmdExt implements JmolCmdExtension {
     case T.isosurface:
     case T.menu:
     case T.mesh:
+    case T.nbo:
     case T.mo:
     case T.pmesh:
       pt++;
@@ -3210,10 +3211,10 @@ public class CmdExt implements JmolCmdExtension {
           && !PT
               .isOneOf(
                   type,
-                  ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;ISOSURFACE;MESH;PMESH;VAR;FILE;FUNCTION;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;PDB;PGRP;PQR;QUAT;RAMA;SDF;V2000;V3000;INLINE;"))
+                  ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;VAR;FILE;FUNCTION;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;PDB;PGRP;PQR;QUAT;RAMA;SDF;V2000;V3000;INLINE;"))
         eval.errorStr2(
             ScriptError.ERROR_writeWhat,
-            "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
+            "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|NBO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
                 + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL  CLIPBOARD",
             "CML|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|SDF|CD|JSON|V2000|V3000|SPT|XJVXL|XYZ|XYZRN|XYZVIB|ZIP"
                 + driverList.toUpperCase().replace(';', '|'));
@@ -3374,8 +3375,8 @@ public class CmdExt implements JmolCmdExtension {
         } else if (data == "HISTORY") {
           data = vwr.getSetHistory(Integer.MAX_VALUE);
           type = "SPT";
-        } else if (data == "MO") {
-          data = getMoJvxl(Integer.MAX_VALUE);
+        } else if (data == "MO" || data == "NBO") {
+          data = getMoJvxl(Integer.MAX_VALUE, data == "NBO");
           type = "XJVXL";
         } else if (data == "PMESH") {
           if ((data = getIsosurfaceJvxl(true, JC.SHAPE_PMESH)) == null)
@@ -3711,14 +3712,14 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.axes:
       switch (vwr.g.axesMode) {
-      case UNITCELL:
+      case T.axesunitcell:
         msg = "set axesUnitcell";
         break;
-      case BOUNDBOX:
-        msg = "set axesWindow";
+      case T.axesmolecular:
+        msg = "set axesMolecular";
         break;
       default:
-        msg = "set axesMolecular";
+        msg = "set axesWindow";
       }
       break;
     case T.bondmode:
@@ -3899,14 +3900,16 @@ public class CmdExt implements JmolCmdExtension {
       if (!chk)
         msg = (String) getShapeProperty(JC.SHAPE_ISOSURFACE, "jvxlDataXml");
       break;
+    case T.nbo:
     case T.mo:
       if (eval.optParameterAsString(2).equalsIgnoreCase("list")) {
-        msg = vwr.getMoInfo(-1);
+        e.sm.loadShape(JC.SHAPE_MO);
+        msg = (chk ? "" : (String) getShapeProperty(JC.SHAPE_MO, "list -1"));
         len = 3;
       } else {
         int ptMO = ((len = slen) == 2 ? Integer.MIN_VALUE : intParameter(2));
         if (!chk)
-          msg = getMoJvxl(ptMO);
+          msg = getMoJvxl(ptMO, tok == T.nbo);
       }
       break;
     case T.model:
@@ -4296,24 +4299,23 @@ public class CmdExt implements JmolCmdExtension {
   }
 
   @SuppressWarnings("unchecked")
-  private String getMoJvxl(int ptMO) throws ScriptException {
+  private String getMoJvxl(int ptMO, boolean isNBO) throws ScriptException {
     // 0: all; Integer.MAX_VALUE: current;
-    e.sm.loadShape(JC.SHAPE_MO);
+    int iShape = (isNBO ? JC.SHAPE_NBO : JC.SHAPE_MO);
+    e.sm.loadShape(iShape);
     int modelIndex = vwr.am.cmi;
     if (modelIndex < 0)
       e.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK,
-          "MO isosurfaces");
+          "show/write MO/NBO");
     Map<String, Object> moData = (Map<String, Object>) vwr
         .ms.getInfo(modelIndex, "moData");
     if (moData == null)
       error(ScriptError.ERROR_moModelError);
-    Integer n = (Integer) getShapeProperty(JC.SHAPE_MO, "moNumber");
-    if (n == null || n.intValue() == 0) {
-      setShapeProperty(JC.SHAPE_MO, "init", Integer.valueOf(modelIndex));
-      //} else if (ptMO == Integer.MAX_VALUE) {
-    }
-    setShapeProperty(JC.SHAPE_MO, "moData", moData);
-    return (String) getShapePropertyIndex(JC.SHAPE_MO, "showMO", ptMO);
+    Integer n = (Integer) getShapeProperty(iShape, "moNumber");
+    if (n == null || n.intValue() == 0)
+      setShapeProperty(iShape, "init", Integer.valueOf(modelIndex));
+    setShapeProperty(iShape, "moData", moData);
+    return (String) getShapePropertyIndex(iShape, "showMO", ptMO);
   }
 
   private String getScriptID(ScriptContext context) {

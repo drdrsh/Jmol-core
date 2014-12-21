@@ -25,7 +25,6 @@ package org.jmol.adapter.readers.quantum;
 
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.api.JmolAdapter;
 
 import javajs.util.AU;
 import javajs.util.Lst;
@@ -645,7 +644,7 @@ public class CsfReader extends MopacSlaterReader {
           int iAtom = asc
               .getAtomIndex(connectors.get(sto_gto + "_basis_fxn" + (ipt + 1))[0]);
           slater[0] = iAtom;
-          slater[1] = JmolAdapter.getQuantumShellTagID(types[ipt]
+          slater[1] = BasisFunctionReader.getQuantumShellTagID(types[ipt]
               .substring(0, 1));
           int nZ = 0;
           while (++nZ < nZetas && zetas[ipt][nZ] != 0) {

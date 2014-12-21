@@ -78,7 +78,7 @@ public class MopacArchiveReader extends InputReader {
       return true;
     String key = line.substring(0, 34).trim().replace(' ', '_');
     String value = line.substring(35).trim();
-    asc.setAtomSetAuxiliaryInfo(key, value);
+    asc.setCurrentModelInfo(key, value);
     if (line.indexOf("TOTAL ENERGY") >= 0) {
       String[] tokens = getTokens();
       energyWithUnits = " (" + tokens[3] + " " + tokens[4] + ")";

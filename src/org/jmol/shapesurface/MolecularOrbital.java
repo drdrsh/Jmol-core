@@ -37,9 +37,10 @@ import java.util.Map;
 
 import org.jmol.util.Escape;
 import javajs.util.P4;
+
+import org.jmol.quantum.QS;
 import org.jmol.script.T;
 import org.jmol.shape.Shape;
-import org.jmol.c.QS;
 import org.jmol.java.BS;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.readers.Parameters;
@@ -50,7 +51,7 @@ public class MolecularOrbital extends Isosurface {
   public void initShape() {
     super.initShape();
     myType = "mo";
-    setPropI("thisID", "mo", null);
+    setPropI("thisID", myType, null);
   }
 
   // these are globals, stored here and only passed on when the they are needed. 
@@ -117,7 +118,7 @@ public class MolecularOrbital extends Isosurface {
         int tok = ((Integer) slabInfo[0]).intValue();
         moSlab = (Lst<Object>) thisModel.get("slab");
         if (moSlab == null)
-          thisModel.put("slab", moSlab = new  Lst<Object>());
+          thisModel.put("slab", moSlab = new Lst<Object>());
         if (tok == T.none) {
           moSlab = null;
           thisModel.remove("slab");
@@ -139,7 +140,6 @@ public class MolecularOrbital extends Isosurface {
       return;
     }
 
-
     if ("squareData" == propertyName) {
       thisModel.put("moSquareData", Boolean.TRUE);
       moSquareData = Boolean.TRUE;
@@ -151,7 +151,7 @@ public class MolecularOrbital extends Isosurface {
       moSquareLinear = Boolean.TRUE;
       return;
     }
-    
+
     if ("cutoffPositive" == propertyName) {
       thisModel.put("moCutoff", value);
       thisModel.put("moIsPositiveOnly", Boolean.TRUE);
@@ -175,7 +175,7 @@ public class MolecularOrbital extends Isosurface {
       setPropI("color", value, bs);
       propertyName = "colorRGB";
       myColorPt = 0;
-      //$FALL-THROUGH$
+      //fall trhough to colorRGB
     }
 
     if ("colorRGB" == propertyName) {
@@ -232,56 +232,6 @@ public class MolecularOrbital extends Isosurface {
       return;
     }
 
-    if ("translucentLevel" == propertyName) {
-      if (thisModel == null) {
-        if (currentMesh == null)
-          return;
-        thisModel = htModels.get(currentMesh.thisID);
-      }
-      thisModel.put("moTranslucentLevel", value);
-      //pass through
-    }
-
-    if ("delete" == propertyName) {
-      htModels.remove(strID);
-      moNumber = 0;
-      moLinearCombination = null;
-      //pass through
-    }
-
-    if ("token" == propertyName) {
-      int tok = ((Integer) value).intValue();
-      switch (tok) {
-      case T.dots:
-      case T.nodots:
-        moDots = tok;
-        break;
-      case T.fill:
-      case T.nofill:
-        moFill = tok;
-        break;
-      case T.mesh:
-      case T.nomesh:
-        moMesh = tok;
-        break;
-      case T.frontonly:
-      case T.notfrontonly:
-        moFrontOnly = tok;
-        break;
-      }
-      // pass through  
-    }
-
-    if ("translucency" == propertyName) {
-      if (thisModel == null) {
-        if (currentMesh == null)
-          return;
-        thisModel = htModels.get(currentMesh.thisID);
-      }
-      thisModel.put("moTranslucency", value);
-      //pass through
-    }
-
     if (propertyName == "deleteModelAtoms") {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       Map<String, Map<String, Object>> htModelsNew = new Hashtable<String, Map<String, Object>>();
@@ -307,6 +257,55 @@ public class MolecularOrbital extends Isosurface {
       htModels = htModelsNew;
       return;
     }
+
+    //the rest of these pass through to Isosurface
+    
+    if ("moData" == propertyName) {
+      Map<String, Object> moData = (Map<String, Object>) value;
+      nboType = (String) moData.get("nboType");
+      if (nboType == null)
+        thisModel.remove("nboType");
+      else
+        thisModel.put("nboType", nboType);
+    } else if ("translucentLevel" == propertyName) {
+      if (thisModel == null) {
+        if (currentMesh == null)
+          return;
+        thisModel = htModels.get(currentMesh.thisID);
+      }
+      thisModel.put("moTranslucentLevel", value);
+    } else if ("delete" == propertyName) {
+      htModels.remove(strID);
+      moNumber = 0;
+      moLinearCombination = null;
+    } else if ("token" == propertyName) {
+      int tok = ((Integer) value).intValue();
+      switch (tok) {
+      case T.dots:
+      case T.nodots:
+        moDots = tok;
+        break;
+      case T.fill:
+      case T.nofill:
+        moFill = tok;
+        break;
+      case T.mesh:
+      case T.nomesh:
+        moMesh = tok;
+        break;
+      case T.frontonly:
+      case T.notfrontonly:
+        moFrontOnly = tok;
+        break;
+      }
+    } else if ("translucency" == propertyName) {
+      if (thisModel == null) {
+        if (currentMesh == null)
+          return;
+        thisModel = htModels.get(currentMesh.thisID);
+      }
+      thisModel.put("moTranslucency", value);
+    }
     setPropI(propertyName, value, bs);
   }
 
@@ -317,11 +316,15 @@ public class MolecularOrbital extends Isosurface {
   @SuppressWarnings("unchecked")
   @Override
   public Object getProperty(String propertyName, int param) {
-    if (propertyName.equals("list")) {
-      String s = (String) getPropI("list");
-      if (s.length() > 1)
-        s += "cutoff = " + jvxlData.cutoff + "\n";
-      return vwr.getMoInfo(-1) + "\n" + s;
+    if (propertyName.startsWith("list")) {
+      String s = "";
+      if (propertyName.equals("list")) {
+        s = (String) getPropI("list");
+        if (s.length() > 1)
+          s += "cutoff = " + jvxlData.cutoff + "\n";
+        s = "\n" + s;
+      }
+      return getMoInfo(-1) + s;
     }
     if (propertyName == "moNumber")
       return Integer.valueOf(moNumber);
@@ -329,7 +332,8 @@ public class MolecularOrbital extends Isosurface {
       return moLinearCombination;
     if (propertyName == "showMO") {
       SB str = new SB();
-      Lst<Map<String, Object>> mos = (Lst<Map<String, Object>>) (sg.params.moData.get("mos"));
+      Lst<Map<String, Object>> mos = (Lst<Map<String, Object>>) (sg.params.moData
+          .get("mos"));
       int nOrb = (mos == null ? 0 : mos.size());
       int thisMO = param;
       int currentMO = moNumber;
@@ -351,26 +355,75 @@ public class MolecularOrbital extends Isosurface {
             setPropI("init", sg.params, null);
             setOrbital(i, null);
           }
-          jvxlData.moleculeXml = vwr.getModelCml(vwr.getModelUndeletedAtomsBitSet(thisMesh.modelIndex), 100, true);
+          jvxlData.moleculeXml = vwr.getModelCml(
+              vwr.getModelUndeletedAtomsBitSet(thisMesh.modelIndex), 100, true);
           if (!haveHeader) {
             str.append(JvxlCoder.jvxlGetFile(jvxlData, null, null,
                 "HEADERONLY", true, nTotal, null, null));
             haveHeader = true;
           }
           str.append(JvxlCoder.jvxlGetFile(jvxlData, null, jvxlData.title,
-              null, false, 1, thisMesh.getState("mo"),
+              null, false, 1, thisMesh.getState(myType),
               (thisMesh.scriptCommand == null ? "" : thisMesh.scriptCommand)));
           if (!doOneMo)
             setPropI("delete", "mo_show", null);
           if (nTotal == 1)
             break;
         }
-      str.append(JvxlCoder.jvxlGetFile(jvxlData, null, null, "TRAILERONLY", true,
-          0, null, null));
+      str.append(JvxlCoder.jvxlGetFile(jvxlData, null, null, "TRAILERONLY",
+          true, 0, null, null));
       return str.toString();
     }
     return getPropI(propertyName);
   }
+
+  @SuppressWarnings("unchecked")
+  public String getMoInfo(int modelIndex) {
+    SB sb = new SB();
+
+    for (int m = 0, mc = vwr.ms.mc; m < mc; m++) {
+      if (modelIndex >= 0 && m != modelIndex)
+        continue;
+      Map<String, Object> moData = (Map<String, Object>) vwr.ms.getInfo(m, "moData");
+      if (moData == null)
+        continue;
+      Lst<Map<String, Object>> mos = (Lst<Map<String, Object>>) (moData
+          .get("mos"));
+      int nOrb = (mos == null ? 0 : mos.size());
+      if (nOrb == 0)
+        continue;
+      String moType = (String) moData.get("nboType");
+      if (moType == null)
+        moType = "mo";
+      for (int i = nOrb; --i >= 0;) {
+        Map<String, Object> mo = mos.get(i);
+        String type = (String) mo.get("type");
+        if (type == null)
+          type = "";
+        String units = (String) mo.get("energyUnits");
+        if (units == null)
+          units = "";
+        Float occ = (Float) mo.get("occupancy");
+        if (occ != null)
+          type = "occupancy " + occ.floatValue() + " " + type;
+        String sym = (String) mo.get("symmetry");
+        if (sym != null)
+          type += sym;
+        String energy = "" + mo.get("energy");
+        if (Float.isNaN(PT.parseFloat(energy)))
+          sb.append(PT.sprintf("model %-2s; %s %-2i # %s\n", "ssis",
+              new Object[] { vwr.ms.getModelNumberDotted(m), moType, Integer.valueOf(i + 1),
+                  type }));
+        else
+          sb.append(PT.sprintf("model %-2s;  %s %-2i # energy %-8.3f %s %s\n",
+              "ssifss",
+              new Object[] { vwr.ms.getModelNumberDotted(m), moType, Integer.valueOf(i + 1),
+                  mo.get("energy"), units, type }));
+      }
+    }
+    return sb.toString();
+  }
+
 
   @Override
   protected void clearSg() {
@@ -379,6 +432,7 @@ public class MolecularOrbital extends Isosurface {
 
   private Lst<Object> moSlab;
   private Integer moSlabValue;
+  private String nboType;
   
   @SuppressWarnings("unchecked")
   private boolean getSettings(String strID) {
@@ -397,6 +451,7 @@ public class MolecularOrbital extends Isosurface {
     thisModel.put("moCutoff", Float.valueOf(moCutoff.floatValue()));
     moResolution = (Float) thisModel.get("moResolution");
     moScale = (Float) thisModel.get("moScale");
+    nboType = (String) thisModel.get("moType");
     moColorPos = (Integer) thisModel.get("moColorPos");
     moColorNeg = (Integer) thisModel.get("moColorNeg");
     moSquareData = (Boolean) thisModel.get("moSquareData");
@@ -478,57 +533,51 @@ public class MolecularOrbital extends Isosurface {
       return "";
     SB s = new SB();
     int modelCount = vwr.ms.mc;
-    for (int i = 0; i < modelCount; i++)
-      s.append(getMoState(i));
-    //System.out.println("molecular orbital state " + s.length());
+    for (int iModel = 0; iModel < modelCount; iModel++) {
+      if (!getSettings(getId(iModel)))
+        continue;
+      if (modelCount > 1)
+        appendCmd(s, "frame " + vwr.getModelNumberDotted(iModel));
+      if (nboType != null)
+        appendCmd(s, "nbo type " + nboType);
+      if (moCutoff != null)
+        appendCmd(s, myType + " cutoff " + (sg.params.isPositiveOnly ? "+" : "")
+            + moCutoff);
+      if (moScale != null)
+        appendCmd(s, myType + " scale " + moScale);
+      if (moMonteCarloCount != null)
+        appendCmd(s, myType + " points " + moMonteCarloCount + " " + moRandomSeed);
+      if (moResolution != null)
+        appendCmd(s, myType + " resolution " + moResolution);
+      if (moPlane != null)
+        appendCmd(s, myType + " plane {" + moPlane.x + " " + moPlane.y + " " + moPlane.z
+            + " " + moPlane.w + "}");
+      if (moTitleFormat != null)
+        appendCmd(s, myType + " titleFormat " + PT.esc(moTitleFormat));
+      //the following is a correct object==object test
+      if (moColorNeg != null)
+        appendCmd(s, myType + " color "
+            + Escape.escapeColor(moColorNeg.intValue())
+            + (moColorNeg.equals(moColorPos) ? "" : " "
+                + Escape.escapeColor(moColorPos.intValue())));
+      if (moSlab != null) {
+        if (thisMesh.slabOptions != null)
+          appendCmd(s, thisMesh.slabOptions.toString());
+        if (thisMesh.jvxlData.slabValue != Integer.MIN_VALUE)
+          appendCmd(s, myType + " slab " + thisMesh.jvxlData.slabValue);
+      }
+      if (moLinearCombination == null) {
+        appendCmd(s, myType + " " + (moSquareData == Boolean.TRUE ? "squared ": "") + moNumber);
+      } else {
+        appendCmd(s, myType + " " + QS.getMOString(moLinearCombination) + (moSquareLinear == Boolean.TRUE ? " squared": ""));
+      }
+      if (moTranslucency != null)
+        appendCmd(s, myType + " translucent " + moTranslucentLevel);
+      appendCmd(s, ((IsosurfaceMesh) thisModel.get("mesh")).getState(myType));
+    }
     return s.toString();
   }
 
-  private String getMoState(int modelIndex) {
-    strID = getId(modelIndex);
-    if (!getSettings(strID))
-      return "";
-    SB s = new SB();
-    int modelCount = vwr.ms.mc;
-    if (modelCount > 1)
-      appendCmd(s, "frame " + vwr.getModelNumberDotted(modelIndex));
-    if (moCutoff != null)
-      appendCmd(s, "mo cutoff " + (sg.params.isPositiveOnly ? "+" : "")
-          + moCutoff);
-    if (moScale != null)
-      appendCmd(s, "mo scale " + moScale);
-    if (moMonteCarloCount != null)
-      appendCmd(s, "mo points " + moMonteCarloCount + " " + moRandomSeed);
-    if (moResolution != null)
-      appendCmd(s, "mo resolution " + moResolution);
-    if (moPlane != null)
-      appendCmd(s, "mo plane {" + moPlane.x + " " + moPlane.y + " " + moPlane.z
-          + " " + moPlane.w + "}");
-    if (moTitleFormat != null)
-      appendCmd(s, "mo titleFormat " + PT.esc(moTitleFormat));
-    //the following is a correct object==object test
-    if (moColorNeg != null)
-      appendCmd(s, "mo color "
-          + Escape.escapeColor(moColorNeg.intValue())
-          + (moColorNeg.equals(moColorPos) ? "" : " "
-              + Escape.escapeColor(moColorPos.intValue())));
-    if (moSlab != null) {
-      if (thisMesh.slabOptions != null)
-        appendCmd(s, thisMesh.slabOptions.toString());
-      if (thisMesh.jvxlData.slabValue != Integer.MIN_VALUE)
-        appendCmd(s, "mo slab " + thisMesh.jvxlData.slabValue);
-    }
-    if (moLinearCombination == null) {
-      appendCmd(s, "mo " + (moSquareData == Boolean.TRUE ? "squared ": "") + moNumber);
-    } else {
-      appendCmd(s, "mo " + QS.getMOString(moLinearCombination) + (moSquareLinear == Boolean.TRUE ? " squared": ""));
-    }
-    if (moTranslucency != null)
-      appendCmd(s, "mo translucent " + moTranslucentLevel);
-    appendCmd(s, ((IsosurfaceMesh) thisModel.get("mesh")).getState("mo"));
-    return s.toString();
-  }
-  
   @Override
   public void merge(Shape shape) {
   MolecularOrbital mo = (MolecularOrbital) shape;

@@ -158,7 +158,7 @@ public class XtalSymmetry {
     for (int i = 0; i < info.length; i++)
       notionalUnitCell[i] = info[i];
     asc.haveUnitCell = true;
-    asc.setAtomSetAuxiliaryInfo("notionalUnitcell", notionalUnitCell);
+    asc.setCurrentModelInfo("notionalUnitcell", notionalUnitCell);
     if (asc.isTrajectory) {
       if (trajectoryUnitCells == null) {
         trajectoryUnitCells = new Lst<float[]>();
@@ -172,11 +172,11 @@ public class XtalSymmetry {
     // ModelLoader creates a new symmetry object.
     if (unitCellOffset != null) {
       symmetry.setOffsetPt(unitCellOffset);
-      asc.setAtomSetAuxiliaryInfo("unitCellOffset", unitCellOffset);
+      asc.setCurrentModelInfo("unitCellOffset", unitCellOffset);
     }
     if (matUnitCellOrientation != null) {
       symmetry.initializeOrientation(matUnitCellOrientation);
-      asc.setAtomSetAuxiliaryInfo("matUnitCellOrientation",
+      asc.setCurrentModelInfo("matUnitCellOrientation",
           matUnitCellOrientation);
     }
   }
@@ -244,7 +244,7 @@ public class XtalSymmetry {
   }
 
   private void setAtomSetSpaceGroupName(String spaceGroupName) {
-    asc.setAtomSetAuxiliaryInfo("spaceGroup", spaceGroupName + "");
+    asc.setCurrentModelInfo("spaceGroup", spaceGroupName + "");
   }
 
   private void applySymmetryLattice(MSInterface ms, String supercell)
@@ -413,7 +413,7 @@ public class XtalSymmetry {
       asc.haveAnisou = false;
 
       // ?? TODO
-      asc.setAtomSetAuxiliaryInfo("matUnitCellOrientation", null);
+      asc.setCurrentModelInfo("matUnitCellOrientation", null);
 
     }
     minXYZ = new P3i();
@@ -538,7 +538,7 @@ public class XtalSymmetry {
       asc.setInfo("centroidMinMax", new int[] { minXYZ.x, minXYZ.y, minXYZ.z,
           maxXYZ.x, maxXYZ.y, maxXYZ.z, (centroidPacked ? 1 : 0) });
     if (ptSupercell != null) {
-      asc.setAtomSetAuxiliaryInfo("supercell", ptSupercell);
+      asc.setCurrentModelInfo("supercell", ptSupercell);
       switch (dtype) {
       case 3:
         // standard
@@ -712,14 +712,14 @@ public class XtalSymmetry {
     if (iCell * noSymmetryCount == asc.ac - firstSymmetryAtom)
       duplicateAtomProperties(iCell);
     setSymmetryOps();
-    asc.setAtomSetAuxiliaryInfo("presymmetryAtomIndex",
+    asc.setCurrentModelInfo("presymmetryAtomIndex",
         Integer.valueOf(firstSymmetryAtom));
-    asc.setAtomSetAuxiliaryInfo("presymmetryAtomCount",
+    asc.setCurrentModelInfo("presymmetryAtomCount",
         Integer.valueOf(noSymmetryCount));
-    asc.setAtomSetAuxiliaryInfo("latticeDesignation",
+    asc.setCurrentModelInfo("latticeDesignation",
         symmetry.getLatticeDesignation());
-    asc.setAtomSetAuxiliaryInfo("unitCellRange", unitCells);
-    asc.setAtomSetAuxiliaryInfo("unitCellTranslations", unitCellTranslations);
+    asc.setCurrentModelInfo("unitCellRange", unitCells);
+    asc.setCurrentModelInfo("unitCellTranslations", unitCellTranslations);
     baseUnitCell = notionalUnitCell;
     notionalUnitCell = new float[6];
     reset();
@@ -951,11 +951,11 @@ public class XtalSymmetry {
       String[] symmetryList = new String[operationCount];
       for (int i = 0; i < operationCount; i++)
         symmetryList[i] = "" + symmetry.getSpaceGroupXyz(i, doNormalize);
-      asc.setAtomSetAuxiliaryInfo("symmetryOperations", symmetryList);
-      asc.setAtomSetAuxiliaryInfo("symmetryOps",
+      asc.setCurrentModelInfo("symmetryOperations", symmetryList);
+      asc.setCurrentModelInfo("symmetryOps",
           symmetry.getSymmetryOperations());
     }
-    asc.setAtomSetAuxiliaryInfo("symmetryCount",
+    asc.setCurrentModelInfo("symmetryCount",
         Integer.valueOf(operationCount));
   }
 
@@ -1103,12 +1103,12 @@ public class XtalSymmetry {
         symmetry.addBioMoleculeOperation(mat, false);
     }
     noSymmetryCount = atomMax - firstSymmetryAtom;
-    asc.setAtomSetAuxiliaryInfo("presymmetryAtomIndex",
+    asc.setCurrentModelInfo("presymmetryAtomIndex",
         Integer.valueOf(firstSymmetryAtom));
-    asc.setAtomSetAuxiliaryInfo("presymmetryAtomCount",
+    asc.setCurrentModelInfo("presymmetryAtomCount",
         Integer.valueOf(noSymmetryCount));
-    asc.setAtomSetAuxiliaryInfo("biosymmetryCount", Integer.valueOf(len));
-    asc.setAtomSetAuxiliaryInfo("biosymmetry", symmetry);
+    asc.setCurrentModelInfo("biosymmetryCount", Integer.valueOf(len));
+    asc.setCurrentModelInfo("biosymmetry", symmetry);
     finalizeSymmetry(symmetry);
     setSymmetryOps();
     reset();
@@ -1117,7 +1117,7 @@ public class XtalSymmetry {
 
   private void reset() {
     asc.coordinatesAreFractional = false;
-    asc.setAtomSetAuxiliaryInfo("hasSymmetry", Boolean.TRUE);
+    asc.setCurrentModelInfo("hasSymmetry", Boolean.TRUE);
     asc.setGlobalBoolean(AtomSetCollection.GLOBAL_SYMMETRY);
   }
 

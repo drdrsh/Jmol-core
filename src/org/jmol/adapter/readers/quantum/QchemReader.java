@@ -28,6 +28,7 @@ package org.jmol.adapter.readers.quantum;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
+import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
 
 import java.io.IOException;
@@ -285,7 +286,7 @@ $end
       int[] slater = new int[4];
       tokens = getTokens();
       slater[0] = ac;
-      slater[1] = JmolAdapter.getQuantumShellTagID(tokens[0]); // default cartesian
+      slater[1] = BasisFunctionReader.getQuantumShellTagID(tokens[0]); // default cartesian
       slater[2] = gaussianCount;
       int nGaussians = parseIntStr(tokens[1]);
       slater[3] = nGaussians;
@@ -581,9 +582,9 @@ $end
     boolean isOK = true;
     if (dList.length() > 0) {
       if (dSpherical) 
-        isOK = getDFMap(dList, JmolAdapter.SHELL_D_SPHERICAL, DS_LIST, 2);
+        isOK = getDFMap(dList, QS.DS, DS_LIST, 2);
       else
-        isOK = getDFMap(dList, JmolAdapter.SHELL_D_CARTESIAN, DC_LIST, 3);
+        isOK = getDFMap(dList, QS.DC, DC_LIST, 3);
       if (!isOK) {
         Logger.error("atomic orbital order is unrecognized -- skipping reading of MOs. dList=" + dList);
         shells = null;
@@ -591,9 +592,9 @@ $end
     }
     if (fList.length() > 0) {
       if (fSpherical) 
-        isOK = getDFMap(fList, JmolAdapter.SHELL_F_SPHERICAL, FS_LIST, 2);
+        isOK = getDFMap(fList, QS.FS, FS_LIST, 2);
       else
-        isOK = getDFMap(fList, JmolAdapter.SHELL_F_CARTESIAN, FC_LIST, 3);
+        isOK = getDFMap(fList, QS.FC, FC_LIST, 3);
       if (!isOK) {
         Logger.error("atomic orbital order is unrecognized -- skipping reading of MOs. fList=" + fList);
         shells = null;
@@ -633,8 +634,7 @@ $end
           s = s.substring(s.length() - 3).toUpperCase();
           if (s.startsWith("D ")) {
             if (!dFixed)
-              fixSlaterTypes(JmolAdapter.SHELL_D_CARTESIAN,
-                  JmolAdapter.SHELL_D_SPHERICAL);
+              fixSlaterTypes(QS.DC, QS.DS);
             s = "D" + s.charAt(2);
             dSpherical = true;
           }
@@ -646,8 +646,7 @@ $end
           s = s.substring(s.length() - 3).toUpperCase();
           if (s.startsWith("F ")) {
             if (!fFixed)
-              fixSlaterTypes(JmolAdapter.SHELL_F_CARTESIAN,
-                  JmolAdapter.SHELL_F_SPHERICAL);
+              fixSlaterTypes(QS.FC, QS.FS);
             s = "F" + s.charAt(2);
             fSpherical = true;
           }
@@ -656,7 +655,7 @@ $end
           fFixed = true;
           break;
         default:
-          if (!isQuantumBasisSupported(ch))
+          if (!QS.isQuantumBasisSupported(ch))
             continue;
           break;
         }

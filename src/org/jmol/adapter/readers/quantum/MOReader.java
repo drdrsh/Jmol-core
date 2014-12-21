@@ -25,7 +25,7 @@
 package org.jmol.adapter.readers.quantum;
 
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.api.JmolAdapter;
+import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
 import javajs.util.AU;
 import javajs.util.Lst;
@@ -276,10 +276,9 @@ abstract public class MOReader extends BasisFunctionReader {
   private static final String FS_LIST =  "(F1)  (F2)  (F3)  (F4)  (F5)  (F6)  (F7)";
   
   private static String FC_LIST  =       "(F1)  (F2)  (F10) (F4)  (F2)  (F3)  (F6)  (F9)  (F8)  F(5)";
+
   // inferred from GenNBO, which is: 301 302 303 304 305 306 307 308 309 310
   //       for xxx xxy xxz xyy xyz xzz yyy yyz yzz zzz
-
-  
 
   protected void readMolecularOrbitals(int headerType) throws Exception {
     // GamessUK, GamessUS, and general NBO reader
@@ -295,7 +294,7 @@ abstract public class MOReader extends BasisFunctionReader {
     // and these will replace previous results. 
     // we still need atom positions and bases functions.
     if (haveNboOrbitals) {
-      orbitals = new  Lst<Map<String,Object>>();
+      orbitals = new Lst<Map<String, Object>>();
       alphaBeta = "";
     }
     haveNboOrbitals = true;
@@ -343,29 +342,22 @@ abstract public class MOReader extends BasisFunctionReader {
           haveCoeffMap = true;
           boolean isOK = true;
           if (pCoeffLabels.length() > 0)
-            isOK = getDFMap(pCoeffLabels, JmolAdapter.SHELL_P,
-                P_LIST, 4);
+            isOK = getDFMap(pCoeffLabels, QS.P, P_LIST, 4);
           if (dCoeffLabels.length() > 0) {
             if (dCoeffLabels.indexOf("X") >= 0)
-              isOK = getDFMap(dCoeffLabels, JmolAdapter.SHELL_D_CARTESIAN,
-                CANONICAL_DC_LIST, 2);
+              isOK = getDFMap(dCoeffLabels, QS.DC, CANONICAL_DC_LIST, 2);
             else if (dCoeffLabels.indexOf("(D6)") >= 0)
-              isOK = getDFMap(dCoeffLabels, JmolAdapter.SHELL_D_CARTESIAN,
-                  DC_LIST, 4);
-            else 
-              isOK = getDFMap(dCoeffLabels, JmolAdapter.SHELL_D_SPHERICAL,
-                  DS_LIST, 4);
+              isOK = getDFMap(dCoeffLabels, QS.DC, DC_LIST, 4);
+            else
+              isOK = getDFMap(dCoeffLabels, QS.DS, DS_LIST, 4);
           }
           if (fCoeffLabels.length() > 0) {
             if (fCoeffLabels.indexOf("X") >= 0)
-              isOK = getDFMap(fCoeffLabels, JmolAdapter.SHELL_F_CARTESIAN,
-                  CANONICAL_FC_LIST, 2);
+              isOK = getDFMap(fCoeffLabels, QS.FC, CANONICAL_FC_LIST, 2);
             else if (fCoeffLabels.indexOf("(F10)") >= 0)
-              isOK = getDFMap(fCoeffLabels, JmolAdapter.SHELL_F_CARTESIAN,
-                  FC_LIST, 5);                
+              isOK = getDFMap(fCoeffLabels, QS.FC, FC_LIST, 5);
             else
-              isOK = getDFMap(fCoeffLabels, JmolAdapter.SHELL_F_SPHERICAL,
-                  FS_LIST, 4);
+              isOK = getDFMap(fCoeffLabels, QS.FS, FS_LIST, 4);
           }
           if (!isOK) {
             //
@@ -414,7 +406,7 @@ abstract public class MOReader extends BasisFunctionReader {
         }
         for (int i = 0; i < nThisLine; i++) {
           mos[i] = new Hashtable<String, Object>();
-          data[i] = new  Lst<String>();
+          data[i] = new Lst<String>();
         }
         getMOHeader(headerType, tokens, mos, nThisLine);
         continue;
@@ -431,12 +423,12 @@ abstract public class MOReader extends BasisFunctionReader {
             break;
           case 'd':
             dCoeffLabels += " "
-              + canonicalizeQuantumSubshellTag(type.toUpperCase());
+                + canonicalizeQuantumSubshellTag(type.toUpperCase());
             break;
           case 'f':
             // unchecked
             fCoeffLabels += " "
-              + canonicalizeQuantumSubshellTag(type.toUpperCase());
+                + canonicalizeQuantumSubshellTag(type.toUpperCase());
             break;
           case 's':
             // could be sp??? 
@@ -444,7 +436,7 @@ abstract public class MOReader extends BasisFunctionReader {
         }
       } else {
         int nChar = type.length();
-        ch = (nChar  < 4 ? 'S' : nChar == 4 ? 'G' : nChar == 5 ? 'H' : '?');
+        ch = (nChar < 4 ? 'S' : nChar == 4 ? 'G' : nChar == 5 ? 'H' : '?');
         if (!haveCoeffMap && nChar == 3)
           fCoeffLabels += " "
               + canonicalizeQuantumSubshellTag(type.toUpperCase());
@@ -452,7 +444,7 @@ abstract public class MOReader extends BasisFunctionReader {
           dCoeffLabels += " "
               + canonicalizeQuantumSubshellTag(type.toUpperCase());
       }
-      if (isQuantumBasisSupported(ch)) {
+      if (QS.isQuantumBasisSupported(ch)) {
         if (ptOffset < 0) {
           for (int i = 0; i < nThisLine; i++)
             data[i].addLast(tokens[i + nSkip]);
@@ -538,9 +530,10 @@ abstract public class MOReader extends BasisFunctionReader {
   }
 
   private Map<String, Object> lastMoData;
+  protected boolean allowNoOrbitals;
   
   protected void setMOData(boolean clearOrbitals) {
-    if (shells != null && gaussians != null && orbitals.size() != 0) {
+    if (shells != null && gaussians != null && (allowNoOrbitals || orbitals.size() != 0)) {
       moData.put("calculationType", calculationType);
       moData.put("energyUnits", energyUnits);
       moData.put("shells", shells);

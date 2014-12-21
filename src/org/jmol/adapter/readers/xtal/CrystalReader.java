@@ -794,7 +794,7 @@ public class CrystalReader extends AtomSetCollectionReader {
 
   private void setEnergy() {
     asc.setAtomSetEnergy("" + energy, energy.floatValue());
-    asc.setAtomSetAuxiliaryInfo("Energy", energy);
+    asc.setCurrentModelInfo("Energy", energy);
     asc.setInfo("Energy", energy);
     asc.setAtomSetName("Energy = " + energy + " Hartree");
   }
@@ -1121,7 +1121,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     rd();
     Atom[] atoms = asc.atoms;
     while (rd().startsWith(" ATOM")) {
-      int index = parseIntStr(line.substring(5)) - 1;
+      int index = parseIntAt(line, 5) - 1;
       Atom atom = atoms[index];
       readLines(2);
       double[][] a = new double[3][3];

@@ -145,7 +145,6 @@ public final class ModelLoader {
   private boolean someModelsHaveUnitcells;
   private boolean someModelsAreModulated;
   private boolean is2D;
-  private boolean isPDB;
   public boolean isTrajectory; 
   private boolean isPyMOLsession;
   private boolean doMinimize;
@@ -168,8 +167,8 @@ public final class ModelLoader {
     ms.modelSetProperties = (Properties) ms
         .getInfoM("properties");
     //isMultiFile = getModelSetAuxiliaryInfoBoolean("isMultiFile"); -- no longer necessary
-    isPDB = ms.isPDB = ms.getMSInfoB("isPDB");
-    if (isPDB)
+    ms.haveBioModels = ms.getMSInfoB("isPDB");
+    if (ms.haveBioModels)
       jbr = vwr.getJBR().setLoader(this);
     jmolData = (String) ms.getInfoM("jmolData");
     fileHeader = (String) ms.getInfoM("fileHeader");
@@ -212,7 +211,8 @@ public final class ModelLoader {
     ms.someModelsHaveFractionalCoordinates = ms
         .getMSInfoB("someModelsHaveFractionalCoordinates");
     if (merging) {
-      ms.isPDB |= mergeModelSet.isPDB;
+      ms.haveBioModels |= mergeModelSet.haveBioModels;
+      ms.bioModel = mergeModelSet.bioModel;
       ms.someModelsHaveSymmetry |= mergeModelSet
           .getMSInfoB("someModelsHaveSymmetry");
       someModelsHaveUnitcells |= mergeModelSet
@@ -400,14 +400,13 @@ public final class ModelLoader {
     SB sb = new SB();
     int modelCount = ms.mc;
     Model[] models = ms.am;
-      for (int i = baseModelIndex; i < modelCount; i++)
-        if (models[i].isBioModel)
-          models[i].getDefaultLargePDBRendering(sb, maxAtoms);
+    for (int i = baseModelIndex; i < modelCount; i++)
+      if (models[i].isBioModel)
+        models[i].getDefaultLargePDBRendering(sb, maxAtoms);
     if (sb.length() == 0)
       return;
     sb.append("select *;");
-    String script = (String) ms
-        .getInfoM("jmolscript");
+    String script = (String) ms.getInfoM("jmolscript");
     if (script == null)
       script = "";
     sb.append(script);
@@ -503,7 +502,7 @@ public final class ModelLoader {
     //if merging PDB data into an already-present model, and the 
     //structure is defined, consider the current structures in that 
     //model to be undefined. Not guarantee to work.
-    if (!appendNew && isPDB) 
+    if (!appendNew && ms.haveBioModels) 
       structuresDefinedInFile.clear(baseModelIndex);
   }
 
@@ -1293,7 +1292,7 @@ public final class ModelLoader {
 
     // finalize all structures
 
-    if (!isPDB || isPyMOLsession) {
+    if (!ms.haveBioModels || isPyMOLsession) {
       ms.freezeModels();
       return;
     }

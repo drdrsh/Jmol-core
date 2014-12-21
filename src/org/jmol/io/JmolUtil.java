@@ -53,6 +53,7 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolZipUtilities;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public class JmolUtil implements JmolZipUtilities {
@@ -428,7 +429,7 @@ public class JmolUtil implements JmolZipUtilities {
     if (useFileManifest && haveManifest) {
       String path = JmolBinary.getManifestScriptPath(manifest);
       if (path != null)
-        return JmolAdapter.NOTE_SCRIPT_FILE + fileName + path + "\n";
+        return JC.NOTE_SCRIPT_FILE + fileName + path + "\n";
     }
     Lst<Object> vCollections = new Lst<Object>();
     Map<String, Object> htCollections = (haveManifest ? new Hashtable<String, Object>()

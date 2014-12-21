@@ -544,7 +544,6 @@ public class Polyhedra extends AtomShape {
   }
 
   private final V3 vAB = new V3();
-  private final V3 vAC = new V3();
 
   private static float minDistanceForPlanarity = 0.1f;
 
@@ -556,7 +555,7 @@ public class Polyhedra extends AtomShape {
      * 
      */
     V3 norm = new V3();
-    float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vAB, vAC);
+    float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vAB);
     float d = Measure.distanceToPlaneV(norm, w, ptX);
     return (Math.abs(d) < minDistanceForPlanarity);
   }

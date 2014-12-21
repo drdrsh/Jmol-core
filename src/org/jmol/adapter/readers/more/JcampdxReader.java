@@ -215,10 +215,10 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
       if (baseModel.length() != 0) {
         int ibase = findModelById(baseModel);
         if (ibase >= 0) {
-          asc.setAtomSetAuxiliaryInfoForSet("jdxModelID",
+          asc.setModelInfoForSet("jdxModelID",
               baseModel, ibase);
           for (int i = model.atomSetCount; --i >= 0;)
-            model.setAtomSetAuxiliaryInfoForSet("jdxBaseModel", baseModel, i);
+            model.setModelInfoForSet("jdxBaseModel", baseModel, i);
           if (model.bondCount == 0)
             setBonding(model, ibase);
         }
@@ -293,11 +293,11 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
   private void updateModelIDs(String id, int model0, boolean isFirst) {
     int n = asc.atomSetCount;
     if (isFirst && n == model0 + 2) {
-      asc.setAtomSetAuxiliaryInfo("modelID", id);
+      asc.setCurrentModelInfo("modelID", id);
       return;
     }
     for (int pt = 0, i = model0; ++i < n;)
-      asc.setAtomSetAuxiliaryInfoForSet("modelID", id + "."
+      asc.setModelInfoForSet("modelID", id + "."
           + (++pt), i);
   }
 
@@ -401,7 +401,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
             "spectrumTypes"), type);
     if (types == null)
       return;
-    asc.setAtomSetAuxiliaryInfoForSet("spectrumTypes", types,
+    asc.setModelInfoForSet("spectrumTypes", types,
         imodel);
     String s = addTypeStr(allTypes, type);
     if (s != null)
@@ -423,7 +423,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     Lst<String> peaks = (Lst<String>) asc
         .getAtomSetAuxiliaryInfoValue(i, key);
     if (peaks == null)
-      asc.setAtomSetAuxiliaryInfoForSet(key,
+      asc.setModelInfoForSet(key,
           peaks = new Lst<String>(), i);
     peaks.addLast(data);
   }
@@ -432,8 +432,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     if (asc.getAtomSetAuxiliaryInfoValue(i, "jdxModelSelect") != null)
       return false;
     // assign name and jdxModelSelect ONLY if first found.
-    asc.setAtomSetAuxiliaryInfoForSet("name", title, i);
-    asc.setAtomSetAuxiliaryInfoForSet("jdxModelSelect", line, i);
+    asc.setModelInfoForSet("name", title, i);
+    asc.setModelInfoForSet("jdxModelSelect", line, i);
     return true;
   }
 

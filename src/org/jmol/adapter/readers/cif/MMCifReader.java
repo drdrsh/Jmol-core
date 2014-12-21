@@ -121,7 +121,7 @@ public class MMCifReader extends CifReader {
       addSites(htSites);
     if (vBiomolecules != null && vBiomolecules.size() == 1
         && (isCourseGrained || asc.ac > 0)) {
-      asc.setAtomSetAuxiliaryInfo("biomolecules", vBiomolecules);
+      asc.setCurrentModelInfo("biomolecules", vBiomolecules);
       Map<String, Object> ht = vBiomolecules.get(0);
       appendLoadNote("Constructing " + ht.get("name"));
       setBiomolecules(ht);
@@ -978,7 +978,7 @@ public class MMCifReader extends CifReader {
       bs.set(ac);
     }
     if (atom.isHetero && htHetero != null) {
-      asc.setAtomSetAuxiliaryInfo("hetNames", htHetero);
+      asc.setCurrentModelInfo("hetNames", htHetero);
       asc.setInfo("hetNames", htHetero);
       htHetero = null;
     }

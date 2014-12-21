@@ -1,9 +1,9 @@
 /* $RCSfile$
- * $Author$
- * $Date$
- * $Revision$
+ * $Author: egonw $
+ * $Date: 2005-11-10 09:52:44 -0600 (Thu, 10 Nov 2005) $
+ * $Revision: 4255 $
  *
- * Copyright (C) 2011  The Jmol Development Team
+ * Copyright (C) 2002-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
  *
@@ -19,15 +19,10 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- *  02110-1301, USA.
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+package org.jmol.rendersurface;
 
-package org.jmol.c;
-
-/**
- * Enum for animation mode.
- */
-public enum ANIM {
-  ONCE, LOOP, PALINDROME;  
+public class NBORenderer extends MolecularOrbitalRenderer {
+ // nothing to override
 }

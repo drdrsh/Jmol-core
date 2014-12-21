@@ -31,10 +31,8 @@ import java.util.Map;
 import javajs.util.PT;
 
 import org.jmol.api.JmolFilesReaderInterface;
-import org.jmol.c.QS;
 import org.jmol.util.Elements;
 import org.jmol.util.Edge;
-import org.jmol.viewer.JC;
 
 /****************************************************************
  * The JmolAdapter interface defines the API used by the JmolViewer to
@@ -73,23 +71,6 @@ public abstract class JmolAdapter {
   public final static int ORDER_UNSPECIFIED     = Edge.BOND_ORDER_UNSPECIFIED;
   public final static int ORDER_PYMOL_SINGLE    = Edge.BOND_PYMOL_SINGLE;
   public final static int ORDER_PYMOL_MULT      = Edge.BOND_PYMOL_MULT;
-  public final static QS getShellEnumeration(int i) { return QS.getItem(i); }
-  public final static int[][] getNewDfCoefMap() { return QS.getNewDfCoefMap(); }
-  // We need the shell ids only because we are storing these in the (int) shell[1] spot
-  public final static int        SHELL_S           = QS.S.id;
-  public final static int        SHELL_P           = QS.P.id;
-  public final static int        SHELL_SP          = QS.SP.id;
-  public final static int        SHELL_L           = QS.SP.id;
-  public final static int        SHELL_D_SPHERICAL = QS.D_SPHERICAL.id;
-  public final static int        SHELL_D_CARTESIAN = QS.D_CARTESIAN.id;
-  public final static int        SHELL_F_SPHERICAL = QS.F_SPHERICAL.id;
-  public final static int        SHELL_F_CARTESIAN = QS.F_CARTESIAN.id;
-  public final static int        SHELL_G_SPHERICAL = QS.G_SPHERICAL.id;
-  public final static int        SHELL_G_CARTESIAN = QS.G_CARTESIAN.id;
-  public final static int        SHELL_H_SPHERICAL = QS.H_SPHERICAL.id;
-  public final static int        SHELL_H_CARTESIAN = QS.H_CARTESIAN.id;
-  public static final String SUPPORTED_BASIS_FUNCTIONS = QS.SUPPORTED_BASIS_FUNCTIONS;
-  public static final String NOTE_SCRIPT_FILE = JC.NOTE_SCRIPT_FILE;
   
   public static String getElementSymbol(int elementNumber) {
     return Elements.elementSymbolFromNumber(elementNumber);
@@ -103,18 +84,6 @@ public abstract class JmolAdapter {
     return Elements.getNaturalIsotope(elementNumber);
   }
 
-  public static String getQuantumShellTag(int id) {
-    return QS.getQuantumShellTag(id);
-  }
-                                           
-  public static int getQuantumShellTagID(String tag) {
-    return QS.getQuantumShellTagID(tag);
-  }
-                                           
-  public static int getQuantumShellTagIDSpherical(String tag) {
-    return QS.getQuantumShellTagIDSpherical(tag);
-  }
-  
   public static float getBondingRadius(int atomicNumberWithIsotope, int charge) {
     return Elements.getBondingRadius(atomicNumberWithIsotope, charge);
   }

@@ -67,11 +67,18 @@ public class CGOMesh extends DrawMesh {
   };
   
   public static int getSize(int i) {
-    return (i >= 0 && i < sizes.length ? sizes[i] : -1);
+    switch (i) {
+    case JMOL_DIAMETER:
+      return 1;
+    default:
+      return (i >= 0 && i < sizes.length ? sizes[i] : -1);
+    }
   }
   
+  // only a few of these have been implemented
+  
   public final static int STOP                = 0;
-  public final static int SIMPLE_LINE           = 1;
+  public final static int SIMPLE_LINE         = 1;
   public final static int BEGIN               = 2;
   public final static int END                 = 3;
   public final static int VERTEX              = 4;
@@ -79,7 +86,7 @@ public class CGOMesh extends DrawMesh {
   public final static int NORMAL              = 5;
   public final static int COLOR               = 6;
   public final static int SPHERE              = 7;
-  public final static int TRICOLOR_TRIANGLE            = 8;
+  public final static int TRICOLOR_TRIANGLE   = 8;
   public final static int CYLINDER            = 9;
   
   public final static int LINEWIDTH           = 10;
@@ -105,6 +112,8 @@ public class CGOMesh extends DrawMesh {
   public final static int CONE                = 27;
   public final static int RESET_NORMAL        = 28;
   public final static int PICK_COLOR          = 29;
+
+  public final static int JMOL_DIAMETER       = -100;
 
   @Override
   public void clear(String meshType) {

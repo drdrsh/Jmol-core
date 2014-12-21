@@ -24,7 +24,7 @@
 package org.jmol.adapter.readers.quantum;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.api.JmolAdapter;
+import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
 
 import javajs.util.Lst;
@@ -148,10 +148,6 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
       xxyy xxzz yyzz xxyz yyxz zzxy
   */
   
-  protected boolean isQuantumBasisSupported(char ch) {
-    return (JmolAdapter.SUPPORTED_BASIS_FUNCTIONS.indexOf(Character.toUpperCase(ch)) >= 0);
-  }
-
 
   /**
    * 
@@ -201,9 +197,7 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
   protected int nCoef;
 
   protected int[][] getDfCoefMaps() {
-    if (dfCoefMaps == null)
-      dfCoefMaps = JmolAdapter.getNewDfCoefMap();
-    return dfCoefMaps;
+    return (dfCoefMaps == null ? (dfCoefMaps = BasisFunctionReader.getNewDfCoefMap()) : dfCoefMaps);
   }
 
   final protected static String canonicalizeQuantumSubshellTag(String tag) {
@@ -233,6 +227,20 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
     }
     return nCoef;
   }
+
+  public static int getQuantumShellTagIDSpherical(String tag) {
+    return QS.getQuantumShellTagIDSpherical(tag);
+  }
+
+  public static int getQuantumShellTagID(String tag) {
+    return QS.getQuantumShellTagID(tag);
+  }
+
+  public static String getQuantumShellTag(int id) {
+    return QS.getQuantumShellTag(id);
+  }
+
+  public final static int[][] getNewDfCoefMap() { return QS.getNewDfCoefMap(); }
 
 
 }

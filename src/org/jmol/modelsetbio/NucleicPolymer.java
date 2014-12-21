@@ -98,7 +98,6 @@ public class NucleicPolymer extends PhosphorusPolymer {
     NucleicPolymer other = (NucleicPolymer) polymer;
     V3 vNorm = new V3();
     V3 vAB = new V3();
-    V3 vAC = new V3();
     for (int i = monomerCount; --i >= 0;) {
       NucleicMonomer myNucleotide = (NucleicMonomer) monomers[i];
       if (!myNucleotide.isPurine())
@@ -109,9 +108,8 @@ public class NucleicPolymer extends PhosphorusPolymer {
         continue;
       Atom myN1 = myNucleotide.getN1();
       Atom myN9 = myNucleotide.getN0();
-      P4 plane  = new P4();
-      Measure.getPlaneThroughPoints(myN3, myN1, myN9, vNorm,
-          vAB, vAC, plane);
+      P4 plane  = Measure.getPlaneThroughPoints(myN3, myN1, myN9, vNorm,
+          vAB, new P4());
       Atom bestN3 = null;
       float minDist2 = 25;
       NucleicMonomer bestNucleotide = null;

@@ -346,21 +346,20 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
 
   @Override
-  protected void outputCone(P3 screenBase, P3 screenTip,
-                            float radius, short colix, boolean isBarb) {
+  protected void outputCone(P3 screenBase, P3 screenTip, float radius,
+                            short colix, boolean isBarb) {
     if (isBarb) {
       if (!haveMacros)
         writeMacros2();
-      P4 plane = new P4();
       tempP1.set(screenBase.x, screenTip.y, 12345.6789f);
-      Measure.getPlaneThroughPoints(screenBase, screenTip, tempP1, tempV1,
-          tempV2, tempV3, plane);
+      P4 plane = Measure.getPlaneThroughPoints(screenBase, screenTip, tempP1,
+          tempV1, tempV2, new P4());
       output("barb(" + getTriad(screenBase) + "," + radius + ","
-          + getTriad(screenTip) + ",0" + "," + color4(colix) + "," + plane.x + ","
-          + plane.y + "," + plane.z + "," + -plane.w + ")\n");
+          + getTriad(screenTip) + ",0" + "," + color4(colix) + "," + plane.x
+          + "," + plane.y + "," + plane.z + "," + -plane.w + ")\n");
     } else {
-      output("b(" + getTriad(screenBase) + "," + radius + "," + getTriad(screenTip)
-          + ",0" + "," + color4(colix) + ")\n");
+      output("b(" + getTriad(screenBase) + "," + radius + ","
+          + getTriad(screenTip) + ",0" + "," + color4(colix) + ")\n");
     }
   }
 

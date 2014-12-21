@@ -30,7 +30,6 @@ import org.jmol.util.ContactPair;
 import org.jmol.util.Logger;
 
 import javajs.util.AU;
-import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.P3;
 import javajs.util.P3i;
@@ -400,18 +399,6 @@ abstract class AtomDataReader extends VolumeDataReader {
       setVoxelRange(2, xyzMin.z, xyzMax.z, ptsPerAngstrom, maxGrid,
           minPtsPerAng);
     }
-  }
-
-  protected boolean fixTitleLine(int iLine) {
-    if (params.title == null)
-      return false;
-    String line = params.title[iLine];
-    if (line.indexOf("%F") > 0)
-      line = params.title[iLine] = PT.formatStringS(line, "F",
-          atomData.fileName);
-    if (line.indexOf("%M") > 0)
-      params.title[iLine] = PT.formatStringS(line, "M", atomData.modelName);
-    return true;
   }
 
   protected void setVertexSource() {

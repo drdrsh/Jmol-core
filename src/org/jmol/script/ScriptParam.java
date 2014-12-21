@@ -36,7 +36,7 @@ abstract public class ScriptParam extends ScriptError {
                                     boolean mustBeBitSet, boolean andNotDeleted)
                throws ScriptException;
   abstract protected P3 getObjectCenter(String id, int index, int modelIndex);
-  abstract protected P4 getPlaneForObject(String id, V3 vAB, V3 vAC);
+  abstract protected P4 getPlaneForObject(String id, V3 vAB);
   abstract protected Lst<SV> parameterExpressionList(int pt, int ptAtom,
       boolean isArrayItem) throws ScriptException;
   abstract protected void restrictSelected(boolean isBond, boolean doInvert);
@@ -257,8 +257,8 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   public P4 planeParameter(int i) throws ScriptException {
-    V3 vAB = new V3();
-    V3 vAC = new V3();
+    V3 vTemp = new V3();
+    V3 vTemp2 = new V3();
     P4 plane = null;
     if (tokAt(i) == T.plane)
       i++;
@@ -274,7 +274,7 @@ abstract public class ScriptParam extends ScriptError {
         String id = objectNameParameter(++i);
         if (chk)
           return new P4();
-        plane = getPlaneForObject(id, vAB, vAC);
+        plane = getPlaneForObject(id, vTemp);
         break;
       case T.x:
         if (!checkToken(++i) || getToken(i++).tok != T.opEQ)
@@ -316,15 +316,22 @@ abstract public class ScriptParam extends ScriptError {
         P3 pt2 = atomCenterOrCoordinateParameter(iToken);
         if (getToken(++iToken).tok == T.comma)
           ++iToken;
-        P3 pt3 = atomCenterOrCoordinateParameter(iToken);
-        i = iToken;
-        V3 norm = new V3();
-        float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vAB, vAC);
-        plane = new P4();
-        plane.set4(norm.x, norm.y, norm.z, w);
+        if (isFloatParameter(iToken)) {
+          float frac = floatParameter(iToken);
+          plane = new P4();
+          vTemp.sub2(pt2, pt1);
+          vTemp.scale(frac * 2);
+          Measure.getBisectingPlane(pt1, vTemp, vTemp2, vTemp, plane);
+        } else {
+          P3 pt3 = atomCenterOrCoordinateParameter(iToken);
+          i = iToken;
+          V3 norm = new V3();
+          float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
+          plane = new P4();
+          plane.set4(norm.x, norm.y, norm.z, w);
+        }
         if (!chk && Logger.debugging)
-          Logger.debug("points: " + pt1 + pt2 + pt3 + " defined plane: "
-              + plane);
+          Logger.debug(" defined plane: " + plane);
         break;
       }
     if (plane == null)
@@ -349,8 +356,6 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   public P4 getHklPlane(P3 pt) {
-    V3 vAB = new V3();
-    V3 vAC = new V3();
     P3 pt1 = P3.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
     P3 pt2 = P3.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
     P3 pt3 = P3.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
@@ -376,12 +381,8 @@ abstract public class ScriptParam extends ScriptError {
     // base this one on the currently defined unit cell
     vwr.toCartesian(pt1, false);
     vwr.toCartesian(pt2, false);
-    vwr.toCartesian(pt3, false);
-    V3 plane = new V3();
-    float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, plane, vAB, vAC);
-    P4 pt4 = new P4();
-    pt4.set4(plane.x, plane.y, plane.z, w);
-    return pt4;
+    vwr.toCartesian(pt3, false);    
+    return Measure.getPlaneThroughPoints(pt1,  pt2, pt3, new V3(), new V3(), new P4());
   }
 
   protected Object getPointOrPlane(int index, boolean integerOnly,
