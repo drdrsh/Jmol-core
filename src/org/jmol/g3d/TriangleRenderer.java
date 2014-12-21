@@ -122,20 +122,6 @@ public class TriangleRenderer implements G3DRenderer {
    *
    *==============================================================*/
 
-  void drawfillTriangle(int xA, int yA, int zA, int xB, int yB, int zB, int xC,
-                        int yC, int zC, boolean useGouraud) {
-    ax[0] = xA;
-    ax[1] = xB;
-    ax[2] = xC;
-    ay[0] = yA;
-    ay[1] = yB;
-    ay[2] = yC;
-    az[0] = zA;
-    az[1] = zB;
-    az[2] = zC;
-    fillTriangleB(useGouraud);
-  }
-
   void fillTriangleXYZ(int xScreenA, int yScreenA, int zScreenA, int xScreenB,
                     int yScreenB, int zScreenB, int xScreenC, int yScreenC,
                     int zScreenC, boolean useGouraud) {
@@ -167,7 +153,6 @@ public class TriangleRenderer implements G3DRenderer {
 
   void fillTriangleP3f(P3 screenA, P3 screenB, P3 screenC,
                     boolean useGouraud) {
-    //if (screenA.y > 260)return;
     ax[0] = Math.round(screenA.x);
     ax[1] = Math.round(screenB.x);
     ax[2] = Math.round(screenC.x);
@@ -234,8 +219,15 @@ public class TriangleRenderer implements G3DRenderer {
     int nLines = yMax - yMin + 1;
     if (nLines > g3d.height * 3)
       return;
-    if (nLines > axW.length)
-      reallocRasterArrays(nLines);
+    if (nLines > axW.length) {
+      int n = (nLines + 31) & ~31;
+      axW = new int[n];
+      azW = new int[n];
+      axE = new int[n];
+      azE = new int[n];
+      rgb16sW = reallocRgb16s(rgb16sW, n);
+      rgb16sE = reallocRgb16s(rgb16sE, n);
+    }
     Rgb16[] gouraudW, gouraudE;
     if (useGouraud) {
       gouraudW = rgb16sW;
@@ -321,23 +313,69 @@ public class TriangleRenderer implements G3DRenderer {
       }
     }
     g3d.setZMargin(5);
-    if (useGouraud)
-      fillRasterG(yMin, nLines, isClipped, g3d.isPass2 ? 1 : 0);
-    else
-      fillRaster(yMin, nLines, isClipped, g3d.isPass2 ? 1 : 0);
+    int pass2Row = g3d.pass2Flag01;
+    int pass2Off = 1 - pass2Row;
+    int xW;
+    int i = 0;    
+    if (yMin < 0) {
+      nLines += yMin;
+      i -= yMin;
+      yMin = 0;
+    }
+    if (yMin + nLines > g3d.height)
+      nLines = g3d.height - yMin;
+    if (useGouraud) {
+      if (isClipped) {
+        for (; --nLines >= pass2Row; ++yMin, ++i) {
+          int pixelCount = axE[i] - (xW = axW[i]) + pass2Off;
+          if (pixelCount > 0)
+            g3d.plotPixelsClippedRaster(pixelCount, xW, yMin, azW[i], azE[i], rgb16sW[i], rgb16sE[i]);
+        }
+      } else {
+        for (; --nLines >= pass2Row; ++yMin, ++i) {
+          int pixelCount = axE[i] - (xW = axW[i]) + pass2Off;
+          if (pass2Row == 1 && pixelCount < 0) {
+            /*
+             * The issue here is that some very long, narrow triangles can be skipped
+             * altogether because axE < axW.
+             * 
+             */
+
+            pixelCount = 1;
+            xW--;
+          }
+          if (pixelCount > 0)
+            g3d.plotPixelsUnclippedRaster(pixelCount, xW, yMin, azW[i], azE[i], rgb16sW[i], rgb16sE[i]);
+        }
+      }
+    } else {
+      if (isClipped) {
+        for (; --nLines >= pass2Row; ++yMin, ++i) {
+          int pixelCount = axE[i] - (xW = axW[i]) + pass2Off;
+          if (pixelCount > 0)
+            g3d.plotPixelsClippedRaster(pixelCount, xW, yMin, azW[i], azE[i], null, null);
+        }
+      } else {
+        for (; --nLines >= pass2Row; ++yMin, ++i) {
+          int pixelCount = axE[i] - (xW = axW[i]) + pass2Off;
+          if (pass2Row == 1 && pixelCount < 0) {
+            /*
+             * The issue here is that some very long, narrow triangles can be skipped
+             * altogether because axE < axW.
+             * 
+             */
+
+            pixelCount = 1;
+            xW--;
+          }
+          if (pixelCount > 0)
+            g3d.plotPixelsUnclippedRaster(pixelCount, xW, yMin, azW[i], azE[i], null, null);
+        }
+      }
+    }
     g3d.setZMargin(0);
   }
-
-  private void reallocRasterArrays(int n) {
-    n = (n + 31) & ~31;
-    axW = new int[n];
-    azW = new int[n];
-    axE = new int[n];
-    azE = new int[n];
-    rgb16sW = reallocRgb16s(rgb16sW, n);
-    rgb16sE = reallocRgb16s(rgb16sE, n);
-  }
-
+ 
   private void generateRaster(int dy, int iN, int iS, int[] axRaster,
                               int[] azRaster, int iRaster, Rgb16[] gouraud) {
     int xN = ax[iN], zN = az[iN];
@@ -398,80 +436,6 @@ public class TriangleRenderer implements G3DRenderer {
 //          throw new NullPointerException();
 //        }
 //      }
-    }
-  }
-
-  private void fillRaster(int y, int numLines,
-                          boolean isClipped, int correction) {
-    int i = 0;
-    if (y < 0) {
-      numLines += y;
-      i -= y;
-      y = 0;
-    }
-    if (y + numLines > g3d.height)
-      numLines = g3d.height - y;
-    if (isClipped) {
-      for (; --numLines >= correction; ++y, ++i) {
-        int xW = axW[i];
-        int pixelCount = axE[i] - xW + 1 - correction;
-        if (pixelCount > 0)
-          g3d.plotPixelsClippedRaster(pixelCount, xW, y, azW[i], azE[i], null, null);
-      }
-    } else {
-      int xW;
-      for (; --numLines >= correction; ++y, ++i) {
-        int pixelCount = axE[i] - (xW = axW[i]) + 1 - correction;
-        if (correction == 1 && pixelCount < 0) {
-          /*
-           * The issue here is that some very long, narrow triangles can be skipped
-           * altogether because axE < axW.
-           * 
-           */
-
-          pixelCount = 1;
-          xW--;
-        }
-        if (pixelCount > 0)
-          g3d.plotPixelsUnclippedRaster(pixelCount, xW, y, azW[i], azE[i], null, null);
-      }
-    }
-  }
-
-  private void fillRasterG(int y, int numLines,
-                          boolean isClipped, int correction) {
-    int i = 0;
-    if (y < 0) {
-      numLines += y;
-      i -= y;
-      y = 0;
-    }
-    if (y + numLines > g3d.height)
-      numLines = g3d.height - y;
-    if (isClipped) {
-      for (; --numLines >= correction; ++y, ++i) {
-        int xW = axW[i];
-        int pixelCount = axE[i] - xW + 1 - correction;
-        if (pixelCount > 0)
-          g3d.plotPixelsClippedRaster(pixelCount, xW, y, azW[i], azE[i], rgb16sW[i], rgb16sE[i]);
-      }
-    } else {
-      int xW;
-      for (; --numLines >= correction; ++y, ++i) {
-        int pixelCount = axE[i] - (xW = axW[i]) + 1 - correction;
-        if (correction == 1 && pixelCount < 0) {
-          /*
-           * The issue here is that some very long, narrow triangles can be skipped
-           * altogether because axE < axW.
-           * 
-           */
-
-          pixelCount = 1;
-          xW--;
-        }
-        if (pixelCount > 0)
-          g3d.plotPixelsUnclippedRaster(pixelCount, xW, y, azW[i], azE[i], rgb16sW[i], rgb16sE[i]);
-      }
     }
   }
 

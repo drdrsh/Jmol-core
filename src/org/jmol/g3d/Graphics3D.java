@@ -311,6 +311,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     stringCount = 0;
     twoPass = true; //only for testing -- set false to disallow second pass
     isPass2 = false;
+    pass2Flag01 = 0;
     colixCurrent = 0;
     haveTranslucentObjects = false;
     translucentCoverOnly = !translucentMode;
@@ -350,6 +351,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (!haveTranslucentObjects || !currentlyRendering)
       return false;
     isPass2 = true;
+    pass2Flag01 = 1;
     colixCurrent = 0;
     //aap = true;
     if (pbufT == null || antialias2 != antialiasTranslucent) {
@@ -1838,6 +1840,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   private final byte[] shadeIndexes = new byte[normixCount];
   private final byte[] shadeIndexes2Sided = new byte[normixCount];
+  public int pass2Flag01;
     
   public void setRotationMatrix(M3 rotationMatrix) {
     V3[] vertexVectors = Normix.getVertexVectors();

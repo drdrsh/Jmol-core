@@ -47,7 +47,6 @@ import java.util.Map;
 
 import org.jmol.java.BS;
 import org.jmol.util.GData;
-import org.jmol.util.Logger;
 import org.jmol.util.Shader;
 
 final class LineRenderer {
@@ -64,19 +63,30 @@ final class LineRenderer {
   private float slope;
   private boolean lineTypeX;
   private int nBits;
-  private int nCached = 0;
-  private int nFound = 0;
+//  private int nCached = 0;
+//  private int nFound = 0;
   //int test = 5;
   private Map<Float, BS> lineCache = new Hashtable<Float, BS>();
   private Float slopeKey;
   
-  void setLineBits(float dx, float dy) { 
+  void setLineBits(float dx, float dy) {
     // from cylinder
-    slope = (dx != 0 ?  dy / dx : dy >= 0 ? Float.MAX_VALUE  : -Float.MAX_VALUE);
-    lineTypeX = (slope <=1 && slope >= -1);
+    slope = (dx != 0 ? dy / dx : dy >= 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
+    lineTypeX = (slope <= 1 && slope >= -1);
     nBits = (lineTypeX ? g3d.width : g3d.height);
-    if (getCachedLine())
+
+    // get cached line bits or create new ones
+
+    slopeKey = Float.valueOf(slope);
+    if (lineCache.containsKey(slopeKey)) {
+      lineBits = lineCache.get(slopeKey);
+      //    if (Logger.debugging) {
+      //      nFound++;
+      //      if (nFound == 1000000)
+      //        Logger.debug("nCached/nFound lines: " + nCached + " " + nFound);
+      //    }
       return;
+    }
     lineBits = BS.newN(nBits);
     dy = Math.abs(dy);
     dx = Math.abs(dx);
@@ -93,15 +103,15 @@ final class LineRenderer {
         lineBits.set(i);
         twoDError -= twoDx;
       }
-    }    
+    }
     lineCache.put(slopeKey, lineBits);
-    nCached++;
+    //nCached++;
     //if (--test > 0 || ((100-test) % 100 == 0)) System.out.println(test+" "+dx + " " + dy + " " + lineBits);
   }
   
   void clearLineCache() {
     lineCache.clear();
-    nCached = 0;
+    //nCached = 0;
   }
   
   void plotLine(int argbA, int argbB, 
@@ -115,9 +125,6 @@ final class LineRenderer {
     y2t = yB;
     z1t = zA;
     z2t = zB;
-    //if (xA != 250 && xB != 250)return;
-    //System.out.println("\t\t\t" + xA + "," + yA + " " + xB + "," + yB);
-
     if (clipped)
       switch (getTrimmedLine()) {
       case VISIBILITY_UNCLIPPED:
@@ -210,19 +217,6 @@ final class LineRenderer {
         - yA, zB - zA, clipped, run, rise);
   }
 
-  private boolean getCachedLine() {
-    slopeKey = Float.valueOf(slope);
-    if (!lineCache.containsKey(slopeKey))
-      return false;
-    lineBits = lineCache.get(slopeKey);
-    if (Logger.debugging) {
-      nFound++;
-      if (nFound == 1000000)
-        Logger.debug("nCached/nFound lines: " + nCached + " " + nFound);
-    }
-    return true;
-  }
-  
   private final static int VISIBILITY_UNCLIPPED = 0;
   private final static int VISIBILITY_CLIPPED = 1;
   private final static int VISIBILITY_OFFSCREEN = 2;
