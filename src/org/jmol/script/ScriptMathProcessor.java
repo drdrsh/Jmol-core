@@ -917,9 +917,7 @@ public class ScriptMathProcessor {
         m.invert();
         return addXM3(m);
       case T.matrix4f:
-        m4 = M4.newM4((M4) x2.value);
-        m4.invert();
-        return addXM4(m4);
+        return addXM4(M4.newM4((M4) x2.value).invert());
       case T.bitset:
         return addXBs(BSUtil.copyInvert(
             SV.bsSelectVar(x2),

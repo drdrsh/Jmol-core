@@ -60,6 +60,7 @@ public class Draw extends MeshCollection {
   // bob hanson hansonr@stolaf.edu 3/2006
   
   public Draw() {
+    // from reflection
     htObjects = new Hashtable<String, Mesh>();
   }
 
@@ -71,7 +72,7 @@ public class Draw extends MeshCollection {
     int index = meshCount++;
     meshes = dmeshes = (DrawMesh[]) AU.ensureLength(dmeshes,
         meshCount * 2);
-    currentMesh = thisMesh = dmeshes[index] = (m == null ? new DrawMesh(thisID,
+    currentMesh = thisMesh = dmeshes[index] = (m == null ? new DrawMesh(vwr, thisID,
         colix, index) : (DrawMesh) m);
     currentMesh.color = color;
     currentMesh.index = index;
@@ -162,7 +163,7 @@ public void initShape() {
         boundBox = (P3[]) value;
       return;
     }
-    
+
     if ("slab" == propertyName) {
       int meshIndex = getIndexFromName((String) value);
       if (meshIndex < 0) {
@@ -172,13 +173,18 @@ public void initShape() {
       Mesh m = meshes[meshIndex];
       if (m.checkByteCount != 1)
         return;
-      slabData = MeshSurface.newSlab(m.vs, m.vc, new float[m.vc], 
-          m.pis, m.pc, 1);
-      return;
+      MeshSurface ms = new MeshSurface();
+      ms.vs = m.vs;
+      ms.vvs = new float[m.vc];
+      ms.vc = m.vc;
+      ms.pis = m.pis;
+      ms.pc = m.pc;
+      ms.dataOnly = true;
+      slabData = ms;
     }
-    
+
     if ("lineData" == propertyName) {
-      lineData = new  Lst<P3[]>();
+      lineData = new Lst<P3[]>();
       if (indicatedModelIndex < 0)
         indicatedModelIndex = vwr.am.cmi;
       float[] fdata = (float[]) value;
@@ -186,11 +192,10 @@ public void initShape() {
       for (int i = 0, pt = 0; i < n; i++)
         lineData.addLast(new P3[] {
             P3.new3(fdata[pt++], fdata[pt++], fdata[pt++]),
-            P3.new3(fdata[pt++], fdata[pt++], fdata[pt++])
-            });
+            P3.new3(fdata[pt++], fdata[pt++], fdata[pt++]) });
       return;
     }
-    
+
     if ("modelIndex" == propertyName) {
       //from saved state -- used to set modelVertices
       indicatedModelIndex = ((Integer) value).intValue();
@@ -205,9 +210,10 @@ public void initShape() {
       plane = (P4) value;
       if (intersectID != null || boundBox != null || slabData != null)
         return;
-     if (isCircle || isArc)
+      if (isCircle || isArc)
         isPlane = true;
-      vData.addLast(new Object[] { Integer.valueOf(PT_COORD), P3.new3(Float.NaN, Float.NaN, Float.NaN) });
+      vData.addLast(new Object[] { Integer.valueOf(PT_COORD),
+          P3.new3(Float.NaN, Float.NaN, Float.NaN) });
       return;
     }
 
@@ -340,7 +346,7 @@ public void initShape() {
     if ("polygon" == propertyName) {
       polygon = (Lst<Object>) value;
       if (polygon == null)
-        polygon = new  Lst<Object>();
+        polygon = new Lst<Object>();
       return;
     }
 
@@ -370,10 +376,11 @@ public void initShape() {
     }
 
     if ("modelBasedPoints" == propertyName) {
-      vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_BASED_POINTS), value });
+      vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_BASED_POINTS),
+          value });
       return;
     }
-    
+
     if ("set" == propertyName) {
       if (thisMesh == null) {
         allocMesh(null, null);
@@ -382,8 +389,7 @@ public void initShape() {
       }
       thisMesh.isValid = (isValid ? setDrawing((int[]) value) : false);
       if (thisMesh.isValid) {
-        if (thisMesh.vc > 2 && length != Float.MAX_VALUE
-            && newScale == 1)
+        if (thisMesh.vc > 2 && length != Float.MAX_VALUE && newScale == 1)
           newScale = length;
         scale(thisMesh, newScale);
         thisMesh.initialize(T.fullylit, null, null);
@@ -396,7 +402,7 @@ public void initShape() {
       lineData = null;
       return;
     }
-    
+
     if (propertyName == "deleteModelAtoms") {
       deleteModels(((int[]) ((Object[]) value)[2])[0]);
       return;
@@ -541,21 +547,46 @@ protected void resetObjects() {
     thisMesh.clear("draw");
     thisMesh.diameter = diameter;
     thisMesh.width = width;
-    if (intersectID != null || boundBox != null)
-      setIntersectData();
-    else if (slabData != null)
-      setSlabData();
-    if (polygon == null && (lineData != null ? lineData.size() == 0 : (vData.size() == 0) == (connections == null))
-        || !isArrow && connections != null)
-      return false;  // connections only for arrows at this point
+    if (intersectID != null || boundBox != null) {
+      if (boundBox != null) {
+        // TODO
+        if (plane == null) {
+
+        }
+      } else if (plane != null && intersectID != null) {
+        Lst<P3[]> vData = new Lst<P3[]>();
+        Object[] data = new Object[] { intersectID, plane, vData, null };
+        vwr.shm.getShapePropertyData(JC.SHAPE_ISOSURFACE, "intersectPlane",
+            data);
+        if (vData.size() > 0) {
+          indicatedModelIndex = ((Integer) data[3]).intValue();
+          lineData = vData;
+        }
+      }
+    } else if (slabData != null && plane != null) {
+      slabData.getMeshSlicer().getIntersection(0, plane, null, null, null,
+          null, null, false, true, T.plane, false);
+      polygon = new Lst<Object>();
+      polygon.addLast(slabData.vs);
+      polygon.addLast(slabData.pis);
+    }
+    if (polygon == null
+        && (lineData != null ? lineData.size() == 0
+            : (vData.size() == 0) == (connections == null)) || !isArrow
+        && connections != null)
+      return false; // connections only for arrows at this point
     int modelCount = vwr.ms.mc;
-    if (polygon != null || lineData != null || indicatedModelIndex < 0
+    if (polygon != null
+        || lineData != null
+        || indicatedModelIndex < 0
         && (isFixed || isArrow || isCurve || isCircle || isCylinder || modelCount == 1)) {
       // make just ONE copy 
       // arrows and curves simply can't be handled as
       // multiple frames yet
-      thisMesh.modelIndex = (lineData == null ? vwr.am.cmi : indicatedModelIndex);
-      thisMesh.isFixed = (isFixed || lineData == null && thisMesh.modelIndex < 0 && modelCount > 1);
+      thisMesh.modelIndex = (lineData == null ? vwr.am.cmi
+          : indicatedModelIndex);
+      thisMesh.isFixed = (isFixed || lineData == null
+          && thisMesh.modelIndex < 0 && modelCount > 1);
       if (isFixed && modelCount > 1)
         thisMesh.modelIndex = -1;
       else if (lineData == null && thisMesh.modelIndex < 0)
@@ -570,7 +601,7 @@ protected void resetObjects() {
           return false;
         thisMesh.isTriangleSet = true;
         thisMesh.vs = (P3[]) polygon.get(0);
-        thisMesh.pis = (int[][]) polygon.get(1);          
+        thisMesh.pis = (int[][]) polygon.get(1);
         thisMesh.drawVertexCount = thisMesh.vc = thisMesh.vs.length;
         thisMesh.pc = thisMesh.pis.length;
         for (int i = 0; i < thisMesh.pc; i++) {
@@ -583,10 +614,10 @@ protected void resetObjects() {
       } else if (lineData != null) {
         thisMesh.lineData = lineData;
       } else {
-        thisMesh.setPolygonCount(1);      
+        thisMesh.setPolygonCount(1);
         if (setPoints(-1, -1))
           setPoints(-1, nPoints);
-        setPolygon(0); 
+        setPolygon(0);
       }
     } else {
       // multiple copies, one for each model involved
@@ -608,7 +639,7 @@ protected void resetObjects() {
         for (int iModel = 0; iModel < modelCount; iModel++) {
           if (bsModels.get(iModel) && setPoints(iModel, -1)) {
             setPoints(iModel, nPoints);
-            setPolygon(iModel); 
+            setPolygon(iModel);
             thisMesh.setCenter(iModel);
             thisMesh.drawTypes[iModel] = thisMesh.drawType;
             thisMesh.drawVertexCounts[iModel] = thisMesh.drawVertexCount;
@@ -625,8 +656,9 @@ protected void resetObjects() {
     thisMesh.isVector = isVector;
     thisMesh.noHead = noHead;
     thisMesh.isBarb = isBarb;
-    thisMesh.width= (thisMesh.drawType == EnumDrawType.CYLINDER || 
-        thisMesh.drawType == EnumDrawType.CIRCULARPLANE ? -Math.abs(width) : width);
+    thisMesh.width = (thisMesh.drawType == EnumDrawType.CYLINDER
+        || thisMesh.drawType == EnumDrawType.CIRCULARPLANE ? -Math.abs(width)
+        : width);
     thisMesh.setCenter(-1);
     if (offset != null)
       thisMesh.offset(offset);
@@ -646,35 +678,8 @@ protected void resetObjects() {
         deleteMeshI(i);
   }
 
-  private void setIntersectData() {
-    if (boundBox != null) {
-      // TODO
-      if (plane == null) {
-        
-      }
-    } else if (plane != null && intersectID != null) {
-      Lst<P3[]> vData = new  Lst<P3[]>();
-      Object[] data = new Object[] { intersectID, plane, vData, null };
-      vwr.shm.getShapePropertyData(JC.SHAPE_ISOSURFACE, "intersectPlane",
-          data);
-      if (vData.size() == 0)
-        return;
-      indicatedModelIndex = ((Integer)data[3]).intValue();
-      lineData = vData;
-    }
-  }
-
   MeshSurface slabData;
   
-  private void setSlabData() {
-    if (plane != null) {
-      slabData.getIntersection(0, plane, null, null, null, null, null, false, true, T.plane, false);
-      polygon = new  Lst<Object>();
-      polygon.addLast(slabData.vs);
-      polygon.addLast(slabData.pis);
-    }
-  }
-
   private void addPoint(T3 newPt, int iModel) {
     boolean isOK = (iModel < 0 || bsAllModels.get(iModel));
     if (makePoints) {

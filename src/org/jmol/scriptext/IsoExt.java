@@ -852,6 +852,7 @@ public class IsoExt extends CmdExt {
         .ms.getInfo(modelIndex, "moData");
     if (moData == null)
       error(ScriptError.ERROR_moModelError);
+    vwr.checkMenuUpdate();
     if (nboType != null) {
       setNBOType(moData, nboType);
       if (lc == null && moNumber == Integer.MAX_VALUE)
@@ -3287,8 +3288,10 @@ public class IsoExt extends CmdExt {
     case T.expressionBegin:
       data = atomExpressionAt(i + 1);
       tok = T.decimal;
-      if (!eval.isCenterParameter(++eval.iToken))
+      if (!eval.isCenterParameter(++eval.iToken)) {
+        isSlab = true;
         break;
+      }
       data = null;
       //$FALL-THROUGH$
     default:

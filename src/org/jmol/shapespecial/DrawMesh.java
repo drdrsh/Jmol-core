@@ -28,6 +28,7 @@ import org.jmol.java.BS;
 import org.jmol.shape.Mesh;
 import org.jmol.shapespecial.Draw.EnumDrawType;
 import org.jmol.util.BSUtil;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
 import javajs.util.P3;
@@ -38,15 +39,16 @@ public class DrawMesh extends Mesh {
   /**
    * @j2sIgnoreSuperConstructor
    * 
+   * @param vwr 
    * @param thisID
    * @param colix
    * @param index
    */
-  public DrawMesh(String thisID, short colix, int index) {
+  public DrawMesh(Viewer vwr, String thisID, short colix, int index) {
     drawType = EnumDrawType.NONE;
     axis = V3.new3 (1, 0, 0);
     bsMeshesVisible =  new BS ();
-    mesh1(thisID, colix, index);
+    mesh1(vwr, thisID, colix, index);
   }
 
   public BS bsMeshesVisible;

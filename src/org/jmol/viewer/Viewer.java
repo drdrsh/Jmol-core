@@ -9165,4 +9165,9 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     return (jbr == null ? jbr = ((JmolBioResolver) Interface
     .getInterface("org.jmol.modelsetbio.Resolver", this, "file")).setViewer(this) : jbr);
   }
+
+  public void checkMenuUpdate() {
+    if (jmolpopup != null)
+      jmolpopup.jpiUpdateComputedMenus();
+  }
 }

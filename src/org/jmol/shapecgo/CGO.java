@@ -44,6 +44,7 @@ public class CGO extends Draw {
   private boolean useColix;
   
   public CGO() {
+    // for reflection
     super();
   }
   
@@ -57,7 +58,7 @@ public class CGO extends Draw {
     int index = meshCount++;
     meshes = cmeshes = (CGOMesh[]) AU.ensureLength(cmeshes,
         meshCount * 2);
-    currentMesh = thisMesh = cgoMesh = cmeshes[index] = (m == null ? new CGOMesh(thisID,
+    currentMesh = thisMesh = cgoMesh = cmeshes[index] = (m == null ? new CGOMesh(vwr, thisID,
         colix, index) : (CGOMesh) m);
     currentMesh.color = color;
     currentMesh.index = index;

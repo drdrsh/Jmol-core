@@ -182,6 +182,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private static final String exitAction = "exit";
   private static final String aboutAction = "about";
   private static final String whatsnewAction = "whatsnew";
+  private static final String creditsAction = "credits";
   private static final String uguideAction = "uguide";
   private static final String printActionProperty = "print";
   private static final String recentFilesAction = "recentFiles";
@@ -1011,7 +1012,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private Action[] defaultActions = { new NewAction(), new NewwinAction(),
       new OpenAction(), new OpenUrlAction(), new OpenPdbAction(), new OpenMolAction(), printAction, exportAction,
       new CloseAction(), new ExitAction(), copyImageAction, copyScriptAction,
-      pasteClipboardAction, new AboutAction(), new WhatsNewAction(),
+      pasteClipboardAction, new AboutAction(), new WhatsNewAction(), new CreditsAction(),
       new UguideAction(), new ConsoleAction(),  
       new RecentFilesAction(), povrayAction, writeAction, toWebAction, 
       new ScriptWindowAction(), new ScriptEditorAction(),
@@ -1073,6 +1074,18 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     }
   }
 
+  class CreditsAction extends AbstractAction {
+
+    public CreditsAction() {
+      super(creditsAction);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      (new CreditsDialog(frame)).setVisible(true);
+    }
+  }
+
   class GaussianAction extends AbstractAction {
     public GaussianAction() {
       super(gaussianAction);
@@ -1113,7 +1126,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      (new HelpDialog(frame)).setVisible(true);
+      vwr.showUrl(JmolResourceHandler.getStringX("UGuide.wikiURL"));
+      //showHelp(new HelpDialog(frame)).setVisible(true);
     }
   }
 

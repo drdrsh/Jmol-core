@@ -111,7 +111,7 @@ public class Mesh extends MeshSurface {
   public boolean frontOnly = false;
   public boolean isTwoSided = true;
   public boolean havePlanarContours = false;
-  
+
   /**
    * always use Mesh().mesh1(thisID, colix, index)
    * 
@@ -120,10 +120,11 @@ public class Mesh extends MeshSurface {
   public Mesh() {
   }
   
-  public Mesh mesh1(String thisID, short colix, int index) {
+  public Mesh mesh1(Viewer vwr, String thisID, short colix, int index) {
     // prevents JavaScript 
     if (PREVIOUS_MESH_ID.equals(thisID))
       thisID = null;
+    this.vwr = vwr;
     this.thisID = thisID;
     this.colix = colix;
     this.index = index;
@@ -150,7 +151,7 @@ public class Mesh extends MeshSurface {
     bsSlabGhost = null;
     symops = null;
     symopColixes = null;
-    bsTransPolygons = null;
+    //bsTransPolygons = null;
     cappingObject = null;
     colix = C.GOLD;
     colorDensity = false;
@@ -167,7 +168,7 @@ public class Mesh extends MeshSurface {
     mat4 = null;
     normixes = null;
     pis = null;
-    polygonTranslucencies = null;
+    //polygonTranslucencies = null;
     scale3d = 0;
     showContourLines = false;
     showPoints = false;
@@ -272,35 +273,36 @@ public class Mesh extends MeshSurface {
   public short[] symopColixes;
 
   protected void sumVertexNormals(T3[] vertices, V3[] normals) {
-    sumVertexNormals2(vertices, normals);
+    // subclassed in IsosurfaceMesh
+    sumVertexNormals2(this, vertices, normals);
   }
 
-  protected void sumVertexNormals2(T3[] vertices, V3[] normals) {
-    // subclassed in IsosurfaceMesh
-    int adjustment = checkByteCount;
-    float min = getMinDistance2ForVertexGrouping();
-    for (int i = pc; --i >= 0;) {
+  protected static void sumVertexNormals2(Mesh m, T3[] vertices, V3[] normals) {
+    int adjustment = m.checkByteCount;
+    float min = m.getMinDistance2ForVertexGrouping();
+    for (int i = m.pc; --i >= 0;) {
       try {
-        if (!setABC(i))
+        int[] face = m.setABC(i);
+        if (face == null)
           continue;
-        T3 vA = vertices[iA];
-        T3 vB = vertices[iB];
-        T3 vC = vertices[iC];
+        T3 vA = vertices[face[0]];
+        T3 vB = vertices[face[1]];
+        T3 vC = vertices[face[2]];
         // no skinny triangles
         if (vA.distanceSquared(vB) < min || vB.distanceSquared(vC) < min
             || vA.distanceSquared(vC) < min)
           continue;
-        Measure.calcNormalizedNormal(vA, vB, vC, vTemp, vAB);
-        if (isTriangleSet) {
-          normals[i].setT(vTemp);
-          continue;
+        Measure.calcNormalizedNormal(vA, vB, vC, m.vTemp, m.vAB);
+        if (m.isTriangleSet) {
+          normals[i].setT(m.vTemp);
+        } else {
+          float l = m.vTemp.length();
+          if (l > 0.9 && l < 1.1) // test for not infinity or -infinity or isNaN
+            for (int j = face.length - adjustment; --j >= 0;) {
+              int k = face[j];
+              normals[k].add(m.vTemp);
+            }
         }
-        float l = vTemp.length();
-        if (l > 0.9 && l < 1.1) // test for not infinity or -infinity or isNaN
-          for (int j = pis[i].length - adjustment; --j >= 0;) {
-            int k = pis[i][j];
-            normals[k].add(vTemp);
-          }
       } catch (Exception e) {
         System.out.println(e);
       }
@@ -511,10 +513,9 @@ public class Mesh extends MeshSurface {
   }
 
   /**
-   * @param vwr  
    * @return unitcell
    */
-  public SymmetryInterface getUnitCell(Viewer vwr) {
+  public SymmetryInterface getUnitCell() {
     // isosurfaceMesh only
     return null;
   }

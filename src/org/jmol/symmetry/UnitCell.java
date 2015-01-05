@@ -100,7 +100,7 @@ class UnitCell extends SimpleUnitCell {
     M4 m = new M4();
     m.setToM3(mat);
     matrixFractionalToCartesian.mul2(m, matrixFractionalToCartesian);
-    matrixCartesianToFractional.invertM(matrixFractionalToCartesian);
+    matrixCartesianToFractional.setM4(matrixFractionalToCartesian).invert();
     initUnitcellVertices();
   }
 
@@ -436,11 +436,8 @@ class UnitCell extends SimpleUnitCell {
     matrixCtoFANoOffset = M4.newM4(matrixCartesianToFractional);
     matrixFtoCNoOffset = M4.newM4(matrixFractionalToCartesian);
     vertices = new P3[8];
-    for (int i = 8; --i >= 0;) {
-      vertices[i] = new P3(); 
-      matrixFractionalToCartesian.rotTrans2(BoxInfo.unitCubePoints[i], vertices[i]);
-      //System.out.println("UNITCELL " + vertices[i] + " " + BoxInfo.unitCubePoints[i]);
-    }
+    for (int i = 8; --i >= 0;)
+      vertices[i] = (P3) matrixFractionalToCartesian.rotTrans2(BoxInfo.unitCubePoints[i], new P3());
   }
 
   /**

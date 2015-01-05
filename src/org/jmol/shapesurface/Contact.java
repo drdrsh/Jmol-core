@@ -592,7 +592,7 @@ public class Contact extends Isosurface {
         iSlab0 = -100;
     }
     if (iSlab0 != iSlab1)
-      thisMesh.slabPolygons(TempArray.getSlabWithinRange(iSlab0, iSlab1),
+      thisMesh.getMeshSlicer().slabPolygons(TempArray.getSlabWithinRange(iSlab0, iSlab1),
           false);
     if (displayType != T.surface)
       thisMesh.setMerged(true);

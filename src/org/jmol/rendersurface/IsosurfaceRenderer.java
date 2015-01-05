@@ -31,6 +31,8 @@ import org.jmol.shapesurface.Isosurface;
 import org.jmol.shapesurface.IsosurfaceMesh;
 import org.jmol.util.C;
 import org.jmol.util.GData;
+import org.jmol.util.MeshSurface;
+
 import javajs.util.Lst;
 import org.jmol.util.Normix;
 import org.jmol.viewer.JC;
@@ -479,7 +481,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       } else {
         // mesh only
         // check: 1 (ab) | 2(bc) | 4(ac)
-        check &= polygon[3];
+        check &= polygon[MeshSurface.P_CHECK];
         if (check == 0)
           continue;
         if (iShowTriangles)
@@ -492,7 +494,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
         pt3i.z -= 2;
         if (noColor) {
         } else if (colorArrayed) {
-          g3d.setC(mesh.fillTriangles ? C.BLACK : contourColixes[polygon[4]
+          g3d.setC(mesh.fillTriangles ? C.BLACK : contourColixes[polygon[MeshSurface.P_CONTOUR]
               % contourColixes.length]);
         } else {
           drawTriangle(pt1i, colixA, pt2i, colixB, pt3i, colixC, check, diam);

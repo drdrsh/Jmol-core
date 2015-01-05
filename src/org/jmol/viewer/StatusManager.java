@@ -396,8 +396,8 @@ public class StatusManager {
               sJmol,
               new int[] { frameNo, fileNo, modelNo, firstNo, lastNo,
                   currentFrame }, entryName, Float.valueOf(currentMorphModel) });
-    if (vwr.jmolpopup != null && !animating)
-      vwr.jmolpopup.jpiUpdateComputedMenus();
+    if (!animating)
+      vwr.checkMenuUpdate();
   }
 
   synchronized boolean setStatusDragDropped(int mode, int x, int y,

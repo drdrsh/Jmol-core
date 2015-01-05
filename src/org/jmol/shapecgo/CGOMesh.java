@@ -32,6 +32,8 @@ import javajs.util.CU;
 import javajs.util.Lst;
 import org.jmol.util.Logger;
 import org.jmol.util.Normix;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.T3;
 
 /*
@@ -44,8 +46,8 @@ public class CGOMesh extends DrawMesh {
   
   public Lst<Object> cmds;
 
-  CGOMesh(String thisID, short colix, int index) {
-    super(thisID, colix, index);
+  CGOMesh(Viewer vwr, String thisID, short colix, int index) {
+    super(vwr, thisID, colix, index);
   }
   
   public final static int GL_POINTS = 0;

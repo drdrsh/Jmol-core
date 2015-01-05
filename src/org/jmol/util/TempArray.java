@@ -191,7 +191,6 @@ public class TempArray {
         new Float[] {Float.valueOf(min), Float.valueOf(max)}, Boolean.FALSE, null };
   }
 
-
   public static Object[] getSlabObjectType(int tok, Object data, boolean isCap, Object colorData) {
     return new Object[] { Integer.valueOf(tok), data, Boolean.valueOf(isCap), colorData };
   }

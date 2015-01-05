@@ -48,6 +48,12 @@ public class P3 extends T3 {
     return p;
   }
 
+  private static P3 unlikely;
+  
+  public static P3 getUnlikely() {
+    return (unlikely == null ? unlikely = new3((float) Math.PI, (float) Math.E, (float) (Math.PI * Math.E)) : unlikely);
+  }
+  
   public static P3 new3(float x, float y, float z) {
     P3 p = new P3();
     p.x = x;

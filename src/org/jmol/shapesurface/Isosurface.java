@@ -112,6 +112,7 @@ import org.jmol.shape.Shape;
 import org.jmol.util.Escape;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
+import org.jmol.util.TempArray;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.util.AU;
@@ -119,7 +120,6 @@ import javajs.util.Lst;
 import javajs.util.SB;
 
 import org.jmol.util.Logger;
-import org.jmol.util.MeshSurface;
 import javajs.util.PT;
 
 import javajs.util.A4;
@@ -150,7 +150,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     int index = meshCount++;
     meshes = isomeshes = (IsosurfaceMesh[]) AU.ensureLength(isomeshes,
         meshCount * 2);
-    currentMesh = thisMesh = isomeshes[index] = (m == null ? new IsosurfaceMesh(
+    currentMesh = thisMesh = isomeshes[index] = (m == null ? new IsosurfaceMesh(vwr,
         thisID, colix, index) : (IsosurfaceMesh) m);
     currentMesh.index = index;
     if (sg != null)
@@ -489,7 +489,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("fixLattice" == propertyName) {
       if (thisMesh != null)
-        thisMesh.fixLattice(vwr);
+        thisMesh.fixLattice();
       return;
     }
 
@@ -519,9 +519,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
 
     if ("cap" == propertyName) {
-      // for lcaocartoons?
       if (thisMesh != null && thisMesh.pc != 0) {
-        thisMesh.slabPolygons((Object[]) value, true);
+        thisMesh.getMeshSlicer().slabPolygons((Object[]) value, true);
         thisMesh.initialize(thisMesh.lighting, null, null);
         return;
       }
@@ -763,7 +762,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   }
 
   protected void slabPolygons(Object[] slabInfo) {
-    thisMesh.slabPolygons(slabInfo, false);
+    thisMesh.getMeshSlicer().slabPolygons(slabInfo, false);
     thisMesh.reinitializeLightingAndColor(vwr);
   }
 
@@ -795,7 +794,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (mesh == null)
         return false;
       data[3] = Integer.valueOf(mesh.modelIndex);
-      mesh.getIntersection(0, (P4) data[1], null, (Lst<P3[]>) data[2], null, null, null, false, false, T.plane, false);
+      mesh.getMeshSlicer().getIntersection(0, (P4) data[1], null, (Lst<P3[]>) data[2], null, null, null, false, false, T.plane, false);
       return true;
     }
     if (property == "getBoundingBox") {
@@ -818,7 +817,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
     if (property == "unitCell") {
       IsosurfaceMesh m = (IsosurfaceMesh) getMesh((String) data[0]);
-      return (m != null && (data[1] = m.getUnitCell(vwr)) != null);
+      return (m != null && (data[1] = m.getUnitCell()) != null);
     }
     if (property == "getCenter") {
       int index = ((Integer)data[1]).intValue();
@@ -950,7 +949,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       f *= (thisMesh.bsSlabDisplay == null ? thisMesh.vc : thisMesh.bsSlabDisplay.cardinality());
       return  thisMesh.calculatedVolume = Float.valueOf(f); 
     }
-    Object ret = meshData.calculateVolumeOrArea(thisMesh.jvxlData.thisSet, isArea, false);
+    Object ret = MeshData.calculateVolumeOrArea(meshData, thisMesh.jvxlData.thisSet, isArea, false);
     if (thisMesh.nSets <= 0)
       thisMesh.nSets = -meshData.nSets;
     if (isArea)
@@ -1111,11 +1110,36 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   protected void getCapSlabInfo(String script) {
     int i = script.indexOf("# SLAB=");
     if (i >= 0)
-      sg.setProp("slab", MeshSurface.getCapSlabObject(PT.getQuotedStringAt(script, i), false), null);
+      sg.setProp("slab", getCapSlabObject(PT.getQuotedStringAt(script, i), false), null);
     i = script.indexOf("# CAP=");
     if (i >= 0)
-      sg.setProp("slab", MeshSurface.getCapSlabObject(PT.getQuotedStringAt(script, i), true), null);
+      sg.setProp("slab", getCapSlabObject(PT.getQuotedStringAt(script, i), true), null);
   }
+
+  /**
+   * legacy -- for some scripts with early isosurface slabbing
+   * 
+   * @param s
+   * @param isCap
+   * @return slabInfo object
+   */
+  private Object[] getCapSlabObject(String s, boolean isCap) {
+    try {
+      if (s.indexOf("array") == 0) {
+        String[] pts = PT.split(s.substring(6, s.length() - 1), ",");
+        return TempArray.getSlabObjectType(T.boundbox,
+            new P3[] { (P3) Escape.uP(pts[0]), (P3) Escape.uP(pts[1]),
+                (P3) Escape.uP(pts[2]), (P3) Escape.uP(pts[3]) }, isCap, null);
+      }
+      Object plane = Escape.uP(s);
+      if (plane instanceof P4)
+        return TempArray.getSlabObjectType(T.plane, plane, isCap, null);
+    } catch (Exception e) {
+      //
+    }
+    return null;
+  }
+
 
   private boolean iHaveModelIndex;
 
@@ -1442,7 +1466,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         : T.frontlit, null, sg.params.thePlane);
       if (jvxlData.fixedLattice != null) {
         thisMesh.lattice = jvxlData.fixedLattice;
-        thisMesh.fixLattice(vwr);
+        thisMesh.fixLattice();
       }
         return;
 
@@ -1527,10 +1551,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
   @Override
   public int addTriangleCheck(int iA, int iB, int iC, int check,
-                              int check2, boolean isAbsolute, int color) {
+                              int iContour, boolean isAbsolute, int color) {
    return (iA < 0 || iB < 0 || iC < 0 
        || isAbsolute && !MeshData.checkCutoff(iA, iB, iC, thisMesh.vvs)
-       ? -1 : thisMesh.addTriangleCheck(iA, iB, iC, check, check2, color));
+       ? -1 : thisMesh.addTriangleCheck(iA, iB, iC, check, iContour, color));
   }
 
   protected void setScriptInfo(String strCommand) {
@@ -1765,113 +1789,114 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         .isColixTranslucent(m.colix);
   }
 
-//  private void navigate(int dz) {
-//    if (thisMesh == null)
-//      return;
-//    Point3f navPt = Point3f.newP(vwr.getNavigationOffset());
-//    Point3f toPt = new Point3f();
-//    vwr.unTransformPoint(navPt, toPt);
-//    navPt.z += dz;
-//    vwr.unTransformPoint(navPt, toPt);
-//    Point3f ptRet = new Point3f();
-//    Vector3f vNorm = new Vector3f();
-//    if (!getClosestNormal(thisMesh, toPt, ptRet, vNorm))
-//      return;
-//    Point3f pt2 = Point3f.newP(ptRet);
-//    pt2.add(vNorm);
-//    Point3f pt2s = new Point3f();
-//    vwr.tm.transformPt3f(pt2, pt2s);
-//    if (pt2s.y > navPt.y)
-//      vNorm.scale(-1);
-//    setHeading(ptRet, vNorm, 0);     
-//  }
+  //  private void navigate(int dz) {
+  //    if (thisMesh == null)
+  //      return;
+  //    Point3f navPt = Point3f.newP(vwr.getNavigationOffset());
+  //    Point3f toPt = new Point3f();
+  //    vwr.unTransformPoint(navPt, toPt);
+  //    navPt.z += dz;
+  //    vwr.unTransformPoint(navPt, toPt);
+  //    Point3f ptRet = new Point3f();
+  //    Vector3f vNorm = new Vector3f();
+  //    if (!getClosestNormal(thisMesh, toPt, ptRet, vNorm))
+  //      return;
+  //    Point3f pt2 = Point3f.newP(ptRet);
+  //    pt2.add(vNorm);
+  //    Point3f pt2s = new Point3f();
+  //    vwr.tm.transformPt3f(pt2, pt2s);
+  //    if (pt2s.y > navPt.y)
+  //      vNorm.scale(-1);
+  //    setHeading(ptRet, vNorm, 0);     
+  //  }
 
-//  private void setHeading(Point3f pt, Vector3f vNorm, int nSeconds) {
-//    // general trick here is to save the original orientation, 
-//    // then do all the changes and save the new orientation.
-//    // Then just do a timed restore.
-//
-//    Orientation o1 = vwr.getOrientation();
-//    
-//    // move to point
-//    vwr.navigatePt(pt);
-//    
-//    Point3f toPts = new Point3f();
-//    
-//    // get screen point along normal
-//    Point3f toPt = Point3f.newP(vNorm);
-//    //vwr.script("draw test2 vector " + Escape.escape(pt) + " " + Escape.escape(toPt));
-//    toPt.add(pt);
-//    vwr.tm.transformPt3f(toPt, toPts);
-//    
-//    // subtract the navigation point to get a relative point
-//    // that we can project into the xy plane by setting z = 0
-//    Point3f navPt = Point3f.newP(vwr.getNavigationOffset());
-//    toPts.sub(navPt);
-//    toPts.z = 0;
-//    
-//    // set the directed angle and rotate normal into yz plane,
-//    // less 20 degrees for the normal upward sloping view
-//    float angle = Measure.computeTorsion(JmolConstants.axisNY, 
-//        JmolConstants.center, JmolConstants.axisZ, toPts, true);
-//    vwr.navigateAxis(JmolConstants.axisZ, angle);        
-//    toPt.setT(vNorm);
-//    toPt.add(pt);
-//    vwr.tm.transformPt3f(toPt, toPts);
-//    toPts.sub(navPt);
-//    angle = Measure.computeTorsion(JmolConstants.axisNY,
-//        JmolConstants.center, JmolConstants.axisX, toPts, true);
-//    vwr.navigateAxis(JmolConstants.axisX, 20 - angle);
-//    
-//    // save this orientation, restore the first, and then
-//    // use TransformManager.moveto to smoothly transition to it
-//    // a script is necessary here because otherwise the application
-//    // would hang.
-//    
-//    navPt = Point3f.newP(vwr.getNavigationOffset());
-//    if (nSeconds <= 0)
-//      return;
-//    vwr.saveOrientation("_navsurf");
-//    o1.restore(0, true);
-//    vwr.script("restore orientation _navsurf " + nSeconds);
-//  }
-  
-//  private boolean getClosestNormal(IsosurfaceMesh m, Point3f toPt, Point3f ptRet, Vector3f normalRet) {
-//    Point3f[] centers = m.getCenters();
-//    float d;
-//    float dmin = Float.MAX_VALUE;
-//    int imin = -1;
-//    for (int i = centers.length; --i >= 0; ) {
-//      if ((d = centers[i].distance(toPt)) >= dmin)
-//        continue;
-//      dmin = d;
-//      imin = i;
-//    }
-//    if (imin < 0)
-//      return false;
-//    getClosestPoint(m, imin, toPt, ptRet, normalRet);
-//    return true;
-//  }
-  
-//  private void getClosestPoint(IsosurfaceMesh m, int imin, Point3f toPt, Point3f ptRet,
-//                               Vector3f normalRet) {
-//    Point4f plane = m.getFacePlane(imin, normalRet);
-//    float dist = Measure.distanceToPlane(plane, toPt);
-//    normalRet.scale(-dist);
-//    ptRet.setT(toPt);
-//    ptRet.add(normalRet);
-//    dist = Measure.distanceToPlane(plane, ptRet);
-//    if (m.centers[imin].distance(toPt) < ptRet.distance(toPt))
-//      ptRet.setT(m.centers[imin]);
-//  }
+  //  private void setHeading(Point3f pt, Vector3f vNorm, int nSeconds) {
+  //    // general trick here is to save the original orientation, 
+  //    // then do all the changes and save the new orientation.
+  //    // Then just do a timed restore.
+  //
+  //    Orientation o1 = vwr.getOrientation();
+  //    
+  //    // move to point
+  //    vwr.navigatePt(pt);
+  //    
+  //    Point3f toPts = new Point3f();
+  //    
+  //    // get screen point along normal
+  //    Point3f toPt = Point3f.newP(vNorm);
+  //    //vwr.script("draw test2 vector " + Escape.escape(pt) + " " + Escape.escape(toPt));
+  //    toPt.add(pt);
+  //    vwr.tm.transformPt3f(toPt, toPts);
+  //    
+  //    // subtract the navigation point to get a relative point
+  //    // that we can project into the xy plane by setting z = 0
+  //    Point3f navPt = Point3f.newP(vwr.getNavigationOffset());
+  //    toPts.sub(navPt);
+  //    toPts.z = 0;
+  //    
+  //    // set the directed angle and rotate normal into yz plane,
+  //    // less 20 degrees for the normal upward sloping view
+  //    float angle = Measure.computeTorsion(JmolConstants.axisNY, 
+  //        JmolConstants.center, JmolConstants.axisZ, toPts, true);
+  //    vwr.navigateAxis(JmolConstants.axisZ, angle);        
+  //    toPt.setT(vNorm);
+  //    toPt.add(pt);
+  //    vwr.tm.transformPt3f(toPt, toPts);
+  //    toPts.sub(navPt);
+  //    angle = Measure.computeTorsion(JmolConstants.axisNY,
+  //        JmolConstants.center, JmolConstants.axisX, toPts, true);
+  //    vwr.navigateAxis(JmolConstants.axisX, 20 - angle);
+  //    
+  //    // save this orientation, restore the first, and then
+  //    // use TransformManager.moveto to smoothly transition to it
+  //    // a script is necessary here because otherwise the application
+  //    // would hang.
+  //    
+  //    navPt = Point3f.newP(vwr.getNavigationOffset());
+  //    if (nSeconds <= 0)
+  //      return;
+  //    vwr.saveOrientation("_navsurf");
+  //    o1.restore(0, true);
+  //    vwr.script("restore orientation _navsurf " + nSeconds);
+  //  }
+
+  //  private boolean getClosestNormal(IsosurfaceMesh m, Point3f toPt, Point3f ptRet, Vector3f normalRet) {
+  //    Point3f[] centers = m.getCenters();
+  //    float d;
+  //    float dmin = Float.MAX_VALUE;
+  //    int imin = -1;
+  //    for (int i = centers.length; --i >= 0; ) {
+  //      if ((d = centers[i].distance(toPt)) >= dmin)
+  //        continue;
+  //      dmin = d;
+  //      imin = i;
+  //    }
+  //    if (imin < 0)
+  //      return false;
+  //    getClosestPoint(m, imin, toPt, ptRet, normalRet);
+  //    return true;
+  //  }
+
+  //  private void getClosestPoint(IsosurfaceMesh m, int imin, Point3f toPt, Point3f ptRet,
+  //                               Vector3f normalRet) {
+  //    Point4f plane = m.getFacePlane(imin, normalRet);
+  //    float dist = Measure.distanceToPlane(plane, toPt);
+  //    normalRet.scale(-dist);
+  //    ptRet.setT(toPt);
+  //    ptRet.add(normalRet);
+  //    dist = Measure.distanceToPlane(plane, ptRet);
+  //    if (m.centers[imin].distance(toPt) < ptRet.distance(toPt))
+  //      ptRet.setT(m.centers[imin]);
+  //  }
 
   /**
    * 
    * @param x
    * @param y
-   * @param isPicking IGNORED
+   * @param isPicking
+   *        IGNORED
    * @param bsVisible
-   * @return  value found 
+   * @return value found
    */
   private String findValue(int x, int y, boolean isPicking, BS bsVisible) {
     int dmin2 = MAX_OBJECT_CLICK_DISTANCE_SQUARED;
@@ -1902,15 +1927,16 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
               pickedContour = vc;
               pickedJ = j;
               pickedMesh = m;
-              pickedPt = v; 
+              pickedPt = v;
             }
           }
         }
         if (pickedContour != null)
-          return pickedContour.get(JvxlCoder.CONTOUR_VALUE).toString() + (Logger.debugging ? " " + pickedJ : "");
+          return pickedContour.get(JvxlCoder.CONTOUR_VALUE).toString()
+              + (Logger.debugging ? " " + pickedJ : "");
       } else if (m.jvxlData.jvxlPlane != null && m.vvs != null) {
-        T3[] vertices = (m.mat4 == null && m.scale3d == 0 
-            ? m.vs : m.getOffsetVertices(m.jvxlData.jvxlPlane)); 
+        T3[] vertices = (m.mat4 == null && m.scale3d == 0 ? m.vs : m
+            .getOffsetVertices(m.jvxlData.jvxlPlane));
         for (int k = m.vc; --k >= ilast;) {
           T3 v = vertices[k];
           int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
@@ -1918,29 +1944,46 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
             dmin2 = d2;
             pickedVertex = k;
             pickedMesh = m;
-            pickedPt = v; 
+            pickedPt = v;
           }
         }
         if (pickedVertex != -1)
           break;
       } else if (m.vvs != null) {
-        for (int k = m.vc; --k >= ilast;) {
-          T3 v = m.vs[k];
-          int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
-          if (d2 >= 0) {
-            dmin2 = d2;
-            pickedVertex = k;
-            pickedMesh = m;
-            pickedPt = v; 
+        if (m.bsSlabDisplay != null) {
+          for (int k = m.bsSlabDisplay.nextSetBit(0); k >= 0; k = m.bsSlabDisplay.nextSetBit(k + 1)) {
+            int[] p = m.pis[k];
+            for (int l = 0; l < 3; l++) {
+              T3 v = m.vs[p[l]];
+              int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
+              if (d2 >= 0) {
+                dmin2 = d2;
+                pickedVertex = p[l];
+                pickedMesh = m;
+                pickedPt = v;
+              }
+            }
+          }
+        } else {
+          for (int k = m.vc; --k >= ilast;) {
+            T3 v = m.vs[k];
+            int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
+            if (d2 >= 0) {
+              dmin2 = d2;
+              pickedVertex = k;
+              pickedMesh = m;
+              pickedPt = v;
+            }
           }
         }
         if (pickedVertex != -1)
           break;
       }
     }
-    return (pickedVertex == -1 ? null 
-        : (Logger.debugging ? "$" + m.thisID + "[" + (pickedVertex + 1) + "] "  
-            + m.vs[pickedVertex] + ": " : m.thisID + ": ") + m.vvs[pickedVertex]);
+    return (pickedVertex == -1 ? null : (Logger.debugging ? "$" + m.thisID
+        + "[" + (pickedVertex + 1) + "] " + m.vs[pickedVertex] + ": "
+        : m.thisID + ": ")
+        + m.vvs[pickedVertex]);
   }
 
   @Override

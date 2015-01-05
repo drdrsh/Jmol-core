@@ -549,7 +549,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
     int nPer = (isFlatMesh ? 4 : (hermiteLevel + 1) * 4 - 2); // 6 for hermiteLevel 1; 22 for hermiteLevel 5
     float angle = (float) ((isFlatMesh ? Math.PI / (nPer - 1) : 2 * Math.PI
         / nPer));
-    Mesh mesh = meshes[i] = new Mesh().mesh1("mesh_" + shapeID + "_" + i,
+    Mesh mesh = meshes[i] = new Mesh().mesh1(vwr, "mesh_" + shapeID + "_" + i,
         (short) 0, i);
     boolean variableRadius = (madBeg != madMid || madMid != madEnd);
 

@@ -230,7 +230,7 @@ public class TransformManager {
   public final static int MAXIMUM_ZOOM_PERCENTAGE = 200000;
   private final static int MAXIMUM_ZOOM_PERSPECTIVE_DEPTH = 10000;
 
-  private void setFixedRotationCenter(P3 center) {
+  private void setFixedRotationCenter(T3 center) {
     if (center == null)
       return;
     fixedRotationCenter.setT(center);
@@ -544,8 +544,7 @@ public class TransformManager {
 
     vectorT.setT(internalRotationCenter);
     pointT2.sub2(fixedRotationCenter, vectorT);
-    P3 pt = new P3();
-    matrixTemp4.rotTrans2(pointT2, pt);
+    T3 pt = matrixTemp4.rotTrans2(pointT2, new P3());
 
     // return this point to the fixed frame
 
@@ -1470,7 +1469,7 @@ public class TransformManager {
     //z-translate to set rotation center at midplane (Nav) or front plane (V10)
     matrixTransform.m23 += modelCenterOffset;
     try {
-      matrixTransformInv.invertM(matrixTransform);
+      matrixTransformInv.setM4(matrixTransform).invert();
     } catch (Exception e) {
       System.out.println("ERROR INVERTING matrixTransform!");
       // ignore -- this is a Mac issue on applet startup
@@ -2283,7 +2282,7 @@ public class TransformManager {
     return angstroms;
   }
 
-  private void setRotationCenterAndRadiusXYZ(P3 newCenterOfRotation,
+  private void setRotationCenterAndRadiusXYZ(T3 newCenterOfRotation,
                                              boolean andRadius) {
     resetNavigationPoint(false);
     if (newCenterOfRotation == null) {

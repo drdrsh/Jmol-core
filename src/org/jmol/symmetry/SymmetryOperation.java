@@ -295,7 +295,7 @@ class SymmetryOperation extends M4 {
       setA(linearRotTrans);
       if (isReverse) {
         P3 p3 = P3.new3(m03,  m13,  m23);
-        invertM(this);
+        invert();
         rotate(p3);
         p3.scale(-1);
         setTranslation(p3);

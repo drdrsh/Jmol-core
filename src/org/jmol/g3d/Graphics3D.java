@@ -557,10 +557,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   private void downsampleFullSceneAntialiasing(boolean downsampleZBuffer) {
-    int width4 = width;
-    int offset1 = 0;
-    int offset4 = 0;
-    int bgcheck = bgcolor;
     // now is the time we have to put in the correct background color
     // this was a bug in 11.6.0-11.6.2. 
 
@@ -572,17 +568,32 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     // television effect. We want to avoid that. Here we can do that
     // because the colors will be blurred anyway.
 
+    int bgcheck = bgcolor;
     if (downsampleZBuffer)
       bgcheck += ((bgcheck & 0xFF) == 0xFF ? -1 : 1);
-    bgcheck &= 0xFFFFFF;
-    for (int i = pbuf.length; --i >= 0;)
-      if (pbuf[i] == 0)
-        pbuf[i] = bgcheck;
+    downsample2d(pbuf, windowWidth, windowHeight, bgcheck);
+    if (downsampleZBuffer) {
+      downsample2dZ(pbuf, zbuf, windowWidth, windowHeight, bgcheck);
+      antialiasThisFrame = false;
+      setWidthHeight(false);
+    }
+  }
+
+  public static void downsample2d(int[] pbuf, int width, int height, int bgcheck) {
+    int width4 = width << 1;
+    if (bgcheck != 0) {
+      bgcheck &= 0xFFFFFF;
+      for (int i = pbuf.length; --i >= 0;)
+        if (pbuf[i] == 0)
+          pbuf[i] = bgcheck;
+    }
     int bg0 = ((bgcheck >> 2) & 0x3F3F3F3F) << 2;
     bg0 += (bg0 & 0xC0C0C0C0) >> 6;
 
-    for (int i = windowHeight; --i >= 0; offset4 += width4)
-      for (int j = windowWidth; --j >= 0; ++offset1) {
+    int offset1 = 0;
+    int offset4 = 0;
+    for (int i = height; --i >= 0; offset4 += width4)
+      for (int j = width; --j >= 0; ++offset1) {
 
         /* more precise, but of no benefit:
 
@@ -616,21 +627,22 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
           pbuf[offset1] = argb & 0x00FFFFFF;
         }
       }
-    if (downsampleZBuffer) {
-      //we will add the alpha mask later
-      offset1 = offset4 = 0;
-      for (int i = windowHeight; --i >= 0; offset4 += width4)
-        for (int j = windowWidth; --j >= 0; ++offset1, ++offset4) {
-          int z = Math.min(zbuf[offset4], zbuf[offset4 + width4]);
-          z = Math.min(z, zbuf[++offset4]);
-          z = Math.min(z, zbuf[offset4 + width4]);
-          if (z != Integer.MAX_VALUE)
-            z >>= 1;
-          zbuf[offset1] = (pbuf[offset1] == bgcheck ? Integer.MAX_VALUE : z);
-        }
-      antialiasThisFrame = false;
-      setWidthHeight(false);
-    }
+  }
+
+  private static void downsample2dZ(int[] pbuf, int[] zbuf, int width,
+                                    int height, int bgcheck) {
+    int width4 = width << 1;
+    //we will add the alpha mask later
+    int offset1 = 0, offset4 = 0;
+    for (int i = height; --i >= 0; offset4 += width4)
+      for (int j = width; --j >= 0; ++offset1, ++offset4) {
+        int z = Math.min(zbuf[offset4], zbuf[offset4 + width4]);
+        z = Math.min(z, zbuf[++offset4]);
+        z = Math.min(z, zbuf[offset4 + width4]);
+        if (z != Integer.MAX_VALUE)
+          z >>= 1;
+        zbuf[offset1] = (pbuf[offset1] == bgcheck ? Integer.MAX_VALUE : z);
+      }
   }
 
   public boolean hasContent() {

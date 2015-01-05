@@ -717,17 +717,17 @@ public abstract class SurfaceReader implements VertexDataServer {
   }
 
   @Override
-  public int addTriangleCheck(int iA, int iB, int iC, int check, int check2,
+  public int addTriangleCheck(int iA, int iB, int iC, int check, int iContour,
                               boolean isAbsolute, int color) {
     if (marchingSquares != null && params.isContoured) {
       if (color == 0) // from marching cubes 
-        return marchingSquares.addTriangle(iA, iB, iC, check, check2);
+        return marchingSquares.addTriangle(iA, iB, iC, check, iContour);
       color = 0; // from marchingSquares
     }
     return (meshDataServer != null ? meshDataServer.addTriangleCheck(iA, iB,
-        iC, check, check2, isAbsolute, color) : isAbsolute
+        iC, check, iContour, isAbsolute, color) : isAbsolute
         && !MeshData.checkCutoff(iA, iB, iC, meshData.vvs) ? -1
-        : meshData.addTriangleCheck(iA, iB, iC, check, check2, color));
+        : meshData.addTriangleCheck(iA, iB, iC, check, iContour, color));
   }
 
   ////////////////////////////////////////////////////////////////

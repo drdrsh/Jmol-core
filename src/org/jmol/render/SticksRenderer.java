@@ -322,13 +322,13 @@ public class SticksRenderer extends FontLineShapeRenderer {
     }
     if (doFixedSpacing) {
       if (!isPiBonded) // obscure point
-        z.set((float) Math.PI, (float) Math.E, (float) (Math.PI * Math.E)); 
+        z.setT(P3.getUnlikely()); 
       x.sub2(b, a);
       y.cross(x, z);
       y.normalize();
       if (Float.isNaN(y.x)) {
         // in case x and z are parallel (O=C=O)
-        z.set((float) Math.PI, (float) Math.E, (float) (Math.PI * Math.E)); 
+        z.setT(P3.getUnlikely()); 
         y.cross(x, z);
         y.cross(y, x);
         y.normalize();

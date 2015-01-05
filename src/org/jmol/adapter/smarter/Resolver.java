@@ -263,7 +263,7 @@ public class Resolver {
 
     // Test 3. check special file formats (pass 1) 
     
-    if ((readerName = checkSpecial1(nLines, lines)) != null)
+    if ((readerName = checkSpecial1(nLines, lines, leader)) != null)
       return readerName;
 
     // Test 4. check line starts 
@@ -357,7 +357,7 @@ public class Resolver {
   // Test 3. check first time for special file types
   ////////////////////////////////////////////////////////////////
 
-  private final static String checkSpecial1(int nLines, String[] lines) {
+  private final static String checkSpecial1(int nLines, String[] lines, String leader) {
     // the order here is CRITICAL
 
     if (nLines == 1 && lines[0].length() > 0 && PT.isDigit(lines[0].charAt(0)))
@@ -390,7 +390,7 @@ public class Resolver {
       return "Wien2k";
     if (checkAims(lines))
       return "Aims";
-    if (checkGenNBO(lines))
+    if (checkGenNBO(lines, leader))
       return "GenNBO";
     return null;
   }
@@ -483,9 +483,9 @@ public class Resolver {
     return true;
   }
   
-  private static boolean checkGenNBO(String[] lines) {
+  private static boolean checkGenNBO(String[] lines, String leader) {
     // .31-.41 file or .47 or .nbo file
-    return (lines[0].startsWith(" $GENNBO  NATOMS")
+    return (leader.indexOf("$GENNBO") >= 0
       || lines[1].startsWith(" Basis set information needed for plotting orbitals")
       || lines[1].indexOf("s in the AO basis:") >= 0
       || lines[2].indexOf(" N A T U R A L   A T O M I C   O R B I T A L") >= 0);

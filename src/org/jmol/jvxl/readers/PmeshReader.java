@@ -295,10 +295,10 @@ class PmeshReader extends PolygonFileReader {
 
 //  @Override
 //  public int addTriangleCheck(int iA, int iB, int iC, int check,
-//                               int check2, boolean isAbsolute, int color) {
+//                               int iContour, boolean isAbsolute, int color) {
 //    if (Logger.debugging)
 //      Logger.debug("tri: " + iA + " " + iB + " " + iC);
-//    return super.addTriangleCheck(iA, iB, iC, check, check2, isAbsolute, color); 
+//    return super.addTriangleCheck(iA, iB, iC, check, iContour, isAbsolute, color); 
 //  }
 
   //////////// file reading

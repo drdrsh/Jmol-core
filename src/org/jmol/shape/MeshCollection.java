@@ -112,7 +112,7 @@ public abstract class MeshCollection extends Shape {
     // isosurface and draw both have overriding methods
     int index = meshCount++;
     meshes = (Mesh[])AU.ensureLength(meshes, meshCount * 2);
-    currentMesh = meshes[index] = (m == null ? new Mesh().mesh1(thisID, colix, index) : m);
+    currentMesh = meshes[index] = (m == null ? new Mesh().mesh1(vwr, thisID, colix, index) : m);
     currentMesh.color = color;
     currentMesh.index = index;
     if (thisID != null && htObjects != null)
@@ -370,8 +370,8 @@ public abstract class MeshCollection extends Shape {
       if (bProp && m.bsSlabGhost != null)
         m.resetSlab();
       // color isosurface translucent or opaque clears all special translucent polygons
-      if (m.bsTransPolygons != null)
-        m.resetTransPolygons();
+      //if (m.bsTransPolygons != null)
+        //m.resetTransPolygons();
       return;
     default:
       m.setTokenProperty(tokProp, bProp);

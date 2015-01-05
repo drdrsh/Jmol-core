@@ -216,8 +216,9 @@ public class GuiMap {
     labels.put("surfaceToolTip", GT._("Control Display of Surfaces"));
     labels.put("help", GT._("&Help"));
     labels.put("about", GT._("About Jmol"));
-    labels.put("uguide", GT._("User Guide"));
+    labels.put("uguide", GT._("Jmol Wiki"));
     labels.put("whatsnew", GT._("What's New"));
+    labels.put("credits", GT._("Credits"));
     labels.put("Prefs.showHydrogens", GT._("Hydrogens"));
     labels.put("Prefs.showMeasurements", GT._("Measurements"));
     labels.put("Prefs.perspectiveDepth", GT._("Perspective Depth"));
@@ -295,8 +296,15 @@ public class GuiMap {
     if (translations == null || !GT.getLanguage().equals(language))
       setTranslations();
     language = GT.getLanguage();
-    for (int i = 0; i < translations.length; i += 2)
-      str = PT.rep(str, translations[i], translations[i + 1]);
+    for (int i = 0; i < translations.length; i += 2) {
+      String t = translations[i];
+      if (str.indexOf(t) >= 0) {
+        String s = translations[i + 1];
+        if (s.equals("see Jmol-resources.properties"))
+          s = JmolResourceHandler.getStringX(t);
+        str = PT.rep(str, t, s);
+      }
+    }
     return str;
   }
 
@@ -413,29 +421,11 @@ public class GuiMap {
         "GT_script_btn_template2.html_MORE",
         GT.escapeHTML(GT.o(GT._("Insert more information for {0} here."),
             "@NAME@")),
-
-        "About.html#weblinks",
-        "<p><b>Jmol "
-            + JC.version
-            + " ("
-            + JC.date
-            + ")</b></p>"
-            + "<ul>"
-            + "<li><a href=\"http://sourceforge.net/projects/jmol\">SourceForge</a> (sourceforge.net/projects/jmol)</li>"
-            + "<li><a href=\"http://jmol.sourceforge.net\">Jmol Wiki</a> (jmol.sourceforge.net)</li>"
-            + "</ul>",
-        "About.html#libraries",
-        "<ul>"
-            + "<li><a href=\"http://www.sourceforge.net/projects/jspecview\">JSpecView</a> (www.sourceforge.net/projects/jspecview, Robert Lancashire, robert.lancashire@uwimona.edu.jm)</li>"
-            + "<li><a href=\"http://www.megginson.com/SAX/\">Simple API for XML</a> (www.megginson.com/SAX, David Megginson, david@megginson.com)</li>"
-            + "<li><a href=\"http://www.javalobby.org/jfa/projects/icons\">JFA Icon collection</a> (www.javalobby.org/jfa/projects/icons, Copyright &copy; 1998, Dean S. Jones, dean@gallant.com)</li>"
-            + "<li><a href=\"http://www.acme.com/\">Acme image encoders</a> (www.acme.com, Copyright &copy; 1996,1998, Jef Poskanzer, jef@acme.com)</li>"
-            + "<li><a href=\"http://www.obrador.com/essentialjpeg/\">JPEG Encoder</a> (www.obrador.com/essentialjpeg, Copyright &copy; 1998, James R. Weeks, BioElectroMech, james@obrador.com)</li>"
-            + "<li><a href=\"http://www.junit.org/\">JUnit</a> (www.junit.org, Erich Gamma, Kent Beck)</li>"
-            + "<li><a href=\"http://jas.freehep.org/\">Java Analysis Studio</a> (jas.freehep.org)</li>"
-            + "<li><a href=\"http://www.esm.co.jp/divisions/open-sys/java/vecmath/\">Unofficial Java3D vecmath package</a> (www.esm.co.jp/divisions/open-sys/java/vecmath, Copyright &copy; 1997,1998,1999, Kenji Hiranabe</li>"
-            + "<li><a href=\"http://www.icon-king.com/projects/nuvola\">Nuvola icon library</a> (www.icon-king.com/projects/nuvola, David Vignoni)</li>"
-            + "</ul>" };
+        "About.html#version", "<p><b>Jmol " + JC.version + " (" + JC.date + ")</b></p>",
+        "About.html#splash", "see Jmol-resources.properties",
+        "About.html#weblinks", "see Jmol-resources.properties",
+        "About.html#libraries", "see Jmol-resources.properties"
+        };
   }
   
 }

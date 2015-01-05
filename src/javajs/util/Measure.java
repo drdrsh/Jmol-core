@@ -519,7 +519,7 @@ final public class Measure {
    * @param ptRet  point of intersection of line with plane
    * @param tempNorm 
    * @param vTemp 
-   * @return       ptRte
+   * @return       ptRtet
    */
   public static P3 getIntersection(P3 pt1, V3 v,
                                                P4 plane, P3 ptRet, V3 tempNorm, V3 vTemp) {

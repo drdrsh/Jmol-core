@@ -163,14 +163,14 @@ public class MarchingSquares {
    * @param iB
    * @param iC
    * @param check
-   * @param check2
+   * @param iContour
    * @return       0
    */
-  public int addTriangle(int iA, int iB, int iC, int check, int check2) {
+  public int addTriangle(int iA, int iB, int iC, int check, int iContour) {
     //System.out.println("addT " + iA + " " + iB + " " + iC);
     if (triangleCount == triangles.length)
       triangles = (Triangle[]) AU.doubleLength(triangles);
-    triangles[triangleCount++] = new Triangle(iA, iB, iC, check, check2);
+    triangles[triangleCount++] = new Triangle(iA, iB, iC, check, iContour);
     return 0;
   }
 

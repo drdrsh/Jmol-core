@@ -578,7 +578,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
           + (mo.containsKey("type") ? mo.get("type") + " " : "")
           + (mo.containsKey("symmetry") ? mo.get("symmetry") + " "
               : "") 
-          + (mo.containsKey("occupancy") ? "(" + ((Number) mo.get("occupancy")).intValue() + ") " : "")
+          + (mo.containsKey("occupancy") ? "(" + mo.get("occupancy") + ") " : "")
               
               + (mo.containsKey("energy") ? mo.get("energy") : "");
       String script = "mo " + (i + 1);

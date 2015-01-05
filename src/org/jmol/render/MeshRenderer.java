@@ -32,6 +32,7 @@ import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;
 import org.jmol.util.C;
 import org.jmol.util.GData;
+import org.jmol.util.MeshSurface;
 
 import javajs.util.AU;
 import javajs.util.M4;
@@ -105,7 +106,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       render2(isExport);
     } else {
       P3 vTemp = new P3();
-      SymmetryInterface unitcell = mesh.getUnitCell(vwr);
+      SymmetryInterface unitcell = mesh.getUnitCell();
       if (unitcell != null) {
         if (mesh.symops != null) {
           if (mesh.symopNormixes == null)
@@ -302,7 +303,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected void renderTriangles(boolean fill, boolean iShowTriangles,
                                  boolean generateSet) {
     g3d.addRenderer(T.triangles);
-    int[][] polygonIndexes = mesh.pis;
+    int[][] polygons = mesh.pis;
     colix = (isGhostPass ? mesh.slabColix : mesh.colix);
     // vertexColixes are only isosurface properties of IsosurfaceMesh, not Mesh
     if (isTranslucentInherit)
@@ -316,10 +317,10 @@ public abstract class MeshRenderer extends ShapeRenderer {
     for (int i = mesh.pc; --i >= 0;) {
       if (!isPolygonDisplayable(i))
         continue;
-      int[] vertexIndexes = polygonIndexes[i];
-      int iA = vertexIndexes[0];
-      int iB = vertexIndexes[1];
-      int iC = vertexIndexes[2];
+      int[] polygon = polygons[i];
+      int iA = polygon[0];
+      int iB = polygon[1];
+      int iC = polygon[2];
       if (haveBsDisplay
           && (!mesh.bsDisplay.get(iA) || !mesh.bsDisplay.get(iB) || !mesh.bsDisplay
               .get(iC)))
@@ -348,7 +349,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
           }
           continue;
         }
-        check = vertexIndexes[3];
+        check = polygon[MeshSurface.P_CHECK];
         if (iShowTriangles)
           check = 7;
         if ((check & 1) == 1)
@@ -368,8 +369,9 @@ public abstract class MeshRenderer extends ShapeRenderer {
       check = checkNormals(nA, nB, nC);
       if (fill && check != 7)
         continue;
-      switch (vertexIndexes.length) {
+      switch (polygon.length) {
       case 3:
+        // simple triangle
         if (fill) {
           if (generateSet) {
             bsPolygonsToExport.set(i);
@@ -387,7 +389,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
         drawTriangle(screens[iA], colix, screens[iB], colix, screens[iC], colix, check, 1);
         continue;
       case 4:
-        int iD = vertexIndexes[3];
+        // simple quad
+        int iD = polygon[3];
         short nD = normixes[iD];
         if (frontOnly && (check != 7 || transformedVectors[nD].z < 0))
           continue;

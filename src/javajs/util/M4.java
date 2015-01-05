@@ -162,8 +162,9 @@ public class M4 extends M34 {
    * 
    * @param m1
    *        the matrix to be copied
+   * @return this
    */
-  public void setM4(M4 m1) {
+  public M4 setM4(M4 m1) {
     setM33(m1);
     m03 = m1.m03;
     m13 = m1.m13;
@@ -172,6 +173,7 @@ public class M4 extends M34 {
     m31 = m1.m31;
     m32 = m1.m32;
     m33 = m1.m33;
+    return this;
   }
 
   /**
@@ -589,24 +591,13 @@ public class M4 extends M34 {
   }
 
   /**
-   * Sets the value of this matrix to the matrix inverse of the passed matrix
-   * m1.
-   * 
-   * @param m1
-   *        the matrix to be inverted
-   */
-  public void invertM(M4 m1) {
-    setM4(m1);
-    invert();
-  }
-
-  /**
    * Sets the value of this matrix to its inverse.
+   * @return this
    */
-  public void invert() {
+  public M4 invert() {
     float s = determinant4();
     if (s == 0.0)
-      return;
+      return this;
     s = 1 / s;
     // alias-safe way.
     // less *,+,- calculation than expanded expression.
@@ -638,6 +629,7 @@ public class M4 extends M34 {
         * (m01 * m10 - m00 * m11), m00 * (m11 * m22 - m12 * m21) + m01
         * (m12 * m20 - m10 * m22) + m02 * (m10 * m21 - m11 * m20));
     scale(s);
+    return this;
   }
 
   /**
@@ -806,12 +798,14 @@ public class M4 extends M34 {
    *        the input point to be transformed.
    * @param pointOut
    *        the transformed point
+   * @return pointOut
    */
-  public void rotTrans2(T3 point, T3 pointOut) {
+  public T3 rotTrans2(T3 point, T3 pointOut) {
       pointOut.set(
           m00 * point.x + m01 * point.y + m02 * point.z + m03, 
           m10 * point.x + m11 * point.y + m12 * point.z + m13, 
           m20 * point.x + m21 * point.y + m22 * point.z + m23);
+      return pointOut;
   }
 
   /**

@@ -38,6 +38,7 @@ import javajs.awt.event.Event;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.P3;
+import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.TransformManager;
@@ -494,8 +495,7 @@ public final class Navigator extends JmolThread implements
       // must just be (not so!) simple navigation
       // navigation center will initially move
       // but we center it by moving the rotation center instead
-      P3 pt1 = new P3();
-      tm.matrixTransform.rotTrans2(tm.navigationCenter, pt1);
+      T3 pt1 = tm.matrixTransform.rotTrans2(tm.navigationCenter, new P3());
       float z = pt1.z;
       tm.matrixTransform.rotTrans2(tm.fixedRotationCenter, pt1);
       tm.modelCenterOffset = tm.referencePlaneOffset + (pt1.z - z);

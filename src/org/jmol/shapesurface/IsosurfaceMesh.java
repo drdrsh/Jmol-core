@@ -35,20 +35,16 @@ import java.util.Map;
 
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
-import org.jmol.util.Escape;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
 
 import javajs.util.CU;
 import javajs.util.M4;
-import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P3i;
-import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
@@ -75,14 +71,15 @@ public class IsosurfaceMesh extends Mesh {
   
 
   /**
+   * @param vwr 
    * @j2sIgnoreSuperConstructor
    * 
    * @param thisID
    * @param colix
    * @param index
    */
-  IsosurfaceMesh(String thisID, short colix, int index) {
-    mesh1(thisID, colix, index);
+  IsosurfaceMesh(Viewer vwr, String thisID, short colix, int index) {
+    mesh1(vwr, thisID, colix, index);
     jvxlData = new JvxlData();
     checkByteCount = 2;
     jvxlData.version = Viewer.getJmolVersion();
@@ -175,7 +172,7 @@ public class IsosurfaceMesh extends Mesh {
 
   @Override
   protected void sumVertexNormals(T3[] vertices, V3[] vectorSums) {
-    sumVertexNormals2(vertices, vectorSums);
+    sumVertexNormals2(this, vertices, vectorSums);
     /* 
      * OK, so if there is an associated grid point (because the 
      * point is so close to one), we now declare that associated
@@ -272,13 +269,13 @@ public class IsosurfaceMesh extends Mesh {
       // n + 1 because we want n lines between n + 1 slices
       for (int i = 0; i < n; i++) {
         float value = jvxlData.valueMappedToRed + (i + 1) * dv;
-        get3dContour(vContours[i], value, jvxlData.contourColixes[i]);
+        get3dContour(this, vContours[i], value, jvxlData.contourColixes[i]);
       }
       Logger.info(n + " contour lines; separation = " + dv);
     } else {
       for (int i = 0; i < n; i++) {
         float value = jvxlData.contourValuesUsed[i];
-        get3dContour(vContours[i], value, jvxlData.contourColixes[i]);
+        get3dContour(this, vContours[i], value, jvxlData.contourColixes[i]);
       }
     }
     jvxlData.contourColixes = new short[n];
@@ -290,15 +287,15 @@ public class IsosurfaceMesh extends Mesh {
     return jvxlData.vContours = vContours;
   }
 
-  private void get3dContour(Lst<Object> v, float value, short colix) {
-    BS bsContour = BS.newN(pc);
+  private static void get3dContour(IsosurfaceMesh m, Lst<Object> v, float value, short colix) {
+    BS bsContour = BS.newN(m.pc);
     SB fData = new SB();
     int color = C.getArgb(colix);
-    setContourVector(v, pc, bsContour, value, colix, color, fData);
-    for (int i = 0; i < pc; i++)
-      if (setABC(i))
-        addContourPoints(v, bsContour, i, fData, vs, vvs, iA,
-            iB, iC, value);
+    setContourVector(v, m.pc, bsContour, value, colix, color, fData);
+    for (int i = 0; i < m.pc; i++)
+      if (m.setABC(i) != null)
+        addContourPoints(v, bsContour, i, fData, m.vs, m.vvs, m.iA,
+            m.iB, m.iC, value);
   }
 
   public static void setContourVector(Lst<Object> v, int nPolygons,
@@ -830,34 +827,12 @@ public class IsosurfaceMesh extends Mesh {
   public P3[] getBoundingBox() {
     return jvxlData.boundingBox;
   }
-  
-  private void resetBoundingBox() {
-    BoxInfo bi = new BoxInfo();
-    if (pc == 0)
-      for (int i = vc; --i >= 0;) {
-        bi.addBoundBoxPoint(vs[i]);
-      }
-    else {
-      BS bsDone = new BS();
-      for (int i = pc; --i >= 0;) {
-        if (!setABC(i))
-          continue;
-        if (!bsDone.get(iA)) {
-          bi.addBoundBoxPoint(vs[iA]);
-          bsDone.set(iA);
-        }
-        if (!bsDone.get(iB)) {
-          bi.addBoundBoxPoint(vs[iB]);
-          bsDone.set(iB);
-        }
-        if (!bsDone.get(iC)) {
-          bi.addBoundBoxPoint(vs[iC]);
-          bsDone.set(iC);
-        }
-      }
-    }
-    jvxlData.boundingBox = bi.getBoundBoxPoints(false);
+
+  @Override
+  public void setBoundingBox(P3[] pts) {
+    jvxlData.boundingBox = pts;
   }
+  
   //private void dumpData() {
   //for (int i =0;i<10;i++) {
   //  System.out.println("P["+i+"]="+polygonIndexes[i][0]+" "+polygonIndexes[i][1]+" "+polygonIndexes[i][2]+" "+ polygonIndexes[i][3]+" "+vertices[i]);
@@ -914,7 +889,7 @@ public class IsosurfaceMesh extends Mesh {
   }
 
   @Override
-  public SymmetryInterface getUnitCell(Viewer vwr) {
+  public SymmetryInterface getUnitCell() {
     return (unitCell != null
         || (unitCell = vwr.ms.am[modelIndex].biosymmetry) != null
         || (unitCell = vwr.ms.getUnitCell(modelIndex)) != null
@@ -923,8 +898,8 @@ public class IsosurfaceMesh extends Mesh {
             spanningVectors, true, null)) != null ? unitCell : null);
   }
 
-  void fixLattice(Viewer vwr) {
-    if (getUnitCell(vwr) == null)
+  void fixLattice() {
+    if (getUnitCell() == null)
       return;
     P3i minXYZ = new P3i();
     P3i maxXYZ = P3i.new3((int) lattice.x, (int) lattice.y, (int) lattice.z);
@@ -972,117 +947,6 @@ public class IsosurfaceMesh extends Mesh {
 
   }
 
-  /**
-   * "slabs" an isosurface into the first Brillouin zone moving points as
-   * necessary.
-   * 
-   */
-  @Override
-  protected void slabBrillouin(P3[] unitCellPoints) {
-    T3[] vectors = (unitCellPoints == null ? spanningVectors : unitCellPoints);
-    if (vectors == null)
-      return;    
-    
-    // define 26 k-points around the origin
-    
-    P3[] pts = new P3[27];
-    pts[0] = P3.newP(vectors[0]);
-    int pt = 0;
-    for (int i = -1; i <= 1; i++)
-      for (int j = -1; j <= 1; j++)
-        for (int k = -1; k <= 1; k++)
-          if (i != 0 || j != 0 || k != 0) {
-            pts[++pt] = P3.newP(pts[0]);
-            pts[pt].scaleAdd2(i, vectors[1], pts[pt]);
-            pts[pt].scaleAdd2(j, vectors[2], pts[pt]);
-            pts[pt].scaleAdd2(k, vectors[3], pts[pt]);
-          }
-    
-    System.out.println("draw line1 {0 0 0} color red"
-        + Escape.eP(spanningVectors[1]));
-    System.out.println("draw line2 {0 0 0} color green"
-        + Escape.eP(spanningVectors[2]));
-    System.out.println("draw line3 {0 0 0} color blue"
-        + Escape.eP(spanningVectors[3]));
-    
-    P3 ptTemp = new P3();
-    P4 planeGammaK = new P4();
-    V3 vGammaToKPoint = new V3();
-    V3 vTemp = new V3();
-    BS bsMoved = new BS();
-    Map<String, Integer> mapEdge = new Hashtable<String, Integer>();    
-    bsSlabGhost = new BS();
-    
-    // iterate over the 26 k-points using getIntersection() to
-    // clip cleanly on the bisecting plane and identify "ghost" triangles
-    // which we will simply copy. We have to be careful here never to 
-    // move a point twice for each k-point. The iteration is restarted
-    // if any points are moved.
-    
-    for (int i = 1; i < 27; i++) {
-      vGammaToKPoint.setT(pts[i]);
-      Measure.getBisectingPlane(pts[0], vGammaToKPoint, ptTemp, vTemp, planeGammaK);
-      getIntersection(1, planeGammaK, null, null, null, null, null, false,
-          false, T.plane, true);
-
-      //System.out.println("#slab " + i + " " + bsSlabGhost.cardinality());
-      //System.out.println("isosurface s" + i + " plane " + Escape.escape(plane)
-        //  + "#" + vGamma);
-      bsMoved.clearAll();
-      mapEdge.clear();
-      for (int j = bsSlabGhost.nextSetBit(0); j >= 0; j = bsSlabGhost
-          .nextSetBit(j + 1)) {
-        if (!setABC(j))
-          continue;
-        
-        // copy points because at least some will be needed by both sides,
-        // and in some cases triangles will be split multiple times
-        
-        int[] p = AU.arrayCopyRangeI(pis[j], 0, -1);
-        for (int k = 0; k < 3; k++) {
-          int pk = p[k];
-          p[k] = addIntersectionVertex(vs[pk], vvs[pk], 
-              vertexSource == null ? 0 : vertexSource[pk], 
-                  vertexSets == null ? 0 : vertexSets[pk], mapEdge, 0, pk);
-          // we have to be careful, because some points have already been
-          // moved 
-          if (pk != p[k] && bsMoved.get(pk))
-            bsMoved.set(p[k]);
-        }
-        addPolygonC(p, 0, bsSlabDisplay);
-        
-        // now move the (copied) points
-        
-        for (int k = 0; k < 3; k++)
-          if (!bsMoved.get(p[k])) {
-            bsMoved.set(p[k]);
-            vs[p[k]].sub(vGammaToKPoint);
-          }
-      }
-      
-      if (bsSlabGhost.nextSetBit(0) >= 0) {
-
-        // append these points to the display set again
-        // and clear the ghost set
-        
-        //bsSlabDisplay.or(bsSlabGhost);
-        bsSlabGhost.clearAll();
-      
-        // restart iteration if any points are moved, because 
-        // some triangles need to be moved and/or split multiple 
-        // times, and the order is not predictable (I don't think).
-      
-        i = 0;
-      }
-    }
-    
-    // all done -- clear ghost slabbing and reset the bounding box
-    
-    bsSlabGhost = null;
-    resetBoundingBox();
-    //System.out.println("Isosurface verteCount = " + vertexCount);
-  }
-  
   @Override
   protected float getMinDistance2ForVertexGrouping() {
     if (jvxlData.boundingBox != null && jvxlData.boundingBox[0] != null) {

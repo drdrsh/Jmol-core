@@ -93,28 +93,29 @@ public class GenNBOReader extends MOReader {
      * molname.47 archive file
      */
     String line1 = rd().trim();
-    isArchive = (line1.indexOf("$GENNBO  NATOMS") >= 0);
+    isArchive = (line1.indexOf("$GENNBO") >= 0 || line1.indexOf("$NBO") >= 0); // GENNBO 6
     if (isArchive) {
       readData47();
-      continuing = false;
       return;
     }
     boolean isOK;
-    rd();
-    isOutputFile = (line.indexOf("***") >= 0);
+    String line2 = rd();
+    line = line1 + line2;
+    isOutputFile = (line2.indexOf("****") >= 0);
     if (isOutputFile) {
-      isOK = readFile31();
+      // this may or may not work. 
+      isOK = getFile31();
       super.initializeReader();
       // keep going -- we need to read the file using MOReader
       moData.put("isNormalized", Boolean.TRUE);
-    } else if (line.indexOf("s in the AO basis:") >= 0) {
-      nboType = line.substring(1, line.indexOf("s"));
+    } else if (line2.indexOf("s in the AO basis:") >= 0) {
+      nboType = line2.substring(1, line2.indexOf("s"));
       asc.setCollectionName(line1 + ": " + nboType + "s");
-      isOK = readFile31();
-    } else {
+      isOK = getFile31();
+    } else {//if (line.indexOf("Basis set information") >= 0) {
       nboType = "AO";
       asc.setCollectionName(line1 + ": " + nboType + "s");
-      isOK = readData31(line1, line);
+      isOK = readData31(line1); 
     }
     if (!isOK)
       Logger.error("Unimplemented shell type -- no orbitals avaliable: " + line);
@@ -138,23 +139,46 @@ public class GenNBOReader extends MOReader {
 //          1    1      -1.076988       0.386322       0.827032
 //      $END
 
-  private void readFile47() throws Exception {
-    discardLinesUntilContains("$COORD");
-    asc.newAtomSet();
-    asc.setAtomSetName(rd().trim());
-    while (rd().indexOf("$END") < 0) {
-      String[] tokens = getTokens();
-      addAtomXYZSymName(tokens, 2, null, null).elementNumber = (short) parseIntStr(tokens[0]);
-    }
-  }
 
   private void readMOs() throws Exception {
     nOrbitals0 = orbitals.size();
-    readFile46();
-    readOrbitalData();
+    getFile46();
+    boolean isMO = !nboType.equals("AO");
+    int nAOs = nOrbitals;
+    nOrbitals = orbitals.size();
+    line = null;
+    for (int i = nOrbitals0; i < nOrbitals; i++) {
+      Map<String, Object> mo = orbitals.get(i);
+      float[] coefs = new float[nAOs];
+      mo.put("coefficients", coefs);
+      if (isMO) {
+        if (line == null) {
+          while (rd() != null && Float.isNaN(parseFloatStr(line))) {
+            // skip lines            
+          }
+        } else {
+          line = null;
+        }
+        fillFloatArray(line, 0, coefs);
+        line = null;
+        //setMOType(mo, i);
+      } else {
+        coefs[i] = 1;
+      }
+    }
+    if (nboType.equals("NBO")) {
+      float[] occupancies = new float[nOrbitals - nOrbitals0];
+      fillFloatArray(null, 0, occupancies);   
+      for (int i = nOrbitals0; i < nOrbitals; i++) {
+        Map<String, Object> mo = orbitals.get(i);
+        mo.put("occupancy", Float.valueOf(occupancies[i - nOrbitals0]));
+      }
+    }
+    moData.put(nboType + "_coefs", orbitals);
     setMOData(false);
     moData.put("isNormalized", Boolean.TRUE);
     moData.put("nboType", nboType);
+    Logger.info((orbitals.size() - nOrbitals0) + " orbitals read");
 
   }
 
@@ -188,6 +212,7 @@ public class GenNBOReader extends MOReader {
     moData.put("nboRoot", fileName);
     fileName += ext;
     String data = vwr.getFileAsString3(fileName, false, null);
+    Logger.info(data.length() + " bytes read from " + fileName);
     if (data.length() == 0 || data.indexOf("java.io.FileNotFound") >= 0)
       throw new Exception(" supplemental file " + fileName + " was not found");
     return data;
@@ -202,14 +227,14 @@ public class GenNBOReader extends MOReader {
    * 6 -2.378528000 -1.339374000 0.620578000
    */
 
-  private boolean readFile31() throws Exception {
+  private boolean getFile31() throws Exception {
     String data = getFileData(".31");
     BufferedReader readerSave = reader;
     reader = Rdr.getBR(data);
-    return (readData31(null, null) && (reader = readerSave) != null);
+    return (readData31(null) && (reader = readerSave) != null);
   }
 
-  private void readFile46() throws Exception {
+  private void getFile46() throws Exception {
     String data = getFileData(".46");
     BufferedReader readerSave = reader;
     reader = Rdr.getBR(data);
@@ -255,7 +280,13 @@ public class GenNBOReader extends MOReader {
 
   private void readData47() throws Exception {
     allowNoOrbitals = true;
-    readFile47();
+    discardLinesUntilContains("$COORD");
+    asc.newAtomSet();
+    asc.setAtomSetName(rd().trim());
+    while (rd().indexOf("$END") < 0) {
+      String[] tokens = getTokens();
+      addAtomXYZSymName(tokens, 2, null, null).elementNumber = (short) parseIntStr(tokens[0]);
+    }
     discardLinesUntilContains("$BASIS");
     int[] centers = getIntData();
     int[] labels = getIntData();
@@ -286,9 +317,10 @@ public class GenNBOReader extends MOReader {
         return;
     }
     line = l;
-    getAlphasAndExponents(3);
+    getAlphasAndExponents();
     nboType = "AO";
     readMOs();
+    continuing = false;
   }
 
   private int[] getIntData() throws Exception {
@@ -348,10 +380,13 @@ public class GenNBOReader extends MOReader {
     return true;
   }
 
-  private void getAlphasAndExponents(int nTypes) throws Exception {
-    for (int j = 0; j < nTypes; j++) {
+  private void getAlphasAndExponents() throws Exception {
+    // EXP  CS  CP  CD  ??
+    for (int j = 0; j < 5; j++) {
       if (line.indexOf("=") < 0)
         rd();
+      if (line.indexOf("$END") >= 0)
+        break;
       line = line.substring(line.indexOf("=") + 1);
       float[] temp = fillFloatArray(line, 0, new float[gaussianCount]);
       for (int i = 0; i < gaussianCount; i++) {
@@ -372,14 +407,14 @@ public class GenNBOReader extends MOReader {
     }
   }
 
-  private boolean readData31(String line1, String line2) throws Exception {
-    if (line1 == null)
+  private boolean readData31(String line1) throws Exception {
+    if (line1 == null) {
       line1 = rd();
-    if (line2 == null)
-      line2 = rd();
+      rd();
+    }
+    rd(); // ----------
 
     // read ac, shellCount, and gaussianCount
-    rd(); // ----------
     String[] tokens = PT.getTokens(rd());
     int ac = parseIntStr(tokens[0]);
     shellCount = parseIntStr(tokens[1]);
@@ -418,7 +453,7 @@ public class GenNBOReader extends MOReader {
         return false;
     }
     rd();
-    getAlphasAndExponents(5);
+    getAlphasAndExponents();
     return true;
   }
 
@@ -472,38 +507,4 @@ public class GenNBOReader extends MOReader {
     (new QS()).setNboLabels(tokens, nOrbitals, orbitals, nOrbitals0, nboType);
   }
 
-  private void readOrbitalData() throws Exception {
-    boolean isMO = !nboType.equals("AO");
-    int nAOs = nOrbitals;
-    nOrbitals = orbitals.size();
-    line = null;
-    for (int i = nOrbitals0; i < nOrbitals; i++) {
-      Map<String, Object> mo = orbitals.get(i);
-      float[] coefs = new float[nAOs];
-      mo.put("coefficients", coefs);
-      if (isMO) {
-        if (line == null) {
-          while (rd() != null && Float.isNaN(parseFloatStr(line))) {
-            // skip lines            
-          }
-        } else {
-          line = null;
-        }
-        fillFloatArray(line, 0, coefs);
-        line = null;
-        //setMOType(mo, i);
-      } else {
-        coefs[i] = 1;
-      }
-    }
-    if (nboType.equals("NBO")) {
-      float[] occupancies = new float[nOrbitals - nOrbitals0];
-      fillFloatArray(null, 0, occupancies);   
-      for (int i = nOrbitals0; i < nOrbitals; i++) {
-        Map<String, Object> mo = orbitals.get(i);
-        mo.put("occupancy", Float.valueOf(occupancies[i - nOrbitals0]));
-      }
-    }
-    moData.put(nboType + "_coefs", orbitals);
-  }
 }

@@ -55,27 +55,33 @@ public class HelpDialog extends JDialog implements HyperlinkListener {
       this(fr, null);
   }
   
+  public HelpDialog(JFrame fr, String title, boolean modal) {
+    super(fr, title, modal);
+  }
+  
   /**
    * If url is null, then the default help url is taken.
    * @param fr
    * @param url
    */
   public HelpDialog(JFrame fr, URL url) {
-    super(fr, GT._("Jmol Help"), false);
+    this(fr, GT._("Jmol Help"), false);
+    init(url, "Help.helpURL");
+  }
 
+  protected void init(URL url, String resource) {
     try {
-        URL helpURL = (url != null ? url : this.getClass().getClassLoader()
-                .getResource(JmolResourceHandler
-                .getStringX("Help.helpURL")));
-        if (helpURL != null)
-            html = new JEditorPane(helpURL);
-        else
-            html = new JEditorPane("text/plain",
-                GT.o(GT._("Unable to find url \"{0}\"."),
-                     JmolResourceHandler.getStringX("Help.helpURL")
-                ));
-        html.setEditable(false);
-        html.addHyperlinkListener(this);
+      URL myURL = url;
+      if (myURL == null) {
+        resource = JmolResourceHandler.getStringX(resource);
+        myURL = (resource.startsWith("http") ? new URL(resource) : this
+            .getClass().getClassLoader().getResource(resource));
+      }
+      html = (myURL == null ? new JEditorPane("text/plain", GT.o(
+          GT._("Unable to find url \"{0}\"."), resource)) : new JEditorPane(
+          myURL));
+      html.setEditable(false);
+      html.addHyperlinkListener(this);
     } catch (MalformedURLException e) {
       Logger.errorEx("Malformed URL", e);
     } catch (IOException e) {

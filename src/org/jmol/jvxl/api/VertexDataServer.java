@@ -97,13 +97,13 @@ public interface VertexDataServer {
    * @param iB
    * @param iC
    * @param check
-   * @param check2 TODO
+   * @param iContour TODO
    * @param isAbsolute
    * @param color 
    * @return polygon index or -1
    */
   public abstract int addTriangleCheck(int iA, int iB, int iC, int check,
-                                        int check2, boolean isAbsolute, int color);
+                                        int iContour, boolean isAbsolute, int color);
   
   /**
    * 

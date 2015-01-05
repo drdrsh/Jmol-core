@@ -308,38 +308,39 @@ public class MeshData extends MeshSurface {
 
   /**
    * 
+   * @param m 
    * @param thisSet set to Integer.MIN_VALUE to ensure an array.
    *        If a set has been selected, we return a Float 
    * @param isArea
    * @param getSets
    * @return Float or double[]
    */
-  public Object calculateVolumeOrArea(int thisSet, boolean isArea, boolean getSets) {
-    if (getSets || nSets <= 0)
-      getSurfaceSet();
+  public static Object calculateVolumeOrArea(MeshData m, int thisSet, boolean isArea, boolean getSets) {
+    if (getSets || m.nSets <= 0)
+      m.getSurfaceSet();
     boolean justOne = (thisSet >= -1);
-    int n = (justOne || nSets <= 0 ? 1 : nSets);
+    int n = (justOne || m.nSets <= 0 ? 1 : m.nSets);
     double[] v = new double[n];
     V3 vAB = new V3();
     V3 vAC = new V3();
     V3 vTemp = new V3();
-    for (int i = pc; --i >= 0;) {
-      if (!setABC(i))
+    for (int i = m.pc; --i >= 0;) {
+      if (m.setABC(i) == null)
         continue;
-      int iSet = (nSets <= 0 ? 0 : vertexSets[iA]);
+      int iSet = (m.nSets <= 0 ? 0 : m.vertexSets[m.iA]);
       if (thisSet >= 0 && iSet != thisSet)
         continue;
       if (isArea) {
-        vAB.sub2(vs[iB], vs[iA]);
-        vAC.sub2(vs[iC], vs[iA]);
+        vAB.sub2(m.vs[m.iB], m.vs[m.iA]);
+        vAC.sub2(m.vs[m.iC], m.vs[m.iA]);
         vTemp.cross(vAB, vAC);
         v[justOne ? 0 : iSet] += vTemp.length();
       } else {
         // volume
-        vAB.setT(vs[iB]);
-        vAC.setT(vs[iC]);
+        vAB.setT(m.vs[m.iB]);
+        vAC.setT(m.vs[m.iC]);
         vTemp.cross(vAB, vAC);
-        vAC.setT(vs[iA]);
+        vAC.setT(m.vs[m.iA]);
         v[justOne ? 0 : iSet] += vAC.dot(vTemp);
       }
     }

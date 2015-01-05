@@ -138,11 +138,7 @@ class HallRotationTerm {
 
     // set matrix, including translations and vector adjustment
 
-    if (isImproper) {
-      seitzMatrix12ths.setM4(rotation.seitzMatrixInv);
-    } else {
-      seitzMatrix12ths.setM4(rotation.seitzMatrix);
-    }
+    seitzMatrix12ths.setM4(isImproper ? rotation.seitzMatrixInv : rotation.seitzMatrix);
     seitzMatrix12ths.m03 = translation.vectorShift12ths.x;
     seitzMatrix12ths.m13 = translation.vectorShift12ths.y;
     seitzMatrix12ths.m23 = translation.vectorShift12ths.z;

@@ -169,8 +169,7 @@ public class SimpleUnitCell {
       }      
       matrixCartesianToFractional = M4.newA16(scaleMatrix);
       matrixCartesianToFractional.getTranslation(fractionalOrigin);
-      matrixFractionalToCartesian = new M4();
-      matrixFractionalToCartesian.invertM(matrixCartesianToFractional);
+      matrixFractionalToCartesian = M4.newM4(matrixCartesianToFractional).invert();
       if (parameters[0] == 1)
         setParamsFromMatrix();
     } else if (parameters.length > 14 && !Float.isNaN(parameters[14])) {
@@ -181,8 +180,7 @@ public class SimpleUnitCell {
       m.setColumn4(1, parameters[9] * nb, parameters[10] * nb, parameters[11] * nb, 0);
       m.setColumn4(2, parameters[12] * nc, parameters[13] * nc, parameters[14] * nc, 0);
       m.setColumn4(3, 0, 0, 0, 1);
-      matrixCartesianToFractional = new M4();
-      matrixCartesianToFractional.invertM(matrixFractionalToCartesian);
+      matrixCartesianToFractional = M4.newM4(matrixFractionalToCartesian).invert();
     } else {
       M4 m = matrixFractionalToCartesian = new M4();
       // 1. align the a axis with x axis
@@ -195,8 +193,7 @@ public class SimpleUnitCell {
           * (cosAlpha - cosBeta * cosGamma) / sinGamma), (float) (volume / (a
           * b * sinGamma)), 0);
       m.setColumn4(3, 0, 0, 0, 1);
-      matrixCartesianToFractional = new M4();
-      matrixCartesianToFractional.invertM(matrixFractionalToCartesian);
+      matrixCartesianToFractional = M4.newM4(matrixFractionalToCartesian).invert();
     }
     matrixCtoFANoOffset = matrixCartesianToFractional;
     matrixFtoCNoOffset = matrixFractionalToCartesian;
