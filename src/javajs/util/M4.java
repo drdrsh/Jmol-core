@@ -791,8 +791,8 @@ public class M4 extends M34 {
 
   /**
    * Transforms the point parameter with this Matrix4f and places the result
-   * into pointOut. The fourth element of the point input paramter is assumed to
-   * be one.
+   * into pointOut. The fourth element of the point input parameter is assumed to
+   * be one. point may be pointOut
    * 
    * @param point
    *        the input point to be transformed.
