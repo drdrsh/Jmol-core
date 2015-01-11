@@ -90,7 +90,7 @@ public class MeshCapper {
   }
 
   /**
-   * Input edge must be in counter-clockwise order.
+   * Pointers are into MeshSlicer.m.vs[]
    * 
    * @param ipt1
    * @param ipt2
@@ -166,7 +166,8 @@ public class MeshCapper {
     vertices.toArray(vs);
     for (int i = vs.length; --i >= 0;)
       m4inv.rotTrans2(vs[i], vs[i]);
-
+    vertices = null;
+    
     // link by Y,X sort
 
     CapVertex v0 = vs[0].sort(vs);
@@ -174,6 +175,9 @@ public class MeshCapper {
       Logger.error("two identical points");
       return;
     }
+    
+    // scan the plane
+    
     CapVertex v = v0;
     do {
       v = v.process();
