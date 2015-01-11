@@ -51,19 +51,42 @@ public class MeshCapper {
     // for reflection
   }
 
+  /**
+   * source of edges; consumer of triangles
+   */
+  protected MeshSlicer slicer;
+
+  /**
+   * for debugging
+   */
   protected boolean dumping;
 
-  protected MeshSlicer slicer;
+  /**
+   * initialization only
+   */
   private Map<Integer, CapVertex> capMap;
   private Lst<CapVertex> vertices;
+  private int ipt0;
 
+  /**
+   * dynamic region processing. These are just 
+   * [DESCENDER, ASCENDER, LAST] for each region 
+   * 
+   */
   protected Lst<CapVertex[]> lstRegions;
+  
+  /**
+   * informational only
+   */
+  protected int nTriangles;
 
+  /**
+   * temporary storage
+   */
   protected V3d vab, vac, vap;
   protected V3 vTemp0, vTemp1, vTemp2;
-  private int ipt0;
-  public int nTriangles;
 
+  
   /////////////// initialization //////////////////
 
   /**
