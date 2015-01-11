@@ -479,7 +479,8 @@ public class CmdExt implements JmolCmdExtension {
       }
       if (isTransparent)
         type += "T";
-      boolean streaming = (fileName.indexOf("0000.") != fileName.lastIndexOf(".") - 4);    
+      int pt = fileName.indexOf("0000.");
+      boolean streaming = (pt < 0 || pt != fileName.lastIndexOf(".") - 4);    
       boolean isRock = false;
       if (tokAt(i) == T.loop) {
         looping = true;
