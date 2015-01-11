@@ -327,6 +327,9 @@ public class MeshSurface {
   public int mergePolygonCount0;
   public boolean isMerged;
 
+  public float getResolution() {
+    return 0; // overridden in IsosurfaceMesh
+  }
   /**
    * Calculates the data (faces, vertices, normals) for a sphere.
    * 

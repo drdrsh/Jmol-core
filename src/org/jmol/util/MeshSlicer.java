@@ -265,7 +265,7 @@ public class MeshSlicer {
     if (ptCenters != null || isGhost)
       andCap = false; // can only cap faces, and no capping of ghosts
     if (andCap && capper == null)
-      capper = ((MeshCapper) Interface.getInterface("org.jmol.util.MeshCapper", m.vwr, "script")).set(this);
+      capper = ((MeshCapper) Interface.getInterface("org.jmol.util.MeshCapper", m.vwr, "script")).set(this, m.getResolution());
     if (capper != null)
       capper.clear();
     double absD = Math.abs(distance);
