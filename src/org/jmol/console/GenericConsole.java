@@ -169,7 +169,8 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
       if (!asCommand) {
         notThis = s;
         if (inBrace || splitCmd[2].startsWith("$") 
-            || T.isIDcmd(cmdtok) || isSelect) {
+            //|| T.isIDcmd(cmdtok) 
+            || isSelect) {
           map = new Hashtable<String, Object>();
           vwr.getObjectMap(map, inBrace || isSelect ? '{' : splitCmd[2].startsWith("$") ? '$' : '0');
         }
