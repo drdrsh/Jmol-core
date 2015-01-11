@@ -69,6 +69,10 @@ public class IsosurfaceMesh extends Mesh {
   Object calculatedVolume;
   Object info;
   
+  @Override
+  public float getResolution() {
+    return 1/jvxlData.pointsPerAngstrom;
+  }
 
   /**
    * @param vwr 
