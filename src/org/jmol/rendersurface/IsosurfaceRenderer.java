@@ -410,7 +410,8 @@ public class IsosurfaceRenderer extends MeshRenderer {
     }
     if (diam < 1)
       diam = 1;
-    for (int i = mesh.pc; --i >= 0;) {
+    int i0 = 0;
+    for (int i = mesh.pc; --i >= i0;) {
       int[] polygon = polygonIndexes[i];
       if (polygon == null || selectedPolyOnly && !bsPolygons.get(i))
         continue;
@@ -438,6 +439,8 @@ public class IsosurfaceRenderer extends MeshRenderer {
             continue;
           colix = c;
         }
+        if (iShowTriangles)
+          colix = (short) (Math.round(Math.random()*10)+ 5);
         colixA = colixB = colixC = colix;
       } else {
         colixA = vertexColixes[iA];
@@ -464,9 +467,9 @@ public class IsosurfaceRenderer extends MeshRenderer {
           else
             g3d.fillCylinder(GData.ENDCAPS_SPHERICAL, diam, screens[iA],
                 screens[iB]);
-        } else if (iShowTriangles) {
-          g3d.fillTriangle(screens[iA], colixA, nA, screens[iB], colixB, nB,
-              screens[iC], colixC, nC, 0.1f);
+        //} else if (iShowTriangles) {
+          //g3d.fillTriangle(screens[iA], colixA, nA, screens[iB], colixB, nB,
+            //  screens[iC], colixC, nC, 0.1f);
         } else {
           if (isTranslucentInherit && vertexColixes != null) {
             colixA = C.copyColixTranslucency(mesh.slabColix, vertexColixes[iA]);
