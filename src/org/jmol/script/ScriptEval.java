@@ -8192,7 +8192,7 @@ public class ScriptEval extends ScriptExpr {
       }
     }
     if (!chk && (shapeType == JC.SHAPE_MO || shapeType == JC.SHAPE_NBO)
-        && getCmdExt().dispatch(shapeType, true, st) == null)
+        && getIsoExt().dispatch(shapeType, true, st) != null)
       return;
     boolean isTranslucent = (theTok == T.translucent);
     if (isTranslucent || theTok == T.opaque) {
