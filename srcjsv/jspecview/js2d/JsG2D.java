@@ -37,25 +37,22 @@
 
 package jspecview.js2d;
 
+import org.jmol.api.GenericGraphics;
+
 import javajs.api.GenericColor;
 import javajs.awt.Color;
 import javajs.awt.Font;
 import javajs.util.CU;
 
 
-import jspecview.api.JSVGraphics;
 
 /**
- * JSVPanel class represents a View combining one or more GraphSets, each with one or more JDXSpectra.
+ * generic 2D drawing methods -- JavaScript version
  * 
- * @author Debbie-Ann Facey
- * @author Khari A. Bryan
- * @author Craig A.D. Walters
- * @author Prof Robert J. Lancashire
  * @author Bob Hanson hansonr@stolaf.edu
  */
 
-public class JsG2D implements JSVGraphics {
+public class JsG2D implements GenericGraphics {
 
 	private int windowWidth;
 	private int windowHeight;

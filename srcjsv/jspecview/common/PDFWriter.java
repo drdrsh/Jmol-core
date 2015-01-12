@@ -27,12 +27,13 @@ import java.io.OutputStream;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.GenericGraphics;
+
 import javajs.api.GenericColor;
 import javajs.awt.Font;
 import javajs.export.PDFCreator;
 import javajs.util.CU;
 
-import jspecview.api.JSVGraphics;
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPdfWriter;
 import jspecview.common.JSVersion;
@@ -43,9 +44,9 @@ import jspecview.common.PrintLayout;
  * javajs.export.PDFCreator.
  * 
  */
-public class PDFWriter implements JSVGraphics, JSVPdfWriter {
+public class PDFWriter implements GenericGraphics, JSVPdfWriter {
  
-	private JSVGraphics g2d;
+	private GenericGraphics g2d;
 	private String date;
 	private PDFCreator pdf;
 	private boolean inPath;

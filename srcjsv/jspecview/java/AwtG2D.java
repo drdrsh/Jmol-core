@@ -46,23 +46,20 @@ import java.awt.Image;
 import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 
+import org.jmol.api.GenericGraphics;
+
 import javajs.api.GenericColor;
 import javajs.awt.Font;
 
 
-import jspecview.api.JSVGraphics;
 
 /**
- * JSVPanel class represents a View combining one or more GraphSets, each with one or more JDXSpectra.
+ * generic 2D drawing methods -- AWT version
  * 
- * @author Debbie-Ann Facey
- * @author Khari A. Bryan
- * @author Craig A.D. Walters
- * @author Prof Robert J. Lancashire
  * @author Bob Hanson hansonr@stolaf.edu
  */
 
-public class AwtG2D implements JSVGraphics {
+public class AwtG2D implements GenericGraphics {
   
 	BasicStroke strokeBasic = new BasicStroke();
   BasicStroke strokeBold = new BasicStroke(2f);

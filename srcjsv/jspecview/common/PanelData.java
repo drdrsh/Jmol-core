@@ -50,7 +50,6 @@ import javajs.util.CU;
 import javajs.util.Lst;
 
 import jspecview.api.AnnotationData;
-import jspecview.api.JSVGraphics;
 import jspecview.api.JSVPanel;
 import jspecview.api.PanelListener;
 import jspecview.api.VisibleInterface;
@@ -59,6 +58,7 @@ import jspecview.common.Spectrum.IRMode;
 import jspecview.dialog.JSVDialog;
 
 
+import org.jmol.api.GenericGraphics;
 import org.jmol.util.Logger;
 
 /**
@@ -74,7 +74,7 @@ import org.jmol.util.Logger;
 
 public class PanelData implements EventManager {
 
-	public JSVGraphics g2d, g2d0;
+	public GenericGraphics g2d, g2d0;
 	JSViewer vwr;
 
 	public PanelData(JSVPanel panel, JSViewer viewer) {
@@ -1388,7 +1388,7 @@ public class PanelData implements EventManager {
 	 * @param pdfCreator
 	 * @param pl 
 	 */
-	public void printPdf(JSVGraphics pdfCreator, PrintLayout pl) {
+	public void printPdf(GenericGraphics pdfCreator, PrintLayout pl) {
 		boolean isPortrait = !pl.layout.equals("landscape");
 		print(pdfCreator, (isPortrait ? pl.imageableHeight : pl.imageableWidth), 
 				(isPortrait ? pl.imageableWidth : pl.imageableHeight), 
@@ -1403,8 +1403,8 @@ public class PanelData implements EventManager {
     if (pi == 0) {
       isPrinting = true;
       boolean addFilePath = false;
-      if (g instanceof JSVGraphics) {// JsPdfCreator
-      	g2d = (JSVGraphics) g;
+      if (g instanceof GenericGraphics) {// JsPdfCreator
+      	g2d = (GenericGraphics) g;
       	g = gMain;
       }
       if (printGraphPosition.equals("default")) {

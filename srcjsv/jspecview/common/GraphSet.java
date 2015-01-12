@@ -12,11 +12,11 @@ import javajs.util.BS;
 import javajs.util.DF;
 import javajs.util.Lst;
 
+import org.jmol.api.GenericGraphics;
 import org.jmol.util.Logger;
 import javajs.util.PT;
 
 import jspecview.api.AnnotationData;
-import jspecview.api.JSVGraphics;
 import jspecview.api.JSVPanel;
 import jspecview.api.VisibleInterface;
 import jspecview.common.Annotation.AType;
@@ -4137,7 +4137,7 @@ synchronized void checkWidgetEvent(int xPixel, int yPixel, boolean isPress) {
   private JSVPanel jsvp;
   private Object image2D;
   private GenericColor[] plotColors;
-	private JSVGraphics g2d;
+	private GenericGraphics g2d;
 	private Object gMain;
 
   

@@ -40,8 +40,8 @@ public class JSVersion {
 		/**
 		 * @j2sNative
 		 * 
-		 *            tmpVersion = self.___version; tmpDate = self.___date; tmpSVN =
-		 *            self.___svnRev;
+		 *            tmpVersion = Jmol.___JSVVersion; tmpDate = Jmol.___JSVDate; 
+		 *            tmpSVN =  Jmol.___JSVSvnRev;
 		 * 
 		 */
 		{
@@ -53,10 +53,9 @@ public class JSVersion {
 				bis = new BufferedInputStream(is);
 				Properties props = new Properties();
 				props.load(bis);
-				tmpVersion = PT
-						.trimQuotes(props.getProperty("___version", tmpVersion));
-				tmpDate = PT.trimQuotes(props.getProperty("___date", tmpDate));
-				tmpSVN = PT.trimQuotes(props.getProperty("___svnRev", tmpSVN));
+				tmpVersion = PT.trimQuotes(props.getProperty("Jmol.___JSVVersion", tmpVersion));
+				tmpDate = PT.trimQuotes(props.getProperty("Jmol.___JSVDate", tmpDate));
+				tmpSVN = PT.trimQuotes(props.getProperty("Jmol.___JSVSvnRev", tmpSVN));
 			} catch (Exception e) {
 				// Nothing to do
 			} finally {
@@ -78,10 +77,9 @@ public class JSVersion {
 		}
 		if (tmpDate != null)
 			tmpDate = tmpDate.substring(7, 23);
-		if (tmpSVN != null)
-			tmpSVN = tmpSVN.substring(22, 27);
+		tmpSVN = (tmpSVN == null ? "" : "/SVN" + tmpSVN.substring(22, 27));
 		VERSION_SHORT = (tmpVersion != null ? tmpVersion : "(Unknown version)");
-		VERSION = VERSION_SHORT + "/SVN" + tmpSVN + "/"
+		VERSION = VERSION_SHORT + tmpSVN + "/"
 				+ (tmpDate != null ? tmpDate : "(Unknown date)");
 	}
 

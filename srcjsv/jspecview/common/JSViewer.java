@@ -23,6 +23,7 @@ import javajs.api.GenericPlatform;
 import javajs.api.PlatformViewer;
 import javajs.awt.Dimension;
 
+import org.jmol.api.GenericGraphics;
 import org.jmol.util.Logger;
 
 import javajs.util.PT;
@@ -30,7 +31,6 @@ import javajs.util.PT;
 
 import jspecview.api.ExportInterface;
 import jspecview.api.JSVFileHelper;
-import jspecview.api.JSVGraphics;
 import jspecview.api.JSVMainPanel;
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPopupMenu;
@@ -77,7 +77,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 	private final static int NLEVEL_MAX = 100;
 
 	public ScriptInterface si;
-	public JSVGraphics g2d;
+	public GenericGraphics g2d;
 	public JSVTree spectraTree;
 	public JDXSource currentSource;
 	public Lst<PanelNode> panelNodes;
@@ -153,7 +153,7 @@ public class JSViewer implements PlatformViewer, BytePoster  {
 		this.isSigned = si.isSigned();
 		apiPlatform = (GenericPlatform) getPlatformInterface("Platform");
 		apiPlatform.setViewer(this, this.display);
-		g2d = (JSVGraphics) getPlatformInterface("G2D");
+		g2d = (GenericGraphics) getPlatformInterface("G2D");
 		spectraTree = new SimpleTree(this);
 		parameters = (ColorParameters) getPlatformInterface("Parameters");
 		parameters.setName("applet");
