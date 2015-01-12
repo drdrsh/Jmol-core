@@ -64,13 +64,8 @@ public class MeshCapper {
    * initialization only
    */
   private Map<Integer, CapVertex> capMap;
-  private Lst<CapVertex> vertices;
-  private int ipt0;
-
-  private static final int DESCENDER = 0;
-  private static final int ASCENDER = 1;
-  private static final int LAST = 2;
-
+  private Lst<CapVertex> vertices;  
+  
   /**
    * dynamic region processing. These are just 
    * [DESCENDER, ASCENDER, LAST] for each region 
@@ -78,43 +73,35 @@ public class MeshCapper {
    */
   private Lst<CapVertex[]> lstRegions;
   
+  private static final int DESCENDER = 0;
+  private static final int ASCENDER = 1;
+  private static final int LAST = 2;
+
   /**
    * informational only
    */
   private int nTriangles, nRegions;
 
-  /**
-   * temporary storage
-   */
-
-  private V3 vTemp1, vTemp2;
-
-  
   /////////////// initialization //////////////////
 
   /**
    * @param slicer 
-   * @param resolution  
    * @return this
    */
-  MeshCapper set(MeshSlicer slicer, float resolution) {
+  MeshCapper set(MeshSlicer slicer) {
     // resolution has not been necessary
     this.slicer = slicer;
     dumping = Logger.debugging;
-    //testing = true;
     return this;    
   }
 
   void clear() {
-    vTemp1 = null;
-    vTemp2 = new V3();
     capMap = new Hashtable<Integer, CapVertex>();
     vertices = new Lst<CapVertex>();
-    lstRegions = new Lst<CapVertex[]>();
   }
 
   /**
-   * Pointers are into MeshSlicer.m.vs[]
+   * Input method from MeshSlicer. Pointers are into MeshSlicer.m.vs[]
    * 
    * @param ipt1
    * @param ipt2
@@ -125,13 +112,6 @@ public class MeshCapper {
     CapVertex v1 = addPoint(thisSet, ipt1);
     CapVertex v2 = addPoint(thisSet, ipt2);
     v1.link(v2);
-    // temporary variables store first and last vertex
-    if (vTemp1 == null) {
-      vTemp1 = V3.newV(v1);
-      ipt0 = ipt1;
-    } else if (ipt2 != ipt0) {
-      vTemp2.setT(v2);
-    }
   }
 
   /**
@@ -149,8 +129,10 @@ public class MeshCapper {
     CapVertex v = capMap.get(ii);
     if (v == null) {
       T3 pt = slicer.m.vs[i];
+      // copy this point to a new one to avoid shading across the edge
       i = slicer.addIntersectionVertex(pt, 0, -1, thisSet, null, -1, -1);
-      vertices.addLast(v = new CapVertex(pt, i));
+      v = new CapVertex(pt, i);
+      vertices.addLast(v);
       capMap.put(ii, v);
     }
     if (dumping)
@@ -158,13 +140,62 @@ public class MeshCapper {
     return v;
   }
 
+  /**
+   * for debugging
+   * 
+   * @param v
+   * @return external point or test point
+   */
+  private T3 getInputPoint(CapVertex v) {
+    return (testing ? P3.newP(v) : slicer.m.vs[v.ipt]);
+  }
+  
+  /**
+   * Export triangle to MeshSlicer
+   * 
+   * @param ipt1
+   * @param ipt2
+   * @param ipt3
+   */
+  private void outputTriangle(int ipt1, int ipt2, int ipt3) {
+    slicer.addTriangle(ipt1, ipt2, ipt3);
+  }
+
+  private CapVertex[] test(CapVertex[] vs) {
+//  dumping = testing = true;
+//  int n = 0;
+//  vs = new CapVertex[] {
+////   new CapVertex(P3.new3(0,  10,  0), n++),
+////   new CapVertex(P3.new3(0,  0,  0), n++), 
+////   new CapVertex(P3.new3(1,  0,  0), n++), 
+////   new CapVertex(P3.new3(2,  0,  0), n++)
+//      
+////      new CapVertex(P3.new3(0,  10,  0), n++)
+////      new CapVertex(P3.new3(-2,  0,  0), n++),
+////      new CapVertex(P3.new3(-1,  0,  0), n++), 
+////      new CapVertex(P3.new3(0,  0,  0), n++)
+//      
+//      new CapVertex(P3.new3(0,  10,  0), n++),
+//      new CapVertex(P3.new3(-2,  0,  0), n++),
+//      new CapVertex(P3.new3(-1,  0,  0), n++), 
+//      new CapVertex(P3.new3(0,  0,  0), n++), 
+//      new CapVertex(P3.new3(0,  6,  0), n++), 
+//      new CapVertex(P3.new3(0,  8,  0), n++) 
+//  };
+//  for (int i = 0; i < n; i++)
+//    vs[i].link(vs[(i + 1)%n]);
+  return vs;
+}
+
+
   /////////////// processing //////////////////
 
   /**
    * Entry point when finished generating edges.
    * 
+   * @param norm
    */
-  void createCap() {
+  void createCap(V3 norm) {
 
     capMap = null;
 
@@ -175,15 +206,15 @@ public class MeshCapper {
 
     // get transform to xy plane
     // to give best precision
-
-    V3 vab = V3.newVsub(vTemp2, vTemp1);
-    V3 vac = V3.newV(slicer.norm);
+    
+    V3 vab = V3.newVsub(vertices.get(0), vertices.get(1));
+    V3 vac = V3.newV(norm);
     vac.cross(vac, vab);
 
     //Get xy plane points
     Quat q = Quat.getQuaternionFrameV(vab, vac, null, false);
     M3 m3 = q.getMatrix();
-    M4 m4 = M4.newMV(m3, vTemp1);
+    M4 m4 = M4.newMV(m3, vertices.get(0));
     M4 m4inv = M4.newM4(m4).invert();
     vertices.toArray(vs);
     for (int i = vs.length; --i >= 0;)
@@ -192,8 +223,7 @@ public class MeshCapper {
     
     // link by Y,X sort
 
-    //if (testing)
-      //vs = test();
+    vs = test(vs);
 
     Logger.info("MeshCapper using " + vs.length + " vertices");
 
@@ -204,6 +234,8 @@ public class MeshCapper {
       return;
     }
     
+    lstRegions = new Lst<CapVertex[]>();
+
     // scan the plane
     
     CapVertex v = v0;
@@ -214,32 +246,6 @@ public class MeshCapper {
     Logger.info("MeshCapper created " + nTriangles + " triangles " + nRegions + " regions");
 
   }
-
-//  private CapVertex[] test() {
-//    dumping = true;
-//    int n = 0;
-//    CapVertex[] vs = new CapVertex[] {
-////     new CapVertex(P3.new3(0,  10,  0), n++),
-////     new CapVertex(P3.new3(0,  0,  0), n++), 
-////     new CapVertex(P3.new3(1,  0,  0), n++), 
-////     new CapVertex(P3.new3(2,  0,  0), n++)
-//        
-////        new CapVertex(P3.new3(0,  10,  0), n++)
-////        new CapVertex(P3.new3(-2,  0,  0), n++),
-////        new CapVertex(P3.new3(-1,  0,  0), n++), 
-////        new CapVertex(P3.new3(0,  0,  0), n++)
-//        
-//        new CapVertex(P3.new3(0,  10,  0), n++),
-//        new CapVertex(P3.new3(-2,  0,  0), n++),
-//        new CapVertex(P3.new3(-1,  0,  0), n++), 
-//        new CapVertex(P3.new3(0,  0,  0), n++), 
-//        new CapVertex(P3.new3(0,  6,  0), n++), 
-//        new CapVertex(P3.new3(0,  8,  0), n++) 
-//    };
-//    for (int i = 0; i < n; i++)
-//      vs[i].link(vs[(i + 1)%n]);
-//    return vs;
-//  }
 
   /**
    * Handle the point; mark as processed.
@@ -595,11 +601,7 @@ public class MeshCapper {
    * @return true if properly wound -- (v1-v0).cross.(v2-v0).dot.norm > 0
    */
   private boolean checkWinding(CapVertex v0, CapVertex v1, CapVertex v2) {
-    vTemp1.sub2(v1, v0);
-    vTemp2.sub2(v2, v0);
-    vTemp1.z = vTemp2.z = 0;
-    vTemp2.cross(vTemp1, vTemp2);
-    return (vTemp2.z > 0);
+    return (v1.x-v0.x) * (v2.y-v0.y) > (v1.y - v0.y) * (v2.x - v0.x);
   }
 
   /**
@@ -617,8 +619,7 @@ public class MeshCapper {
     if (checkWinding(v0, v1, v2)) {
       if (dumping)
         drawTriangle(nTriangles, v0, v1, v2, "red");
-      slicer.m.addPolygonV3(v0.ipt, v1.ipt, v2.ipt, 0, 0, 0,
-          slicer.m.bsSlabDisplay);
+      outputTriangle(v0.ipt, v1.ipt, v2.ipt);
     } else if (dumping) {
       // probably a 180-degree triangle, which can happen with
       //
@@ -646,9 +647,9 @@ public class MeshCapper {
    */
   private void drawTriangle(int index, CapVertex v0, CapVertex v1, CapVertex v2,
                     String color) {
-    T3 p0 = (testing ? P3.newP(v0) : slicer.m.vs[v0.ipt]);
-    T3 p1 = (testing ? P3.newP(v1) : slicer.m.vs[v1.ipt]);
-    T3 p2 = (testing ? P3.newP(v2) : slicer.m.vs[v2.ipt]);
+    T3 p0 = getInputPoint(v0);
+    T3 p1 = getInputPoint(v1);
+    T3 p2 = getInputPoint(v2);
     Logger.info("draw " + color + index + "/* " + v0.id + " " + v1.id
         + " " + v2.id + " */" + p0 + p1 + p2 + " color " + color);
   }
@@ -696,8 +697,7 @@ public class MeshCapper {
     CapVertex(T3 p, int i) {
       ipt = i;
       id = "" + i;
-      x = p.x;
-      y = p.y;
+      setT(p);
     }
 
     public CapVertex cloneV() {

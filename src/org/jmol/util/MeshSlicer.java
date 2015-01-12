@@ -265,7 +265,7 @@ public class MeshSlicer {
     if (ptCenters != null || isGhost)
       andCap = false; // can only cap faces, and no capping of ghosts
     if (andCap && capper == null)
-      capper = ((MeshCapper) Interface.getInterface("org.jmol.util.MeshCapper", m.vwr, "script")).set(this, m.getResolution());
+      capper = ((MeshCapper) Interface.getInterface("org.jmol.util.MeshCapper", m.vwr, "script")).set(this);
     if (capper != null)
       capper.clear();
     double absD = Math.abs(distance);
@@ -523,7 +523,7 @@ public class MeshSlicer {
       }
     }
     if (andCap)
-      capper.createCap();
+      capper.createCap(norm);
     if (!doClean)
       return;
     BS bsv = new BS();
@@ -839,6 +839,17 @@ public class MeshSlicer {
 
   String getKey(int i1, int i2) {
     return (i1 < 0 ? "" : i1 > i2 ? i2 + "_" + i1 : i1 + "_" + i2);
+  }
+
+  /**
+   * from MeshCapper
+   * 
+   * @param ipt1
+   * @param ipt2
+   * @param ipt3
+   */
+  void addTriangle(int ipt1, int ipt2, int ipt3) {
+    m.addPolygonV3(ipt1, ipt2, ipt3, 0, 0, 0, m.bsSlabDisplay);  
   }
 
 }
