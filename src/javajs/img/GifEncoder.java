@@ -518,6 +518,10 @@ public class GifEncoder extends ImageEncoder {
     for (int i = 0, p = 0; i < height; ++i) {
       boolean notLastRow = (i != height - 1);
       for (int j = 0; j < width; ++j, p++) {
+        if (pixels[p] == backgroundColor) {
+          // leave as 0
+          continue;
+        }
         P3 pe = errors[p % w2];
         if (pe == null || pe.x == Float.MAX_VALUE) {
           lab = null;
