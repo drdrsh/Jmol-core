@@ -12,7 +12,6 @@ import javajs.util.Quat;
 import javajs.util.P3;
 import javajs.util.V3;
 import javajs.util.T3;
-import javajs.util.V3d;
 
 /**
  * A class to properly cap a convoluted, closed slice of an isosurface
@@ -54,12 +53,12 @@ public class MeshCapper {
   /**
    * source of edges; consumer of triangles
    */
-  protected MeshSlicer slicer;
+  private MeshSlicer slicer;
 
   /**
    * for debugging
    */
-  protected boolean dumping;
+  private boolean dumping, testing;
 
   /**
    * initialization only
@@ -68,23 +67,27 @@ public class MeshCapper {
   private Lst<CapVertex> vertices;
   private int ipt0;
 
+  private static final int DESCENDER = 0;
+  private static final int ASCENDER = 1;
+  private static final int LAST = 2;
+
   /**
    * dynamic region processing. These are just 
    * [DESCENDER, ASCENDER, LAST] for each region 
    * 
    */
-  protected Lst<CapVertex[]> lstRegions;
+  private Lst<CapVertex[]> lstRegions;
   
   /**
    * informational only
    */
-  protected int nTriangles;
+  private int nTriangles, nRegions;
 
   /**
    * temporary storage
    */
-  protected V3d vab, vac, vap;
-  protected V3 vTemp0, vTemp1, vTemp2;
+
+  private V3 vTemp1, vTemp2;
 
   
   /////////////// initialization //////////////////
@@ -97,14 +100,12 @@ public class MeshCapper {
   MeshCapper set(MeshSlicer slicer, float resolution) {
     // resolution has not been necessary
     this.slicer = slicer;
-    return this;
+    dumping = Logger.debugging;
+    //testing = true;
+    return this;    
   }
 
   void clear() {
-    vab = new V3d();
-    vac = new V3d();
-    vap = new V3d();
-    vTemp0 = new V3();
     vTemp1 = null;
     vTemp2 = new V3();
     capMap = new Hashtable<Integer, CapVertex>();
@@ -143,7 +144,7 @@ public class MeshCapper {
    * @return a CapVertex pointing to this new point in the isosurface or one we
    *         already have
    */
-  protected CapVertex addPoint(int thisSet, int i) {
+  private CapVertex addPoint(int thisSet, int i) {
     Integer ii = Integer.valueOf(i);
     CapVertex v = capMap.get(ii);
     if (v == null) {
@@ -166,8 +167,6 @@ public class MeshCapper {
   void createCap() {
 
     capMap = null;
-
-    Logger.info("MeshCapper for " + vertices.size() + " vertices");
 
     CapVertex[] vs = new CapVertex[vertices.size()];
 
@@ -193,9 +192,15 @@ public class MeshCapper {
     
     // link by Y,X sort
 
+    //if (testing)
+      //vs = test();
+
+    Logger.info("MeshCapper using " + vs.length + " vertices");
+
+
     CapVertex v0 = vs[0].sort(vs);
     if (v0 == null) {
-      Logger.error("two identical points");
+      Logger.error("two identical points -- aborting");
       return;
     }
     
@@ -203,15 +208,456 @@ public class MeshCapper {
     
     CapVertex v = v0;
     do {
-      v = v.process();
+      v = process(v);
     } while (v != v0);
     clear();
-
-    Logger.info("MeshCapper created " + nTriangles + " triangles");
+    Logger.info("MeshCapper created " + nTriangles + " triangles " + nRegions + " regions");
 
   }
 
-  private class CapVertex extends P3 implements Cloneable,
+//  private CapVertex[] test() {
+//    dumping = true;
+//    int n = 0;
+//    CapVertex[] vs = new CapVertex[] {
+////     new CapVertex(P3.new3(0,  10,  0), n++),
+////     new CapVertex(P3.new3(0,  0,  0), n++), 
+////     new CapVertex(P3.new3(1,  0,  0), n++), 
+////     new CapVertex(P3.new3(2,  0,  0), n++)
+//        
+////        new CapVertex(P3.new3(0,  10,  0), n++)
+////        new CapVertex(P3.new3(-2,  0,  0), n++),
+////        new CapVertex(P3.new3(-1,  0,  0), n++), 
+////        new CapVertex(P3.new3(0,  0,  0), n++)
+//        
+//        new CapVertex(P3.new3(0,  10,  0), n++),
+//        new CapVertex(P3.new3(-2,  0,  0), n++),
+//        new CapVertex(P3.new3(-1,  0,  0), n++), 
+//        new CapVertex(P3.new3(0,  0,  0), n++), 
+//        new CapVertex(P3.new3(0,  6,  0), n++), 
+//        new CapVertex(P3.new3(0,  8,  0), n++) 
+//    };
+//    for (int i = 0; i < n; i++)
+//      vs[i].link(vs[(i + 1)%n]);
+//    return vs;
+//  }
+
+  /**
+   * Handle the point; mark as processed.
+   * @param v 
+   * 
+   * @return next point to process
+   */
+  private CapVertex process(CapVertex v) {
+    //
+    //                    /\
+    //                   /  \ascending
+    //       descending /    \
+    //                 /      \
+    //                /        \
+    //              -/----------*-<
+    //              /            \
+
+    CapVertex q = v.qnext;
+    v.qnext = null; // indicates already processed
+    if (dumping)
+      Logger.info(this.toString());
+    if (v.prev == v.next)
+      return q;
+
+    boolean isDescending = (v.prev.region != null);
+    boolean isAscending = (v.next.region != null);
+
+    if (dumping)
+      Logger.info("#" + (isAscending ? v.next.id : "    ") + "    "
+        + (isDescending ? v.prev.id : "") + "\n#"
+        + (isAscending ? "   \\" : "    ")
+        + (isDescending ? "    /\n" : "\n") + "#    " + v.id);
+
+    if (!isDescending && !isAscending) {
+      CapVertex last = getLastPoint(v);
+      if (last == null) {
+        // start vertex -- just create a new region
+        newRegion(v);
+        return q;
+      }
+      CapVertex p = processSplit(v, last);
+      // patch in new point as the next to process
+      p.qnext = q;
+      q = p;
+      // process left branch
+      isAscending = true;
+    }
+
+    // note that a point may be both ascending and descending:
+
+    //
+    //                    /\         /\
+    //                   /  \       /  \
+    //                  /    \     /    \
+    //                 /   next   prev   \
+    //                /        \ /        \
+    //              -/----------*----------\<
+    //              /                       \
+
+    if (isDescending) {
+      processMonotonic(v, true);
+    }
+    if (isAscending) {
+      processMonotonic(v, false);
+    }
+
+    if (isDescending && isAscending) {
+      if (v.prev.prev == v.next) {
+        // end vertex -- draw last triangle
+        lstRegions.removeObj(v.region);
+        addTriangle(v.prev, v, v.next, "end");
+        v.prev.clear();
+        v.next.clear();
+      } else {
+        // merge vertex -- linking two separate regions
+        // just mark as having no region yet
+        v.region = null;
+      }
+
+    }
+    return q;
+  }
+
+
+  /**
+   * Process a standard monotonic region, cleaving off as many triangles as possible.
+   * 
+   * @param v 
+   * @param isDescending
+   */
+  private void processMonotonic(CapVertex v, boolean isDescending) {
+    CapVertex vEdge = (isDescending ? v.prev : v.next);
+    v.region = vEdge.region;
+    CapVertex last = v.region[LAST];
+    if (last == v) {
+      // single triangle processed already by descender
+      lstRegions.removeObj(v.region);
+      return;
+    }
+    CapVertex v2, v1;
+
+    if (last == vEdge) {
+
+      // same side
+
+      v1 = last;
+      v2 = (isDescending ? v1.prev : v1.next);
+      while (v2 != v && v2.qnext == null
+          && isDescending == (v.x > v.interpolateX(v2, v1))) {
+        if (isDescending) {
+          // same side descending
+          //
+          //                    /\
+          //                  v2  \
+          //                  /    \
+          //         --(last)v-----------
+          //                /        \
+          //              -*----------\-<
+          //              /            \
+
+          addTriangle(v2, v1, v, "same desc " + v.ipt);
+          v1 = v2;
+          v2 = v2.prev;
+        } else {
+          // same side ascending
+          //
+          //                    /\
+          //                   /  v2
+          //                  /    \
+          //              ----------v(last)--
+          //                /        \
+          //              ------------*-<
+          //              /            \
+
+          addTriangle(v, v1, v2, "same asc " + v.ipt);
+          v1 = v2;
+          v2 = v2.next;
+        }
+      }
+    } else {
+      // opposite side
+      v2 = vEdge;
+      do {
+        v1 = v2;
+        if (isDescending) {
+          v2 = v1.prev;
+
+          // opposite side descending
+          //
+          //                     v(vEdge)
+          //                    / \
+          //                   /   v2
+          //                  /     \
+          //               ----------last
+          //                /         \
+          //              -*-----------\-<
+          //              /             \
+
+          addTriangle(v2, v1, v, "opp desc " + v.id);
+        } else {
+          v2 = v1.next;
+
+          // opposite side ascending
+          //
+          //                    /\
+          //                   /  \
+          //                  /    v(vEdge)
+          //            --last------\----
+          //                /        \
+          //              -/----------*-<
+          //              /            \
+
+          addTriangle(v, v1, v2, "opp asc " + v.id);
+        }
+      } while (v2 != last && v2 != v && v2.qnext == null);
+      if (last.region == null) {
+        // done with this region
+        lstRegions.removeObj(v.region);
+        v.region = last.region = (isDescending ? last.prev : last.next).region;
+      }
+    }
+    v.region[LAST] = v.region[isDescending ? DESCENDER : ASCENDER] = v;
+  }
+
+  /**
+   * 
+   * Process what M3O refer to as a "split" vertex, which we handle differently
+   * here, cloning the "helper" point and the "split" point, creating a new
+   * region if necessary, and then swapping pointers.
+   * 
+   * @param v
+   * 
+   * @param last
+   *        "helper" or left edge
+   * @return new point clone of this
+   * 
+   */
+  private CapVertex processSplit(CapVertex v, CapVertex last) {
+
+    CapVertex pv = last.cloneV();
+    if (dumping)
+      pv.id += "a";
+    CapVertex p = v.cloneV();
+    if (dumping)
+      p.id += "a";
+
+    if (last.region == null) {
+
+      // split is to a merge vertex
+      //
+      //                    /\
+      //       last.next   /  \
+      //                \ /    \
+      //              last(pv)--\-
+      //                         \
+      //              ------*(p)--\-<
+      //                   / \     
+      // becomes
+      //
+      //                      /\
+      //       last.next     /  \
+      //                \   /    \
+      //              last pv-----\-
+      //                  \ \      \
+      //                   * p------\-<
+      //                  /   \     
+
+      last.region = last.next.region;
+      pv.region = last.prev.region;
+
+    } else {
+
+      // split is to an edge, requiring a new region
+
+      //                    /\
+      //                   /  \
+      //                  /    \
+      //              last(pv)----
+      //                /        \
+      //              -/----*(p)--\-<
+      //        last.next  / \     \
+
+      // becomes
+      //
+      //                      /\
+      //                     /  \
+      //                    /    \
+      //              last pv     \    
+      //                / \ \      \
+      //              -/---* p------\-<
+      //        last.next /   \      \     
+
+      newRegion(last);
+
+      // It is possible for v.next to be above. This will happen
+      // in the case where we have just a single edge with d above a.
+
+      CapVertex cv = last;
+      while (cv.next.region != null) {
+        cv.next.region = cv.region;
+        cv = cv.next;
+        cv.region[DESCENDER] = cv;
+      }
+    }
+
+    // fix region references
+
+    CapVertex[] r = pv.region;
+    if (r[LAST] == last)
+      r[LAST] = pv;
+    r[DESCENDER] = pv;
+    if (r[ASCENDER] == last)
+      r[ASCENDER] = pv;
+
+    // patch new edges
+
+    v.link(last);
+    pv.prev.link(pv);
+    pv.link(p);
+    p.link(p.next);
+
+    //System.out.println("#split v=" + v + "\n#p=" + pv);
+
+    return p;
+  }
+
+  /**
+   * Add a new region to the list of regions.
+   * 
+   * @param v
+   */
+  private void newRegion(CapVertex v) {
+    //System.out.println("\n\n#new region for " + id);
+    nRegions++;
+    lstRegions.addLast(v.region = new CapVertex[] { v, v, v });
+  }
+
+  /**
+   * Find the lowest ascender or descender above scan line bounding the region
+   * for this point. In the case of a region that consists of a single edge
+   * with descender above ascender, this will return the ascender.
+   * 
+   * [This is MOST confusing in the M3O book.]
+   * @param v 
+   * 
+   * @return pt
+   */
+  private CapVertex getLastPoint(CapVertex v) {
+
+    //  return a:
+    //                    /\
+    //                   /  \
+    //                  /    \
+    //                 d      \
+    //                /        a
+    //              -/----*-----\-<
+    //              /
+
+    CapVertex closest = null;
+    float ymin = Float.MAX_VALUE;
+    for (int i = lstRegions.size(); --i >= 0;) {
+      CapVertex[] r = lstRegions.get(i);
+      // check left edge
+      CapVertex d = r[DESCENDER];
+      if (d == r[ASCENDER])
+        continue;
+      float xp = (d.region == null ? d.x : v.interpolateX(d, d.next));
+      if (xp > v.x)
+        continue;
+      // check right edge
+      CapVertex a = r[ASCENDER];
+      xp = (a.region == null ? a.x : v.interpolateX(a, a.prev));
+      if (xp < v.x)
+        continue;
+      if (d.y < ymin) {
+        ymin = d.y;
+        closest = d;
+      }
+      if (a.y < ymin) {
+        ymin = a.y;
+        closest = a;
+      }
+    }
+    return closest;
+  }
+
+  /**
+   * Check for CCW winding.
+   * 
+   * @param v0
+   * @param v1
+   * @param v2
+   * @return true if properly wound -- (v1-v0).cross.(v2-v0).dot.norm > 0
+   */
+  private boolean checkWinding(CapVertex v0, CapVertex v1, CapVertex v2) {
+    vTemp1.sub2(v1, v0);
+    vTemp2.sub2(v2, v0);
+    vTemp1.z = vTemp2.z = 0;
+    vTemp2.cross(vTemp1, vTemp2);
+    return (vTemp2.z > 0);
+  }
+
+  /**
+   * Add the triangle and remove v1 from the chain.
+   * 
+   * @param v0
+   * @param v1
+   * @param v2
+   * @param note
+   */
+  private void addTriangle(CapVertex v0, CapVertex v1, CapVertex v2,
+                           String note) {
+    //System.out.println("#" + test + " " + note);
+    ++nTriangles;
+    if (checkWinding(v0, v1, v2)) {
+      if (dumping)
+        drawTriangle(nTriangles, v0, v1, v2, "red");
+      slicer.m.addPolygonV3(v0.ipt, v1.ipt, v2.ipt, 0, 0, 0,
+          slicer.m.bsSlabDisplay);
+    } else if (dumping) {
+      // probably a 180-degree triangle, which can happen with
+      //
+      //         0
+      //        /|
+      //       / 5
+      //      /  |
+      //     /   4
+      //    /    |
+      //   1--2--3
+
+      Logger.info("#!!!BAD WINDING " + note);
+    }
+    v1.link(null);
+  }
+
+  /**
+   *        for debugging
+   * 
+   * @param index
+   * @param v0
+   * @param v1
+   * @param v2
+   * @param color
+   */
+  private void drawTriangle(int index, CapVertex v0, CapVertex v1, CapVertex v2,
+                    String color) {
+    T3 p0 = (testing ? P3.newP(v0) : slicer.m.vs[v0.ipt]);
+    T3 p1 = (testing ? P3.newP(v1) : slicer.m.vs[v1.ipt]);
+    T3 p2 = (testing ? P3.newP(v2) : slicer.m.vs[v2.ipt]);
+    Logger.info("draw " + color + index + "/* " + v0.id + " " + v1.id
+        + " " + v2.id + " */" + p0 + p1 + p2 + " color " + color);
+  }
+
+  /**
+   * A class to provide linked vertices for MeshCapper
+   * 
+   */
+  private class CapVertex extends T3 implements Cloneable,
       Comparator<CapVertex> {
 
     /**
@@ -239,9 +685,6 @@ public class MeshCapper {
      * dynamic region pointers
      */
 
-    private static final int DESCENDER = 0;
-    private static final int ASCENDER = 1;
-    private static final int LAST = 2;
     CapVertex[] region;
 
     /**
@@ -255,6 +698,14 @@ public class MeshCapper {
       id = "" + i;
       x = p.x;
       y = p.y;
+    }
+
+    public CapVertex cloneV() {
+      try {
+        return (CapVertex) clone();
+      } catch (Exception e) {
+        return null;
+      }
     }
 
     /**
@@ -282,244 +733,9 @@ public class MeshCapper {
     }
 
     /**
-     * Handle the point; mark as processed.
-     * 
-     * @return next point to process
-     */
-    protected CapVertex process() {
-      //
-      //                    /\
-      //                   /  \ascending
-      //       descending /    \
-      //                 /      \
-      //                /        \
-      //              -/----------*-<
-      //              /            \
-
-      CapVertex q = qnext;
-      qnext = null; // indicates already processed
-      if (dumping)
-        Logger.info(this.toString());
-      if (prev == next)
-        return q;
-
-      boolean isDescending = (prev.region != null);
-      boolean isAscending = (next.region != null);
-
-      if (dumping)
-        Logger.info("#" + (isAscending ? next.id : "    ") + "    "
-          + (isDescending ? prev.id : "") + "\n#"
-          + (isAscending ? "   \\" : "    ")
-          + (isDescending ? "    /\n" : "\n") + "#    " + id);
-
-      if (!isDescending && !isAscending) {
-        CapVertex v = getClosestMinPoint();
-        if (v == null) {
-          // start vertex -- just create a new region
-          newRegion();
-          return q;
-        }
-        CapVertex p = processSplit(v);
-        // patch in new point as the next to process
-        p.qnext = q;
-        q = p;
-        // process left branch
-        isAscending = true;
-      }
-
-      // note that a point may be both ascending and descending:
-
-      //
-      //                    /\         /\
-      //                   /  \       /  \
-      //                  /    \     /    \
-      //                 /   next   prev   \
-      //                /        \ /        \
-      //              -/----------*----------\<
-      //              /                       \
-
-      if (isDescending) {
-        processMonotonic(true);
-      }
-      if (isAscending) {
-        processMonotonic(false);
-      }
-
-      if (isDescending && isAscending) {
-        if (prev.prev == next) {
-          // end vertex -- draw last triangle
-          lstRegions.removeObj(region);
-          addTriangle(prev, this, next, "end");
-          prev.clear();
-          next.clear();
-        } else {
-          // merge vertex -- linking two separate regions
-          // just mark as having no region yet
-          region = null;
-        }
-
-      }
-      return q;
-    }
-
-    /**
-     * 
-     * Process what M3O refer to as a "split" vertex, which we handle
-     * differently here, cloning the "helper" point and the "split" point,
-     * creating a new region if necessary, and then swapping pointers.
-     * 
-     * @param v
-     *        "helper" or left edge
-     * @return new point clone of this
-     * 
-     */
-    private CapVertex processSplit(CapVertex v) {
-
-      CapVertex p = null, pv = null;
-      try {
-        pv = (CapVertex) v.clone();
-        pv.id += "a";
-        p = (CapVertex) clone();
-        p.id += "a";
-      } catch (Exception e) {
-        // ignore
-      }
-
-      if (v.region == null) {
-
-        // split is to a merge vertex
-        //
-        //                    /\
-        //          v.next   /  \
-        //                \ /    \
-        //                 v(pv)--\-
-        //                         \
-        //              ------*(p)--\-<
-        //                   / \     
-        // becomes
-        //
-        //                      /\
-        //          v.next     /  \
-        //                \   /    \
-        //                 v pv-----\-
-        //                  \ \      \
-        //                   * p------\-<
-        //                  /   \     
-
-        v.region = v.next.region;
-        pv.region = v.prev.region;
-
-      } else {
-
-        // split is to an edge, requiring a new region
-
-        //                    /\
-        //                   /  \
-        //                  /    \
-        //                 v(pv)----
-        //                /        \
-        //              -/----*(p)--\-<
-        //           v.next  / \     \
-
-        // becomes
-        //
-        //                      /\
-        //                     /  \
-        //                    /    \
-        //                 v pv     \    
-        //                / \ \      \
-        //              -/---* p------\-<
-        //           v.next /   \      \     
-
-        v.newRegion();
-
-        // It is possible for v.next to be above. This will happen
-        // in the case where we have just a single edge with d above a.
-
-        CapVertex cv = v;
-        while (cv.next.region != null) {
-          cv.next.region = cv.region;
-          cv = cv.next;
-          cv.region[DESCENDER] = cv;
-        }
-      }
-
-      // fix region references
-
-      CapVertex[] r = pv.region;
-      if (r[LAST] == v)
-        r[LAST] = pv;
-      r[DESCENDER] = pv;
-      if (r[ASCENDER] == v)
-        r[ASCENDER] = pv;
-
-      // patch new edges
-
-      link(v);
-      pv.prev.link(pv);
-      pv.link(p);
-      p.link(p.next);
-
-      //System.out.println("#split v=" + v + "\n#p=" + pv);
-
-      return p;
-    }
-
-    private void newRegion() {
-      //System.out.println("\n\n#new region for " + id);
-      lstRegions.addLast(region = new CapVertex[] { this, this, this });
-    }
-
-    /**
-     * Find the lowest ascender or descender above scan line bounding the region
-     * for this point. In the case of a region that consists of a single edge
-     * with descender above ascender, this will return the ascender.
-     * 
-     * [This is MOST confusing in the M3O book.]
-     * 
-     * @return pt
-     */
-    private CapVertex getClosestMinPoint() {
-
-      //  return a:
-      //                    /\
-      //                   /  \
-      //                  /    \
-      //                 d      \
-      //                /        a
-      //              -/----*-----\-<
-      //              /
-
-      CapVertex closest = null;
-      float ymin = Float.MAX_VALUE;
-      for (int i = lstRegions.size(); --i >= 0;) {
-        CapVertex[] r = lstRegions.get(i);
-        // check left edge
-        CapVertex d = r[DESCENDER];
-        if (d == r[ASCENDER])
-          continue;
-        float xp = (d.region == null ? d.x : interpolateX(d, d.next));
-        if (xp > x)
-          continue;
-        // check right edge
-        CapVertex a = r[ASCENDER];
-        xp = (a.region == null ? a.x : interpolateX(a, a.prev));
-        if (xp < x)
-          continue;
-        if (d.y < ymin) {
-          ymin = d.y;
-          closest = d;
-        }
-        if (a.y < ymin) {
-          ymin = a.y;
-          closest = a;
-        }
-      }
-      return closest;
-    }
-
-    /**
-     * Get interpolated x for the scan line intersection with an edge
+     * Get interpolated x for the scan line intersection with an edge.
+     * This method is used both in finding the last point for a split
+     * and for checking winding on same-side addition.
      * 
      * determine
      * 
@@ -527,170 +743,17 @@ public class MeshCapper {
      * @param v2
      * @return x
      */
-    private float interpolateX(CapVertex v1, CapVertex v2) {
+    protected float interpolateX(CapVertex v1, CapVertex v2) {
       double dy12 = v2.y - v1.y;
       double dx12 = v2.x - v1.x;
+      if (dy12 == 0)
+        return (dx12 > 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
       double dy1v = y - v1.y;
       return (float) (v1.x + (dy1v / dy12) * dx12);
     }
 
     /**
-     * Cleave off as many triangles as possible.
-     * 
-     * @param isDescending
-     */
-    private void processMonotonic(boolean isDescending) {
-      CapVertex vEdge = (isDescending ? prev : next);
-      region = vEdge.region;
-      CapVertex v = region[LAST];
-      if (v == this) {
-        // single triangle processed already by descender
-        lstRegions.removeObj(region);
-        return;
-      }
-      CapVertex v2;
-
-      if (v == vEdge) {
-
-        // same side
-
-        v2 = (isDescending ? v.prev : v.next);
-        if (v2.region != null)
-          while (v2 != this
-              && v2.qnext == null
-              && (isDescending ? checkWinding(v2, v, this) : checkWinding(this,
-                  v, v2))) {
-            if (isDescending) {
-              // same side descending
-              //
-              //                    /\
-              //               last2  \
-              //                  /    \
-              //            --last-----------
-              //                /        \
-              //              -*----------\-<
-              //              /            \
-
-              addTriangle(v2, v, this, "same desc " + ipt);
-              v = v2;
-              v2 = v2.prev;
-            } else {
-              // same side ascending
-              //
-              //                    /\
-              //                   /  last2
-              //                  /    \
-              //              ----------last--
-              //                /        \
-              //              ------------*-<
-              //              /            \
-
-              addTriangle(this, v, v2, "same asc " + ipt);
-              v = v2;
-              v2 = v2.next;
-              if (v == region[DESCENDER])
-                region[DESCENDER] = next;
-            }
-            if (v2 == this) {
-              // finalized region
-              lstRegions.removeObj(region);
-            }
-          }
-      } else {
-        // opposite side
-        if (v.region == null) {
-          // pull out this region
-          lstRegions.removeObj(region);
-          region = v.region = (isDescending ? v.prev : v.next).region;
-        }
-
-        CapVertex last0 = v;
-        v = vEdge;
-
-        do {
-          if (isDescending) {
-
-            // opposite side descending
-            //
-            //                    /\
-            //                   /  last.next
-            //              vEdge    \
-            //               ---------last
-            //                /        \
-            //              -*----------\-<
-            //              /            \
-
-            v2 = v.prev;
-            addTriangle(v2, v, this, "opp desc " + id);
-            v = v2;
-          } else {
-            // opposite side ascending
-            //
-            //                    /\
-            //           last.prev  \
-            //                  /    vEdge
-            //            --last------\----
-            //                /        \
-            //              -/----------*-<
-            //              /            \
-
-            v2 = v.next;
-            addTriangle(this, v, v2, "opp asc " + id);
-            v = v2;
-          }
-        } while (v != last0 && v != this && v.qnext == null);
-      }
-
-      region[LAST] = region[isDescending ? DESCENDER : ASCENDER] = this;
-
-      //System.out.println(this);
-      //System.out.println("#--------------");
-
-      // region now may have unfinished edges. No matter.
-
-    }
-
-    /**
-     * Check for CCW winding
-     * 
-     * @param v0
-     * @param v1
-     * @param v2
-     * @return true if properly wound -- (v1-v0)x(v2-v0).dot.norm > 0
-     */
-    private boolean checkWinding(CapVertex v0, CapVertex v1, CapVertex v2) {
-      vTemp1.sub2(v1, v0);
-      vTemp2.sub2(v2, v0);
-      vTemp1.z = vTemp2.z = 0;
-      vTemp2.cross(vTemp1, vTemp2);
-      return (vTemp2.z > 0);
-    }
-
-    /**
-     * add the triangle and remove v1 from the chain
-     * 
-     * @param v0
-     * @param v1
-     * @param v2
-     * @param note
-     *        for debugging
-     */
-    private void addTriangle(CapVertex v0, CapVertex v1, CapVertex v2,
-                             String note) {
-      //System.out.println("#" + test + " " + note);
-      ++nTriangles;
-      if (dumping) {
-        if (!checkWinding(v0, v1, v2))
-          Logger.error("!!!BAD WINDING " + note);
-        draw(nTriangles, v0, v1, v2, "red");
-      }
-      slicer.m.addPolygonV3(v0.ipt, v1.ipt, v2.ipt, 0, 0, 0,
-          slicer.m.bsSlabDisplay);
-      v1.link(null);
-    }
-
-    /**
-     * link this vertex with v or remove it from the chain
+     * Link this vertex with v or remove it from the chain.
      * 
      * @param v
      *        null to remove
@@ -707,29 +770,11 @@ public class MeshCapper {
     }
 
     /**
-     * free links
+     * Free all links.
      */
-    private void clear() {
+    protected void clear() {
       qnext = next = prev = null;
       region = null;
-    }
-
-    /**
-     * for debugging
-     * 
-     * @param index
-     * @param v0
-     * @param v1
-     * @param v2
-     * @param color
-     */
-    private void draw(int index, CapVertex v0, CapVertex v1, CapVertex v2,
-                      String color) {
-      T3 p0 = slicer.m.vs[v0.ipt];
-      T3 p1 = slicer.m.vs[v1.ipt];
-      T3 p2 = slicer.m.vs[v2.ipt];
-      Logger.info("draw " + color + index + "/* " + v0.id + " " + v1.id
-          + " " + v2.id + " */" + p0 + p1 + p2 + " color " + color);
     }
 
     /**
@@ -739,9 +784,9 @@ public class MeshCapper {
      * 
      */
     private String dumpRegion() {
-      String s = "\n#REGION d=" + region[DESCENDER].id + " a="
-          + region[ASCENDER].id + " last=" + region[LAST].id + "\n# ";
-      CapVertex v = region[ASCENDER];
+      String s = "\n#REGION d=" + region[MeshCapper.DESCENDER].id + " a="
+          + region[MeshCapper.ASCENDER].id + " last=" + region[MeshCapper.LAST].id + "\n# ";
+      CapVertex v = region[MeshCapper.ASCENDER];
       while (true) {
         s += v.id + " ";
         if (v == region[DESCENDER])
