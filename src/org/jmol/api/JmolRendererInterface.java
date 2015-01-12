@@ -243,12 +243,6 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
    */
   public abstract void fillSphereXYZ(int diameter, int x, int y, int z);
 
-  public abstract void fillTriangle(P3i screenA, short colixA,
-                                    short normixA, P3i screenB,
-                                    short colixB, short normixB,
-                                    P3i screenC, short colixC,
-                                    short normixC, float factor);
-
   public abstract void fillTriangle3CN(P3i screenA, short colixA,
                                     short normixA, P3i screenB,
                                     short colixB, short normixB,

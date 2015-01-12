@@ -677,23 +677,6 @@ public class Export3D implements JmolRendererInterface {
     }
   }
 
-  // was in js:
-
-  //  @Override
-  //  public void fillTriangle3i(P3i pointA, P3i pointB, P3i pointC, P3 ptA,
-  //                             P3 ptB, P3 ptC) {
-  //    // cartoon only, for nucleic acid bases
-  //    exporter.fillTriangle(colix, ptA, ptB, ptC, true, true);
-  //  }
-
-  @Override
-  public void fillTriangle(P3i pointA, short colixA, short normixA, P3i pointB,
-                           short colixB, short normixB, P3i pointC,
-                           short colixC, short normixC, float factor) {
-    fillTriangle3CN(pointA, colixA, normixA, pointB, colixB, normixB, pointC,
-        colixC, normixC);
-  }
-
   /*
    * ***************************************************************
    * quadrilaterals

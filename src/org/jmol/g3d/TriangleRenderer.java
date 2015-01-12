@@ -165,28 +165,28 @@ public class TriangleRenderer implements G3DRenderer {
     fillTriangleB(useGouraud);
   }
 
-  void fillTriangleP3if(P3i screenA, P3i screenB, P3i screenC,
-                    float factor, boolean useGouraud) {
-    ax[0] = screenA.x;
-    ax[1] = screenB.x;
-    ax[2] = screenC.x;
-    ay[0] = screenA.y;
-    ay[1] = screenB.y;
-    ay[2] = screenC.y;
-    az[0] = screenA.z;
-    az[1] = screenB.z;
-    az[2] = screenC.z;
-    adjustVertex(ax, factor);
-    adjustVertex(ay, factor);
-    adjustVertex(az, factor);
-    fillTriangleB(useGouraud);
-  }
-
-  private static void adjustVertex(int[] t, float factor) {
-    float av = (t[0] + t[1] + t[2]) / 3f;
-    for (int i = 0; i < 3; i++)
-      t[i] += factor * (av - t[i]);
-  }
+//  void fillTriangleP3if(P3i screenA, P3i screenB, P3i screenC,
+//                    float factor, boolean useGouraud) {
+//    ax[0] = screenA.x;
+//    ax[1] = screenB.x;
+//    ax[2] = screenC.x;
+//    ay[0] = screenA.y;
+//    ay[1] = screenB.y;
+//    ay[2] = screenC.y;
+//    az[0] = screenA.z;
+//    az[1] = screenB.z;
+//    az[2] = screenC.z;
+//    adjustVertex(ax, factor);
+//    adjustVertex(ay, factor);
+//    adjustVertex(az, factor);
+//    fillTriangleB(useGouraud);
+//  }
+//
+//  private static void adjustVertex(int[] t, float factor) {
+//    float av = (t[0] + t[1] + t[2]) / 3f;
+//    for (int i = 0; i < 3; i++)
+//      t[i] += factor * (av - t[i]);
+//  }
 
   private void fillTriangleB(boolean useGouraud) {
     if (az[0] <= 1 || az[1] <= 1 || az[2] <= 1)

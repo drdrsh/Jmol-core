@@ -321,6 +321,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
       int iA = polygon[0];
       int iB = polygon[1];
       int iC = polygon[2];
+      if (iShowTriangles)
+        setColix((short) (Math.round(Math.random() * 10) + 5));
       if (haveBsDisplay
           && (!mesh.bsDisplay.get(iA) || !mesh.bsDisplay.get(iB) || !mesh.bsDisplay
               .get(iC)))
@@ -337,16 +339,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
         if (!vwr.gdata.isDirectedTowardsCamera(normix))
           continue;
         if (fill) {
-          /*if (isExport) { this cannot be right....
-            g3d.fillTriangle3CN(screens[iC], colix, normix, screens[iB], colix,
-                normix, screens[iA], colix, normix);
-          } else */ if (iShowTriangles) {
-            g3d.fillTriangle(screens[iA], colix, normix, screens[iB], colix,
-                normix, screens[iC], colix, normix, 0.1f);
-          } else {
-            g3d.fillTriangle3CN(screens[iA], colix, normix, screens[iB], colix,
-                normix, screens[iC], colix, normix);
-          }
+          g3d.fillTriangle3CN(screens[iA], colix, normix, screens[iB], colix,
+              normix, screens[iC], colix, normix);
           continue;
         }
         check = polygon[MeshSurface.P_CHECK];
@@ -377,16 +371,12 @@ public abstract class MeshRenderer extends ShapeRenderer {
             bsPolygonsToExport.set(i);
             continue;
           }
-          if (iShowTriangles) {
-            g3d.fillTriangle(screens[iA], colix, nA, screens[iB], colix, nB,
-                screens[iC], colix, nC, 0.1f);
-            continue;
-          }
           g3d.fillTriangle3CN(screens[iA], colix, nA, screens[iB], colix, nB,
               screens[iC], colix, nC);
           continue;
         }
-        drawTriangle(screens[iA], colix, screens[iB], colix, screens[iC], colix, check, 1);
+        drawTriangle(screens[iA], colix, screens[iB], colix, screens[iC],
+            colix, check, 1);
         continue;
       case 4:
         // simple quad
@@ -399,8 +389,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
             bsPolygonsToExport.set(i);
             continue;
           }
-          g3d.fillQuadrilateral3i(screens[iA], colix, nA, screens[iB], colix, nB,
-              screens[iC], colix, nC, screens[iD], colix, nD);
+          g3d.fillQuadrilateral3i(screens[iA], colix, nA, screens[iB], colix,
+              nB, screens[iC], colix, nC, screens[iD], colix, nD);
           continue;
         }
         g3d.drawQuadrilateral(colix, screens[iA], screens[iB], screens[iC],
