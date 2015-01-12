@@ -744,12 +744,10 @@ public class MeshCapper {
      * @return x
      */
     protected float interpolateX(CapVertex v1, CapVertex v2) {
-      double dy12 = v2.y - v1.y;
-      double dx12 = v2.x - v1.x;
-      if (dy12 == 0)
-        return (dx12 > 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
-      double dy1v = y - v1.y;
-      return (float) (v1.x + (dy1v / dy12) * dx12);
+      float dy12 = v2.y - v1.y;
+      float dx12 = v2.x - v1.x;
+      return (dy12 != 0 ? v1.x + (y - v1.y) * dx12 / dy12 
+          : dx12 > 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
     }
 
     /**
