@@ -622,7 +622,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
          * 
          * @j2sNative
          * 
-         *            this.pbuf[offset1] = argb & 0x00FFFFFF | 0xFF000000;
+         *            pbuf[offset1] = argb & 0x00FFFFFF | 0xFF000000;
          */
         {
           pbuf[offset1] = argb & 0x00FFFFFF;
