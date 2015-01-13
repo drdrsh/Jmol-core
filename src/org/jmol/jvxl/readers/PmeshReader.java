@@ -29,6 +29,8 @@ import java.io.BufferedReader;
 import org.jmol.io.JmolBinary;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.util.Logger;
+
+import javajs.util.CU;
 import javajs.util.P3;
 
 /*
@@ -267,7 +269,14 @@ class PmeshReader extends PolygonFileReader {
       if (vertexCount < 3)
         for (int i = vertexCount; i < 3; ++i)
           vertices[i] = vertices[i - 1];
-      int color = (haveColor ? getInt() : 0); 
+      int color = 0;
+      if (haveColor) {
+        String c = nextToken();
+        color = parseIntStr(c);
+        if (color == Integer.MIN_VALUE)
+          color = CU.getArgbFromString(c);
+        color |= 0xFF000000;
+      }
       // check: 1 (ab) | 2(bc) | 4(ac)
       //    1
       //  a---b
@@ -281,11 +290,11 @@ class PmeshReader extends PolygonFileReader {
       //             2
       if (vertexCount == 4) {
         nTriangles += 2;
-        addTriangleCheck(vertices[0], vertices[1], vertices[3], 5, 0, false, color);
-        addTriangleCheck(vertices[1], vertices[2], vertices[3], 3, 0, false, color);
+        addTriangleCheck(vertices[0], vertices[1], vertices[3], 5, color, false, -1);
+        addTriangleCheck(vertices[1], vertices[2], vertices[3], 3, color, false, -1);
       } else {
         nTriangles++;
-        addTriangleCheck(vertices[0], vertices[1], vertices[2], 7, 0, false, color);
+        addTriangleCheck(vertices[0], vertices[1], vertices[2], 7, color, false, -1);
       }
     }
     if (isBinary)
@@ -293,13 +302,6 @@ class PmeshReader extends PolygonFileReader {
     return true;
   }
 
-//  @Override
-//  public int addTriangleCheck(int iA, int iB, int iC, int check,
-//                               int iContour, boolean isAbsolute, int color) {
-//    if (Logger.debugging)
-//      Logger.debug("tri: " + iA + " " + iB + " " + iC);
-//    return super.addTriangleCheck(iA, iB, iC, check, iContour, isAbsolute, color); 
-//  }
 
   //////////// file reading
 

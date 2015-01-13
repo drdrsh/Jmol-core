@@ -470,6 +470,9 @@ public class IsosurfaceRenderer extends MeshRenderer {
         //} else if (iShowTriangles) {
           //g3d.fillTriangle(screens[iA], colixA, nA, screens[iB], colixB, nB,
             //  screens[iC], colixC, nC, 0.1f);
+        } else if (mesh.colorsExplicit) {
+          vwr.gdata.setRGB(polygon[MeshSurface.P_EXPLICIT_COLOR]);
+          g3d.fillTriangle3i(screens[iA], screens[iB], screens[iC], vertices[iA], vertices[iB], vertices[iC]);          
         } else {
           if (isTranslucentInherit && vertexColixes != null) {
             colixA = C.copyColixTranslucency(mesh.slabColix, vertexColixes[iA]);

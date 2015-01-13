@@ -291,7 +291,7 @@ public class _ObjExporter extends __CartesianExporter {
    * @see org.jmol.export.__CartesianExporter#outputTriangle(javax.vecmath.Point3f, javax.vecmath.Point3f, javax.vecmath.Point3f, short)
    */
   @Override
-  protected void outputTriangle(P3 pt1, P3 pt2, P3 pt3,
+  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3,
                                 short colix) {
     debugPrint("outputTriangle");
     if (surfacesOnly) {
@@ -332,7 +332,7 @@ public class _ObjExporter extends __CartesianExporter {
       } else {
         debugPrint("  nNormals=" + meshSurface.vc);
       }
-      if (meshSurface.pcs == null) {
+      if (meshSurface.vcs == null) {
         debugPrint("  no vertex colors");
       } else {
         debugPrint("  nColixes=" + meshSurface.vc);
@@ -660,7 +660,7 @@ public class _ObjExporter extends __CartesianExporter {
    * @param colix
    *          The colix.
    */
-  private void outputTriangle1(P3 pt1, P3 pt2, P3 pt3,
+  private void outputTriangle1(T3 pt1, T3 pt2, T3 pt3,
                                short colix) {
     MeshSurface data = MeshData.getTriangleData(pt1, pt2, pt3);
     addTexture(colix, null);

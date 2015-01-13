@@ -203,7 +203,7 @@ abstract public class __CartesianExporter extends ___Exporter {
 
   abstract protected void outputTextPixel(P3 pt, int argb);
 
-  abstract protected void outputTriangle(P3 pt1, P3 pt2, P3 pt3,
+  abstract protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3,
                                          short colix);
 
   // these are called by Export3D:
@@ -348,8 +348,8 @@ abstract public class __CartesianExporter extends ___Exporter {
   }
 
   @Override
-  protected void fillTriangle(short colix, P3 ptA, P3 ptB,
-                              P3 ptC, boolean twoSided, boolean isCartesian) {
+  protected void fillTriangle(short colix, T3 ptA, T3 ptB,
+                              T3 ptC, boolean twoSided, boolean isCartesian) {
     if (isCartesian) {
       tempP1.setT(ptA);
       tempP2.setT(ptB);

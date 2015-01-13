@@ -525,7 +525,7 @@ public class _PovrayExporter extends __RayTracerExporter {
   }
   
   @Override
-  protected void outputTriangle(P3 ptA, P3 ptB, P3 ptC, short colix) {
+  protected void outputTriangle(T3 ptA, T3 ptB, T3 ptC, short colix) {
     if (!haveMacros)
       writeMacros2();
     //cartoons, mesh, isosurface

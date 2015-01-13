@@ -38,6 +38,8 @@ import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.T3;
+
 import org.jmol.viewer.Viewer;
 
 public class Export3D implements JmolRendererInterface {
@@ -664,8 +666,8 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC, P3 ptA0,
-                             P3 ptB0, P3 ptC0) {
+  public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC, T3 ptA0,
+                             T3 ptB0, T3 ptC0) {
     // cartoon only, for nucleic acid bases
     if (exporter.isCartesian) {
       exporter.fillTriangle(colix, ptA0, ptB0, ptC0, true, true);

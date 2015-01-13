@@ -12,6 +12,8 @@ import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.T3;
+
 import org.jmol.viewer.Viewer;
 
 public interface JmolRendererInterface extends JmolGraphicsInterface {
@@ -252,7 +254,7 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                     P3 screenC, boolean setNoisy);
 
   public abstract void fillTriangle3i(P3i screenA, P3i screenB,
-                                    P3i screenC, P3 ptA, P3 ptB, P3 ptC);
+                                    P3i screenC, T3 ptA, T3 ptB, T3 ptC);
 
   public abstract void fillTriangleTwoSided(short normix, int xScreenA,
                                             int yScreenA, int zScreenA,

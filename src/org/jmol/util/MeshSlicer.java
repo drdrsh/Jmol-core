@@ -762,7 +762,7 @@ public class MeshSlicer {
           if (pk != p[k] && bsMoved.get(pk))
             bsMoved.set(p[k]);
         }
-        m.addPolygonC(p, 0, m.bsSlabDisplay);
+        m.addPolygon(p, m.bsSlabDisplay);
 
         // now move the (copied) points
 

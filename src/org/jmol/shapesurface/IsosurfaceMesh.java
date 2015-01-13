@@ -100,6 +100,7 @@ public class IsosurfaceMesh extends Mesh {
     centers = null;
     colorEncoder = null;
     colorPhased = false;
+    colorsExplicit = false;
     firstRealVertex = -1;
     hasGridPoints = iAddGridPoints;
     isColorSolid = true;
@@ -448,6 +449,7 @@ public class IsosurfaceMesh extends Mesh {
     }
     short defaultColix = 0;
     pcs = new short[pc];
+    colorsExplicit = false;
     for (int i = 0; i < pc; i++) {
       int[] p = pis[i];
       if (p == null)
@@ -746,6 +748,7 @@ public class IsosurfaceMesh extends Mesh {
     boolean inherit = (vertexSource != null && ce.currentPalette == ColorEncoder.INHERIT);
     vertexColorMap = null;
     pcs = null;
+    colorsExplicit = false;
     jvxlData.baseColor = null;
     jvxlData.vertexCount = vc;
     if (vvs == null || jvxlData.vertexCount == 0)
@@ -941,7 +944,7 @@ public class IsosurfaceMesh extends Mesh {
             p[0] += off;
             p[1] += off;
             p[2] += off;
-            addPolygonC(p, 0, null);
+            addPolygon(p, null);
           }
         }
     P3 xyzMin = new P3();

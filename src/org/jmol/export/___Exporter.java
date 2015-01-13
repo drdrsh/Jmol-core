@@ -563,7 +563,7 @@ public abstract class ___Exporter {
   abstract void fillSphere(short colix, int diameter, P3 pt);
   
   //cartoons, rockets, polyhedra:
-  protected abstract void fillTriangle(short colix, P3 ptA, P3 ptB, P3 ptC, boolean twoSided, boolean isCartesian);
+  protected abstract void fillTriangle(short colix, T3 ptA0, T3 ptB0, T3 ptC0, boolean twoSided, boolean isCartesian);
   
   
   private int nText;

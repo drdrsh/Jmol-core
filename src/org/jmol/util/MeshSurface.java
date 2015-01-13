@@ -19,6 +19,7 @@ public class MeshSurface {
   
   public static final int P_CHECK = 3;
   public static final int P_CONTOUR = 4;
+  public static final int P_EXPLICIT_COLOR = 4;
 
   protected Viewer vwr;
   
@@ -56,6 +57,8 @@ public class MeshSurface {
    */
   public int[][] pis;
   //public float[] polygonTranslucencies;
+
+  public boolean colorsExplicit;
 
   public boolean isTriangleSet; // just a set of flat polygons
   public boolean haveQuads;
@@ -180,24 +183,33 @@ public class MeshSurface {
                    int iContour, int color, BS bs) {
     return (dataOnly ? 
         addPolygon(new int[] { vertexA, vertexB, vertexC, check }, bs) : 
-        addPolygonC(new int[] { vertexA, vertexB, vertexC, check, iContour }, color, bs));
+        addPolygonC(new int[] { vertexA, vertexB, vertexC, check, iContour }, color, bs, (iContour < 0)));
   }
 
   private int lastColor;
   private short lastColix;
 
-  protected int addPolygonC(int[] polygon, int color, BS bs) {
+  protected int addPolygonC(int[] polygon, int color, BS bs, boolean isExplicit) {
     if (color != 0) {
       if (pcs == null || pc == 0)
         lastColor = 0;
-      short colix = (color == lastColor ? lastColix : (lastColix = C
-          .getColix(lastColor = color)));
-      setPolygonColix(pc, colix);
+      if (isExplicit) {
+        colorsExplicit = true;
+      } else {
+        if (pcs == null) {
+          pcs = new short[SEED_COUNT];
+        } else if (pc >= pcs.length) {
+          pcs = AU.doubleLengthShort(pcs);
+        }
+        pcs[pc] = (isExplicit ? C.LAST_AVAILABLE_COLIX
+            : color == lastColor ? lastColix : (lastColix = C
+            .getColix(lastColor = color)));
+      }
     }
     return addPolygon(polygon, bs);
   }
 
-  private int addPolygon(int[] polygon, BS bs) {
+  public int addPolygon(int[] polygon, BS bs) {
     int n = pc;
     if (n == 0)
       pis = AU.newInt2(SEED_COUNT);
@@ -207,15 +219,6 @@ public class MeshSurface {
       bs.set(n);
     pis[pc++] = polygon;
     return n;
-  }
-
-  private void setPolygonColix(int index, short colix) {
-    if (pcs == null) {
-      pcs = new short[SEED_COUNT];
-    } else if (index >= pcs.length) {
-      pcs = AU.doubleLengthShort(pcs);
-    }
-    pcs[index] = colix;
   }
 
   public void invalidatePolygons() {

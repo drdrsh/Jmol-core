@@ -75,7 +75,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   
   abstract protected void outputTextPixel(int x, int y, int z, int argb);
 
-  abstract protected void outputTriangle(P3 ptA, P3 ptB, P3 ptC, short colix);
+  abstract protected void outputTriangle(T3 ptA, T3 ptB, T3 ptC, short colix);
 
   abstract protected void outputCone(P3 screenBase, P3 screenTip, float radius,
                                      short colix, boolean isBarb);
@@ -226,7 +226,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   }
   
   @Override
-  protected void fillTriangle(short colix, P3 ptA, P3 ptB, P3 ptC, boolean twoSided, boolean isCartesian) {
+  protected void fillTriangle(short colix, T3 ptA, T3 ptB, T3 ptC, boolean twoSided, boolean isCartesian) {
     outputTriangle(ptA, ptB, ptC, colix);
   }
 

@@ -469,7 +469,7 @@ public class _VrmlExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputTriangle(P3 pt1, P3 pt2, P3 pt3, short colix) {
+  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3, short colix) {
     // nucleic base
     // cartoons
     output("Shape{geometry IndexedFaceSet{solid FALSE coord Coordinate{point[");

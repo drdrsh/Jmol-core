@@ -1027,7 +1027,7 @@ public class _IdtfExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputTriangle(P3 pt1, P3 pt2, P3 pt3, short colix) {
+  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3, short colix) {
     addColix(colix, false);
     String key = "T" + (++iObj);
     models.append(getTriangleResource(key, pt1, pt2, pt3));
@@ -1045,9 +1045,9 @@ public class _IdtfExporter extends __CartesianExporter {
     triangleFace[0] = new int[] { 0, 1, 2 };
   }
   
-  private String getTriangleResource(String key, P3 pt1,
-                                     P3 pt2, P3 pt3) {
-    P3[] vertexes = new P3[] { pt1, pt2, pt3 };
+  private String getTriangleResource(String key, T3 pt1,
+                                     T3 pt2, T3 pt3) {
+    T3[] vertexes = new T3[] { pt1, pt2, pt3 };
     tempV1.sub2(pt3, pt1);
     tempV2.sub2(pt2, pt1);
     tempV2.cross(tempV2, tempV1);

@@ -131,7 +131,7 @@ public class Shader {
   }
   
   void flushCaches() {
-    checkShades();
+    checkShades(C.colixMax);
     for (int i = C.colixMax; --i >= 0; )
       ashades[i] = null;
     calcSphereShading();
@@ -141,15 +141,15 @@ public class Shader {
   }
   
   public void setLastColix(int argb, boolean asGrey) {
-    C.allocateColix(argb);
-    checkShades();
+    C.allocateColix(argb, true);
+    checkShades(C.LAST_AVAILABLE_COLIX);
     if (asGrey)
       C.setLastGrey(argb);
     ashades[C.LAST_AVAILABLE_COLIX] = getShades2(argb, false);
   }
 
   int[] getShades(short colix) {
-    checkShades();
+    checkShades(C.colixMax);
     colix &= C.OPAQUE_MASK;
     int[] shades = ashades[colix];
     if (shades == null)
@@ -158,7 +158,7 @@ public class Shader {
   }
 
   int[] getShadesG(short colix) {
-    checkShades();
+    checkShades(C.colixMax);
     colix &= C.OPAQUE_MASK;
     if (ashadesGreyscale == null)
       ashadesGreyscale = AU.newInt2(ashades.length);
@@ -169,12 +169,14 @@ public class Shader {
     return shadesGreyscale;
   }
 
-  private void checkShades() {
-    if (ashades != null && ashades.length == C.colixMax)
+  private void checkShades(int n) {
+    if (ashades != null && ashades.length >= n)
       return;
-    ashades = AU.arrayCopyII(ashades, C.colixMax);
+    if (n == C.LAST_AVAILABLE_COLIX)
+      n++;
+    ashades = AU.arrayCopyII(ashades, n);
     if (ashadesGreyscale != null)
-      ashadesGreyscale = AU.arrayCopyII(ashadesGreyscale, C.colixMax);
+      ashadesGreyscale = AU.arrayCopyII(ashadesGreyscale, n);
   }
   
   /*

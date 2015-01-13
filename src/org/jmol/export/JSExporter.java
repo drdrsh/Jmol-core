@@ -148,7 +148,7 @@ public class JSExporter extends __CartesianExporter {
    * @param pt2
    * @param pt3
    */
-  void jsTriangle(Object applet, int color, P3 pt1, P3 pt2, P3 pt3) {
+  void jsTriangle(Object applet, int color, T3 pt1, T3 pt2, T3 pt3) {
     // implemented in JavaScript only
   }
 
@@ -252,7 +252,7 @@ public class JSExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputTriangle(P3 pt1, P3 pt2, P3 pt3, short colix) {
+  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3, short colix) {
     jsTriangle(html5Applet, gdata.getColorArgbOrGray(colix), pt1, pt2, pt3);
   }
 

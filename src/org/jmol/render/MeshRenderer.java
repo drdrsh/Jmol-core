@@ -179,6 +179,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
       return false;
     if (mesh.bsSlabGhost != null)
       g3d.setC(mesh.slabColix); // forces a second pass
+    if (mesh.colorsExplicit)
+      g3d.setC((short) C.LAST_AVAILABLE_COLIX);
     isGhostPass = (mesh.bsSlabGhost != null && (isExport ? exportPass == 2
         : vwr.gdata.isPass2));
     isTranslucentInherit = (isGhostPass && C.getColixTranslucent3(mesh.slabColix, false, 0)== C.INHERIT_COLOR);

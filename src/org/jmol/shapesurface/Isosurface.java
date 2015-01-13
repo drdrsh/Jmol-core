@@ -112,6 +112,7 @@ import org.jmol.shape.Shape;
 import org.jmol.util.Escape;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
+import org.jmol.util.MeshSurface;
 import org.jmol.util.TempArray;
 
 import javajs.api.GenericBinaryDocument;
@@ -716,6 +717,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     m.jvxlData.baseColor = color;
     m.isColorSolid = true;
     m.pcs = null;
+    m.colorsExplicit = false;
     m.colorEncoder = null;
     m.vertexColorMap = null;
   }
@@ -898,7 +900,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (property == "jvxlMeshXml" || jvxlData.vertexDataOnly || thisMesh.bsSlabDisplay != null && thisMesh.bsSlabGhost == null) {
         meshData = new MeshData();
         fillMeshData(meshData, MeshData.MODE_GET_VERTICES, null);
-        meshData.polygonColorData = getPolygonColorData(meshData.pc, meshData.pcs, meshData.bsSlabDisplay);
+        meshData.polygonColorData = getPolygonColorData(meshData.pc, meshData.pcs, (meshData.colorsExplicit ? meshData.pis : null), meshData.bsSlabDisplay);
       } else if (thisMesh.bsSlabGhost != null) {
         jvxlData.slabInfo = thisMesh.slabOptions.toString();
       }
@@ -959,23 +961,28 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     return ret;
   }
 
-  public static String getPolygonColorData(int ccount, short[] colixes, BS bsSlabDisplay) {
-    if (colixes == null)
+  public static String getPolygonColorData(int ccount, short[] colixes, int[][] polygons, BS bsSlabDisplay) {
+    boolean isExplicit = (polygons != null);
+    if (colixes == null && polygons == null)
       return null;
     SB list1 = new SB();
     int count = 0;
     short colix = 0;
+    int color = 0, colorNext = 0;
     boolean done = false;
     for (int i = 0; i < ccount || (done = true) == true; i++) {
       if (!done && bsSlabDisplay != null && !bsSlabDisplay.get(i))
         continue;
-      if (done || colixes[i] != colix) {
+      if (done || (isExplicit ? (colorNext = polygons[i][MeshSurface.P_EXPLICIT_COLOR]) != color : colixes[i] != colix)) {
         if (count != 0)
           list1.append(" ").appendI(count).append(" ").appendI(
-              (colix == 0 ? 0 : C.getArgb(colix)));
+              (isExplicit ? color : colix == 0 ? 0 : C.getArgb(colix)));
         if (done)
           break;
-        colix = colixes[i];
+        if (isExplicit)
+          color = colorNext;
+        else
+          colix = colixes[i];
         count = 1;
       } else {
         count++;
@@ -1038,7 +1045,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         appendCmd(sb, imesh.colorCommand);
       }
       boolean colorArrayed = (imesh.isColorSolid && imesh.pcs != null);
-      if (imesh.isColorSolid && imesh.colorType == 0 && !colorArrayed) {
+      if (imesh.isColorSolid && imesh.colorType == 0 && !imesh.colorsExplicit && !colorArrayed) {
         appendCmd(sb, getColorCommandUnk(myType, imesh.colix, translucentAllowed));
       } else if (imesh.jvxlData.isBicolorMap && imesh.colorPhased) {
         appendCmd(sb, "color isosurface phase "
@@ -1417,6 +1424,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       meshData.polygonCount0 = mesh.polygonCount0;
       meshData.vertexCount0 = mesh.vertexCount0;
       meshData.slabOptions = mesh.slabOptions;
+      meshData.colorsExplicit = mesh.colorsExplicit;
       return;
     case MeshData.MODE_GET_COLOR_INDEXES:
       if (mesh.vcs == null
@@ -1447,6 +1455,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       mesh.vertexCount0 = meshData.vertexCount0;
       mesh.mergeVertexCount0 = meshData.mergeVertexCount0;
       mesh.slabOptions = meshData.slabOptions;
+      mesh.colorsExplicit = meshData.colorsExplicit;
       return;
     }
   }

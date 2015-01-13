@@ -181,36 +181,37 @@ public final class C {
     int c = colixHash.get(argb);
     if ((c & RAW_RGB_INT) == RAW_RGB_INT)
       translucentFlag = 0;
-    return (short) ((c > 0 ? c : allocateColix(argb)) | translucentFlag);
+    return (short) ((c > 0 ? c : allocateColix(argb, false)) | translucentFlag);
   }
 
-  public synchronized static int allocateColix(int argb) {
+  public synchronized static int allocateColix(int argb, boolean forceLast) {
     // in JavaScript argb & 0xFF000000 will be a long
     //if ((argb & 0xFF000000) != (0xFF000000 & 0xFF000000))
     //  throw new IndexOutOfBoundsException();
     // double-check to make sure that someone else did not allocate
     // something of the same color while we were waiting for the lock
-    for (int i = colixMax; --i >= SPECIAL_COLIX_MAX; )
-      if ((argb & 0xFFFFFF) == (argbs[i] & 0xFFFFFF))
-        return i;
-    if (colixMax == argbs.length) {
-      int oldSize = colixMax;
-      int newSize = oldSize * 2;
+    int n;
+    if (forceLast) {
+      n = LAST_AVAILABLE_COLIX;
+    } else {
+      for (int i = colixMax; --i >= SPECIAL_COLIX_MAX;)
+        if ((argb & 0xFFFFFF) == (argbs[i] & 0xFFFFFF))
+          return i;
+      n = colixMax;
+    }
+    if (n >= argbs.length) {
+      int newSize = (forceLast ? n + 1 : colixMax * 2);
       if (newSize > LAST_AVAILABLE_COLIX + 1)
         newSize = LAST_AVAILABLE_COLIX + 1;
       argbs = AU.arrayCopyI(argbs, newSize);
-      //int[] t0 = new int[newSize];
-      //System.arraycopy(argbs, 0, t0, 0, oldSize);
-      //argbs = t0;
-
       if (argbsGreyscale != null)
         argbsGreyscale = AU.arrayCopyI(argbsGreyscale, newSize);
     }
-    argbs[colixMax] = argb;
+    argbs[n] = argb;
     if (argbsGreyscale != null)
-      argbsGreyscale[colixMax] = CU.toFFGGGfromRGB(argb);
-    colixHash.put(argb, colixMax);
-    return (colixMax < LAST_AVAILABLE_COLIX ? colixMax++ : colixMax);
+      argbsGreyscale[n] = CU.toFFGGGfromRGB(argb);
+    colixHash.put(argb, n);
+    return (n < LAST_AVAILABLE_COLIX ? colixMax++ : colixMax);
   }
 
   static void setLastGrey(int argb) {
@@ -333,7 +334,7 @@ public final class C {
   }
 
   public static boolean isColixLastAvailable(short colix) {
-    return (colix > 0 && (colix & UNMASK_CHANGEABLE_TRANSLUCENT) == UNMASK_CHANGEABLE_TRANSLUCENT);
+    return (colix > 0 && (colix & LAST_AVAILABLE_COLIX) == LAST_AVAILABLE_COLIX);
   }
 
   public static int getArgb(short colix) {

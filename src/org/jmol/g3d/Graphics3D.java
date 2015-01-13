@@ -46,6 +46,7 @@ import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.T3;
 
 import org.jmol.util.Rgb16;
 import org.jmol.util.Shader;
@@ -1317,6 +1318,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 //          true);
 //  }
 //
+
+  
   /*
   public void drawfillTriangle(int xA, int yA, int zA, int xB,
                                int yB, int zB, int xC, int yC, int zC) {
@@ -1355,34 +1358,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC,
-                             P3 ptA, P3 ptB, P3 ptC) {
-    // cartoon DNA plates
+                             T3 ptA, T3 ptB, T3 ptC) {
+    // cartoon DNA plates, colored pmesh
     ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC, false);
   }
-
-//  @Override
-//  public void fillTriangle(P3i screenA, short colixA,
-//                                   short normixA, P3i screenB,
-//                                   short colixB, short normixB,
-//                                   P3i screenC, short colixC,
-//                                   short normixC, float factor) {
-//    // isosurface test showing triangles
-//    boolean useGouraud;
-//    if (!isPass2 && normixA == normixB && normixA == normixC && colixA == colixB
-//        && colixA == colixC) {
-//      setTriangleColixAndShadeIndex(colixA, getShadeIndex(normixA));
-//      useGouraud = false;
-//    } else {
-//      if (!setTriangleTranslucency(colixA, colixB, colixC))
-//        return;
-//      ((TriangleRenderer) triangle3d).setGouraud(getShades(colixA)[getShadeIndex(normixA)],
-//          getShades(colixB)[getShadeIndex(normixB)],
-//          getShades(colixC)[getShadeIndex(normixC)]);
-//      useGouraud = true;
-//    }
-//    ((TriangleRenderer) triangle3d).fillTriangleP3if(screenA, screenB, screenC, factor,
-//        useGouraud);
-//  }
 
   @Override
   public void fillTriangle3CN(P3i screenA, short colixA, short normixA,
@@ -1941,5 +1920,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     mergeBufferPixel(pbuf, offset, (argb & 0xFFFFFF) | shade << 24, bgcolor);
     zbuf[offset] = z;
   }
+
 
 }

@@ -322,7 +322,7 @@ public class _TachyonExporter extends __RayTracerExporter {
   }
   
   @Override
-  protected void outputTriangle(P3 ptA, P3 ptB, P3 ptC, short colix) {
+  protected void outputTriangle(T3 ptA, T3 ptB, T3 ptC, short colix) {
     outputTexture(colix, true);
     output("TRI");
     output(" V0 " + triad(ptA));

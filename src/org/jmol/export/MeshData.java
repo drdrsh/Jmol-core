@@ -5,6 +5,7 @@ import org.jmol.util.MeshSurface;
 
 import javajs.util.AU;
 import javajs.util.P3;
+import javajs.util.T3;
 import javajs.util.V3;
 
 /**
@@ -99,9 +100,9 @@ class MeshData {
    * @param pt3 Vertex 3.
    * @return The data.
    */
-  static MeshSurface getTriangleData(P3 pt1, P3 pt2,
-                                              P3 pt3) {
-    P3[] vertexes = new P3[] { pt1, pt2, pt3 };
+  static MeshSurface getTriangleData(T3 pt1, T3 pt2,
+                                              T3 pt3) {
+    T3[] vertexes = new T3[] { pt1, pt2, pt3 };
     V3 v1 = V3.newVsub(pt3, pt1);
     V3 v2 = V3.newVsub(pt2, pt1);
     v2.cross(v2, v1);

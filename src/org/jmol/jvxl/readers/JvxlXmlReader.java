@@ -855,8 +855,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     if (nTriangles < 0)
       return;
     int[] nextc = new int[1];
-    int nColors = (colorData == null ? -1 : PT.parseIntNext(colorData,
-        nextc));
+    int nColors = (colorData == null ? -1 : 1);
     int color = 0;
     Logger.info("Reading " + nTriangles + " triangles");
     String encoding = getEncoding(tdata);
@@ -930,15 +929,15 @@ public class JvxlXmlReader extends VolumeFileReader {
           if (edgeMask < 0 || edgeMask > 7)
             edgeMask = 7;
         }
-        if (nColors > 0) {
+        if (--nColors == 0) {
+          nColors = (PT.parseIntNext(colorData, nextc));
           int c = PT.parseIntNext(colorData, nextc);
           if (c == Integer.MIN_VALUE)
             nColors = 0;
           else
-            color = c;
-          nColors--;
+            color = c | 0xFF000000;
         }
-        addTriangleCheck(vertex[0], vertex[1], vertex[2], edgeMask, 0, false,
+        addTriangleCheck(vertex[0], vertex[1], vertex[2], edgeMask, color, false,
             color);
         i++;
       }
