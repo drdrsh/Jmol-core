@@ -339,9 +339,10 @@ final class LineRenderer {
     //boolean flipflop = (((x ^ y) & 1) != 0);
     //boolean tScreened = tScreened1;
     int argb = argb1;
+    Pixelator p = g3d.pixel;
     if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax 
         && z < zbuf[offset]) {
-      g3d.addPixel(offset, z, argb);
+      p.addPixel(offset, z, argb);
       //System.out.println((offset % width) + "\t" + (offset / width));
     }
     if (dx == 0 && dy == 0) {
@@ -395,7 +396,7 @@ final class LineRenderer {
             && runIndex < rise) {
           int zCurrent = zCurrentScaled >> 10;
           if (zCurrent < zbuf[offset])
-            g3d.addPixel(offset, zCurrent, argb);
+            p.addPixel(offset, zCurrent, argb);
           //System.out.println((offset % width) + "\t" + (offset / width));
         }
         runIndex = (runIndex + 1) % run;
@@ -427,7 +428,7 @@ final class LineRenderer {
             && runIndex < rise) {
           int zCurrent = zCurrentScaled >> 10;
           if (zCurrent < zbuf[offset])
-            g3d.addPixel(offset, zCurrent, argb);
+            p.addPixel(offset, zCurrent, argb);
           //System.out.println((offset % width) + "\t" + (int)Math.floor(offset / width));
         }
         runIndex = (runIndex + 1) % run;
@@ -460,11 +461,12 @@ final class LineRenderer {
     int argb2Up = shades2[shadeIndexUp];
     int argb2Dn = shades2[shadeIndexDn];
     int argb = argb1;
+    Pixelator p = g3d.pixel;
     //boolean tScreened = tScreened1;
     //boolean flipflop = (((x ^ y) & 1) != 0);
     if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax 
         && z < zbuf[offset])
-      g3d.addPixel(offset, z, argb);
+      p.addPixel(offset, z, argb);
     if (dx == 0 && dy == 0) {
       return;
     }
@@ -530,7 +532,7 @@ final class LineRenderer {
           int zCurrent = zCurrentScaled >> 10;
           if (zCurrent < zbuf[offset]) {
             int rand8 = shader.nextRandom8Bit();
-            g3d.addPixel(offset, zCurrent, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
+            p.addPixel(offset, zCurrent, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
           }
         }
         runIndex = (runIndex + 1) % run;
@@ -573,7 +575,7 @@ final class LineRenderer {
           int zCurrent = zCurrentScaled >> 10;
           if (zCurrent < zbuf[offset]) {
             int rand8 = g3d.shader.nextRandom8Bit();
-            g3d.addPixel(offset, zCurrent, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
+            p.addPixel(offset, zCurrent, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
           }
         }
         runIndex = (runIndex + 1) % run;
@@ -637,7 +639,7 @@ int shadeIndexUp = (shadeIndex < Shader.SHADE_INDEX_LAST ? shadeIndex + 1
     int argbUp = argb1Up;
     int argbDn = argb1Dn;
     boolean isInWindow = false;
-
+    Pixelator p = g3d.pixel;
     // "x" is not necessarily the x-axis.
     
     //  x----x1t-----------x2t---x2
@@ -674,7 +676,7 @@ int shadeIndexUp = (shadeIndex < Shader.SHADE_INDEX_LAST ? shadeIndex + 1
           
           //System.out.println(x + " - " + y + " " + i + " " + offset + " " + (offset - width));
 
-          g3d.addPixel(offset, (int) zFloat, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
+          p.addPixel(offset, (int) zFloat, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
         }
       }
       if (i == i2)

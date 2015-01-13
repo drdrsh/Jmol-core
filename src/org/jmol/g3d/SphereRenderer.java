@@ -210,10 +210,9 @@ public class SphereRenderer {
     int offsetNorthCenter = offsetSouthCenter - evenSizeCorrection * width;
     int nLines = (diameter + 1) / 2;
     int[] shades = this.shades;
-    Graphics3D g3d = this.g3d;
     int[] zbuf = this.zbuf;
     int width = this.width;
-    //if (!tScreened) {
+    Pixelator p = g3d.pixel;
       do {
         int offsetSE = offsetSouthCenter;
         int offsetSW = offsetSouthCenter - evenSizeCorrection;
@@ -224,16 +223,16 @@ public class SphereRenderer {
           packed = sphereShape[offsetSphere++];
           int zPixel = z - (packed & 0x7F);
           if (zPixel < zbuf[offsetSE])
-            g3d.addPixel(offsetSE, zPixel,
+            p.addPixel(offsetSE, zPixel,
                 shades[((packed >> 7) & 0x3F)]);
           if (zPixel < zbuf[offsetSW])
-            g3d.addPixel(offsetSW, zPixel,
+            p.addPixel(offsetSW, zPixel,
                 shades[((packed >> 13) & 0x3F)]);
           if (zPixel < zbuf[offsetNE])
-            g3d.addPixel(offsetNE, zPixel,
+            p.addPixel(offsetNE, zPixel,
                 shades[((packed >> 19) & 0x3F)]);
           if (zPixel < zbuf[offsetNW])
-            g3d.addPixel(offsetNW, zPixel,
+            p.addPixel(offsetNW, zPixel,
                 shades[((packed >> 25) & 0x3F)]);
           ++offsetSE;
           --offsetSW;
@@ -243,47 +242,6 @@ public class SphereRenderer {
         offsetSouthCenter += width;
         offsetNorthCenter -= width;
       } while (--nLines > 0);
-//      return;
-//    }
-//    int flipflopSouthCenter = (x ^ y) & 1;
-//    int flipflopNorthCenter = flipflopSouthCenter ^ evenSizeCorrection;
-//    int flipflopSE = flipflopSouthCenter;
-//    int flipflopSW = flipflopSouthCenter ^ evenSizeCorrection;
-//    int flipflopNE = flipflopNorthCenter;
-//    int flipflopNW = flipflopNorthCenter ^ evenSizeCorrection;
-//    int flipflopsCenter = flipflopSE | (flipflopSW << 1) | (flipflopNE << 2)
-//        | (flipflopNW << 3);
-//    do {
-//      int offsetSE = offsetSouthCenter;
-//      int offsetSW = offsetSouthCenter - evenSizeCorrection;
-//      int offsetNE = offsetNorthCenter;
-//      int offsetNW = offsetNorthCenter - evenSizeCorrection;
-//      int packed;
-//      int flipflops = (flipflopsCenter = ~flipflopsCenter);
-//      do {
-//        packed = sphereShape[offsetSphere++];
-//        int zPixel = z - (packed & 0x7F);
-//        if ((flipflops & 1) != 0 && zPixel < zbuf[offsetSE])
-//            g3d.addPixel(offsetSE, zPixel,
-//                shades[((packed >> 7) & 0x3F)]);
-//        if ((flipflops & 2) != 0 && zPixel < zbuf[offsetSW])        
-//          g3d.addPixel(offsetSW, zPixel,
-//              shades[((packed >> 13) & 0x3F)]);
-//        if ((flipflops & 4) != 0 && zPixel < zbuf[offsetNE])        
-//          g3d.addPixel(offsetNE, zPixel,
-//              shades[((packed >> 19) & 0x3F)]);
-//        if ((flipflops & 8) != 0 && zPixel < zbuf[offsetNW])
-//          g3d.addPixel(offsetNW, zPixel,
-//              shades[((packed >> 25) & 0x3F)]);
-//        ++offsetSE;
-//        --offsetSW;
-//        ++offsetNE;
-//        --offsetNW;
-//        flipflops = ~flipflops;
-//      } while (packed >= 0);
-//      offsetSouthCenter += width;
-//      offsetNorthCenter -= width;
-//    } while (--nLines > 0);
   }
 
   private final static int SHADE_SLAB_CLIPPED = Shader.SHADE_INDEX_NORMAL - 5;
@@ -297,17 +255,9 @@ public class SphereRenderer {
     int ySouth = y;
     int yNorth = y - evenSizeCorrection;
     int randu = (x << 16) + (y << 1) ^ 0x33333333;
-    //int flipflopSouthCenter = (x ^ y) & 1;
-    // int flipflopNorthCenter = flipflopSouthCenter ^ evenSizeCorrection;
-    //int flipflopSE = flipflopSouthCenter;
-    //int flipflopSW = flipflopSouthCenter ^ evenSizeCorrection;
-    //int flipflopNE = flipflopNorthCenter;
-    //int flipflopNW = flipflopNorthCenter ^ evenSizeCorrection;
-    //int flipflopsCenter = flipflopSE | (flipflopSW << 1) | (flipflopNE << 2)
-    //    | (flipflopNW << 3);
     int[] shades = this.shades;
-    Graphics3D g3d = this.g3d;
     int[] zbuf = this.zbuf;
+    Pixelator p = g3d.pixel;
     do {
       boolean tSouthVisible = ySouth >= 0 && ySouth < height;
       boolean tNorthVisible = yNorth >= 0 && yNorth < height;
@@ -316,7 +266,6 @@ public class SphereRenderer {
       int offsetNE = offsetNorthCenter;
       int offsetNW = offsetNorthCenter - evenSizeCorrection;
       int packed;
-      //int flipflops = (flipflopsCenter = ~flipflopsCenter);
       int xEast = x;
       int xWest = x - evenSizeCorrection;
       do {
@@ -343,13 +292,13 @@ public class SphereRenderer {
                 && zPixel < zbuf[offsetSE]) {
               int i = (isCore ? SHADE_SLAB_CLIPPED - 3 + ((randu >> 7) & 0x07)
                   : (packed >> 7) & 0x3F);
-              g3d.addPixel(offsetSE, zPixel, shades[i]);
+              p.addPixel(offsetSE, zPixel, shades[i]);
             }
             if (tWestVisible
                 && zPixel < zbuf[offsetSW]) {
               int i = (isCore ? SHADE_SLAB_CLIPPED - 3 + ((randu >> 13) & 0x07)
                   : (packed >> 13) & 0x3F);
-              g3d.addPixel(offsetSW, zPixel, shades[i]);
+              p.addPixel(offsetSW, zPixel, shades[i]);
             }
           }
           if (tNorthVisible) {
@@ -357,13 +306,13 @@ public class SphereRenderer {
                 && zPixel < zbuf[offsetNE]) {
               int i = (isCore ? SHADE_SLAB_CLIPPED - 3 + ((randu >> 19) & 0x07)
                   : (packed >> 19) & 0x3F);
-              g3d.addPixel(offsetNE, zPixel, shades[i]);
+              p.addPixel(offsetNE, zPixel, shades[i]);
             }
             if (tWestVisible
                 && zPixel < zbuf[offsetNW]) {
               int i = (isCore ? SHADE_SLAB_CLIPPED - 3 + ((randu >> 25) & 0x07)
                   : (packed >> 25) & 0x3F);
-              g3d.addPixel(offsetNW, zPixel, shades[i]);
+              p.addPixel(offsetNW, zPixel, shades[i]);
             }
           }
         }
@@ -373,7 +322,6 @@ public class SphereRenderer {
         --offsetNW;
         ++xEast;
         --xWest;
-        //flipflops = ~flipflops;
         if (isCore)
           randu = ((randu << 16) + (randu << 1) + randu) & 0x7FFFFFFF;
       } while (packed >= 0);
@@ -422,23 +370,20 @@ public class SphereRenderer {
   private void renderQuadrantUnclipped(int radius, int xSign, int ySign) {
     int r2 = radius * radius;
     int dDivisor = radius * 2 + 1;
-    // it will get flipped twice before use
-    // so initialize it to true if it is at an even coordinate
-//    boolean flipflopBeginLine = ((x ^ y) & 1) == 0;
     int lineIncrement = (ySign < 0 ? -width : width);
     int ptLine = offsetPbufBeginLine;
+    int[] zbuf = this.zbuf;
+    Pixelator p = g3d.pixel;
     for (int i = 0, i2 = 0; i2 <= r2; 
         i2 += i + (++i),
         ptLine += lineIncrement) {
       int offset = ptLine;
-//      boolean flipflop = (flipflopBeginLine = !flipflopBeginLine);
       int s2 = r2 - i2;
       int z0 = z - radius;
       int y8 = ((i * ySign + radius) << 8) / dDivisor;
       for (int j = 0, j2 = 0; j2 <= s2;
            j2 += j + (++j),
            offset += xSign) {
-//        if (addAllPixels || (flipflop = !flipflop)) {
           if (zbuf[offset] <= z0)
             continue;
           int k = (int)Math.sqrt(s2 - j2);
@@ -446,16 +391,14 @@ public class SphereRenderer {
           if (zbuf[offset] <= z0)
             continue;
           int x8 = ((j * xSign + radius) << 8) / dDivisor;
-          g3d.addPixel(offset,z0, shades[shader.sphereShadeIndexes[((y8 << 8) + x8)]]);
-//        }
+          p.addPixel(offset,z0, shades[shader.sphereShadeIndexes[((y8 << 8) + x8)]]);
       }
     }
   }
 
-  private final P3 ptTemp = new P3();
+  private final P3 ptTemp = new P3();  
   private final int[] planeShades = new int[3];
   private final float[][] dxyz = new float[3][3];
-  private int z0;
   
   private void renderQuadrantClipped(int radius, int xSign, int ySign) {
     boolean isEllipsoid = (mat != null);
@@ -468,6 +411,8 @@ public class SphereRenderer {
     int yCurrent = y;
     int y8 = 0;
     int iShade = 0;
+    Pixelator p = g3d.pixel;
+    int z0 = 0;
     for (int i = 0, i2 = 0; i2 <= r2;
          i2 += i + (++i),
          ptLine += lineIncrement,
@@ -505,8 +450,6 @@ public class SphereRenderer {
             break;
           continue;
         }
-//        if (tScreened && (((xCurrent ^ yCurrent) & 1) != 0))
-  //        continue;
         int zPixel;
         if (isEllipsoid) {
           if (!getQuardricZ(xCurrent, yCurrent, coef, zroot)) {
@@ -563,14 +506,14 @@ public class SphereRenderer {
           iShade = shader.getEllipsoidShade(xCurrent, yCurrent, (float) zroot[iRoot], radius, mDeriv);
           break;
         case 3: //ellipsoid fill
-          g3d.clearPixel(offset, z0);
+          p.clearPixel(offset, z0);
           break;
         default: //sphere
           int x8 = ((j * xSign + radius) << 8) / dDivisor;
           iShade = shader.sphereShadeIndexes[(y8 << 8) + x8];
           break;
         }
-        g3d.addPixel(offset, zPixel, shades[iShade]);
+        p.addPixel(offset, zPixel, shades[iShade]);
       }
       // randu is failing me and generating moire patterns :-(
       // so throw in a little more salt

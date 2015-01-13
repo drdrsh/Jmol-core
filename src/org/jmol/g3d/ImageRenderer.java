@@ -141,12 +141,13 @@ class ImageRenderer {
     int i = 0;
     int j = 0;
     int offset = 0;
+    Pixelator p = g3d.pixel;
     while (i < textHeight) {
       while (j < textWidth) {
         if (z < zbuf[pbufOffset]) {
           int argb = buffer[offset];
           //if (argb != bgargb) && (argb & 0xFF000000) == 0xFF000000)
-            g3d.addPixel(pbufOffset, z, argb);
+            p.addPixel(pbufOffset, z, argb);
           //else if (argb == 0 && bgargb != 0)
             //g3d.addPixel(pbufOffset, z, bgargb);
         }

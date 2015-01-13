@@ -614,15 +614,6 @@ public class GData implements JmolGraphicsInterface {
   }
 
   /**
-   * @param pointA  
-   * @param pointB  
-   * @param pointC  
-   */
-  public void setNoisySurfaceShade(P3i pointA, P3i pointB,
-                                   P3i pointC) {
-  }
-
-  /**
    * JavaScript won't really have an integer here after integer division.
    * So we need to round it to the integer between it and zero. 
    * 

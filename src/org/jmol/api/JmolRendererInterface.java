@@ -247,7 +247,7 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                     P3 screenC, boolean setNoisy);
 
   public abstract void fillTriangle3i(P3i screenA, P3i screenB,
-                                    P3i screenC, T3 ptA, T3 ptB, T3 ptC);
+                                    P3i screenC, T3 ptA, T3 ptB, T3 ptC, boolean doShade);
 
   public abstract void fillTriangleTwoSided(short normix, int xScreenA,
                                             int yScreenA, int zScreenA,

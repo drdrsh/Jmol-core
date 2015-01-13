@@ -217,7 +217,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private int anaglyphLength;
   //private boolean isScreened;
 
-  private Pixelator pixel;
+  Pixelator pixel;
 
   protected int zMargin;
   private int[] aobuf;
@@ -694,14 +694,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     return true;
   }
 
-  void addPixel(int offset, int z, int p) {
-    pixel.addPixel(offset, z, p);
-  }
-  
-  void clearPixel(int offset, int z) {
-    pixel.clearPixel(offset, z);
-  }
-  
   @Override
   public void drawFilledCircle(short colixRing, short colixFill, int diameter,
                                int x, int y, int z) {
@@ -756,7 +748,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void fillSphereXYZ(int diameter, int x, int y, int z) {
     switch (diameter) {
     case 1:
-      plotPixelClippedArgb(argbCurrent, x, y, z);
+      plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf);
       return;
     case 0:
       return;
@@ -813,7 +805,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
                               int selectedOctant, P3i[] octantPoints) {
     switch (diameter) {
     case 1:
-      plotPixelClippedArgb(argbCurrent, x, y, z);
+      plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf);
       return;
     case 0:
       return;
@@ -865,22 +857,16 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
     if (x + w >= width)
       w = width - 1 - x;
+    Pixelator p = pixel;
+    int c = argbCurrent;
     int offset = x + width * y;
-//    if (aap) {
       for (int i = 0; i <= w; i++) {
         if (z < zbuf[offset])
-          addPixel(offset, z, argbCurrent);
+          p.addPixel(offset, z, c);
         offset++;
       }
-//      return;
-//    }
-//    boolean flipflop = ((x ^ y) & 1) != 0;
-//    for (int i = 0; i <= w; i++) {
-//      if ((flipflop = !flipflop) && z < zbuf[offset])
-//        addPixel(offset, z, argbCurrent);
-//      offset++;
-//    }
   }
+
 
   private void drawVLine(int x, int y, int z, int h) {
     // hover, labels only
@@ -896,20 +882,13 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       h = height - 1 - y;
     }
     int offset = x + width * y;
-//    if (aap) {
-      for (int i = 0; i <= h; i++) {
-        if (z < zbuf[offset])
-          addPixel(offset, z, argbCurrent);
-        offset += width;
-      }
-//      return;
-//    }
-//    boolean flipflop = ((x ^ y) & 1) != 0;
-//    for (int i = 0; i <= h; i++) {
-//      if ((flipflop = !flipflop) && z < zbuf[offset])
-//        addPixel(offset, z, argbCurrent);
-//      offset += width;
-//    }
+    Pixelator p = pixel;
+    int c = argbCurrent;
+    for (int i = 0; i <= h; i++) {
+      if (z < zbuf[offset])
+        p.addPixel(offset, z, c);
+      offset += width;
+    }
   }
 
 
@@ -1318,8 +1297,25 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC,
-                             T3 ptA, T3 ptB, T3 ptC) {
-    // cartoon DNA plates
+                             T3 ptA, T3 ptB, T3 ptC, boolean doShade) {
+    // cartoon DNA plates; preset color
+    if (doShade) {
+      V3 v = vectorAB;
+      v.set(screenB.x - screenA.x, screenB.y - screenA.y, screenB.z - screenA.z);
+      int shadeIndex;
+      if (screenC == null) {
+        shadeIndex = shader.getShadeIndex(-v.x, -v.y, v.z);
+      } else {
+        vectorAC.set(screenC.x - screenA.x, screenC.y - screenA.y, screenC.z
+            - screenA.z);
+        v.cross(v, vectorAC);
+        shadeIndex = v.z >= 0 ? shader.getShadeIndex(-v.x, -v.y, v.z) : shader
+            .getShadeIndex(v.x, v.y, -v.z);
+      }
+      if (shadeIndex > Shader.SHADE_INDEX_NOISY_LIMIT)
+        shadeIndex = Shader.SHADE_INDEX_NOISY_LIMIT;
+      setColorNoisy(shadeIndex);
+    }
     ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC, false);
   }
 
@@ -1331,7 +1327,12 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     boolean useGouraud;
     if (!isPass2 && normixA == normixB && normixA == normixC &&
         colixA == colixB && colixA == colixC) {
-      setTriangleColixAndShadeIndex(colixA, getShadeIndex(normixA));
+      int shadeIndex = getShadeIndex(normixA);
+      if (colixA != colixCurrent || currentShadeIndex != shadeIndex) {
+        currentShadeIndex = -1;
+        setC(colixA);
+        setColorNoisy(shadeIndex);
+      }
       useGouraud = false;
     } else {
       setTriangleTranslucency(colixA, colixB, colixC);
@@ -1341,15 +1342,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       useGouraud = true;
     }
     ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC, useGouraud);
-    //triangle3d.fillTriangleP3if(screenA, screenB, screenC, 0.1f, useGouraud);
-  }
-
-  private void setTriangleColixAndShadeIndex(short colix, int shadeIndex) {
-    if (colix == colixCurrent && currentShadeIndex == shadeIndex)
-      return;
-    currentShadeIndex = -1;
-    setC(colix);
-    setColorNoisy(shadeIndex);
   }
 
   private void setTriangleTranslucency(short colixA, short colixB, short colixC) {
@@ -1360,7 +1352,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       maskA &= ~C.TRANSPARENT;
       maskB &= ~C.TRANSPARENT;
       maskC &= ~C.TRANSPARENT;
-      int mask = GData.roundInt((maskA + maskB + maskC) / 3)
+      int mask = roundInt((maskA + maskB + maskC) / 3)
           & C.TRANSLUCENT_MASK;
       translucencyMask = (mask << C.ALPHA_SHIFT) | 0xFFFFFF;
     }
@@ -1395,28 +1387,28 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     // Export3D only
   }
   
+  @Override
+  public void plotPixelClippedP3i(P3i screen) {
+    // hermite only; export checks for clipping
+    plotPixelClippedXYZ(screen.x, screen.y, screen.z);
+  }
+
   void plotPixelClippedXYZ(int x, int y, int z) {
     //circle3D, drawPixel, plotPixelClipped(point3)
     if (isClipped3(x, y, z))
       return;
     int offset = y * width + x;
     if (z < zbuf[offset])
-      addPixel(offset, z, argbCurrent);
+      pixel.addPixel(offset, z, argbCurrent);
   }
 
-  @Override
-  public void plotPixelClippedP3i(P3i screen) {
-    // hermite only
-    plotPixelClippedXYZ(screen.x, screen.y, screen.z);
-  }
-
-  void plotPixelClippedArgb(int argb, int x, int y, int z) {
+  void plotPixelClippedArgb(int argb, int x, int y, int z, int width, int[] zbuf) {
     // cylinder3d plotRaster
     if (isClipped3(x, y, z))
       return;
     int offset = y * width + x;
     if (z < zbuf[offset])
-      addPixel(offset, z, argb);
+      pixel.addPixel(offset, z, argb);
   }
 
   @Override
@@ -1436,21 +1428,21 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 //      return;
     int offset = y * width + x;
     if (z < zbuf[offset])
-      addPixel(offset, z, argb);
+      pixel.addPixel(offset, z, argb);
   }
 
   void plotPixelUnclipped(int x, int y, int z) {
     // circle (halo)
     int offset = y * width + x;
     if (z < zbuf[offset])
-      addPixel(offset, z, argbCurrent);
+      pixel.addPixel(offset, z, argbCurrent);
   }
   
   void plotPixelUnclippedArgb(int argb, int x, int y, int z) {
     // cylinder plotRaster
     int offset = y * width + x;
     if (z < zbuf[offset])
-      addPixel(offset, z, argb);
+      pixel.addPixel(offset, z, argb);
   }
   
   void plotPixelsClipped(int count, int x, int y, int z) {
@@ -1468,33 +1460,31 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       return;
     int offsetPbuf = y * width + x;
     int offsetMax = offsetPbuf + count;
-    //int step = 1;
-//    if (!aap) {
-//      step = 2;
-//      if (((x ^ y) & 1) != 0)
-//        ++offsetPbuf;
-//    }
+    Pixelator p = pixel;
+    int c = argbCurrent;
     while (offsetPbuf < offsetMax) {
       if (z < zbuf[offsetPbuf])
-        addPixel(offsetPbuf, z, argbCurrent);
+        p.addPixel(offsetPbuf, z, c);
       offsetPbuf++;// += step;
     }
   }
 
-  void plotPixelsClippedRaster(int count, int x, int y, int zAtLeft, int zPastRight,
-                         Rgb16 rgb16Left, Rgb16 rgb16Right) {
+  void plotPixelsClippedRaster(int count, int x, int y, int zAtLeft,
+                               int zPastRight, Rgb16 rgb16Left, Rgb16 rgb16Right) {
     // cylinder3d.renderFlatEndcap, triangle3d.fillRaster
+    int depth, slab;
     if (count <= 0 || y < 0 || y >= height || x >= width
-        || (zAtLeft < slab && zPastRight < slab)
-        || (zAtLeft > depth && zPastRight > depth))
+        || (zAtLeft < (slab = this.slab) && zPastRight < slab)
+        || (zAtLeft > (depth = this.depth) && zPastRight > depth))
       return;
+    int[] zb = zbuf;
     int seed = (x << 16) + (y << 1) ^ 0x33333333;
     // scale the z coordinates;
     int zScaled = (zAtLeft << 10) + (1 << 9);
     int dz = zPastRight - zAtLeft;
     int roundFactor = count / 2;
-    int zIncrementScaled = GData.roundInt(((dz << 10) + (dz >= 0 ? roundFactor : -roundFactor))
-        / count);
+    int zIncrementScaled = roundInt(((dz << 10) + (dz >= 0 ? roundFactor
+        : -roundFactor)) / count);
     if (x < 0) {
       x = -x;
       zScaled += zIncrementScaled * x;
@@ -1505,21 +1495,19 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
     if (count + x > width)
       count = width - x;
-    // when screening 0,0 should be turned ON
-    // the first time through this will get flipped to true
-    //boolean flipflop = ((x ^ y) & 1) != 0;
     int offsetPbuf = y * width + x;
+    Pixelator p = pixel;
     if (rgb16Left == null) {
+      int adn = argbNoisyDn;
+      int aup = argbNoisyUp;
+      int ac = argbCurrent;
       while (--count >= 0) {
-        //if (aap || (flipflop = !flipflop) == true) {
-          int z = zScaled >> 10;
-          if (z >= slab && z <= depth && z < zbuf[offsetPbuf]) {
-            seed = ((seed << 16) + (seed << 1) + seed) & 0x7FFFFFFF;
-            int bits = (seed >> 16) & 0x07;
-            addPixel(offsetPbuf, z, bits == 0 ? argbNoisyDn
-                : (bits == 1 ? argbNoisyUp : argbCurrent));
-          }
-        //}
+        int z = zScaled >> 10;
+        if (z >= slab && z <= depth && z < zb[offsetPbuf]) {
+          seed = ((seed << 16) + (seed << 1) + seed) & 0x7FFFFFFF;
+          int bits = (seed >> 16) & 0x07;
+          p.addPixel(offsetPbuf, z, bits == 0 ? adn : (bits == 1 ? aup : ac));
+        }
         ++offsetPbuf;
         zScaled += zIncrementScaled;
       }
@@ -1531,12 +1519,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       int bScaled = rgb16Left.b;
       int bIncrement = (rgb16Right.b - bScaled) / count;
       while (--count >= 0) {
-        //if (aap || (flipflop = !flipflop)) {
-          int z = zScaled >> 10;
-          if (z >= slab && z <= depth && z < zbuf[offsetPbuf])
-            addPixel(offsetPbuf, z, 0xFF000000 | (rScaled & 0xFF0000)
-                | (gScaled & 0xFF00) | ((bScaled >> 8) & 0xFF));
-        //}
+        int z = zScaled >> 10;
+        if (z >= slab && z <= depth && z < zb[offsetPbuf])
+          p.addPixel(offsetPbuf, z, 0xFF000000 | (rScaled & 0xFF0000)
+              | (gScaled & 0xFF00) | ((bScaled >> 8) & 0xFF));
         ++offsetPbuf;
         zScaled += zIncrementScaled;
         rScaled += rIncrement;
@@ -1548,47 +1534,48 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   ///////////////////////////////////
   void plotPixelsUnclippedRaster(int count, int x, int y, int zAtLeft,
-                           int zPastRight, Rgb16 rgb16Left, Rgb16 rgb16Right) {
+                                 int zPastRight, Rgb16 rgb16Left,
+                                 Rgb16 rgb16Right) {
     // for isosurface Triangle3D.fillRaster
     if (count <= 0)
       return;
     int seed = ((x << 16) + (y << 1) ^ 0x33333333) & 0x7FFFFFFF;
-    //boolean flipflop = ((x ^ y) & 1) != 0;
     // scale the z coordinates;
     int zScaled = (zAtLeft << 10) + (1 << 9);
     int dz = zPastRight - zAtLeft;
     int roundFactor = count / 2;
-    int zIncrementScaled = GData.roundInt(((dz << 10) + (dz >= 0 ? roundFactor : -roundFactor))
-        / count);
+    int zIncrementScaled = roundInt(((dz << 10) + (dz >= 0 ? roundFactor
+        : -roundFactor)) / count);
     int offsetPbuf = y * width + x;
+    int[] zb = zbuf;
+    Pixelator p = pixel;
     if (rgb16Left == null) {
+      int adn = argbNoisyDn;
+      int aup = argbNoisyUp;
+      int ac = argbCurrent;
       while (--count >= 0) {
-        //if (aap || (flipflop = !flipflop)) {
-          int z = zScaled >> 10;
-          if (z < zbuf[offsetPbuf]) {
-            seed = ((seed << 16) + (seed << 1) + seed) & 0x7FFFFFFF;
-            int bits = (seed >> 16) & 0x07;
-            addPixel(offsetPbuf, z, bits == 0 ? argbNoisyDn
-                : (bits == 1 ? argbNoisyUp : argbCurrent));
-          }
-        //}
+        int z = zScaled >> 10;
+        if (z < zb[offsetPbuf]) {
+          seed = ((seed << 16) + (seed << 1) + seed) & 0x7FFFFFFF;
+          int bits = (seed >> 16) & 0x07;
+          p.addPixel(offsetPbuf, z, bits == 0 ? adn : (bits == 1 ? aup : ac));
+        }
         ++offsetPbuf;
         zScaled += zIncrementScaled;
       }
     } else {
       int rScaled = rgb16Left.r << 8;
-      int rIncrement = GData.roundInt(((rgb16Right.r - rgb16Left.r) << 8) / count);
+      int rIncrement = roundInt(((rgb16Right.r - rgb16Left.r) << 8)
+          / count);
       int gScaled = rgb16Left.g;
-      int gIncrement = GData.roundInt((rgb16Right.g - gScaled) / count);
+      int gIncrement = roundInt((rgb16Right.g - gScaled) / count);
       int bScaled = rgb16Left.b;
-      int bIncrement = GData.roundInt((rgb16Right.b - bScaled) / count);
+      int bIncrement = roundInt((rgb16Right.b - bScaled) / count);
       while (--count >= 0) {
-        //if (aap || (flipflop = !flipflop)) {
-          int z = zScaled >> 10;
-          if (z < zbuf[offsetPbuf])
-            addPixel(offsetPbuf, z, 0xFF000000 | (rScaled & 0xFF0000)
-                | (gScaled & 0xFF00) | ((bScaled >> 8) & 0xFF));
-        //}
+        int z = zScaled >> 10;
+        if (z < zb[offsetPbuf])
+          p.addPixel(offsetPbuf, z, 0xFF000000 | (rScaled & 0xFF0000)
+              | (gScaled & 0xFF00) | ((bScaled >> 8) & 0xFF));
         ++offsetPbuf;
         zScaled += zIncrementScaled;
         rScaled += rIncrement;
@@ -1598,32 +1585,24 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
   }
 
-  ///////////////////////////////
   void plotPixelsUnclippedCount(int count, int x, int y, int z) {
-    
+
     // for Cirle3D.plot8Filled and fillRect
-    
+
     int offsetPbuf = y * width + x;
-    //if (aap) {
-      while (--count >= 0) {
-        if (z < zbuf[offsetPbuf])
-          addPixel(offsetPbuf, z, argbCurrent);
-        ++offsetPbuf;
-      }
-//    } else {
-//      int offsetMax = offsetPbuf + count;
-//      if (((x ^ y) & 1) != 0)
-//        if (++offsetPbuf == offsetMax)
-//          return;
-//      do {
-//        if (z < zbuf[offsetPbuf])
-//          addPixel(offsetPbuf, z, argbCurrent);
-//        offsetPbuf += 2;
-//      } while (offsetPbuf < offsetMax);
-//    }
+    Pixelator p = pixel;
+    int c = argbCurrent;
+    while (--count >= 0) {
+      if (z < zbuf[offsetPbuf])
+        p.addPixel(offsetPbuf, z, c);
+      ++offsetPbuf;
+    }
   }
 
   private void plotPoints(int count, int[] coordinates, int xOffset, int yOffset) {
+    Pixelator p = pixel;
+    int c = argbCurrent;
+    int[] zb = zbuf;
     for (int i = count * 3; i > 0; ) {
       int z = coordinates[--i];
       int y = coordinates[--i] + yOffset;
@@ -1631,24 +1610,23 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       if (isClipped3(x, y, z))
         continue;
       int offset = y * width + x++;
-      if (z < zbuf[offset])
-        addPixel(offset, z, argbCurrent);
+      if (z < zb[offset])
+        p.addPixel(offset, z, c);
       if (antialiasThisFrame) {
         offset = y * width + x;
-        if (!isClipped3(x, y, z) && z < zbuf[offset])
-          addPixel(offset, z, argbCurrent);
+        if (!isClipped3(x, y, z) && z < zb[offset])
+          p.addPixel(offset, z, c);
         offset = (++y)* width + x;
-        if (!isClipped3(x, y, z) && z < zbuf[offset])
-          addPixel(offset, z, argbCurrent);
+        if (!isClipped3(x, y, z) && z < zb[offset])
+          p.addPixel(offset, z, c);
         offset = y * width + (--x);
-        if (!isClipped3(x, y, z) && z < zbuf[offset])
-          addPixel(offset, z, argbCurrent);
+        if (!isClipped3(x, y, z) && z < zb[offset])
+          p.addPixel(offset, z, c);
       }
 
     }
   }
 
-  
   private final V3 vectorAB = new V3();
   private final V3 vectorAC = new V3();
   private final V3 vectorNormal = new V3();
@@ -1661,45 +1639,14 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     argbNoisyDn = shadesCurrent[shadeIndex > 0 ? shadeIndex - 1 : 0];
   }
 
-  /**
-   *  used by CartoonRenderer (DNA surface) and GeoSurfaceRenderer (face) to
-   *  assign a noisy shade to the surface it will render
-   * @param screenA 
-   * @param screenB 
-   * @param screenC 
-   */
-  @Override
-  public void setNoisySurfaceShade(P3i screenA, P3i screenB, P3i screenC) {
-    vectorAB.set(screenB.x - screenA.x, screenB.y - screenA.y, screenB.z
-        - screenA.z);
-    int shadeIndex;
-    if (screenC == null) {
-      shadeIndex = shader.getShadeIndex(-vectorAB.x, -vectorAB.y, vectorAB.z);
-    } else {
-      vectorAC.set(screenC.x - screenA.x, screenC.y - screenA.y, screenC.z
-          - screenA.z);
-      vectorAB.cross(vectorAB, vectorAC);
-      shadeIndex = vectorAB.z >= 0 ? shader.getShadeIndex(-vectorAB.x,
-          -vectorAB.y, vectorAB.z) : shader.getShadeIndex(vectorAB.x,
-          vectorAB.y, -vectorAB.z);
-    }
-    if (shadeIndex > Shader.SHADE_INDEX_NOISY_LIMIT)
-      shadeIndex = Shader.SHADE_INDEX_NOISY_LIMIT;
-    setColorNoisy(shadeIndex);
-  }
-
-  private int getShadeIndexP3(P3 screenA,
-                                 P3 screenB, P3 screenC) {
+  private int getShadeIndexP3(P3 screenA, P3 screenB, P3 screenC) {
     // for fillTriangle and fillQuad.
     vectorAB.sub2(screenB, screenA);
     vectorAC.sub2(screenC, screenA);
-    vectorNormal.cross(vectorAB, vectorAC);
-    int i = 
-      (vectorNormal.z >= 0
-            ? shader.getShadeIndex(-vectorNormal.x, -vectorNormal.y,
-                                    vectorNormal.z)
-            : shader.getShadeIndex(vectorNormal.x, vectorNormal.y,
-                                    -vectorNormal.z));
+    V3 v = vectorNormal;
+    v.cross(vectorAB, vectorAC);
+    int i = (v.z >= 0 ? shader.getShadeIndex(-v.x, -v.y, v.z) : shader
+        .getShadeIndex(v.x, v.y, -v.z));
     return i;
   }
     
@@ -1722,7 +1669,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public int getExportType() {
-    return GData.EXPORT_NOT;
+    return EXPORT_NOT;
   }
 
   @Override
@@ -1851,7 +1798,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   void shadeTextPixel(int offset, int z, int argb, int bgargb, int shade) {
     switch (shade) {
     case 8:
-      addPixel(offset, z, argb);
+      pixel.addPixel(offset, z, argb);
       return;
     }
     if (bgargb != 0) {

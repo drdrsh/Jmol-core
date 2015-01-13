@@ -114,6 +114,8 @@ class CylinderRenderer {
     if (endcaps == GData.ENDCAPS_FLAT || endcaps == GData.ENDCAPS_OPENEND)
       renderFlatEndcap(true);
     g3d.setZMargin(5);
+    int width = g3d.width;
+    int[] zbuf = g3d.zbuf;
     for (int i = rasterCount; --i >= 0;) {
       int fpz = fp8ShadeIndexUp[i] >> (8);
       int fpzBack = fpz >> 1;
@@ -123,9 +125,9 @@ class CylinderRenderer {
       if (tEndcapOpen && argbEndcap != 0) {
         if (clipped) {
           g3d.plotPixelClippedArgb(argbEndcap, xEndcap + x, yEndcap + y, zEndcap - z
-              - 1);
+              - 1, width, zbuf);
           g3d.plotPixelClippedArgb(argbEndcap, xEndcap - x, yEndcap - y, zEndcap + z
-              - 1);
+              - 1, width, zbuf);
         } else {
           g3d.plotPixelUnclippedArgb(argbEndcap, xEndcap + x, yEndcap + y, zEndcap
               - z - 1);
@@ -203,6 +205,8 @@ class CylinderRenderer {
       renderFlatEndcapPrecisely(true);
     line3d.setLineBits(this.dxBf, this.dyBf);
     g3d.setZMargin(5);
+    int width = g3d.width;
+    int[] zbuf = g3d.zbuf;
     for (int i = rasterCount; --i >= 0;) {
       int fpz = fp8ShadeIndexUp[i] >> (8);
       int fpzBack = fpz >> 1;
@@ -212,9 +216,9 @@ class CylinderRenderer {
       if (tEndcapOpen && argbEndcap != 0) {
         if (clipped) {
           g3d.plotPixelClippedArgb(argbEndcap, xEndcap + x, yEndcap + y, zEndcap - z
-              - 1);
+              - 1, width, zbuf);
           g3d.plotPixelClippedArgb(argbEndcap, xEndcap - x, yEndcap - y, zEndcap + z
-              - 1);
+              - 1, width, zbuf);
         } else {
           g3d.plotPixelUnclippedArgb(argbEndcap, xEndcap + x, yEndcap + y, zEndcap
               - z - 1);

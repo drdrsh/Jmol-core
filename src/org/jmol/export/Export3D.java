@@ -648,7 +648,7 @@ public class Export3D implements JmolRendererInterface {
 
   @Override
   public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC, T3 ptA0,
-                             T3 ptB0, T3 ptC0) {
+                             T3 ptB0, T3 ptC0, boolean doShade) {
     // cartoon only, for nucleic acid bases
     if (exporter.isCartesian) {
       exporter.fillTriangle(colix, ptA0, ptB0, ptC0, true, true);

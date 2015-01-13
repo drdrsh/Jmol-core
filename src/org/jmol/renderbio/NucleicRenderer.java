@@ -236,9 +236,7 @@ public class NucleicRenderer {
    * @param doShade    if shade was not calculated previously;
    */
   private void renderTriangle(P3i[] scr, P3[] pt, int i, int j, int k, boolean doShade) {
-    if (doShade)
-      vwr.gdata.setNoisySurfaceShade(scr[i], scr[j], scr[k]);
-    g3d.fillTriangle3i(scr[i], scr[j], scr[k], pt[i], pt[j], pt[k]);
+    g3d.fillTriangle3i(scr[i], scr[j], scr[k], pt[i], pt[j], pt[k], doShade);
   }
 
   private void renderRing6() {
