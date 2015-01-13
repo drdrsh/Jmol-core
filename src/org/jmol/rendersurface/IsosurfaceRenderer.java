@@ -471,8 +471,11 @@ public class IsosurfaceRenderer extends MeshRenderer {
           //g3d.fillTriangle(screens[iA], colixA, nA, screens[iB], colixB, nB,
             //  screens[iC], colixC, nC, 0.1f);
         } else if (mesh.colorsExplicit) {
-          vwr.gdata.setRGB(polygon[MeshSurface.P_EXPLICIT_COLOR]);
-          g3d.fillTriangle3i(screens[iA], screens[iB], screens[iC], vertices[iA], vertices[iB], vertices[iC]);          
+            vwr.gdata.setColor(polygon[MeshSurface.P_EXPLICIT_COLOR]);
+            colixA = C.copyColixTranslucency(mesh.colix, (short) C.LAST_AVAILABLE_COLIX); 
+            g3d.setC(colixA);
+          g3d.fillTriangle3CN(screens[iA], colixA, nA, screens[iB], colixA, nB,
+              screens[iC], colixA, nC);
         } else {
           if (isTranslucentInherit && vertexColixes != null) {
             colixA = C.copyColixTranslucency(mesh.slabColix, vertexColixes[iA]);
@@ -514,8 +517,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
   }
 
   private void renderNormals() {
-    // Logger.debug("mesh renderPoints: " + vertexCount);
-    if (!g3d.setC(C.WHITE))
+    if (!g3d.setC(C.copyColixTranslucency(mesh.colix, C.WHITE)))
       return;
     vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Monospaced", 24));
     V3[] vertexVectors = Normix.getVertexVectors();

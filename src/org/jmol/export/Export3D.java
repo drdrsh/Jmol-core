@@ -30,6 +30,7 @@ import org.jmol.api.JmolRendererInterface;
 import org.jmol.g3d.HermiteRenderer;
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
+import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 
@@ -612,26 +613,6 @@ public class Export3D implements JmolRendererInterface {
           screenC.y, screenC.z);
   }
 
-//  @Override
-//  public void drawTriangle3I(P3i screenA, P3i screenB, P3i screenC, int check) {
-//    // primary method for mapped Mesh
-//    if ((check & 1) == 1)
-//      drawLine(colix, colix, screenA.x, screenA.y, screenA.z, screenB.x,
-//          screenB.y, screenB.z);
-//    if ((check & 2) == 2)
-//      drawLine(colix, colix, screenB.x, screenB.y, screenB.z, screenC.x,
-//          screenC.y, screenC.z);
-//    if ((check & 4) == 4)
-//      drawLine(colix, colix, screenA.x, screenA.y, screenA.z, screenC.x,
-//          screenC.y, screenC.z);
-//  }
-
-  /*
-   * public void drawfillTriangle(int xA, int yA, int zA, int xB, int yB, int
-   * zB, int xC, int yC, int zC) { ptA.set(xA, yA, zA); ptB.set(xB, yB, zB);
-   * ptC.set(xC, yC, zC); fillTriangle(ptA, ptB, ptC); }
-   */
-
   @Override
   public void fillTriangle3CN(P3i pointA, short colixA, short normixA,
                               P3i pointB, short colixB, short normixB,
@@ -701,18 +682,6 @@ public class Export3D implements JmolRendererInterface {
     // hermite, rockets, cartoons
     exporter.fillTriangle(colix, pointA, pointB, pointC, false, false);
     exporter.fillTriangle(colix, pointA, pointC, pointD, false, false);
-  }
-
-  @Override
-  public void fillQuadrilateral3i(P3i pointA, short colixA, short normixA,
-                                  P3i pointB, short colixB, short normixB,
-                                  P3i pointC, short colixC, short normixC,
-                                  P3i screenD, short colixD, short normixD) {
-    // mesh
-    fillTriangle3CN(pointA, colixA, normixA, pointB, colixB, normixB, pointC,
-        colixC, normixC);
-    fillTriangle3CN(pointA, colixA, normixA, pointC, colixC, normixC, screenD,
-        colixD, normixD);
   }
 
   @Override

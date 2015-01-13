@@ -183,13 +183,6 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void fillQuadrilateral(P3 screenA, P3 screenB,
                                          P3 screenC, P3 screenD);
 
-  public abstract void fillQuadrilateral3i(P3i screenA, short colixA,
-                                         short normixA, P3i screenB,
-                                         short colixB, short normixB,
-                                         P3i screenC, short colixC,
-                                         short normixC, P3i screenD,
-                                         short colixD, short normixD);
-
   /**
    * fills background rectangle for label
    *<p>
@@ -301,5 +294,6 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void volumeRender(boolean TF);
 
   public abstract void volumeRender4(int diam, int x, int y, int z);
+
 
 }

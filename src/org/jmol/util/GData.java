@@ -184,11 +184,6 @@ public class GData implements JmolGraphicsInterface {
     return (inGreyscaleMode ? C.getArgbGreyscale(colix) : C.getArgb(colix));
   }
 
-  public void setRGB(int rgb) {
-    setColor(rgb);
-    setC((short) C.LAST_AVAILABLE_COLIX);    
-  }
-
   public int[] getShades(short colix) {
     if (colix < 0)
       colix = changeableColixMap[colix & C.UNMASK_CHANGEABLE_TRANSLUCENT];
@@ -595,13 +590,12 @@ public class GData implements JmolGraphicsInterface {
   public void setFontFid(byte fid) {
   }
 
-  /**
-   * @param color  
-   */
-  public void setColor(int color) {
-    argbCurrent = color;
-  }
+  public int argbNoisyUp, argbNoisyDn;
 
+  public void setColor(int argb) {
+    argbCurrent = argbNoisyUp = argbNoisyDn = argb;
+  }
+  
   /**
    * @param colix  
    * @return TRUE if correct pass (translucent or opaque)

@@ -391,8 +391,10 @@ public abstract class MeshRenderer extends ShapeRenderer {
             bsPolygonsToExport.set(i);
             continue;
           }
-          g3d.fillQuadrilateral3i(screens[iA], colix, nA, screens[iB], colix,
-              nB, screens[iC], colix, nC, screens[iD], colix, nD);
+          g3d.fillTriangle3CN(screens[iA], colix, nA, screens[iB], colix, nB,
+              screens[iC], colix, nC);
+          g3d.fillTriangle3CN(screens[iA], colix, nA, screens[iC], colix, nC,
+              screens[iD], colix, nD);
           continue;
         }
         g3d.drawQuadrilateral(colix, screens[iA], screens[iB], screens[iC],

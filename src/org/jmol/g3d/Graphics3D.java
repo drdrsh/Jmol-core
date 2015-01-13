@@ -216,7 +216,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private int[] shadesCurrent;
   private int anaglyphLength;
   //private boolean isScreened;
-  private int argbNoisyUp, argbNoisyDn;
 
   private Pixelator pixel;
 
@@ -654,12 +653,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private int lastRawColor;
   private int translucencyLog;
   
-  @Override
-  public void setColor(int argb) {
-    argbCurrent = argbNoisyUp = argbNoisyDn = argb;
-  }
-  
-
   /**
    * sets current color from colix color index
    * @param colix the color index
@@ -1300,39 +1293,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
           screenC.y, screenC.z);
   }
 
-//  @Override
-//  public void drawTriangle3I(P3i screenA, P3i screenB, P3i screenC,
-//                           int check) {
-//    // primary method for unmapped monochromatic Mesh
-//    if ((check & 1) == 1)
-//      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
-//          screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z,
-//          true);
-//    if ((check & 2) == 2)
-//      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
-//          screenB.x, screenB.y, screenB.z, screenC.x, screenC.y, screenC.z,
-//          true);
-//    if ((check & 4) == 4)
-//      line3d.plotLine(argbCurrent, !aap, argbCurrent, !aap,
-//          screenA.x, screenA.y, screenA.z, screenC.x, screenC.y, screenC.z,
-//          true);
-//  }
-//
-
-  
-  /*
-  public void drawfillTriangle(int xA, int yA, int zA, int xB,
-                               int yB, int zB, int xC, int yC, int zC) {
-    // sticks -- sterochemical wedge notation -- not implemented?
-    line3d.plotLine(argbCurrent, !addAllPixels, argbCurrent, !addAllPixels, xA,
-        yA, zA, xB, yB, zB, true);
-    line3d.plotLine(argbCurrent, !addAllPixels, argbCurrent, !addAllPixels, xA,
-        yA, zA, xC, yC, zC, true);
-    line3d.plotLine(argbCurrent, !addAllPixels, argbCurrent, !addAllPixels, xB,
-        yB, zB, xC, yC, zC, true);
-    ((TriangleRenderer) triangle3d).fillTriangle(xA, yA, zA, xB, yB, zB, xC, yC, zC, false);
-  }
-  */
   @Override
   public void fillTriangleTwoSided(short normix,
                            int xScreenA, int yScreenA, int zScreenA,
@@ -1359,7 +1319,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   @Override
   public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC,
                              T3 ptA, T3 ptB, T3 ptC) {
-    // cartoon DNA plates, colored pmesh
+    // cartoon DNA plates
     ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC, false);
   }
 
@@ -1374,8 +1334,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       setTriangleColixAndShadeIndex(colixA, getShadeIndex(normixA));
       useGouraud = false;
     } else {
-      if (!setTriangleTranslucency(colixA, colixB, colixC))
-        return;
+      setTriangleTranslucency(colixA, colixB, colixC);
       ((TriangleRenderer) triangle3d).setGouraud(getShades(colixA)[getShadeIndex(normixA)],
                             getShades(colixB)[getShadeIndex(normixB)],
                             getShades(colixC)[getShadeIndex(normixC)]);
@@ -1393,18 +1352,18 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     setColorNoisy(shadeIndex);
   }
 
-  private boolean setTriangleTranslucency(short colixA, short colixB, short colixC) {
-    if (!isPass2)
-      return true;
-    int maskA = colixA & C.TRANSLUCENT_MASK;
-    int maskB = colixB & C.TRANSLUCENT_MASK;
-    int maskC = colixC & C.TRANSLUCENT_MASK;
-    maskA &= ~C.TRANSPARENT;
-    maskB &= ~C.TRANSPARENT;
-    maskC &= ~C.TRANSPARENT;
-    int mask = GData.roundInt((maskA + maskB + maskC) / 3) & C.TRANSLUCENT_MASK;
-    translucencyMask = (mask << C.ALPHA_SHIFT) | 0xFFFFFF;
-    return true;
+  private void setTriangleTranslucency(short colixA, short colixB, short colixC) {
+    if (isPass2) {
+      int maskA = colixA & C.TRANSLUCENT_MASK;
+      int maskB = colixB & C.TRANSLUCENT_MASK;
+      int maskC = colixC & C.TRANSLUCENT_MASK;
+      maskA &= ~C.TRANSPARENT;
+      maskB &= ~C.TRANSPARENT;
+      maskC &= ~C.TRANSPARENT;
+      int mask = GData.roundInt((maskA + maskB + maskC) / 3)
+          & C.TRANSLUCENT_MASK;
+      translucencyMask = (mask << C.ALPHA_SHIFT) | 0xFFFFFF;
+    }
   }
 
   /* ***************************************************************
@@ -1429,20 +1388,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     setColorNoisy(getShadeIndexP3(screenA, screenB, screenC));
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC, false);
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenC, screenD, false);
-  }
-
-  @Override
-  public void fillQuadrilateral3i(P3i screenA, short colixA, short normixA,
-                                P3i screenB, short colixB, short normixB,
-                                P3i screenC, short colixC, short normixC,
-                                P3i screenD, short colixD, short normixD) {
-    // mesh
-    fillTriangle3CN(screenA, colixA, normixA,
-                 screenB, colixB, normixB,
-                 screenC, colixC, normixC);
-    fillTriangle3CN(screenA, colixA, normixA,
-                 screenC, colixC, normixC,
-                 screenD, colixD, normixD);
   }
 
   @Override
@@ -1920,6 +1865,5 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     mergeBufferPixel(pbuf, offset, (argb & 0xFFFFFF) | shade << 24, bgcolor);
     zbuf[offset] = z;
   }
-
 
 }
