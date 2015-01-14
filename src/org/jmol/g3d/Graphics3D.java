@@ -23,11 +23,9 @@
  */
 package org.jmol.g3d;
 
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
-
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolRendererInterface;
@@ -54,107 +52,106 @@ import javajs.util.V3;
 import org.jmol.viewer.Viewer;
 
 /**
- * Provides high-level graphics primitives for 3D visualization
- * for the software renderers. These methods should not have to 
- * be used with WebGL or OpenGL or other hardware accelerators.
+ * Provides high-level graphics primitives for 3D visualization for the software
+ * renderers. These methods should not have to be used with WebGL or OpenGL or
+ * other hardware accelerators.
  * 
  * This module is linked to via reflection from org.jmol.viewer.Viewer
  * 
  * Bob Hanson 9/2/2012
  * 
  * 
- *<p>
- * A pure software implementation of a 3D graphics engine.
- * No hardware required.
- * Depending upon what you are rendering ... some people say it
- * is <i>pretty fast</i>.
- *
+ * <p>
+ * A pure software implementation of a 3D graphics engine. No hardware required.
+ * Depending upon what you are rendering ... some people say it is <i>pretty
+ * fast</i>.
+ * 
  * @author Miguel, miguel@jmol.org
  * 
- * with additions by Bob Hanson hansonr@stolaf.edu
+ *         with additions by Bob Hanson hansonr@stolaf.edu
  * 
- * The above is an understatement to say the least.
+ *         The above is an understatement to say the least.
  * 
- * This is a two-pass rendering system. In the first pass, all opaque
- * objects are rendered. In the second pass, all translucent objects
- * are rendered. 
+ *         This is a two-pass rendering system. In the first pass, all opaque
+ *         objects are rendered. In the second pass, all translucent objects are
+ *         rendered.
  * 
- * If there are no translucent objects, then that is found in the 
- * first pass as follows: 
+ *         If there are no translucent objects, then that is found in the first
+ *         pass as follows:
  * 
- * The renderers first try to set the color index of the object to be 
- * rendered using setColix(short colix), and that method returns false 
- * if we are in the wrong pass for that type of object. 
+ *         The renderers first try to set the color index of the object to be
+ *         rendered using setColix(short colix), and that method returns false
+ *         if we are in the wrong pass for that type of object.
  * 
- * In addition, setColix records in the boolean haveTranslucentObjects 
- * whether a translucent object was seen in the first pass. 
+ *         In addition, setColix records in the boolean haveTranslucentObjects
+ *         whether a translucent object was seen in the first pass.
  * 
- * The second pass is skipped if this flag is not set. This saves immensely 
- * on rendering time when there are no translucent objects.  
+ *         The second pass is skipped if this flag is not set. This saves
+ *         immensely on rendering time when there are no translucent objects.
  * 
- * THUS, IT IS CRITICAL THAT ALL RENDERING OPTIONS CHECK THE COLIX USING
- * g3d.setColix(short colix) PRIOR TO RENDERING.
+ *         THUS, IT IS CRITICAL THAT ALL RENDERING OPTIONS CHECK THE COLIX USING
+ *         g3d.setColix(short colix) PRIOR TO RENDERING.
  * 
- * Translucency is rendered only approximately. We can't maintain a full
- * buffer of all translucent objects. Instead, we "cheat" by maintaining
- * one translucent z buffer. When a translucent pixel is to be written, its
- * z position is checked and...
+ *         Translucency is rendered only approximately. We can't maintain a full
+ *         buffer of all translucent objects. Instead, we "cheat" by maintaining
+ *         one translucent z buffer. When a translucent pixel is to be written,
+ *         its z position is checked and...
  * 
- * ...if it is behind or at the z position of any pixel, it is ignored
- * ...if it is in front of a translucent pixel, it is added to the translucent buffer
- * ...if it is between an opaque and translucent pixel, the translucent pixel is
- *       turned opaque, and the new pixel is added to the translucent buffer
+ *         ...if it is behind or at the z position of any pixel, it is ignored
+ *         ...if it is in front of a translucent pixel, it is added to the
+ *         translucent buffer ...if it is between an opaque and translucent
+ *         pixel, the translucent pixel is turned opaque, and the new pixel is
+ *         added to the translucent buffer
  * 
- * This guarantees accurate translucency when there are no more than two translucent
- * pixels between the user and an opaque pixel. It's a fudge, for sure. But it is 
- * pretty good, and certainly fine for "draft" work. 
+ *         This guarantees accurate translucency when there are no more than two
+ *         translucent pixels between the user and an opaque pixel. It's a
+ *         fudge, for sure. But it is pretty good, and certainly fine for
+ *         "draft" work.
  * 
- * Users needing more accurate translucencty are encouraged to use the POV-Ray export
- * facility for production-level work.
+ *         Users needing more accurate translucencty are encouraged to use the
+ *         POV-Ray export facility for production-level work.
  * 
- * Antialiasing is accomplished as full scene antialiasing. This means that 
- * the width and height are doubled (both here and in TransformManager), the
- * scene is rendered, and then each set of four pixels is averaged (roughly)
- * as the final pixel in the width*height buffer. 
+ *         Antialiasing is accomplished as full scene antialiasing. This means
+ *         that the width and height are doubled (both here and in
+ *         TransformManager), the scene is rendered, and then each set of four
+ *         pixels is averaged (roughly) as the final pixel in the width*height
+ *         buffer.
  * 
- * Antialiasing options allow for antialiasing of all objects:
+ *         Antialiasing options allow for antialiasing of all objects:
  * 
- *    antialiasDisplay = true
- *    antialiasTranslucent = true
+ *         antialiasDisplay = true antialiasTranslucent = true
  * 
- * or just the opaque ones:
+ *         or just the opaque ones:
  * 
- *    antialiasDisplay = true
- *    antialiasTranslucent = false
- *    
- * or not at all:
+ *         antialiasDisplay = true antialiasTranslucent = false
  * 
- *    antialiasDisplay = false
- *
- * The difference will be speed and memory. Adding translucent objects
- * doubles the buffer requirement, and adding antialiasing quadruples
- * the buffer requirement. 
+ *         or not at all:
  * 
- * So we have:
+ *         antialiasDisplay = false
  * 
- * Memory requirements are significant, in multiples of (width) * (height) 32-bit integers:
- *
- *                 antialias OFF       ON/opaque only   ON/all objects
- *
- *   no translucent     1p + 1z = 2      4p + 4z = 8      4p + 4z = 8
- *      objects
- *
- *   with translucent   2p + 2z = 4      5p + 5z = 10     8p + 8z = 16
- *      objects
- *
- * Note that no antialising at all is required for POV-Ray output. 
- * POV-Ray will do antialiasing on its own.
+ *         The difference will be speed and memory. Adding translucent objects
+ *         doubles the buffer requirement, and adding antialiasing quadruples
+ *         the buffer requirement.
  * 
- * In principle we could save a bit in the case of antialiasing of 
- * just opaque objects and reuse the p and z buffers for the 
- * translucent buffer, but this hasn't been implemented because the 
- * savings isn't that great, and if you are going to the trouble of
- * having antialiasing, you probably what it all.
+ *         So we have:
+ * 
+ *         Memory requirements are significant, in multiples of (width) *
+ *         (height) 32-bit integers:
+ * 
+ *         antialias OFF ON/opaque only ON/all objects
+ * 
+ *         no translucent 1p + 1z = 2 4p + 4z = 8 4p + 4z = 8 objects
+ * 
+ *         with translucent 2p + 2z = 4 5p + 5z = 10 8p + 8z = 16 objects
+ * 
+ *         Note that no antialising at all is required for POV-Ray output.
+ *         POV-Ray will do antialiasing on its own.
+ * 
+ *         In principle we could save a bit in the case of antialiasing of just
+ *         opaque objects and reuse the p and z buffers for the translucent
+ *         buffer, but this hasn't been implemented because the savings isn't
+ *         that great, and if you are going to the trouble of having
+ *         antialiasing, you probably what it all.
  * 
  * 
  */
@@ -165,25 +162,25 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   LineRenderer line3d;
   private SphereRenderer sphere3d;
   private CylinderRenderer cylinder3d;
-  
+
   // loaded only if needed
   private G3DRenderer triangle3d;
   private G3DRenderer circle3d;
   private G3DRenderer hermite3d;
-  
+
   private boolean isFullSceneAntialiasingEnabled;
-  private boolean antialias2; 
+  private boolean antialias2;
 
   private TextString[] strings = null;
   private int stringCount;
-  
+
   @Override
   public void clear() {
     stringCount = 0;
     strings = null;
     TextRenderer.clearFontCache();
   }
-  
+
   @Override
   public void destroy() {
     releaseBuffers();
@@ -191,15 +188,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     graphicsForMetrics = null;
   }
 
-
   private byte[] anaglyphChannelBytes;
-  
+
   private boolean twoPass = false;
 
-//  /**
-//   * !aap (add all pixels) was for screened translucency
-//   */
-  //private boolean aap = true;
   private boolean haveTranslucentObjects;
   protected int[] pbuf;
   protected int[] pbufT;
@@ -208,45 +200,39 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   protected int translucencyMask;
   private boolean renderLow;
 
-  //int clipX;
-  //int clipY;
-  //int clipWidth;
-  //int clipHeight;
-
   private int[] shadesCurrent;
   private int anaglyphLength;
-  //private boolean isScreened;
 
   Pixelator pixel;
 
   protected int zMargin;
   private int[] aobuf;
-  
+
   void setZMargin(int dz) {
     zMargin = dz;
   }
 
-
   public Graphics3D() {
-    for (int i = normixCount; --i >= 0; )
+    for (int i = normixCount; --i >= 0;)
       transformedVectors[i] = new V3();
   }
-  
+
   @Override
   public void initialize(Viewer vwr, GenericPlatform apiPlatform) {
     this.vwr = vwr;
     this.apiPlatform = apiPlatform;
     platform = new Platform3D(apiPlatform);
     graphicsForMetrics = platform.getGraphicsForMetrics();
-    
+
     line3d = new LineRenderer(this);
     sphere3d = new SphereRenderer(this);
-    cylinder3d = new CylinderRenderer(this);    
+    cylinder3d = new CylinderRenderer(this);
   }
 
   /**
    * allows core JavaScript loading to not involve these classes
-   * @param tok 
+   * 
+   * @param tok
    * 
    */
   @Override
@@ -264,9 +250,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       if (triangle3d == null)
         triangle3d = getRenderer("Triangle");
       break;
-    }    
+    }
   }
-  
+
   private G3DRenderer getRenderer(String type) {
     G3DRenderer r = ((G3DRenderer) Interface.getOption("g3d." + type
         + "Renderer", vwr, "render"));
@@ -282,16 +268,17 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (currentlyRendering)
       endRendering();
   }
-  
+
   @Override
   public boolean checkTranslucent(boolean isAlphaTranslucent) {
     if (isAlphaTranslucent)
       haveTranslucentObjects = true;
     return (!twoPass || twoPass && (isPass2 == isAlphaTranslucent));
   }
-  
+
   @Override
-  public void beginRendering(M3 rotationMatrix, boolean translucentMode, boolean isImageWrite, boolean renderLow) {
+  public void beginRendering(M3 rotationMatrix, boolean translucentMode,
+                             boolean isImageWrite, boolean renderLow) {
     if (currentlyRendering)
       endRendering();
     this.renderLow = renderLow;
@@ -315,10 +302,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     colixCurrent = 0;
     haveTranslucentObjects = false;
     translucentCoverOnly = !translucentMode;
-    //aap = true;
     if (pbuf == null) {
-      platform.allocateBuffers(windowWidth, windowHeight,
-                              antialiasThisFrame, isImageWrite);
+      platform.allocateBuffers(windowWidth, windowHeight, antialiasThisFrame,
+          isImageWrite);
       pbuf = platform.pBuffer;
       zbuf = platform.zBuffer;
       aobuf = null;
@@ -326,14 +312,15 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     setWidthHeight(antialiasThisFrame);
     platform.clearBuffer();
     if (backgroundImage != null)
-      plotImage(Integer.MIN_VALUE, 0, Integer.MIN_VALUE, backgroundImage, null, (short) 0, 0, 0);
+      plotImage(Integer.MIN_VALUE, 0, Integer.MIN_VALUE, backgroundImage, null,
+          (short) 0, 0, 0);
     textY = 0;
   }
 
   @Override
   public void setBackgroundTransparent(boolean TF) {
     if (platform != null)
-    platform.setBackgroundTransparent(TF);
+      platform.setBackgroundTransparent(TF);
   }
 
   private void releaseBuffers() {
@@ -345,7 +332,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     platform.releaseBuffers();
     line3d.clearLineCache();
   }
-  
+
   @Override
   public boolean setPass2(boolean antialiasTranslucent) {
     if (!haveTranslucentObjects || !currentlyRendering)
@@ -353,20 +340,18 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     isPass2 = true;
     pass2Flag01 = 1;
     colixCurrent = 0;
-    //aap = true;
     if (pbufT == null || antialias2 != antialiasTranslucent) {
       platform.allocateTBuffers(antialiasTranslucent);
       pbufT = platform.pBufferT;
       zbufT = platform.zBufferT;
-    }    
+    }
     antialias2 = antialiasTranslucent;
     if (antialiasThisFrame && !antialias2)
       downsampleFullSceneAntialiasing(true);
     platform.clearTBuffer();
     return true;
   }
-  
-  
+
   @Override
   public void endRendering() {
     if (!currentlyRendering)
@@ -375,15 +360,15 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       if (isPass2 && pbufT != null)
         for (int offset = pbufT.length; --offset >= 0;)
           mergeBufferPixel(pbuf, offset, pbufT[offset], bgcolor);
-//      if (ambientOcclusion != 0) {
-//        if (aobuf == null)
-//          aobuf = new int[pbuf.length];
-//        else
-//          for (int offset = pbuf.length; --offset >= 0;)
-//            aobuf[offset] = 0;
-//        shader
-//            .occludePixels(pbuf, zbuf, aobuf, width, height, ambientOcclusion);
-//      }
+      //      if (ambientOcclusion != 0) {
+      //        if (aobuf == null)
+      //          aobuf = new int[pbuf.length];
+      //        else
+      //          for (int offset = pbuf.length; --offset >= 0;)
+      //            aobuf[offset] = 0;
+      //        shader
+      //            .occludePixels(pbuf, zbuf, aobuf, width, height, ambientOcclusion);
+      //      }
       if (antialiasThisFrame)
         downsampleFullSceneAntialiasing(false);
     }
@@ -393,7 +378,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     currentlyRendering = false;
   }
 
-  public static void mergeBufferPixel(int[] pbuf, int offset, int argbB, int bgcolor) {
+  public static void mergeBufferPixel(int[] pbuf, int offset, int argbB,
+                                      int bgcolor) {
     if (argbB == 0)
       return;
     int argbA = pbuf[offset];
@@ -419,8 +405,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       gA = gB;
       break;
     case 1: // 7:1
-      rbA = (((rbB << 2) + (rbB << 1) + rbB  + rbA) >> 3) & 0x00FF00FF;
-      gA = (((gB << 2) + + (gB << 1) + gB + gA) >> 3) & 0x0000FF00;
+      rbA = (((rbB << 2) + (rbB << 1) + rbB + rbA) >> 3) & 0x00FF00FF;
+      gA = (((gB << 2) + +(gB << 1) + gB + gA) >> 3) & 0x0000FF00;
       break;
     case 2: // 3:1
       rbA = (((rbB << 1) + rbB + rbA) >> 2) & 0x00FF00FF;
@@ -428,7 +414,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       break;
     case 3: // 5:3
       rbA = (((rbB << 2) + rbB + (rbA << 1) + rbA) >> 3) & 0x00FF00FF;
-      gA = (((gB << 2) + gB  + (gA << 1) + gA) >> 3) & 0x0000FF00;
+      gA = (((gB << 2) + gB + (gA << 1) + gA) >> 3) & 0x0000FF00;
       break;
     case 4: // 1:1
       rbA = ((rbA + rbB) >> 1) & 0x00FF00FF;
@@ -436,7 +422,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       break;
     case 5: // 3:5
       rbA = (((rbB << 1) + rbB + (rbA << 2) + rbA) >> 3) & 0x00FF00FF;
-      gA = (((gB << 1) + gB  + (gA << 2) + gA) >> 3) & 0x0000FF00;
+      gA = (((gB << 1) + gB + (gA << 2) + gA) >> 3) & 0x0000FF00;
       break;
     case 6: // 1:3
       rbA = (((rbA << 1) + rbA + rbB) >> 2) & 0x00FF00FF;
@@ -447,23 +433,21 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       gA = (((gA << 2) + (gA << 1) + gA + gB) >> 3) & 0x0000FF00;
       break;
     }
-    pbuf[offset] = 0xFF000000 | rbA | gA;    
+    pbuf[offset] = 0xFF000000 | rbA | gA;
   }
-  
 
   @Override
   public Object getScreenImage(boolean isImageWrite) {
     /**
-     * @j2sNative
-     * var obj = this.platform.bufferedImage;
-     * if (isImageWrite) { this.releaseBuffers(); }
-     * return obj;
+     * @j2sNative var obj = this.platform.bufferedImage; if (isImageWrite) {
+     *            this.releaseBuffers(); } return obj;
      * 
      */
     {
       return platform.bufferedImage;
     }
   }
+
   @Override
   public void applyAnaglygh(STER stereoMode, int[] stereoColors) {
     switch (stereoMode) {
@@ -485,17 +469,17 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       break;
     }
   }
-  
+
   @Override
   public void snapshotAnaglyphChannelBytes() {
     if (currentlyRendering)
       throw new NullPointerException();
     anaglyphLength = windowWidth * windowHeight;
-    if (anaglyphChannelBytes == null ||
-  anaglyphChannelBytes.length != anaglyphLength)
+    if (anaglyphChannelBytes == null
+        || anaglyphChannelBytes.length != anaglyphLength)
       anaglyphChannelBytes = new byte[anaglyphLength];
-    for (int i = anaglyphLength; --i >= 0; )
-      anaglyphChannelBytes[i] = (byte)pbuf[i];
+    for (int i = anaglyphLength; --i >= 0;)
+      anaglyphChannelBytes[i] = (byte) pbuf[i];
   }
 
   public void applyCustomAnaglyph(int[] stereoColors) {
@@ -510,27 +494,27 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   public void applyGreenAnaglyph() {
-    for (int i = anaglyphLength; --i >= 0; ) {
+    for (int i = anaglyphLength; --i >= 0;) {
       int green = (anaglyphChannelBytes[i] & 0x000000FF) << 8;
       pbuf[i] = (pbuf[i] & 0xFFFF0000) | green;
     }
   }
 
   public void applyBlueAnaglyph() {
-    for (int i = anaglyphLength; --i >= 0; ) {
+    for (int i = anaglyphLength; --i >= 0;) {
       int blue = anaglyphChannelBytes[i] & 0x000000FF;
       pbuf[i] = (pbuf[i] & 0xFFFF0000) | blue;
     }
   }
 
   public void applyCyanAnaglyph() {
-    for (int i = anaglyphLength; --i >= 0; ) {
+    for (int i = anaglyphLength; --i >= 0;) {
       int blue = anaglyphChannelBytes[i] & 0x000000FF;
       int cyan = (blue << 8) | blue;
       pbuf[i] = pbuf[i] & 0xFFFF0000 | cyan;
     }
   }
-  
+
   @Override
   public void releaseScreenImage() {
     platform.clearScreenBufferThreaded();
@@ -540,11 +524,11 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public boolean haveTranslucentObjects() {
     return haveTranslucentObjects;
   }
-  
+
   public void setTempZSlab(int zSlab) {
     this.zSlab = zSlab;
   }
-  
+
   @Override
   public void setZShade(boolean zShade, int zSlab, int zDepth, int zShadePower) {
     if (zShade) {
@@ -651,16 +635,18 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   private int currentShadeIndex;
   private int lastRawColor;
-  private int translucencyLog;
-  
+  int translucencyLog;
+
   /**
    * sets current color from colix color index
-   * @param colix the color index
+   * 
+   * @param colix
+   *        the color index
    * @return true or false if this is the right pass
    */
   @Override
   public boolean setC(short colix) {
-    boolean isLast = C.isColixLastAvailable(colix); 
+    boolean isLast = C.isColixLastAvailable(colix);
     if (!isLast && colix == colixCurrent && currentShadeIndex == -1)
       return true;
     int mask = colix & C.TRANSLUCENT_MASK;
@@ -669,10 +655,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (renderLow)
       mask = 0;
     boolean isTranslucent = (mask != 0);
-    //isScreened = isTranslucent && mask == C.TRANSLUCENT_SCREENED;
     if (!checkTranslucent(isTranslucent))
       return false;
-    //aap = isPass2 || !isTranslucent;
     if (isPass2) {
       translucencyMask = (mask << C.ALPHA_SHIFT) | 0xFFFFFF;
       translucencyLog = mask >> C.TRANSLUCENT_SHIFT;
@@ -705,23 +689,29 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (isClipped && isClippedXY(diameter, x, y))
       return;
     if (colixRing != 0 && setC(colixRing)) {
-      if (isClipped)
-        ((CircleRenderer)circle3d).plotCircleCenteredClipped(x, y, z, diameter);
-      else
-        ((CircleRenderer)circle3d).plotCircleCenteredUnclipped(x, y, z, diameter);
+      if (isClipped) {
+        if (!isClippedXY(diameter, x, y))
+          ((CircleRenderer) circle3d).plotCircleCenteredClipped(x, y, z,
+              diameter);
+      } else {
+        ((CircleRenderer) circle3d).plotCircleCenteredUnclipped(x, y, z,
+            diameter);
+      }
     }
     if (colixFill != 0 && setC(colixFill)) {
       if (isClipped)
-        ((CircleRenderer)circle3d).plotFilledCircleCenteredClipped(x, y, z, diameter);
+        ((CircleRenderer) circle3d).plotFilledCircleCenteredClipped(x, y, z,
+            diameter);
       else
-        ((CircleRenderer)circle3d).plotFilledCircleCenteredUnclipped(x, y, z, diameter);
+        ((CircleRenderer) circle3d).plotFilledCircleCenteredUnclipped(x, y, z,
+            diameter);
     }
   }
 
   @Override
   public void volumeRender4(int diameter, int x, int y, int z) {
     if (diameter == 1) {
-      plotPixelClippedXYZ(x, y, z);
+      plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf, pixel);
       return;
     }
     if (isClippedZ(z))
@@ -731,32 +721,38 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (isClipped && isClippedXY(diameter, x, y))
       return;
     if (isClipped)
-      ((CircleRenderer)circle3d).plotFilledCircleCenteredClipped(x, y, z, diameter);
+      ((CircleRenderer) circle3d).plotFilledCircleCenteredClipped(x, y, z,
+          diameter);
     else
-      ((CircleRenderer)circle3d).plotFilledCircleCenteredUnclipped(x, y, z, diameter);
+      ((CircleRenderer) circle3d).plotFilledCircleCenteredUnclipped(x, y, z,
+          diameter);
   }
-  
+
   /**
    * fills a solid sphere
-   *
-   * @param diameter pixel count
-   * @param x center x
-   * @param y center y
-   * @param z center z
+   * 
+   * @param diameter
+   *        pixel count
+   * @param x
+   *        center x
+   * @param y
+   *        center y
+   * @param z
+   *        center z
    */
   @Override
   public void fillSphereXYZ(int diameter, int x, int y, int z) {
     switch (diameter) {
     case 1:
-      plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf);
+      plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf, pixel);
       return;
     case 0:
       return;
     }
     if (diameter <= (antialiasThisFrame ? SphereRenderer.maxSphereDiameter2
         : SphereRenderer.maxSphereDiameter))
-      sphere3d.render(shadesCurrent, diameter, x, y, z, null,
-          null, null, -1, null);
+      sphere3d.render(shadesCurrent, diameter, x, y, z, null, null, null, -1,
+          null);
   }
 
   private int saveAmbient, saveDiffuse;
@@ -774,11 +770,14 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       setDiffusePercent(saveDiffuse);
     }
   }
+
   /**
    * fills a solid sphere
-   *
-   * @param diameter pixel count
-   * @param center javax.vecmath.Point3i defining the center
+   * 
+   * @param diameter
+   *        pixel count
+   * @param center
+   *        javax.vecmath.Point3i defining the center
    */
 
   @Override
@@ -788,43 +787,51 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   /**
    * fills a solid sphere
-   *
-   * @param diameter pixel count
-   * @param center a javax.vecmath.Point3f ... floats are casted to ints
+   * 
+   * @param diameter
+   *        pixel count
+   * @param center
+   *        a javax.vecmath.Point3f ... floats are casted to ints
    */
   @Override
   public void fillSphere(int diameter, P3 center) {
     // from hermite ribbon
-    fillSphereXYZ(diameter, Math.round(center.x), Math.round(center.y), Math.round(center.z));
+    fillSphereXYZ(diameter, Math.round(center.x), Math.round(center.y),
+        Math.round(center.z));
   }
 
   @Override
-  public void fillEllipsoid(P3 center, P3[] points, int x, int y,
-                              int z, int diameter, M3 mToEllipsoidal,
-                              double[] coef, M4 mDeriv,
-                              int selectedOctant, P3i[] octantPoints) {
+  public void fillEllipsoid(P3 center, P3[] points, int x, int y, int z,
+                            int diameter, M3 mToEllipsoidal, double[] coef,
+                            M4 mDeriv, int selectedOctant, P3i[] octantPoints) {
     switch (diameter) {
     case 1:
-      plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf);
+      plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf, pixel);
       return;
     case 0:
       return;
     }
     if (diameter <= (antialiasThisFrame ? SphereRenderer.maxSphereDiameter2
         : SphereRenderer.maxSphereDiameter))
-      sphere3d.render(shadesCurrent, diameter, x, y, z,
-          mToEllipsoidal, coef, mDeriv, selectedOctant, octantPoints);
+      sphere3d.render(shadesCurrent, diameter, x, y, z, mToEllipsoidal, coef,
+          mDeriv, selectedOctant, octantPoints);
   }
 
   /**
    * draws a rectangle
-   *
-   * @param x upper left x
-   * @param y upper left y
-   * @param z upper left z
-   * @param zSlab z for slab check (for set labelsFront)
-   * @param rWidth pixel count
-   * @param rHeight pixel count
+   * 
+   * @param x
+   *        upper left x
+   * @param y
+   *        upper left y
+   * @param z
+   *        upper left z
+   * @param zSlab
+   *        z for slab check (for set labelsFront)
+   * @param rWidth
+   *        pixel count
+   * @param rHeight
+   *        pixel count
    */
   @Override
   public void drawRect(int x, int y, int z, int zSlab, int rWidth, int rHeight) {
@@ -860,13 +867,12 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     Pixelator p = pixel;
     int c = argbCurrent;
     int offset = x + width * y;
-      for (int i = 0; i <= w; i++) {
-        if (z < zbuf[offset])
-          p.addPixel(offset, z, c);
-        offset++;
-      }
+    for (int i = 0; i <= w; i++) {
+      if (z < zbuf[offset])
+        p.addPixel(offset, z, c);
+      offset++;
+    }
   }
-
 
   private void drawVLine(int x, int y, int z, int h) {
     // hover, labels only
@@ -891,31 +897,38 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
   }
 
-
   /**
    * fills background rectangle for label
-   *<p>
-   *
-   * @param x upper left x
-   * @param y upper left y
-   * @param z upper left z
-   * @param zSlab  z value for slabbing
-   * @param widthFill pixel count
-   * @param heightFill pixel count
+   * <p>
+   * 
+   * @param x
+   *        upper left x
+   * @param y
+   *        upper left y
+   * @param z
+   *        upper left z
+   * @param zSlab
+   *        z value for slabbing
+   * @param widthFill
+   *        pixel count
+   * @param heightFill
+   *        pixel count
    */
   @Override
-  public void fillRect(int x, int y, int z, int zSlab, int widthFill, int heightFill) {
+  public void fillRect(int x, int y, int z, int zSlab, int widthFill,
+                       int heightFill) {
     // hover and labels only -- slab at atom or front -- simple Z/window clip
     if (isClippedZ(zSlab))
       return;
+    int w = width;
     if (x < 0) {
       widthFill += x;
       if (widthFill <= 0)
         return;
       x = 0;
     }
-    if (x + widthFill > width) {
-      widthFill = width - x;
+    if (x + widthFill > w) {
+      widthFill = w - x;
       if (widthFill <= 0)
         return;
     }
@@ -927,51 +940,64 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
     if (y + heightFill > height)
       heightFill = height - y;
+    int c = argbCurrent;
+    int[] zb = zbuf;
+    Pixelator p = pixel;
     while (--heightFill >= 0)
-      plotPixelsUnclippedCount(widthFill, x, y++, z);
+      plotPixelsUnclippedCount(c, widthFill, x, y++, z, w, zb, p);
   }
-  
+
   /**
-   * draws the specified string in the current font.
-   * no line wrapping -- axis, labels, measures
-   *
-   * @param str the String
-   * @param font3d the Font3D
-   * @param xBaseline baseline x
-   * @param yBaseline baseline y
-   * @param z baseline z
-   * @param zSlab z for slab calculation
-   * @param bgColix 
+   * draws the specified string in the current font. no line wrapping -- axis,
+   * labels, measures
+   * 
+   * @param str
+   *        the String
+   * @param font3d
+   *        the Font3D
+   * @param xBaseline
+   *        baseline x
+   * @param yBaseline
+   *        baseline y
+   * @param z
+   *        baseline z
+   * @param zSlab
+   *        z for slab calculation
+   * @param bgColix
    */
-  
+
   @Override
-  public void drawString(String str, Font font3d,
-                         int xBaseline, int yBaseline, int z, int zSlab, short bgColix) {
+  public void drawString(String str, Font font3d, int xBaseline, int yBaseline,
+                         int z, int zSlab, short bgColix) {
     //axis, labels, measures, echo    
-    currentShadeIndex = 0; 
+    currentShadeIndex = 0;
     if (str == null)
       return;
     if (isClippedZ(zSlab))
       return;
-    drawStringNoSlab(str, font3d, xBaseline, yBaseline, z, bgColix); 
+    drawStringNoSlab(str, font3d, xBaseline, yBaseline, z, bgColix);
   }
 
   /**
-   * draws the specified string in the current font.
-   * no line wrapping -- echo, frank, hover, molecularOrbital, uccage
-   *
-   * @param str the String
-   * @param font3d the Font3D
-   * @param xBaseline baseline x
-   * @param yBaseline baseline y
-   * @param z baseline z
-   * @param bgColix 
+   * draws the specified string in the current font. no line wrapping -- echo,
+   * frank, hover, molecularOrbital, uccage
+   * 
+   * @param str
+   *        the String
+   * @param font3d
+   *        the Font3D
+   * @param xBaseline
+   *        baseline x
+   * @param yBaseline
+   *        baseline y
+   * @param z
+   *        baseline z
+   * @param bgColix
    */
-  
+
   @Override
-  public void drawStringNoSlab(String str, Font font3d, 
-                               int xBaseline, int yBaseline,
-                               int z, short bgColix) {
+  public void drawStringNoSlab(String str, Font font3d, int xBaseline,
+                               int yBaseline, int z, short bgColix) {
     // echo, frank, hover, molecularOrbital, uccage
     if (str == null)
       return;
@@ -980,16 +1006,17 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (stringCount == strings.length)
       strings = (TextString[]) AU.doubleLength(strings);
     TextString t = new TextString();
-    t.setText(str, font3d == null ? currentFont : (currentFont = font3d), argbCurrent, 
-        C.isColixTranslucent(bgColix) ?  // shift colix translucency mask into integer alpha position
-            (getColorArgbOrGray(bgColix) & 0xFFFFFF) | ((bgColix & C.TRANSLUCENT_MASK) << C.ALPHA_SHIFT): 0, 
-                xBaseline, yBaseline, z);
+    t.setText(str, font3d == null ? currentFont : (currentFont = font3d),
+        argbCurrent, C.isColixTranslucent(bgColix) ? // shift colix translucency mask into integer alpha position
+        (getColorArgbOrGray(bgColix) & 0xFFFFFF)
+            | ((bgColix & C.TRANSLUCENT_MASK) << C.ALPHA_SHIFT)
+            : 0, xBaseline, yBaseline, z);
     strings[stringCount++] = t;
-    
+
   }
-  
+
   public static Comparator<TextString> sort;
-  
+
   @Override
   public void renderAllStrings(Object jmolRenderer) {
     if (strings == null)
@@ -1009,14 +1036,14 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   @Override
-  public void plotText(int x, int y, int z, int argb,
-                int bgargb, String text, Font font3d, JmolRendererInterface jmolRenderer) {
-    TextRenderer.plot(x, y, z, argb, bgargb, text, font3d, this, 
-        jmolRenderer, antialiasThisFrame);    
+  public void plotText(int x, int y, int z, int argb, int bgargb, String text,
+                       Font font3d, JmolRendererInterface jmolRenderer) {
+    TextRenderer.plot(x, y, z, argb, bgargb, text, font3d, this, jmolRenderer,
+        antialiasThisFrame);
   }
-  
+
   @Override
-  public void drawImage(Object objImage, int x, int y, int z, int zSlab, 
+  public void drawImage(Object objImage, int x, int y, int z, int zSlab,
                         short bgcolix, int width, int height) {
     if (objImage == null || width == 0 || height == 0 || isClippedZ(zSlab))
       return;
@@ -1024,27 +1051,28 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   @Override
-  public void plotImage(int x, int y, int z, Object image, JmolRendererInterface jmolRenderer,
-                        short bgcolix, int width, int height) {
+  public void plotImage(int x, int y, int z, Object image,
+                        JmolRendererInterface jmolRenderer, short bgcolix,
+                        int width, int height) {
     setC(bgcolix);
     if (!isPass2)
       translucencyMask = -1;
     if (bgcolix == 0)
       argbCurrent = 0;
-    ImageRenderer.plotImage(x, y, z, image, this, jmolRenderer, antialiasThisFrame, argbCurrent, 
-        width, height);
+    ImageRenderer.plotImage(x, y, z, image, this, jmolRenderer,
+        antialiasThisFrame, argbCurrent, width, height);
   }
 
   @Override
   public void setFontFid(byte fid) {
     currentFont = Font.getFont3D(fid);
   }
-  
+
   @Override
   public void setFont(Font font3d) {
     currentFont = font3d;
   }
-  
+
   /*
   private void setRectClip(int x, int y, int width, int height) {
     // not implemented
@@ -1075,11 +1103,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
    * points
    * ***************************************************************/
 
-  
   @Override
   public void drawPixel(int x, int y, int z) {
     // measures - render angle
-    plotPixelClippedXYZ(x, y, z);
+    plotPixelClippedArgb(argbCurrent, x, y, z, width, zbuf, pixel);
   }
 
   @Override
@@ -1107,159 +1134,149 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   @Override
   public void drawDashedLine(int run, int rise, P3i pointA, P3i pointB) {
     // measures only
-    line3d.plotDashedLine(argbCurrent, run, rise, 
-        pointA.x, pointA.y, pointA.z,
+    line3d.plotDashedLine(argbCurrent, run, rise, pointA.x, pointA.y, pointA.z,
         pointB.x, pointB.y, pointB.z, true);
   }
 
   @Override
   public void drawDottedLine(P3i pointA, P3i pointB) {
-     //axes, bbcage only
-    line3d.plotDashedLine(argbCurrent, 2, 1,
-                          pointA.x, pointA.y, pointA.z,
-                          pointB.x, pointB.y, pointB.z, true);
+    //axes, bbcage only
+    line3d.plotDashedLine(argbCurrent, 2, 1, pointA.x, pointA.y, pointA.z,
+        pointB.x, pointB.y, pointB.z, true);
   }
 
   @Override
   public void drawLineXYZ(int x1, int y1, int z1, int x2, int y2, int z2) {
     // stars
-    line3d.plotLine(argbCurrent, argbCurrent,
-                    x1, y1, z1, x2, y2, z2, true);
+    line3d.plotLine(argbCurrent, argbCurrent, x1, y1, z1, x2, y2, z2, true);
   }
 
   @Override
-  public void drawLine(short colixA, short colixB,
-                       int x1, int y1, int z1, int x2, int y2, int z2) {
+  public void drawLine(short colixA, short colixB, int x1, int y1, int z1,
+                       int x2, int y2, int z2) {
     // backbone and sticks
     if (!setC(colixA))
       colixA = 0;
-//    boolean isScreenedA = !aap;
     int argbA = argbCurrent;
     if (!setC(colixB))
       colixB = 0;
-    if (colixA == 0 && colixB == 0)
-      return;
-    line3d.plotLine(argbA, argbCurrent,
-                    x1, y1, z1, x2, y2, z2, true);
+    if (colixA != 0 || colixB != 0)
+      line3d.plotLine(argbA, argbCurrent, x1, y1, z1, x2, y2, z2, true);
   }
-  
+
   @Override
   public void drawLineAB(P3i pointA, P3i pointB) {
     // draw quadrilateral and hermite
-    line3d.plotLine(argbCurrent, argbCurrent,
-                    pointA.x, pointA.y, pointA.z,
-                    pointB.x, pointB.y, pointB.z, true);
+    line3d.plotLine(argbCurrent, argbCurrent, pointA.x, pointA.y, pointA.z,
+        pointB.x, pointB.y, pointB.z, true);
   }
-  
+
   @Override
   public void fillCylinderXYZ(short colixA, short colixB, byte endcaps,
-                           int diameter,
-                           int xA, int yA, int zA, int xB, int yB, int zB) {
+                              int diameter, int xA, int yA, int zA, int xB,
+                              int yB, int zB) {
     //Backbone, Mps, Sticks
+    if (diameter > ht3)
+      return;
     if (!setC(colixA))
       colixA = 0;
-    //boolean isScreenedA = !aap;
     if (!setC(colixB))
       colixB = 0;
-    if (colixA == 0 && colixB == 0)
-      return;
-    cylinder3d.render(colixA, colixB, endcaps, diameter,
-                      xA, yA, zA, xB, yB, zB);
+    if (colixA != 0 || colixB != 0)
+      cylinder3d.render(colixA, colixB, endcaps, diameter, xA, yA, zA, xB, yB,
+          zB);
   }
 
   @Override
-  public void fillCylinderScreen(byte endcaps,
-                           int diameter,
-                           int xA, int yA, int zA, int xB, int yB, int zB) {
+  public void fillCylinderScreen(byte endcaps, int diameter, int xA, int yA,
+                                 int zA, int xB, int yB, int zB) {
     //measures, vectors, polyhedra
-    cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter,
-                      xA, yA, zA, xB, yB, zB);
+    if (diameter <= ht3)
+      cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter, xA, yA,
+          zA, xB, yB, zB);
   }
 
   @Override
-  public void fillCylinderScreen3I(byte endcaps, int diameter,
-                           P3i screenA, P3i screenB, P3 pt0f, P3 pt1f, float radius) {
+  public void fillCylinderScreen3I(byte endcaps, int diameter, P3i screenA,
+                                   P3i screenB, P3 pt0f, P3 pt1f, float radius) {
     //draw
-    cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter,
-                      screenA.x, screenA.y, screenA.z,
-                      screenB.x, screenB.y, screenB.z);
+    if (diameter <= ht3)
+      cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter,
+          screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z);
   }
 
   @Override
-  public void fillCylinder(byte endcaps, int diameter,
-                           P3i screenA, P3i screenB) {
+  public void fillCylinder(byte endcaps, int diameter, P3i screenA, P3i screenB) {
     //axes, bbcage, uccage, cartoon, dipoles, mesh
-    cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter,
-                      screenA.x, screenA.y, screenA.z,
-                      screenB.x, screenB.y, screenB.z);
+    if (diameter <= ht3)
+      cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter,
+          screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z);
   }
 
   @Override
-  public void fillCylinderBits(byte endcaps, int diameter,
-                               P3 screenA, P3 screenB) {
-   // dipole cross, cartoonRockets, draw line
-   cylinder3d.renderBits(colixCurrent, colixCurrent, endcaps, diameter,
-       screenA.x, screenA.y, screenA.z,
-       screenB.x, screenB.y, screenB.z);
- }
+  public void fillCylinderBits(byte endcaps, int diameter, P3 screenA,
+                               P3 screenB) {
+    // dipole cross, cartoonRockets, draw line
+    if (diameter <= ht3)
+      cylinder3d.renderBits(colixCurrent, colixCurrent, endcaps, diameter,
+          screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z);
+  }
 
   @Override
-  public void fillConeScreen(byte endcap, int screenDiameter,
-                       P3i screenBase, P3i screenTip, boolean isBarb) {
+  public void fillConeScreen(byte endcap, int screenDiameter, P3i screenBase,
+                             P3i screenTip, boolean isBarb) {
     // dipoles, mesh, vectors
-    cylinder3d.renderCone(colixCurrent, endcap, screenDiameter,
-                          screenBase.x, screenBase.y, screenBase.z,
-                          screenTip.x, screenTip.y, screenTip.z, false, isBarb);
+    if (screenDiameter <= ht3)
+      cylinder3d.renderCone(colixCurrent, endcap, screenDiameter, screenBase.x,
+          screenBase.y, screenBase.z, screenTip.x, screenTip.y, screenTip.z,
+          false, isBarb);
   }
 
   @Override
-  public void fillConeSceen3f(byte endcap, int screenDiameter,
-                       P3 screenBase, P3 screenTip) {
+  public void fillConeSceen3f(byte endcap, int screenDiameter, P3 screenBase,
+                              P3 screenTip) {
     // cartoons, rockets
-    cylinder3d.renderCone(colixCurrent, endcap, screenDiameter,
-                          screenBase.x, screenBase.y, screenBase.z,
-                          screenTip.x, screenTip.y, screenTip.z, true, false);
+    if (screenDiameter <= ht3)
+      cylinder3d.renderCone(colixCurrent, endcap, screenDiameter, screenBase.x,
+          screenBase.y, screenBase.z, screenTip.x, screenTip.y, screenTip.z,
+          true, false);
   }
 
   @Override
-  public void drawHermite4(int tension,
-                          P3i s0, P3i s1, P3i s2, P3i s3) {
+  public void drawHermite4(int tension, P3i s0, P3i s1, P3i s2, P3i s3) {
     // bioShapeRenderer
-    ((HermiteRenderer) hermite3d).renderHermiteRope(false, tension, 0, 0, 0, s0, s1, s2, s3);
+    ((HermiteRenderer) hermite3d).renderHermiteRope(false, tension, 0, 0, 0,
+        s0, s1, s2, s3);
   }
 
   @Override
-  public void drawHermite7(boolean fill, boolean border, int tension,
-                           P3i s0, P3i s1, P3i s2, P3i s3,
-                           P3i s4, P3i s5, P3i s6, P3i s7,
-                           int aspectRatio, short colixBack) {
+  public void drawHermite7(boolean fill, boolean border, int tension, P3i s0,
+                           P3i s1, P3i s2, P3i s3, P3i s4, P3i s5, P3i s6,
+                           P3i s7, int aspectRatio, short colixBack) {
     if (colixBack == 0) {
-      ((HermiteRenderer) hermite3d).renderHermiteRibbon(fill, border, tension, s0, s1, s2, s3, s4,
-          s5, s6, s7, aspectRatio, 0);
+      ((HermiteRenderer) hermite3d).renderHermiteRibbon(fill, border, tension,
+          s0, s1, s2, s3, s4, s5, s6, s7, aspectRatio, 0);
       return;
     }
-    ((HermiteRenderer) hermite3d).renderHermiteRibbon(fill, border, tension, s0, s1, s2, s3, s4,
-        s5, s6, s7, aspectRatio, 1);
+    ((HermiteRenderer) hermite3d).renderHermiteRibbon(fill, border, tension,
+        s0, s1, s2, s3, s4, s5, s6, s7, aspectRatio, 1);
     short colix = colixCurrent;
     setC(colixBack);
-    ((HermiteRenderer) hermite3d).renderHermiteRibbon(fill, border, tension, s0, s1, s2, s3, s4,
-        s5, s6, s7, aspectRatio, -1);
+    ((HermiteRenderer) hermite3d).renderHermiteRibbon(fill, border, tension,
+        s0, s1, s2, s3, s4, s5, s6, s7, aspectRatio, -1);
     setC(colix);
   }
 
   @Override
-  public void fillHermite(int tension, int diameterBeg,
-                          int diameterMid, int diameterEnd,
-                          P3i s0, P3i s1, P3i s2, P3i s3) {
-    ((HermiteRenderer) hermite3d).renderHermiteRope(true, tension,
-                     diameterBeg, diameterMid, diameterEnd,
-                     s0, s1, s2, s3);
+  public void fillHermite(int tension, int diameterBeg, int diameterMid,
+                          int diameterEnd, P3i s0, P3i s1, P3i s2, P3i s3) {
+    ((HermiteRenderer) hermite3d).renderHermiteRope(true, tension, diameterBeg,
+        diameterMid, diameterEnd, s0, s1, s2, s3);
   }
-  
+
   @Override
   public void drawTriangle3C(P3i screenA, short colixA, P3i screenB,
-                           short colixB, P3i screenC, short colixC,
-                           int check) {
+                             short colixB, P3i screenC, short colixC, int check) {
     // primary method for mapped Mesh
     if ((check & 1) == 1)
       drawLine(colixA, colixB, screenA.x, screenA.y, screenA.z, screenB.x,
@@ -1273,31 +1290,33 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   @Override
-  public void fillTriangleTwoSided(short normix,
-                           int xScreenA, int yScreenA, int zScreenA,
-                           int xScreenB, int yScreenB, int zScreenB,
-                           int xScreenC, int yScreenC, int zScreenC) {
+  public void fillTriangleTwoSided(short normix, int xScreenA, int yScreenA,
+                                   int zScreenA, int xScreenB, int yScreenB,
+                                   int zScreenB, int xScreenC, int yScreenC,
+                                   int zScreenC) {
     // polyhedra
     setColorNoisy(getShadeIndex(normix));
-    ((TriangleRenderer) triangle3d).fillTriangleXYZ( xScreenA, yScreenA, zScreenA,
-        xScreenB, yScreenB, zScreenB,
-        xScreenC, yScreenC, zScreenC, false);
+    ((TriangleRenderer) triangle3d).fillTriangleXYZ(xScreenA, yScreenA,
+        zScreenA, xScreenB, yScreenB, zScreenB, xScreenC, yScreenC, zScreenC,
+        false);
   }
 
   @Override
-  public void fillTriangle3f(P3 screenA, P3 screenB, P3 screenC, boolean setNoisy) {
+  public void fillTriangle3f(P3 screenA, P3 screenB, P3 screenC,
+                             boolean setNoisy) {
     // rockets
     int i = getShadeIndexP3(screenA, screenB, screenC);
     if (setNoisy)
       setColorNoisy(i);
     else
       setColor(shadesCurrent[i]);
-    ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC, false);
+    ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
+        false);
   }
 
   @Override
-  public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC,
-                             T3 ptA, T3 ptB, T3 ptC, boolean doShade) {
+  public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC, T3 ptA,
+                             T3 ptB, T3 ptC, boolean doShade) {
     // cartoon DNA plates; preset color
     if (doShade) {
       V3 v = vectorAB;
@@ -1316,17 +1335,18 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         shadeIndex = Shader.SHADE_INDEX_NOISY_LIMIT;
       setColorNoisy(shadeIndex);
     }
-    ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC, false);
+    ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC,
+        false);
   }
 
   @Override
   public void fillTriangle3CN(P3i screenA, short colixA, short normixA,
-                           P3i screenB, short colixB, short normixB,
-                           P3i screenC, short colixC, short normixC) {
+                              P3i screenB, short colixB, short normixB,
+                              P3i screenC, short colixC, short normixC) {
     // mesh, isosurface
     boolean useGouraud;
-    if (!isPass2 && normixA == normixB && normixA == normixC &&
-        colixA == colixB && colixA == colixC) {
+    if (!isPass2 && normixA == normixB && normixA == normixC
+        && colixA == colixB && colixA == colixC) {
       int shadeIndex = getShadeIndex(normixA);
       if (colixA != colixCurrent || currentShadeIndex != shadeIndex) {
         currentShadeIndex = -1;
@@ -1336,14 +1356,23 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       useGouraud = false;
     } else {
       setTriangleTranslucency(colixA, colixB, colixC);
-      ((TriangleRenderer) triangle3d).setGouraud(getShades(colixA)[getShadeIndex(normixA)],
-                            getShades(colixB)[getShadeIndex(normixB)],
-                            getShades(colixC)[getShadeIndex(normixC)]);
+      ((TriangleRenderer) triangle3d).setGouraud(
+          getShades(colixA)[getShadeIndex(normixA)],
+          getShades(colixB)[getShadeIndex(normixB)],
+          getShades(colixC)[getShadeIndex(normixC)]);
       useGouraud = true;
     }
-    ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC, useGouraud);
+    ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC,
+        useGouraud);
   }
 
+  private static byte nullShadeIndex = 50;
+
+  public int getShadeIndex(short normix) {
+    // from Graphics3D.fillTriangle
+    return (normix == ~Normix.NORMIX_NULL || normix == Normix.NORMIX_NULL ? nullShadeIndex
+        : normix < 0 ? shadeIndexes2Sided[~normix] : shadeIndexes[normix]);
+  }
   private void setTriangleTranslucency(short colixA, short colixB, short colixC) {
     if (isPass2) {
       int maskA = colixA & C.TRANSLUCENT_MASK;
@@ -1352,8 +1381,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       maskA &= ~C.TRANSPARENT;
       maskB &= ~C.TRANSPARENT;
       maskC &= ~C.TRANSPARENT;
-      int mask = roundInt((maskA + maskB + maskC) / 3)
-          & C.TRANSLUCENT_MASK;
+      int mask = roundInt((maskA + maskB + maskC) / 3) & C.TRANSLUCENT_MASK;
       translucencyMask = (mask << C.ALPHA_SHIFT) | 0xFFFFFF;
     }
   }
@@ -1361,7 +1389,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   /* ***************************************************************
    * quadrilaterals
    * ***************************************************************/
-  
+
   @Override
   public void drawQuadrilateral(short colix, P3i screenA, P3i screenB,
                                 P3i screenC, P3i screenD) {
@@ -1374,78 +1402,68 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   @Override
-  public void fillQuadrilateral(P3 screenA, P3 screenB,
-                                P3 screenC, P3 screenD) {
+  public void fillQuadrilateral(P3 screenA, P3 screenB, P3 screenC, P3 screenD) {
     // hermite, rockets, cartoons
     setColorNoisy(getShadeIndexP3(screenA, screenB, screenC));
-    ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC, false);
-    ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenC, screenD, false);
+    ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
+        false);
+    ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenC, screenD,
+        false);
   }
 
   @Override
   public void drawSurface(MeshSurface meshSurface, short colix) {
     // Export3D only
   }
-  
+
   @Override
   public void plotPixelClippedP3i(P3i screen) {
-    // hermite only; export checks for clipping
-    plotPixelClippedXYZ(screen.x, screen.y, screen.z);
+    // hermite only; export checks for clipping; overridden in Export3D
+    plotPixelClippedArgb(argbCurrent, screen.x, screen.y, screen.z, width,
+        zbuf, pixel);
   }
 
-  void plotPixelClippedXYZ(int x, int y, int z) {
-    //circle3D, drawPixel, plotPixelClipped(point3)
-    if (isClipped3(x, y, z))
-      return;
-    int offset = y * width + x;
-    if (z < zbuf[offset])
-      pixel.addPixel(offset, z, argbCurrent);
-  }
-
-  void plotPixelClippedArgb(int argb, int x, int y, int z, int width, int[] zbuf) {
+  void plotPixelClippedArgb(int argb, int x, int y, int z, int width,
+                            int[] zbuf, Pixelator p) {
     // cylinder3d plotRaster
     if (isClipped3(x, y, z))
       return;
     int offset = y * width + x;
     if (z < zbuf[offset])
-      pixel.addPixel(offset, z, argb);
+      p.addPixel(offset, z, argb);
   }
 
-  @Override
-  public void plotImagePixel(int argb, int x, int y, int z, int shade, int bgargb) {
-    // drawString via text3d.plotClipped
-    if (x < 0 || x >= width || y < 0 || y >= height)
-      return;
-    int offset = y * width + x;
-    if (z < zbuf[offset])
-      shadeTextPixel(offset, z, argb, bgargb, shade);
-  }
-
-  void plotPixelClippedScreened(int argb, int x, int y, int z) {
-    if (isClipped3(x, y, z))
-      return;
-//    if (isScreened && ((x ^ y) & 1) != 0)
-//      return;
-    int offset = y * width + x;
-    if (z < zbuf[offset])
-      pixel.addPixel(offset, z, argb);
-  }
-
-  void plotPixelUnclipped(int x, int y, int z) {
+  void plotPixelUnclipped(int argb, int x, int y, int z, int width, int[] zbuf,
+                          Pixelator p) {
     // circle (halo)
     int offset = y * width + x;
     if (z < zbuf[offset])
-      pixel.addPixel(offset, z, argbCurrent);
+      p.addPixel(offset, z, argb);
   }
-  
-  void plotPixelUnclippedArgb(int argb, int x, int y, int z) {
-    // cylinder plotRaster
+
+  @Override
+  public void plotImagePixel(int argb, int x, int y, int z, int shade,
+                             int bgargb, int width, int height, int[] zbuf,
+                             Object p, int transpLog) {
+    // drawString via text3d.plotClipped; overridden in Export
+    if (x < 0 || x >= width || y < 0 || y >= height)
+      return;
     int offset = y * width + x;
-    if (z < zbuf[offset])
-      pixel.addPixel(offset, z, argb);
+    if (z < zbuf[offset]) {
+      if (shade == 8)
+        ((Pixelator) p).addPixel(offset, z, argb);
+      else {
+        // shade is a log of translucency, so adding two is equivalent to
+        // multiplying them. Works like a charm! - BH 
+        shade += transpLog;
+        if (shade <= 7)
+          shadeTextPixel(offset, z, argb, bgargb, shade, zbuf);
+      }
+    }
   }
-  
-  void plotPixelsClipped(int count, int x, int y, int z) {
+
+  void plotPixelsClipped(int argb, int count, int x, int y, int z, int width,
+                         int height, int[] zbuf, Pixelator p) {
     // for circle only; i.e. halo 
     // simple Z/window clip
     if (y < 0 || y >= height || x >= width)
@@ -1460,11 +1478,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       return;
     int offsetPbuf = y * width + x;
     int offsetMax = offsetPbuf + count;
-    Pixelator p = pixel;
-    int c = argbCurrent;
     while (offsetPbuf < offsetMax) {
       if (z < zbuf[offsetPbuf])
-        p.addPixel(offsetPbuf, z, c);
+        p.addPixel(offsetPbuf, z, argb);
       offsetPbuf++;// += step;
     }
   }
@@ -1565,8 +1581,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       }
     } else {
       int rScaled = rgb16Left.r << 8;
-      int rIncrement = roundInt(((rgb16Right.r - rgb16Left.r) << 8)
-          / count);
+      int rIncrement = roundInt(((rgb16Right.r - rgb16Left.r) << 8) / count);
       int gScaled = rgb16Left.g;
       int gIncrement = roundInt((rgb16Right.g - gScaled) / count);
       int bScaled = rgb16Left.b;
@@ -1585,13 +1600,12 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
   }
 
-  void plotPixelsUnclippedCount(int count, int x, int y, int z) {
+  void plotPixelsUnclippedCount(int c, int count, int x, int y, int z,
+                                int width, int[] zbuf, Pixelator p) {
 
     // for Cirle3D.plot8Filled and fillRect
 
     int offsetPbuf = y * width + x;
-    Pixelator p = pixel;
-    int c = argbCurrent;
     while (--count >= 0) {
       if (z < zbuf[offsetPbuf])
         p.addPixel(offsetPbuf, z, c);
@@ -1603,23 +1617,25 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     Pixelator p = pixel;
     int c = argbCurrent;
     int[] zb = zbuf;
-    for (int i = count * 3; i > 0; ) {
+    int w = width;
+    boolean antialias = antialiasThisFrame;
+    for (int i = count * 3; i > 0;) {
       int z = coordinates[--i];
       int y = coordinates[--i] + yOffset;
       int x = coordinates[--i] + xOffset;
       if (isClipped3(x, y, z))
         continue;
-      int offset = y * width + x++;
+      int offset = y * w + x++;
       if (z < zb[offset])
         p.addPixel(offset, z, c);
-      if (antialiasThisFrame) {
-        offset = y * width + x;
+      if (antialias) {
+        offset = y * w + x;
         if (!isClipped3(x, y, z) && z < zb[offset])
           p.addPixel(offset, z, c);
-        offset = (++y)* width + x;
+        offset = (++y) * w + x;
         if (!isClipped3(x, y, z) && z < zb[offset])
           p.addPixel(offset, z, c);
-        offset = y * width + (--x);
+        offset = y * w + (--x);
         if (!isClipped3(x, y, z) && z < zb[offset])
           p.addPixel(offset, z, c);
       }
@@ -1649,9 +1665,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         .getShadeIndex(v.x, v.y, -v.z));
     return i;
   }
-    
+
   //////////////////////////////////////////////////////////
-  
+
   @Override
   public void renderBackground(JmolRendererInterface jmolRenderer) {
     if (backgroundImage != null)
@@ -1661,8 +1677,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public void drawAtom(Atom atom) {
-    fillSphereXYZ(atom.sD,
-        atom.sX, atom.sY, atom.sZ);
+    fillSphereXYZ(atom.sD, atom.sX, atom.sY, atom.sZ);
   }
 
   // implemented only for Export3D:
@@ -1680,14 +1695,15 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public boolean canDoTriangles() {
     return true;
   }
-  
+
   public boolean isCartesianExport() {
     return false;
   }
 
   @Override
-  public JmolRendererInterface initializeExporter(Viewer vwr, double privateKey, GData g3d,
-                                    Map<String, Object> params) {
+  public JmolRendererInterface initializeExporter(Viewer vwr,
+                                                  double privateKey, GData g3d,
+                                                  Map<String, Object> params) {
     return null;
   }
 
@@ -1698,12 +1714,12 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public void drawBond(P3 atomA, P3 atomB, short colixA, short colixB,
-                           byte endcaps, short mad, int bondOrder) {
+                       byte endcaps, short mad, int bondOrder) {
   }
 
   @Override
-  public boolean drawEllipse(P3 ptAtom, P3 ptX, P3 ptY,
-                           boolean fillArc, boolean wireframeOnly) {
+  public boolean drawEllipse(P3 ptAtom, P3 ptX, P3 ptY, boolean fillArc,
+                             boolean wireframeOnly) {
     return false;
   }
 
@@ -1718,50 +1734,40 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   // Normix/Shading related methods
-  
+
   // only these three instance variables depend upon current orientation:
 
   private final byte[] shadeIndexes = new byte[normixCount];
   private final byte[] shadeIndexes2Sided = new byte[normixCount];
   public int pass2Flag01;
-    
+
   public void setRotationMatrix(M3 rotationMatrix) {
     V3[] vertexVectors = Normix.getVertexVectors();
-    for (int i = normixCount; --i >= 0; ) {
+    for (int i = normixCount; --i >= 0;) {
       V3 tv = transformedVectors[i];
       rotationMatrix.rotate2(vertexVectors[i], tv);
       shadeIndexes[i] = shader.getShadeB(tv.x, -tv.y, tv.z);
-      shadeIndexes2Sided[i] = (tv.z >= 0 ? shadeIndexes[i] 
-          : shader.getShadeB(-tv.x, tv.y, -tv.z));
+      shadeIndexes2Sided[i] = (tv.z >= 0 ? shadeIndexes[i] : shader.getShadeB(
+          -tv.x, tv.y, -tv.z));
     }
   }
 
-  private static byte nullShadeIndex = 50;
-  
-  public int getShadeIndex(short normix) {
-    // from Graphics3D.fillTriangle
-    return (normix == ~Normix.NORMIX_NULL
-        || normix == Normix.NORMIX_NULL 
-        ? nullShadeIndex
-        : normix < 0 ? shadeIndexes2Sided[~normix] : shadeIndexes[normix]);
-  }
 
   /////////// special rendering ///////////
-  
+
   /**
-   * @param minMax 
-   * @param screenWidth  
-   * @param screenHeight 
-   * @param navOffset 
-   * @param navDepth 
+   * @param minMax
+   * @param screenWidth
+   * @param screenHeight
+   * @param navOffset
+   * @param navDepth
    */
   @Override
-  public void renderCrossHairs(int[] minMax, int screenWidth, 
-                               int screenHeight, P3 navOffset, float navDepth) {
+  public void renderCrossHairs(int[] minMax, int screenWidth, int screenHeight,
+                               P3 navOffset, float navDepth) {
     // this is the square and crosshairs for the navigator
     boolean antialiased = isAntialiased();
-    setC(navDepth < 0 ? C.RED
-        : navDepth > 100 ? C.GREEN : C.GOLD);
+    setC(navDepth < 0 ? C.RED : navDepth > 100 ? C.GREEN : C.GOLD);
     int x = Math.max(Math.min(width, Math.round(navOffset.x)), 0);
     int y = Math.max(Math.min(height, Math.round(navOffset.y)), 0);
     int z = Math.round(navOffset.z) + 1;
@@ -1774,41 +1780,27 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     drawRect(x - off, y - off, z, 0, h, h);
     off = h;
     h = h >> 1;
-    setC(minMax[1] < navOffset.x ? C.YELLOW
-            : C.GREEN);
+    setC(minMax[1] < navOffset.x ? C.YELLOW : C.GREEN);
     drawRect(x - off, y, z, 0, h, w);
-    setC(minMax[0] > navOffset.x ? C.YELLOW
-            : C.GREEN);
+    setC(minMax[0] > navOffset.x ? C.YELLOW : C.GREEN);
     drawRect(x + h, y, z, 0, h, w);
-    setC(minMax[3] < navOffset.y ? C.YELLOW
-            : C.GREEN);
+    setC(minMax[3] < navOffset.y ? C.YELLOW : C.GREEN);
     drawRect(x, y - off, z, 0, w, h);
-    setC(minMax[2] > navOffset.y ? C.YELLOW
-            : C.GREEN);
+    setC(minMax[2] > navOffset.y ? C.YELLOW : C.GREEN);
     drawRect(x, y + h, z, 0, w, h);
   }
 
   @Override
-  public boolean initializeOutput(Viewer vwr,
-                                  double privateKey, Map<String, Object> params) {
+  public boolean initializeOutput(Viewer vwr, double privateKey,
+                                  Map<String, Object> params) {
     // N/A
     return false;
   }
 
-  void shadeTextPixel(int offset, int z, int argb, int bgargb, int shade) {
-    switch (shade) {
-    case 8:
-      pixel.addPixel(offset, z, argb);
-      return;
-    }
-    if (bgargb != 0) {
+  void shadeTextPixel(int offset, int z, int argb, int bgargb, int shade,
+                      int[] zbuf) {
+    if (bgargb != 0)
       mergeBufferPixel(pbuf, offset, bgargb, bgcolor);
-    }
-    // shade is a log of translucency, so adding two is equivalent to
-    // multiplying them. Works like a charm! - BH 
-    shade += translucencyLog;
-    if (shade > 7)
-      return;
     mergeBufferPixel(pbuf, offset, (argb & 0xFFFFFF) | shade << 24, bgcolor);
     zbuf[offset] = z;
   }

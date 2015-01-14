@@ -106,13 +106,46 @@ class TextRenderer {
       // the label is black or almost black.
       argb = argb | 0x040404;
     }
+    int textHeight = text3d.height;
+    int textWidth = text3d.width;
+    byte[] tmap = text3d.tmap;
+    Graphics3D g = g3d;
+    int width = g.width;
+    int height = g.height;
+    int[] zbuf = g.zbuf;
+    Pixelator p = g.pixel;
+    int tLog = g.translucencyLog;
+    
     if (jmolRenderer != null
-        || (x < 0 || x + text3d.width > g3d.width || y < 0 || y + text3d.height > g3d.height))
-      plotClipped(x, y, z, argb, bgargb, jmolRenderer == null ? g3d : jmolRenderer, 
-          text3d.mapWidth, text3d.height, text3d.tmap);
-    else
-      plotUnclipped(x, y, z, argb, bgargb, g3d, text3d.mapWidth, text3d.height,
-          text3d.tmap);
+        || (x < 0 || x + text3d.width > width || y < 0 || y + text3d.height > height)) {
+
+      for (int off = 0, i = 0; i < textHeight; i++) {
+        for (int j = 0; j < textWidth; j++) {
+          byte shade = tmap[off++];
+          if (shade != 0)
+            jmolRenderer.plotImagePixel(argb, x + j, y + i, z, shade, bgargb, width, height, zbuf, p, tLog);
+        }
+      }
+      
+    } else {
+      int pbufOffset = y * width + x;
+      for (int i = 0, off = 0; i < textHeight; i++) {
+        for (int j = 0; j < textWidth; j++) {
+          byte shade = tmap[off++];
+          if (shade != 0 && z < zbuf[pbufOffset]) {
+            if (shade == 8) {
+              p.addPixel(pbufOffset, z, argb);
+            } else {
+              shade += tLog;
+              if (shade <= 7)
+                g3d.shadeTextPixel(pbufOffset, z, argb, bgargb, shade, zbuf);
+            }
+          }
+          pbufOffset++;
+        }
+        pbufOffset += (width - textWidth);
+      }
+    }
     return text3d.width;
   }
 
@@ -171,36 +204,6 @@ class TextRenderer {
     return w;
   }
   
-  private static void plotUnclipped(int x, int y, int z, int argb, int bgargb,
-                                    Graphics3D g3d, int textWidth,
-                                    int textHeight, byte[] tmap) {
-    int offset = 0;
-    int[] zbuf = g3d.zbuf;
-    int renderWidth = g3d.width;
-    int pbufOffset = y * renderWidth + x;
-    for (int i = 0; i < textHeight; i++) {
-      for (int j = 0; j < textWidth; j++) {
-        byte shade = tmap[offset++];
-        if (shade != 0 && z < zbuf[pbufOffset])
-          g3d.shadeTextPixel(pbufOffset, z, argb, bgargb, shade);
-        pbufOffset++;
-      }
-      pbufOffset += (renderWidth - textWidth);
-    }
-  }
-  
-  private static void plotClipped(int x, int y, int z, int argb, int bgargb,
-                                  JmolRendererInterface jmolRenderer,
-                                  int textWidth, int textHeight, byte[] tmap) {
-    for (int offset = 0, i = 0; i < textHeight; i++) {
-      for (int j = 0; j < textWidth; j++) {
-        byte shade = tmap[offset++];
-        if (shade != 0)
-          jmolRenderer.plotImagePixel(argb, x + j, y + i, z, shade, bgargb);
-      }
-    }
-  }
-
   /**
    * 
    * @param text

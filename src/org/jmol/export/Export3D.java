@@ -30,7 +30,6 @@ import org.jmol.api.JmolRendererInterface;
 import org.jmol.g3d.HermiteRenderer;
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
-import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 
@@ -800,7 +799,7 @@ public class Export3D implements JmolRendererInterface {
 
   @Override
   public void plotImagePixel(int argb, int x, int y, int z, int shade,
-                             int bgargb) {
+                             int bgargb, int width, int height, int[] pbuf, Object p, int transpLog) {
     // from Text3D
     if (isWebGL)
       return;

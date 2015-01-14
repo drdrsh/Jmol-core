@@ -528,7 +528,14 @@ final public class EllipsoidsRenderer extends ShapeRenderer {
       s1.scaleAdd(-3, s0, s1);
       pt1.set(s1.x, s1.y, s1.z);
       matScreenToEllipsoid.rotate(pt1);
-      selectedOctant = GData.getScreenOctant(pt1);
+        int i = 0;
+        if (pt1.x < 0)
+          i |= 1;
+        if (pt1.y < 0)
+          i |= 2;
+        if (pt1.z < 0)
+          i |= 4;
+       selectedOctant = i;
     }
   }  
 }

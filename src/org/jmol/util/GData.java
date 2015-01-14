@@ -6,7 +6,6 @@ import javajs.awt.Font;
 import javajs.util.AU;
 import javajs.util.M3;
 import javajs.util.P3;
-import javajs.util.P3i;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -45,8 +44,8 @@ public class GData implements JmolGraphicsInterface {
   public int ambientOcclusion;
 
   protected short colixCurrent;
-  protected int argbCurrent;
-
+  public int argbCurrent;
+  protected int ht3; // ht * 3, for cylinders
   public boolean isPass2;
   protected int textY;
   
@@ -491,6 +490,7 @@ public class GData implements JmolGraphicsInterface {
     displayMaxX = width - displayMinX;
     displayMinY = -(height >> 1);
     displayMaxY = height - displayMinY;
+    ht3 = height * 3;
     bufferSize = width * height;
   }
 
@@ -639,16 +639,6 @@ public class GData implements JmolGraphicsInterface {
   @Override
   public void renderAllStrings(Object jmolRenderer) {
     // only in Graphics3D
-  }
-  public static int getScreenOctant(P3 pt) {
-    int i = 0;
-    if (pt.x < 0)
-      i |= 1;
-    if (pt.y < 0)
-      i |= 2;
-    if (pt.z < 0)
-      i |= 4;
-    return i;
   }
 
   /**
