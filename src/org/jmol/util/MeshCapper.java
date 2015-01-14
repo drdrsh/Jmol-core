@@ -262,11 +262,10 @@ public class MeshCapper {
     //                /        \
     //              -/----------*-<
     //              /            \
-
     CapVertex q = v.qnext;
     v.qnext = null; // indicates already processed
     if (dumping)
-      Logger.info(this.toString());
+      Logger.info(v.toString());
     if (v.prev == v.next)
       return q;
 
@@ -545,11 +544,12 @@ public class MeshCapper {
 
   /**
    * Find the lowest ascender or descender above scan line bounding the region
-   * for this point. In the case of a region that consists of a single edge
-   * with descender above ascender, this will return the ascender.
+   * for this point. In the case of a region that consists of a single edge with
+   * descender above ascender, this will return the ascender.
    * 
    * [This is MOST confusing in the M3O book.]
-   * @param v 
+   * 
+   * @param v
    * 
    * @return pt
    */
@@ -572,21 +572,33 @@ public class MeshCapper {
       CapVertex d = r[DESCENDER];
       if (d == r[ASCENDER])
         continue;
-      float xp = (d.region == null ? d.x : v.interpolateX(d, d.next));
-      if (xp > v.x)
+      boolean isEdge = (d.region != null);
+      float xp = (isEdge? v.interpolateX(d, d.next) : d.x);
+      if (xp > v.x) {
+        if (isEdge && closest != null && d.x < closest.x) {
+          // d is an unfinished edge, v is off to left, 
+          // but closest is to the right of d
+          closest = null;
+          ymin = Float.MAX_VALUE;
+        }
         continue;
+      }
       // check right edge
       CapVertex a = r[ASCENDER];
-      xp = (a.region == null ? a.x : v.interpolateX(a, a.prev));
-      if (xp < v.x)
+      isEdge = (a.region != null);
+      xp = (isEdge ? v.interpolateX(a, a.prev) : a.x);
+      if (xp < v.x) {
+        if (isEdge && closest != null && closest.x < a.x) {
+          // a is an unfinished edge, v is off to right, 
+          // but closest is to the left of a
+          closest = null;
+          ymin = Float.MAX_VALUE;
+        }
         continue;
-      if (d.y < ymin) {
-        ymin = d.y;
-        closest = d;
       }
-      if (a.y < ymin) {
-        ymin = a.y;
-        closest = a;
+      if (r[LAST].y < ymin) {
+        ymin = r[LAST].y;
+        closest = r[LAST];
       }
     }
     return closest;
