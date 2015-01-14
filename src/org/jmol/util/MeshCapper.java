@@ -165,16 +165,16 @@ public class MeshCapper {
 //  dumping = testing = true;
 //  int n = 0;
 //  vs = new CapVertex[] {
-////   new CapVertex(P3.new3(0,  10,  0), n++),
-////   new CapVertex(P3.new3(0,  0,  0), n++), 
-////   new CapVertex(P3.new3(1,  0,  0), n++), 
-////   new CapVertex(P3.new3(2,  0,  0), n++)
-//      
-////      new CapVertex(P3.new3(0,  10,  0), n++)
-////      new CapVertex(P3.new3(-2,  0,  0), n++),
-////      new CapVertex(P3.new3(-1,  0,  0), n++), 
-////      new CapVertex(P3.new3(0,  0,  0), n++)
-//      
+//   new CapVertex(P3.new3(0,  10,  0), n++),
+//   new CapVertex(P3.new3(0,  0,  0), n++), 
+//   new CapVertex(P3.new3(1,  0,  0), n++), 
+//   new CapVertex(P3.new3(2,  0,  0), n++)
+      
+//      new CapVertex(P3.new3(0,  10,  0), n++)
+//      new CapVertex(P3.new3(-2,  0,  0), n++),
+//      new CapVertex(P3.new3(-1,  0,  0), n++), 
+//      new CapVertex(P3.new3(0,  0,  0), n++)
+      
 //      new CapVertex(P3.new3(0,  10,  0), n++),
 //      new CapVertex(P3.new3(-2,  0,  0), n++),
 //      new CapVertex(P3.new3(-1,  0,  0), n++), 
@@ -545,7 +545,9 @@ public class MeshCapper {
   /**
    * Find the lowest ascender or descender above scan line bounding the region
    * for this point. In the case of a region that consists of a single edge with
-   * descender above ascender, this will return the ascender.
+   * descender above ascender, this will return the ascender. In the case where 
+   * there are two independent regions, it is possible for the lowest to be missed,
+   * but to no import.
    * 
    * [This is MOST confusing in the M3O book.]
    * 
@@ -574,27 +576,25 @@ public class MeshCapper {
         continue;
       boolean isEdge = (d.region != null);
       float xp = (isEdge? v.interpolateX(d, d.next) : d.x);
-      if (xp > v.x) {
-        if (isEdge && closest != null && d.x < closest.x) {
-          // d is an unfinished edge, v is off to left, 
-          // but closest is to the right of d
-          closest = null;
-          ymin = Float.MAX_VALUE;
-        }
+      if (xp > v.x)
         continue;
+      if (isEdge && closest != null && closest.x < d.x) {
+        // d is an unfinished edge on the left 
+        // but closest is to the left of d -- reset
+        closest = null;
+        ymin = Float.MAX_VALUE;
       }
       // check right edge
       CapVertex a = r[ASCENDER];
       isEdge = (a.region != null);
       xp = (isEdge ? v.interpolateX(a, a.prev) : a.x);
-      if (xp < v.x) {
-        if (isEdge && closest != null && closest.x < a.x) {
-          // a is an unfinished edge, v is off to right, 
-          // but closest is to the left of a
-          closest = null;
-          ymin = Float.MAX_VALUE;
-        }
+      if (xp < v.x)
         continue;
+      if (isEdge && closest != null && closest.x > a.x) {
+        // a is an unfinished edge on the right 
+        // but closest is to the right of d -- reset
+        closest = null;
+        ymin = Float.MAX_VALUE;
       }
       if (r[LAST].y < ymin) {
         ymin = r[LAST].y;
