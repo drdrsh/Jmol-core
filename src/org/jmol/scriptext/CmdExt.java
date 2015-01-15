@@ -2081,7 +2081,8 @@ public class CmdExt implements JmolCmdExtension {
     boolean mod = true;
     boolean isQ = false;
     BS bs = null;
-    switch (getToken(1).tok) {
+    int i = 1;
+    switch (getToken(i).tok) {
     case T.off:
       mod = false;
       //$FALL-THROUGH$
@@ -2108,14 +2109,40 @@ public class CmdExt implements JmolCmdExtension {
       qtOffset = e.getPoint3f(1, false);
       isQ = (tokAt(e.iToken + 1) == T.on);
       break;
+    case T.identifier:
+      String s = e.theToken.value.toString();
+      i++;
+      if (s.equalsIgnoreCase("t")) {
+        e.theTok = T.decimal;
+      } else if (s.equalsIgnoreCase("m") || s.equalsIgnoreCase("q")) {
+        e.theTok = T.integer;
+      } else {
+        invArg();
+      }
+      //$FALL-THROUGH$
     case T.decimal:
-      float t1 = floatParameter(1);
-      qtOffset = P3.new3(t1, t1, t1);
-      break;
     case T.integer:
-      int t = intParameter(1);
-      qtOffset = P3.new3(t, t, t);
-      isQ = true;
+      // allows for form of number -- integer or float -- to determine type,
+      // but allso allows using "t" or "q" followed by a number or {t1 t2 t3}
+      switch (e.theTok) {
+      case T.decimal:
+        if (isFloatParameter(i)) {
+          float t1 = floatParameter(i);
+          qtOffset = P3.new3(t1, t1, t1);
+        } else {
+          qtOffset = e.getPoint3f(i, false);
+        }
+        break;
+      case T.integer:
+        if (tokAt(i) == T.integer) {
+          int t = intParameter(i);
+          qtOffset = P3.new3(t, t, t);
+        } else {
+          qtOffset = e.getPoint3f(i, false);
+        }
+        isQ = true;
+        break;
+      }
       break;
     case T.scale:
       float scale = floatParameter(2);
