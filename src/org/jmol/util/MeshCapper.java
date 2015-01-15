@@ -64,15 +64,15 @@ public class MeshCapper {
    * initialization only
    */
   private Map<Integer, CapVertex> capMap;
-  private Lst<CapVertex> vertices;  
-  
+  private Lst<CapVertex> vertices;
+
   /**
-   * dynamic region processing. These are just 
-   * [DESCENDER, ASCENDER, LAST] for each region 
+   * dynamic region processing. These are just [DESCENDER, ASCENDER, LAST] for
+   * each region
    * 
    */
   private Lst<CapVertex[]> lstRegions;
-  
+
   private static final int DESCENDER = 0;
   private static final int ASCENDER = 1;
   private static final int LAST = 2;
@@ -85,14 +85,14 @@ public class MeshCapper {
   /////////////// initialization //////////////////
 
   /**
-   * @param slicer 
+   * @param slicer
    * @return this
    */
   MeshCapper set(MeshSlicer slicer) {
     // resolution has not been necessary
     this.slicer = slicer;
     dumping = Logger.debugging;
-    return this;    
+    return this;
   }
 
   void clear() {
@@ -149,7 +149,7 @@ public class MeshCapper {
   private T3 getInputPoint(CapVertex v) {
     return (testing ? P3.newP(v) : slicer.m.vs[v.ipt]);
   }
-  
+
   /**
    * Export triangle to MeshSlicer
    * 
@@ -162,31 +162,30 @@ public class MeshCapper {
   }
 
   private CapVertex[] test(CapVertex[] vs) {
-//  dumping = testing = true;
-//  int n = 0;
-//  vs = new CapVertex[] {
-//   new CapVertex(P3.new3(0,  10,  0), n++),
-//   new CapVertex(P3.new3(0,  0,  0), n++), 
-//   new CapVertex(P3.new3(1,  0,  0), n++), 
-//   new CapVertex(P3.new3(2,  0,  0), n++)
-      
-//      new CapVertex(P3.new3(0,  10,  0), n++)
-//      new CapVertex(P3.new3(-2,  0,  0), n++),
-//      new CapVertex(P3.new3(-1,  0,  0), n++), 
-//      new CapVertex(P3.new3(0,  0,  0), n++)
-      
-//      new CapVertex(P3.new3(0,  10,  0), n++),
-//      new CapVertex(P3.new3(-2,  0,  0), n++),
-//      new CapVertex(P3.new3(-1,  0,  0), n++), 
-//      new CapVertex(P3.new3(0,  0,  0), n++), 
-//      new CapVertex(P3.new3(0,  6,  0), n++), 
-//      new CapVertex(P3.new3(0,  8,  0), n++) 
-//  };
-//  for (int i = 0; i < n; i++)
-//    vs[i].link(vs[(i + 1)%n]);
-  return vs;
-}
+    //  dumping = testing = true;
+    //  int n = 0;
+    //  vs = new CapVertex[] {
+    //   new CapVertex(P3.new3(0,  10,  0), n++),
+    //   new CapVertex(P3.new3(0,  0,  0), n++), 
+    //   new CapVertex(P3.new3(1,  0,  0), n++), 
+    //   new CapVertex(P3.new3(2,  0,  0), n++)
 
+    //      new CapVertex(P3.new3(0,  10,  0), n++)
+    //      new CapVertex(P3.new3(-2,  0,  0), n++),
+    //      new CapVertex(P3.new3(-1,  0,  0), n++), 
+    //      new CapVertex(P3.new3(0,  0,  0), n++)
+
+    //      new CapVertex(P3.new3(0,  10,  0), n++),
+    //      new CapVertex(P3.new3(-2,  0,  0), n++),
+    //      new CapVertex(P3.new3(-1,  0,  0), n++), 
+    //      new CapVertex(P3.new3(0,  0,  0), n++), 
+    //      new CapVertex(P3.new3(0,  6,  0), n++), 
+    //      new CapVertex(P3.new3(0,  8,  0), n++) 
+    //  };
+    //  for (int i = 0; i < n; i++)
+    //    vs[i].link(vs[(i + 1)%n]);
+    return vs;
+  }
 
   /////////////// processing //////////////////
 
@@ -206,7 +205,7 @@ public class MeshCapper {
 
     // get transform to xy plane
     // to give best precision
-    
+
     V3 vab = V3.newVsub(vertices.get(0), vertices.get(1));
     V3 vac = V3.newV(norm);
     vac.cross(vac, vab);
@@ -220,36 +219,37 @@ public class MeshCapper {
     for (int i = vs.length; --i >= 0;)
       m4inv.rotTrans2(vs[i], vs[i]);
     vertices = null;
-    
+
     // link by Y,X sort
 
     vs = test(vs);
 
     Logger.info("MeshCapper using " + vs.length + " vertices");
 
-
     CapVertex v0 = vs[0].sort(vs);
     if (v0 == null) {
       Logger.error("two identical points -- aborting");
       return;
     }
-    
+
     lstRegions = new Lst<CapVertex[]>();
 
     // scan the plane
-    
+
     CapVertex v = v0;
     do {
       v = process(v);
     } while (v != v0);
     clear();
-    Logger.info("MeshCapper created " + nTriangles + " triangles " + nRegions + " regions");
+    Logger.info("MeshCapper created " + nTriangles + " triangles " + nRegions
+        + " regions");
 
   }
 
   /**
    * Handle the point; mark as processed.
-   * @param v 
+   * 
+   * @param v
    * 
    * @return next point to process
    */
@@ -274,9 +274,9 @@ public class MeshCapper {
 
     if (dumping)
       Logger.info("#" + (isAscending ? v.next.id : "    ") + "    "
-        + (isDescending ? v.prev.id : "") + "\n#"
-        + (isAscending ? "   \\" : "    ")
-        + (isDescending ? "    /\n" : "\n") + "#    " + v.id);
+          + (isDescending ? v.prev.id : "") + "\n#"
+          + (isAscending ? "   \\" : "    ")
+          + (isDescending ? "    /\n" : "\n") + "#    " + v.id);
 
     if (!isDescending && !isAscending) {
       CapVertex last = getLastPoint(v);
@@ -328,11 +328,11 @@ public class MeshCapper {
     return q;
   }
 
-
   /**
-   * Process a standard monotonic region, cleaving off as many triangles as possible.
+   * Process a standard monotonic region, cleaving off as many triangles as
+   * possible.
    * 
-   * @param v 
+   * @param v
    * @param isDescending
    */
   private void processMonotonic(CapVertex v, boolean isDescending) {
@@ -575,8 +575,9 @@ public class MeshCapper {
       if (d == r[ASCENDER])
         continue;
       boolean isEdge = (d.region != null);
-      boolean isOK = ((isEdge ? v.interpolateX(d, d.next) : d.x) < v.x); 
-      if (isEdge && closest != null && closest.x != d.x && isOK == (closest.x < d.x)) {
+      boolean isOK = ((isEdge ? v.interpolateX(d, d.next) : d.x) < v.x);
+      if (isEdge && closest != null && closest.x != d.x
+          && isOK == (closest.x < d.x)) {
         // d is an unfinished edge on the left 
         // and closest is further to the left
         // or
@@ -590,8 +591,9 @@ public class MeshCapper {
       // check that the ascending edge is to the right
       CapVertex a = r[ASCENDER];
       isEdge = (a.region != null);
-      isOK = ((isEdge ? v.interpolateX(a, a.prev) : a.x) >= v.x); 
-      if (isEdge && closest != null && closest.x != a.x && isOK == (closest.x > a.x)) {
+      isOK = ((isEdge ? v.interpolateX(a, a.prev) : a.x) >= v.x);
+      if (isEdge && closest != null && closest.x != a.x
+          && isOK == (closest.x > a.x)) {
         // a is an unfinished edge on the left 
         // and closest is further to the left
         // or 
@@ -619,7 +621,7 @@ public class MeshCapper {
    * @return true if properly wound -- (v1-v0).cross.(v2-v0).dot.norm > 0
    */
   private boolean checkWinding(CapVertex v0, CapVertex v1, CapVertex v2) {
-    return (v1.x-v0.x) * (v2.y-v0.y) > (v1.y - v0.y) * (v2.x - v0.x);
+    return (v1.x - v0.x) * (v2.y - v0.y) > (v1.y - v0.y) * (v2.x - v0.x);
   }
 
   /**
@@ -630,8 +632,7 @@ public class MeshCapper {
    * @param v2
    * @param note
    */
-  private void addTriangle(CapVertex v0, CapVertex v1, CapVertex v2,
-                           String note) {
+  private void addTriangle(CapVertex v0, CapVertex v1, CapVertex v2, String note) {
     //System.out.println("#" + test + " " + note);
     ++nTriangles;
     if (checkWinding(v0, v1, v2)) {
@@ -655,7 +656,7 @@ public class MeshCapper {
   }
 
   /**
-   *        for debugging
+   * for debugging
    * 
    * @param index
    * @param v0
@@ -663,13 +664,13 @@ public class MeshCapper {
    * @param v2
    * @param color
    */
-  private void drawTriangle(int index, CapVertex v0, CapVertex v1, CapVertex v2,
-                    String color) {
+  private void drawTriangle(int index, CapVertex v0, CapVertex v1,
+                            CapVertex v2, String color) {
     T3 p0 = getInputPoint(v0);
     T3 p1 = getInputPoint(v1);
     T3 p2 = getInputPoint(v2);
-    Logger.info("draw " + color + index + "/* " + v0.id + " " + v1.id
-        + " " + v2.id + " */" + p0 + p1 + p2 + " color " + color);
+    Logger.info("draw " + color + index + "/* " + v0.id + " " + v1.id + " "
+        + v2.id + " */" + p0 + p1 + p2 + " color " + color);
   }
 
   /**
@@ -751,9 +752,9 @@ public class MeshCapper {
     }
 
     /**
-     * Get interpolated x for the scan line intersection with an edge.
-     * This method is used both in finding the last point for a split
-     * and for checking winding on same-side addition.
+     * Get interpolated x for the scan line intersection with an edge. This
+     * method is used both in finding the last point for a split and for
+     * checking winding on same-side addition.
      * 
      * determine
      * 
@@ -764,7 +765,7 @@ public class MeshCapper {
     protected float interpolateX(CapVertex v1, CapVertex v2) {
       float dy12 = v2.y - v1.y;
       float dx12 = v2.x - v1.x;
-      return (dy12 != 0 ? v1.x + (y - v1.y) * dx12 / dy12 
+      return (dy12 != 0 ? v1.x + (y - v1.y) * dx12 / dy12
           : dx12 > 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
     }
 
@@ -801,7 +802,8 @@ public class MeshCapper {
      */
     private String dumpRegion() {
       String s = "\n#REGION d=" + region[MeshCapper.DESCENDER].id + " a="
-          + region[MeshCapper.ASCENDER].id + " last=" + region[MeshCapper.LAST].id + "\n# ";
+          + region[MeshCapper.ASCENDER].id + " last="
+          + region[MeshCapper.LAST].id + "\n# ";
       CapVertex v = region[MeshCapper.ASCENDER];
       while (true) {
         s += v.id + " ";
