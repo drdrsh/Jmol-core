@@ -82,12 +82,12 @@ class TextRenderer {
 
   static int plot(int x, int y, int z, int argb, int bgargb,
                          String text, Font font3d,
-                         Graphics3D g3d, JmolRendererInterface jmolRenderer, boolean antialias) {
+                         Graphics3D g3d, JmolRendererInterface jr, boolean antialias) {
     if (text.length() == 0)
       return 0;
     //System.out.println(x + "  " + y + " " + text);
     if (text.indexOf("<su") >= 0 || text.indexOf("<color") >= 0)
-      return plotByCharacter(x, y, z, argb, bgargb, text, font3d, g3d, jmolRenderer,
+      return plotByCharacter(x, y, z, argb, bgargb, text, font3d, g3d, jr,
           antialias);
     int offset = font3d.getAscent();
     //if (antialias)
@@ -116,9 +116,9 @@ class TextRenderer {
     Pixelator p = g.pixel;
     int tLog = g.translucencyLog;
     
-    if (jmolRenderer != null
-        || (x < 0 || x + text3d.width > width || y < 0 || y + text3d.height > height)) {
-      JmolRendererInterface jr = (jmolRenderer == null ? g3d : jmolRenderer);
+    if (jr != null
+        || (x < 0 || x + text3d.width > width || y < 0 || y + text3d.height > height) 
+        && (jr = g3d) != null) {
       for (int off = 0, i = 0; i < textHeight; i++) {
         for (int j = 0; j < textWidth; j++) {
           byte shade = tmap[off++];
