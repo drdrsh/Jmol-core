@@ -118,12 +118,12 @@ class TextRenderer {
     
     if (jmolRenderer != null
         || (x < 0 || x + text3d.width > width || y < 0 || y + text3d.height > height)) {
-
+      JmolRendererInterface jr = (jmolRenderer == null ? g3d : jmolRenderer);
       for (int off = 0, i = 0; i < textHeight; i++) {
         for (int j = 0; j < textWidth; j++) {
           byte shade = tmap[off++];
           if (shade != 0)
-            jmolRenderer.plotImagePixel(argb, x + j, y + i, z, shade, bgargb, width, height, zbuf, p, tLog);
+            jr.plotImagePixel(argb, x + j, y + i, z, shade, bgargb, width, height, zbuf, p, tLog);
         }
       }
       
