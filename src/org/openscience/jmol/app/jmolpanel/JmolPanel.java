@@ -119,6 +119,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
   protected DisplayPanel display;
   protected GaussianDialog gaussianDialog;
+  protected NBODialog nboDialog;
   protected RecentFilesDialog recentFiles;
   protected AtomSetChooser atomSetChooser;
   protected JFrame frame;
@@ -196,6 +197,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private static final String copyScriptActionProperty = "copyScript";
   private static final String surfaceToolActionProperty = "surfaceTool";  private static final String pasteClipboardActionProperty = "pasteClipboard";
   private static final String gaussianAction = "gauss";
+  private static final String nboAction = "nbo";
   private static final String resizeAction = "resize";
   //private static final String saveasAction = "saveas";
   //private static final String vibAction = "vibrate";
@@ -1017,7 +1019,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       new RecentFilesAction(), povrayAction, writeAction, toWebAction, 
       new ScriptWindowAction(), new ScriptEditorAction(),
       new AtomSetChooserAction(), viewMeasurementTableAction, 
-      new GaussianAction(), new ResizeAction(), surfaceToolAction }
+      new GaussianAction(), new NBOAction(), new ResizeAction(), surfaceToolAction }
   ;
 
   class CloseAction extends AbstractAction {
@@ -1096,6 +1098,20 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       if (gaussianDialog == null)
         gaussianDialog = new GaussianDialog(frame, vwr);
       gaussianDialog.setVisible(true);
+    }
+  }
+    
+  class NBOAction extends AbstractAction {
+    public NBOAction() {
+      super(nboAction);
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      if (nboDialog == null)
+        nboDialog = new NBODialog(frame, vwr);
+      else
+        nboDialog.setVisible(true);
     }
   }
     
@@ -1629,6 +1645,10 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     if (gaussianDialog != null) {
       gaussianDialog.dispose();
       gaussianDialog = null;
+    }
+    if (nboDialog != null) {
+      nboDialog.dispose();
+      nboDialog = null;
     }
     boolean doTranslate = GT.setDoTranslate(true);
     getDialogs();

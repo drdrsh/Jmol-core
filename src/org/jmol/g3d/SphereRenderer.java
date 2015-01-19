@@ -25,7 +25,6 @@
 package org.jmol.g3d;
 
 //import javax.vecmath.Vector4f;  !NO -- requires Vector4d in applet
-import org.jmol.util.GData;
 
 import javajs.util.M3;
 import javajs.util.M4;

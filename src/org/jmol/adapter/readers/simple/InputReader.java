@@ -204,9 +204,19 @@ public class InputReader extends AtomSetCollectionReader {
   private Map<String, Float> symbolicMap = new Hashtable<String, Float>();
   private boolean isMopac;
   private boolean isHeader = true;
+  private boolean firstLine = true;
 
   @Override
   protected boolean checkLine() throws Exception {
+    if (firstLine) {
+      firstLine = false;
+      String[] tokens = getTokens();
+      if (tokens.length == 3 && parseIntStr(tokens[0]) > 0 && parseIntStr(tokens[1]) > 0 && parseIntStr(tokens[2]) > 0) {
+        // NBO CON file format -- must be explicitly indicated
+        readConFile();
+        return continuing = false;
+      }
+    }
     // easiest just to grab all lines that are comments or symbolic first, then do the processing of atoms.
     cleanLine();
     if (line.length() <= 2) // for Mopac, could be blank or an atom symbol, but not an atom name
@@ -298,6 +308,38 @@ public class InputReader extends AtomSetCollectionReader {
     }
     lineBuffer.addLast(tokens);
     return true;
+  }
+
+  
+  private void readConFile() throws Exception {
+
+//  1   13    1
+//  5 CH4
+//H    1   -1.090000    0.000000    0.000000    1    2
+//C    2    0.000000    0.000000    0.000000    6    1    3    4    5
+//H    3    0.363333    1.027662    0.000000    1    2
+//H    4    0.363333   -0.513831   -0.889981    1
+//H    5    0.363333   -0.513831    0.889981    1    2
+//
+
+     rd();
+     Map<String, Atom> map = new Hashtable<String, Atom>();
+     Lst<String[]>lstTokens = new Lst<String[]>();
+     int n = 0;
+     while (rd() != null && line.length() > 40) {
+       n++;
+       String[] tokens = getTokens();
+       lstTokens.addLast(tokens);
+       map.put(tokens[1], addAtomXYZSymName(tokens, 2, tokens[0], null)); 
+     }
+     for (int i = 0; i < n; i++) {
+       String[] tokens = lstTokens.get(i);
+       Atom a = map.get(tokens[1]);
+       for (int j = 6; j < tokens.length; j++)
+         asc.addBond(new Bond(a.index, map.get(tokens[j]).index, 1));
+     }
+     
+    
   }
 
   private void readCFI() throws Exception {

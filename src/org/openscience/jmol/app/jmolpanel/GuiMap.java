@@ -183,6 +183,7 @@ public class GuiMap {
     labels.put("definecenter", GT._("Define &Center"));
     labels.put("tools", GT._("&Tools"));
     labels.put("gauss", GT._("&Gaussian..."));
+    labels.put("nbo", GT._("&NBO..."));
     labels.put("viewMeasurementTable", GT._("&Measurements") + "...");
     labels.put("distanceUnitsMenu", GT._("Distance &Units"));
     labels.put("distanceNanometersScript", GT._("&Nanometers 1E-9"));
