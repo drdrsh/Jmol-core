@@ -1043,7 +1043,6 @@ abstract class ScriptTokenParser {
     int tok = tokPeek();
     residueSpecCodeGenerated = false;
     boolean checkResNameSpec = false;
-    int tok0 = tok;
     switch (tok) {
     case T.nada:
     case T.dna:
@@ -1096,7 +1095,7 @@ abstract class ScriptTokenParser {
       tok = tokPeek();
     }
     if (tok == T.colon || tok == T.times 
-        || tok0 ==  T.leftsquare && 
+        || theToken.tok ==  T.rightsquare && 
             (tok == T.identifier
               || tok == T.x || tok == T.y || tok == T.z || tok == T.w)
               || tok == T.integer && !wasInteger) {
