@@ -1045,17 +1045,26 @@ abstract class ScriptTokenParser {
     boolean checkResNameSpec = false;
     switch (tok) {
     case T.nada:
+      // terminal
     case T.dna:
     case T.rna:
       return false;
-    case T.colon:
     case T.integer:
+      // select 33    
+      // select 33-35
+    case T.colon:
+      // select :a
     case T.percent:
+      // select %1
     case T.seqcode:
+      // sequence code precompiled
       break;
     case T.times:
+      // all
     case T.leftsquare:
+      // [ala]
     case T.identifier:
+      // ala
       checkResNameSpec = true;
       break;
     default:
@@ -1077,28 +1086,26 @@ abstract class ScriptTokenParser {
         return false;
       specSeen = true;
       tok = tokPeek();
-      if (T.tokAttr(tok, T.comparator)) {
-        returnToken();
-        ltokenPostfix.remove(ltokenPostfix.size() - 1);
-        return false;
-      }
-
     }
-    boolean wasInteger = false;
-    if (tok == T.times || tok == T.integer || tok == T.seqcode) {
-      wasInteger = (tok == T.integer);
-      if (tokPeekIs(T.times))
-        getToken();
-      else if (!clauseSequenceSpec())
+    if (tok == T.integer || tok == T.times || tok == T.seqcode) {
+      // [ala]33 
+      // ala33
+      // [ala]*
+      // [ala]<precompiled seqcode
+      if (!clauseSequenceSpec())
         return false;
       specSeen = true;
       tok = tokPeek();
     }
-    if (tok == T.colon || tok == T.times 
-        || theToken.tok ==  T.rightsquare && 
-            (tok == T.identifier
-              || tok == T.x || tok == T.y || tok == T.z || tok == T.w)
-              || tok == T.integer && !wasInteger) {
+    if (tok == T.colon
+// BH 1/19/15 reduced allowance here -- just too much possible
+// that is undocumented, especially with multiple-character chains 
+//        || tok == T.times 
+//        || theToken.tok ==  T.rightsquare && 
+//            (tok == T.identifier
+//              || tok == T.x || tok == T.y || tok == T.z || tok == T.w)
+//              || tok == T.integer && !wasInteger
+              ) {
       if (!clauseChainSpec(tok))
         return false;
       specSeen = true;
@@ -1116,7 +1123,9 @@ abstract class ScriptTokenParser {
       specSeen = true;
       tok = tokPeek();
     }
-    if (tok == T.colon || tok == T.divide) {
+    if (tok == T.divide) { 
+      // BH 1/19/2015: was || tok == T.colon here, but then that would
+      // allow undocumented [ala]:a:1 to be the same as [ala]:a/1 ?? 
       if (!clauseModelSpec())
         return false;
       specSeen = true;
@@ -1131,8 +1140,13 @@ abstract class ScriptTokenParser {
     return true;
   }
 
+  /**
+   * [a] or just a
+   * @return true if handled
+   */
   private boolean clauseResNameSpec() {
     getToken();
+    int tok = tokPeek();
     switch (theToken.tok) {
     case T.times:
       return true;
@@ -1145,17 +1159,21 @@ abstract class ScriptTokenParser {
       if (strSpec == "")
         return true;
       int pt;
-      if (strSpec.length() > 0 && (pt = strSpec.indexOf("*")) >= 0
-          && pt != strSpec.length() - 1)
-        return error(ERROR_residueSpecificationExpected);
-      strSpec = strSpec.toUpperCase();
-      return generateResidueSpecCode(T.o(T.spec_name_pattern, strSpec));
+      return (strSpec.length() > 0 && (pt = strSpec.indexOf("*")) >= 0
+          && pt != strSpec.length() - 1 ? error(ERROR_residueSpecificationExpected)
+              : generateResidueSpecCode(T.o(T.spec_name_pattern, strSpec.toUpperCase())));
     default:
+      if (T.tokAttr(tok, T.comparator)) {
+        // a variable, not a name. For example:
+        // a > 3
+        // _e = 55
+        returnToken();
+        return false;
+      }
       //check for a * in the next token, which
       //would indicate this must be a name with wildcard
-
       String res = (String) theValue;
-      if (tokPeekIs(T.times)) {
+      if (tok == T.times) {
         res = theValue + "*";
         getToken();
       }
@@ -1164,6 +1182,8 @@ abstract class ScriptTokenParser {
   }
 
   private boolean clauseSequenceSpec() {
+    if (tokPeek() == T.times)
+      return  (getToken() != null); // true
     T seqToken = getSequenceCode(false);
     if (seqToken == null)
       return false;
@@ -1187,13 +1207,16 @@ abstract class ScriptTokenParser {
   private T getSequenceCode(boolean isSecond) {
     int seqcode = Integer.MAX_VALUE;
     int seqvalue = Integer.MAX_VALUE;
-    int tokPeek = tokPeek();
-    if (tokPeek == T.seqcode)
+    switch (tokPeek()) {
+    case T.seqcode:
       seqcode = tokenNext().intValue;
-    else if (tokPeek == T.integer)
+      break;
+    case T.integer:
       seqvalue = tokenNext().intValue;
-    else if (!isSecond){
-      return null;
+      break;
+    default:
+      if (!isSecond)
+        return null;
       // can have open-ended range  
       // select 3-
     }
@@ -1201,71 +1224,65 @@ abstract class ScriptTokenParser {
   }
 
   /**
-   * [:] [term]
+   * [:] [chars]
+   * 
+   * [:] ["chars"]
+   * 
    * [:] [*]
+   * 
    * [:] [0-9]
+   * 
    * [:] [?]
    * 
+   * [:] (empty chain)
+   * 
    * @param tok
-   * @return  true if chain
+   * @return true if chain handled
    */
   private boolean clauseChainSpec(int tok) {
-    int tok0 = tok;
-    if (tok == T.colon) {
-      tokenNext();
-      tok = tokPeek();
-      if (isSpecTerminator(tok))
-        return generateResidueSpecCode(T.tv(T.spec_chain, 0,
-            "spec_chain"));
-    }
-    int chain;
-    switch (tok) {
-    case T.times:
-      return (getToken() != null);
-    case T.integer:
-      getToken();
-      int val = theToken.intValue;
-      if (val < 0 || val > 9999)
-        return error(ERROR_invalidChainSpecification);
-      chain = vwr.getChainID("" + val, false);
-      break;
-    default:
-      if (tok0 != T.colon) {
-        return false;
+    tokenNext();
+    tok = tokPeek();
+    String strChain;
+    if (isTerminator(tok)) {
+      strChain = " ";
+    } else {
+      switch (tok) {
+      case T.times:
+        return (getToken() != null); // true
+      case T.integer:
+        getToken();
+        int val = theToken.intValue;
+        if (val < 0 || val > 9999)
+          return error(ERROR_invalidChainSpecification);
+        strChain = "" + val;
+        break;
+      case T.string:
+        vwr.getChainID("a", true); // forces chain case
+        //$FALL-THROUGH$
+      default:
+        strChain = "" + getToken().value;
+        break;
       }
-      String strChain = "" + getToken().value;
-      if (strChain.equals("?"))
+      if (strChain.length() == 0)
+        strChain = " ";
+      else if (strChain.equals("?"))
         return true;
-      chain = vwr.getChainID(strChain, false);
-      break;
     }
-    return generateResidueSpecCode(T.tv(T.spec_chain, chain,
-        "spec_chain"));
+    int chain = vwr.getChainID(strChain, false);
+    return generateResidueSpecCode(T.tv(T.spec_chain, chain, "spec_chain"));
   }
 
-  private boolean isSpecTerminator(int tok) {
-    switch (tok) {
-    case T.nada:
-    case T.divide:
-    case T.opAnd:
-    case T.opOr:
-    case T.opNot:
-    case T.comma:
-    case T.percent:
-    case T.rightparen:
-    case T.rightbrace:
-      return true;
-    }
-    return false;
-  }
-
+  /**
+   * check for %x or % (null alternate)
+   * 
+   * @return true if no error
+   */
   private boolean clauseAlternateSpec() {
     tokenNext();
-    int tok = tokPeek();
-    if (isSpecTerminator(tok))
+    // check for termination -- is this really the full list?
+    if (isTerminator(tokPeek()))
       return generateResidueSpecCode(T.o(T.spec_alternate, null));
-    String alternate = (String) getToken().value;
-    switch (theToken.tok) {
+    switch (getToken().tok) {
     case T.times:
     case T.string:
     case T.integer:
@@ -1274,27 +1291,54 @@ abstract class ScriptTokenParser {
     default:
       return error(ERROR_invalidModelSpecification);
     }
-    //Logger.debug("alternate specification seen:" + alternate);
-    return generateResidueSpecCode(T.o(T.spec_alternate, alternate));
+    return generateResidueSpecCode(T.o(T.spec_alternate, theToken.value));
   }
 
+  /**
+   * we allow : and % to have null values
+   * @param tok
+   * @return true if terminating
+   */
+  private boolean isTerminator(int tok) {
+    switch (tok) {
+    case T.nada:
+    case T.divide:
+    case T.opAnd:
+    case T.opOr:
+    case T.opNot:
+    case T.comma:
+    case T.rightparen:
+    case T.rightbrace:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+
+  /**
+   * process /1   /1.1   /*
+   * 
+   * no longer accept just "/" here for implicit /1 
+   * 
+   * @return true if no error
+   */
   private boolean clauseModelSpec() {
     getToken();
-    if (tokPeekIs(T.times)) {
+    switch (tokPeek()) {
+    case T.times:
       getToken();
       return true;
-    }
-    switch (tokPeek()) {
     case T.integer:
       return generateResidueSpecCode(T.o(T.spec_model, Integer
           .valueOf(getToken().intValue)));
     case T.decimal:
       return generateResidueSpecCode(T.tv(T.spec_model, fixModelSpec(getToken()), theValue));
-    case T.comma:
-    case T.rightbrace:
-    case T.nada:
-      return generateResidueSpecCode(T.o(T.spec_model, Integer
-          .valueOf(1)));
+//    case T.comma:
+//    case T.rightbrace:
+//    case T.nada:
+//      return generateResidueSpecCode(T.o(T.spec_model, Integer
+//          .valueOf(1)));
     }
     return error(ERROR_invalidModelSpecification);
   }
