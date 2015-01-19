@@ -1043,6 +1043,7 @@ abstract class ScriptTokenParser {
     int tok = tokPeek();
     residueSpecCodeGenerated = false;
     boolean checkResNameSpec = false;
+    int tok0 = tok;
     switch (tok) {
     case T.nada:
     case T.dna:
@@ -1094,9 +1095,11 @@ abstract class ScriptTokenParser {
       specSeen = true;
       tok = tokPeek();
     }
-    if (tok == T.colon || tok == T.times || tok == T.identifier
-        || tok == T.x || tok == T.y || tok == T.z || tok == T.w
-        || tok == T.integer && !wasInteger) {
+    if (tok == T.colon || tok == T.times 
+        || tok0 ==  T.leftsquare && 
+            (tok == T.identifier
+              || tok == T.x || tok == T.y || tok == T.z || tok == T.w)
+              || tok == T.integer && !wasInteger) {
       if (!clauseChainSpec(tok))
         return false;
       specSeen = true;
@@ -1208,6 +1211,7 @@ abstract class ScriptTokenParser {
    * @return  true if chain
    */
   private boolean clauseChainSpec(int tok) {
+    int tok0 = tok;
     if (tok == T.colon) {
       tokenNext();
       tok = tokPeek();
@@ -1227,6 +1231,9 @@ abstract class ScriptTokenParser {
       chain = vwr.getChainID("" + val, false);
       break;
     default:
+      if (tok0 != T.colon) {
+        return false;
+      }
       String strChain = "" + getToken().value;
       if (strChain.equals("?"))
         return true;

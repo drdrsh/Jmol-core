@@ -1622,7 +1622,7 @@ public class ScriptMathProcessor {
     BS bs = SV.bsSelectVar(x2);
     Lst<T> tokens;
     int n = bs.cardinality();
-    if (n == 0
+    if (n == 0 || !abbr.endsWith("?")
         || (tokens = T.getAtomPropertiesLike(abbr.substring(0, abbr
             .length() - 1))) == null)
       return addXStr("");
