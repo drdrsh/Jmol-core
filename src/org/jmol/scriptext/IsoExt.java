@@ -93,6 +93,9 @@ public class IsoExt extends CmdExt {
     case JC.SHAPE_CONTACT:
       contact();
       break;
+    case JC.SHAPE_DIPOLES:
+      dipole();
+      break;
     case JC.SHAPE_DRAW:
       draw();
       break;
@@ -110,6 +113,137 @@ public class IsoExt extends CmdExt {
       break;
     }
     return null;
+  }
+
+  private void dipole() throws ScriptException {
+    ScriptEval eval = e;
+    // dipole intWidth floatMagnitude OFFSET floatOffset {atom1} {atom2}
+    String propertyName = null;
+    Object propertyValue = null;
+    boolean iHaveAtoms = false;
+    boolean iHaveCoord = false;
+    boolean idSeen = false;
+
+    eval.sm.loadShape(JC.SHAPE_DIPOLES);
+    if (tokAt(1) == T.list && listIsosurface(JC.SHAPE_DIPOLES))
+      return;
+    setShapeProperty(JC.SHAPE_DIPOLES, "init", null);
+    if (slen == 1) {
+      setShapeProperty(JC.SHAPE_DIPOLES, "thisID", null);
+      return;
+    }
+    for (int i = 1; i < slen; ++i) {
+      propertyName = null;
+      propertyValue = null;
+      switch (getToken(i).tok) {
+      case T.all:
+        propertyName = "all";
+        break;
+      case T.on:
+        propertyName = "on";
+        break;
+      case T.off:
+        propertyName = "off";
+        break;
+      case T.delete:
+        propertyName = "delete";
+        break;
+      case T.integer:
+      case T.decimal:
+        propertyName = "value";
+        propertyValue = Float.valueOf(floatParameter(i));
+        break;
+      case T.bitset:
+        if (tokAt(i + 1) == T.bitset) {
+          // fix for atomno2 < atomno1
+          setShapeProperty(JC.SHAPE_DIPOLES, "startSet", atomExpressionAt(i++));
+        } else {
+          // early Jmol
+          propertyName = "atomBitset";
+        }
+        //$FALL-THROUGH$
+      case T.expressionBegin:
+        if (propertyName == null)
+          propertyName = (iHaveAtoms || iHaveCoord ? "endSet" : "startSet");
+        propertyValue = atomExpressionAt(i);
+        i = eval.iToken;
+        if (tokAt(i + 1) == T.nada && propertyName == "startSet")
+          propertyName = "atomBitset";
+        iHaveAtoms = true;
+        break;
+      case T.leftbrace:
+      case T.point3f:
+        // {X, Y, Z}
+        P3 pt = getPoint3f(i, true);
+        i = eval.iToken;
+        propertyName = (iHaveAtoms || iHaveCoord ? "endCoord" : "startCoord");
+        propertyValue = pt;
+        iHaveCoord = true;
+        break;
+      case T.bonds:
+        propertyName = "bonds";
+        break;
+      case T.calculate:
+        propertyName = "calculate";
+        if (tokAt(i+1) == T.bitset || tokAt(i + 1) == T.expressionBegin) {
+          propertyValue = atomExpressionAt(++i);
+          i = eval.iToken;
+        }
+        break;
+      case T.id:
+        setShapeId(JC.SHAPE_DIPOLES, ++i, idSeen);
+        i = eval.iToken;
+        break;
+      case T.cross:
+        propertyName = "cross";
+        propertyValue = Boolean.TRUE;
+        break;
+      case T.nocross:
+        propertyName = "cross";
+        propertyValue = Boolean.FALSE;
+        break;
+      case T.offset:
+        if (isFloatParameter(i + 1)) {
+        float v = floatParameter(++i);
+        if (eval.theTok == T.integer) {
+          propertyName = "offsetPercent";
+          propertyValue = Integer.valueOf((int) v);
+        } else {
+          propertyName = "offset";
+          propertyValue = Float.valueOf(v);
+        }
+        } else {
+          propertyName = "offsetPt";
+          propertyValue = centerParameter(++i);
+          i = eval.iToken;
+        }
+        break;
+      case T.offsetside:
+        propertyName = "offsetSide";
+        propertyValue = Float.valueOf(floatParameter(++i));
+        break;
+      case T.val:
+        propertyName = "value";
+        propertyValue = Float.valueOf(floatParameter(++i));
+        break;
+      case T.width:
+        propertyName = "width";
+        propertyValue = Float.valueOf(floatParameter(++i));
+        break;
+      default:
+        if (eval.theTok == T.times || T.tokAttr(eval.theTok, T.identifier)) {
+          setShapeId(JC.SHAPE_DIPOLES, i, idSeen);
+          i = eval.iToken;
+          break;
+        }
+        invArg();
+      }
+      idSeen = (eval.theTok != T.delete && eval.theTok != T.calculate);
+      if (propertyName != null)
+        setShapeProperty(JC.SHAPE_DIPOLES, propertyName, propertyValue);
+    }
+    if (iHaveCoord || iHaveAtoms)
+      setShapeProperty(JC.SHAPE_DIPOLES, "set", null);
   }
 
   private boolean draw() throws ScriptException {
