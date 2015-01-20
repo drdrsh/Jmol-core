@@ -35,8 +35,9 @@
        gettext.path can be used if gettext tools are not in the path
        or if Ant can't find them (potential problem on MacOSX + Eclipse)
        Set it by running Ant with -Dgettext.path=<path ending with />
-
        MacOSX+Eclipse: https://bugs.eclipse.org/bugs/show_bug.cgi?id=111193
+       
+          
   -->
   <property name="gettext.path" value="" />
   <property name="gettext.xgettext" value="${gettext.path}xgettext" />
@@ -519,6 +520,8 @@
           ----------------------------------------------
           Homepage: http://www.gnu.org/software/gettext/
           Win32: http://gnuwin32.sourceforge.net/packages/gettext.htm
+          [the full gnu/bin set of files, including dll files needs to be 
+           put somewhere on your Windows PATH. Bob has these in C:\gnu\bin]	
         </echo>
       </else>
     </if>
