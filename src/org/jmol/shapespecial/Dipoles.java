@@ -571,8 +571,8 @@ public class Dipoles extends Shape {
     dipoles = (Dipole[]) AU.ensureLength(dipoles, dipoleCount + 1);
     if (thisID == null || thisID.length() == 0)
       thisID = "dipole" + (dipoleCount + 1);
-    Dipole d = dipoles[dipoleCount++] = new Dipole(vwr
-        .am.cmi, thisID, dipoleInfo, colix, DEFAULT_MAD, true);
+    Dipole d = dipoles[dipoleCount++] = new Dipole().init(vwr.am.cmi, thisID,
+        dipoleInfo, colix, DEFAULT_MAD, true);
     return d;
   }
 

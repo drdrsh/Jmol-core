@@ -76,10 +76,7 @@ public class Dipole {
   final static short DIPOLE_TYPE_MOLECULAR = 4;
   final static short DIPOLE_TYPE_POINTVECTOR = 5;
 
-  Dipole() {
-  }
-
-  Dipole(int modelIndex, String thisID, String dipoleInfo, short colix,
+  Dipole init(int modelIndex, String thisID, String dipoleInfo, short colix,
       short mad, boolean visible) {
     this.modelIndex = modelIndex;
     this.thisID = thisID;
@@ -88,6 +85,7 @@ public class Dipole {
     this.mad = mad;
     this.visible = visible;
     this.type = DIPOLE_TYPE_UNKNOWN;
+    return this;
   }
 
   void setTranslucent(boolean isTranslucent, float translucentLevel) {
