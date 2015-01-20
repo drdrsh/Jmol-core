@@ -1208,7 +1208,7 @@ all support for previous versions removed
 	          Bob's computer chokes on doc -->
 
 	<target name="dist" id="dist"
-          depends="doc">
+          depends="main-i18n,doc">
 		
 		  <!-- 
 		  
