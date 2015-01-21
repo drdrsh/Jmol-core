@@ -157,6 +157,10 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
 
   abstract public Object getAtomSetCollectionFromSet(Object readers, Object atomSets, Map<String, Object> htParams);
 
+  abstract public Object getAtomSetCollectionFromReader(String fname,
+                                                        Object reader, Map<String, Object> htParams) throws Exception;
+              
+
   /**
    * all in one -- for TestSmarterJmolAdapter
    * 
@@ -166,7 +170,7 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
    * @param htParams
    * @return           AtomSetCollection or error string
    */
-  public Object getAtomSetCollectionFromReader(String name, String type,
+  public Object getAtomSetCollectionFromReaderType(String name, String type,
                                                Object bufferedReader,
                                                Map<String, Object> htParams) {
     if (htParams == null)
@@ -184,17 +188,17 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
   // alternative settings, for posterity:
 
   public Object openBufferedReader(String name, BufferedReader bufferedReader) {
-    return getAtomSetCollectionFromReader(name, null, bufferedReader, null);
+    return getAtomSetCollectionFromReaderType(name, null, bufferedReader, null);
   }
 
   public Object openBufferedReader(String name, BufferedReader bufferedReader,
                                    Map<String, Object> htParams) {
-    return getAtomSetCollectionFromReader(name, null, bufferedReader, htParams);
+    return getAtomSetCollectionFromReaderType(name, null, bufferedReader, htParams);
   }
 
   public Object openBufferedReader(String name, String type,
                                    BufferedReader bufferedReader) {
-    return getAtomSetCollectionFromReader(name, type, bufferedReader, null);
+    return getAtomSetCollectionFromReaderType(name, type, bufferedReader, null);
   }
 
   abstract public Object getAtomSetCollectionFromDOM(Object DOMNode, Map<String, Object> htParams);
@@ -361,7 +365,4 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
     return canonizeAlphaDigit(altLoc);
   }
 
-  abstract public Object getAtomSetCollectionFromReader(String fname,
-                                            Object reader, Map<String, Object> htParams) throws Exception;
-  
 }

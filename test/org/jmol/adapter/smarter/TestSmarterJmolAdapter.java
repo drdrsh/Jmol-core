@@ -45,7 +45,7 @@ public class TestSmarterJmolAdapter extends TestSuite {
     super(name);
   }
 
-  String testOne;
+  static String testOne;
   
   /**
    * @return Test suite containing tests for all files
@@ -57,7 +57,7 @@ public class TestSmarterJmolAdapter extends TestSuite {
     //result.addDirectory(false, "aces2", "dat");
     //result.addDirectory(false, "aces2", "out");
     
-    //testOne = "csf";
+    //testOne = "zmatrix";
     
     result.addDirectory("adf", "adf;out", "Adf");
     result.addDirectory("aims", "in", "Aims");
@@ -118,6 +118,7 @@ public class TestSmarterJmolAdapter extends TestSuite {
     result.addDirectory("xsd", "xsd", "XmlXsd");
     result.addDirectory("xyz", "xyz", "Xyz");
     result.addDirectory("zmatrix", "txt;zmat", "Input");
+    result.addDirectory("zmatrix", "inp", "=Input"); // force InputReader and no other
     return result;
   }
 
@@ -182,11 +183,15 @@ class TestSmarterJmolAdapterImpl extends TestCase {
   private File file;
   private boolean gzipped;
   private String typeAllowed;
+  private boolean mustForce;
 
   public TestSmarterJmolAdapterImpl(File file, boolean gzipped, String typeAllowed) {
     super("testFile");
     this.file = file;
     this.gzipped = gzipped;
+    this.mustForce = (typeAllowed.startsWith("="));    
+    if (mustForce)
+      typeAllowed = typeAllowed.substring(1);
     this.typeAllowed = typeAllowed;
   }
 
@@ -203,8 +208,8 @@ class TestSmarterJmolAdapterImpl extends TestCase {
   /**
    * Tests reading of one file.
    * 
-   *  @throws FileNotFoundException
-   *  @throws IOException
+   * @throws FileNotFoundException
+   * @throws IOException
    */
   public void testFile() throws FileNotFoundException, IOException {
     if (!continuing)
@@ -218,22 +223,30 @@ class TestSmarterJmolAdapterImpl extends TestCase {
     Logger.info(file.getPath());
     BufferedReader bReader = new BufferedReader(new InputStreamReader(iStream));
     SmarterJmolAdapter adapter = new SmarterJmolAdapter();
-    if (typeAllowed != null) {
-      String fileType = adapter.getFileTypeName(bReader);
-      if (!typeAllowed.equals(fileType) && typeAllowed.indexOf(";"+ fileType + ";") < 0) {
-        continuing = false;
-        fail("Wrong type for " + file.getPath() + ": " + fileType + " instead of " + typeAllowed);
-      }
+    String type = null;
+    boolean ok = true;
+    String fileType = adapter.getFileTypeName(bReader);
+    ok = (typeAllowed.equals(fileType) || typeAllowed.indexOf(";" + fileType
+        + ";") >= 0);
+    if (ok == mustForce) {
+      continuing = false;
+      fail("Wrong type for " + file.getPath() + ": " + fileType
+          + " instead of " + typeAllowed);
     }
+    if (mustForce)
+      type = typeAllowed;
     Hashtable<String, Object> htParams = new Hashtable<String, Object>();
     htParams.put("fullPathName", file.getCanonicalPath());
-    Object result = adapter.getAtomSetCollectionFromReader(file.getName(), null, bReader, htParams);
+    Object result = adapter.getAtomSetCollectionFromReaderType(file.getName(),
+        type, bReader, htParams);
     continuing = (result != null && result instanceof AtomSetCollection);
     assertNotNull("Nothing read for " + file.getPath(), result);
-    assertFalse("Error returned for " + file.getPath() + ": " + result, result instanceof String);
-    assertTrue("Not an AtomSetCollection for " + file.getPath(), result instanceof AtomSetCollection);
+    assertFalse("Error returned for " + file.getPath() + ": " + result,
+        result instanceof String);
+    assertTrue("Not an AtomSetCollection for " + file.getPath(),
+        result instanceof AtomSetCollection);
     int nAtoms = ((AtomSetCollection) result).ac;
-    continuing &= (nAtoms > 0);    
+    continuing &= (nAtoms > 0);
     assertTrue("No atoms loaded for " + file.getPath(), nAtoms > 0);
   }
 
@@ -267,5 +280,6 @@ class TestSmarterJmolAdapterImpl extends TestCase {
     JUnitLogger.setInformation(null);
     file = null;
     typeAllowed = null;
+    mustForce = false;
   }
 }
