@@ -4407,7 +4407,8 @@ public class ScriptEval extends ScriptExpr {
         loadScript = new SB().append("{\n    var ")
             .append(filename.substring(1)).append(" = ").append(PT.esc(s))
             .append(";\n    ").appendSB(loadScript);
-      } else if ((vwr.testAsync || vwr.isJS) && (isAsync || filename.startsWith("?"))) {
+      } else if ((vwr.testAsync || vwr.isJS)
+          && (isAsync || filename.startsWith("?"))) {
         localName = null;
         filename = loadFileAsync("LOAD" + (isAppend ? "_APPEND_" : "_"),
             filename, i, !isAppend && pc != pcResume);
@@ -4453,35 +4454,40 @@ public class ScriptEval extends ScriptExpr {
       }
       if (!isConcat && (filename.startsWith("=") || filename.startsWith("*"))
           && filename.indexOf("/") > 1) {
-        
-          // EBI domains and validations, also rna3 and dssr
 
-          // load *1cbs/dom/xx/xx  -->  load *1cbs + *dom/xx/xx/1cbs
-          // load *1cbs/val/xx/xx  -->  load *1cbs + *val/xx/xx/1cbs
-          // load *1cbs/rna3d/loops  -->  load *1cbs + *rna3d/loops/downloads/1cbs
-          // TODO load *1cbs/map/xx/xx  -->  load *1cbs + *map/xx/xx/1cbs (unimplemented electron density?)
-          // load =1mys/dssr  -->  load =1mys + *dssr/1mys
-        
-          isConcat = true;
-          int pt = filename.indexOf("/");
-          String id = filename.substring(1, pt);
-          String ext = filename.substring(pt + 1);          
+        // EBI domains and validations, also rna3 and dssr
+
+        // load *1cbs/dom/xx/xx  -->  load *1cbs + *dom/xx/xx/1cbs
+        // load *1cbs/val/xx/xx  -->  load *1cbs + *val/xx/xx/1cbs
+        // load *1cbs/rna3d/loops  -->  load *1cbs + *rna3d/loops/downloads/1cbs
+        // TODO load *1cbs/map/xx/xx  -->  load *1cbs + *map/xx/xx/1cbs (unimplemented electron density?)
+        // load =1mys/dssr  -->  load =1mys + *dssr/1mys
+
+        isConcat = true;
+        int pt = filename.indexOf("/");
+        String id = filename.substring(1, pt);
+        String ext = filename.substring(pt + 1);
+        filename = filename.substring(0, pt);
+        if ((pt = filename.indexOf(".")) >= 0)
           filename = filename.substring(0, pt);
-          if ((pt = filename.indexOf(".")) >= 0)
-            filename = filename.substring(0, pt);
+        if (JC.PDB_ANNOTATIONS.indexOf(";" + ext + ";") >= 0) {
           if (filename.startsWith("="))
             filename += ".cif";
-          filenames = (ext.equals("all") ? 
-            new String[] { filename, "*dom/" + id ,  "*val/" + id }
-          : new String[] { filename, "*" + ext + "/" + id });
+          filenames = (ext.equals("all") ? new String[] { filename,
+              "*dom/" + id, "*val/" + id } : new String[] { filename,
+              "*" + ext + "/" + id });
           filename = "fileSet";
           loadScript = null;
-      } else {
-        if (sOptions.length() > 0)
-          loadScript.append(" /*options*/ ").append(sOptions.toString());
-        if (isVariable)
-          loadScript.append("\n  }");
+          isVariable = false;
+          sOptions.setLength(0);
+        } else {
+          filename += "/" + ext;
+        }
       }
+      if (sOptions.length() > 0)
+        loadScript.append(" /*options*/ ").append(sOptions.toString());
+      if (isVariable)
+        loadScript.append("\n  }");
       if (loadScript != null)
         htParams.put("loadScript", loadScript);
     }
@@ -4529,7 +4535,7 @@ public class ScriptEval extends ScriptExpr {
       if (vwr.async && errMsg.startsWith(JC.READER_NOT_FOUND)) {
         //TODO: other errors can occur due to missing files 
         //String rdrName = errMsg.substring(JC.READER_NOT_FOUND.length());
-        throw  new ScriptInterruption(this, "async", 1);
+        throw new ScriptInterruption(this, "async", 1);
         //errMsg = "asynchronous load for " + rdrName + " initiated";
       }
       evalError(errMsg, null);

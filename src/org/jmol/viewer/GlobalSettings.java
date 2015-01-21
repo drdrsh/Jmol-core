@@ -884,19 +884,28 @@ public class GlobalSettings {
       return structureList;
     }
 
-    String resolveDataBase(String database, String id) {
-      String format = databases.get(database.toLowerCase());
-      if (format == null)
-        return null;
-      if (id.indexOf("/") < 0) {
-        if (database.equals("pubchem"))
-          id = "name/" + id;
-        else if (database.equals("nci"))
-          id += "/file?format=sdf&get3d=True";
-      }
-      return (format.indexOf("%FILE") < 0 ? format + id : PT
-          .formatStringS(format, "FILE", id));
+  String resolveDataBase(String database, String id) {
+    String format = databases.get(database.toLowerCase());
+    if (format == null)
+      return null;
+    if (id.indexOf("/") < 0) {
+      if (database.equals("pubchem"))
+        id = "name/" + id;
+      else if (database.equals("nci"))
+        id += "/file?format=sdf&get3d=True";
     }
+    while (format.indexOf("%c") >= 0) {
+      try {
+        for (int i = 1; i < 10; i++) {
+          format = PT.rep(format, "%c" + i, id.substring(i - 1, i));
+        }
+      } catch (Exception e) {
+        // too bad.
+      }
+    }
+    return (format.indexOf("%FILE") < 0 ? format + id : PT.formatStringS(
+        format, "FILE", id));
+  }
 
     static boolean doReportProperty(String name) {
       return (name.charAt(0) != '_' && unreportedProperties.indexOf(";" + name

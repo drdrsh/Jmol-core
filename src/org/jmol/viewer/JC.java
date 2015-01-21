@@ -47,12 +47,15 @@ public final class JC {
   // callback constants --> org.jmol.constant.EnumCallback
   // draw constants --> org.jmol.shapespecial.draw.EnumCallback
   
+  public static final String PDB_ANNOTATIONS = ";dssr;rna3d;dom;val;";
+
   public static String[] databases = { 
     "dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--jmol%20--more",
     "dssrModel", "http://x3dna.bio.columbia.edu/dssr/report.php?POST?opts=--jmol --more&model=",  
     "ligand", "http://www.rcsb.org/pdb/files/ligand/%FILE.cif",
     "mp", "http://www.materialsproject.org/materials/%FILE/cif",
     "nci", "http://cactus.nci.nih.gov/chemical/structure/%FILE",
+    "cod", "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif",
     "nmr", "http://www.nmrdb.org/new_predictor?POST?molfile=",
     "nmrdb", "http://www.nmrdb.org/service/predictor?POST?molfile=",
     "pdb", "http://www.rcsb.org/pdb/files/%FILE.pdb.gz",
@@ -940,6 +943,7 @@ public final class JC {
   public static final int JSV_SELECT = 14;
   public static final int JSV_STRUCTURE = 21;
   public static final int JSV_SEND_H1SIMULATE = 28;
+
 
   public static int getJSVSyncSignal(String script) {
     return (script.length() < 7 ? -1 : ("" +
