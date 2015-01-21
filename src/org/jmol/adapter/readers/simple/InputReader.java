@@ -285,8 +285,12 @@ public class InputReader extends AtomSetCollectionReader {
 
     switch (tokens.length) {
     case 1:
+      if (tokens[0].indexOf("=") < 0) {
       lineBuffer.clear();
       break;
+      }
+      tokens = PT.split(tokens[0], "=");
+      //$FALL-THROUGH$
     case 2:
       if (parseIntStr(line) > 0 && parseInt() >= 0) {
         // int int --> Gaussian CFILE (via NBO)
