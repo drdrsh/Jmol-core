@@ -5,7 +5,7 @@ import javajs.awt.Font;
 /**
  * methods required by Jmol that access java.awt.Font
  * 
- * private to org.jmol.awt
+ * private to org.jmol.awtjs2d
  * 
  */
 
@@ -15,7 +15,7 @@ class JSFont {
     // "px" are different from "pt" here.
     // "pt" is the height of an X, ascent.
     // "px" is the ascent + descent.
-    fontFace = (fontFace.equals("Monospaced") ? "Courier" : fontFace.startsWith("Sans") ? "Sans-Serif" : "Serif");    
+    fontFace = (fontFace.equals("Monospaced") ? "Courier" : fontFace.startsWith("Sans") ? "Helvetica Neue, Sans-serif" : "Serif");    
     return (isBold ? "bold " : "") 
         + (isItalic ? "italic " : "") 
         + fontSize + type + " " + fontFace;
