@@ -67,8 +67,8 @@ public class TestSmarterJmolAdapter extends TestSuite {
     result.addDirectory("animations", "pdb;pdb.gz", "Pdb");
     result.addDirectory("animations", "xyz", "Xyz");
     result.addDirectory("castep", "cell;phonon", "Castep");
-    result.addDirectory("cif", "cif", "Cif");
     result.addDirectory("cif", "mmcif", "MMCif");
+    result.addDirectory("cif", "cif", "Cif");
     result.addDirectory("c3xml", "c3xml", "XmlChem3d");
     result.addDirectory("cml", "cml", "XmlCml");
     result.addDirectory("crystal", "out;outp", "Crystal");
@@ -80,7 +80,7 @@ public class TestSmarterJmolAdapter extends TestSuite {
     result.addDirectory("dmol",  "outmol", "Dmol");
     result.addDirectory("folding", "xyz;xyz.gz", "FoldingXyz");
     result.addDirectory("../Jmol-FAH/projects", "xyz;xyz.gz", "FoldingXyz");
-    result.addDirectory("gamess", "log;out;txt", ";Gamess;GamessUS;GamessUK;");
+    result.addDirectory("gamess", "log;out", ";Gamess;GamessUS;GamessUK;");
     result.addDirectory("gaussian", "log;out", "Gaussian");
     result.addDirectory("gennbo", "out;36;37", "GenNBO");
     result.addDirectory("ghemical", "gpr", "GhemicalMM");
