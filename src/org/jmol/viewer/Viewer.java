@@ -2457,6 +2457,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       tempArray.clear();
       chainMap.clear();
       chainList.clear();
+      chainCaseSpecified = false;
       //cm.clear();
       definedAtomSets.clear();
       lastData = null;
@@ -4973,7 +4974,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     case T.cartoonrockets:
       return g.cartoonRockets;
     case T.chaincasesensitive:
-      return g.chainCaseSensitive || chainList.size() > 0;
+      return g.chainCaseSensitive || chainCaseSpecified;
     case T.debugscript:
       return g.debugScript;
     case T.defaultstructuredssp:
@@ -8943,6 +8944,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     ms.setDihedrals(dihedralList, bsBranches, rate);
   }
 
+  private boolean chainCaseSpecified;
+
   /**
    * Create a unique integer for any chain string. Note that if there are any
    * chains that are more than a single character, chainCaseSensitive is
@@ -8974,6 +8977,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     }
     if (i >= 256) {
       //this will force chainCaseSensitive when it is necessary
+      chainCaseSpecified |= isAssign;
       chainList.addLast(id);
     }
     // if select :a and there is NO chain "a" in the structure,
