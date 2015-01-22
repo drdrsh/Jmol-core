@@ -13,6 +13,6 @@ public interface JmolGraphicsInterface {
 
   public abstract void setSlab(int slabValue);
 
-  public abstract void setSlabAndZShade(int slabValue, int depthValue, boolean zShade, int zSlab, int zDepth, int zPower);
+  public abstract void setSlabAndZShade(int slabValue, int depthValue, int zSlab, int zDepth, int zPower);
 
 }

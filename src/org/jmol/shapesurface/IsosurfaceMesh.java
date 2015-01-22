@@ -668,6 +668,7 @@ public class IsosurfaceMesh extends Mesh {
    * opened.
    * 
    * @param colorRgb
+   * @return true if still need color handling
    */
   boolean setColorsFromJvxlData(int colorRgb) {
     diameter = jvxlData.diameter;

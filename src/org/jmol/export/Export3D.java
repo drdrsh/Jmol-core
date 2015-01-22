@@ -107,7 +107,7 @@ public class Export3D implements JmolRendererInterface {
     slab = gdata.slab;
   }
   @Override
-  public void setSlabAndZShade(int slabValue, int depthValue, boolean zShade, int zSlab, int zDepth, int zPower) {
+  public void setSlabAndZShade(int slabValue, int depthValue, int zSlab, int zDepth, int zPower) {
     gdata.setSlab(slabValue);
     slab = gdata.slab;
     gdata.setDepth(depthValue);

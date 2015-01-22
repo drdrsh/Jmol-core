@@ -185,6 +185,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void destroy() {
     releaseBuffers();
     platform = null;
+    pixel = pixel0 = pixelScreened = pixelShaded = null;
     graphicsForMetrics = null;
   }
 
@@ -205,8 +206,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   Pixelator pixel;
   private Pixelator pixel0, pixelT0, pixelScreened;
-  int zSlab, zDepth, zShadePower;
-  private boolean zShade;
+  private PixelatorShaded pixelShaded;
 
   protected int zMargin;
   private int[] aobuf;
@@ -225,6 +225,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     this.vwr = vwr;
     this.apiPlatform = apiPlatform;
     platform = new Platform3D(apiPlatform);
+    pixel = pixel0 = new Pixelator(this);
     graphicsForMetrics = platform.getGraphicsForMetrics();
 
     line3d = new LineRenderer(this);
@@ -304,8 +305,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     pass2Flag01 = 0;
     colixCurrent = 0;
     haveTranslucentObjects = wasScreened = false;
-    if (pixel0 == null)
-      pixel0 = new Pixelator(this);
     pixel = pixel0;
     translucentCoverOnly = !translucentMode;
     if (pbuf == null) {
@@ -314,8 +313,13 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       pbuf = platform.pBuffer;
       zbuf = platform.zBuffer;
       aobuf = null;
+      pixel0.setBuf();
+      if (pixelT0 != null)
+        pixelT0.setBuf();
     }
     setWidthHeight(antialiasThisFrame);
+    if (pixelScreened != null)
+      pixelScreened.width = width;
     platform.clearBuffer();
     if (backgroundImage != null)
       plotImage(Integer.MIN_VALUE, 0, Integer.MIN_VALUE, backgroundImage, null,
@@ -538,14 +542,18 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   @Override
-  public void setSlabAndZShade(int slabValue, int depthValue, boolean zShade, int zSlab, int zDepth, int zShadePower) {
+  public void setSlabAndZShade(int slabValue, int depthValue, int zSlab,
+                               int zDepth, int zShadePower) {
     setSlab(slabValue);
     setDepth(depthValue);
-    this.zSlab = zSlab;
-    this.zDepth = zDepth;
-    this.zShadePower = zShadePower;
-    this.zShade = zShade;
-    pixel = (zShade ? new PixelatorShaded(this, pixel0) : pixel);
+    if (zSlab < zDepth) {
+      if (pixelShaded == null)
+        pixelShaded = new PixelatorShaded(this, pixel0);
+      pixel = pixelShaded.set(zSlab, zDepth, zShadePower);
+      pixel.p0 = pixel0;
+    } else {
+      pixel = pixel0;
+    }
   }
 
   private void downsampleFullSceneAntialiasing(boolean downsampleZBuffer) {
@@ -699,7 +707,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
           pixel = pixelScreened;
         else
           pixel.p0 = pixelScreened;
-      } else if (pixel.p0 == null) {
+      } else if (pixel.p0 == null || pixel == pixelScreened) {
         pixel = (isPass2 ? pixelT0 : pixel0);
       } else {
         pixel.p0 = (isPass2 ? pixelT0 : pixel0);

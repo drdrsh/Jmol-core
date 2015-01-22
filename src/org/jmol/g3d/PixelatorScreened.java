@@ -25,13 +25,12 @@
 
 package org.jmol.g3d;
 
+/**
+ * A class to create a "screened" translucent effect by 
+ * discarding pixels in a checkerboard fashion.
+ * 
+ */
 class PixelatorScreened extends Pixelator {
-
-
-  public int zSlab, zDepth, zShadeR, zShadeG, zShadeB;
-  public int zShadePower = 3;
-  private Pixelator p0;
-  private int width;
 
   /**
    * @param g 

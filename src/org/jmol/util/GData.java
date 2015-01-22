@@ -118,8 +118,6 @@ public class GData implements JmolGraphicsInterface {
   }
 
   /**
-   * @param zShade
-   *        whether to shade along z front to back
    * @param zSlab
    *        for zShade
    * @param zDepth
@@ -127,7 +125,7 @@ public class GData implements JmolGraphicsInterface {
    * @param zPower 
    */
   @Override
-  public void setSlabAndZShade(int slab, int depth, boolean zShade, int zSlab, int zDepth, int zPower) {
+  public void setSlabAndZShade(int slab, int depth,int zSlab, int zDepth, int zPower) {
     setSlab(slab);
     setDepth(depth);
   }

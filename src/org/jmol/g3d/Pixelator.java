@@ -25,29 +25,39 @@
 
 package org.jmol.g3d;
 
+/**
+ * 
+ */
 class Pixelator {
-  /**
-   * 
-   */
   protected final Graphics3D g;
   Pixelator p0;
+  protected int[] zb, pb;
+  int width;
+
 
   /**
    * @param graphics3d
    */
   Pixelator(Graphics3D graphics3d) {
     g = graphics3d;
+    setBuf();
+  }
+
+  void setBuf() {
+    zb = g.zbuf;
+    pb = g.pbuf;
+    
   }
 
   void clearPixel(int offset, int z) {
     // first-pass only; ellipsoids
-    if (g.zbuf[offset] > z)
-      g.zbuf[offset] = Integer.MAX_VALUE;
+    if (zb[offset] > z)
+      zb[offset] = Integer.MAX_VALUE;
   }
   
   void addPixel(int offset, int z, int p) {
-    g.zbuf[offset] = z;
-    g.pbuf[offset] = p;
+    zb[offset] = z;
+    pb[offset] = p;
   }
 
 }

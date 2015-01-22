@@ -1061,20 +1061,20 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     refresh(3, "slabDepthByPixels");
   }
 
-//  @Override
-//  public M4 getUnscaledTransformMatrix() {
-//    // unused
-//    return tm.getUnscaledTransformMatrix();
-//  }
+  //  @Override
+  //  public M4 getUnscaledTransformMatrix() {
+  //    // unused
+  //    return tm.getUnscaledTransformMatrix();
+  //  }
 
   public void finalizeTransformParameters() {
     // FrameRenderer
     // InitializeModel
 
     tm.finalizeTransformParameters();
-    gdata.setSlabAndZShade(tm.slabValue, tm.depthValue, tm.zShadeEnabled,
-        tm.zSlabValue, tm.zDepthValue,
-        g.zShadePower);
+    gdata.setSlabAndZShade(tm.slabValue, tm.depthValue, 
+        (tm.zShadeEnabled ? tm.zSlabValue : Integer.MAX_VALUE),
+        tm.zDepthValue, g.zShadePower);
   }
   
   public float getScalePixelsPerAngstrom(boolean asAntialiased) {

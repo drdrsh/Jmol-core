@@ -25,6 +25,10 @@
 
 package org.jmol.g3d;
 
+/**
+ * Handle pixels in Pass 2 - Translucency
+ * 
+ */
 class PixelatorT extends Pixelator {
   PixelatorT(Graphics3D graphics3d) {
     super(graphics3d);

@@ -25,47 +25,54 @@
 
 package org.jmol.g3d;
 
+/**
+ * A class to do Z Shading of pixels.
+ * 
+ */
 class PixelatorShaded extends Pixelator {
 
 
-  public int zSlab, zDepth, zShadeR, zShadeG, zShadeB;
-  public int zShadePower = 3;
+  private int[] bgRGB, tmp;
+  private int zSlab, zDepth, zShadePower;
 
   /**
-   * @param g 
-   * @param p0 
+   * @param g
+   * @param p0
    */
   PixelatorShaded(Graphics3D g, Pixelator p0) {
     super(g);
-      zShadeR = g.bgcolor & 0xFF;
-      zShadeG = (g.bgcolor & 0xFF00) >> 8;
-      zShadeB = (g.bgcolor & 0xFF0000) >> 16;
-      this.zSlab = g.zSlab < 0 ? 0 : g.zSlab;
-      this.zDepth = g.zDepth < 0 ? 0 : g.zDepth;
-      this.zShadePower = g.zShadePower;
-      this.p0 = p0;
+    tmp = new int[3];
+    this.p0 = p0;
+  }
+  
+  Pixelator set(int zSlab, int zDepth, int zShadePower) {
+    bgRGB = new int[] { g.bgcolor & 0xFF, (g.bgcolor >> 8) & 0xFF,
+        (g.bgcolor >> 16) & 0xFF };
+    this.zSlab = zSlab < 0 ? 0 : zSlab;
+    this.zDepth = zDepth < 0 ? 0 : zDepth;
+    this.zShadePower = zShadePower;
+    return this;
   }
 
   @Override
   void addPixel(int offset, int z, int p) {
+    // z starts with 0 at camera and runs toward model, with zSlab <= zDepth
     if (z > zDepth)
       return;
-    if (z <= zDepth && z >= zSlab) {
-      int pR = p & 0xFF;
-      int pG = (p & 0xFF00) >> 8;
-      int pB = (p & 0xFF0000) >> 16;
-      int pA = (p & 0xFF000000);
+    if (z >= zSlab) {
+      int[] t = tmp;
+      int[] zs = bgRGB;
+      t[0] = p;
+      t[1] = p >> 8;
+      t[2] = p >> 16;
       float f = (float)(zDepth - z) / (zDepth - zSlab);
-      if (zShadePower > 1) {
+      if (zShadePower > 1)
         for (int i = 0; i < zShadePower; i++)
           f *= f;
-      }
-      pR = zShadeR + (int) (f * (pR - zShadeR));
-      pG = zShadeG + (int) (f * (pG - zShadeG));
-      pB = zShadeB + (int) (f * (pB - zShadeB));        
-      p = (pB << 16) | (pG << 8) | pR | pA;
+      for (int i = 0; i < 3; i++)
+        t[i] = zs[i] + (int) (f * ((t[i] & 0xFF) - zs[i]));
+      p = (t[2] << 16) | (t[1] << 8) | t[0] | (p & 0xFF000000);
     }
-    // important not to go directly to addPixel here for JavaScript avoidance of Java2Script SAEM method
     p0.addPixel(offset, z, p);
   }
 }
