@@ -25,29 +25,35 @@
 
 package org.jmol.g3d;
 
-class Pixelator {
-  /**
-   * 
-   */
-  protected final Graphics3D g;
-  Pixelator p0;
-
-  /**
-   * @param graphics3d
-   */
-  Pixelator(Graphics3D graphics3d) {
-    g = graphics3d;
+class PixelatorT extends Pixelator {
+  PixelatorT(Graphics3D graphics3d) {
+    super(graphics3d);
   }
 
+  /**
+   * @param offset  
+   * @param z 
+   */
+  @Override
   void clearPixel(int offset, int z) {
-    // first-pass only; ellipsoids
-    if (g.zbuf[offset] > z)
-      g.zbuf[offset] = Integer.MAX_VALUE;
+    // ignore in pass 2
   }
   
-  void addPixel(int offset, int z, int p) {
-    g.zbuf[offset] = z;
-    g.pbuf[offset] = p;
+  @Override
+  protected void addPixel(int offset, int z, int p) {
+    int zT = g.zbufT[offset];
+    if (z < zT) {
+      // new in front -- merge old translucent with opaque
+      // if (zT != Integer.MAX_VALUE)
+      int argb = g.pbufT[offset];
+      if (!g.translucentCoverOnly && argb != 0 && zT - z > g.zMargin)
+        Graphics3D.mergeBufferPixel(g.pbuf, offset, argb, g.bgcolor);
+      g.zbufT[offset] = z;
+      g.pbufT[offset] = p & g.translucencyMask;
+    } else if (z == zT) {
+    } else if (!g.translucentCoverOnly && z - zT > g.zMargin) {
+        // oops-out of order
+        Graphics3D.mergeBufferPixel(g.pbuf, offset, p & g.translucencyMask, g.bgcolor);
+    }
   }
-
 }

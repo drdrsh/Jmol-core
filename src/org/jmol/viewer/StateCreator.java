@@ -1373,12 +1373,12 @@ public class StateCreator extends JmolStateCreator {
     t.appendFontCmd(s);
     s.append("; color echo");
     if (C.isColixTranslucent(t.colix))
-      s.append(" translucent " + C.getColixTranslucencyFractional(t.colix));
+      s.append(C.getColixTranslucencyLabel(t.colix));
     s.append(" ").append(C.getHexCode(t.colix));
     if (t.bgcolix != 0) {
       s.append("; color echo background");
       if (C.isColixTranslucent(t.bgcolix))
-        s.append(" translucent " + C.getColixTranslucencyFractional(t.bgcolix));
+        s.append(C.getColixTranslucencyLabel(t.bgcolix));
       s.append(" ").append(C.getHexCode(t.bgcolix));
     }
     s.append(";\n");

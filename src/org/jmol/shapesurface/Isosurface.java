@@ -1461,7 +1461,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   }
 
   @Override
-  public void notifySurfaceGenerationCompleted() {
+  public boolean notifySurfaceGenerationCompleted() {
     setMeshI();
     setBsVdw();
     thisMesh.insideOut = sg.isInsideOut();
@@ -1477,8 +1477,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         thisMesh.lattice = jvxlData.fixedLattice;
         thisMesh.fixLattice();
       }
-        return;
-
+      return thisMesh.setColorsFromJvxlData(sg.params.colorRgb);
     }
     if (!sg.params.allowVolumeRender)
       thisMesh.jvxlData.allowVolumeRender = false;
@@ -1488,7 +1487,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       
     if (sg.params.psi_monteCarloCount > 0)
       thisMesh.diameter = -1; // use set DOTSCALE
-    
+    return false;
     
   }
 

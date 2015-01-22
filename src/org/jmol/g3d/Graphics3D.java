@@ -204,6 +204,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private int anaglyphLength;
 
   Pixelator pixel;
+  private Pixelator pixel0, pixelT0, pixelScreened;
+  int zSlab, zDepth, zShadePower;
+  private boolean zShade;
 
   protected int zMargin;
   private int[] aobuf;
@@ -300,7 +303,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     isPass2 = false;
     pass2Flag01 = 0;
     colixCurrent = 0;
-    haveTranslucentObjects = false;
+    haveTranslucentObjects = wasScreened = false;
+    if (pixel0 == null)
+      pixel0 = new Pixelator(this);
+    pixel = pixel0;
     translucentCoverOnly = !translucentMode;
     if (pbuf == null) {
       platform.allocateBuffers(windowWidth, windowHeight, antialiasThisFrame,
@@ -349,6 +355,12 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (antialiasThisFrame && !antialias2)
       downsampleFullSceneAntialiasing(true);
     platform.clearTBuffer();
+    if (pixelT0 == null)
+      pixelT0 = new PixelatorT(this);
+    if (pixel.p0 == null)
+      pixel = pixelT0;
+    else
+      pixel.p0 = pixelT0;
     return true;
   }
 
@@ -525,19 +537,15 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     return haveTranslucentObjects;
   }
 
-  public void setTempZSlab(int zSlab) {
-    this.zSlab = zSlab;
-  }
-
   @Override
-  public void setZShade(boolean zShade, int zSlab, int zDepth, int zShadePower) {
-    if (zShade) {
-      setZShade2(zSlab, zDepth, zShadePower);
-      pixel = new PixelatorShaded(this);
-    } else {
-      pixel = new Pixelator(this);
-    }
-
+  public void setSlabAndZShade(int slabValue, int depthValue, boolean zShade, int zSlab, int zDepth, int zShadePower) {
+    setSlab(slabValue);
+    setDepth(depthValue);
+    this.zSlab = zSlab;
+    this.zDepth = zDepth;
+    this.zShadePower = zShadePower;
+    this.zShade = zShade;
+    pixel = (zShade ? new PixelatorShaded(this, pixel0) : pixel);
   }
 
   private void downsampleFullSceneAntialiasing(boolean downsampleZBuffer) {
@@ -633,9 +641,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     return platform.hasContent();
   }
 
-  private int currentShadeIndex;
+  int currentShadeIndex;
   private int lastRawColor;
   int translucencyLog;
+  private boolean wasScreened;
 
   /**
    * sets current color from colix color index
@@ -655,7 +664,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (renderLow)
       mask = 0;
     boolean isTranslucent = (mask != 0);
-    if (!checkTranslucent(isTranslucent))
+    boolean isScreened = (isTranslucent && mask == C.TRANSLUCENT_SCREENED);
+    setScreened(isScreened);
+    if (!checkTranslucent(isTranslucent && !isScreened))
       return false;
     if (isPass2) {
       translucencyMask = (mask << C.ALPHA_SHIFT) | 0xFFFFFF;
@@ -676,6 +687,25 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     currentShadeIndex = -1;
     setColor(getColorArgbOrGray(colix));
     return true;
+  }
+
+  Pixelator setScreened(boolean isScreened) {
+    if (wasScreened != isScreened) {
+      wasScreened = isScreened;
+      if (isScreened) {
+        if (pixelScreened == null)
+          pixelScreened = new PixelatorScreened(this, pixel0);
+        if (pixel.p0 == null)
+          pixel = pixelScreened;
+        else
+          pixel.p0 = pixelScreened;
+      } else if (pixel.p0 == null) {
+        pixel = (isPass2 ? pixelT0 : pixel0);
+      } else {
+        pixel.p0 = (isPass2 ? pixelT0 : pixel0);
+      }
+    }
+    return pixel;
   }
 
   @Override
@@ -1178,13 +1208,19 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     //Backbone, Mps, Sticks
     if (diameter > ht3)
       return;
-    if (!setC(colixA))
-      colixA = 0;
+    int screen = 0;
     if (!setC(colixB))
       colixB = 0;
-    if (colixA != 0 || colixB != 0)
-      cylinder3d.render(colixA, colixB, endcaps, diameter, xA, yA, zA, xB, yB,
-          zB);
+    if (wasScreened)
+      screen = 2;
+    if (!setC(colixA))
+      colixA = 0;
+    if (wasScreened)
+      screen += 1;
+    if (colixA == 0 && colixB == 0)
+      return;
+    cylinder3d.render(colixA, colixB, screen, endcaps, diameter, xA, yA, zA,
+        xB, yB, zB);
   }
 
   @Override
@@ -1192,7 +1228,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
                                  int zA, int xB, int yB, int zB) {
     //measures, vectors, polyhedra
     if (diameter <= ht3)
-      cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter, xA, yA,
+      cylinder3d.render(colixCurrent, colixCurrent, 0, endcaps, diameter, xA, yA,
           zA, xB, yB, zB);
   }
 
@@ -1201,7 +1237,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
                                    P3i screenB, P3 pt0f, P3 pt1f, float radius) {
     //draw
     if (diameter <= ht3)
-      cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter,
+      cylinder3d.render(colixCurrent, colixCurrent, 0, endcaps, diameter,
           screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z);
   }
 
@@ -1209,7 +1245,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void fillCylinder(byte endcaps, int diameter, P3i screenA, P3i screenB) {
     //axes, bbcage, uccage, cartoon, dipoles, mesh
     if (diameter <= ht3)
-      cylinder3d.render(colixCurrent, colixCurrent, endcaps, diameter,
+      cylinder3d.render(colixCurrent, colixCurrent, 0, endcaps, diameter,
           screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z);
   }
 
@@ -1218,7 +1254,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
                                P3 screenB) {
     // dipole cross, cartoonRockets, draw line
     if (diameter <= ht3)
-      cylinder3d.renderBits(colixCurrent, colixCurrent, endcaps, diameter,
+      cylinder3d.renderBits(colixCurrent, endcaps, diameter,
           screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z);
   }
 

@@ -39,8 +39,6 @@ public class GData implements JmolGraphicsInterface {
   public int xLast, yLast;
   public int slab, depth;
   public int width, height;
-  public int zSlab, zDepth;
-  public int zShadePower = 3;
   public int ambientOcclusion;
 
   protected short colixCurrent;
@@ -61,6 +59,10 @@ public class GData implements JmolGraphicsInterface {
   public final static byte ENDCAPS_SPHERICAL = 3;
   public final static byte ENDCAPS_OPENEND = 4;
   
+  /**
+   * It is possible to instantiate this class with no Graphics3D. 
+   * This will happen in the case of WebGL. 
+   */
   public GData() {
     shader = new Shader();
   }
@@ -88,7 +90,6 @@ public class GData implements JmolGraphicsInterface {
    * @param depthValue
    *        rear clipping percentage [0,100]
    */
-  @Override
   public void setDepth(int depthValue) {
     depth = depthValue < 0 ? 0 : depthValue;
   }
@@ -116,16 +117,6 @@ public class GData implements JmolGraphicsInterface {
     slab = Math.max(0, slabValue);
   }
 
-  public int zShadeR, zShadeG, zShadeB;
-
-  protected Object graphicsForMetrics;
-
-  public final static int EXPORT_RAYTRACER = 2;
-
-  public final static int EXPORT_CARTESIAN = 1;
-
-  public final static int EXPORT_NOT = 0;
-
   /**
    * @param zShade
    *        whether to shade along z front to back
@@ -135,19 +126,20 @@ public class GData implements JmolGraphicsInterface {
    *        for zShade
    * @param zPower 
    */
-  public void setZShade(boolean zShade, int zSlab, int zDepth, int zPower) {
-    if (zShade)
-      setZShade2(zSlab, zDepth, zPower);
+  @Override
+  public void setSlabAndZShade(int slab, int depth, boolean zShade, int zSlab, int zDepth, int zPower) {
+    setSlab(slab);
+    setDepth(depth);
   }
 
-  protected void setZShade2(int zSlab, int zDepth, int zPower) {
-    zShadeR = bgcolor & 0xFF;
-    zShadeG = (bgcolor & 0xFF00) >> 8;
-    zShadeB = (bgcolor & 0xFF0000) >> 16;
-    this.zSlab = zSlab < 0 ? 0 : zSlab;
-    this.zDepth = zDepth < 0 ? 0 : zDepth;
-    this.zShadePower = zPower;
-  }
+
+  protected Object graphicsForMetrics;
+
+  public final static int EXPORT_RAYTRACER = 2;
+
+  public final static int EXPORT_CARTESIAN = 1;
+
+  public final static int EXPORT_NOT = 0;
 
   public void setAmbientOcclusion(int value) {
     ambientOcclusion = value;

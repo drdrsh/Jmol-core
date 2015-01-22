@@ -34,7 +34,7 @@ public interface MeshDataServer extends VertexDataServer {
   
   public abstract void invalidateTriangles();
   public abstract void fillMeshData(MeshData meshData, int mode, IsosurfaceMesh mesh);
-  public abstract void notifySurfaceGenerationCompleted();
+  public abstract boolean notifySurfaceGenerationCompleted();
   public abstract void notifySurfaceMappingCompleted();
   public abstract P3[] calculateGeodesicSurface(BS bsSelected, float envelopeRadius);
   public abstract void addRequiredFile(String fileName);

@@ -109,8 +109,7 @@ public class MeshSlicer {
     SB sb = new SB();
     sb.append(andCap ? " cap " : " slab ");
     if (isGhost) {
-      sb.append("translucent ")
-          .appendF(C.getColixTranslucencyFractional(m.slabColix)).append(" ");
+      sb.append(C.getColixTranslucencyLabel(m.slabColix)).append(" ");
       String s = C.getHexCode(m.slabColix);
       if (s != null)
         sb.append(s).append(" ");

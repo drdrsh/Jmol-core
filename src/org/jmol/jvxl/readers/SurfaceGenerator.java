@@ -1030,8 +1030,11 @@ public class SurfaceGenerator {
     if (params.slabInfo != null)
       surfaceReader.slabIsosurface(params.slabInfo);
 
-    if (haveMeshDataServer)
-      meshDataServer.notifySurfaceGenerationCompleted();
+    if (haveMeshDataServer) {
+      if (meshDataServer.notifySurfaceGenerationCompleted()) {
+        surfaceReader.hasColorData = false;
+      }
+    }
     
     if (jvxlData.thisSet >= 0)
       getSurfaceSets();

@@ -69,7 +69,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
       return false;
     colix = C.getColixInherited(colix, p.centralAtom.colixAtom);
     boolean needTranslucent = false;
-    if (C.isColixTranslucent(colix)) {
+    if (C.renderPass2(colix)) {
       needTranslucent = true;
     } else if (!g3d.setC(colix)) {
       return false;

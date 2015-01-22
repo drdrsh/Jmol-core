@@ -185,7 +185,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
         : vwr.gdata.isPass2));
     isTranslucentInherit = (isGhostPass && C.getColixTranslucent3(mesh.slabColix, false, 0)== C.INHERIT_COLOR);
     isTranslucent = isGhostPass
-        || C.isColixTranslucent(mesh.colix);
+        || C.renderPass2(mesh.colix);
     if (isTranslucent || volumeRender || mesh.bsSlabGhost != null)
       needTranslucent = true;
     doRender = (setColix(mesh.colix) || mesh.showContourLines);

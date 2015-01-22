@@ -1072,9 +1072,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     // InitializeModel
 
     tm.finalizeTransformParameters();
-    gdata.setSlab(tm.slabValue);
-    gdata.setDepth(tm.depthValue);
-    gdata.setZShade(tm.zShadeEnabled,
+    gdata.setSlabAndZShade(tm.slabValue, tm.depthValue, tm.zShadeEnabled,
         tm.zSlabValue, tm.zDepthValue,
         g.zShadePower);
   }

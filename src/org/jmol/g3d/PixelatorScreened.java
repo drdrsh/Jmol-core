@@ -25,47 +25,27 @@
 
 package org.jmol.g3d;
 
-class PixelatorShaded extends Pixelator {
+class PixelatorScreened extends Pixelator {
 
 
   public int zSlab, zDepth, zShadeR, zShadeG, zShadeB;
   public int zShadePower = 3;
+  private Pixelator p0;
+  private int width;
 
   /**
    * @param g 
    * @param p0 
    */
-  PixelatorShaded(Graphics3D g, Pixelator p0) {
+  PixelatorScreened(Graphics3D g, Pixelator p0) {
     super(g);
-      zShadeR = g.bgcolor & 0xFF;
-      zShadeG = (g.bgcolor & 0xFF00) >> 8;
-      zShadeB = (g.bgcolor & 0xFF0000) >> 16;
-      this.zSlab = g.zSlab < 0 ? 0 : g.zSlab;
-      this.zDepth = g.zDepth < 0 ? 0 : g.zDepth;
-      this.zShadePower = g.zShadePower;
-      this.p0 = p0;
+    width = g.width;
+    this.p0 = p0;
   }
 
   @Override
-  void addPixel(int offset, int z, int p) {
-    if (z > zDepth)
-      return;
-    if (z <= zDepth && z >= zSlab) {
-      int pR = p & 0xFF;
-      int pG = (p & 0xFF00) >> 8;
-      int pB = (p & 0xFF0000) >> 16;
-      int pA = (p & 0xFF000000);
-      float f = (float)(zDepth - z) / (zDepth - zSlab);
-      if (zShadePower > 1) {
-        for (int i = 0; i < zShadePower; i++)
-          f *= f;
-      }
-      pR = zShadeR + (int) (f * (pR - zShadeR));
-      pG = zShadeG + (int) (f * (pG - zShadeG));
-      pB = zShadeB + (int) (f * (pB - zShadeB));        
-      p = (pB << 16) | (pG << 8) | pR | pA;
-    }
-    // important not to go directly to addPixel here for JavaScript avoidance of Java2Script SAEM method
-    p0.addPixel(offset, z, p);
+  protected void addPixel(int offset, int z, int p) {
+    if ((offset % width) % 2 == (offset / width) % 2)
+      p0.addPixel(offset, z, p);
   }
 }

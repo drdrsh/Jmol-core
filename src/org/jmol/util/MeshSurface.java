@@ -277,11 +277,6 @@ public class MeshSurface {
     return (bsSlabGhost == null ? null : C.getHexCode(slabColix));
   }
 
-  public String getSlabTranslucency() {
-    return (bsSlabGhost == null ? null : ""
-        + C.getColixTranslucencyFractional(slabColix));
-  }
-
   public String getSlabType() {
     return (bsSlabGhost != null && slabMeshType == T.mesh ? "mesh" : null);
   }

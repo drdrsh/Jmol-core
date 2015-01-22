@@ -387,8 +387,7 @@ public abstract class Shape {
   }
 
   public static String getTranslucentLabel(short colix) {
-    return (C.isColixTranslucent(colix) ? "translucent "
-        + C.getColixTranslucencyFractional(colix): "opaque");
+    return (C.isColixTranslucent(colix) ? C.getColixTranslucencyLabel(colix): "opaque");
   }
 
   

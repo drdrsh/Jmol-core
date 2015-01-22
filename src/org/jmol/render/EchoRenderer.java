@@ -76,7 +76,7 @@ public class EchoRenderer extends LabelsRenderer {
       }
       TextRenderer.render(t, g3d, scalePixelsPerMicron, imageFontScaling,
           false, null, xy);
-     if (C.isColixTranslucent(t.bgcolix) || C.isColixTranslucent(t.colix))
+     if (C.renderPass2(t.bgcolix) || C.renderPass2(t.colix))
        haveTranslucent = true;
     }
     if (!isExport) {

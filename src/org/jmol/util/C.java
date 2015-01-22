@@ -140,9 +140,8 @@ public final class C {
   public final static int TRANSLUCENT_SHIFT = 11;
   public final static int ALPHA_SHIFT = 24 - TRANSLUCENT_SHIFT;
   public final static int TRANSLUCENT_MASK = 0xF << TRANSLUCENT_SHIFT; //0x7800
-  // abandoned in Jmol 14.3.11 public final static int TRANSLUCENT_SCREENED = TRANSLUCENT_MASK;
+  public final static int TRANSLUCENT_SCREENED = TRANSLUCENT_MASK;
   public final static int TRANSPARENT = 8 << TRANSLUCENT_SHIFT; //0x4000
-  //public final static int TRANSLUCENT_50 = 4 << TRANSLUCENT_SHIFT; //0x2000
   public final static short OPAQUE_MASK = ~TRANSLUCENT_MASK;
 
   public final static short BLACK = 4;
@@ -322,7 +321,9 @@ public final class C {
     if (translucentLevel == 0) //opaque
       return 0;
     if (translucentLevel < 0) //screened
-      translucentLevel = 128;//return TRANSLUCENT_SCREENED;
+      return TRANSLUCENT_SCREENED;
+//    if (translucentLevel < 0) //screened
+  //    translucentLevel = 128;//return TRANSLUCENT_SCREENED;
     if (Float.isNaN(translucentLevel) || translucentLevel >= 255
         || translucentLevel == 1.0)
       return TRANSPARENT;
@@ -365,6 +366,11 @@ public final class C {
     }
   }
 
+  public final static boolean renderPass2(short colix) {
+    int c = colix & TRANSLUCENT_MASK;
+    return (c != 0 && c != TRANSLUCENT_SCREENED);
+  }
+
   public final static boolean isColixTranslucent(short colix) {
     return ((colix & TRANSLUCENT_MASK) != 0);
   }
@@ -392,6 +398,10 @@ public final class C {
     int translevel = getColixTranslucencyLevel(colix);
     return (translevel == -1 ? 0.5f : translevel == 0 ? 0
         : translevel == 255 ? 1 : translevel / 256f);
+  }
+
+  public static String getColixTranslucencyLabel(short colix) {
+    return  "translucent " + ((colix & TRANSLUCENT_SCREENED) == TRANSLUCENT_SCREENED ? -1 : getColixTranslucencyFractional(colix));
   }
 
   public final static int getColixTranslucencyLevel(short colix) {

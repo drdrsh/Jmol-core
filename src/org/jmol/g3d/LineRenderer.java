@@ -105,8 +105,6 @@ final class LineRenderer {
       }
     }
     lineCache.put(slopeKey, lineBits);
-    //nCached++;
-    //if (--test > 0 || ((100-test) % 100 == 0)) System.out.println(test+" "+dx + " " + dy + " " + lineBits);
   }
   
   void clearLineCache() {
@@ -159,41 +157,245 @@ final class LineRenderer {
         dyBA, dzBA, clipped, 0, 0);
   }
 
-  void plotLineDeltaA(int[] shades1, int[] shades2,
-                     int shadeIndex, int xA, int yA, int zA,
-                     int dxBA, int dyBA, int dzBA, boolean clipped) {
-    // from cylinder -- standard bond with two colors and translucencies
-    x1t = xA;
-    x2t = xA + dxBA;
-    y1t = yA;
-    y2t = yA + dyBA;
-    z1t = zA;
-    z2t = zA + dzBA;
+  void plotLineDeltaA(int[] shades1, int[] shades2, int screen, int shadeIndex,
+                      int x, int y, int z, int dx, int dy, int dz,
+                      boolean clipped) {
+    // from cylinder -- standard bond with two colors or cone with one color
+    x1t = x;
+    x2t = x + dx;
+    y1t = y;
+    y2t = y + dy;
+    z1t = z;
+    z2t = z + dz;
     if (clipped)
-    switch (getTrimmedLine()) {
-    case VISIBILITY_OFFSCREEN:
-      return;
-    case VISIBILITY_UNCLIPPED:
-      clipped = false;
+      switch (getTrimmedLine()) {
+      case VISIBILITY_OFFSCREEN:
+        return;
+      case VISIBILITY_UNCLIPPED:
+        clipped = false;
+      }
+    // special shading for bonds
+    int[] zbuf = g3d.zbuf;
+    int width = g3d.width;
+    int runIndex = 0;
+    int rise = Integer.MAX_VALUE;
+    int run = 1;
+    int offset = y * width + x;
+    int offsetMax = g3d.bufferSize;
+    int shadeIndexUp = (shadeIndex < Shader.SHADE_INDEX_LAST ? shadeIndex + 1
+        : shadeIndex);
+    int shadeIndexDn = (shadeIndex > 0 ? shadeIndex - 1 : shadeIndex);
+    int argb1 = shades1[shadeIndex];
+    int argb1Up = shades1[shadeIndexUp];
+    int argb1Dn = shades1[shadeIndexDn];
+    int argb2 = shades2[shadeIndex];
+    int argb2Up = shades2[shadeIndexUp];
+    int argb2Dn = shades2[shadeIndexDn];
+    int argb = argb1;
+    Pixelator p = g3d.pixel;
+    if (screen != 0) {
+      p = g3d.setScreened((screen & 1) == 1);
+      g3d.currentShadeIndex = 0;
     }
-    plotLineClippedA(shades1, shades2, shadeIndex, xA,
-        yA, zA, dxBA, dyBA, dzBA, clipped, 0, 0);
+    if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax
+        && z < zbuf[offset])
+      p.addPixel(offset, z, argb);
+    if (dx == 0 && dy == 0)
+      return;
+    int xIncrement = 1;
+    int yOffsetIncrement = width;
+    int x2 = x + dx;
+    int y2 = y + dy;
+
+    if (dx < 0) {
+      dx = -dx;
+      xIncrement = -1;
+    }
+    if (dy < 0) {
+      dy = -dy;
+      yOffsetIncrement = -width;
+    }
+    int twoDx = dx + dx, twoDy = dy + dy;
+
+    // the z dimension and the z increment are stored with a fractional
+    // component in the bottom 10 bits.
+    int zCurrentScaled = z << 10;
+    int argbUp = argb1Up;
+    int argbDn = argb1Dn;
+    if (dy <= dx) {
+      int roundingFactor = dx - 1;
+      if (dz < 0)
+        roundingFactor = -roundingFactor;
+      int zIncrementScaled = ((dz << 10) + roundingFactor) / dx;
+      int twoDxAccumulatedYError = 0;
+      int n1 = Math.abs(x2 - x2t) - 1;
+      int n2 = Math.abs(x2 - x1t) - 1;
+      for (int n = dx - 1, nMid = n / 2; --n >= n1;) {
+        if (n == nMid) {
+          argb = argb2;
+          if (argb == 0)
+            return;
+          argbUp = argb2Up;
+          argbDn = argb2Dn;
+          if (screen % 3 != 0) {
+            p = g3d.setScreened((screen & 2) == 2);
+            g3d.currentShadeIndex = 0;
+          }
+        }
+        offset += xIncrement;
+        zCurrentScaled += zIncrementScaled;
+        twoDxAccumulatedYError += twoDy;
+        if (twoDxAccumulatedYError > dx) {
+          offset += yOffsetIncrement;
+          twoDxAccumulatedYError -= twoDx;
+        }
+        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax
+            && runIndex < rise) {
+          int zCurrent = zCurrentScaled >> 10;
+          if (zCurrent < zbuf[offset]) {
+            int rand8 = shader.nextRandom8Bit();
+            p.addPixel(offset, zCurrent, rand8 < 85 ? argbDn
+                : (rand8 > 170 ? argbUp : argb));
+          }
+        }
+        runIndex = (runIndex + 1) % run;
+      }
+    } else {
+      int roundingFactor = dy - 1;
+      if (dz < 0)
+        roundingFactor = -roundingFactor;
+      int zIncrementScaled = ((dz << 10) + roundingFactor) / dy;
+      int twoDyAccumulatedXError = 0;
+      int n1 = Math.abs(y2 - y2t) - 1;// + 1;
+      int n2 = Math.abs(y2 - y1t) - 1;// - 1;
+      for (int n = dy - 1, nMid = n / 2; --n >= n1;) {
+        if (n == nMid) {
+          argb = argb2;
+          if (argb == 0)
+            return;
+          argbUp = argb2Up;
+          argbDn = argb2Dn;
+          if (screen % 3 != 0) {
+            p = g3d.setScreened((screen & 2) == 2);
+            g3d.currentShadeIndex = 0;
+          }
+        }
+        offset += yOffsetIncrement;
+        zCurrentScaled += zIncrementScaled;
+        twoDyAccumulatedXError += twoDx;
+        if (twoDyAccumulatedXError > dy) {
+          offset += xIncrement;
+          twoDyAccumulatedXError -= twoDy;
+        }
+        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax
+            && runIndex < rise) {
+          int zCurrent = zCurrentScaled >> 10;
+          if (zCurrent < zbuf[offset]) {
+            int rand8 = g3d.shader.nextRandom8Bit();
+            p.addPixel(offset, zCurrent, rand8 < 85 ? argbDn
+                : (rand8 > 170 ? argbUp : argb));
+          }
+        }
+        runIndex = (runIndex + 1) % run;
+      }
+    }
   }
 
-  void plotLineDeltaBits(int[] shades1, int[] shades2,
-                     int shadeIndex, int xA, int yA, int zA,
-                     int dxBA, int dyBA, int dzBA, boolean clipped) {
+  void plotLineDeltaBits(int[] shades1, int[] shades2, int shadeIndex, int x,
+                         int y, int z, int dx, int dy, int dz, boolean clipped) {
     // from cylinder -- cartoonRockets
-    x1t = xA;
-    x2t = xA + dxBA;
-    y1t = yA;
-    y2t = yA + dyBA;
-    z1t = zA;
-    z2t = zA + dzBA;
+    x1t = x;
+    x2t = x + dx;
+    y1t = y;
+    y2t = y + dy;
+    z1t = z;
+    z2t = z + dz;
     if (clipped && getTrimmedLine() == VISIBILITY_OFFSCREEN)
       return;
-    plotLineClippedBits(shades1, shades2, shadeIndex, xA,
-        yA, zA, dxBA, dyBA, dzBA, 0, 0);
+    // special shading for rockets; somewhat slower than above;
+    int[] zbuf = g3d.zbuf;
+    int width = g3d.width;
+    int runIndex = 0;
+    int rise = Integer.MAX_VALUE;
+    int run = 1;
+    int shadeIndexUp = (shadeIndex < Shader.SHADE_INDEX_LAST ? shadeIndex + 1
+        : shadeIndex);
+    int shadeIndexDn = (shadeIndex > 0 ? shadeIndex - 1 : shadeIndex);
+    int argb1 = shades1[shadeIndex];
+    int argb1Up = shades1[shadeIndexUp];
+    int argb1Dn = shades1[shadeIndexDn];
+    int argb2 = shades2[shadeIndex];
+    int argb2Up = shades2[shadeIndexUp];
+    int argb2Dn = shades2[shadeIndexDn];
+    int offset = y * width + x;
+    int offsetMax = g3d.bufferSize;
+    int i0, iMid, i1, i2, iIncrement, xIncrement, yIncrement;
+    float zIncrement;
+    if (lineTypeX) {
+      i0 = x;
+      i1 = x1t;
+      i2 = x2t;
+      iMid = x + dx / 2;
+      iIncrement = (dx >= 0 ? 1 : -1);
+      xIncrement = iIncrement;
+      yIncrement = (dy >= 0 ? width : -width);
+      zIncrement = (float) dz / (float) Math.abs(dx);
+    } else {
+      i0 = y;
+      i1 = y1t;
+      i2 = y2t;
+      iMid = y + dy / 2;
+      iIncrement = (dy >= 0 ? 1 : -1);
+      xIncrement = (dy >= 0 ? width : -width);
+      yIncrement = (dx >= 0 ? 1 : -1);
+      zIncrement = (float) dz / (float) Math.abs(dy);
+    }
+    float zFloat = z;
+    int argb = argb1;
+    int argbUp = argb1Up;
+    int argbDn = argb1Dn;
+    boolean isInWindow = false;
+    Pixelator p = g3d.pixel;
+    // "x" is not necessarily the x-axis.
+
+    //  x----x1t-----------x2t---x2
+    //  ------------xMid-----------
+    //0-|------------------>-----------w
+
+    // or
+
+    //  x2---x2t-----------x1t----x
+    //  ------------xMid-----------    
+    //0-------<-------------------|----w
+
+    for (int i = i0, iBits = i0;; i += iIncrement, iBits += iIncrement) {
+      if (i == i1)
+        isInWindow = true;
+      if (i == iMid) {
+        argb = argb2;
+        if (argb == 0)
+          return;
+        argbUp = argb2Up;
+        argbDn = argb2Dn;
+      }
+      if (argb != 0 && isInWindow && offset >= 0 && offset < offsetMax
+          && runIndex < rise) {
+        if (zFloat < zbuf[offset]) {
+          int rand8 = shader.nextRandom8Bit();
+          p.addPixel(offset, (int) zFloat, rand8 < 85 ? argbDn
+              : (rand8 > 170 ? argbUp : argb));
+        }
+      }
+      if (i == i2)
+        break;
+      runIndex = (runIndex + 1) % run;
+      offset += xIncrement;
+      while (iBits < 0)
+        iBits += nBits;
+      if (lineBits.get(iBits % nBits))
+        offset += yIncrement;
+      zFloat += zIncrement;
+    }
   }
 
   void plotDashedLine(int argb, int run, int rise, int xA,
@@ -318,7 +520,6 @@ final class LineRenderer {
         cc2 = g3d.clipCode3(x2t, y2t, z2t);
       }
     } while ((cc1 | cc2) != 0);
-    //System.out.println("trimmed line " + x1t + " " + y1t + " " + z1t + " " + x2t + " " + y2t + " " + z2t + " " + cc1 + "/" + cc2);
     return VISIBILITY_CLIPPED;
   }
 
@@ -333,7 +534,6 @@ final class LineRenderer {
       rise = Integer.MAX_VALUE;
       run = 1;
     }
-    //int test1 = (g3d.random > 0.9 ? -1 : 1);System.out.println("line3db " + test1 + " " + x + " " + y + " " + dx + " " + dy);
     int offset = y * width + x;
     int offsetMax = g3d.bufferSize;
     //boolean flipflop = (((x ^ y) & 1) != 0);
@@ -341,15 +541,10 @@ final class LineRenderer {
     int argb = argb1;
     Pixelator p = g3d.pixel;
     if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax 
-        && z < zbuf[offset]) {
+        && z < zbuf[offset])
       p.addPixel(offset, z, argb);
-      //System.out.println((offset % width) + "\t" + (offset / width));
-    }
-    if (dx == 0 && dy == 0) {
-      //g3d.addPixel(offset, z, argb);
+    if (dx == 0 && dy == 0)
       return;
-    }
-    //System.out.println("dx dy " + dx + " " + dy);
     int xIncrement = 1;
     int yOffsetIncrement = width;
 
@@ -379,7 +574,11 @@ final class LineRenderer {
       int n2 = Math.abs(x2 - x1t) - 1;
       for (int n = dx - 1, nMid = n / 2; --n >= n1;) {
         if (n == nMid) {
+          
+          
 //          tScreened = tScreened2;
+          
+          
           argb = argb2;
           if (argb == 0)
             return;
@@ -397,7 +596,6 @@ final class LineRenderer {
           int zCurrent = zCurrentScaled >> 10;
           if (zCurrent < zbuf[offset])
             p.addPixel(offset, zCurrent, argb);
-          //System.out.println((offset % width) + "\t" + (offset / width));
         }
         runIndex = (runIndex + 1) % run;
       }
@@ -422,273 +620,16 @@ final class LineRenderer {
         if (twoDyAccumulatedXError > dy) {
           offset += xIncrement;
           twoDyAccumulatedXError -= twoDy;
-//          flipflop = !flipflop;
         }
         if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax 
             && runIndex < rise) {
           int zCurrent = zCurrentScaled >> 10;
           if (zCurrent < zbuf[offset])
             p.addPixel(offset, zCurrent, argb);
-          //System.out.println((offset % width) + "\t" + (int)Math.floor(offset / width));
-        }
-        runIndex = (runIndex + 1) % run;
-      }
-    }
-  }
-
-  private void plotLineClippedA(int[] shades1, 
-                               int[] shades2, 
-                               int shadeIndex, int x, int y, int z, int dx,
-                               int dy, int dz, boolean clipped, int run,
-                               int rise) {
-    // special shading for bonds
-    int[] zbuf = g3d.zbuf;
-    int width = g3d.width;
-    int runIndex = 0;
-    if (run == 0) {
-      rise = Integer.MAX_VALUE;
-      run = 1;
-    }
-    int offset = y * width + x;
-    int offsetMax = g3d.bufferSize;
-    int shadeIndexUp = (shadeIndex < Shader.SHADE_INDEX_LAST ? shadeIndex + 1
-        : shadeIndex);
-    int shadeIndexDn = (shadeIndex > 0 ? shadeIndex - 1 : shadeIndex);
-    int argb1 = shades1[shadeIndex];
-    int argb1Up = shades1[shadeIndexUp];
-    int argb1Dn = shades1[shadeIndexDn];
-    int argb2 = shades2[shadeIndex];
-    int argb2Up = shades2[shadeIndexUp];
-    int argb2Dn = shades2[shadeIndexDn];
-    int argb = argb1;
-    Pixelator p = g3d.pixel;
-    //boolean tScreened = tScreened1;
-    //boolean flipflop = (((x ^ y) & 1) != 0);
-    if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax 
-        && z < zbuf[offset])
-      p.addPixel(offset, z, argb);
-    if (dx == 0 && dy == 0) {
-      return;
-    }
-    int xIncrement = 1;
-    int yOffsetIncrement = width;
-    int x2 = x + dx;
-    int y2 = y + dy;
-
-    //int test1 = (g3d.random > 0.9 ? -1 : 0);System.out.println("line3d " + test1 + " " + x + " " + y + " " + dx + " " + dy);
-
-    if (dx < 0) {
-      dx = -dx;
-      xIncrement = -1;
-    }
-    if (dy < 0) {
-      dy = -dy;
-      yOffsetIncrement = -width;
-    }
-    int twoDx = dx + dx, twoDy = dy + dy;
-
-    // the z dimension and the z increment are stored with a fractional
-    // component in the bottom 10 bits.
-    int zCurrentScaled = z << 10;
-    int argbUp = argb1Up;
-    int argbDn = argb1Dn;
-    if (dy <= dx) {
-      int roundingFactor = dx - 1;
-      if (dz < 0)
-        roundingFactor = -roundingFactor;
-      int zIncrementScaled = ((dz << 10) + roundingFactor) / dx;
-      int twoDxAccumulatedYError = 0;
-      int n1 = Math.abs(x2 - x2t) - 1;// + 1;
-      int n2 = Math.abs(x2 - x1t) - 1;// - 1;
-      //     System.out.println("shade dx-mode n1n2" + " " + n1 + " " + n2 + " xyz  " + x
-      //       + " " + y + " " + z + " x2 " + (x2) + " y2" + (y2) + " z2 "
-      //     + (z + "=z dz= " + dz) + " x2y2t=" + x2t + " " + y2t);
-      for (int n = dx - 1, nMid = n / 2; --n >= n1;) {
-        if (n == nMid) {
-          argb = argb2;
-          if (argb == 0)
-            return;
-          argbUp = argb2Up;
-          argbDn = argb2Dn;
-//          tScreened = tScreened2;
-//          if (tScreened && !tScreened1) {
-//            int yT = offset / width;
-//            int xT = offset % width;
-//            flipflop = ((xT ^ yT) & 1) == 0;
-//          }
-        }
-        offset += xIncrement;
-        zCurrentScaled += zIncrementScaled;
-        twoDxAccumulatedYError += twoDy;
-        if (twoDxAccumulatedYError > dx) {
-          offset += yOffsetIncrement;
-          //sy=" n,ny="+n+"  accumulated error "+dx+"/"+twoDxAccumulatedYError+" yincr="+yOffsetIncrement+" offset " + offset;
-          twoDxAccumulatedYError -= twoDx;
-          //flipflop = !flipflop;
-        }
-        //System.out.println("shade n offset" + n + " " + offset);
-        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax 
-            && runIndex < rise) {
-          int zCurrent = zCurrentScaled >> 10;
-          if (zCurrent < zbuf[offset]) {
-            int rand8 = shader.nextRandom8Bit();
-            p.addPixel(offset, zCurrent, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
-          }
-        }
-        runIndex = (runIndex + 1) % run;
-      }
-    } else {
-      int roundingFactor = dy - 1;
-      if (dz < 0)
-        roundingFactor = -roundingFactor;
-      int zIncrementScaled = ((dz << 10) + roundingFactor) / dy;
-      int twoDyAccumulatedXError = 0;
-      int n1 = Math.abs(y2 - y2t) - 1;// + 1;
-      int n2 = Math.abs(y2 - y1t) - 1;// - 1;
-      //      System.out.println("shade dy-mode " + " n1=" + n1 + " n2=" + n2 + " xyz  " + x
-      //        + " " + y + " " + z + " x2 " + (x2) + " y2" + (y2) + " z2 "
-      //      + (z + "=z dz= " + dz) + " x2t=" + x2t + " y2t=" + y2t  );
-      for (int n = dy - 1, nMid = n / 2; --n >= n1;) {
-        if (n == nMid) {
-          argb = argb2;
-          if (argb == 0)
-            return;
-          argbUp = argb2Up;
-          argbDn = argb2Dn;
-//          tScreened = tScreened2;
-//          if (tScreened && !tScreened1) {
-//            int yT = offset / width;
-//            int xT = offset % width;
-//            flipflop = ((xT ^ yT) & 1) == 0;
-//          }
-        }
-        offset += yOffsetIncrement;
-        zCurrentScaled += zIncrementScaled;
-        twoDyAccumulatedXError += twoDx;
-        if (twoDyAccumulatedXError > dy) {
-          offset += xIncrement;
-          twoDyAccumulatedXError -= twoDy;
-          //flipflop = !flipflop;
-        }
-        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax 
-            && runIndex < rise) {
-          int zCurrent = zCurrentScaled >> 10;
-          if (zCurrent < zbuf[offset]) {
-            int rand8 = g3d.shader.nextRandom8Bit();
-            p.addPixel(offset, zCurrent, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
-          }
         }
         runIndex = (runIndex + 1) % run;
       }
     }
   }
   
-  private void plotLineClippedBits(int[] shades1, 
-                                   int[] shades2, 
-                                   int shadeIndex, int x, int y, int z, int dx,
-                                   int dy, int dz, int run, int rise) {
-    // special shading for rockets; somewhat slower than above;
-    //System.out.println("line3d plotLineClippedBits "+x+" "+y+" "+z+" "+dx+" "+dy+" "+dz+" "+shades1);
-    int[] zbuf = g3d.zbuf;
-    int width = g3d.width;
-    int runIndex = 0;
-    if (run == 0) {
-      rise = Integer.MAX_VALUE;
-      run = 1;
-    }
-//    if (x != 227 || y != 843)return;
-//System.out.println("plcb " + x + " " + y + " " + z + " " + dx + " " + dy + " " + dz + " " + width);
-
-int shadeIndexUp = (shadeIndex < Shader.SHADE_INDEX_LAST ? shadeIndex + 1
-        : shadeIndex);
-    int shadeIndexDn = (shadeIndex > 0 ? shadeIndex - 1 : shadeIndex);
-    int argb1 = shades1[shadeIndex];
-    int argb1Up = shades1[shadeIndexUp];
-    int argb1Dn = shades1[shadeIndexDn];
-    int argb2 = shades2[shadeIndex];
-    int argb2Up = shades2[shadeIndexUp];
-    int argb2Dn = shades2[shadeIndexDn];
-    //boolean tScreened = tScreened1;
-    //boolean flipflop = (((x ^ y) & 1) != 0);
-    int offset = y * width + x;
-    int offsetMax = g3d.bufferSize;
-    int i0, iMid, i1, i2, iIncrement, xIncrement, yIncrement;
-    float zIncrement;
-    if (lineTypeX) {
-      i0 = x;
-      i1 = x1t;
-      i2 = x2t;
-      iMid = x + dx / 2;
-      iIncrement = (dx >= 0 ? 1 : -1);
-      xIncrement = iIncrement;
-      yIncrement = (dy >= 0 ? width : -width);
-      zIncrement = (float)dz/(float)Math.abs(dx);
-    } else {
-      i0 = y;
-      i1 = y1t;
-      i2 = y2t;
-      iMid = y + dy / 2;
-      iIncrement = (dy >= 0 ? 1 : -1);
-      xIncrement = (dy >= 0 ? width : -width);
-      yIncrement = (dx >= 0 ? 1 : -1);
-      zIncrement = (float)dz/(float)Math.abs(dy);
-    }
-    //System.out.println(lineTypeX+" dx dy dz " + dx + " " + dy + " " + dz);
-    float zFloat = z;
-    int argb = argb1;
-    int argbUp = argb1Up;
-    int argbDn = argb1Dn;
-    boolean isInWindow = false;
-    Pixelator p = g3d.pixel;
-    // "x" is not necessarily the x-axis.
-    
-    //  x----x1t-----------x2t---x2
-    //  ------------xMid-----------
-    //0-|------------------>-----------w
-
-    // or
-    
-    //  x2---x2t-----------x1t----x
-    //  ------------xMid-----------    
-    //0-------<-------------------|----w
-    
-    for (int i = i0, iBits = i0;; i += iIncrement, iBits += iIncrement) {
-      if (i == i1)
-        isInWindow = true;
-      if (i == iMid) {
-        argb = argb2;
-        if (argb == 0)
-          return;
-        argbUp = argb2Up;
-        argbDn = argb2Dn;
-//        tScreened = tScreened2;
-//        if (tScreened && !tScreened1) {
-//          int yT = offset / width;
-//          int xT = offset % width;
-//          flipflop = ((xT ^ yT) & 1) == 0;
-//        }
-      }
-      //if(test > 0)System.out.println(isInWindow + " i1="+ i1 + " i0=" + i0 + " i=" + i + " offset="+offset );
-      if (argb != 0 && isInWindow && offset >= 0 && offset < offsetMax 
-          && runIndex < rise) {
-        if (zFloat < zbuf[offset]) {
-          int rand8 = shader.nextRandom8Bit();
-          
-          //System.out.println(x + " - " + y + " " + i + " " + offset + " " + (offset - width));
-
-          p.addPixel(offset, (int) zFloat, rand8 < 85 ? argbDn : (rand8 > 170 ? argbUp : argb));
-        }
-      }
-      if (i == i2)
-        break;
-      runIndex = (runIndex + 1) % run;
-      offset += xIncrement;
-      while (iBits < 0)
-        iBits += nBits;
-      if (lineBits.get(iBits % nBits))
-        offset += yIncrement;
-      zFloat += zIncrement;
-      //System.out.println("x y z "+offset+" "+zFloat+ " "+xIncrement+" "+yIncrement+" "+zIncrement);
-    }
-  }
 }

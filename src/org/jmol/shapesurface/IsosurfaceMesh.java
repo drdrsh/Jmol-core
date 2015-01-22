@@ -609,7 +609,7 @@ public class IsosurfaceMesh extends Mesh {
     jvxlData.diameter = diameter;
     jvxlData.color = C.getHexCode(colix);
     jvxlData.meshColor = (meshColix == 0 ? null : C.getHexCode(meshColix));
-    jvxlData.translucency = C.getColixTranslucencyFractional(colix);
+    jvxlData.translucency = ((colix & C.TRANSLUCENT_SCREENED) == C.TRANSLUCENT_SCREENED ? -1 : C.getColixTranslucencyFractional(colix));
     jvxlData.rendering = getRendering().substring(1);
     jvxlData.colorScheme = (colorEncoder == null ? null : colorEncoder
         .getColorScheme());
@@ -669,7 +669,7 @@ public class IsosurfaceMesh extends Mesh {
    * 
    * @param colorRgb
    */
-  void setColorsFromJvxlData(int colorRgb) {
+  boolean setColorsFromJvxlData(int colorRgb) {
     diameter = jvxlData.diameter;
     if (colorRgb == -1) {
     } else if (colorRgb != Integer.MIN_VALUE && colorRgb != Integer.MAX_VALUE) {
@@ -682,22 +682,26 @@ public class IsosurfaceMesh extends Mesh {
       colix = C.ORANGE;
     colix = C.getColixTranslucent3(colix, jvxlData.translucency != 0,
         jvxlData.translucency);
+    float translucencyLevel = (jvxlData.translucency == 0 ? Float.NaN : jvxlData.translucency);
     if (jvxlData.meshColor != null)
       meshColix = C.getColixS(jvxlData.meshColor);
     setJvxlDataRendering();
 
     isColorSolid = !jvxlData.isBicolorMap && jvxlData.vertexColors == null
         && jvxlData.vertexColorMap == null;
-    if (colorEncoder != null) {
+    if (colorEncoder == null)
+      return false;
       // bicolor map will be taken care of with params.isBicolorMap
       if (jvxlData.vertexColorMap == null) {
         if (jvxlData.colorScheme != null) {
           String colorScheme = jvxlData.colorScheme;
           boolean isTranslucent = colorScheme.startsWith("translucent ");
-          if (isTranslucent)
+          if (isTranslucent) {
             colorScheme = colorScheme.substring(12);
+            translucencyLevel = Float.NaN;
+          }
           colorEncoder.setColorScheme(colorScheme, isTranslucent);
-          remapColors(null, null, Float.NaN);
+          remapColors(null, null, translucencyLevel);
         }
       } else {
         if (jvxlData.baseColor != null) {
@@ -712,8 +716,7 @@ public class IsosurfaceMesh extends Mesh {
             vcs[i] = colix;
         }
       }
-    }
-
+      return true;
   }
 
   void setJvxlDataRendering() {

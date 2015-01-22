@@ -53,7 +53,7 @@ public class Export3D implements JmolRendererInterface {
   private HermiteRenderer hermite3d;
   private int width;
   private int height;
-  private int slab;
+  private int slab, depth;
 
   String exportName;
 
@@ -106,11 +106,14 @@ public class Export3D implements JmolRendererInterface {
     gdata.setSlab(slabValue);
     slab = gdata.slab;
   }
-
   @Override
-  public void setDepth(int depthValue) {
-    // no equivalent in exporters?
+  public void setSlabAndZShade(int slabValue, int depthValue, boolean zShade, int zSlab, int zDepth, int zPower) {
+    gdata.setSlab(slabValue);
+    slab = gdata.slab;
     gdata.setDepth(depthValue);
+    depth = gdata.depth; // not implemented
+    // zShade??
+    // see Graphics3D; could be implemented in an Exporter as well;
   }
 
   @Override

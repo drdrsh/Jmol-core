@@ -60,7 +60,7 @@ public class UccageRenderer extends CageRenderer {
         && vwr.getBoolean(T.navigationperiodic))
       return false;
     colix = vwr.getObjectColix(StateManager.OBJ_UNITCELL);
-    boolean needTranslucent = C.isColixTranslucent(colix);
+    boolean needTranslucent = C.renderPass2(colix);
     if (!isExport && needTranslucent != vwr.gdata.isPass2)
       return needTranslucent;
     //doLocalize = vwr.getUseNumberLocalization();

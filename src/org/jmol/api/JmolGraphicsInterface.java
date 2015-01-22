@@ -11,9 +11,8 @@ public interface JmolGraphicsInterface {
 
   public abstract void renderAllStrings(Object jmolRenderer);
 
-  public abstract void setDepth(int depthValue);
-
   public abstract void setSlab(int slabValue);
 
+  public abstract void setSlabAndZShade(int slabValue, int depthValue, boolean zShade, int zSlab, int zDepth, int zPower);
 
 }

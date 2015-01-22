@@ -187,8 +187,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
     }
     boolean needTranslucent = false;
     if (!isExport && !isPass2) {
-      boolean doA = !C.isColixTranslucent(colixA);
-      boolean doB = !C.isColixTranslucent(colixB);
+      boolean doA = !C.renderPass2(colixA);
+      boolean doB = !C.renderPass2(colixB);
       if (!doA || !doB) {
         if (!doA && !doB && !needTranslucent) {
           g3d.setC(!doA ? colixA : colixB);
