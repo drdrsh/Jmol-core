@@ -423,7 +423,7 @@ final class LineRenderer {
   private final static int VISIBILITY_CLIPPED = 1;
   private final static int VISIBILITY_OFFSCREEN = 2;
 
-  private int x1t, y1t, z1t, x2t, y2t, z2t, cc1, cc2; // trimmed
+  private int x1t, y1t, z1t, x2t, y2t, z2t; // trimmed
 
   /**
    *<p>
@@ -445,8 +445,8 @@ final class LineRenderer {
 
   private int getTrimmedLine() {   // formerly "visibilityCheck()"
 
-    cc1 = g3d.clipCode3(x1t, y1t, z1t);
-    cc2 = g3d.clipCode3(x2t, y2t, z2t);
+    int cc1 = g3d.clipCode3(x1t, y1t, z1t);
+    int cc2 = g3d.clipCode3(x2t, y2t, z2t);
     if ((cc1 | cc2) == 0)
       return VISIBILITY_UNCLIPPED;
 

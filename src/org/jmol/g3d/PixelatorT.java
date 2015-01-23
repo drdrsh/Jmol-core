@@ -44,7 +44,7 @@ class PixelatorT extends Pixelator {
   }
   
   @Override
-  protected void addPixel(int offset, int z, int p) {
+  void addPixel(int offset, int z, int p) {
     int zT = g.zbufT[offset];
     if (z < zT) {
       // new in front -- merge old translucent with opaque

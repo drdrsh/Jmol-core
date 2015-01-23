@@ -43,7 +43,7 @@ class PixelatorScreened extends Pixelator {
   }
 
   @Override
-  protected void addPixel(int offset, int z, int p) {
+  void addPixel(int offset, int z, int p) {
     if ((offset % width) % 2 == (offset / width) % 2)
       p0.addPixel(offset, z, p);
   }
