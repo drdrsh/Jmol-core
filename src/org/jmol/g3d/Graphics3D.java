@@ -1217,6 +1217,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (diameter > ht3)
       return;
     int screen = 0;
+    currentShadeIndex = 0;
     if (!setC(colixB))
       colixB = 0;
     if (wasScreened)
