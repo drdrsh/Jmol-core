@@ -43,6 +43,9 @@ class PixelatorT extends Pixelator {
     // ignore in pass 2
   }
   
+  /**
+  *   @j2sOverride
+  */
   @Override
   void addPixel(int offset, int z, int p) {
     int zT = g.zbufT[offset];

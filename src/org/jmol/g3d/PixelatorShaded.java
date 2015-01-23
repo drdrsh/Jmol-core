@@ -37,12 +37,10 @@ class PixelatorShaded extends Pixelator {
 
   /**
    * @param g
-   * @param p0
    */
-  PixelatorShaded(Graphics3D g, Pixelator p0) {
+  PixelatorShaded(Graphics3D g) {
     super(g);
     tmp = new int[3];
-    this.p0 = p0;
   }
   
   Pixelator set(int zSlab, int zDepth, int zShadePower) {
@@ -51,9 +49,13 @@ class PixelatorShaded extends Pixelator {
     this.zSlab = zSlab < 0 ? 0 : zSlab;
     this.zDepth = zDepth < 0 ? 0 : zDepth;
     this.zShadePower = zShadePower;
+    this.p0 = g.pixel0; 
     return this;
   }
 
+  /**
+  *   @j2sOverride
+  */
   @Override
   void addPixel(int offset, int z, int p) {
     // z starts with 0 at camera and runs toward model, with zSlab <= zDepth

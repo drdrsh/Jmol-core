@@ -205,7 +205,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   private int anaglyphLength;
 
   Pixelator pixel;
-  private Pixelator pixel0, pixelT0, pixelScreened;
+  Pixelator pixel0;
+  private Pixelator pixelT0;
+  private Pixelator pixelScreened;
   private PixelatorShaded pixelShaded;
 
   protected int zMargin;
@@ -548,9 +550,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     setDepth(depthValue);
     if (zSlab < zDepth) {
       if (pixelShaded == null)
-        pixelShaded = new PixelatorShaded(this, pixel0);
+        pixelShaded = new PixelatorShaded(this);
       pixel = pixelShaded.set(zSlab, zDepth, zShadePower);
-      pixel.p0 = pixel0;
     } else {
       pixel = pixel0;
     }

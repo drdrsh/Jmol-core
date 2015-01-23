@@ -42,6 +42,9 @@ class PixelatorScreened extends Pixelator {
     this.p0 = p0;
   }
 
+  /**
+  *   @j2sOverride
+  */
   @Override
   void addPixel(int offset, int z, int p) {
     if ((offset % width) % 2 == (offset / width) % 2)
