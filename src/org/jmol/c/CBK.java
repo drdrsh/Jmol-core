@@ -42,6 +42,7 @@ public enum CBK {
   MEASURE,
   MESSAGE,
   MINIMIZATION,
+  SERVICE,
   PICK,
   RESIZE,
   SCRIPT,

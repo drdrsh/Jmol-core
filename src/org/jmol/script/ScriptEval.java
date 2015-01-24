@@ -4110,16 +4110,31 @@ public class ScriptEval extends ScriptExpr {
       // load OCCUPANCY
       // load PARTIALCHARGE
       // load HISTORY
+      // load NBO
       switch (tok) {
+      case T.nbo:
+      case T.history:
       case T.menu:
         String m = paramAsStr(checkLast(2));
-        if (!chk)
-          vwr.setMenu(m, true);
-        return;
-      case T.history:
-        String h = paramAsStr(checkLast(2));
-        if (!chk)
-          vwr.setHistory(h);
+        if (!chk) {
+          switch (tok) {
+          case T.nbo:
+            htParams.put("service", "nbo");
+            htParams.put("mode", Integer.valueOf(1)); // MODEL
+            htParams.put("action", "load");
+            htParams.put("value", m);
+            htParams.put("sync", Boolean.TRUE);
+            vwr.sm.processService(htParams);
+            vwr.loadInline((String) htParams.get("ret"));
+            break;
+          case T.history:
+            vwr.setHistory(m);
+            break;
+          case T.menu:
+            vwr.setMenu(m, true);
+            break;
+          }
+        }
         return;
       case T.data:
         isData = true;

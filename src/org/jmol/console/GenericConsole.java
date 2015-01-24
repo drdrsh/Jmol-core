@@ -302,6 +302,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     case HOVER:
     case LOADSTRUCT:
     case MINIMIZATION:
+    case SERVICE:
     case RESIZE:
     case SCRIPT:
     case SYNC:

@@ -96,6 +96,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
     case STRUCTUREMODIFIED:
     case MEASURE:
     case MESSAGE:
+    case SERVICE:
     case PICK:
     case SCRIPT:
     case SYNC:
@@ -115,16 +116,18 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
     return false;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void notifyCallback(CBK type, Object[] data) {
     String strInfo = (data == null || data[1] == null ? null : data[1]
         .toString());
+    Map<String, Object> info;
     switch (type) {
     case LOADSTRUCT:
       notifyFileLoaded(strInfo, (String) data[2], (String) data[3],
           (String) data[4], (Boolean) data[8]);
       if (jmol.gaussianDialog != null)
-        jmol.gaussianDialog.updateModel(-2); 
+        jmol.gaussianDialog.updateModel(-2);
       return;
     case ANIMFRAME:
       int[] iData = (int[]) data[1];
@@ -138,8 +141,8 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         display.status.setStatus(1, menuName);
         if (jmol.frame != null)
           jmol.frame.setTitle(menuName);
-//        if (jSpecViewFrame != null)
-//          setJSpecView("", true);
+        //        if (jSpecViewFrame != null)
+        //          setJSpecView("", true);
       }
       return;
     case SCRIPT:
@@ -164,17 +167,19 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       break;
     case MESSAGE:
       break;
-    //    case CLICK:
-    // x, y, action, int[] {action}
-    // the fourth parameter allows an application to change the action
-    //      if (display.haveDisplay)
-    //        display.status
-    //          .setStatus(1, "(" + data[1] + "," + data[2] + ")");
-    //      break;
+    case SERVICE:
+      if (display == null)
+        return;
+      info = (Map<String, Object>) data[1];
+      String service = (String) info.get("service");
+      if ("nbo".equals(service)) {
+        display.jmolPanel.getNBOService().processRequest(info);
+      }
+      return;
     case PICK:
       notifyAtomPicked(strInfo);
       if (jmol.gaussianDialog != null)
-        jmol.gaussianDialog.updateModel(((Integer) data[2]).intValue()); 
+        jmol.gaussianDialog.updateModel(((Integer) data[2]).intValue());
       break;
     case STRUCTUREMODIFIED:
       // 0 DONE; 1 in process
@@ -183,7 +188,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       int modelIndexx = ((Integer) data[3]).intValue();
       notifyStructureModified(atomIndex, modelIndexx, mode);
       if (jmol.gaussianDialog != null)
-        jmol.gaussianDialog.updateModel(-1); 
+        jmol.gaussianDialog.updateModel(-1);
       break;
     case SYNC:
       if (strInfo != null && strInfo.toLowerCase().startsWith("jspecview")) {
@@ -207,8 +212,8 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
     // cases that fail to return are sent to the console for processing
     if (jmol.service != null)
       jmol.service.scriptCallback(strInfo);
-    JmolCallbackListener appConsole = (JmolCallbackListener) vwr
-        .getProperty("DATA_API", "getAppConsole", null);
+    JmolCallbackListener appConsole = (JmolCallbackListener) vwr.getProperty(
+        "DATA_API", "getAppConsole", null);
     if (appConsole != null)
       appConsole.notifyCallback(type, data);
   }

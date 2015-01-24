@@ -563,6 +563,8 @@ public abstract class GenericApplet implements JmolAppletInterface,
   @Override
   public boolean notifyEnabled(CBK type) {
     switch (type) {
+    case SERVICE:
+      return false;
     case ECHO:
     case MESSAGE:
     case MEASURE:
@@ -608,6 +610,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
     case EVAL:
     case HOVER:
     case MINIMIZATION:
+    case SERVICE:
     case RESIZE:
     case DRAGDROP:
       // just send it

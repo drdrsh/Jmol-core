@@ -9172,4 +9172,5 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     if (jmolpopup != null)
       jmolpopup.jpiUpdateComputedMenus();
   }
+
 }

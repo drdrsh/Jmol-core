@@ -165,7 +165,6 @@ void processAtomicCharges() throws Exception {
    * @throws Exception
    */
   void processCoordinates() throws Exception {
-    readLines(3);
     if (!chargesFound) {
       asc.newAtomSet();
       baseAtomIndex = asc.ac;
@@ -174,7 +173,10 @@ void processAtomicCharges() throws Exception {
     }
     Atom[] atoms = asc.atoms;
     int atomNumber;
-    while (rd() != null) {
+    while (rd().trim().length() == 0 || line.indexOf("ATOM") >= 0) {
+      // skip header lines
+    }
+    while (line != null) {
       String[] tokens = getTokens();
       if (tokens.length == 0
           || (atomNumber = parseIntStr(tokens[0])) == Integer.MIN_VALUE)
@@ -189,6 +191,7 @@ void processAtomicCharges() throws Exception {
       if (atno != Integer.MIN_VALUE)
         elementSymbol = getElementSymbol(atno);
       atom.elementSymbol = elementSymbol;
+      rd();
     }
   }
   /**

@@ -38,6 +38,7 @@ import org.openscience.jmol.app.jsonkiosk.BannerFrame;
 import org.openscience.jmol.app.jsonkiosk.JsonNioClient;
 import org.openscience.jmol.app.jsonkiosk.JsonNioServer;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
+import org.openscience.jmol.app.nbo.NBOService;
 import org.openscience.jmol.app.surfacetool.SurfaceTool;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
@@ -105,7 +106,7 @@ import javax.swing.event.MenuListener;
 
 public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient {
 
-  static HistoryFile historyFile;
+  public static HistoryFile historyFile;
 
   public Viewer vwr;
 
@@ -114,6 +115,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   StatusBar status;
   int startupWidth, startupHeight;
   JsonNioServer serverService;
+  public NBOService nboService;
 
   protected String appletContext;
   protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
@@ -1108,8 +1110,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     
     @Override
     public void actionPerformed(ActionEvent e) {
+      getNBOService();
       if (nboDialog == null)
-        nboDialog = new NBODialog(frame, vwr);
+        nboDialog = new NBODialog(frame, vwr, nboService);
       else
         nboDialog.setVisible(true);
     }
@@ -1771,6 +1774,11 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   public void syncScript(String script) {
     vwr.syncScript(script, "~", 0);
+  }
+
+  public NBOService getNBOService() {
+    return (nboService == null ? (nboService = new NBOService(vwr))
+        : nboService);
   }
 
 }

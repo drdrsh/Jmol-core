@@ -871,6 +871,7 @@ public class TransformManager {
     slabPlane = null;
     setSlabEnabled(false);
     setZShadeEnabled(false);
+    slabDepthChanged();
   }
 
   public int getSlabPercentSetting() {
@@ -888,6 +889,7 @@ public class TransformManager {
   private void slabDepthChanged() {
     vwr.g.setI("slab", slabPercentSetting);
     vwr.g.setI("depth", depthPercentSetting);
+    finalizeTransformParameters(); // also sets _slabPlane and _depthPlane
   }
 
   void depthByPercentagePoints(int percentage) {
@@ -944,6 +946,7 @@ public class TransformManager {
       slabPlane = plane;
       slabPercentSetting = 100;
     }
+    slabDepthChanged();
   }
 
   /**
@@ -952,7 +955,6 @@ public class TransformManager {
    * @param isDepth
    */
   public void setSlabDepthInternal(boolean isDepth) {
-    finalizeTransformParameters();
     if (isDepth)
       depthPlane = null;
     else
@@ -960,7 +962,7 @@ public class TransformManager {
     slabInternal(getSlabDepthPlane(isDepth), isDepth);
   }
 
-  P4 getSlabDepthPlane(boolean isDepth) {
+  private P4 getSlabDepthPlane(boolean isDepth) {
     // the third row of the matrix defines the Z coordinate, which is all we need
     // and, in fact, it defines the plane. How convenient!
     // eval "slab set"

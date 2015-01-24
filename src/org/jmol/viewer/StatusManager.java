@@ -613,6 +613,12 @@ public class StatusManager {
           new Object[] { null, Integer.valueOf(mode), Integer.valueOf(atomIndex), Integer.valueOf(modelIndex), msg });
   }
   
+  public void processService(Map<String, Object> info) {
+    if (notifyEnabled(CBK.SERVICE))
+      cbl.notifyCallback(CBK.SERVICE,
+          new Object[] { null, info });
+  }
+
   public int getSyncMode() {
     return (!isSynced ? SYNC_OFF : drivingSync ? SYNC_DRIVER : SYNC_SLAVE);
   }
