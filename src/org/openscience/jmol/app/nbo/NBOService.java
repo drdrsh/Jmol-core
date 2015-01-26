@@ -36,6 +36,8 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Scanner;
 
+import javajs.util.Lst;
+import javajs.util.PT;
 import javajs.util.SB;
 
 /**
@@ -46,7 +48,12 @@ import javajs.util.SB;
  */
 public class NBOService {
 
-  public static final int MODEL = 1; // do not change - referred to as "1" in org.jmol.script.ScriptEval.cmdLoad
+  public static final int MODEL = 1; 
+
+  public static final int RUN = 2;
+
+  public static final int VIEW = 3;
+
 
   private transient Viewer vwr;
   
@@ -61,8 +68,17 @@ public class NBOService {
   private PrintWriter stdinWriter;
 
   private SB sbRet;
-
   private String nboAction;
+
+  private boolean inData;
+
+  public String serverPath;
+  public String workingPath;
+
+  private boolean nboSync;
+
+  private String nboModel;
+  
 
   /**
    * Manage communication between Jmol and NBOServer
@@ -71,29 +87,44 @@ public class NBOService {
    */
   public NBOService(Viewer vwr) {
     this.vwr = vwr;
+    sbRet = new SB();
     java.util.Properties props = JmolPanel.historyFile.getProperties();
-    serverPath = props.getProperty("nboServerPath",
-        System.getProperty("user.home"));
-    workingPath = props.getProperty("nboWorkingPath",
-        System.getProperty("user.home"));
+    setServerPath(props.getProperty("nboServerPath",
+        System.getProperty("user.home") + "/NBOServe"));
+  }
+
+  private void setServerPath(String path) {
+    serverPath = path;
+    workingPath = path.substring(0, path.lastIndexOf(File.separator));
   }
 
   public boolean processRequest(Map<String, Object> info) {
     boolean ok = false;
-    boolean sync = (info.get("sync") == Boolean.TRUE);
-    sbRet = (sync ? new SB() : null);
-    closeProcess();
-    startProcess(sync);
+    boolean nboSync = (info.get("sync") == Boolean.TRUE);
+    boolean isClosed = false;
+    if (nboServer != null)
+      try {
+        nboServer.exitValue();
+        isClosed = true;
+      } catch (Exception e) {
+        //
+      }
+    if (nboSync || this.nboSync || nboServer == null || isClosed) {
+      closeProcess();
+      startProcess(nboSync);
+    }
     nboMode = ((Integer) info.get("mode")).intValue();
     if (stdinWriter == null) {
       closeProcess();
-      sbRet.append("ERROR: Could not connect to NBOServe -- Use Tools...NBO... to set up NBOServe");
+      sbRet
+          .append("ERROR: Could not connect to NBOServe -- Use Tools...NBO... to set up NBOServe");
       nboMode = 0;
     }
     nboAction = (String) info.get("action");
+    String s;
     switch (nboMode) {
     case MODEL:
-      String s = (String) info.get("value");
+      s = (String) info.get("value");
       if (nboAction.equals("load")) {
         s = "sh " + s;
       } else if (nboAction.equals("run")) {
@@ -101,59 +132,77 @@ public class NBOService {
       } else {
         s = null;
       }
-      if (s != null) {
-        sendToNBO(MODEL, s, sync);
-        if (sync) {
-          try {
-            nboServer.waitFor();
-          } catch (InterruptedException e) {
-            return false;  
-          }
-          sbRet.append(getModel());
-        }
-        ok = true;
-      }
+      break;
+    case VIEW:
+      s = (String) info.get("value");
       break;
     default:
-      if (sync)
-        sbRet.append("unknown mode");
+      nboReport("unknown mode");
+      s = null;
       break;
     }
-    if (sync) {
+    if (s != null) {
+      sendToNBO(nboMode, s);
+      if (nboSync) {
+        try {
+          nboServer.waitFor();
+        } catch (InterruptedException e) {
+          return false;
+        }
+      }
+      ok = true;
+    }
+    if (nboSync) {
       info.put("ret", sbRet.toString());
-    }    
+      sbRet.setLength(0);
+    }
     return ok;
   }
 
   /**
-   * temporary kludge to force exit
-   * 
    * @param mode
    * @param s
-   * @param sync
    */
-  private void sendToNBO(int mode, String s, boolean sync) {
-    stdinWriter.println(mode + "\n" + s + "\n" + (true || sync ? "exit\nexit\n" : ""));
-    stdinWriter.flush();
+  private void sendToNBO(int mode, String s) {
+    s = mode + "\n" + s + "\nexit" + (nboSync ? "\nexit" : "");
+    sendCmd(s);
   }
   
-  public void nboReport(String nextLine) {
-    System.out.println(nextLine);
-    if (sbRet != null)
-      sbRet.append(nextLine + "\n");
-    try {
-      if (nboDialog != null)
-        nboDialog.nboReport(nextLine);
-    } catch (Throwable t) {
-      // ignore
+  private void sendCmd(String s) {    
+    System.out.println("sending: " + s + "\n");
+    stdinWriter.println(s);
+    stdinWriter.flush();
+  }
+
+  public void nboReport(String line) {
+    System.out.println("receiving: " + line);
+    if (nboDialog != null)
+      nboDialog.nboReport(line);
+    if (line.startsWith("DATA ")) {
+      if (line.startsWith("DATA \"model")) {
+        nboModel = PT.getQuotedStringAt(line, 0);
+        line += " NBO " + nboModel;
+      }
+      inData = (line.indexOf("exit") < 0);
+    }
+    if (inData) {
+      sbRet.append(line + "\n");
+    }
+    if (inData && line.indexOf("END") >= 0) {
+      inData = false;
+      String s = sbRet.toString();
+      sbRet.setLength(0);
+      String m = "\"" + nboModel + "\"";
+      nboModel = "\0";
+      if (!nboSync && line.indexOf(m) >= 0)
+        vwr.script(s);
     }
   }
 
-  public String serverPath;
-  public String workingPath;
-  
+
   public String startProcess(boolean sync) {
     try {
+      nboSync = sync;
       File pathToExecutable = new File(serverPath);
       ProcessBuilder builder = new ProcessBuilder(serverPath);
       builder.directory(new File(pathToExecutable.getParent())); // this is where you set the root folder for the executable to run with
@@ -162,25 +211,21 @@ public class NBOService {
       stdout = nboServer.getInputStream();
       nboReader = new BufferedReader(new InputStreamReader(stdout));
       nboListener = null;
-      if (!sync) {
-        nboListener = new Thread(new Runnable() {
-          @Override
-          public void run() {
-            while (true) {
-              String line;
-              try {
-                while ((line = nboReader.readLine()) != null) {
-                  nboReport(line);
-                }
-                asyncCallback();
-              } catch (Exception e1) {
-              }
-              break;
+      nboListener = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          while (true) {
+            String line;
+            try {
+              while ((line = nboReader.readLine()) != null)
+                nboReport(line);
+            } catch (Exception e1) {
             }
+            break;
           }
-        });
-        nboListener.start();
-      }
+        }
+      });
+      nboListener.start();
       stdinWriter = new PrintWriter(nboServer.getOutputStream());
     } catch (IOException e) {
       System.out.println(e.getMessage());
@@ -223,44 +268,9 @@ public class NBOService {
   }
 
 
-  /**
-   * process report from NBO -- asynchronous only
-   */
-  public void asyncCallback() {
-    switch (nboMode) {
-    case MODEL:
-      if (nboAction.equals("load")) {
-        String s = getModel();
-        nboDialog.setModel(s);
-        vwr.loadInline(s);
-      } else {
-        nboDialog.nboReport(null);
-        nboDialog.nboReport(getOutput());        
-      }
-    }
-  }
-
-  /**
-   * temporary only
-   * 
-   * @return model data
-   */
-  private String getModel() {
-    return getNBOFile("jmol_molfile.txt");
-  }
-
-  /**
-   * temporary only
-   * 
-   * @return output data
-   */
-  private String getOutput() {
-    return getNBOFile("jmol_outfile.txt");
-  }
-
-  private String getNBOFile(String fname) {
-    return vwr.getFileAsString3(workingPath.replace('\\', '/') + "/" + fname, true, "nbodialog");
-  }
+//  private String getNBOFile(String fname) {
+//    return vwr.getFileAsString3(workingPath.replace('\\', '/') + "/" + fname, true, "nbodialog");
+//  }
 
   /**
    * Just saves the path settings from this session.
@@ -268,7 +278,7 @@ public class NBOService {
   public void saveHistory() {
     java.util.Properties props = new java.util.Properties();
     props.setProperty("nboServerPath", serverPath);
-    props.setProperty("nboWorkingPath", workingPath);
+    //props.setProperty("nboWorkingPath", workingPath);
     JmolPanel.historyFile.addProperties(props);
   }
   

@@ -2229,7 +2229,6 @@ public class ScriptEval extends ScriptExpr {
       }
       if (theToken == null)
         continue;
-      //System.out.println(pc + " thetoken = " + theToken);
       int tok = theToken.tok;
       if (T.tokAttr(tok, T.flowCommand)) {
         isForCheck = cmdFlow(tok, isForCheck, vProcess);
@@ -4125,7 +4124,7 @@ public class ScriptEval extends ScriptExpr {
             htParams.put("value", m);
             htParams.put("sync", Boolean.TRUE);
             vwr.sm.processService(htParams);
-            vwr.loadInline((String) htParams.get("ret"));
+            runScript((String) htParams.get("ret"));
             break;
           case T.history:
             vwr.setHistory(m);
@@ -5838,10 +5837,43 @@ public class ScriptEval extends ScriptExpr {
         q = getQuaternionParameter(i);
         if (q != null) {
           if (tok == T.best && !(isMolecular = isSelected)) // yes, setting isMolecular here.
-            q = q.mulQ(Quat.newM(vwr.tm.matrixRotate).mul(-1));
+            q = q.div(vwr.tm.getRotationQ());
           rotAxis.setT(q.getNormal());
           endDegrees = q.getTheta();
         }
+        break;
+      case T.plane:
+        // rotate plane @1 @2 @3
+        // rotate plane picked
+        P3[] pts;
+        int n;
+        if (paramAsStr(i + 1).equalsIgnoreCase("picked")) {
+          i++;
+          @SuppressWarnings("unchecked")
+          Lst<SV> lst = (Lst<SV>) vwr.getPOrNull("pickedList");
+          n = lst.size();
+          if (n < 3)
+            return;
+          pts = new P3[3];
+          for (int j = 0; j < 3; j++)
+            pts[j] = vwr.ms.getAtomSetCenter(SV.getBitSet(lst.get(n - 3 + j), false));
+        } else if (isArrayParameter(i + 1)) {
+          pts = getPointArray(++i, -1, false);
+          i = iToken;
+        } else {
+          pts = new P3[3];
+          for (int j = 0; j < 3; j++) {
+            pts[j] = centerParameter(++i);
+            i = iToken;
+          }
+        }
+        n = pts.length;
+        if (n < 3)
+          return;
+        q = Quat.getQuaternionFrame(pts[n - 3], pts[n - 2], pts[n - 1]);
+        q = Quat.new4(1,0,0,0).mulQ(q.inv().div(vwr.tm.getRotationQ()));
+        rotAxis.setT(q.getNormal());
+        endDegrees = q.getTheta();
         break;
       case T.axisangle:
         haveRotation = true;
@@ -5887,7 +5919,8 @@ public class ScriptEval extends ScriptExpr {
         int symop = intParameter(++i);
         if (chk)
           continue;
-        Map<String, Object> info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(vwr.ms, null);
+        Map<String, Object> info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(
+            vwr.ms, null);
         Object[] op = (info == null ? null : (Object[]) info.get("operations"));
         if (symop == 0 || op == null || op.length < Math.abs(symop))
           invArg();
@@ -6060,7 +6093,8 @@ public class ScriptEval extends ScriptExpr {
           // currently rotateAxisAngleAtCenter cannot return true
           // if isSpin is true. But that is what we are working on
           // TODO: not exactly clear here if this will work
-          if (isJS && isSpin && bsAtoms == null && vwr.g.waitForMoveTo && endDegrees != Float.MAX_VALUE)
+          if (isJS && isSpin && bsAtoms == null && vwr.g.waitForMoveTo
+              && endDegrees != Float.MAX_VALUE)
             throw new ScriptInterruption(this, "rotate", 1);
         }
         return;
@@ -6110,9 +6144,9 @@ public class ScriptEval extends ScriptExpr {
       if (requiresThread && !useThreads())
         return;
       if (vwr.rotateAboutPointsInternal(this, points[0], points[1], rate,
-          endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList, is4x4 ? m4 : null)
-          && isJS
-          && isSpin)
+          endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList,
+          is4x4 ? m4 : null)
+          && isJS && isSpin)
         throw new ScriptInterruption(this, "rotate", 1);
     }
   }

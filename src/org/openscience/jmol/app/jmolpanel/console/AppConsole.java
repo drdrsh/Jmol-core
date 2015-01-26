@@ -41,6 +41,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JFrame;
+import javax.swing.JScrollBar;
 import javax.swing.JSplitPane;
 import javax.swing.JTextPane; //import javax.swing.SwingUtilities;
 import javax.swing.text.Position;
@@ -119,6 +120,8 @@ public class AppConsole extends JmolConsole implements EnterListener {
   private JmolAbstractButton helpButton, undoButton, redoButton, checkButton, topButton;
   private JPanel buttonPanel = new JPanel();
 
+  protected JScrollBar vBar;
+
   /*
    * methods sendConsoleEcho and sendConsoleMessage(strStatus)
    * are public in case developers want to use appConsole separate from the Jmol application.
@@ -181,6 +184,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
     if (enabledButtons == null)
       enabledButtons = ALL_BUTTONS;
     JScrollPane consolePane = new JScrollPane(console);
+    vBar = consolePane.getVerticalScrollBar();
     String[] tokens = PT.getTokens(enabledButtons);
     for (int i = 0; i < tokens.length; i++)
       enableButton(tokens[i]);
@@ -873,6 +877,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
 
         pt = caretPosition.getOffset();
         consoleTextPane.setCaretPosition(pt);
+        vBar.setValue(Integer.MAX_VALUE);
       } catch (Exception e) {
         e.printStackTrace();
         consoleTextPane.setCaretPosition(getLength());

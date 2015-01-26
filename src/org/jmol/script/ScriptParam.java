@@ -96,7 +96,7 @@ abstract public class ScriptParam extends ScriptError {
         sb.append(sv.get(i).asString()).appendC('\n');
       return sb.toString();
     }
-    return (v instanceof SV ? SV.oValue((SV) v) : v);
+    return SV.oValue(v);
   }
 
   protected String getStringParameter(String var, boolean orReturnName) {

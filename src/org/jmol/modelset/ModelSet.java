@@ -1389,7 +1389,7 @@ import java.util.Properties;
           continue;
         BS bsConformation = vwr.getModelUndeletedAtomsBitSet(i);
         if (conformationIndex >= 0) {
-          if (!am[i].getPdbConformation(bsConformation, conformationIndex))
+          if (am[i].getPdbConformation(bsConformation, conformationIndex))
             for (int c = nAltLocs; --c >= 0;)
               if (c != conformationIndex)
                 bsConformation.andNot(getAtomBitsMDa(T.spec_alternate,

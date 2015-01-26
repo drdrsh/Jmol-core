@@ -116,9 +116,9 @@ class ImageRenderer {
               height, zbuf, p, tlog);
     } else {
       for (int i = 0, offset = 0, pbufOffset = y * width + x; i < textHeight; i++, pbufOffset += (width - textWidth)) {
-        for (int j = 0; j < textWidth; j++, pbufOffset++)
+        for (int j = 0; j < textWidth; j++, pbufOffset++, offset++)
           if (z < zbuf[pbufOffset])
-            p.addPixel(pbufOffset, z, buffer[offset++]);
+            p.addPixel(pbufOffset, z, buffer[offset]);
       }
     }
   }

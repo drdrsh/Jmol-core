@@ -49,7 +49,7 @@ public class MMCifValidationParser {
 
     String note = (retProps == null || retProps.size() == 0 ? null
         : setProperties(retProps));
-    svMap.getMap().put("_note", SV.newS(note));
+    svMap.mapPut("_note", SV.newS(note));
     return note;
   }
 
@@ -59,7 +59,7 @@ public class MMCifValidationParser {
     
     String note = reader.vwr.getAnnotationParser().catalogStructureUnits(
         reader.vwr, svMap, getModelAtomIndices(), resMap, null, modelMap);
-    svMap.getMap().put("_note", SV.newS(note));
+    svMap.mapPut("_note", SV.newS(note));
     for (int i = reader.asc.atomSetCount; --i >= 0;) {
       Map<String, Object> info = reader.asc.getAtomSetAuxiliaryInfo(i);
       info.put("rna3d", svMap);

@@ -66,10 +66,14 @@ public abstract class Monomer extends Group {
                     int firstAtomIndex, int lastAtomIndex, byte[] interestingAtomOffsets) {
     setGroup(chain, group3, seqcode, firstAtomIndex, lastAtomIndex);
     offsets = interestingAtomOffsets;
+    setLeadAtomIndex();
+    return this;
+  }
+
+  protected void setLeadAtomIndex() {
     int offset = offsets[0] & 0xFF;
     if (offset != 255)
       leadAtomIndex = firstAtomIndex + offset;
-    return this;
   }
 
   int monomerIndex;
@@ -392,13 +396,13 @@ public abstract class Monomer extends Group {
           if (atomID != thisID || atomID == 0 
                   && !atoms[iNew].getAtomName().equals(atom.getAtomName()))
             continue;
-          if (Logger.debugging)
-            Logger.debug("Chain.udateOffsetsForAlternativeLocation " + atoms[iNew] + " was " + atom);
           offsets[offsetIndex] = (byte) offsetNew;
+          //System.out.println("Chain.udateOffsetsForAlternativeLocation " + atoms[iNew] + " was " + atom);
+          atoms[iNew].nBackbonesDisplayed = atom.nBackbonesDisplayed;
           break;
         }
       }
-
+      setLeadAtomIndex();
   }
     
   final void getMonomerSequenceAtoms(BS bsInclude, BS bsResult) {

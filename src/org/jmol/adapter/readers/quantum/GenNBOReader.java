@@ -140,6 +140,12 @@ public class GenNBOReader extends MOReader {
 //      $END
 
 
+  @Override
+  protected void finalizeSubclassReader() throws Exception {
+    appendLoadNote("NBO type " + nboType);
+    finalizeReaderASCR();
+  }
+  
   private void readMOs() throws Exception {
     nOrbitals0 = orbitals.size();
     getFile46();

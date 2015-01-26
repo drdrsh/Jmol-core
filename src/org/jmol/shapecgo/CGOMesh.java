@@ -60,7 +60,7 @@ public class CGOMesh extends DrawMesh {
   
 
   private final static int[] sizes = new int[] {
-     0,  0,  1,  0,  3,
+     0,  8,  1,  0,  3,
      3,  3,  4, 27, 13,
      1,  1,  1,  1, 13,
     15,  1, 35, 13,  3, 
@@ -68,12 +68,22 @@ public class CGOMesh extends DrawMesh {
      1, 14, 16,  1,  2
   };
   
-  public static int getSize(int i) {
+  private final static int[] sizes2D = new int[] {
+    0,  6,  1,  0,  2,
+    3,  3,  4, 24, 13,
+    1,  1,  1,  1, 11,
+   15,  1, 35, 13,  3, 
+    2,  3,  9,  1,  2,
+    1, 14, 16,  1,  2
+ };
+ 
+  public static int getSize(int i, boolean is3D) {
     switch (i) {
+    case JMOL_SCREEN:
     case JMOL_DIAMETER:
       return 1;
     default:
-      return (i >= 0 && i < sizes.length ? sizes[i] : -1);
+      return (i >= 0 && i < sizes.length ? (is3D ? sizes : sizes2D)[i] : -1);
     }
   }
   
@@ -117,6 +127,9 @@ public class CGOMesh extends DrawMesh {
 
   public final static int JMOL_DIAMETER       = -100;
 
+  public final static int JMOL_SCREEN         = -101;  // SCREEN 50 50%; -3000 absolute z=3000 
+  
+
   @Override
   public void clear(String meshType) {
     super.clear(meshType);
@@ -141,18 +154,21 @@ public class CGOMesh extends DrawMesh {
       }
 
       int n = cmds.size();
+      boolean is2D = false;
       for (int i = 0; i < n; i++) {
         int type = ((Number) cmds.get(i)).intValue();
-        int len = getSize(type);
+        int len = getSize(type, is2D);
         if (len < 0) {
           Logger.error("CGO unknown type: " + type);
           return false;
         }
         switch (type) {
+        case JMOL_SCREEN:
+          is2D = true;
+          break;
         case SIMPLE_LINE:
           // para_closed_wt-MD-27.9.12.pse
           // total hack.... could be a strip of lines?
-          len = 8;
           break;
         case STOP:
           return true;

@@ -143,7 +143,7 @@ public final class Resolver implements JmolBioResolver {
   @Override
   public Group distinguishAndPropagateGroup(Chain chain, String group3,
                                             int seqcode, int firstAtomIndex,
-                                            int maxAtomIndex, int modelIndex,
+                                            int lastAtomIndex, int modelIndex,
                                             int[] specialAtomIndexes,
                                             Atom[] atoms) {
     /*
@@ -161,16 +161,14 @@ public final class Resolver implements JmolBioResolver {
      * will NOT be the same for each conformation
      */
 
-    int lastAtomIndex = maxAtomIndex - 1;
-
-    int distinguishingBits = 0;
+    int mask = 0;
 
     // clear previous specialAtomIndexes
     for (int i = ATOMID_MAX; --i >= 0;)
       specialAtomIndexes[i] = Integer.MIN_VALUE;
 
     // go last to first so that FIRST confirmation is default
-    for (int i = maxAtomIndex; --i >= firstAtomIndex;) {
+    for (int i = lastAtomIndex; i >= firstAtomIndex; --i) {
       int specialAtomID = atoms[i].atomID;
       if (specialAtomID <= 0)
         continue;
@@ -186,25 +184,22 @@ public final class Resolver implements JmolBioResolver {
          * for example, two C's doth not make a protein "carbonyl C"
          * distinguishingBits = 0; break; }
          */
-        distinguishingBits |= (1 << specialAtomID);
+        mask |= (1 << specialAtomID);
       }
       specialAtomIndexes[specialAtomID] = i;
     }
 
-    if (lastAtomIndex < firstAtomIndex)
-      throw new NullPointerException();
-
     Monomer m = null;
-    if ((distinguishingBits & JC.ATOMID_PROTEIN_MASK) == JC.ATOMID_PROTEIN_MASK)
+    if ((mask & JC.ATOMID_PROTEIN_MASK) == JC.ATOMID_PROTEIN_MASK)
       m = AminoMonomer.validateAndAllocate(chain, group3, seqcode,
           firstAtomIndex, lastAtomIndex, specialAtomIndexes, atoms);
-    else if (distinguishingBits == JC.ATOMID_ALPHA_ONLY_MASK)
+    else if (mask == JC.ATOMID_ALPHA_ONLY_MASK)
       m = AlphaMonomer.validateAndAllocateA(chain, group3, seqcode,
           firstAtomIndex, lastAtomIndex, specialAtomIndexes);
-    else if (((distinguishingBits & JC.ATOMID_NUCLEIC_MASK) == JC.ATOMID_NUCLEIC_MASK))
+    else if (((mask & JC.ATOMID_NUCLEIC_MASK) == JC.ATOMID_NUCLEIC_MASK))
       m = NucleicMonomer.validateAndAllocate(chain, group3, seqcode,
           firstAtomIndex, lastAtomIndex, specialAtomIndexes);
-    else if (distinguishingBits == JC.ATOMID_PHOSPHORUS_ONLY_MASK)
+    else if (mask == JC.ATOMID_PHOSPHORUS_ONLY_MASK)
       m = PhosphorusMonomer.validateAndAllocateP(chain, group3, seqcode,
           firstAtomIndex, lastAtomIndex, specialAtomIndexes);
     else if (checkCarbohydrate(group3))

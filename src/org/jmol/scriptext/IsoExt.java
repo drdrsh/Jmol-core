@@ -3193,7 +3193,8 @@ public class IsoExt extends CmdExt {
         if (data != null || isWild)
           invArg();
         int pt = (tok == T.leftsquare ? i + 1 : i + 2);
-        if (eval.optParameterAsString(pt).toUpperCase().equals("BEGIN")) {
+        String s = eval.optParameterAsString(pt).toUpperCase();
+        if (s.equals("BEGIN") || s.equals("SCREEN")) {
           Object[] key = new Object[1];
           for (int j = pt; j < slen; j++) {
             if (tokAt(j) != T.rightsquare && !isFloatParameter(j)) {

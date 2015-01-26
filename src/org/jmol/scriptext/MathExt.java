@@ -1058,6 +1058,7 @@ public class MathExt implements JmolMathExtension {
           propertyValue = new BS[] { (BS) propertyValue,
               SV.bsSelectVar(args[pt]) };
         break;
+      case T.hash:
       case T.string:
         if (vwr.checkPropertyParameter(propertyName))
           propertyValue = args[pt++].value;
@@ -1882,7 +1883,7 @@ public class MathExt implements JmolMathExtension {
     P4 p4 = null;
     switch (nArgs) {
     case 0:
-      return mp.addXPt4(Quat.newM(vwr.tm.matrixRotate).toPoint4f());
+      return mp.addXPt4(vwr.tm.getRotationQ().toPoint4f());
     case 1:
     default:
       if (tok == T.quaternion && args[0].tok == T.varray) {

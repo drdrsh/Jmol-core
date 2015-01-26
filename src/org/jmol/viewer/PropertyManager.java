@@ -167,7 +167,9 @@ public class PropertyManager implements JmolPropertyManager {
     "nmrInfo" , "<elementSymbol> or 'all' or 'shifts'", "all",
     "variableInfo","<name>","all",
     "domainInfo"  , atomExpression, "{visible}",
-    "validationInfo"  , atomExpression, "{visible}"
+    "validationInfo"  , atomExpression, "{visible}",
+    "service"    , "<hashTable>", "",
+
   };
 
   private final static int PROP_APPLET_INFO = 0;
@@ -220,7 +222,8 @@ public class PropertyManager implements JmolPropertyManager {
   private final static int PROP_VAR_INFO = 41;
   private final static int PROP_DOM_INFO = 42;
   private final static int PROP_VAL_INFO = 43;
-  private final static int PROP_COUNT = 44;
+  private final static int PROP_SERVICE = 44;
+  private final static int PROP_COUNT = 45;
 
   //// static methods used by Eval and Viewer ////
 
@@ -291,7 +294,7 @@ public class PropertyManager implements JmolPropertyManager {
       args = compileSelect((SV[]) args);
     int pt;
     SV arg = ((SV[]) args)[ptr++];
-    Object property = getObj(prop);
+    Object property = SV.oValue(prop);
     switch (arg.tok) {
     case T.integer:
       pt = arg.intValue - 1; //one-based, as for array selectors
@@ -495,10 +498,6 @@ public class PropertyManager implements JmolPropertyManager {
     return (isOK ? key : null);
   }
 
-  private Object getObj(Object prop) {
-    return (prop instanceof SV ? SV.oValue((SV) prop) : prop);
-  }
-
   private static String getPropertyName(int propID) {
     return (propID < 0 ? "" : propertyTypes[propID * 3]);
   }
@@ -621,6 +620,11 @@ public class PropertyManager implements JmolPropertyManager {
       return getAnnotationInfo(myParam, T.domains);
     case PROP_VAL_INFO:
       return getAnnotationInfo(myParam, T.validation);
+    case PROP_SERVICE:
+      myParam = SV.oValue(myParam);
+      @SuppressWarnings("unchecked")
+      Map<String, Object> info = (myParam instanceof Map<?,?> ? (Map<String, Object>) myParam : null);
+      return (info == null ? null : vwr.sm.processService(info));
     }
     String[] data = new String[PROP_COUNT];
     for (int i = 0; i < PROP_COUNT; i++) {
@@ -929,7 +933,7 @@ public class PropertyManager implements JmolPropertyManager {
     if (!asXYZVIB && bsAtoms.cardinality() == 0)
       return "";
     boolean isOK = true;
-    Quat q = (doTransform ? Quat.newM(vwr.tm.matrixRotate) : null);
+    Quat q = (doTransform ? vwr.tm.getRotationQ() : null);
     if (asSDF) {
       String header = mol.toString();
       mol = new SB();
@@ -1599,7 +1603,7 @@ public class PropertyManager implements JmolPropertyManager {
     if (objAnn == null || objAnn.tok != T.hash)
       return null;
     vwr.getAnnotationParser().initializeAnnotation(objAnn, type, iModel);
-    return objAnn.getMap().get("_list");    
+    return objAnn.mapGet("_list");    
   }
 
   @SuppressWarnings("unchecked")

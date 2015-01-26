@@ -1265,7 +1265,7 @@ public class AnnotationParser implements JmolAnnotationParser {
       return null;
     try {
       // add _map as a new top-level key pointing to the same thing
-      map0.getMap().put("_map", SV.newV(T.hash, data));
+      map0.mapPut("_map", SV.newV(T.hash, data));
       Lst<SV> list = new Lst<SV>();
 
       Set<Entry<String, SV>> set = data.entrySet();
@@ -1307,7 +1307,7 @@ public class AnnotationParser implements JmolAnnotationParser {
           }
         }
       }
-      map0.getMap().put("_list", SV.newV(T.varray, list));
+      map0.mapPut("_list", SV.newV(T.varray, list));
     } catch (Exception e) {
       Logger.info(e + " while cataloging structures");
       return null;
@@ -1335,9 +1335,9 @@ public class AnnotationParser implements JmolAnnotationParser {
       // get second level, skipping "xxxx":
       data = getMainItem(data).getMap();
       // add _map as a new top-level key pointing to the same thing
-      map0.getMap().put("_map", SV.newV(T.hash, data));
+      map0.mapPut("_map", SV.newV(T.hash, data));
       Lst<SV> list = new Lst<SV>();
-      map0.getMap().put("_list", SV.newV(T.varray, list));
+      map0.mapPut("_list", SV.newV(T.varray, list));
 
       //    {
       //      "1blu": {
@@ -1459,7 +1459,7 @@ public class AnnotationParser implements JmolAnnotationParser {
       for (Entry<String, SV> e2 : _dbMap.getMap().entrySet()) {
         // second level: ID
         String _domainName = e2.getKey();
-        SV _domainMap = e2.getValue();
+        SV _domainMap = e2.getValue();        
         SV _domainList = _domainMap.mapGet(dataKey);
         Lst<SV> _mapList = _domainList.getList();
         for (int i = _mapList.size(); --i >= 0;) {
@@ -1474,8 +1474,8 @@ public class AnnotationParser implements JmolAnnotationParser {
           String rescode = "modelIndex=" + modelIndex + "&chain='"
               + _chain.value + "'";
           if (start != null && end != null) {
-            res1 = start.getMap().get("residue_number").intValue;
-            res2 = end.getMap().get("residue_number").intValue;
+            res1 = start.mapGet("residue_number").intValue;
+            res2 = end.mapGet("residue_number").intValue;
             rescode += "&seqid>=" + res1 + "&seqid<=" + res2;
           } else {
             res2 = 1;
@@ -1833,7 +1833,7 @@ public class AnnotationParser implements JmolAnnotationParser {
       int ia = atom.i;
       l = new Lst<Float>();
       list = ((SV) vwr.ms.getModelAuxiliaryInfo(atom.mi).get("validation"))
-          .getMap().get("_list").getList();
+          .mapGet("_list").getList();
 
       for (i = 0, n = list.size(); i < n; i++) {
         map = list.get(i).getMap();
@@ -1878,7 +1878,7 @@ public class AnnotationParser implements JmolAnnotationParser {
     if ("".equals(match))
       match = null;
     if (type == T.validation && !isDetail && match == null)
-      return a.getMap().get("_note").asString();
+      return a.mapGet("_note").asString();
     boolean isMappingOnly = (match != null && match.indexOf(".") >= 0 && match
         .indexOf(".*") < 0);
     match = PT.rep(match, "*", "");
@@ -1965,8 +1965,7 @@ public class AnnotationParser implements JmolAnnotationParser {
       Map<String, SV> m = _list.get(i).getMap();
       SV _atoms = m.get("_atoms");
       if (_atoms != null && _atoms.tok == T.bitset)
-        BSUtil.shiftBits((BS) _atoms.value, bsAddedMask, _list.get(i).getMap()
-            .containsKey("_isres"), ((BS) _atoms.value).length() + margin);
+        BSUtil.shiftBits((BS) _atoms.value, bsAddedMask, _list.get(i).mapGet("_isres") != null, ((BS) _atoms.value).length() + margin);
     }
   }
 

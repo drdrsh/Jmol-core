@@ -23,6 +23,7 @@
  */
 package org.jmol.viewer;
 
+import org.jmol.script.SV;
 import org.jmol.script.T;
 import javajs.awt.Dimension;
 import org.jmol.util.Logger;
@@ -31,6 +32,7 @@ import javajs.util.PT;
 import javajs.util.T3;
 
 import java.util.Hashtable;
+import java.util.Map.Entry;
 
 import java.util.Map;
 
@@ -613,10 +615,27 @@ public class StatusManager {
           new Object[] { null, Integer.valueOf(mode), Integer.valueOf(atomIndex), Integer.valueOf(modelIndex), msg });
   }
   
-  public void processService(Map<String, Object> info) {
+  /**
+   * service is expected to return a value in the "ret" key
+   * 
+   * @param info
+   *        with key "service"
+   * @return info, for chaining
+   * 
+   */
+  public Object processService(Map<String, Object> info) {
+    Object s = info.get("service");
+    if (s == null)
+      return null;
+    if (s instanceof SV) {
+      Map<String, Object> m = new Hashtable<String, Object>();
+      for (Entry<String, Object> e : info.entrySet())
+        m.put(e.getKey(), SV.oValue(e.getValue()));
+      info = m;
+    }
     if (notifyEnabled(CBK.SERVICE))
-      cbl.notifyCallback(CBK.SERVICE,
-          new Object[] { null, info });
+      cbl.notifyCallback(CBK.SERVICE, new Object[] { null, info });
+    return info;
   }
 
   public int getSyncMode() {

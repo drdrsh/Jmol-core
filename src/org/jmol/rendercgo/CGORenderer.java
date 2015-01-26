@@ -44,6 +44,8 @@ public class CGORenderer extends DrawRenderer {
   private boolean doColor;
   private int ptNormal;
   private int ptColor;
+  private int screenZ;
+  private boolean is2DPercent;
 
   
   @Override
@@ -55,7 +57,6 @@ public class CGORenderer extends DrawRenderer {
       renderMesh(cgoMesh = (CGOMesh) cgo.meshes[i]);
     return needTranslucent;
   }
-
   
   @Override
   public boolean renderMesh(Mesh mesh) {
@@ -73,15 +74,17 @@ public class CGORenderer extends DrawRenderer {
     ptNormal = 0;
     ptColor = 0;
     width = 0;
+    screenZ = Integer.MAX_VALUE;
     doColor = !mesh.useColix;
     P3 pt;
     P3i spt;
     g3d.addRenderer(T.triangles);
+    boolean is3D = true;
     for (int i = 0; i < n; i++) {
       int type = cgoMesh.getInt(i);
       if (type == CGOMesh.STOP)
         break;
-      int len = CGOMesh.getSize(type);
+      int len = CGOMesh.getSize(type, is3D);
       if (len < 0) {
         Logger.error("CGO unknown type: " + type);
         return false;
@@ -90,15 +93,24 @@ public class CGORenderer extends DrawRenderer {
       default:
         System.out.println("CGO ? " + type);
         break;
+      case CGOMesh.JMOL_SCREEN:
+        float f = cgoMesh.getFloat(i + 1);
+        if (f == 0) {
+          is3D = true;
+        } else {
+          is2DPercent = (f > 0);
+          screenZ = (is2DPercent ? tm.zValueFromPercent((int) f) : -(int) f);
+          is3D = false;
+        }
+        break;
       case CGOMesh.RESET_NORMAL: // use?
         break;
       case CGOMesh.SIMPLE_LINE:
         // what are the first two parameters? 
         // width and number of points?
         getPoint(i + 2, pt0, pt0i);
-        getPoint(i + 5, pt1, pt1i);
+        getPoint(i + (is3D ? 5 : 4), pt1, pt1i);
         drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
-        len = 8;
         break;
       case CGOMesh.BEGIN:
         glMode = cgoMesh.getInt(i + 1);
@@ -221,7 +233,7 @@ public class CGORenderer extends DrawRenderer {
         break;
       case CGOMesh.SAUSAGE:
         getPoint(i, pt0, pt0i);
-        getPoint(i + 3, pt1, pt1i);
+        getPoint(i + (is3D ? 3 : 2), pt1, pt1i);
         width = cgoMesh.getFloat(i + 7);
         getColix(true);
         getColix(false); // for now -- ignore second color
@@ -230,8 +242,8 @@ public class CGORenderer extends DrawRenderer {
         break;
       case CGOMesh.TRICOLOR_TRIANGLE:
         getPoint(i, pt0, pt0i);
-        getPoint(i + 3, pt1, pt1i);
-        getPoint(i + 6, pt2, pt2i);
+        getPoint(i + (is3D ? 3 : 2), pt1, pt1i);
+        getPoint(i + (is3D ? 6 : 4), pt2, pt2i);
         normix0 = getNormix();
         normix1 = getNormix();
         normix2 = getNormix();
@@ -260,10 +272,16 @@ public class CGORenderer extends DrawRenderer {
     return colix;
   }
 
-
-  private void getPoint(int i, P3 pt, P3i pti) {
+ void getPoint(int i, P3 pt, P3i pti) {
     cgoMesh.getPoint(i, pt);
-    tm.transformPtScr(pt, pti);
+    if (screenZ == Integer.MAX_VALUE) {
+      tm.transformPtScr(pt, pti);
+    } else {
+      pti.x = (is2DPercent ? tm.percentToPixels('x', pt.x) : (int) pt.x);
+      pti.y = (is2DPercent ? tm.percentToPixels('y', pt.y) : (int) pt.y);
+      pti.z = screenZ;
+      tm.unTransformPoint(pt, pt);
+    }
   }
 
 

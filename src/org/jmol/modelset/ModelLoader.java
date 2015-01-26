@@ -1167,7 +1167,7 @@ public final class ModelLoader {
     for (int i = baseGroupIndex; i < groupCount; ++i)
       distinguishAndPropagateGroup(i, chainOf[i], group3Of[i], seqcodes[i],
           firstAtomIndexes[i], (i == groupCount - 1 ? ms.ac
-              : firstAtomIndexes[i + 1]));
+              : firstAtomIndexes[i + 1]) - 1);
     if (group3Lists != null)
       if (ms.msInfo != null) {
         ms.msInfo.put("group3Lists", group3Lists);
@@ -1180,7 +1180,7 @@ public final class ModelLoader {
 
   private void distinguishAndPropagateGroup(int groupIndex, Chain chain,
                                             String group3, int seqcode,
-                                            int firstAtomIndex, int maxAtomIndex) {
+                                            int firstAtomIndex, int lastAtomIndex) {
     /*
      * called by finalizeGroupBuild()
      * 
@@ -1197,15 +1197,14 @@ public final class ModelLoader {
      * these will NOT be the same for each conformation  
      * 
      */
-    int lastAtomIndex = maxAtomIndex - 1;
-
     if (lastAtomIndex < firstAtomIndex)
       throw new NullPointerException();
-    int modelIndex = ms.at[firstAtomIndex].mi;
+    
+   int modelIndex = ms.at[firstAtomIndex].mi;
 
     Group group = (group3 == null || jbr == null ? null : jbr
         .distinguishAndPropagateGroup(chain, group3, seqcode, firstAtomIndex,
-            maxAtomIndex, modelIndex, specialAtomIndexes, ms.at));
+            lastAtomIndex, modelIndex, specialAtomIndexes, ms.at));
     String key;
     if (group == null) {
       group = new Group().setGroup(chain, group3, seqcode, firstAtomIndex,
@@ -1229,7 +1228,7 @@ public final class ModelLoader {
     groups[groupIndex] = group;
     group.groupIndex = groupIndex;
 
-    for (int i = maxAtomIndex; --i >= firstAtomIndex;)
+    for (int i = lastAtomIndex; --i >= firstAtomIndex;)
       ms.at[i].setGroup(group);
 
   }

@@ -171,9 +171,13 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       if (display == null)
         return;
       info = (Map<String, Object>) data[1];
+      try {
       String service = (String) info.get("service");
       if ("nbo".equals(service)) {
         display.jmolPanel.getNBOService().processRequest(info);
+      }
+      } catch (Exception e) {
+        // ignore
       }
       return;
     case PICK:

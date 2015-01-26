@@ -586,7 +586,7 @@ public class TransformManager {
     setFixedRotationCenter(pt);
   }
 
-  int percentToPixels(char xyz, float percent) {
+  public int percentToPixels(char xyz, float percent) {
     switch (xyz) {
     case 'x':
       return (int) Math.floor(percent / 100 * width);
@@ -654,7 +654,7 @@ public class TransformManager {
     case T.moveto:
       return getMoveToText(1, false);
     case T.rotation:
-      return Quat.newM(vwr.tm.matrixRotate).toString();
+      return getRotationQ().toString();
     case T.translation:
       SB sb = new SB();
       truncate2(sb, getTranslationXPercent());
@@ -666,6 +666,10 @@ public class TransformManager {
     }
   }
 
+  public Quat getRotationQ() {
+    return Quat.newM(matrixRotate);
+  }
+
   Map<String, Object> getOrientationInfo() {
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("moveTo", getMoveToText(1, false));
@@ -674,7 +678,7 @@ public class TransformManager {
     A4 aa = new A4();
     aa.setM(matrixRotate);
     info.put("axisAngle", aa);
-    info.put("quaternion", Quat.newM(matrixRotate).toPoint4f());
+    info.put("quaternion", getRotationQ().toPoint4f());
     info.put("rotationMatrix", matrixRotate);
     info.put("rotateZYZ", getRotateZyzText(false));
     info.put("rotateXYZ", getRotateXyzText());
@@ -1171,11 +1175,11 @@ public class TransformManager {
     // in these renderers. 
 
     P3 ptCamera = P3.new3(screenWidth / 2, screenHeight / 2, 0);
-    vwr.tm.unTransformPoint(ptCamera, ptCamera);
+    unTransformPoint(ptCamera, ptCamera);
     ptCamera.sub(fixedRotationCenter);
     P3 pt = P3.new3(screenWidth / 2, screenHeight / 2, cameraDistanceFromCenter
         * scalePixelsPerAngstrom);
-    vwr.tm.unTransformPoint(pt, pt);
+    unTransformPoint(pt, pt);
     pt.sub(fixedRotationCenter);
     ptCamera.add(pt);
 

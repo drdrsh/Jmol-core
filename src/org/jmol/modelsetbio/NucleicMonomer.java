@@ -173,9 +173,7 @@ public class NucleicMonomer extends PhosphorusMonomer {
           firstAtomIndex, lastAtomIndex, offsets);
     if (!have(offsets, NP)) {
       offsets[0] = offsets[O5P];
-      int offset = offsets[0] & 0xFF;
-      if (offset != 255)
-        leadAtomIndex = firstAtomIndex + offset;
+      setLeadAtomIndex();
     }
     this.hasRnaO2Prime = have(offsets, O2Pr);
     this.isPyrimidine = have(offsets, O2);

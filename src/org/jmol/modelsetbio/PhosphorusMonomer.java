@@ -66,16 +66,16 @@ public class PhosphorusMonomer extends Monomer {
   ////////////////////////////////////////////////////////////////
 
   protected PhosphorusMonomer set3(Chain chain, String group3, int seqcode,
-               int firstAtomIndex, int lastAtomIndex,
-               byte[] offsets) {
-    set2(chain, group3, seqcode,
-          firstAtomIndex, lastAtomIndex, offsets);
+                                   int firstAtomIndex, int lastAtomIndex,
+                                   byte[] offsets) {
+    set2(chain, group3, seqcode, firstAtomIndex, lastAtomIndex, offsets);
     if (group3.indexOf('T') >= 0)
       chain.isDna = true;
     if (group3.indexOf('U') + group3.indexOf('I') > -2)
-        chain.isRna = true;
+      chain.isRna = true;
     isPurine = (group3.indexOf('A') + group3.indexOf('G') + group3.indexOf('I') > -3);
-    isPyrimidine = (group3.indexOf('T') + group3.indexOf('C') + group3.indexOf('U') > -3);
+    isPyrimidine = (group3.indexOf('T') + group3.indexOf('C')
+        + group3.indexOf('U') > -3);
     return this;
   }
 

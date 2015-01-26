@@ -60,23 +60,15 @@ import java.util.Map;
  */
 public class NBODialog extends JDialog implements ChangeListener {
 
-  private static final int MODEL = 1;
-
   private transient Viewer vwr;
   
-  protected JButton    nboPathButton;
+  protected JButton nboPathButton;
   //protected JTextField commandLineField;
   protected JTextField Field;
   protected JTextField dataPathLabel;
   protected JTextField serverPathLabel;
 
-  private JTextField saveField;
-
-  private JTextField workingPathLabel;
-
-  private JTextPane jmol_molfile;
-
-  private JScrollPane editPane1;
+//  private JTextField workingPathLabel;
 
   private JTextPane nboOutput;
 
@@ -86,12 +78,14 @@ public class NBODialog extends JDialog implements ChangeListener {
 
   private Component modelPanel;
 
+  private Component viewPanel;
+
   private Component runPanel;
 
-  private JTextField modelField;
+  private JTextField modelField, viewField, runField;
   
   private NBOService nboService;
-  
+
   /**
    * Creates a dialog for getting info related to output frames in nbo format.
    * 
@@ -109,7 +103,7 @@ public class NBODialog extends JDialog implements ChangeListener {
     this.nboService = nboService;
     nboService.nboDialog = this;
     JPanel container = new JPanel();
-    container.setPreferredSize(new Dimension(700, 500));
+    container.setPreferredSize(new Dimension(700, 300));
     container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
     JPanel leftPanel = buildLeftPanel();
     JPanel rightPanel = buildRightPanel();
@@ -118,22 +112,23 @@ public class NBODialog extends JDialog implements ChangeListener {
     splitPane.setOneTouchExpandable(true);
     JPanel splitPanel = new JPanel(new BorderLayout());
     splitPanel.add(splitPane, BorderLayout.CENTER);
-    container.add(splitPanel);
 
     JPanel filePanel = buildFilePanel();
     JPanel buttonPanel = buildButtonPanel();
 
     JPanel gluePanel = new JPanel(new BorderLayout());
-    gluePanel.add(Box.createGlue(), BorderLayout.NORTH);
+//    gluePanel.add(Box.createGlue(), BorderLayout.NORTH);
     gluePanel.add(filePanel, BorderLayout.SOUTH);
-    container.add(gluePanel);
+    //container.add(gluePanel);
+    container.add(filePanel);
     container.add(buttonPanel);
+    container.add(Box.createGlue());
+    container.add(splitPanel);
     getContentPane().add(container);
 
     pack();
     centerDialog();
     getPathHistory();
-    loadArea1();
     setVisible(true);
     splitPane.setDividerLocation(0.5);
   }
@@ -174,22 +169,22 @@ public class NBODialog extends JDialog implements ChangeListener {
 
     
     //GUI for working path selection
-    Box workingPathBox = Box.createHorizontalBox();
-    workingPathBox.setBorder(new TitledBorder("Working Directory"));
-    workingPathLabel = new JTextField("");
-    workingPathLabel.setEditable(false);
-    workingPathLabel.setBorder(null);
-    workingPathBox.add(workingPathLabel);
-    JButton pathButton = new JButton("Browse...");
-    pathButton.addActionListener(new ActionListener() {
-
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        showWorkingPathDialog();
-      }
-    });
-    workingPathBox.add(pathButton);
-    filePanel.add(workingPathBox, BorderLayout.NORTH);
+//    Box workingPathBox = Box.createHorizontalBox();
+//    workingPathBox.setBorder(new TitledBorder("Working Directory"));
+//    workingPathLabel = new JTextField("");
+//    workingPathLabel.setEditable(false);
+//    workingPathLabel.setBorder(null);
+//    workingPathBox.add(workingPathLabel);
+//    JButton pathButton = new JButton("Browse...");
+//    pathButton.addActionListener(new ActionListener() {
+//
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        showWorkingPathDialog();
+//      }
+//    });
+//    workingPathBox.add(pathButton);
+//    filePanel.add(workingPathBox, BorderLayout.NORTH);
 
     //GUI for NBO path selection
     Box nboPathBox = Box.createHorizontalBox();
@@ -207,7 +202,7 @@ public class NBODialog extends JDialog implements ChangeListener {
       }
     });
     nboPathBox.add(nboPathButton);
-    filePanel.add(nboPathBox, BorderLayout.SOUTH);
+    filePanel.add(nboPathBox, BorderLayout.NORTH);
     return filePanel;
   }
 
@@ -217,6 +212,7 @@ public class NBODialog extends JDialog implements ChangeListener {
     inputTabs = new JTabbedPane();
     inputTabs.addTab("Model", null, modelPanel = getModelPanel());
     inputTabs.addTab("Run", null, runPanel = getRunPanel());
+    inputTabs.addTab("View", null, viewPanel = getViewPanel());
     inputTabs.setSelectedComponent(modelPanel);
     inputTabs.addChangeListener(this);
     showPanel.add(inputTabs,  BorderLayout.CENTER);
@@ -230,18 +226,11 @@ public class NBODialog extends JDialog implements ChangeListener {
     
     TitledBorder editTitle =
       BorderFactory.createTitledBorder("NBO Output");
-    editPanel.setBorder(editTitle);
-  
-    jmol_molfile = new JTextPane();
-    jmol_molfile.setContentType("text/plain");
-    jmol_molfile.setFont(new Font("Monospaced", Font.PLAIN, 10));
-    editPane1 = new JScrollPane(jmol_molfile);
-    editPanel.add(editPane1);
+    editPanel.setBorder(editTitle);  
     nboOutput = new JTextPane();
     nboOutput.setContentType("text/plain");
     nboOutput.setFont(new Font("Monospaced", Font.PLAIN, 10));
     editPane2 = new JScrollPane(nboOutput);
-    //editPane2.setPreferredSize(new Dimension(500,100));  
     editPanel.add(editPane2);
 
     editPanel.setPreferredSize(new Dimension(500,100));
@@ -257,32 +246,10 @@ public class NBODialog extends JDialog implements ChangeListener {
 
   private void tabSwitched() {
     Component c = inputTabs.getSelectedComponent();
-    if (c == modelPanel) {
-      modelPanel.setVisible(true);
-      runPanel.setVisible(false);
-    } else if (c == runPanel) {
-      modelPanel.setVisible(false);
-      runPanel.setVisible(true);
-    }
+    modelPanel.setVisible(c == modelPanel);
+    viewPanel.setVisible(c == viewPanel);
+    runPanel.setVisible(c == runPanel);
     pack();
-  }
-
-  private Component getRunPanel() {
-    //Box: Window
-    JPanel showPanel = new JPanel(new BorderLayout());
-    //Box: Main
-    Box rootBox = Box.createVerticalBox();
-    rootBox.setBorder(new TitledBorder("NBO Data Files and Directory"));    
-    Box saveBox = Box.createHorizontalBox();
-    saveBox.setBorder(new TitledBorder("File Root"));
-    saveField = new JTextField("Jmol");
-    saveBox.add(saveField);
-    rootBox.add(saveBox);
-    rootBox.add(Box.createGlue());
-
-    showPanel.add(rootBox, BorderLayout.CENTER);
-
-    return showPanel;
   }
 
   private Component getModelPanel() {
@@ -306,6 +273,48 @@ public class NBODialog extends JDialog implements ChangeListener {
     return showPanel;
   }
 
+  private Component getViewPanel() {
+    viewField = new JTextField("");
+    viewField.setPreferredSize(new Dimension(100, 10));
+    viewField.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        viewCmd();        
+      }}
+    );
+    JPanel showPanel = new JPanel(new BorderLayout());
+    Box a = Box.createVerticalBox();
+    Box b = Box.createHorizontalBox();
+    b.add(newLabel("View Command"));
+    b.add(viewField);
+    a.add(b);
+    a.add(Box.createVerticalGlue());
+    showPanel.add(a, BorderLayout.NORTH);
+    //showPanel.add(Box.createGlue(), BorderLayout.CENTER);
+    return showPanel;
+  }
+
+  private Component getRunPanel() {
+    runField = new JTextField("");
+    runField.setPreferredSize(new Dimension(100, 10));
+    runField.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        runCmd();        
+      }}
+    );
+    JPanel showPanel = new JPanel(new BorderLayout());
+    Box a = Box.createVerticalBox();
+    Box b = Box.createHorizontalBox();
+    b.add(newLabel("Run Command"));
+    b.add(runField);
+    a.add(b);
+    a.add(Box.createVerticalGlue());
+    showPanel.add(a, BorderLayout.NORTH);
+    //showPanel.add(Box.createGlue(), BorderLayout.CENTER);
+    return showPanel;
+  }
+
   private Component newLabel(String label) {
     JTextField t = new JTextField(label);
     t.setEditable(false);
@@ -317,9 +326,11 @@ public class NBODialog extends JDialog implements ChangeListener {
 
   public void nboReport(String s) {
     nboOutput.setText(s == null ? "" : nboOutput.getText() + s + "\n");
+    editPane2.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
   }
 
   protected void modelCmd() {
+    nboReport(null);
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("mode", Integer.valueOf(NBOService.MODEL));
     info.put("sync", Boolean.FALSE);
@@ -339,6 +350,34 @@ public class NBODialog extends JDialog implements ChangeListener {
     if (!nboService.processRequest(info)) {
       clearInfo();
       nboReport("You must connect first.");
+    }
+  }
+  
+  protected void runCmd() {
+    nboReport(null);
+    Map<String, Object> info = new Hashtable<String, Object>();
+    info.put("mode", Integer.valueOf(NBOService.RUN));
+    info.put("sync", Boolean.FALSE);
+    info.put("action", "run");
+    String cmd = runField.getText();
+    info.put("value", cmd);
+    if (!nboService.processRequest(info)) {
+      clearInfo();
+      nboReport("not implemented");
+    }
+  }
+  
+  protected void viewCmd() {
+    nboReport(null);
+    Map<String, Object> info = new Hashtable<String, Object>();
+    info.put("mode", Integer.valueOf(NBOService.VIEW));
+    info.put("sync", Boolean.FALSE);
+    info.put("action", "view");
+    String cmd = viewField.getText();
+    info.put("value", cmd);
+    if (!nboService.processRequest(info)) {
+      clearInfo();
+      nboReport("not implemented");
     }
   }
   
@@ -367,32 +406,31 @@ public class NBODialog extends JDialog implements ChangeListener {
   public void setVisible(boolean b) {
     super.setVisible(b);    
   }
-  /**
-   * Show a file selector when the savePath button is pressed.
-   */
-  void showWorkingPathDialog() {
-
-    JFileChooser myChooser = new JFileChooser();
-    myChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-    String fname = workingPathLabel.getText();
-    myChooser.setSelectedFile(new File(fname));
-
-    int button = myChooser.showDialog(this, GT._("Select"));
-    if (button == JFileChooser.APPROVE_OPTION) {
-      File newFile = myChooser.getSelectedFile();
-      String path;
-      if (newFile.isDirectory()) {
-        path = newFile.toString();
-      } else {
-        path = newFile.getParent();
-      }
-      workingPathLabel.setText(path);
-      loadArea1();
-      pack();
-      nboService.workingPath = path;
-      nboService.saveHistory();
-    }
-  }
+//  /**
+//   * Show a file selector when the savePath button is pressed.
+//   */
+//  void showWorkingPathDialog() {
+//
+//    JFileChooser myChooser = new JFileChooser();
+//    myChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+//    String fname = workingPathLabel.getText();
+//    myChooser.setSelectedFile(new File(fname));
+//
+//    int button = myChooser.showDialog(this, GT._("Select"));
+//    if (button == JFileChooser.APPROVE_OPTION) {
+//      File newFile = myChooser.getSelectedFile();
+//      String path;
+//      if (newFile.isDirectory()) {
+//        path = newFile.toString();
+//      } else {
+//        path = newFile.getParent();
+//      }
+//      workingPathLabel.setText(path);
+//      pack();
+//      nboService.workingPath = path;
+//      nboService.saveHistory();
+//    }
+//  }
 
   /**
    * Show a file selector when the savePath button is pressed.
@@ -406,10 +444,12 @@ public class NBODialog extends JDialog implements ChangeListener {
     if (button == JFileChooser.APPROVE_OPTION) {
       File newFile = myChooser.getSelectedFile();
       String path = newFile.toString();
+      if (path.indexOf("NBO") < 0)
+        return;
       serverPathLabel.setText(path);
-      pack();
       nboService.serverPath = path;
       nboService.saveHistory();      
+      pack();
     }
   }
 
@@ -434,21 +474,11 @@ public class NBODialog extends JDialog implements ChangeListener {
    */
   private void getPathHistory() {
     serverPathLabel.setText(nboService.serverPath);
-    workingPathLabel.setText(nboService.workingPath);
+    //workingPathLabel.setText(nboService.workingPath);
   }
 
   void clearInfo() {
-    jmol_molfile.setText("");
     nboOutput.setText("");
-  }
-  void loadArea1() {
-    String s = vwr.getFileAsString3(workingPathLabel.getText().replace('\\', '/') + "/jmol_infile.txt", true, "nbodialog");
-    jmol_molfile.setText(s);
-    nboOutput.setText("");
-  }
-  
-  public void setModel(String s) {
-    jmol_molfile.setText(s);
   }
 
   

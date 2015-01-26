@@ -119,22 +119,6 @@ public class SV extends T implements JSONEncodable {
     intValue = v.intValue;
     tok = v.tok;
     value = v.value;
-// never necessary: 
-//    if (asCopy) {
-//      switch (tok) {
-//      case hash:
-//        value = new Hashtable<String, SV>(
-//            (Map<String, SV>) v.value);
-//        break;
-//      case varray:
-//        List<SV> o2 = new  List<SV>();
-//        List<SV> o1 = v.getList();
-//        for (int i = 0; i < o1.size(); i++)
-//          o2.addLast(o1.get(i));
-//        value = o2;
-//        break;
-//      }
-//    }
     return this;
   }
 
@@ -479,12 +463,15 @@ public class SV extends T implements JSONEncodable {
 
   /**
    * 
-   * @param x
-   * @return   Object-wrapped value
+   * @param xx
+   * @return Object-wrapped value
    */
-  
-  public static Object oValue(SV x) {
-    switch (x == null ? nada : x.tok) {
+
+  public static Object oValue(Object xx) {
+    if (!(xx instanceof SV))
+      return xx;
+    SV x = (SV) xx;
+    switch (x.tok) {
     case on:
       return Boolean.TRUE;
     case nada:
@@ -498,6 +485,7 @@ public class SV extends T implements JSONEncodable {
     default:
       return x.value;
     }
+
   }
 
   /**
@@ -1603,13 +1591,12 @@ public class SV extends T implements JSONEncodable {
     }
   }
 
-  public void mapPut(String key, SV v) {
-    getMap().put(key, v);
+  public SV mapGet(String key) {
+    return getMap().get(key);
   }
 
-  @SuppressWarnings("unchecked")
-  public SV mapGet(String key) {
-    return (tok == hash ? ((Map<String, SV>) value).get(key) : SV.newS(""));
+  public void mapPut(String key, SV v) {
+    getMap().put(key, v);
   }
 
   @SuppressWarnings("unchecked")
@@ -1623,17 +1610,17 @@ public class SV extends T implements JSONEncodable {
     return null;
   }
 
-  @Override
-  public String toString() {
-    return toString2() + "[" + myName + " index =" + index + " intValue=" + intValue + "]";
-  }
-
   public String getMapKeys(int nLevels, boolean skipEmpty) {
     if (tok != hash)
       return "";
     SB sb = new SB();
     sValueArray(sb, this, "", "", true, false, false, nLevels + 1, skipEmpty);
     return sb.toString();
+  }
+
+  @Override
+  public String toString() {
+    return toString2() + "[" + myName + " index =" + index + " intValue=" + intValue + "]";
   }
 
 }
