@@ -901,7 +901,7 @@ public abstract class BioPolymer {
                     new float[] { x * factor, y * factor, z * factor,
                         w * factor } }));
         if (atomLast != null
-            && atomLast.getPolymerIndexInModel() == a.getPolymerIndexInModel()) {
+            && atomLast.group.getBioPolymerIndexInModel() == a.group.getBioPolymerIndexInModel()) {
           pdbCONECT.append("CONECT").append(
               PT.formatStringI("%5i", "i", atomLast.getAtomNumber()))
               .append(PT.formatStringI("%5i", "i", a.getAtomNumber()))

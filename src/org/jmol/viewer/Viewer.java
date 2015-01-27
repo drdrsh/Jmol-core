@@ -3039,6 +3039,10 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         .copy(am.bsVisibleModels));
   }
 
+  public BS getFrameAtoms() {
+    return getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
+  }
+
   public void defineAtomSets(Map<String, Object> info) {
     definedAtomSets.putAll(info);
   }
@@ -8243,7 +8247,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     // We only work on atoms that are in frame
 
     String ff = g.forceField;
-    BS bsInFrame = getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
+    BS bsInFrame = getFrameAtoms();
 
     if (bsSelected == null)
       bsSelected = getModelUndeletedAtomsBitSet(getVisibleFramesBitSet()
@@ -8591,9 +8595,8 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
     case '{':
       if (getScriptManager() != null) {
         Map<String, Object> m = (Map<String, Object>) map;
-        Map<String, Object> sets = eval.getDefinedAtomSets();
-        if (sets != null)
-          m.putAll(sets);
+        if (definedAtomSets != null)
+          m.putAll(definedAtomSets);
         T.getTokensType(m, T.predefinedset);
       }
       return;

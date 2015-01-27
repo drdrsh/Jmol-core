@@ -519,7 +519,6 @@ public final class JC {
     "@helix310 substructure=7",
     "@helixalpha substructure=8",
     "@helixpi substructure=9",
-    "@bonded bondcount>0",
   };
   
   // these are only updated once per file load or file append

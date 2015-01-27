@@ -317,9 +317,9 @@ public final class BioModel extends Model{
     for (int i = 0; i < ac; i++) {
       if (atoms[i].mi != 0)
         break;
-      if ((id = atoms[i].getStrucNo()) != lastid && id != 0) {
+      if ((id = atoms[i].group.getStrucNo()) != lastid && id != 0) {
         lastid = id;
-        switch (atoms[i].getProteinStructureType()) {
+        switch (atoms[i].group.getProteinStructureType()) {
         case HELIX:
           nH++;
           break;
@@ -615,7 +615,7 @@ public final class BioModel extends Model{
         if (taintedOnly && !bsTainted.get(i))
           continue;
         id = 0;
-        if (i == ac || (id = atoms[i].getStrucNo()) != lastId) {
+        if (i == ac || (id = atoms[i].group.getStrucNo()) != lastId) {
           if (bs != null) {
             switch  (type) {
             case HELIX:
@@ -711,8 +711,8 @@ public final class BioModel extends Model{
           if (id == 0
               || bsAtoms != null
               && needPhiPsi
-              && (Float.isNaN(atoms[i].getGroupParameter(T.phi)) || Float
-                  .isNaN(atoms[i].getGroupParameter(T.psi))))
+              && (Float.isNaN(atoms[i].group.getGroupParameter(T.phi)) || Float
+                  .isNaN(atoms[i].group.getGroupParameter(T.psi))))
             continue;
         }
         String ch = atoms[i].getChainIDStr();
@@ -722,9 +722,9 @@ public final class BioModel extends Model{
           group1 = atoms[i].getGroup3(false);
           chain1 = ch;
         }
-        type = atoms[i].getProteinStructureType();
-        subtype = atoms[i].getProteinStructureSubType();
-        sid = atoms[i].getProteinStructureTag();
+        type = atoms[i].group.getProteinStructureType();
+        subtype = atoms[i].group.getProteinStructureSubType();
+        sid = atoms[i].group.getProteinStructureTag();
         bs.set(i);
         lastId = id;
         res2 = atoms[i].getResno();
@@ -850,7 +850,7 @@ public final class BioModel extends Model{
     for (int i = bsCheck.nextSetBit(0); i >= 0; i = bsCheck.nextSetBit(i + 1))
       if (atoms[i].checkVisible()
           && atoms[i].atomID == JC.ATOMID_ALPHA_CARBON
-          && atoms[i].getGroupID() != JC.GROUPID_CYSTEINE)
+          && atoms[i].group.groupID != JC.GROUPID_CYSTEINE)
         vCA.addLast((a1 = atoms[i]));
     if (vCA.size() == 0)
       return 0;    
@@ -858,7 +858,7 @@ public final class BioModel extends Model{
     short mad = (short) (vwr.getFloat(T.strutdefaultradius) * 2000);
     int delta = vwr.getInt(T.strutspacing);
     boolean strutsMultiple = vwr.getBoolean(T.strutsmultiple);
-    Lst<Atom[]> struts = ((BioModel) m).getBioPolymer(a1.getPolymerIndexInModel())
+    Lst<Atom[]> struts = ((BioModel) m).getBioPolymer(a1.group.getBioPolymerIndexInModel())
         .calculateStruts(ms, bs1, bs2, vCA, thresh, delta, strutsMultiple);
     for (int i = 0; i < struts.size(); i++) {
       Atom[] o = struts.get(i);

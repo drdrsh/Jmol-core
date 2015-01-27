@@ -1246,7 +1246,7 @@ public class PropertyManager implements JmolPropertyManager {
             s = PT.esc(s);
           switch (tok) {
           case T.residue:
-            s = "[" + a.getGroup3(false) + "]" + a.getSeqcodeString() + ":" + s;
+            s = "[" + a.getGroup3(false) + "]" + a.group.getSeqcodeString() + ":" + s;
             break;
           case T.sequence:
           case T.group1:
@@ -1258,10 +1258,10 @@ public class PropertyManager implements JmolPropertyManager {
               glast = null;
               clast = null;
             }
-            if (a.getChain() != clast) {
+            if (a.group.chain != clast) {
               info.appendC('\n');
               n = 0;
-              clast = a.getChain();
+              clast = a.group.chain;
               info.append("Chain " + s + ":\n");
               glast = null;
             }
@@ -1355,7 +1355,7 @@ public class PropertyManager implements JmolPropertyManager {
       info.put("surfaceDistance", Float.valueOf(d));
     if (ms.am[atom.mi].isBioModel) {
       info.put("resname", atom.getGroup3(false));
-      char insCode = atom.getInsertionCode();
+      char insCode = atom.group.getInsertionCode();
       int seqNum = atom.getResno();
       if (seqNum > 0)
         info.put("resno", Integer.valueOf(seqNum));
@@ -1364,12 +1364,12 @@ public class PropertyManager implements JmolPropertyManager {
       info.put("name", ms.at[i].getAtomName());
       info.put("chain", atom.getChainIDStr());
       info.put("atomID", Integer.valueOf(atom.atomID));
-      info.put("groupID", Integer.valueOf(atom.getGroupID()));
+      info.put("groupID", Integer.valueOf(atom.group.groupID));
       if (atom.altloc != '\0')
         info.put("altLocation", "" + atom.altloc);
-      info.put("structure", Integer.valueOf(atom.getProteinStructureType()
+      info.put("structure", Integer.valueOf(atom.group.getProteinStructureType()
           .getId()));
-      info.put("polymerLength", Integer.valueOf(atom.getPolymerLength()));
+      info.put("polymerLength", Integer.valueOf(atom.group.getBioPolymerLength()));
       info.put("occupancy", Integer.valueOf(atom.getOccupancy100()));
       int temp = atom.getBfactor100();
       info.put("temp", Integer.valueOf(temp / 100));
@@ -1510,7 +1510,7 @@ public class PropertyManager implements JmolPropertyManager {
 
   private static void getAtomResidueInfo(SB info, Atom atom) {
     info.append("[").append(atom.getGroup3(false)).append("]").append(
-        atom.getSeqcodeString()).append(":");
+        atom.group.getSeqcodeString()).append(":");
     int id = atom.getChainID();
     info.append(id == 0 ? " " : atom.getChainIDStr());
   }
@@ -1837,8 +1837,8 @@ public class PropertyManager implements JmolPropertyManager {
               new Object[] { a.getElementSymbolIso(false).toUpperCase(),
                   strExtra, new float[] { x, y, z, 0f } }));
           if (atomLast != null
-              && atomLast.getPolymerIndexInModel() == a
-                  .getPolymerIndexInModel())
+              && atomLast.group.getBioPolymerIndexInModel() == a.group
+                  .getBioPolymerIndexInModel())
             pdbCONECT.append("CONECT")
                 .append(PT.formatStringI("%5i", "i", atomLast.getAtomNumber()))
                 .append(PT.formatStringI("%5i", "i", a.getAtomNumber()))

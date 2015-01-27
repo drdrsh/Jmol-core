@@ -172,17 +172,17 @@ public class ColorManager {
           atom.getBfactor100(), lo, hi, ColorEncoder.BWR, false);
     case PAL.PALETTE_STRAIGHTNESS:
       return ce.getColorIndexFromPalette(
-          atom.getGroupParameter(T.straightness), -1, 1, ColorEncoder.BWR,
+          atom.group.getGroupParameter(T.straightness), -1, 1, ColorEncoder.BWR,
           false);
     case PAL.PALETTE_SURFACE:
       hi = vwr.ms.getSurfaceDistanceMax();
       return ce.getColorIndexFromPalette(
           atom.getSurfaceDistance100(), 0, hi, ColorEncoder.BWR, false);
     case PAL.PALETTE_AMINO:
-      return ce.getColorIndexFromPalette(atom.getGroupID(),
+      return ce.getColorIndexFromPalette(atom.group.groupID,
           0, 0, ColorEncoder.AMINO, false);
     case PAL.PALETTE_SHAPELY:
-      return ce.getColorIndexFromPalette(atom.getGroupID(),
+      return ce.getColorIndexFromPalette(atom.group.groupID,
           0, 0, ColorEncoder.SHAPELY, false);
     case PAL.PALETTE_GROUP:
       // vwr.calcSelectedGroupsCount() must be called first ...
@@ -192,19 +192,19 @@ public class ColorManager {
       // for each atom
       // therefore, we call it in Eval.colorObject();
       return ce.getColorIndexFromPalette(
-          atom.getSelectedGroupIndexWithinChain(), 0,
-          atom.getSelectedGroupCountWithinChain() - 1, ColorEncoder.BGYOR,
+          atom.getSelectedGroupIndex(), 0,
+          atom.group.chain.selectedGroupCount - 1, ColorEncoder.BGYOR,
           false);
     case PAL.PALETTE_POLYMER:
       Model m = vwr.ms.am[atom.mi];
       return ce.getColorIndexFromPalette(
-          atom.getPolymerIndexInModel(), 0, m.getBioPolymerCount() - 1,
+          atom.group.getBioPolymerIndexInModel(), 0, m.getBioPolymerCount() - 1,
           ColorEncoder.BGYOR, false);
     case PAL.PALETTE_MONOMER:
       // vwr.calcSelectedMonomersCount() must be called first ...
       return ce.getColorIndexFromPalette(
-          atom.getSelectedMonomerIndexWithinPolymer(), 0,
-          atom.getSelectedMonomerCountWithinPolymer() - 1, ColorEncoder.BGYOR,
+          atom.group.getSelectedMonomerIndex(), 0,
+          atom.group.getSelectedMonomerCount() - 1, ColorEncoder.BGYOR,
           false);
     case PAL.PALETTE_MOLECULE:
       return ce.getColorIndexFromPalette(
@@ -225,7 +225,7 @@ public class ColorManager {
       modelIndex = atom.mi;
       return ce.getColorIndexFromPalette(
           modelSet.getInsertionCodeIndexInModel(modelIndex,
-              atom.getInsertionCode()), 0,
+              atom.group.getInsertionCode()), 0,
           modelSet.getInsertionCountInModel(modelIndex), ColorEncoder.ROYGB,
           false);
     case PAL.PALETTE_JMOL:
@@ -237,7 +237,7 @@ public class ColorManager {
       argb = getJmolOrRasmolArgb(id, T.rasmol);
       break;
     case PAL.PALETTE_STRUCTURE:
-      argb = atom.getProteinStructureSubType().getColor();
+      argb = atom.group.getProteinStructureSubType().getColor();
       break;
     case PAL.PALETTE_CHAIN:
       int chain = atom.getChainID();

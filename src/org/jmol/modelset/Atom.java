@@ -38,7 +38,6 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.PAL;
-import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.java.BS;
 import org.jmol.script.T;
@@ -437,9 +436,8 @@ public class Atom extends Point3fi implements BNode {
   }
 
   public void setValence(int nBonds) {
-    if (isDeleted()) // no resurrection
-      return;
-    valence = (byte) (nBonds < 0 ? 0 : nBonds < 0xEF ? nBonds : 0xEF);
+    if (!isDeleted()) // no resurrection
+      valence = (byte) (nBonds < 0 ? 0 : nBonds < 0xEF ? nBonds : 0xEF);
   }
 
   @Override
@@ -570,10 +568,6 @@ public class Atom extends Point3fi implements BNode {
   public int getAtomSite() {
     return atomSite;
   }
-
-   void setGroup(Group group) {
-     this.group = group;
-   }
 
   @Override
   public void getGroupBits(BS bs) {
@@ -886,7 +880,7 @@ public class Atom extends Point3fi implements BNode {
       info.append("[");
       info.append(group3);
       info.append("]");
-      String seqcodeString = getSeqcodeString();
+      String seqcodeString = group.getSeqcodeString();
       if (seqcodeString != null)
         info.append(seqcodeString);
       int chainID = getChainID();
@@ -969,10 +963,6 @@ public class Atom extends Point3fi implements BNode {
     return group.isPyrimidine();
   }
 
-  int getSeqcode() {
-    return group.seqcode;
-  }
-
   @Override
   public int getResno() {
     return group.getResno();   
@@ -1031,10 +1021,6 @@ public class Atom extends Point3fi implements BNode {
     return group.isLeadAtom(i);
   }
   
-  public float getGroupParameter(int tok) {
-    return group.getGroupParameter(tok);
-  }
-
   @Override
   public int getChainID() {
     return group.chain.chainID;
@@ -1065,36 +1051,8 @@ public class Atom extends Point3fi implements BNode {
     return group.chain.model.ms.getModulationCoord(i, ch);
   }
 
-  public int getPolymerLength() {
-    return group.getBioPolymerLength();
-  }
-
-  public int getPolymerIndexInModel() {
-    return group.getBioPolymerIndexInModel();
-  }
-
-  public int getMonomerIndex() {
-    return group.getMonomerIndex();
-  }
-  
-  public int getSelectedGroupCountWithinChain() {
-    return group.chain.selectedGroupCount;
-  }
-
-  public int getSelectedGroupIndexWithinChain() {
+  public int getSelectedGroupIndex() {
     return group.getSelectedGroupIndex();
-  }
-
-  public int getSelectedMonomerCountWithinPolymer() {
-    return group.getSelectedMonomerCount();
-  }
-
-  public int getSelectedMonomerIndexWithinPolymer() {
-    return group.getSelectedMonomerIndex();
-  }
-
-  public Chain getChain() {
-    return group.chain;
   }
 
   public String getModelNumberForLabel() {
@@ -1107,39 +1065,7 @@ public class Atom extends Point3fi implements BNode {
   
   @Override
   public String getBioStructureTypeName() {
-    return getProteinStructureType().getBioStructureTypeName(true);
-  }
-  
-  public STR getProteinStructureType() {
-    return group.getProteinStructureType();
-  }
-  
-  public STR getProteinStructureSubType() {
-    return group.getProteinStructureSubType();
-  }
-  
-  public int getStrucNo() {
-    return group.getStrucNo();
-  }
-
-  public String getStructureId() {
-    return group.getStructureId();
-  }
-
-  public String getProteinStructureTag() {
-    return group.getProteinStructureTag();
-  }
-
-  public short getGroupID() {
-    return group.groupID;
-  }
-
-  public String getSeqcodeString() {
-    return group.getSeqcodeString();
-  }
-
-  public char getInsertionCode() {
-    return group.getInsertionCode();
+    return group.getProteinStructureType().getBioStructureTypeName(true);
   }
   
   @Override
@@ -1202,7 +1128,7 @@ public class Atom extends Point3fi implements BNode {
     case T.formalcharge:
       return getFormalCharge();
     case T.groupid:
-      return getGroupID(); //-1 if no group
+      return group.groupID; //-1 if no group
     case T.groupindex:
       return group.groupIndex;
     case T.model:
@@ -1221,7 +1147,7 @@ public class Atom extends Point3fi implements BNode {
     case T.polymer:
       return group.getBioPolymerIndexInModel() + 1;
     case T.polymerlength:
-      return getPolymerLength();
+      return group.getBioPolymerLength();
     case T.radius:
       // the comparator uses rasmol radius, unfortunately, for integers
       return getRasMolRadius();        
@@ -1230,11 +1156,11 @@ public class Atom extends Point3fi implements BNode {
     case T.site:
       return getAtomSite();
     case T.structure:
-      return getProteinStructureType().getId();
+      return group.getProteinStructureType().getId();
     case T.substructure:
-      return getProteinStructureSubType().getId();
+      return group.getProteinStructureSubType().getId();
     case T.strucno:
-      return getStrucNo();
+      return group.getStrucNo();
     case T.symop:
       return getSymOp();
     case T.valence:
@@ -1296,7 +1222,7 @@ public class Atom extends Point3fi implements BNode {
     case T.eta:
     case T.theta:
     case T.straightness:
-      return getGroupParameter(tokWhat);
+      return group.getGroupParameter(tokWhat);
     case T.fracx:
       return getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', true, ptTemp);
     case T.fracy:
@@ -1339,7 +1265,7 @@ public class Atom extends Point3fi implements BNode {
           }
         }
       }
-      return getGroupParameter(tokWhat);
+      return group.getGroupParameter(tokWhat);
     case T.radius:
     case T.spacefill:
       return getRadius();
@@ -1430,7 +1356,7 @@ public class Atom extends Point3fi implements BNode {
     case T.identify:
       return getIdentity(true);
     case T.insertion:
-      ch = getInsertionCode();
+      ch = group.getInsertionCode();
       return (ch == '\0' ? "" : "" + ch);
     case T.label:
     case T.format:
@@ -1439,11 +1365,11 @@ public class Atom extends Point3fi implements BNode {
         s = "";
       return s;
     case T.structure:
-      return getProteinStructureType().getBioStructureTypeName(false);
+      return group.getProteinStructureType().getBioStructureTypeName(false);
     case T.substructure:
-      return getProteinStructureSubType().getBioStructureTypeName(false);
+      return group.getProteinStructureSubType().getBioStructureTypeName(false);
     case T.strucid:
-      return getStructureId();
+      return group.getStructureId();
     case T.shape:
       return vwr.getHybridizationAndAxes(i, null, null, "d");
     case T.symbol:
@@ -1482,10 +1408,6 @@ public class Atom extends Point3fi implements BNode {
     return null;
   }
 
-  boolean isWithinStructure(STR type) {
-    return group.isWithinStructure(type);
-  }
-  
   @Override
   public int getOffsetResidueAtom(String name, int offset) {
     return group.getAtomIndex(name, offset);

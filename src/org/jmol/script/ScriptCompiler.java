@@ -1306,7 +1306,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         && theTok != T.defaultcmd && lastToken.tok != T.switchcmd)
       return ERROR(ERROR_badContext, ident);
     if (lastToken.tok == T.define && theTok != T.leftbrace && nTokens != 1) {
-      addTokenToPrefix(T.o(T.string, ident));
+      addTokenToPrefix(theTok == T.define ? lastToken : T.o(T.string, ident));
       return CONTINUE;
     }
     switch (theTok) {

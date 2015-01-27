@@ -857,7 +857,7 @@ abstract public class AtomCollection {
     if (hydrophobicities == null) {
       hydrophobicities = new float[at.length];
       for (int i = 0; i < at.length; i++)
-        hydrophobicities[i] = Elements.getHydrophobicity(at[i].getGroupID());
+        hydrophobicities[i] = Elements.getHydrophobicity(at[i].group.groupID);
     }
     hydrophobicities[atomIndex] = value;
     return true;
@@ -2073,6 +2073,11 @@ abstract public class AtomCollection {
         if (at[i].getAtomNumber() == iSpec)
           bs.set(i);
       break;
+    case T.bonded:
+      for (i = ac; --i >= 0;)
+        if (at[i].getCovalentBondCount() > 0)
+          bs.set(i);
+      break;
     case T.atomname:
       String names = "," + specInfo + ",";
       for (i = ac; --i >= 0;) {
@@ -2093,7 +2098,7 @@ abstract public class AtomCollection {
       break;
     case T.spec_resid:
       for (i = ac; --i >= 0;)
-        if (at[i].getGroupID() == iSpec)
+        if (at[i].group.groupID == iSpec)
           bs.set(i);
       break;
     case T.spec_chain:
@@ -2130,7 +2135,7 @@ abstract public class AtomCollection {
       STR type = (tokType == T.helix ? STR.HELIX
           : STR.SHEET);
       for (i = ac; --i >= 0;)
-        if (at[i].isWithinStructure(type))
+        if (at[i].group.isWithinStructure(type))
           bs.set(i);
       break;
     case T.nucleic:
@@ -2240,7 +2245,7 @@ abstract public class AtomCollection {
     case T.chain:
       bsInfo = BSUtil.copy((BS) specInfo);
       for (i = bsInfo.nextSetBit(0); i >= 0; i = bsInfo.nextSetBit(i + 1)) {
-        Chain chain = at[i].getChain();
+        Chain chain = at[i].group.chain;
         chain.setAtomBitSet(bs);
         bsInfo.andNot(bs);
       }
@@ -2249,15 +2254,15 @@ abstract public class AtomCollection {
       for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
         if (bs.get(i))
           continue;
-        iPolymer = at[i].getPolymerIndexInModel();
+        iPolymer = at[i].group.getBioPolymerIndexInModel();
         bs.set(i);
         for (int j = i; --j >= 0;)
-          if (at[j].getPolymerIndexInModel() == iPolymer)
+          if (at[j].group.getBioPolymerIndexInModel() == iPolymer)
             bs.set(j);
           else
             break;
         for (; ++i < ac;)
-          if (at[i].getPolymerIndexInModel() == iPolymer)
+          if (at[i].group.getBioPolymerIndexInModel() == iPolymer)
             bs.set(i);
           else
             break;
@@ -2298,7 +2303,7 @@ abstract public class AtomCollection {
     int[] hs = new int[2];
     Atom a;
    for (int i = ac; --i >= 0;) {
-      int g = at[i].getGroupID();
+      int g = at[i].group.groupID;
       if (g >= JC.GROUPID_WATER && g < JC.GROUPID_SOLVENT_MIN) {
         bs.set(i);
       } else if ((a = at[i]).getElementNumber() == 8 && a.getCovalentBondCount() == 2) {
@@ -2463,7 +2468,7 @@ abstract public class AtomCollection {
     switch (insCode) {
     case '?':
       for (int i = ac; --i >= 0;) {
-        int atomSeqcode = at[i].getSeqcode();
+        int atomSeqcode = at[i].group.seqcode;
         if (!haveSeqNumber 
             || seqNum == Group.getSeqNumberFor(atomSeqcode)
             && Group.getInsertionCodeFor(atomSeqcode) != 0) {
@@ -2474,7 +2479,7 @@ abstract public class AtomCollection {
       break;
     default:
       for (int i = ac; --i >= 0;) {
-        int atomSeqcode = at[i].getSeqcode();
+        int atomSeqcode = at[i].group.seqcode;
         if (seqcode == atomSeqcode || 
             !haveSeqNumber && seqcode == Group.getInsertionCodeFor(atomSeqcode) 
             || insCode == '*' && seqNum == Group.getSeqNumberFor(atomSeqcode)) {
@@ -2494,7 +2499,7 @@ abstract public class AtomCollection {
     BS bsDone = BS.newN(ac);
     int id;
     for (int i = bsDone.nextClearBit(0); i < ac; i = bsDone.nextClearBit(i + 1)) {
-      Chain chain = at[i].getChain();
+      Chain chain = at[i].group.chain;
       if (chainID == (id = chain.chainID) || !caseSensitive 
           && id >= 0 && id < 300 && chainID == chainToUpper(id)) {
         chain.setAtomBitSet(bs);
@@ -2794,6 +2799,15 @@ abstract public class AtomCollection {
     tainted[TAINT_VIBRATION].or(bsVib);
     //{*}.vxyz = {*}.vxyz.all.mul(3.0/{*}.vxyz.all.max)
   }
+
+  public BS getAtomsFromAtomNumberInFrame(int atomNumber) {
+    BS bs = vwr.getFrameAtoms();
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      if (at[i].getAtomNumber() != atomNumber)
+        bs.clear(i);
+    return bs;
+  }
+
 
 
 }

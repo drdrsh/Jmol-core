@@ -195,14 +195,20 @@ abstract class ScriptExpr extends ScriptParam {
 
       switch (tok) {
       case T.define:
-        // @{@x} or @{@{x}} or @{@1} -- also userFunction(@1)
-        if (tokAt(++i) == T.expressionBegin) {
+        if ((tok = tokAt(++i)) == T.expressionBegin) {
+          // @{@x} or @{@{x}} or @{@1} -- also userFunction(@1)
           v = parameterExpressionToken(++i);
           i = iToken;
-        } else if (tokAt(i) == T.integer) {
+        } else if (tok == T.integer) {
+          // @3
           v = vwr.ms.getAtoms(T.atomno, Integer.valueOf(st[i].intValue));
           break;
+        } else if (tok == T.define && tokAt(i + 1) == T.integer) {
+          // @@3
+          v = vwr.ms.getAtomsFromAtomNumberInFrame(st[++i].intValue);
+          break;
         } else {
+          // @@x
           v = getParameter(SV.sValue(st[i]), T.variable, true);
         }
         v = getParameter(((SV) v).asString(), T.variable, true);
@@ -805,6 +811,7 @@ abstract class ScriptExpr extends ScriptParam {
           rpn.addXBs(lookupIdentifierValue("_" + value));
         }
         break;
+      case T.bonded:
       case T.carbohydrate:
       case T.dna:
       case T.hetero:
@@ -819,7 +826,6 @@ abstract class ScriptExpr extends ScriptParam {
       case T.spec_alternate:
       case T.specialposition:
       case T.symmetry:
-      case T.nonequivalent:
       case T.unitcell:
         rpn.addXBs(getAtomBits(instruction.tok, value));
         break;
@@ -876,7 +882,7 @@ abstract class ScriptExpr extends ScriptParam {
                 (int) Math.floor(pt.y * 1000), (int) Math.floor(pt.z * 1000) }));
         break;
       case T.thismodel:
-        rpn.addXBs(vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi));
+        rpn.addXBs(vwr.am.cmi < 0 ? vwr.getFrameAtoms() : vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi));
         break;
       case T.hydrogen:
       case T.amino:
@@ -2319,11 +2325,13 @@ abstract class ScriptExpr extends ScriptParam {
         boolean isSetAt = (j == 1 && st[0] == T.tokenSetCmd);
         if (isClauseDefine) {
           SV vt = parameterExpressionToken(++i);
-          i = iToken;
           v = (vt.tok == T.varray ? vt : SV.oValue(vt));
+          i = iToken;
         } else {
           if (tokAt(i) == T.integer) {
-            v = vwr.ms.getAtomsFromAtomNumberInFrame(st[i].intValue);
+            v = vwr.ms.getAtoms(T.atomno, Integer.valueOf(st[i].intValue));
+          } else if (tokAt(i) == T.define && tokAt(i + 1) == T.integer) {
+            v = vwr.ms.getAtomsFromAtomNumberInFrame(st[++i].intValue);
           } else {
             v = getParameter(var, T.nada, true);
           }

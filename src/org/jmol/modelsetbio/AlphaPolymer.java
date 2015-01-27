@@ -220,8 +220,8 @@ public class AlphaPolymer extends BioPolymer {
     int[][] biopolymerStartsEnds = new int[nBiopolymers][nEndMin * 2];
     for (int i = 0; i < n; i++) {
       a1 = vCA.get(i);
-      int polymerIndex = a1.getPolymerIndexInModel();
-      int monomerIndex = a1.getMonomerIndex();
+      int polymerIndex = a1.group.getBioPolymerIndexInModel();
+      int monomerIndex = a1.group.getMonomerIndex();
       int bpt = monomerIndex;
       if (bpt < nEndMin)
         biopolymerStartsEnds[polymerIndex][bpt] = i + 1;
@@ -244,9 +244,9 @@ public class AlphaPolymer extends BioPolymer {
         int ipt = strutPoint(i, j, n);
         a2 = vCA.get(j);
         int resno1 = a1.getResno();
-        int polymerIndex1 = a1.getPolymerIndexInModel();
+        int polymerIndex1 = a1.group.getBioPolymerIndexInModel();
         int resno2 = a2.getResno();
-        int polymerIndex2 = a2.getPolymerIndexInModel();
+        int polymerIndex2 = a2.group.getBioPolymerIndexInModel();
         if (polymerIndex1 == polymerIndex2 && Math.abs(resno2 - resno1) < delta)
           bsNearbyResidues.set(ipt);
         float d = d2[ipt] = a1.distanceSquared(a2);

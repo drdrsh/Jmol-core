@@ -1342,7 +1342,7 @@ import java.util.Properties;
         i = am[modelIndex].firstAtomIndex + am[modelIndex].ac;
         continue;
       }
-      iLast = at[i].getStrucNo();
+      iLast = at[i].group.getStrucNo();
       if (iLast < 1000 && iLast > lastStrucNo[modelIndex])
         lastStrucNo[modelIndex] = iLast;
       i = at[i].group.lastAtomIndex + 1;
@@ -1353,7 +1353,7 @@ import java.util.Properties;
         i = am[modelIndex].firstAtomIndex + am[modelIndex].ac;
         continue;
       }
-      if (at[i].getStrucNo() > 1000)
+      if (at[i].group.getStrucNo() > 1000)
         at[i].group.setStrucNo(++lastStrucNo[modelIndex]);
       i = at[i].group.lastAtomIndex + 1;
     }
@@ -2929,7 +2929,7 @@ import java.util.Properties;
         lastmodel = imodel;
         lastid = -1;
       }
-      if ((id = at[i].getStrucNo()) != lastid && id != 0) {
+      if ((id = at[i].group.getStrucNo()) != lastid && id != 0) {
         at[i].group.setStrucNo(++idnew);
         lastid = idnew;
       }
@@ -4078,22 +4078,6 @@ import java.util.Properties;
     setStructureIndexes();
     return ret;
   }
-
-  public BS getAtomsFromAtomNumberInFrame(int atomNumber) {
-    BS bs = new BS();
-    BS bsModels = vwr.getVisibleFramesBitSet();
-    for (int i = ac; --i >= 0;) {
-      Atom atom = at[i];
-      if (!bsModels.get(atom.mi)) {
-        i = am[atom.mi].firstAtomIndex;
-        continue;
-      }
-      if (atom.getAtomNumber() == atomNumber)
-        bs.set(i);
-    }
-    return bs;
-  }
-
 
 }
 

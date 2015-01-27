@@ -1228,8 +1228,8 @@ public final class ModelLoader {
     groups[groupIndex] = group;
     group.groupIndex = groupIndex;
 
-    for (int i = lastAtomIndex; --i >= firstAtomIndex;)
-      ms.at[i].setGroup(group);
+    for (int i = lastAtomIndex + 1; --i >= firstAtomIndex;)
+      ms.at[i].group = group;
 
   }
 

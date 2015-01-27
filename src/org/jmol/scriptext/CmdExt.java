@@ -1507,7 +1507,7 @@ public class CmdExt implements JmolCmdExtension {
     int[] result;
     if (expression2 > 0) {
       BS bs = new BS();
-      eval.definedAtomSets.put("_1", bs);
+      vwr.definedAtomSets.put("_1", bs);
       BS bs0 = atomSets[0];
       for (int atom1 = bs0.nextSetBit(0); atom1 >= 0; atom1 = bs0
           .nextSetBit(atom1 + 1)) {
@@ -3713,7 +3713,7 @@ public class CmdExt implements JmolCmdExtension {
       break;
     case T.variables:
       if (!chk)
-        msg = vwr.getAtomDefs(eval.definedAtomSets) + vwr.g.getVariableList()
+        msg = vwr.getAtomDefs(vwr.definedAtomSets) + vwr.g.getVariableList()
             + getContext(true);
       break;
     case T.trajectory:

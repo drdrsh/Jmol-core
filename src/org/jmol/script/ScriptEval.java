@@ -287,12 +287,6 @@ public class ScriptEval extends ScriptExpr {
 
   private Thread currentThread;
   public ScriptCompiler compiler;
-  public Map<String, Object> definedAtomSets;
-
-  @Override
-  public Map<String, Object> getDefinedAtomSets() {
-    return definedAtomSets;
-  }
 
   public SB outputBuffer;
 
@@ -355,7 +349,6 @@ public class ScriptEval extends ScriptExpr {
     this.compiler = (compiler == null ? (ScriptCompiler) vwr.compiler
         : compiler);
     isJS = vwr.isSingleThreaded;
-    definedAtomSets = vwr.definedAtomSets;
     return this;
   }
 
@@ -1192,7 +1185,7 @@ public class ScriptEval extends ScriptExpr {
   
   @Override
   public void clearDefinedVariableAtomSets() {
-    definedAtomSets.remove("# variable");
+    vwr.definedAtomSets.remove("# variable");
   }
 
   /**
@@ -1200,12 +1193,12 @@ public class ScriptEval extends ScriptExpr {
    * 
    */
   private void defineSets() {
-    if (!definedAtomSets.containsKey("# static")) {
+    if (!vwr.definedAtomSets.containsKey("# static")) {
       for (int i = 0; i < JC.predefinedStatic.length; i++)
         defineAtomSet(JC.predefinedStatic[i]);
       defineAtomSet("# static");
     }
-    if (definedAtomSets.containsKey("# variable"))
+    if (vwr.definedAtomSets.containsKey("# variable"))
       return;
     for (int i = 0; i < JC.predefinedVariable.length; i++)
       defineAtomSet(JC.predefinedVariable[i]);
@@ -1258,7 +1251,7 @@ public class ScriptEval extends ScriptExpr {
 
   private void defineAtomSet(String script) {
     if (script.indexOf("#") == 0) {
-      definedAtomSets.put(script, Boolean.TRUE);
+      vwr.definedAtomSets.put(script, Boolean.TRUE);
       return;
     }
     ScriptContext sc = compiler.compile("#predefine", script, true, false,
@@ -1291,7 +1284,7 @@ public class ScriptEval extends ScriptExpr {
     String name = ((String) statement[1].value).toLowerCase();
     if (name.startsWith("dynamic_"))
       name = "!" + name.substring(8);
-    definedAtomSets.put(name, statement);
+    vwr.definedAtomSets.put(name, statement);
   }
 
   @Override
@@ -1320,10 +1313,10 @@ public class ScriptEval extends ScriptExpr {
     }
     defineSets();
     setName = setName.toLowerCase();
-    Object value = definedAtomSets.get(setName);
+    Object value = vwr.definedAtomSets.get(setName);
     boolean isDynamic = false;
     if (value == null) {
-      value = definedAtomSets.get("!" + setName);
+      value = vwr.definedAtomSets.get("!" + setName);
       isDynamic = (value != null);
     }
     if (value instanceof BS)
@@ -1333,13 +1326,13 @@ public class ScriptEval extends ScriptExpr {
       BS bs = atomExpression((T[]) value, -2, 0, true, false, true, true);
       popContext(false, false);
       if (!isDynamic)
-        definedAtomSets.put(setName, bs);
+        vwr.definedAtomSets.put(setName, bs);
       return bs;
     }
     if (setName.equals("water")) {
       BS bs = vwr.ms.getAtoms(T.solvent, null);
       if (!isDynamic)
-        definedAtomSets.put(setName, bs);
+        vwr.definedAtomSets.put(setName, bs);
       return bs;
     }
     if (plurals)
@@ -1358,7 +1351,7 @@ public class ScriptEval extends ScriptExpr {
 
   @Override
   public void deleteAtomsInVariables(BS bsDeleted) {
-    for (Map.Entry<String, Object> entry : definedAtomSets.entrySet()) {
+    for (Map.Entry<String, Object> entry : vwr.definedAtomSets.entrySet()) {
       Object value = entry.getValue();
       if (value instanceof BS) {
         BSUtil.deleteBits((BS) value, bsDeleted);
@@ -3225,13 +3218,13 @@ public class ScriptEval extends ScriptExpr {
       T[] code = new T[slen];
       for (int i = slen; --i >= 0;)
         code[i] = st[i];
-      definedAtomSets
+      vwr.definedAtomSets
           .put("!" + (isSite ? setName : setName.substring(8)), code);
       //if (!isSite)
       //vwr.addStateScript(thisCommand, false, true); removed for 12.1.16
     } else {
       BS bs = atomExpressionAt(2);
-      definedAtomSets.put(setName, bs);
+      vwr.definedAtomSets.put(setName, bs);
       if (!chk)
         vwr.g.setUserVariable("@" + setName, SV.newV(T.bitset, bs));
     }

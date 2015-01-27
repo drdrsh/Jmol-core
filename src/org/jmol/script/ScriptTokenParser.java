@@ -162,17 +162,19 @@ abstract class ScriptTokenParser {
     int tok = tokAt(1);
     switch (tokCommand) {
     case T.define:
-      if (tokAt(1) == T.integer && tokAt(2) == T.per && tokAt(4) == T.opEQ) {
+      int i = (tokAt(1) == T.define ? 2 : 1);
+      if (tokAt(i) == T.integer && tokAt(i + 1) == T.per && tokAt(i + 3) == T.opEQ) {
         // @2.xxx = 
+        // @@2.xxx = 
         tokCommand = T.set;
         isSetBrace = true;
-        ptNewSetModifier = 4;
+        ptNewSetModifier = i + 3;
         isMathExpressionCommand = true;
         isEmbeddedExpression = true;
         addTokenToPostfixToken(T.tokenSetProperty);
         addTokenToPostfixToken(T.tokenExpressionBegin);
-        addNextToken();
-        addNextToken();
+        for (int j = 0; j++ <= i;)
+          addNextToken();
         addTokenToPostfixToken(T.tokenExpressionEnd);
         firstToken = 0;
       }
@@ -1011,12 +1013,15 @@ abstract class ScriptTokenParser {
         token = T.tokenDefineString;
       addTokenToPostfixToken(token);
     }
-    if (tokPeek() == T.nada)
+    if (tokPeekIs(T.nada))
       return error(ERROR_endOfCommandUnexpected);
     // we allow @x[1], which compiles as {@x}[1], not @{x[1]}
     // otherwise [1] gets read as a general atom name selector
-    if (!addSubstituteTokenIf(T.leftbrace, T.tokenExpressionBegin))
+    if (!addSubstituteTokenIf(T.leftbrace, T.tokenExpressionBegin)) {
+      if (tokPeek() == T.define)
+        addNextToken();
       return addNextToken() && checkForItemSelector(true);
+    }
     while (moreTokens() && !tokPeekIs(T.rightbrace)) {
       if (tokPeekIs(T.leftbrace)) {
         if (!checkForCoordinate(true))

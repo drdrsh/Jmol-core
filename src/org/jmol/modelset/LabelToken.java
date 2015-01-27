@@ -549,7 +549,7 @@ public class LabelToken {
             : formalCharge < 0 ? "" + -formalCharge + "-" : "");
         break;
       case 'g':
-        strT = "" + atom.getSelectedGroupIndexWithinChain();
+        strT = "" + atom.getSelectedGroupIndex();
         break;
       case T.model:
         strT = atom.getModelNumberForLabel();
@@ -567,17 +567,17 @@ public class LabelToken {
         floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);
         break;
       case 'r':
-        strT = atom.getSeqcodeString();
+        strT = atom.group.getSeqcodeString();
         break;
       case T.strucid:
-        strT = atom.getStructureId();
+        strT = atom.group.getStructureId();
         break;
       case T.strucno:
-        int id = atom.getStrucNo();
+        int id = atom.group.getStrucNo();
         strT = (id <= 0 ? "" : "" + id);
         break;
       case T.straightness:
-        if (Float.isNaN(floatT = atom.getGroupParameter(T.straightness)))
+        if (Float.isNaN(floatT = atom.group.getGroupParameter(T.straightness)))
           strT = "null";
         break;
       case T.vibx:

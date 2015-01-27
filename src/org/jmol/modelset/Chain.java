@@ -34,7 +34,7 @@ public final class Chain {
   
   public int groupCount;
   public Group[] groups;
-  int selectedGroupCount;
+  public int selectedGroupCount;
 
   public Atom getAtom(int index) {
     return model.ms.at[index];

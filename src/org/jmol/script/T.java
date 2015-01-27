@@ -431,6 +431,7 @@ public class T {
   public final static int spec_seqcode_range   = expression | 39;
 
   public final static int amino                = predefinedset | 2;
+  public final static int bonded               = predefinedset | 3;
   public final static int dna           = predefinedset | 4;
   public final static int hetero        = predefinedset | 6 | deprecatedparam;
   public final static int helixalpha           = predefinedset | 7;   // Jmol 12.1.14
@@ -456,8 +457,7 @@ public class T {
   public final static int hidden                 = predefinedset | 42;
   public final static int specialposition = predefinedset | 44;
   public final static int visible                = predefinedset | 46;
-  public final static int basemodel              = predefinedset | 48;
-  public final static int nonequivalent          = predefinedset | 50;
+  public final static int basemodel              = predefinedset | 48; // specific to JCAMP-MOL files
 
   
   static int getPrecedence(int tokOperator) {
@@ -1898,6 +1898,7 @@ public class T {
         "best",
         "bin",
         "bondCount",
+        "bonded",
         "bottom",
         "branch",
         "brillouin",
@@ -2038,7 +2039,6 @@ public class T {
         "inherit",
         "normal",
         "noContourLines",
-        "nonequivalent",
         "notFrontOnly",
         "noTriangles",
         "now",
@@ -2921,6 +2921,7 @@ public class T {
         best,                               // "best"
         bin,                                // "bin"
         bondcount,                          // "bondCount"
+        bonded,                             // "bonded"
         bottom,                             // "bottom"
         branch,                             // "branch"
         brillouin,                          // "brillouin"
@@ -3061,7 +3062,6 @@ public class T {
         -1,                                 // "inherit"
         normal,                             // "normal"
         nocontourlines,                     // "noContourLines"
-        nonequivalent,                      // "nonequivalent"
         notfrontonly,                       // "notFrontOnly"
         notriangles,                        // "noTriangles"
         now,                                // "now"
