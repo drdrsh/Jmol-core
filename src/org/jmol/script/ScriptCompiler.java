@@ -976,7 +976,7 @@ public class ScriptCompiler extends ScriptTokenParser {
               && lastToken.tok == T.defaultdirectory || tokCommand == T.load
               || tokCommand == T.background || tokCommand == T.script));
       iHaveQuotedString = true;
-      if (tokCommand == T.load && lastToken.tok == T.data
+      if ((tokCommand == T.load || tokCommand == T.cgo) && lastToken.tok == T.data
           || tokCommand == T.data && str.indexOf("@") < 0) {
         if (!getData(str)) {
           return ERROR(ERROR_missingEnd, "data");

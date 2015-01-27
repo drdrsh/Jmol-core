@@ -463,7 +463,7 @@ public class IsoExt extends CmdExt {
       case T.point3f:
         // {X, Y, Z}
         if (eval.theTok == T.point4f || !eval.isPoint3f(i)) {
-          propertyValue = getPoint4f(i);
+          propertyValue = eval.getPoint4f(i);
           if (isFrame) {
             eval.checkLast(eval.iToken);
             if (!chk)
@@ -1217,7 +1217,7 @@ public class IsoExt extends CmdExt {
       case T.rotate:
         propertyName = "rotate";
         propertyValue = (tokAt(eval.iToken = ++i) == T.none ? null
-            : getPoint4f(i));
+            : eval.getPoint4f(i));
         i = eval.iToken;
         break;
       case T.scale3d:
@@ -1663,7 +1663,7 @@ public class IsoExt extends CmdExt {
         ++i;
         //        ignoreError = true;
         //      try {
-        propertyValue = getPoint4f(i);
+        propertyValue = eval.getPoint4f(i);
         propertyName = "ellipsoid";
         i = eval.iToken;
         sbCommand.append(" ellipsoid ").append(Escape.eP4((P4) propertyValue));
@@ -2012,7 +2012,7 @@ public class IsoExt extends CmdExt {
         break;
       case T.eccentricity:
         propertyName = "eccentricity";
-        propertyValue = getPoint4f(++i);
+        propertyValue = eval.getPoint4f(++i);
         //if (surfaceObjectSeen)
         sbCommand.append(" eccentricity ").append(
             Escape.eP4((P4) propertyValue));
@@ -2087,16 +2087,16 @@ public class IsoExt extends CmdExt {
         vxy.addLast(pt3); // (1) = {origin}
         P4 pt4;
         ptX = ++eval.iToken;
-        vxy.addLast(pt4 = getPoint4f(ptX)); // (2) = {ni ix iy iz}
+        vxy.addLast(pt4 = eval.getPoint4f(ptX)); // (2) = {ni ix iy iz}
         //if (!surfaceObjectSeen)
         sbCommand.append(" ").append(Escape.eP4(pt4));
         nX = (int) pt4.x;
         ptY = ++eval.iToken;
-        vxy.addLast(pt4 = getPoint4f(ptY)); // (3) = {nj jx jy jz}
+        vxy.addLast(pt4 = eval.getPoint4f(ptY)); // (3) = {nj jx jy jz}
         //if (!surfaceObjectSeen)
         sbCommand.append(" ").append(Escape.eP4(pt4));
         nY = (int) pt4.x;
-        vxy.addLast(pt4 = getPoint4f(++eval.iToken)); // (4) = {nk kx ky kz}
+        vxy.addLast(pt4 = eval.getPoint4f(++eval.iToken)); // (4) = {nk kx ky kz}
         //if (!surfaceObjectSeen)
         sbCommand.append(" ").append(Escape.eP4(pt4));
         nZ = (int) pt4.x;
@@ -2203,7 +2203,7 @@ public class IsoExt extends CmdExt {
       case T.lobe:
         // lobe {eccentricity}
         propertyName = "lobe";
-        propertyValue = getPoint4f(++i);
+        propertyValue = eval.getPoint4f(++i);
         i = eval.iToken;
         //if (!surfaceObjectSeen)
         sbCommand.append(" lobe ").append(Escape.eP4((P4) propertyValue));
@@ -2213,7 +2213,7 @@ public class IsoExt extends CmdExt {
       case T.lp:
         // lp {eccentricity}
         propertyName = "lp";
-        propertyValue = getPoint4f(++i);
+        propertyValue = eval.getPoint4f(++i);
         i = eval.iToken;
         //if (!surfaceObjectSeen)
         sbCommand.append(" lp ").append(Escape.eP4((P4) propertyValue));
@@ -2265,7 +2265,7 @@ public class IsoExt extends CmdExt {
         // rad {eccentricity}
         surfaceObjectSeen = true;
         propertyName = "rad";
-        propertyValue = getPoint4f(++i);
+        propertyValue = eval.getPoint4f(++i);
         i = eval.iToken;
         //if (!surfaceObjectSeen)
         sbCommand.append(" radical ").append(Escape.eP4((P4) propertyValue));
@@ -3192,22 +3192,11 @@ public class IsoExt extends CmdExt {
       case T.varray:
         if (data != null || isWild)
           invArg();
-        int pt = (tok == T.leftsquare ? i + 1 : i + 2);
-        String s = eval.optParameterAsString(pt).toUpperCase();
-        if (s.equals("BEGIN") || s.equals("SCREEN")) {
-          Object[] key = new Object[1];
-          for (int j = pt; j < slen; j++) {
-            if (tokAt(j) != T.rightsquare && !isFloatParameter(j)) {
-              key[0] = getToken(j).value.toString();
-              if (eval.getShapePropertyData(JC.SHAPE_CGO, "key", key))
-                st[j] = SV.newI(((Integer)key[0]).intValue());
-              else
-                Logger.error("CGO unknown: " + st[j].value);
-            }
-          }
-        }
-        data = eval.listParameter(i, 2, Integer.MAX_VALUE);
-        i = eval.iToken;
+        data = new Lst<Object>();
+        int[] ai = new int[] {i, slen};
+        if (!eval.getShapePropertyData(JC.SHAPE_CGO, "data", new Object[] { st, ai, data, vwr }))
+          invArg();
+        i = ai[0];
         continue;
       case T.scale:
         if (++i >= slen)
@@ -3658,10 +3647,6 @@ public class IsoExt extends CmdExt {
       }
     }
     return null;
-  }
-
-  private P4 getPoint4f(int i) throws ScriptException {
-    return e.getPoint4f(i);
   }
 
 

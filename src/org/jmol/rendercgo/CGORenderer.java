@@ -35,6 +35,11 @@ import org.jmol.util.Logger;
 import javajs.util.P3;
 import javajs.util.P3i;
 
+
+/**
+ * Something like a PyMOL Compiled Graphical Object, but more interesting!
+ * 
+ */
 public class CGORenderer extends DrawRenderer {
 
   private CGOMesh cgoMesh;
@@ -44,8 +49,18 @@ public class CGORenderer extends DrawRenderer {
   private boolean doColor;
   private int ptNormal;
   private int ptColor;
+  
+  /**
+   * UV mapping Cartesian origin, X, and Y
+   */
+  private P3 map0, vX, vY;
+  /**
+   * UV mapping min/max x and y
+   */
+  private float x0, y0, dx, dy, scaleX, scaleY;
+  
+  private boolean is2D, is2DPercent, isMapped, isPS;
   private int screenZ;
-  private boolean is2DPercent;
 
   
   @Override
@@ -79,12 +94,14 @@ public class CGORenderer extends DrawRenderer {
     P3 pt;
     P3i spt;
     g3d.addRenderer(T.triangles);
-    boolean is3D = true;
+    is2D = isMapped = false;
+    scaleX = scaleY = 1;
+
     for (int i = 0; i < n; i++) {
       int type = cgoMesh.getInt(i);
       if (type == CGOMesh.STOP)
         break;
-      int len = CGOMesh.getSize(type, is3D);
+      int len = CGOMesh.getSize(type, is2D);
       if (len < 0) {
         Logger.error("CGO unknown type: " + type);
         return false;
@@ -93,15 +110,49 @@ public class CGORenderer extends DrawRenderer {
       default:
         System.out.println("CGO ? " + type);
         break;
+      case CGOMesh.PS_SHOWPAGE:
+        // no fill, either
+        break;
+      case CGOMesh.PS_SETLINEWIDTH:
+        diameter = cgoMesh.getInt(i + 1);
+        break;
+      case CGOMesh.JMOL_DIAMETER:
+        width = cgoMesh.getFloat(i + 1);
+        break;
       case CGOMesh.JMOL_SCREEN:
+        isMapped = false;
         float f = cgoMesh.getFloat(i + 1);
         if (f == 0) {
-          is3D = true;
+          is2D = false;
         } else {
           is2DPercent = (f > 0);
           screenZ = (is2DPercent ? tm.zValueFromPercent((int) f) : -(int) f);
-          is3D = false;
+          is2D = true;
         }
+        break;
+      case CGOMesh.JMOL_PS:
+        isPS = true;
+        //$FALL-THROUGH$
+      case CGOMesh.JMOL_UVMAP:
+        is2D = isMapped = true;
+        map0 = new P3();
+        vX = new P3();
+        vY = new P3();
+        cgoMesh.getPoint(i + 1, map0);
+        cgoMesh.getPoint(i + 4, vX);
+        vX.sub(map0);
+        cgoMesh.getPoint(i + 7, vY);
+        vY.sub(map0);
+        x0 = cgoMesh.getFloat(i + 10);
+        y0 = cgoMesh.getFloat(i + 11);
+        dx = cgoMesh.getFloat(i + 12) - x0;
+        dy = cgoMesh.getFloat(i + 13) - y0;
+        if (isPS)
+          break;
+        //$FALL-THROUGH$
+      case CGOMesh.PS_SCALE:
+          scaleX = cgoMesh.getFloat(isPS ? i + 1 : i + 14);
+          scaleY = cgoMesh.getFloat(isPS ? i + 2 : i + 15);
         break;
       case CGOMesh.RESET_NORMAL: // use?
         break;
@@ -109,20 +160,27 @@ public class CGORenderer extends DrawRenderer {
         // what are the first two parameters? 
         // width and number of points?
         getPoint(i + 2, pt0, pt0i);
-        getPoint(i + (is3D ? 5 : 4), pt1, pt1i);
+        getPoint(i + (is2D ? 4 : 5), pt1, pt1i);
         drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
         break;
       case CGOMesh.BEGIN:
         glMode = cgoMesh.getInt(i + 1);
+        //$FALL-THROUGH$
+      case CGOMesh.PS_NEWPATH:
         nPts = 0;
         break;
+      case CGOMesh.PS_CLOSEPATH:
+        glMode = CGOMesh.PS_CLOSEPATH;
+        break;
+      case CGOMesh.PS_STROKE:
+        if (glMode != CGOMesh.PS_CLOSEPATH)
+          break;
+        glMode = CGOMesh.GL_LINE_LOOP;
+        //$FALL-THROUGH$
       case CGOMesh.END:
         if (glMode == CGOMesh.GL_LINE_LOOP && nPts >= 3)
           drawLine(1, 2, true, pt0, pt3, pt0i, pt3i);
         nPts = 0;
-        break;
-      case CGOMesh.JMOL_DIAMETER:
-        width = cgoMesh.getFloat(i + 1);
         break;
       case CGOMesh.COLOR:
         getColix(true);
@@ -130,6 +188,12 @@ public class CGORenderer extends DrawRenderer {
       case CGOMesh.NORMAL:
         normix = getNormix();
         break;
+      case CGOMesh.PS_MOVETO:
+        nPts = 0;
+        //$FALL-THROUGH$
+      case CGOMesh.PS_LINETO:
+        glMode = CGOMesh.GL_LINE_LOOP;
+        //$FALL-THROUGH$
       case CGOMesh.VERTEX:
         if (nPts++ == 0)
           getPoint(i, pt0, pt0i);
@@ -150,7 +214,7 @@ public class CGORenderer extends DrawRenderer {
         case CGOMesh.GL_LINE_STRIP:
           if (nPts == 1) {
             if (glMode == CGOMesh.GL_LINE_LOOP) {
-              vTemp.setT(pt0);
+              pt3.setT(pt0);
               pt3i.setT(pt0i);
             }
             break;
@@ -233,7 +297,7 @@ public class CGORenderer extends DrawRenderer {
         break;
       case CGOMesh.SAUSAGE:
         getPoint(i, pt0, pt0i);
-        getPoint(i + (is3D ? 3 : 2), pt1, pt1i);
+        getPoint(i + (is2D ? 2 : 3), pt1, pt1i);
         width = cgoMesh.getFloat(i + 7);
         getColix(true);
         getColix(false); // for now -- ignore second color
@@ -242,8 +306,8 @@ public class CGORenderer extends DrawRenderer {
         break;
       case CGOMesh.TRICOLOR_TRIANGLE:
         getPoint(i, pt0, pt0i);
-        getPoint(i + (is3D ? 3 : 2), pt1, pt1i);
-        getPoint(i + (is3D ? 6 : 4), pt2, pt2i);
+        getPoint(i + (is2D ? 2 : 3), pt1, pt1i);
+        getPoint(i + (is2D ? 4 : 6), pt2, pt2i);
         normix0 = getNormix();
         normix1 = getNormix();
         normix2 = getNormix();
@@ -273,17 +337,24 @@ public class CGORenderer extends DrawRenderer {
   }
 
  void getPoint(int i, P3 pt, P3i pti) {
-    cgoMesh.getPoint(i, pt);
-    if (screenZ == Integer.MAX_VALUE) {
-      tm.transformPtScr(pt, pti);
-    } else {
+    cgoMesh.getPoint(i + 1, pt);
+    if (isMapped) { 
+      // The vertex coordinates x and y are map coordinates
+      // on a plane with origin map0 and axis vectors vX and vY;
+      // x0, dx, y0, dy are scalings on the plane 
+      float fx = (pt.x * scaleX - x0) / dx;
+      float fy = (pt.y * scaleY - y0) / dy;
+      pt.scaleAdd2(fx, vX, map0);
+      pt.scaleAdd2(fy, vY, pt);      
+    } else if (is2D) {
       pti.x = (is2DPercent ? tm.percentToPixels('x', pt.x) : (int) pt.x);
       pti.y = (is2DPercent ? tm.percentToPixels('y', pt.y) : (int) pt.y);
       pti.z = screenZ;
       tm.unTransformPoint(pt, pt);
+      return;
     }
+    tm.transformPtScr(pt, pti);
   }
-
 
   private void fillTriangle() {
     g3d.fillTriangle3CN(pt0i, colix0, normix0, pt1i, colix1, normix1, pt2i,

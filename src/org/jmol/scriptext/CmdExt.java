@@ -235,7 +235,12 @@ public class CmdExt implements JmolCmdExtension {
   }
 
   protected boolean isFloatParameter(int index) {
-    return e.isFloatParameter(index);
+    switch (e.tokAt(index)) {
+    case T.integer:
+    case T.decimal:
+      return true;
+    }
+    return false;
   }
 
   protected void setShapeProperty(int shapeType, String propertyName,
@@ -2078,6 +2083,7 @@ public class CmdExt implements JmolCmdExtension {
     // modulation {q1 q2 q3} TRUE 
     P3 qtOffset = null;
     //    int frameN = Integer.MAX_VALUE;
+    ScriptEval eval = e;
     boolean mod = true;
     boolean isQ = false;
     BS bs = null;
@@ -2092,30 +2098,30 @@ public class CmdExt implements JmolCmdExtension {
     case T.bitset:
     case T.expressionBegin:
       bs = atomExpressionAt(1);
-      switch (tokAt(e.iToken + 1)) {
+      switch (tokAt(eval.iToken + 1)) {
       case T.nada:
         break;
       case T.off:
         mod = false;
         //$FALL-THROUGH$
       case T.on:
-        e.iToken++;
+        eval.iToken++;
         break;
       }
-      e.checkLast(e.iToken);
+      eval.checkLast(eval.iToken);
       break;
     case T.leftbrace:
     case T.point3f:
-      qtOffset = e.getPoint3f(1, false);
-      isQ = (tokAt(e.iToken + 1) == T.on);
+      qtOffset = eval.getPoint3f(1, false);
+      isQ = (tokAt(eval.iToken + 1) == T.on);
       break;
     case T.identifier:
-      String s = e.theToken.value.toString();
+      String s = eval.theToken.value.toString();
       i++;
       if (s.equalsIgnoreCase("t")) {
-        e.theTok = T.decimal;
+        eval.theTok = T.decimal;
       } else if (s.equalsIgnoreCase("m") || s.equalsIgnoreCase("q")) {
-        e.theTok = T.integer;
+        eval.theTok = T.integer;
       } else {
         invArg();
       }
@@ -2124,13 +2130,13 @@ public class CmdExt implements JmolCmdExtension {
     case T.integer:
       // allows for form of number -- integer or float -- to determine type,
       // but allso allows using "t" or "q" followed by a number or {t1 t2 t3}
-      switch (e.theTok) {
+      switch (eval.theTok) {
       case T.decimal:
         if (isFloatParameter(i)) {
           float t1 = floatParameter(i);
           qtOffset = P3.new3(t1, t1, t1);
         } else {
-          qtOffset = e.getPoint3f(i, false);
+          qtOffset = eval.getPoint3f(i, false);
         }
         break;
       case T.integer:
@@ -2138,7 +2144,7 @@ public class CmdExt implements JmolCmdExtension {
           int t = intParameter(i);
           qtOffset = P3.new3(t, t, t);
         } else {
-          qtOffset = e.getPoint3f(i, false);
+          qtOffset = eval.getPoint3f(i, false);
         }
         isQ = true;
         break;

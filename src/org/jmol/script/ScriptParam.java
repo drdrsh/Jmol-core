@@ -648,7 +648,6 @@ abstract public class ScriptParam extends ScriptError {
   public Lst<Object> listParameter(int i, int nMin, int nMax)
       throws ScriptException {
     Lst<Object> v = new Lst<Object>();
-    P3 pt;
     int tok = tokAt(i);
     if (tok == T.spacebeforesquare)
       tok = tokAt(++i);
@@ -666,15 +665,7 @@ abstract public class ScriptParam extends ScriptError {
       case T.comma:
       case T.leftbrace:
       case T.rightbrace:
-        break;
       case T.string:
-        break;
-      case T.point3f:
-        pt = getPoint3f(i, false);
-        v.addLast(Float.valueOf(pt.x));
-        v.addLast(Float.valueOf(pt.y));
-        v.addLast(Float.valueOf(pt.z));
-        n += 3;
         break;
       case T.point4f:
         P4 pt4 = getPoint4f(i);
@@ -685,12 +676,19 @@ abstract public class ScriptParam extends ScriptError {
         n += 4;
         break;
       default:
+        if (isCenterParameter(i)) {
+          P3 pt = centerParameter(i);
+          i = iToken;
+          v.addLast(Float.valueOf(pt.x));
+          v.addLast(Float.valueOf(pt.y));
+          v.addLast(Float.valueOf(pt.z));
+          n += 3;
+          break;
+        }
         v.addLast(Float.valueOf(floatParameter(i)));
         n++;
-        if (n == nMax && haveSquare && tokAt(i + 1) == T.rightbrace)
-          i++;
       }
-      i++;
+      i += (n == nMax && haveSquare && tokAt(i + 1) == T.rightbrace ? 2 : 1);
     }
     if (haveBrace && tokAt(i++) != T.rightbrace || haveSquare
         && tokAt(i++) != T.rightsquare || n < nMin || n > nMax)

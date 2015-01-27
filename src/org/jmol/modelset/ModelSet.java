@@ -1226,6 +1226,7 @@ import java.util.Properties;
   public P3 getAtomSetCenter(BS bs) {
     P3 ptCenter = new P3();
     int nPoints = 0;
+    if (bs.cardinality() == 1)
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       if (!isJmolDataFrameForAtom(at[i])) {
         nPoints++;

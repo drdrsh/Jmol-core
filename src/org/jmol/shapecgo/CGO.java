@@ -24,9 +24,6 @@
 
 package org.jmol.shapecgo;
 
-import java.util.Hashtable;
-import java.util.Map;
-
 import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
@@ -37,6 +34,7 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
+
 public class CGO extends Draw {
   
   CGOMesh[] cmeshes = new CGOMesh[4];
@@ -109,28 +107,12 @@ public class CGO extends Draw {
     setPropertySuper(propertyName, value, bs);
   }
   
-  private final static String KEY_LIST = "BEGIN:2 END:3 STOP:0 " +
-  		"POINT:0 POINTS:0 LINES:1 LINE_LOOP:2 LINE_STRIP:3 TRIANGLES:4 TRIANGLE_STRIP:5 TRIANGLE_FAN:6 " +
-  		"LINE:1 VERTEX:4 NORMAL:5 COLOR:6 LINEWIDTH:10 SAUSAGE:14 DIAMETER:-100 SCREEN:-101";
-  
-  private Map<String, Integer> keyMap;
   @Override
   public boolean getPropertyData(String property, Object[] data) {
-    if (property == "key") {
-      if (keyMap == null) {
-        keyMap = new Hashtable<String, Integer>();
-        String[] tokens = PT.getTokens(KEY_LIST);
-        for (int i = tokens.length; --i >= 0;) {
-          int pt = tokens[i].indexOf(":");
-          keyMap.put(tokens[i].substring(0, pt), Integer.valueOf(Integer.parseInt(tokens[i].substring(pt + 1))));
-        }
-      }
-      data[0] = keyMap.get(((String) data[0]).toUpperCase());
-      return (data[0] != null);
-    }
+    if (property == "data")
+      return CGOMesh.getData(data);
     return getPropDataMC(property, data);
   }
-
 
   @Override
   protected void deleteMeshElement(int i) {
