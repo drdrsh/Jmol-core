@@ -2323,7 +2323,7 @@ abstract class ScriptExpr extends ScriptParam {
           v = (vt.tok == T.varray ? vt : SV.oValue(vt));
         } else {
           if (tokAt(i) == T.integer) {
-            v = vwr.ms.getAtoms(T.atomno, Integer.valueOf(st[i].intValue));
+            v = vwr.ms.getAtomsFromAtomNumberInFrame(st[i].intValue);
           } else {
             v = getParameter(var, T.nada, true);
           }

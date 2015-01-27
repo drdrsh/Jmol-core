@@ -278,7 +278,7 @@ abstract public class AtomCollection {
     return (i < 0 ? null : at[i].group.getQuaternion(qtype));
   } 
 
-  public int getAtomIndexFromAtomNumber(int atomNumber, BS bsVisibleFrames) {
+  public int getFirstAtomIndexFromAtomNumber(int atomNumber, BS bsVisibleFrames) {
     //definitely want FIRST (model) not last here
     for (int i = 0; i < ac; i++) {
       Atom atom = at[i];

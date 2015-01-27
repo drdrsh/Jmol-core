@@ -2783,11 +2783,6 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
         null, atomIndexNot, allowCyclic, true);
   }
 
-  public int getAtomIndexFromAtomNumber(int atomNumber) {
-    return ms.getAtomIndexFromAtomNumber(atomNumber,
-        getVisibleFramesBitSet());
-  }
-
   @Override
   public BS getElementsPresentBitSet(int modelIndex) {
     return ms.getElementsPresentBitSet(modelIndex);

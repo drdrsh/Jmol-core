@@ -2754,20 +2754,10 @@ public class ScriptEval extends ScriptExpr {
         vwr.setAnimDisplay(bs);
       return;
     case T.frame:
-      if (isArrayParameter(2)) {
-        int[] frames = expandFloatArray(
-            floatParameterSet(2, 0, Integer.MAX_VALUE), 1);
-        checkLength(iToken + 1);
-        if (chk)
-          return;
-        Map<String, Object> movie = new Hashtable<String, Object>();
-        if (frames.length > 0)
-          movie.put("frames", frames);
-        movie.put("currentFrame", Integer.valueOf(0));
-        vwr.am.setMovie(movie);
-      } else {
+      if (isArrayParameter(2))
+        setFrameSet(2);
+      else
         cmdModel(2);
-      }
       break;
     case T.mode:
       float startDelay = 1,
@@ -2821,6 +2811,19 @@ public class ScriptEval extends ScriptExpr {
     default:
       frameControl(1);
     }
+  }
+
+  private void setFrameSet(int i) throws ScriptException {
+    int[] frames = expandFloatArray(
+        floatParameterSet(i, 0, Integer.MAX_VALUE), 1);
+    checkLength(iToken + 1);
+    if (chk)
+      return;
+    Map<String, Object> movie = new Hashtable<String, Object>();
+    if (frames.length > 0)
+      movie.put("frames", frames);
+    movie.put("currentFrame", Integer.valueOf(0));
+    vwr.am.setMovie(movie);
   }
 
   private void cmdAxes(int index) throws ScriptException {
@@ -4960,9 +4963,9 @@ public class ScriptEval extends ScriptExpr {
   }
 
   /**
-   * ONE difference between FRAME and MODEL:
-   *   model 1  sets model NAMED one in the case of PDB
-   *   frame 1  always sets the first model
+   * ONE difference between FRAME and MODEL: model 1 sets model NAMED one in the
+   * case of PDB frame 1 always sets the first model
+   * 
    * @param offset
    * @throws ScriptException
    */
@@ -4994,8 +4997,7 @@ public class ScriptEval extends ScriptExpr {
         return;
       BS bsa = new BS();
       bsa.set(i);
-      vwr.setCurrentModelIndex(vwr.ms.getModelBS(bsa, false).nextSetBit(
-          0));
+      vwr.setCurrentModelIndex(vwr.ms.getModelBS(bsa, false).nextSetBit(0));
       return;
     case T.create:
       iToken = 1;
@@ -5028,8 +5030,7 @@ public class ScriptEval extends ScriptExpr {
       if (checkLength23() > 0)
         if (!chk)
           vwr.setFrameTitleObj(slen == 2 ? "@{_modelName}"
-              : (tokAt(2) == T.varray ? SV.strListValue(st[2])
-                  : paramAsStr(2)));
+              : (tokAt(2) == T.varray ? SV.strListValue(st[2]) : paramAsStr(2)));
       return;
     case T.align:
       BS bs = (slen == 2 || tokAt(2) == T.none ? null : atomExpressionAt(2));
@@ -5056,87 +5057,91 @@ public class ScriptEval extends ScriptExpr {
     int nFrames = 0;
     float fFrame = 0;
     boolean haveFileSet = vwr.haveFileSet();
-
-    for (int i = offset; i < slen; i++) {
-      switch (getToken(i).tok) {
-      case T.all:
-      case T.times:
-        checkLength(offset + (isRange ? 2 : 1));
-        isAll = true;
-        break;
-      case T.minus: // ignore
-        if (nFrames != 1)
-          invArg();
-        isHyphen = true;
-        break;
-      case T.none:
-        checkLength(offset + 1);
-        break;
-      case T.decimal:
-        useModelNumber = false;
-        if ((fFrame = floatParameter(i)) < 0) {
-          checkLength(i + 1);
-          if (!chk)
-            vwr.am.morph(-fFrame);
-          return;
-        }
-        //$FALL-THROUGH$
-      case T.integer:
-      case T.string:
-        if (nFrames == 2)
-          invArg();
-        int iFrame = (theTok == T.string ? getFloatEncodedInt((String) theToken.value)
-            : theToken.intValue);
-        if (iFrame < 0 && nFrames == 1) {
+    if (isArrayParameter(1)) {
+      setFrameSet(1);
+      isAll = true;
+    } else {
+      for (int i = offset; i < slen; i++) {
+        switch (getToken(i).tok) {
+        case T.all:
+        case T.times:
+          checkLength(offset + (isRange ? 2 : 1));
+          isAll = true;
+          break;
+        case T.minus: // ignore
+          if (nFrames != 1)
+            invArg();
           isHyphen = true;
-          iFrame = -iFrame;
-          if (haveFileSet && iFrame < 1000000)
-            iFrame *= 1000000;
-        }
-        if (theTok == T.decimal && haveFileSet && fFrame == (int) fFrame)
-          iFrame = (int) fFrame * 1000000;
-        if (iFrame == Integer.MAX_VALUE) {
-          if (i == 1) {
-            String id = theToken.value.toString();
-            int modelIndex = (chk ? -1 : vwr.getModelIndexFromId(id));
-            if (modelIndex >= 0) {
-              checkLength(2);
-              vwr.setCurrentModelIndex(modelIndex);
-              return;
-            }
-          }
-          iFrame = 0; // frame 0.0
-        }
-        if (iFrame == -1) {
+          break;
+        case T.none:
           checkLength(offset + 1);
-          if (!chk)
-            vwr.setAnimation(T.prev);
+          break;
+        case T.decimal:
+          useModelNumber = false;
+          if ((fFrame = floatParameter(i)) < 0) {
+            checkLength(i + 1);
+            if (!chk)
+              vwr.am.morph(-fFrame);
+            return;
+          }
+          //$FALL-THROUGH$
+        case T.integer:
+        case T.string:
+          if (nFrames == 2)
+            invArg();
+          int iFrame = (theTok == T.string ? getFloatEncodedInt((String) theToken.value)
+              : theToken.intValue);
+          if (iFrame < 0 && nFrames == 1) {
+            isHyphen = true;
+            iFrame = -iFrame;
+            if (haveFileSet && iFrame < 1000000)
+              iFrame *= 1000000;
+          }
+          if (theTok == T.decimal && haveFileSet && fFrame == (int) fFrame)
+            iFrame = (int) fFrame * 1000000;
+          if (iFrame == Integer.MAX_VALUE) {
+            if (i == 1) {
+              String id = theToken.value.toString();
+              int modelIndex = (chk ? -1 : vwr.getModelIndexFromId(id));
+              if (modelIndex >= 0) {
+                checkLength(2);
+                vwr.setCurrentModelIndex(modelIndex);
+                return;
+              }
+            }
+            iFrame = 0; // frame 0.0
+          }
+          if (iFrame == -1) {
+            checkLength(offset + 1);
+            if (!chk)
+              vwr.setAnimation(T.prev);
+            return;
+          }
+          if (iFrame >= 1000 && iFrame < 1000000 && haveFileSet)
+            iFrame = (iFrame / 1000) * 1000000 + (iFrame % 1000); // initial way
+          if (!useModelNumber && iFrame == 0 && nFrames == 0)
+            isAll = true; // 0.0 means ALL; 0 means "all in this range
+          if (iFrame >= 1000000)
+            useModelNumber = false;
+          frameList[nFrames++] = iFrame;
+          break;
+        case T.play:
+          isPlay = true;
+          break;
+        case T.range:
+          isRange = true;
+          break;
+        case T.property:
+          propName = stringParameter(3);
+          SV sv = setVariable(4, -1, "", false);
+          if (sv != null)
+            prop = SV.oValue(sv);
+          i = slen;
+          break;
+        default:
+          frameControl(offset);
           return;
         }
-        if (iFrame >= 1000 && iFrame < 1000000 && haveFileSet)
-          iFrame = (iFrame / 1000) * 1000000 + (iFrame % 1000); // initial way
-        if (!useModelNumber && iFrame == 0 && nFrames == 0)
-          isAll = true; // 0.0 means ALL; 0 means "all in this range
-        if (iFrame >= 1000000)
-          useModelNumber = false;
-        frameList[nFrames++] = iFrame;
-        break;
-      case T.play:
-        isPlay = true;
-        break;
-      case T.range:
-        isRange = true;
-        break;
-      case T.property:
-        propName = stringParameter(3);
-        SV sv = setVariable(4, -1, "", false);
-        if (sv != null)
-          prop = SV.oValue(sv);
-        i = slen;
-        break;
-      default:
-        frameControl(offset);
-        return;
       }
     }
     if (isRange && nFrames == 0)
@@ -5160,7 +5165,7 @@ public class ScriptEval extends ScriptExpr {
           frameList[i] %= 1000000;
     int modelIndex = vwr.ms.getModelNumberIndex(frameList[0], useModelNumber,
         false);
-    
+
     int modelIndex2 = -1;
     if (haveFileSet && modelIndex < 0 && frameList[0] != 0) {
       // may have frame 2.0 or frame 2 meaning the range of models in file 2

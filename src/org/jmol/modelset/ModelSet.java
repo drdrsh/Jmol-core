@@ -4079,6 +4079,21 @@ import java.util.Properties;
     return ret;
   }
 
+  public BS getAtomsFromAtomNumberInFrame(int atomNumber) {
+    BS bs = new BS();
+    BS bsModels = vwr.getVisibleFramesBitSet();
+    for (int i = ac; --i >= 0;) {
+      Atom atom = at[i];
+      if (!bsModels.get(atom.mi)) {
+        i = am[atom.mi].firstAtomIndex;
+        continue;
+      }
+      if (atom.getAtomNumber() == atomNumber)
+        bs.set(i);
+    }
+    return bs;
+  }
+
 
 }
 

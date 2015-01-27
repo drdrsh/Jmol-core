@@ -1127,7 +1127,7 @@ public class CmdExt implements JmolCmdExtension {
           ptFloat = (ptFloat + 1) % 2;
           rangeMinMax[ptFloat] = iParam;
         } else {
-          atomIndex = vwr.getAtomIndexFromAtomNumber(iParam);
+          atomIndex = vwr.ms.getFirstAtomIndexFromAtomNumber(iParam, vwr.getVisibleFramesBitSet());
           if (!chk && atomIndex < 0)
             return;
           if (value != null)
