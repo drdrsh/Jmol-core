@@ -2440,6 +2440,7 @@ public class TransformManager {
     // model radius in pixels
     modelRadiusPixels = modelRadius * scalePixelsPerAngstrom; // (s)
 
+
     // model center offset for zoom 100
     float offset100 = (2 * modelRadius) / visualRangeAngstroms * referencePlaneOffset; // (s)
 
@@ -2462,9 +2463,11 @@ public class TransformManager {
     if (!scale3D || perspectiveDepth)
       scalePixelsPerAngstrom *= (modelCenterOffset / offset100) * zmPct / 100; // (s/m)
 
+    
     // so that's sppa = (spc / vR) * rPO * (vR / 2) / mR * rPO = spc/2/mR
 
     modelRadiusPixels = modelRadius * scalePixelsPerAngstrom; // (s)
+
     //    System.out.println("transformman zoom scalppa modelrad " + zoomPercent + " " +
     //     scalePixelsPerAngstrom + " " + modelRadiusPixels + " " + visualRange 
     //     + " -- "+ vwr.dimScreen.width+ "  "+ vwr.dimScreen.height);
