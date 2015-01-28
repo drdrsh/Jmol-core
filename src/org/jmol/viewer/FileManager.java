@@ -102,7 +102,19 @@ public class FileManager implements BytePoster {
 
   private String nameAsGiven = JC.ZAP_TITLE, fullPathName, lastFullPathName, lastNameAsGiven = JC.ZAP_TITLE, fileName;
 
+  /**
+   * Set fullPathName, fileName, and nameAsGiven
+   * 
+   * @param fileInfo if null, replace fullPathName and nameAsGiven with last version of such
+   * 
+   * 
+   */
   public void setFileInfo(String[] fileInfo) {
+    if (fileInfo == null) {
+      fullPathName = lastFullPathName;
+      nameAsGiven = lastNameAsGiven;
+      return;
+    }
     // used by ScriptEvaluator dataFrame and load methods to temporarily save the state here
     fullPathName = fileInfo[0];
     fileName = fileInfo[Math.min(1,  fileInfo.length - 1)];

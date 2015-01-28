@@ -1736,6 +1736,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
 
   @Override
   public boolean mutate(int iatom, String fileName) {
+    String[] info = vwr.fm.getFileInfo();
     boolean b = vwr.getBoolean(T.appendnew);
     Group g = vwr.ms.at[iatom].group;
     //try {
@@ -1812,6 +1813,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
      // System.out.println("" + e);
    // }
     vwr.setBooleanProperty("appendNew", b);
+    vwr.fm.setFileInfo(info);
     return true;
 
   }
