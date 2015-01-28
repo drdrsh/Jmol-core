@@ -41,6 +41,7 @@ import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelLoader;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
+import org.jmol.script.ScriptException;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
@@ -282,7 +283,7 @@ public final class Resolver implements JmolBioResolver {
     for (int i = 0; i < nH; i++)
       ms.addAtom(a.mi, a.group, 1, "H", null, 0, a.getSeqID(), 0, xyz,
           Float.NaN, null, 0, 0, 1, 0, null, isHetero, (byte) 0, null)
-          .deleteBonds(null);
+          .delete(null);
   }
 
   private void getBondInfo(JmolAdapter adapter, String group3, Object model) {
@@ -539,7 +540,7 @@ public final class Resolver implements JmolBioResolver {
           Atom atomO = bonds1[j].getOtherAtom(atom1);
           if (atomO.getElementNumber() == 8) {
             bsAddedHydrogens.set(atomH.i);
-            atomH.deleteBonds(bsBondsDeleted);
+            atomH.delete(bsBondsDeleted);
             break;
           }
         }
@@ -1731,6 +1732,88 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
   public static short getGroupIdFor(String group3) {
     short groupID = knownGroupID(group3);
     return (groupID == -1 ? addGroup3Name(group3) : groupID);
+  }
+
+  @Override
+  public boolean mutate(int iatom, String fileName) {
+    boolean b = vwr.getBoolean(T.appendnew);
+    Group g = vwr.ms.at[iatom].group;
+    //try {
+      // get the initial group -- protein for now
+      if (!(g instanceof AminoMonomer))
+        return false;
+      AminoMonomer res0 = (AminoMonomer) g;
+      int ac = vwr.ms.ac;
+      BS bsRes0 = new BS();
+      res0.selectAtoms(bsRes0);
+      int r = g.getResno();
+      // just use a script -- it is much easier!
+      
+      String script = "try{var atoms0 = {*}\n"
+          + "var res0 = " + BS.escape(bsRes0,'(',')')  + "\n"
+          + "set appendNew false\n"
+          + "load append \""+fileName+"\"\n"
+          + "set appendNew " + b + "\n"
+          + "var res1 = {!atoms0};var r1 = res1[1];var r0 = res1[0]\n"
+          + "if ({r1 & within(group, r0)}){" 
+          + "var haveHs = ({_H and connected(res0)} != 0)\n"
+          + "if (!haveHs) {delete _H and res1}\n"
+          + "var sm = '[*.N][*.CA][*.C][*.O]'\n"
+          + "var keyatoms = res1.find(sm)\n"
+          + "var x = compare(res1,res0,sm,'BONDS')\n"
+          + "if(x){\n"
+          + "rotate branch @x 1\n"
+          + "compare res1 res0 SMARTS @sm rotate translate 0\n"
+          + "var N2 = {*.N and !res0 && connected(res0)}\n"
+          + "var C0 = {*.C and !res0 && connected(res0)}\n"
+          + "delete res0\n"
+          + "if (N2) {\n"
+          + "delete *.OXT and res1\n"
+          + "connect {N2} {res1 & *.C}\n"
+          + "}\n"
+          + "if (C0) {\n"
+          + "connect {C0} {res1 & *.N}\n"
+          + "}\n"
+          + "}\n"
+          + "}}catch(e){print e}\n";
+      try {
+        vwr.eval.runScript(script);
+      } catch (ScriptException e) {
+        // TODO
+      }
+      if (vwr.ms.ac == ac)
+        return false;
+      // check for protein monomer
+      g = vwr.ms.at[vwr.ms.ac - 1].group;
+      if (g != vwr.ms.at[ac + 1].group || !(g instanceof AminoMonomer)) {
+        BS bsAtoms = new BS();
+        g.selectAtoms(bsAtoms);
+        vwr.deleteAtoms(bsAtoms, false);
+        return  false;
+      }
+      AminoMonomer res1 = (AminoMonomer) g;
+      
+      // must get new group into old chain
+      
+      Group[] groups = res0.chain.groups;
+      for (int i = groups.length; --i >= 0;)
+        if (groups[i] == res0) {
+          groups[i] = res1;
+          break;
+        }
+      res1.setResno(r);
+      res1.chain.groupCount = 0;
+      res1.chain = res0.chain;
+      BS bsExclude = BSUtil.newBitSet2(0, vwr.ms.mc);
+      bsExclude.clear(res1.chain.model.modelIndex);
+      res1.chain.model.groupCount = -1;
+      vwr.ms.recalculatePolymers(bsExclude);      
+    //} catch (Exception e) {
+     // System.out.println("" + e);
+   // }
+    vwr.setBooleanProperty("appendNew", b);
+    return true;
+
   }
 
 }

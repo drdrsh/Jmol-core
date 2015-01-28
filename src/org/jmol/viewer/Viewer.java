@@ -7166,29 +7166,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   @Override
   public String getData(String atomExpression, String type) {
-    String exp = "";
-    if (type.equalsIgnoreCase("MOL") || type.equalsIgnoreCase("SDF")
-        || type.equalsIgnoreCase("V2000") || type.equalsIgnoreCase("V3000")
-        || type.equalsIgnoreCase("XYZVIB") || type.equalsIgnoreCase("CD") || type.equalsIgnoreCase("JSON"))
-      return getModelExtract(atomExpression, false, false, type);
-    if (type.toLowerCase().indexOf("property_") == 0)
-      exp = "{selected}.label(\"%{" + type + "}\")";
-    else if (type.equalsIgnoreCase("CML"))
-      return getModelCml(getAtomBitSet(atomExpression), Integer.MAX_VALUE, true);
-    else if (type.equalsIgnoreCase("PDB"))
-      // old crude
-      exp = "{selected and not hetero}.label(\"ATOM  %5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
-          + "+{selected and hetero}.label(\"HETATM%5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines";
-    else if (type.equalsIgnoreCase("XYZRN"))
-      exp = "\"\" + {selected}.size + \"\n\n\"+{selected}.label(\"%-2e %8.3x %8.3y %8.3z %4.2[vdw] 1 [%n]%r.%a#%i\").lines";
-    else if (type.startsWith("USER:"))
-      exp = "{selected}.label(\"" + type.substring(5) + "\").lines";
-    else
-      // if(type.equals("XYZ"))
-      exp = "\"\" + {selected}.size + \"\n\n\"+{selected}.label(\"%-2e %10.5x %10.5y %10.5z\").lines";
-    if (!atomExpression.equals("selected"))
-      exp = PT.rep(exp, "selected", atomExpression);
-    return (String) evaluateExpression(exp);
+    return getPropertyManager().getCoordinateFileData(atomExpression, type);
   }
 
   public String getModelCml(BS bs, int nAtomsMax, boolean addBonds) {

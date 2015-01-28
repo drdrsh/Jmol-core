@@ -984,7 +984,7 @@ import java.util.Properties;
    * 
    * @return full array of groups in modelSet
    */
-  public Group[] getGroups() {
+  Group[] getGroups() {
     int n = 0;
     for (int i = 0; i < mc; i++)
       n += am[i].getGroupCount();
@@ -1379,28 +1379,11 @@ import java.util.Properties;
     return bsAtoms;
   }
 
-  public BS getConformation(int modelIndex, int conformationIndex, boolean doSet) {
+  public BS getConformation(int modelIndex, int conformationIndex, boolean doSet, BS bsAtoms) {
     BS bs = new BS();
     for (int i = mc; --i >= 0;)
-      if (i == modelIndex || modelIndex < 0) {
-        String altLocs = getAltLocListInModel(i);
-        int nAltLocs = getAltLocCountInModel(i);
-        if (conformationIndex > 0 && conformationIndex >= nAltLocs)
-          continue;
-        BS bsConformation = vwr.getModelUndeletedAtomsBitSet(i);
-        if (conformationIndex >= 0) {
-          if (am[i].getPdbConformation(bsConformation, conformationIndex))
-            for (int c = nAltLocs; --c >= 0;)
-              if (c != conformationIndex)
-                bsConformation.andNot(getAtomBitsMDa(T.spec_alternate,
-                    altLocs.substring(c, c + 1)));
-        }
-        if (bsConformation.nextSetBit(0) >= 0) {
-          bs.or(bsConformation);
-          if (doSet)
-            am[i].setConformation(bsConformation);
-        }
-      }
+      if (i == modelIndex || modelIndex < 0) 
+        am[i].getConformation(conformationIndex, doSet, bsAtoms, bs);
     return bs;
   }
 
@@ -2979,42 +2962,6 @@ import java.util.Properties;
     return sb.toString();
   }
 
-  public BS getAtomsConnected(float min, float max, int intType, BS bs) {
-    boolean isBonds = bs instanceof BondSet;
-    BS bsResult = (isBonds ? new BondSet() : new BS());
-    int[] nBonded = new int[ac];
-    int i;
-    boolean ishbond = (intType == Edge.BOND_HYDROGEN_MASK);
-    boolean isall = (intType == Edge.BOND_ORDER_ANY);
-    for (int ibond = 0; ibond < bondCount; ibond++) {
-      Bond bond = bo[ibond];
-      if (isall || bond.is(intType) || ishbond && bond.isHydrogen()) {
-        if (isBonds) {
-          bsResult.set(ibond);
-        } else {
-        if (bs.get(bond.atom1.i)) {
-          nBonded[i = bond.atom2.i]++;
-          bsResult.set(i);
-        }
-        if (bs.get(bond.atom2.i)) {
-          nBonded[i = bond.atom1.i]++;
-          bsResult.set(i);
-        }
-        }
-      }
-    }
-    if (isBonds)
-      return bsResult;
-    boolean nonbonded = (min == 0);
-    for (i = ac; --i >= 0;) {
-      int n = nBonded[i];
-      if (n < min || n > max)
-        bsResult.clear(i);
-      else if (nonbonded && n == 0)
-        bsResult.set(i);
-    }
-    return bsResult;
-  }
   public SymmetryInterface getSymTemp(boolean forceNew) {
     return (symTemp == null || forceNew ? (symTemp = Interface.getSymmetry(vwr, "ms")) : symTemp);
   }
@@ -3198,7 +3145,7 @@ import java.util.Properties;
     BS bsBonds = new BS();
     for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs
         .nextSetBit(i + 1))
-      at[i].deleteBonds(bsBonds);
+      at[i].delete(bsBonds);
     for (int i = 0; i < mc; i++) {
       am[i].bsAtomsDeleted.or(bs);
       am[i].bsAtomsDeleted.and(am[i].bsAtoms);
@@ -3223,15 +3170,6 @@ import java.util.Properties;
     if (vibrations != null)
       for (int i = i0; i < ac; i++)
         vibrations[i] = vibrations[map[i]];
-    if (occupancies != null)
-      for (int i = i0; i < ac; i++)
-        occupancies[i] = occupancies[map[i]];
-    if (bfactor100s != null)
-      for (int i = i0; i < ac; i++)
-        bfactor100s[i] = bfactor100s[map[i]];
-    if (partialCharges != null)
-      for (int i = i0; i < ac; i++)
-        partialCharges[i] = partialCharges[map[i]];
     if (atomTensorList != null) {
       for (int i = i0; i < ac; i++) {
         Object[] list = atomTensorList[i] = atomTensorList[map[i]];
@@ -3250,12 +3188,27 @@ import java.util.Properties;
     if (atomTypes != null)
       for (int i = i0; i < ac; i++)
         atomTypes[i] = atomTypes[map[i]];
+
+    if (atomResnos != null)
+      for (int i = i0; i < ac; i++)
+        atomResnos[i] = atomResnos[map[i]];
     if (atomSerials != null)
       for (int i = i0; i < ac; i++)
         atomSerials[i] = atomSerials[map[i]];
     if (atomSeqIDs != null)
       for (int i = i0; i < ac; i++)
         atomSeqIDs[i] = atomSeqIDs[map[i]];
+    
+    if (bfactor100s != null)
+      for (int i = i0; i < ac; i++)
+        bfactor100s[i] = bfactor100s[map[i]];
+
+    if (occupancies != null)
+      for (int i = i0; i < ac; i++)
+        occupancies[i] = occupancies[map[i]];
+    if (partialCharges != null)
+      for (int i = i0; i < ac; i++)
+        partialCharges[i] = partialCharges[map[i]];
   }
 
   protected void growAtomArrays(int newLength) {
@@ -3275,6 +3228,8 @@ import java.util.Properties;
       atomNames = AU.arrayCopyS(atomNames, newLength);
     if (atomTypes != null)
       atomTypes = AU.arrayCopyS(atomTypes, newLength);
+    if (atomResnos != null)
+      atomResnos = AU.arrayCopyI(atomResnos, newLength);
     if (atomSerials != null)
       atomSerials = AU.arrayCopyI(atomSerials, newLength);
     if (atomSeqIDs != null)
@@ -4067,15 +4022,19 @@ import java.util.Properties;
     if (!setStructure)
       return calculateStructuresAllExcept(bsModelsExcluded, asDSSP, doReport,
           dsspIgnoreHydrogen, false, false);
-    for (int i = 0; i < mc; i++)
-      if (!bsModelsExcluded.get(i))
-        am[i].clearBioPolymers();
-    calculatePolymers(null, 0, 0, bsModelsExcluded);
+    recalculatePolymers(bsModelsExcluded);
     String ret = calculateStructuresAllExcept(bsModelsExcluded, asDSSP, doReport,
         dsspIgnoreHydrogen, true, false);
     vwr.shm.resetBioshapes(bsAllAtoms);
     setStructureIndexes();
     return ret;
+  }
+  
+  public void recalculatePolymers(BS bsModelsExcluded) {
+    for (int i = 0; i < mc; i++)
+      if (!bsModelsExcluded.get(i))
+        am[i].clearBioPolymers();
+    calculatePolymers(getGroups(), -1, 0, bsModelsExcluded);
   }
 
 }

@@ -334,8 +334,9 @@ public class T {
 //public final static int model        see mathfunc
 //public final static int measure      see mathfunc
   public final static int move         = scriptCommand | 32;
-  public final static int moveto = scriptCommand | 34;
-  public final static int navigate = scriptCommand | 35;
+  public final static int moveto       = scriptCommand | 33;
+  public final static int mutate       = scriptCommand | 34;
+  public final static int navigate     = scriptCommand | 35;
 //public final static int quaternion   see mathfunc
   public final static int parallel     = flowCommand   | 36;
   public final static int plot         = scriptCommand | 37;
@@ -604,7 +605,7 @@ public class T {
   public final static int molecule      = intproperty | 16;
   public final static int polymer       = intproperty | 17;
   public final static int polymerlength = intproperty | 18;
-  public final static int resno         = intproperty | 19;
+  public final static int resno         = intproperty | 19 | settable;
   public final static int seqid         = intproperty | 20;
   public final static int site          = intproperty | 21;
   public final static int strucno       = intproperty | 22;
@@ -1756,6 +1757,7 @@ public class T {
         "modulation",
         "move",
         "moveTo",
+        "mutate",
         "navigate",
         "navigation",
         "nbo",
@@ -2779,6 +2781,7 @@ public class T {
         modulation,                         // "modulation"
         move,                               // "move"
         moveto,                             // "moveTo"
+        mutate,                             // "mutate"
         navigate,                           // "navigate"
         -1,                                 // "navigation"
         nbo,                                // "nbo"

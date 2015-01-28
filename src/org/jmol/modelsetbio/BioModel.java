@@ -135,7 +135,6 @@ public final class BioModel extends Model{
       else if (bioPolymers[i] instanceof AminoPolymer)
         haveProt = true;
     }
-    
     String s = "";
     if (haveProt)
       s += ((DSSPInterface) Interface.getOption("dssx.DSSP", ms.vwr, "ms"))
@@ -153,12 +152,36 @@ public final class BioModel extends Model{
         bioPolymers[i].setConformation(bsConformation);
   }
 
+  /**
+   * @param conformationIndex
+   * @param bs
+   * @param bsSelected
+   */
   @Override
-  public boolean getPdbConformation(BS bsConformation, int conformationIndex) {
-    if (nAltLocs > 0)
-      for (int i = bioPolymerCount; --i >= 0;)
-        bioPolymers[i].getConformation(bsConformation, conformationIndex);
-    return true;
+  public void getConformation(int conformationIndex, boolean doSet, BS bsSelected, BS bs) {
+    String altLocs = ms.getAltLocListInModel(modelIndex);
+    int nAltLocs = ms.getAltLocCountInModel(modelIndex);
+    if (conformationIndex > 0 && conformationIndex >= nAltLocs)
+      return;
+    BS bsConformation = ms.vwr.getModelUndeletedAtomsBitSet(modelIndex);
+    if (bsSelected != null)
+      bsConformation.and(bsSelected);
+    if (bsConformation.nextSetBit(0) < 0)
+      return;
+    if (conformationIndex >= 0) {
+      if (nAltLocs > 0)
+        for (int i = bioPolymerCount; --i >= 0;)
+          bioPolymers[i].getConformation(bsConformation, conformationIndex);
+      for (int c = nAltLocs; --c >= 0;)
+        if (c != conformationIndex)
+          bsConformation.andNot(ms.getAtomBitsMDa(T.spec_alternate,
+              altLocs.substring(c, c + 1)));
+    }
+    if (bsConformation.nextSetBit(0) >= 0) {
+      bs.or(bsConformation);      
+      if (doSet)
+        setConformation(bsConformation);
+    }
   }
 
   @Override
@@ -283,55 +306,60 @@ public final class BioModel extends Model{
   
   @SuppressWarnings("incomplete-switch")
   @Override
-  public void getChimeInfo(SB sb, int nHetero) {
+  public void getChimeInfo(SB sb) {
     int n = 0;
     Model[] models = ms.am;
     int modelCount = ms.mc;
     int ac = ms.ac;
     Atom[] atoms = ms.at;
-    sb.append("\nMolecule name ....... "
-        + ms.getInfoM("COMPND"));
+    sb.append("\nMolecule name ....... " + ms.getInfoM("COMPND"));
     sb.append("\nSecondary Structure . PDB Data Records");
     sb.append("\nBrookhaven Code ..... " + ms.modelSetName);
     for (int i = modelCount; --i >= 0;)
       n += models[i].getChainCount(false);
     sb.append("\nNumber of Chains .... " + n);
-    n = 0;
-    for (int i = modelCount; --i >= 0;)
-      n += models[i].getGroupCountHetero(false);
-    nHetero = 0;
-    for (int i = modelCount; --i >= 0;)
-      nHetero += models[i].getGroupCountHetero(true);
-    sb.append("\nNumber of Groups .... " + n);
-    if (nHetero > 0)
-      sb.append(" (" + nHetero + ")");
-    for (int i = ac; --i >= 0;)
-      if (atoms[i].isHetero())
-        nHetero++;
-    getChimeInfoM(sb, nHetero);
+    int ng = 0;
+    int ngHetero = 0;
+    int nHetero = 0;
+    Map<Group, Boolean> map = new Hashtable<Group, Boolean>();
     int nH = 0;
     int nS = 0;
     int nT = 0;
     int id;
     int lastid = -1;
-    for (int i = 0; i < ac; i++) {
-      if (atoms[i].mi != 0)
-        break;
-      if ((id = atoms[i].group.getStrucNo()) != lastid && id != 0) {
-        lastid = id;
-        switch (atoms[i].group.getProteinStructureType()) {
-        case HELIX:
-          nH++;
-          break;
-        case SHEET:
-          nS++;
-          break;
-        case TURN:
-          nT++;
-          break;
+    for (int i = ac; --i >= 0;) {
+      boolean isHetero = atoms[i].isHetero();
+      if (isHetero)
+        nHetero++;
+      Group g = atoms[i].group;
+      if (!map.containsKey(g)) {
+        map.put(g, Boolean.TRUE);
+        if (isHetero)
+          ngHetero++;
+        else
+          ng++;
+      }
+      if (atoms[i].mi == 0) {
+        if ((id = g.getStrucNo()) != lastid && id != 0) {
+          lastid = id;
+          switch (g.getProteinStructureType()) {
+          case HELIX:
+            nH++;
+            break;
+          case SHEET:
+            nS++;
+            break;
+          case TURN:
+            nT++;
+            break;
+          }
         }
       }
     }
+    sb.append("\nNumber of Groups .... " + ng);
+    if (ngHetero > 0)
+      sb.append(" (" + ngHetero + ")");
+    getChimeInfoM(sb, nHetero);
     sb.append("\nNumber of Helices ... " + nH);
     sb.append("\nNumber of Strands ... " + nS);
     sb.append("\nNumber of Turns ..... " + nT);
@@ -755,10 +783,8 @@ public final class BioModel extends Model{
                                         int groupCount, int baseGroupIndex,
                                         BS modelsExcluded) {
     boolean checkConnections = !ms.vwr.getBoolean(T.pdbsequential);
-    if (groups == null) {
-      groups = ms.getGroups();
+    if (groupCount < 0)
       groupCount = groups.length;
-    }
     if (modelsExcluded != null)
       for (int j = 0; j < groupCount; ++j) {
         Group group = groups[j];

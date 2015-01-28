@@ -802,5 +802,43 @@ abstract public class BondCollection extends AtomCollection {
         bo[i].setShapeVisibility(isDisplay);
   }
 
+  public BS getAtomsConnected(float min, float max, int intType, BS bs) {
+    boolean isBonds = bs instanceof BondSet;
+    BS bsResult = (isBonds ? new BondSet() : new BS());
+    int[] nBonded = new int[ac];
+    int i;
+    boolean ishbond = (intType == Edge.BOND_HYDROGEN_MASK);
+    boolean isall = (intType == Edge.BOND_ORDER_ANY);
+    for (int ibond = 0; ibond < bondCount; ibond++) {
+      Bond bond = bo[ibond];
+      if (isall || bond.is(intType) || ishbond && bond.isHydrogen()) {
+        if (isBonds) {
+          bsResult.set(ibond);
+        } else {
+        if (bs.get(bond.atom1.i)) {
+          nBonded[i = bond.atom2.i]++;
+          bsResult.set(i);
+        }
+        if (bs.get(bond.atom2.i)) {
+          nBonded[i = bond.atom1.i]++;
+          bsResult.set(i);
+        }
+        }
+      }
+    }
+    if (isBonds)
+      return bsResult;
+    boolean nonbonded = (min == 0);
+    for (i = ac; --i >= 0;) {
+      int n = nBonded[i];
+      if (n < min || n > max)
+        bsResult.clear(i);
+      else if (nonbonded && n == 0)
+        bsResult.set(i);
+    }
+    return bsResult;
+  }
+
+
 }
 

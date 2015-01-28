@@ -158,6 +158,9 @@ public class CmdExt implements JmolCmdExtension {
     case T.modulation:
       modulation();
       break;
+    case T.mutate:
+      mutate();
+      break;
     case T.navigate:
       navigate();
       break;
@@ -934,22 +937,30 @@ public class CmdExt implements JmolCmdExtension {
   private void configuration() throws ScriptException {
     // if (!chk && vwr.getDisplayModelIndex() <= -2)
     // error(ERROR_backgroundModelError, "\"CONFIGURATION\"");
-    BS bsAtoms;
+    BS bsAtoms = null;
     BS bsSelected = vwr.bsA();
     if (slen == 1) {
+      // configuration
       bsAtoms = vwr.ms.setConformation(bsSelected);
-      vwr.ms.addStateScript("select", null, bsSelected, null,
-          "configuration", true, false);
-    } else {
-      int n = intParameter(e.checkLast(1));
+      vwr.ms.addStateScript("select", null, bsSelected, null, "configuration",
+          true, false);
       if (chk)
         return;
-      bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1,
-          true);
-      vwr.addStateScript("configuration " + n + ";", true, false);
+    } else {
+      int n;
+      if (isFloatParameter(1)) {
+        n = intParameter(e.checkLast(1));
+        if (chk)
+          return;
+        bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1, true, null);
+        vwr.addStateScript("configuration " + n + ";", true, false);
+      } else {
+        bsAtoms = atomExpressionAt(1);
+        n = intParameter(e.checkLast(e.iToken + 1));
+        vwr.addStateScript("configuration " + bsAtoms + " " + n + ";", true, false);
+        bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1, true, bsAtoms);
+      }
     }
-    if (chk)
-      return;
     setShapeProperty(JC.SHAPE_STICKS, "type",
         Integer.valueOf(Edge.BOND_HYDROGEN_MASK));
     e.setShapeSizeBs(JC.SHAPE_STICKS, 0, bsAtoms);
@@ -1567,7 +1578,7 @@ public class CmdExt implements JmolCmdExtension {
     }
   }
 
-  public void data() throws ScriptException {
+  private void data() throws ScriptException {
     ScriptEval eval = e;
     String dataString = null;
     String dataLabel = null;
@@ -2175,7 +2186,25 @@ public class CmdExt implements JmolCmdExtension {
     }
   }
 
-  public void navigate() throws ScriptException {
+  private void mutate() throws ScriptException {
+    // mutate {resno} "LYS" or "file identifier"
+    if (tokAt(1) == T.integer)
+      st[1] =T.o(T.string,  "" + st[1].value); // allows @x 
+    int iatom = atomExpressionAt(1).length() - 1;
+    
+    // check for last model 
+    if (iatom < 0 || vwr.ms.mc != vwr.ms.at[iatom].mi + 1)
+      return;
+    int i = ++e.iToken;
+    String group = e.optParameterAsString(e.checkLast(i));
+    if (chk)
+      return;
+    if (tokAt(i) != T.string)
+      group = "==" + group;
+    vwr.getJBR().mutate(iatom, group);
+  }
+
+  private void navigate() throws ScriptException {
     /*
      * navigation on/off navigation depth p # would be as a depth value, like
      * slab, in percent, but could be negative navigation nSec translate X Y #

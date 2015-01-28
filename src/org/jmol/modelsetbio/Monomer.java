@@ -78,11 +78,6 @@ public abstract class Monomer extends Group {
 
   int monomerIndex;
 
-  @Override
-  public Group[] getGroups() {
-    return bioPolymer.monomers;
-  }
-  
   void setBioPolymer(BioPolymer polymer, int index) {
     this.bioPolymer = polymer;
     monomerIndex = index;
@@ -110,7 +105,7 @@ public abstract class Monomer extends Group {
 
   @Override
   public int getAtomIndex(String name, int offset) {
-    Group[] groups = getGroups();
+    Group[] groups = bioPolymer.monomers;
     int ipt = monomerIndex + offset;
     if (ipt >= 0 && ipt < groups.length) {
       Group m = groups[ipt];
@@ -333,41 +328,6 @@ public abstract class Monomer extends Group {
   public String getStructureId() {
     Object structure = getStructure();
     return (structure instanceof ProteinStructure ? ((ProteinStructure)structure).type.getBioStructureTypeName(false) : "");
-  }
-
-  /**
-   * clear out bits that are not associated with the nth conformation
-   * counting for each residue from the beginning of the file listing
-   * 
-   * 
-   * @param atoms
-   * @param bsConformation
-   * @param conformationIndex   will be >= 0
-   */
-  void getConformation(Atom[] atoms, BS bsConformation, int conformationIndex) {
-
-    // A        A
-    // A        B
-    // A        A
-    // B  or    B
-    // B        A
-    // B        B
-    
-    char ch = '\0';
-    for (int i = firstAtomIndex; i <= lastAtomIndex; i++) {
-      Atom atom = atoms[i];
-      char altloc = atom.altloc;
-      // ignore atoms that have no designation
-      if (altloc == '\0')
-        continue;
-      // count down until we get the desired index into the list
-      if (conformationIndex >= 0 && altloc != ch) {
-        ch = altloc;
-        conformationIndex--;
-      }
-      if (conformationIndex < 0 && altloc != ch)
-        bsConformation.clear(i);
-    }
   }
 
   final void updateOffsetsForAlternativeLocations(Atom[] atoms, BS bsSelected) {

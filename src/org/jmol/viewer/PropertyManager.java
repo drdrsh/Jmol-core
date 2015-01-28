@@ -41,6 +41,7 @@ import javajs.util.XmlUtil;
 
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -82,7 +83,7 @@ import org.jmol.viewer.binding.Binding;
 
 
 @J2SIgnoreImport({ javajs.util.XmlUtil.class })
-public class PropertyManager implements JmolPropertyManager {
+public class PropertyManager implements JmolPropertyManager, Comparator<String> {
 
   public PropertyManager() {
     // required for reflection
@@ -1209,7 +1210,7 @@ public class PropertyManager implements JmolPropertyManager {
       return getChimeInfoA(vwr.ms.at, tok, bs);
     }
     SB sb = new SB();
-    vwr.ms.am[0].getChimeInfo(sb, 0);
+    vwr.ms.am[0].getChimeInfo(sb);
     return sb.appendC('\n').toString().substring(1);
   }
 
@@ -1657,6 +1658,7 @@ public class PropertyManager implements JmolPropertyManager {
     int iModel = atoms[bs.nextSetBit(0)].mi;
     int iModelLast = -1;
     boolean isPQR = "PQR".equals(out.getType());
+    boolean isBiomodel = false;
     String occTemp = "%6.2Q%6.2b          ";
     if (isPQR) {
       occTemp = "%8.4P%7.4V       ";
@@ -1675,21 +1677,23 @@ public class PropertyManager implements JmolPropertyManager {
     int lastAtomIndex = bs.length() - 1;
     boolean showModels = (iModel != atoms[lastAtomIndex].mi);
     SB sbCONECT = (showModels ? null : new SB());
+    SB sbATOMS = new SB();
     boolean isMultipleBondPDB = models[iModel].isPdbWithMultipleBonds;
     LabelToken[] tokens;
     P3 ptTemp = new P3();
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
+      isBiomodel = models[a.mi].isBioModel;
       if (showModels && a.mi != iModelLast) {
         if (iModelLast != -1)
           out.append("ENDMDL\n");
         iModelLast = a.mi;
         out.append("MODEL     " + (iModelLast + 1) + "\n");
+        sbATOMS = new SB();
       }
       String sa = a.getAtomName();
       boolean leftJustify = (a.getElementSymbol().length() == 2
           || sa.length() >= 4 || PT.isDigit(sa.charAt(0)));
-      boolean isBiomodel = models[a.mi].isBioModel;
       boolean isHetero = a.isHetero();
       if (!isBiomodel)
         tokens = (leftJustify ? LabelToken.compile(vwr,
@@ -1713,38 +1717,52 @@ public class PropertyManager implements JmolPropertyManager {
             "ATOM  %5.-5i  %-3.3a%1A%3.-3n %1c%4.-4R%1E   %8.3x%8.3y%8.3z"
                 + occTemp, '\0', null));
       String XX = a.getElementSymbolIso(false).toUpperCase();
-      out.append(LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0', null, ptTemp))
+      sbATOMS
+          .append(
+              LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0', null,
+                  ptTemp))
           .append(XX.length() == 1 ? " " + XX : XX.substring(0, 2))
           .append("  \n");
-      if (!showModels && (!isBiomodel || isHetero || isMultipleBondPDB)) {
-        Bond[] bonds = a.bonds;
-        if (bonds != null)
-          for (int j = 0; j < bonds.length; j++) {
-            int iThis = a.getAtomNumber();
-            Atom a2 = bonds[j].getOtherAtom(a);
-            if (!bs.get(a2.i))
-              continue;
-            int n = bonds[j].getCovalentOrder();
-            if (n == 1 && isMultipleBondPDB && !isHetero)
-              continue;
-            int iOther = a2.getAtomNumber();
-            switch (n) {
-            case 2:
-            case 3:
-              if (iOther < iThis)
-                continue; // only one entry in this case -- pseudo-PDB style
-              //$FALL-THROUGH$
-            case 1:
-              sbCONECT.append("CONECT").append(
-                  PT.formatStringI("%5i", "i", iThis));
-              for (int k = 0; k < n; k++)
-                sbCONECT.append(PT.formatStringI("%5i", "i", iOther));
-              sbCONECT.appendC('\n');
-              break;
+    }
+    boolean doConnect = (!showModels && isBiomodel);
+    Map<Integer, Integer> map = (doConnect ? new Hashtable<Integer, Integer>() : null);
+    String sAtoms = fixPDBFormat(sbATOMS.toString(), map);
+    if (doConnect) {
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        Atom a = atoms[i];
+        boolean isHetero = a.isHetero();
+        if (isHetero || isMultipleBondPDB) {
+          Bond[] bonds = a.bonds;
+          if (bonds != null)
+            for (int j = 0; j < bonds.length; j++) {
+              int iThis = a.getAtomNumber();
+              Atom a2 = bonds[j].getOtherAtom(a);
+              if (!bs.get(a2.i))
+                continue;
+              int n = bonds[j].getCovalentOrder();
+              if (n == 1 && isMultipleBondPDB && !isHetero)
+                continue;
+              int iOther = a2.getAtomNumber();
+              switch (n) {
+              case 2:
+              case 3:
+                if (iOther < iThis)
+                  continue; // only one entry in this case -- pseudo-PDB style
+                //$FALL-THROUGH$
+              case 1:
+                sbCONECT.append("CONECT").append(
+                    PT.formatStringI("%5i", "i", map.get(Integer.valueOf(iThis)).intValue()));
+                String s = PT.formatStringI("%5i", "i", map.get(Integer.valueOf(iOther)).intValue());
+                for (int k = 0; k < n; k++)
+                  sbCONECT.append(s);
+                sbCONECT.appendC('\n');
+                break;
+              }
             }
-          }
+        }
       }
     }
+    out.append(sAtoms);
     if (showModels)
       out.append("ENDMDL\n");
     else
@@ -1752,6 +1770,38 @@ public class PropertyManager implements JmolPropertyManager {
     return out.toString();
   }
 
+  /**
+   * must re-order by resno and then renumber atoms
+   * @param s
+   * @param map 
+   * @return fixed string
+   */
+  private String fixPDBFormat(String s, Map<Integer, Integer> map) {
+    String[] lines = PT.split(s, "\n");
+    Arrays.sort(lines, this);
+      SB sb = new SB();
+      for (int i = 0; i < lines.length; i++) {
+        s = lines[i];
+        int p = PT.parseInt(lines[i].substring(6, 12));
+        if (map != null)
+          map.put(Integer.valueOf(p), Integer.valueOf(i));
+        String si = "     " + (i + 1);
+        sb.append(s.substring(0, 6))
+        .append(si.substring(si.length() - 5))
+        .append(s.substring(11)).append("\n");
+      }
+    return sb.toString();
+  }
+
+  @Override
+  public int compare(String s1, String s2) {
+    int atA = PT.parseInt(s1.substring(6, 12));
+    int atB = PT.parseInt(s2.substring(6, 12));
+    int resA = PT.parseInt(s1.substring(22, 26));
+    int resB = PT.parseInt(s2.substring(22, 26));
+    return (resA < resB ? -1 : resA > resB ? 1 : atA < atB ? -1
+        : atA > atB ? 1 : 0);
+  }
   /* **********************
    * 
    * Jmol Data Frame methods
@@ -1940,5 +1990,36 @@ public class PropertyManager implements JmolPropertyManager {
     XmlUtil.closeTag(sb, "molecule");
     return sb.toString();
   }
+
+  @Override
+  public String getCoordinateFileData(String atomExpression, String type) {
+    String exp = "";
+    if (type.equalsIgnoreCase("MOL") || type.equalsIgnoreCase("SDF")
+        || type.equalsIgnoreCase("V2000") || type.equalsIgnoreCase("V3000")
+        || type.equalsIgnoreCase("XYZVIB") || type.equalsIgnoreCase("CD") || type.equalsIgnoreCase("JSON"))
+      return vwr.getModelExtract(atomExpression, false, false, type);
+    if (type.toLowerCase().indexOf("property_") == 0)
+      exp = "{selected}.label(\"%{" + type + "}\")";
+    else if (type.equalsIgnoreCase("CML"))
+      return getModelCml(vwr.getAtomBitSet(atomExpression), Integer.MAX_VALUE, true);
+    else if (type.equalsIgnoreCase("PDB"))
+      // very crude - no connections -- not used
+      exp = "{selected and not hetero}.label(\"ATOM  %5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
+             + "+{selected and hetero}.label(\"HETATM%5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines";
+    else if (type.equalsIgnoreCase("XYZRN"))
+      exp = "\"\" + {selected}.size + \"\n\n\"+{selected}.label(\"%-2e %8.3x %8.3y %8.3z %4.2[vdw] 1 [%n]%r.%a#%i\").lines";
+    else if (type.startsWith("USER:"))
+      exp = "{selected}.label(\"" + type.substring(5) + "\").lines";
+    else
+      // if(type.equals("XYZ"))
+      exp = "\"\" + {selected}.size + \"\n\n\"+{selected}.label(\"%-2e %10.5x %10.5y %10.5z\").lines";
+    if (!atomExpression.equals("selected"))
+      exp = PT.rep(exp, "selected", atomExpression);
+    String s = (String) vwr.evaluateExpression(exp);
+    if (type.equalsIgnoreCase("PDB"))
+      s = fixPDBFormat(s, null);
+    return s;
+  }
+
 
 }

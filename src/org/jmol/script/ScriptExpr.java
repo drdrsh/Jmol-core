@@ -1295,8 +1295,7 @@ abstract class ScriptExpr extends ScriptParam {
         case T.opGT:
           return BSUtil.newBitSet2(ival + 1, ac);
         case T.opEQ:
-          return (ival < ac ? BSUtil.newBitSet2(
-              ival, ival + 1) : new BS());
+          return (ival < ac ? BSUtil.newBitSet2(ival, ival + 1) : new BS());
         case T.opNE:
         default:
           bs = BSUtil.setAll(ac);
@@ -1319,8 +1318,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.subsystem:
       case T.configuration:
         // these are all-inclusive; no need to do a by-atom comparison
-        return BSUtil.copy(vwr.ms.getConformation(-1, ival - 1,
-            false));
+        return BSUtil.copy(vwr.ms.getConformation(-1, ival - 1, false, null));
       case T.symop:
         propertyBitSet = atom.atomSymmetry;
         if (propertyBitSet == null)
@@ -1360,8 +1358,7 @@ abstract class ScriptExpr extends ScriptParam {
           }
           bitsetComparator = T.none;
           if (symop < 0)
-            ia = atom.getCellTranslation(ival, cellRange,
-                nOps);
+            ia = atom.getCellTranslation(ival, cellRange, nOps);
           else
             ia = atom.getSymmetryTranslation(symop, cellRange, nOps);
         } else if (nOps > 0) {
@@ -1370,8 +1367,7 @@ abstract class ScriptExpr extends ScriptParam {
               continue;
           }
           if (bitsetComparator == T.opNE) {
-            if (ival > 0 && ival <= nOps
-                && !propertyBitSet.get(ival)) {
+            if (ival > 0 && ival <= nOps && !propertyBitSet.get(ival)) {
               bs.set(i);
             }
             continue;

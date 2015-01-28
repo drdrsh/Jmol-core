@@ -42,5 +42,7 @@ public interface JmolPropertyManager {
 
   String getModelCml(BS bs, int nAtomsMax, boolean addBonds);
 
+  String getCoordinateFileData(String atomExpression, String type);
+
 
 }

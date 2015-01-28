@@ -2518,6 +2518,7 @@ public class ScriptEval extends ScriptExpr {
     case T.mapproperty:
     case T.minimize:
     case T.modulation:
+    case T.mutate:
     case T.data:
     case T.navigate:
     case T.plot:

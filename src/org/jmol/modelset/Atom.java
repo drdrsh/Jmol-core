@@ -419,7 +419,7 @@ public class Atom extends Point3fi implements BNode {
     return !Float.isNaN(userDefinedVanDerWaalRadius = (radius > 0 ? radius : Float.NaN));  
   }
   
-  public void deleteBonds(BS bsBonds) {
+  public void delete(BS bsBonds) {
     valence = -1;
     if (bonds != null)
       for (int i = bonds.length; --i >= 0; ) {

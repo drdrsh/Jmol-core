@@ -110,10 +110,6 @@ public class Group {
     return -1;
   }
 
-  public Group[] getGroups() {
-    return null;
-  }
-
   public Object getStructure() {
     return null;
   }
@@ -165,6 +161,10 @@ public class Group {
     return (seqcode == Integer.MIN_VALUE ? 0 : seqcode >> SEQUENCE_NUMBER_SHIFT); 
   }
 
+  public void setResno(int i) {
+    seqcode = getSeqcodeFor(i, getInsertionCode());
+  }
+
   public final static int getSeqNumberFor(int seqcode) {
     return (haveSequenceNumber(seqcode)? seqcode >> SEQUENCE_NUMBER_SHIFT 
         : Integer.MAX_VALUE);
@@ -204,9 +204,7 @@ public class Group {
   }
 
   public char getInsertionCode() {
-    if (seqcode == Integer.MIN_VALUE)
-      return '\0';
-    return (char)(seqcode & INSERTION_CODE_MASK);
+    return (seqcode == Integer.MIN_VALUE ? '\0' :(char)(seqcode & INSERTION_CODE_MASK));
   }
   
   public static int getInsertionCodeFor(int seqcode) {
@@ -246,11 +244,6 @@ public class Group {
         || bsAdded != null &&  bsAdded.intersects(bs));
   }
 
-  boolean isHetero() {
-    // just look at the first atom of the group
-    return chain.getAtom(firstAtomIndex).isHetero();
-  }
-  
   @Override
   public String toString() {
     return "[" + getGroup3() + "-" + getSeqcodeString() + "]";

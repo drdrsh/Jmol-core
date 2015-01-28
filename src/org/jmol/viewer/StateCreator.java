@@ -1539,6 +1539,8 @@ public class StateCreator extends JmolStateCreator {
     BS[] tainted = vwr.ms.tainted;
     if (bs != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        if (atoms[i].isDeleted())
+          continue;
         s.appendI(i + 1).append(" ").append(atoms[i].getElementSymbol())
             .append(" ").append(atoms[i].getInfo().replace(' ', '_')).append(
                 " ");
@@ -1550,6 +1552,9 @@ public class StateCreator extends JmolStateCreator {
           break;
         case AtomCollection.TAINT_ATOMNO:
           s.appendI(atoms[i].getAtomNumber());
+          break;
+        case AtomCollection.TAINT_RESNO:
+          s.appendI(atoms[i].group.getResno());
           break;
         case AtomCollection.TAINT_SEQID:
           s.appendI(atoms[i].getSeqID());

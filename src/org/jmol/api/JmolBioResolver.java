@@ -55,6 +55,8 @@ public interface JmolBioResolver {
   Resolver setViewer(Viewer vwr);
 
   public short getGroupID(String g3);
+
+  public boolean mutate(int iatom, String fileName);
   
   }
 

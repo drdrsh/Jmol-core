@@ -326,7 +326,11 @@ public class NBODialog extends JDialog implements ChangeListener {
 
   public void nboReport(String s) {
     nboOutput.setText(s == null ? "" : nboOutput.getText() + s + "\n");
-    editPane2.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+    try {
+      editPane2.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+    } catch (Exception e) {
+      //
+    }
   }
 
   protected void modelCmd() {

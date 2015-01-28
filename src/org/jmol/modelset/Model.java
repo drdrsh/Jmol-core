@@ -150,7 +150,7 @@ public class Model {
   public int nAltLocs;
   int nInsertions;
 
-  int groupCount = -1;
+  public int groupCount = -1;
 
   protected int chainCount = 0;
   public Chain[] chains = new Chain[8];
@@ -210,15 +210,6 @@ public class Model {
         if (chains[i].chainID == '\0')
           return chainCount - 1;
     return chainCount;
-  }
-
-  public int getGroupCountHetero(boolean isHetero) {
-    int n = 0;
-    for (int i = chainCount; --i >= 0;)
-      for (int j = chains[i].groupCount; --j >= 0;)
-        if (chains[i].groups[j].isHetero() == isHetero)
-          n++;
-    return n;
   }
 
   void calcSelectedGroupsCount(BS bsSelected) {
@@ -341,8 +332,8 @@ public class Model {
   public void setStructureList(Map<STR, float[]> structureList) {
   }
 
-  public void getChimeInfo(SB sb, int nHetero) {
-    getChimeInfoM(sb, nHetero);
+  public void getChimeInfo(SB sb) {
+    getChimeInfoM(sb, 0);
   }
 
   protected void getChimeInfoM(SB sb, int nHetero) {
@@ -358,15 +349,6 @@ public class Model {
    */
   public void setConformation(BS bsConformation) {
     //
-  }
-
-  /**
-   * @param bsConformation
-   * @param conformationIndex
-   * @return true for BioModel
-   */
-  public boolean getPdbConformation(BS bsConformation, int conformationIndex) {
-    return false;
   }
 
   public String getFullPDBHeader() {
@@ -526,6 +508,17 @@ public class Model {
    * @param ms  
    */
   public void calculateStraightnessAll(ModelSet ms) {
+    // biomodel only
+  }
+
+  /**
+   * @param conformationIndex  
+   * @param doSet 
+   * @param bsAtoms 
+   * @param bs 
+   */
+  public void getConformation(int conformationIndex, boolean doSet, BS bsAtoms,
+                              BS bs) {
     // biomodel only
   }
 

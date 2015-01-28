@@ -877,7 +877,12 @@ public class AppConsole extends JmolConsole implements EnterListener {
 
         pt = caretPosition.getOffset();
         consoleTextPane.setCaretPosition(pt);
-        vBar.setValue(Integer.MAX_VALUE);
+        try {
+          vBar.setValue(Integer.MAX_VALUE);
+        } catch (Exception e) {
+          //
+        }
+        
       } catch (Exception e) {
         e.printStackTrace();
         consoleTextPane.setCaretPosition(getLength());

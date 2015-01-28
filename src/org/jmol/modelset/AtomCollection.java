@@ -88,6 +88,7 @@ abstract public class AtomCollection {
   String[] atomNames;
   String[] atomTypes;
   int[] atomSerials;
+  int[] atomResnos;
   int[] atomSeqIDs;
   public Vibration[] vibrations;
   float[] occupancies;
@@ -147,7 +148,8 @@ abstract public class AtomCollection {
   final public static byte TAINT_VIBRATION = 12;
   final public static byte TAINT_ATOMNO = 13;
   final public static byte TAINT_SEQID = 14;
-  final public static byte TAINT_MAX = 15; // 1 more than last number, above
+  final public static byte TAINT_RESNO = 15;
+  final public static byte TAINT_MAX = 16; // 1 more than last number, above
   
   public static String[] userSettableValues;
   
@@ -167,7 +169,7 @@ abstract public class AtomCollection {
     bsClickable = new BS();
     // this allows the Google Closure compiler to skip all the TAINTED defs in Clazz.defineStatics
     if (userSettableValues == null)
-      userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupancy partialCharge temperature valence vanderWaals vibrationVector atomNo seqID".split(" ");
+      userSettableValues = "atomName atomType coord element formalCharge hydrophobicity ionic occupancy partialCharge temperature valence vanderWaals vibrationVector atomNo seqID resNo".split(" ");
   }
   
   protected void releaseModelSet() {
@@ -185,6 +187,7 @@ abstract public class AtomCollection {
 
     atomNames = null;
     atomTypes = null;
+    atomResnos = null;
     atomSerials = null;
     atomSeqIDs = null;
     vibrations = null;
@@ -199,6 +202,7 @@ abstract public class AtomCollection {
     tainted = mergeModelSet.tainted;
     atomNames = mergeModelSet.atomNames;
     atomTypes = mergeModelSet.atomTypes;
+    atomResnos = mergeModelSet.atomResnos;
     atomSerials = mergeModelSet.atomSerials;
     atomSeqIDs = mergeModelSet.atomSeqIDs;
     vibrations = mergeModelSet.vibrations;
@@ -655,6 +659,10 @@ abstract public class AtomCollection {
         if (setBFactor(i, fValue))
           taintAtom(i, TAINT_TEMPERATURE);
         break;
+      case T.resno:
+        setAtomResno(i,  iValue);
+        taintAtom(i, TAINT_RESNO);
+        break;
       case T.valence:
         atom.setValence(iValue);
         taintAtom(i, TAINT_VALENCE);
@@ -796,6 +804,15 @@ abstract public class AtomCollection {
     return true;
   }
   
+  public boolean setAtomResno(int atomIndex, int resno) {
+    if (atomResnos == null) {
+      atomResnos = new int[at.length];
+    }
+    atomResnos[atomIndex] = resno;
+    at[atomIndex].group.setResno(resno);
+    return true;
+  }
+  
   public boolean setAtomSeqID(int atomIndex, int seqID) {
     if (atomSeqIDs == null) {
       atomSeqIDs = new int[at.length];
@@ -902,6 +919,9 @@ abstract public class AtomCollection {
           continue;
         case TAINT_ATOMNO:
           setAtomNumber(atomIndex, (int) x);
+          break;
+        case TAINT_RESNO:
+          setAtomResno(atomIndex, (int) x);
           break;
         case TAINT_SEQID:
           setAtomSeqID(atomIndex, (int) x);
@@ -2045,7 +2065,7 @@ abstract public class AtomCollection {
    * @param specInfo
    * @return BitSet; or null if we mess up the type
    */
-  protected BS getAtomBitsMDa(int tokType, Object specInfo) {
+  public BS getAtomBitsMDa(int tokType, Object specInfo) {
     BS bs = new BS()  ;
     BS bsInfo;
     BS bsTemp;
@@ -2618,6 +2638,8 @@ abstract public class AtomCollection {
     atomNames = (String[]) AU.deleteElements(atomNames, firstAtomIndex,
         nAtoms);
     atomTypes = (String[]) AU.deleteElements(atomTypes, firstAtomIndex,
+        nAtoms);
+    atomResnos = (int[]) AU.deleteElements(atomResnos, firstAtomIndex,
         nAtoms);
     atomSerials = (int[]) AU.deleteElements(atomSerials, firstAtomIndex,
         nAtoms);

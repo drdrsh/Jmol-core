@@ -164,8 +164,34 @@ public abstract class BioPolymer {
 
   public void getConformation(BS bsConformation, int conformationIndex) {
     Atom[] atoms = model.getModelSet().at;
-    for (int i = monomerCount; --i >= 0;)
-      monomers[i].getConformation(atoms, bsConformation, conformationIndex);
+    for (int j = monomerCount; --j >= 0;) {
+      Monomer m = monomers[j];
+      //clear out bits that are not associated with the nth conformation
+      // counting for each residue from the beginning of the file listing
+
+      // A        A
+      // A        B
+      // A        A
+      // B  or    B
+      // B        A
+      // B        B
+
+      char ch = '\0';
+      for (int i = m.firstAtomIndex, n = m.lastAtomIndex; i <= n; i++) {
+        Atom atom = atoms[i];
+        char altloc = atom.altloc;
+        // ignore atoms that have no designation
+        if (altloc == '\0')
+          continue;
+        // count down until we get the desired index into the list
+        if (conformationIndex >= 0 && altloc != ch) {
+          ch = altloc;
+          conformationIndex--;
+        }
+        if (conformationIndex < 0 && altloc != ch)
+          bsConformation.clear(i);
+      }
+    }
     recalculateLeadMidpointsAndWingVectors();
   }
 
