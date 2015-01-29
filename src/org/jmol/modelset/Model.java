@@ -124,7 +124,7 @@ public class Model {
   }
 
   public int trajectoryBaseIndex;
-  public boolean isTrajectory;
+  boolean isTrajectory;
   public int selectedTrajectory = -1;
 
   private int bondCount = -1;
@@ -302,7 +302,7 @@ public class Model {
    * @param finalInfo
    * @param modelVector
    */
-  public void getAllPolymerInfo(
+  public void getPolymerInfo(
                                 BS bs,
                                 Map<String, Lst<Map<String, Object>>> finalInfo,
                                 Lst<Map<String, Object>> modelVector) {
@@ -332,7 +332,7 @@ public class Model {
   public void setStructureList(Map<STR, float[]> structureList) {
   }
 
-  public void getChimeInfo(SB sb) {
+  public void getAllChimeInfo(SB sb) {
     getChimeInfoM(sb, 0);
   }
 
@@ -361,7 +361,7 @@ public class Model {
    * @param bs   
    * @return sequence bits
    */
-  public BS getSequenceBits(ModelSet ms, String specInfo, BS bs) {
+  public BS getAllSequenceBits(ModelSet ms, String specInfo, BS bs) {
     // biomodel only
     return null;
   }
@@ -371,16 +371,15 @@ public class Model {
    * @param specInfo 
    * @return base pair bits
    */
-  public BS getBasePairBits(ModelSet ms, String specInfo) {
+  public BS getAllBasePairBits(ModelSet ms, String specInfo) {
     // biomodel only
     return null;
   }
 
   /**
-   * @param model  
    * @param bs 
    */
-  public void resetRasmolBonds(Model model, BS bs) {
+  public void resetRasmolBonds(BS bs) {
     // biomodel only
   }
 
@@ -394,7 +393,7 @@ public class Model {
    * @param dsspIgnoreHydrogens  
    * @param bsHBonds 
    */
-  public void calcRasmolHydrogenBonds(ModelSet ms, BS bsA, BS bsB, Lst<Bond> vHBonds,
+  public void calcAllRasmolHydrogenBonds(ModelSet ms, BS bsA, BS bsB, Lst<Bond> vHBonds,
                                       boolean nucleicOnly, int nMax,
                                       boolean dsspIgnoreHydrogens, BS bsHBonds) {
     // biomodel only

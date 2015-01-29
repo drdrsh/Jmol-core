@@ -976,7 +976,7 @@ public class AnnotationParser implements JmolAnnotationParser {
       BioModel m = (BioModel) vwr.ms.am[modelIndex];
       int n = m.getBioPolymerCount();
       for (int i = n; --i >= 0;) {
-        BioPolymer bp = m.getBioPolymer(i);
+        BioPolymer bp = m.bioPolymers[i];
         if (bp.isNucleic())
           ((NucleicPolymer) bp).isDssrSet = true;
       }

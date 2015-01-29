@@ -41,22 +41,45 @@ import java.util.Hashtable;
 import java.util.Map;
 
 
+/**
+ * The essential container for every atom. Possibly a Monomer, but not necessarily.
+ * Always a member of a chain; sometimes a member of a BioPolymer.
+ * 
+ * Groups need not be contiguous. firstAtomIndex is always fine to use, but
+ * lastAtomIndex is only the end of the INITIAL set of atoms in the file and
+ * must be carefully used. 
+ * 
+ */
 @J2SRequireImport({java.lang.Short.class,org.jmol.viewer.JC.class})
 public class Group {
+
+  public static String standardGroupList; // will be populated by org.jmol.biomodelset.Resolver
+  public static String[] group3Names = new String[128];
+  public static String[] specialAtomNames; // filled by Resolver
+  
+
+  /**
+   * required
+   */
+  public Chain chain;
 
   public int groupIndex;
   public char group1; // set by modelLoader or possibly DSSRParser
 
-  public Chain chain;
   public int firstAtomIndex = -1;
   public int leadAtomIndex = -1;
   public int lastAtomIndex;
+  private BS bsAdded;
 
   public int seqcode;
   
   public short groupID;
   
-  int selectedIndex;
+  /**
+   * for coloring by group
+   */
+  public int selectedIndex;
+  
   private final static int SEQUENCE_NUMBER_FLAG = 0x80;
   private final static int INSERTION_CODE_MASK = 0x7F; //7-bit character codes, please!
   private final static int SEQUENCE_NUMBER_SHIFT = 8;
@@ -86,6 +109,29 @@ public class Group {
     // monomer only
   }
 
+  public boolean isAdded(int atomIndex) {
+    return bsAdded != null && bsAdded.get(atomIndex);
+  }
+  
+  public void addAtoms(int atomIndex) {
+    if (bsAdded == null)
+      bsAdded = new BS();
+    bsAdded.set(atomIndex);
+  }
+  
+  public int setAtomBits(BS bs) {
+    bs.setBits(firstAtomIndex, lastAtomIndex + 1);
+    if (bsAdded != null)
+      bs.or(bsAdded);
+    return lastAtomIndex;
+  }
+
+  public boolean isSelected(BS bs) {
+    int pt = bs.nextSetBit(firstAtomIndex);
+    return (pt >= 0 && pt <= lastAtomIndex 
+        || bsAdded != null &&  bsAdded.intersects(bs));
+  }
+  
   public final void setShapeVisibility(int visFlag, boolean isVisible) {
     if(isVisible) {
       shapeVisibilityFlags |= visFlag;        
@@ -97,6 +143,7 @@ public class Group {
   public String getGroup3() {
     return (groupID < 1 ? "" : group3Names[groupID]);
   }
+
 
   public char getGroup1() {
     return '?';
@@ -215,40 +262,6 @@ public class Group {
     return (seqcode == Integer.MIN_VALUE ? '\0' : (char)(seqcode & INSERTION_CODE_MASK));
   }
   
-  private BS bsAdded;
-  public static Map<String, Short> htGroup = new Hashtable<String, Short>();
-  public static String standardGroupList; // will be populated by org.jmol.biomodelset.Resolver
-  public static String[] group3Names = new String[128];
-  public static String[] specialAtomNames; // filled by Resolver
-  
-  public boolean isAdded(int atomIndex) {
-    return bsAdded != null && bsAdded.get(atomIndex);
-  }
-  
-  public void addAtoms(int atomIndex) {
-    if (bsAdded == null)
-      bsAdded = new BS();
-    bsAdded.set(atomIndex);
-  }
-  
-  public int selectAtoms(BS bs) {
-    bs.setBits(firstAtomIndex, lastAtomIndex + 1);
-    if (bsAdded != null)
-      bs.or(bsAdded);
-    return lastAtomIndex;
-  }
-
-  public boolean isSelected(BS bs) {
-    int pt = bs.nextSetBit(firstAtomIndex);
-    return (pt >= 0 && pt <= lastAtomIndex 
-        || bsAdded != null &&  bsAdded.intersects(bs));
-  }
-
-  @Override
-  public String toString() {
-    return "[" + getGroup3() + "-" + getSeqcodeString() + "]";
-  }
-
   protected float scaleToScreen(int Z, int mar) {
     return chain.model.ms.vwr.tm.scaleToScreen(Z, mar);
   }
@@ -267,20 +280,12 @@ public class Group {
     return chain.model;
   }
   
-  public int getModelIndex() {
-    return chain.model.modelIndex;
-  }
-  
   public int getSelectedMonomerCount() {
     return 0;
   }
 
   public int getSelectedMonomerIndex() {
     return -1;
-  }
-  
-  public int getSelectedGroupIndex() {
-    return selectedIndex;
   }
   
   /**
@@ -448,6 +453,11 @@ public class Group {
   public BS getBSSideChain() {
     // for now, AlphaMonomer only
     return new BS();
+  }
+
+  @Override
+  public String toString() {
+    return "[" + getGroup3() + "-" + getSeqcodeString() + "]";
   }
 
 }

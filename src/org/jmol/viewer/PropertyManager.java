@@ -1103,7 +1103,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     //    3.4920    4.0920    5.8700 Cl  0  0  0  0  0
     //012345678901234567890123456789012
     
-    if (ms.am[a.mi].isTrajectory)
+    if (ms.isTrajectory(a.mi))
       a.setFractionalCoordPt(ptTemp, ms.trajectorySteps.get(a.mi)[a.i
           - ms.am[a.mi].firstAtomIndex], true);
     else
@@ -1210,7 +1210,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       return getChimeInfoA(vwr.ms.at, tok, bs);
     }
     SB sb = new SB();
-    vwr.ms.am[0].getChimeInfo(sb);
+    vwr.ms.am[0].getAllChimeInfo(sb);
     return sb.appendC('\n').toString().substring(1);
   }
 
@@ -1346,7 +1346,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     if (strColor != null)
       info.put("color", strColor);
     info.put("colix", Integer.valueOf(atom.colixAtom));
-    boolean isTranslucent = atom.isTranslucent();
+    boolean isTranslucent = C.isColixTranslucent(atom.colixAtom);
     if (isTranslucent)
       info.put("translucent", Boolean.valueOf(isTranslucent));
     info.put("formalCharge", Integer.valueOf(atom.getFormalCharge()));
@@ -1490,7 +1490,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     Model[] models = vwr.ms.am;
     for (int i = 0; i < modelCount; ++i)
       if (models[i].isBioModel)
-        models[i].getAllPolymerInfo(bs, finalInfo, modelVector);
+        models[i].getPolymerInfo(bs, finalInfo, modelVector);
     finalInfo.put("models", modelVector);
     return finalInfo;
   }
@@ -1731,7 +1731,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         Atom a = atoms[i];
         boolean isHetero = a.isHetero();
-        if (isHetero || isMultipleBondPDB) {
+        boolean isCysS = !isHetero && (a.getElementNumber() == 16);
+        if (isHetero || isMultipleBondPDB || isCysS) {
           Bond[] bonds = a.bonds;
           if (bonds != null)
             for (int j = 0; j < bonds.length; j++) {
@@ -1740,7 +1741,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
               if (!bs.get(a2.i))
                 continue;
               int n = bonds[j].getCovalentOrder();
-              if (n == 1 && isMultipleBondPDB && !isHetero)
+              if (n == 1 && (isMultipleBondPDB && !isHetero && !isCysS
+                  || isCysS && a2.getElementNumber() != 16))
                 continue;
               int iOther = a2.getAtomNumber();
               switch (n) {
@@ -1784,7 +1786,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
         s = lines[i];
         int p = PT.parseInt(lines[i].substring(6, 12));
         if (map != null)
-          map.put(Integer.valueOf(p), Integer.valueOf(i));
+          map.put(Integer.valueOf(p), Integer.valueOf(i + 1));
         String si = "     " + (i + 1);
         sb.append(s.substring(0, 6))
         .append(si.substring(si.length() - 5))

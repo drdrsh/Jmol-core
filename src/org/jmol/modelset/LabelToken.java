@@ -549,7 +549,7 @@ public class LabelToken {
             : formalCharge < 0 ? "" + -formalCharge + "-" : "");
         break;
       case 'g':
-        strT = "" + atom.getSelectedGroupIndex();
+        strT = "" + atom.group.selectedIndex;
         break;
       case T.model:
         strT = atom.getModelNumberForLabel();

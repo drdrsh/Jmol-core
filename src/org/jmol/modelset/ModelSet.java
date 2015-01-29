@@ -423,7 +423,7 @@ import java.util.Properties;
     sm.refreshShapeTrajectories(baseModelIndex, bs, null);
 
     if (am[baseModelIndex].hasRasmolHBonds)
-      bioModel.resetRasmolBonds(am[baseModelIndex], bs);
+      am[baseModelIndex].resetRasmolBonds(bs);
   }
 
   public P3[] getFrameOffsets(BS bsAtoms) {
@@ -579,8 +579,8 @@ import java.util.Properties;
     return bsModels;
   }
 
-  public String getDefaultStructure(BS bsAtoms, BS bsAllAtoms) {
-    BS bsModels = modelsOf(bsAtoms, bsAllAtoms);
+  public String getDefaultStructure(BS bsAtoms, BS bsModified) {
+    BS bsModels = modelsOf(bsAtoms, bsModified);
     SB ret = new SB();
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) 
       if (am[i].isBioModel && am[i].defaultStructure != null)
@@ -1428,12 +1428,18 @@ import java.util.Properties;
     return mc;
   }
 
-  public int getTrajectoryIndex(int modelIndex) {
-    return am[modelIndex].trajectoryBaseIndex;
-  }
-
+  /**
+   * could be the base model or one of the subframes
+   *
+   * @param modelIndex
+   * @return is any part of a trajectory
+   */
   public boolean isTrajectory(int modelIndex) {
     return am[modelIndex].isTrajectory;
+  }
+
+  public boolean isTrajectorySubFrame(int i) {
+    return (am[i].trajectoryBaseIndex != i);
   }
 
   public boolean isTrajectoryMeasurement(int[] countPlusIndices) {
@@ -1442,7 +1448,7 @@ import java.util.Properties;
       int atomIndex;
       for (int i = 1; i <= count; i++)
         if ((atomIndex = countPlusIndices[i]) >= 0
-            && am[at[atomIndex].mi].isTrajectory)
+            && isTrajectory(at[atomIndex].mi))
           return true;
     }
     return false;
@@ -1479,14 +1485,10 @@ import java.util.Properties;
     for (int i = 0; i < mc; i++) {
       if (!allowJmolData && isJmolDataFrameForModel(i))
         continue;
-      if (am[i].trajectoryBaseIndex == i)
+      if (!isTrajectorySubFrame(i))
         bs.set(i);
     }
     return bs;
-  }
-
-  public boolean isTrajectorySubFrame(int i) {
-    return (am[i].isTrajectory && am[i].trajectoryBaseIndex != i);
   }
 
   public BS selectDisplayedTrajectories(BS bs) {
@@ -1494,7 +1496,7 @@ import java.util.Properties;
     //switched to that of the selected trajectory
     //even though the underlying model itself is not changed.
     for (int i = 0; i < mc; i++) {
-      if (am[i].isTrajectory
+      if (isTrajectory(i)
           && at[am[i].firstAtomIndex].mi != i)
         bs.clear(i);
     }
@@ -2148,7 +2150,7 @@ import java.util.Properties;
       String s = (String) specInfo;
       bs = new BS();
       return (!haveBioModels || s.length() % 2 != 0 ? bs : getAtomBitsMDa(T.group,
-          bioModel.getBasePairBits(this, s)));
+          bioModel.getAllBasePairBits(this, s)));
     case T.boundbox:
       BoxInfo boxInfo = getBoxInfo((BS) specInfo, 1);
       bs = getAtomsWithin(boxInfo.getBoundBoxCornerVector().length() + 0.0001f,
@@ -3931,7 +3933,7 @@ import java.util.Properties;
   
   public BS getSequenceBits(String specInfo, BS bs) {
     return (haveBioModels && specInfo.length() > 0 ?
-        bioModel.getSequenceBits(this, specInfo, bs) : new BS());
+        bioModel.getAllSequenceBits(this, specInfo, bs) : new BS());
   }
 
   protected void calculatePolymers(Group[] groups, int groupCount,
@@ -3978,7 +3980,7 @@ import java.util.Properties;
                                       boolean nucleicOnly, int nMax,
                                       boolean dsspIgnoreHydrogens, BS bsHBonds) {
     if (haveBioModels)
-      bioModel.calcRasmolHydrogenBonds(this, bsA, bsB, vHBonds, nucleicOnly,
+      bioModel.calcAllRasmolHydrogenBonds(this, bsA, bsB, vHBonds, nucleicOnly,
           nMax, dsspIgnoreHydrogens, bsHBonds);
   }
 

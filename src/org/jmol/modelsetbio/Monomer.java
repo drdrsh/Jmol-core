@@ -186,30 +186,11 @@ public abstract class Monomer extends Group {
   @Override
   public void setStrucNo(int id) { }
 
-  ////////////////////////////////////////////////////////////////
-/*
-  public final Atom getAtomFromOffset(byte offset) {
-    if (offset == -1)
-      return null;
-    return chain.frame.atoms[firstAtomIndex + (offset & 0xFF)];
-  }
-
-  public final Point3f getAtomPointFromOffset(byte offset) {
-    if (offset == -1)
-      return null;
-    return chain.frame.atoms[firstAtomIndex + (offset & 0xFF)];
-  }
-*/
-  
-  ////////////////////////////////////////////////////////////////
-
   protected final Atom getAtomFromOffsetIndex(int offsetIndex) {
     if (offsetIndex > offsets.length)
       return null;
     int offset = offsets[offsetIndex] & 0xFF;
-    if (offset == 255)
-      return null;
-    return chain.getAtom(firstAtomIndex + offset);
+    return (offset == 255 ? null : chain.model.ms.at[firstAtomIndex + offset]);
   }
 
   protected final Atom getSpecialAtom(byte[] interestingIDs, byte specialAtomID) {
@@ -219,9 +200,7 @@ public abstract class Monomer extends Group {
         interestingID = -interestingID;
       if (specialAtomID == interestingID) {
         int offset = offsets[i] & 0xFF;
-        if (offset == 255)
-          return null;
-        return chain.getAtom(firstAtomIndex + offset);
+        return (offset == 255 ? null : chain.model.ms.at[firstAtomIndex + offset]);
       }
     }
     return null;
@@ -235,9 +214,7 @@ public abstract class Monomer extends Group {
         interestingID = -interestingID;
       if (specialAtomID == interestingID) {
         int offset = offsets[i] & 0xFF;
-        if (offset == 255)
-          return null;
-        return chain.getAtom(firstAtomIndex + offset);
+        return (offset == 255 ? null : chain.model.ms.at[firstAtomIndex + offset]);
       }
     }
     return null;
@@ -366,7 +343,7 @@ public abstract class Monomer extends Group {
   }
     
   final void getMonomerSequenceAtoms(BS bsInclude, BS bsResult) {
-    selectAtoms(bsResult);
+    setAtomBits(bsResult);
     bsResult.and(bsInclude);
   }
   
@@ -434,10 +411,16 @@ public abstract class Monomer extends Group {
     return false;
   }  
 
+  /**
+   * 
+   * @param i
+   * @param vReturn null implies just checking for connection to previous group
+   * @param group
+   * @return true if there is a cross-link
+   */
   protected boolean getCrossLinkGroup(int i, Lst<Integer> vReturn, Group group) {
-    // vReturn null --> just checking for connection to previous group
     // not obvious from PDB file for carbohydrates
-    Atom atom = chain.getAtom(i);
+    Atom atom = chain.model.ms.at[i];
     Bond[] bonds = atom.bonds;
     int ibp = getBioPolymerIndexInModel();
     if (ibp < 0 || bonds == null)

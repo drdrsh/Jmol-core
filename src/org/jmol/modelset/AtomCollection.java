@@ -696,44 +696,53 @@ abstract public class AtomCollection {
         PAL.CPK.id);
   }
 
-  public float getVibrationCoord(int atomIndex, char c) {
-    Vibration v = getVibration(atomIndex, false);
-    if (v == null)
-      return Float.NaN;
+  /**
+   * also handles modulation info
+   * 
+   * @param atomIndex
+   * @param c
+   * @return value or NaN
+   */
+  public float getVibCoord(int atomIndex, char c) {
+    JmolModulationSet ms = null;
+    Vibration v = null;
     switch (c) {
-    case 'X':
-      return v.x;
-    case 'Y':
-      return v.y;
+    case 'x':
+    case 'y':
+    case 'z':
+      v = getVibration(atomIndex, false);
+      break;
     default:
-      return v.z;
-    }
-  }
-
-  public float getModulationCoord(int atomIndex, char c) {
-    JmolModulationSet ms = getModulation(atomIndex);
-    if (ms != null) {
-      Vibration v = ms.getVibration(false);
-      if (v == null)
-        v = (Vibration) ms;
-      switch (c) {
-      case 'X':
-        return v.x;
-      case 'Y':
-        return v.y;
-      case 'Z':
-        return v.z;
-      case 'O':
-        return ((Float) ms.getModulation('O', null)).floatValue();
-      case '1':
-      case '2':
-      case '3':
-        T3 t = (T3) ms.getModulation('T', null);
-        float x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
-        return (float) (x - Math.floor(x));
+      ms = getModulation(atomIndex);
+      if (ms != null) {
+        v = ms.getVibration(false);
+        if (v == null)
+          v = (Vibration) ms;
       }
     }
-    return Float.NaN;
+    if (v == null && ms == null)
+      return Float.NaN;
+    switch (c) {
+    case 'x':
+    case 'X':
+      return v.x;
+    case 'y':
+    case 'Y':
+      return v.y;
+    case 'z':
+    case 'Z':
+      return v.z;
+    case 'O':
+      return ((Float) ms.getModulation('O', null)).floatValue();
+    case '1':
+    case '2':
+    case '3':
+      T3 t = (T3) ms.getModulation('T', null);
+      float x = (c == '1' ? t.x : c == '2' ? t.y : t.z);
+      return (float) (x - Math.floor(x));
+    default:
+      return Float.NaN;
+    }
   }
 
   public Vibration getVibration(int atomIndex, boolean forceNew) {
@@ -2239,7 +2248,7 @@ abstract public class AtomCollection {
     switch (tokType) {
     case T.group:
       for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        int j = at[i].group.selectAtoms(bs);
+        int j = at[i].group.setAtomBits(bs);
         if (j > i)
           i = j;
       }
@@ -2266,7 +2275,7 @@ abstract public class AtomCollection {
       bsInfo = BSUtil.copy((BS) specInfo);
       for (i = bsInfo.nextSetBit(0); i >= 0; i = bsInfo.nextSetBit(i + 1)) {
         Chain chain = at[i].group.chain;
-        chain.setAtomBitSet(bs);
+        chain.setAtomBits(bs);
         bsInfo.andNot(bs);
       }
       break;
@@ -2522,10 +2531,10 @@ abstract public class AtomCollection {
       Chain chain = at[i].group.chain;
       if (chainID == (id = chain.chainID) || !caseSensitive 
           && id >= 0 && id < 300 && chainID == chainToUpper(id)) {
-        chain.setAtomBitSet(bs);
+        chain.setAtomBits(bs);
         bsDone.or(bs);
       } else {
-        chain.setAtomBitSet(bsDone);
+        chain.setAtomBits(bsDone);
       }
     }
     return bs;

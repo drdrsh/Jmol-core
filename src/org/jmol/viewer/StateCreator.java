@@ -1283,7 +1283,7 @@ public class StateCreator extends JmolStateCreator {
         }
         if (shape.bsColixSet != null && shape.bsColixSet.get(i)) {
           byte pid = atoms[i].paletteID;
-          if (pid != PAL.CPK.id || atoms[i].isTranslucent())
+          if (pid != PAL.CPK.id || C.isColixTranslucent(atoms[i].colixAtom))
             BSUtil.setMapBitSet(temp, i, i, Shape.getColorCommand("atoms", pid,
                 atoms[i].colixAtom, shape.translucentAllowed));
           if (colixes != null && i < colixes.length)

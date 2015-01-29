@@ -758,7 +758,7 @@ public final class ModelLoader {
     int nRead = 0;
     Model[] models = ms.am;
     if (ms.mc > 0)
-      nullGroup = new Group().setGroup(new Chain(ms.am[baseModelIndex], 32, -1), "",
+      nullGroup = new Group().setGroup(new Chain(ms.am[baseModelIndex], 32, 0), "",
           0, -1, -1);
     while (iterAtom.hasNext()) {
       nRead++;
@@ -919,7 +919,7 @@ public final class ModelLoader {
       return chain;
     if (model.chainCount == model.chains.length)
       model.chains = (Chain[])AU.doubleLength(model.chains);
-    return model.chains[model.chainCount++] = new Chain(model, chainID, (chainID == 0 || chainID == 32 ? -1 : iChain++));
+    return model.chains[model.chainCount++] = new Chain(model, chainID, (chainID == 0 || chainID == 32 ? 0 : ++iChain));
   }
 
   private void iterateOverAllNewBonds(JmolAdapter adapter,

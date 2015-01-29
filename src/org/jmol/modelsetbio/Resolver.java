@@ -74,6 +74,8 @@ import org.jmol.c.STR;
  */
 public final class Resolver implements JmolBioResolver {
 
+  public final static Map<String, Short> htGroup = new Hashtable<String, Short>();
+
   private Viewer vwr;
 
   public Resolver() {
@@ -1051,7 +1053,7 @@ public final class Resolver implements JmolBioResolver {
   public static short knownGroupID(String group3) {
     if (group3 == null || group3.length() == 0)
       return 0;
-    Short boxedGroupID = Group.htGroup.get(group3);
+    Short boxedGroupID = htGroup.get(group3);
     return (boxedGroupID == null ? -1 : boxedGroupID.shortValue());
   }
   /**
@@ -1725,7 +1727,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       Group.group3Names = AU.doubleLengthS(Group.group3Names);
     short groupID = group3NameCount++;
     Group.group3Names[groupID] = group3;
-    Group.htGroup.put(group3, Short.valueOf(groupID));
+    htGroup.put(group3, Short.valueOf(groupID));
     return groupID;
   }
 
@@ -1746,7 +1748,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       AminoMonomer res0 = (AminoMonomer) g;
       int ac = vwr.ms.ac;
       BS bsRes0 = new BS();
-      res0.selectAtoms(bsRes0);
+      res0.setAtomBits(bsRes0);
       int r = g.getResno();
       // just use a script -- it is much easier!
       
@@ -1788,7 +1790,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       g = vwr.ms.at[vwr.ms.ac - 1].group;
       if (g != vwr.ms.at[ac + 1].group || !(g instanceof AminoMonomer)) {
         BS bsAtoms = new BS();
-        g.selectAtoms(bsAtoms);
+        g.setAtomBits(bsAtoms);
         vwr.deleteAtoms(bsAtoms, false);
         return  false;
       }

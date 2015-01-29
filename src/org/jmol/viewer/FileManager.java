@@ -206,7 +206,7 @@ public class FileManager implements BytePoster {
     htParams.put("fullPathName", (fileType == null ? "" : fileType + "::")
         + fullPathName.replace('\\', '/'));
     if (vwr.getBoolean(T.messagestylechime) && vwr.getBoolean(T.debugscript))
-      vwr.scriptStatus("Requesting " + fullPathName);
+      vwr.getChimeMessenger().update(fullPathName);
     FileReader fileReader = new FileReader(this, vwr, fileName, fullPathName, nameAsGiven,
         fileType, null, htParams, isAppend);
     fileReader.run();

@@ -192,7 +192,7 @@ public class ColorManager {
       // for each atom
       // therefore, we call it in Eval.colorObject();
       return ce.getColorIndexFromPalette(
-          atom.getSelectedGroupIndex(), 0,
+          atom.group.selectedIndex, 0,
           atom.group.chain.selectedGroupCount - 1, ColorEncoder.BGYOR,
           false);
     case PAL.PALETTE_POLYMER:

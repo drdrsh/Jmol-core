@@ -4153,10 +4153,13 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
             -atomOrPointIndex));
   }
 
-  public String getAtomInfoXYZ(int atomIndex, boolean useChimeFormat) {
+  private String getAtomInfoXYZ(int atomIndex, boolean useChimeFormat) {
+    Atom atom = ms.at[atomIndex];
+    if (useChimeFormat)
+      return  getChimeMessenger().getInfoXYZ(atom);
     if (ptTemp == null)
-      ptTemp = new P3();
-    return ms.at[atomIndex].getInfoXYZ(!g.legacyJavaFloat, useChimeFormat, ptTemp);
+      ptTemp = new P3();    
+    return atom.getIdentityXYZ(true, ptTemp);
   }
 
   // //////////////status manager dispatch//////////////
@@ -9147,6 +9150,12 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   public void checkMenuUpdate() {
     if (jmolpopup != null)
       jmolpopup.jpiUpdateComputedMenus();
+  }
+
+  JmolChimeMessenger jcm;
+  
+  public JmolChimeMessenger getChimeMessenger() {
+    return (jcm == null ? jcm = ((JmolChimeMessenger) Interface.getInterface("org.jmol.viewer.ChimeMessenger", this, "script")).set(this) : jcm);
   }
 
 }

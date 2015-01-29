@@ -41,13 +41,14 @@ import javajs.util.P3i;
  */
 public class Point3fi extends P3 implements Cloneable {
   /**
+   * model index -- may be to a trajectory
+   */
+  public short mi = -1;
+
+  /**
    * index in full collection
    * 
    */
-  /**
-   * model index
-   */
-  public short mi = -1;
   public int i;
   /**
    * screen X

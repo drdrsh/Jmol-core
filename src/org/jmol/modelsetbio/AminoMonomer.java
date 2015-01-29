@@ -402,7 +402,7 @@ public class AminoMonomer extends AlphaMonomer {
   @Override
   public BS getBSSideChain() {
     BS bs = new BS();
-    selectAtoms(bs);
+    setAtomBits(bs);
     clear(bs, getLeadAtom(), true);
     clear(bs, getCarbonylCarbonAtom(), false);
     clear(bs, getCarbonylOxygenAtom(), false);

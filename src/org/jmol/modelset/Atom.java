@@ -327,10 +327,6 @@ public class Atom extends Point3fi implements BNode {
     colixAtom = C.getColixTranslucent3(colixAtom, isTranslucent, translucentLevel);    
   }
 
-  public boolean isTranslucent() {
-    return C.isColixTranslucent(colixAtom);
-  }
-
   @Override
   public int getElementNumber() {
     return Elements.getElementNumber(atomicAndIsotopeNumber);
@@ -571,7 +567,7 @@ public class Atom extends Point3fi implements BNode {
 
   @Override
   public void getGroupBits(BS bs) {
-     group.selectAtoms(bs);
+     group.setAtomBits(bs);
    }
    
    @Override
@@ -692,6 +688,9 @@ public class Atom extends Point3fi implements BNode {
     return (str.length() == 0 ? "" : str.substring(1));
   }
    
+  /**
+   * SMILES only, for BNode
+   */
   @Override
   public int getModelIndex() {
     return mi;
@@ -706,7 +705,7 @@ public class Atom extends Point3fi implements BNode {
     return (ch == 'X' ? pt.x : ch == 'Y' ? pt.y : pt.z);
   }
     
-  private P3 getFractionalCoordPt(boolean fixJavaFloat, boolean asAbsolute, P3 pt) {
+  public P3 getFractionalCoordPt(boolean fixJavaFloat, boolean asAbsolute, P3 pt) {
     // asAbsolute TRUE uses the original unshifted matrix
     SymmetryInterface c = getUnitCell();
     if (c == null) 
@@ -850,25 +849,7 @@ public class Atom extends Point3fi implements BNode {
     return getIdentity(true);
   } 
 
-  public String getInfoXYZ(boolean fixJavaFloat, boolean useChimeFormat, P3 pt) {
-    // for atom picking
-    if (useChimeFormat) {
-      String group3 = getGroup3(true);
-      int chainID = getChainID();
-      pt = getFractionalCoordPt(fixJavaFloat, true, pt);
-      return "Atom: " + (group3 == null ? getElementSymbol() : getAtomName()) + " " + getAtomNumber() 
-          + (group3 != null && group3.length() > 0 ? 
-              (isHetero() ? " Hetero: " : " Group: ") + group3 + " " + getResno() 
-              + (chainID != 0 && chainID != 32 ? " Chain: " + group.chain.getIDStr() : "")              
-              : "")
-          + " Model: " + getModelNumber()
-          + " Coordinates: " + x + " " + y + " " + z
-          + (pt == null ? "" : " Fractional: "  + pt.x + " " + pt.y + " " + pt.z); 
-    }
-    return getIdentityXYZ(true, pt);
-  }
-
-  String getIdentityXYZ(boolean allInfo, P3 pt) {
+  public String getIdentityXYZ(boolean allInfo, P3 pt) {
     pt = (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!group.chain.model.ms.vwr.g.legacyJavaFloat, false, pt) : this);
     return getIdentity(allInfo) + " " + pt.x + " " + pt.y + " " + pt.z;  
   }
@@ -883,7 +864,7 @@ public class Atom extends Point3fi implements BNode {
       String seqcodeString = group.getSeqcodeString();
       if (seqcodeString != null)
         info.append(seqcodeString);
-      int chainID = getChainID();
+      int chainID = group.chain.chainID;
       if (chainID != 0 && chainID != 32) {
         info.append(":");
         String s = getChainIDStr();
@@ -1043,18 +1024,6 @@ public class Atom extends Point3fi implements BNode {
     return group.chain.model.ms.getModulation(i);
   }
 
-  public float getVibrationCoord(char ch) {
-    return group.chain.model.ms.getVibrationCoord(i, ch);
-  }
-
-  public float getModulationCoord(char ch) {
-    return group.chain.model.ms.getModulationCoord(i, ch);
-  }
-
-  public int getSelectedGroupIndex() {
-    return group.getSelectedGroupIndex();
-  }
-
   public String getModelNumberForLabel() {
     return group.chain.model.ms.getModelNumberForAtomLabel(mi);
   }
@@ -1115,7 +1084,7 @@ public class Atom extends Point3fi implements BNode {
     case T.bondcount:
       return getCovalentBondCount();
     case T.chainno:
-      return group.chain.index + 1;
+      return group.chain.chainNo;
     case T.color:
       return group.chain.model.ms.vwr.gdata.getColorArgbOrGray(colixAtom);
     case T.element:
@@ -1294,25 +1263,25 @@ public class Atom extends Point3fi implements BNode {
       V3 v = getVibrationVector();
       return (v == null ? 0 : v.length() * vwr.getFloat(T.vectorscale));
     case T.vibx:
-      return getVibrationCoord('X');
+      return getVib('x');
     case T.viby:
-      return getVibrationCoord('Y');
+      return getVib('y');
     case T.vibz:
-      return getVibrationCoord('Z');
+      return getVib('z');
     case T.modx:
-      return getModulationCoord('X');
-    case T.modt1:
-      return getModulationCoord('1');
-    case T.modt2:
-      return getModulationCoord('2');
-    case T.modt3:
-      return getModulationCoord('3');
+      return getVib('X');
     case T.mody:
-      return getModulationCoord('Y');
+      return getVib('Y');
     case T.modz:
-      return getModulationCoord('Z');
+      return getVib('Z');
     case T.modo:
-      return getModulationCoord('O');
+      return getVib('O');
+    case T.modt1:
+      return getVib('1');
+    case T.modt2:
+      return getVib('2');
+    case T.modt3:
+      return getVib('3');
     case T.volume:
       return getVolume(vwr, VDW.AUTO);
     case T.fracxyz:
@@ -1326,6 +1295,10 @@ public class Atom extends Point3fi implements BNode {
       return (v3 == null ? -1 : v3.length());
     }
     return atomPropertyInt(tokWhat);
+  }
+
+  public float getVib(char ch) {
+    return group.chain.model.ms.getVibCoord(i, ch);
   }
 
   private float getMass() {

@@ -25,29 +25,63 @@ package org.jmol.modelset;
 
 import org.jmol.java.BS;
 
+/**
+ * A Model is a collection of Chains of Groups of Atoms.
+ * Chains hold overall information relating to a Monomer, 
+ * particularly whether this monomer is RNA or DNA.
+ * 
+ */
 public final class Chain {
 
   public Model model;
+  /**
+   * chainID is either the integer form of a single character or a pointer into 
+   * a map held in Viewer that allows retrieval of a longer string
+   * 
+   */
   public int chainID;
-  public int index;
-  public boolean isDna, isRna;
+  /**
+   * chainNo is for information purposes only; retrieved by {atoms}.chainNo 
+   */
+  public int chainNo;
   
-  public int groupCount;
+  /**
+   * Groups form the essence of what a Chain is.
+   * This number will be 0 if there is no chain designation in the PDB or CIF file
+   * or when the file is not of a type that would have chain designations.
+   * 
+   */
   public Group[] groups;
+  public int groupCount;
+  
+  /**
+   * Calculated just prior to coloring by group
+   * so that the range is appropriate for each chain.
+   */
   public int selectedGroupCount;
 
-  public Atom getAtom(int index) {
-    return model.ms.at[index];
-  }
+  /**
+   * set when a Monomer is constructed, and tested widely 
+   */
+  public boolean isDna, isRna;
   
-  Chain(Model model, int chainID, int index) {
+
+  Chain(Model model, int chainID, int chainNo) {
     this.model = model;
     this.chainID = chainID;
-    this.index = index;
+    this.chainNo = chainNo;
     groups = new Group[16];
   }
 
-   /**
+  /**
+   * 
+   * @return actual string form of the chain identifier
+   */
+  public String getIDStr() {
+    return (chainID == 0 ? "" : chainID < 256 ? "" + (char) chainID : (String) model.ms.vwr.chainMap.get(Integer.valueOf(chainID)));
+  }
+
+  /**
    * prior to coloring by group, we need the chain count per chain that is
    * selected
    * 
@@ -60,67 +94,14 @@ public final class Chain {
           : -1);
   }
 
-  public int selectSeqcodeRange(int index0, int seqcodeA, int seqcodeB,
-                                BS bs) {
-    int seqcode, indexA, indexB, minDiff;
-    boolean isInexact = false;
-    for (indexA = index0; indexA < groupCount
-        && groups[indexA].seqcode != seqcodeA; indexA++) {
-    }
-    if (indexA == groupCount) {
-      // didn't find A exactly -- go find the nearest that is GREATER than this value
-      if (index0 > 0)
-        return -1;
-      isInexact = true;
-      minDiff = Integer.MAX_VALUE;
-      for (int i = groupCount; --i >= 0;)
-        if ((seqcode = groups[i].seqcode) > seqcodeA
-            && (seqcode - seqcodeA) < minDiff) {
-          indexA = i;
-          minDiff = seqcode - seqcodeA;
-        }
-      if (minDiff == Integer.MAX_VALUE)
-        return -1;
-    }
-    if (seqcodeB == Integer.MAX_VALUE) {
-      indexB = groupCount - 1;
-      isInexact = true;
-    } else {
-      for (indexB = indexA; indexB < groupCount
-          && groups[indexB].seqcode != seqcodeB; indexB++) {
-      }
-      if (indexB == groupCount) {
-        // didn't find B exactly -- get the nearest that is LESS than this value
-        if (index0 > 0)
-          return -1;
-        isInexact = true;
-        minDiff = Integer.MAX_VALUE;
-        for (int i = indexA; i < groupCount; i++)
-          if ((seqcode = groups[i].seqcode) < seqcodeB
-              && (seqcodeB - seqcode) < minDiff) {
-            indexB = i;
-            minDiff = seqcodeB - seqcode;
-          }
-        if (minDiff == Integer.MAX_VALUE)
-          return -1;
-      }
-    }
-    for (int i = indexA; i <= indexB; ++i)
-      groups[i].selectAtoms(bs);
-    return (isInexact ? -1 : indexB + 1);
-  }
-  
   void fixIndices(int atomsDeleted, BS bsDeleted) {
     for (int i = 0; i < groupCount; i++)
       groups[i].fixIndices(atomsDeleted, bsDeleted);
   }
 
-  void setAtomBitSet(BS bs) {
+  void setAtomBits(BS bs) {
     for (int i = 0; i < groupCount; i++)
-      groups[i].selectAtoms(bs);
+      groups[i].setAtomBits(bs);
   }
 
-  public String getIDStr() {
-    return (chainID == 0 ? "" : chainID < 256 ? "" + (char) chainID : (String) model.ms.vwr.chainMap.get(Integer.valueOf(chainID)));
-  }
 }

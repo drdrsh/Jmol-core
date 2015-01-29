@@ -85,7 +85,7 @@ public class StatusManager {
 
   protected Viewer vwr;
   private JmolStatusListener jsl;
-  private JmolCallbackListener cbl;
+  JmolCallbackListener cbl;
   public String statusList = "";
 
   StatusManager(Viewer vwr) {
@@ -283,7 +283,7 @@ public class StatusManager {
       cbl.setCallbackFunction(callbackType, callbackFunction);
   }
   
-  private boolean notifyEnabled(CBK type) {
+  boolean notifyEnabled(CBK type) {
     return cbl != null && cbl.notifyEnabled(type);
   }
 
@@ -482,18 +482,10 @@ public class StatusManager {
             false);
     }
 
-    Object[] data;
     if (isScriptCompletion && vwr.getBoolean(T.messagestylechime)
-        && vwr.getBoolean(T.debugscript)) {
-      data = new Object[] { null, "script <exiting>", statusMessage,
-          Integer.valueOf(-1), strErrorMessageUntranslated };
-      if (notifyEnabled(CBK.SCRIPT))
-        cbl
-            .notifyCallback(CBK.SCRIPT, data);
-      processScript(data);
-      strStatus = "Jmol script completed.";
-    }
-    data = new Object[] { sJmol, strStatus, statusMessage,
+        && vwr.getBoolean(T.debugscript))
+      strStatus = vwr.getChimeMessenger().scriptCompleted(this, statusMessage, strErrorMessageUntranslated);
+    Object[] data = new Object[] { sJmol, strStatus, statusMessage,
         Integer.valueOf(isScriptCompletion ? -1 : msWalltime),
         strErrorMessageUntranslated };
     if (notifyEnabled(CBK.SCRIPT))
@@ -501,7 +493,7 @@ public class StatusManager {
     processScript(data);
   }
 
-  private void processScript(Object[] data) {
+  void processScript(Object[] data) {
     int msWalltime = ((Integer) data[3]).intValue();
     // general message has msWalltime = 0
     // special messages have msWalltime < 0

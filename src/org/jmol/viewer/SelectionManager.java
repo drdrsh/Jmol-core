@@ -175,9 +175,7 @@ public class SelectionManager {
       return;
     int n = getSelectionCount();
     if (reportChime)
-      vwr.reportSelection((n == 0 ? "No atoms" : n == 1 ? "1 atom" : n
-          + " atoms")
-          + " selected!");
+      vwr.getChimeMessenger().reportSelection(n);
     else if (!isQuiet)
       vwr.reportSelection(GT.i(GT._("{0} atoms selected"), n));
   }

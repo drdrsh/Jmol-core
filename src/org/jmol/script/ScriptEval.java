@@ -2108,12 +2108,10 @@ public class ScriptEval extends ScriptExpr {
     if (chk)
       return true;
     String script = vwr.getInsertedCommand();
-    if (!"".equals(script)) {
+    if (!"".equals(script))
       runScriptBuffer(script, null);
-    } else if (isSpt && debugScript && vwr.getBoolean(T.messagestylechime)) {
-      // specifically for ProteinExplorer
-      vwr.scriptStatus("script <exiting>");
-    }
+    else if (isSpt && debugScript && vwr.getBoolean(T.messagestylechime))
+      vwr.getChimeMessenger().update(null);
     if (!mustResumeEval && !allowJSInterrupt || fromFunc)
       return true;
     if (!isTry && mustResumeEval || thisContext == null) {
@@ -2252,14 +2250,8 @@ public class ScriptEval extends ScriptExpr {
     }
     switch (tok) {
     case T.nada:
-      if (chk || !vwr.getBoolean(T.messagestylechime))
-        break;
-      String s = (String) theToken.value;
-      if (s == null)
-        break;
-      if (outputBuffer == null)
-        vwr.warn(s);
-      report(s);
+      if (!chk && vwr.getBoolean(T.messagestylechime))
+        vwr.getChimeMessenger().showHash(outputBuffer, (String) theToken.value);
       break;
     case T.push:
       pushContext((ContextToken) theToken, "PUSH");
@@ -5596,9 +5588,9 @@ public class ScriptEval extends ScriptExpr {
       vwr.clearFunctions();
       return;
     case T.structure:
-      BS bsAllAtoms = new BS();
-      runScript(vwr.ms.getDefaultStructure(vwr.bsA(), bsAllAtoms));
-      vwr.shm.resetBioshapes(bsAllAtoms);
+      BS bsModified = new BS();
+      runScript(vwr.ms.getDefaultStructure(vwr.bsA(), bsModified));
+      vwr.shm.resetBioshapes(bsModified);
       return;
     case T.vanderwaals:
       vwr.setData("element_vdw", new Object[] { null, "" }, 0, 0, 0, 0, 0);

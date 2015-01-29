@@ -52,13 +52,26 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
+/**
+ * A "BioPolymer" is a constructed set of contiguous (probably connected) "Monomers",
+ * which may be one of Alpha (Calpha atoms), Amino (Calpha + backbone), 
+ * Phosphorus (P atoms),  Nucleic (DNA/RNA), or Carbohydrate.
+ * 
+ * BioPolymers are constructed after file loading and after various changes that might
+ * affect secondary structure.
+ * 
+ * BioPolymers are not Chains. Chains are set at load time and just constitute 
+ * collections of unique chain identifiers in the file. 
+ * 
+ */
 public abstract class BioPolymer {
 
   protected BioPolymer() {
     
   }
   
-  
+  public Model model;
+
   public Monomer[] monomers;
   protected boolean hasStructure;
 
@@ -66,7 +79,6 @@ public abstract class BioPolymer {
   // we probably should have better names for these things
   // holds center points between alpha carbons or sugar phosphoruses
 
-  public Model model;
   protected P3[] leadMidpoints;
   protected P3[] leadPoints;
   protected P3[] controlPoints;
@@ -1027,7 +1039,7 @@ public abstract class BioPolymer {
     }
     for (int i = bsTemp.nextSetBit(0); i >= 0 && i < monomerCount; i = bsTemp
         .nextSetBit(i + 1))
-      monomers[i].selectAtoms(bsResult);
+      monomers[i].setAtomBits(bsResult);
   }
 
   /**

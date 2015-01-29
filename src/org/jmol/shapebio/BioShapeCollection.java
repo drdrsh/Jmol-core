@@ -192,7 +192,7 @@ public abstract class BioShapeCollection extends Shape {
     BioShape[] shapes = new BioShape[n--];
     for (int i = modelCount; --i >= 0;)
       for (int j = ms.getBioPolymerCountInModel(i); --j >= 0; n--) {
-        BioPolymer bp = ((BioModel) models[i]).getBioPolymer(j);
+        BioPolymer bp = ((BioModel) models[i]).bioPolymers[j];
         shapes[n] = (bioShapes == null || bioShapes.length <= n
             || bioShapes[n] == null || bioShapes[n].bioPolymer != bp ? new BioShape(
             this, i, bp)
@@ -214,8 +214,7 @@ public abstract class BioShapeCollection extends Shape {
     bsModels = BSUtil.copy(bsModels);
     for (int i = ms.mc; --i >= 0; )
       if (bsModels.get(i) && ms.isTrajectory(i))
-        bsModels.set(ms.getTrajectoryIndex(i));
-    
+        bsModels.set(ms.am[i].trajectoryBaseIndex);    
     for (int i = bioShapes.length; --i >= 0;) {
       BioShape b = bioShapes[i];
       b.modelVisibilityFlags = (bsModels.get(b.modelIndex) ? vf : 0);
