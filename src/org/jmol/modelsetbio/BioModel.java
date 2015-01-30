@@ -249,7 +249,8 @@ public final class BioModel extends Model implements JmolBioModel {
       if (ms.am[i].isBioModel) {
         BioModel m = (BioModel) ms.am[i];
         if (m.nAltLocs > 0)
-          m.setConformation(bsAtoms);
+          for (int j = m.bioPolymerCount; --j >= 0;)
+            m.bioPolymers[j].setConformation(bsAtoms);
       }
   }
 
@@ -380,20 +381,20 @@ public final class BioModel extends Model implements JmolBioModel {
     return bs;
   }
 
-  private static int selectSeqcodeRange(Group[] groups, int n, int index, int seqcodeA, int seqcodeB,
+  private static int selectSeqcodeRange(Group[] groups, int groupCount, int index, int seqcodeA, int seqcodeB,
                                 BS bs) {
     int seqcode, indexA, indexB, minDiff;
     boolean isInexact = false;
-    for (indexA = index; indexA < n
+    for (indexA = index; indexA < groupCount
         && groups[indexA].seqcode != seqcodeA; indexA++) {
     }
-    if (indexA == n) {
+    if (indexA == groupCount) {
       // didn't find A exactly -- go find the nearest that is GREATER than this value
       if (index > 0)
         return -1;
       isInexact = true;
       minDiff = Integer.MAX_VALUE;
-      for (int i = n; --i >= 0;)
+      for (int i = groupCount; --i >= 0;)
         if ((seqcode = groups[i].seqcode) > seqcodeA
             && (seqcode - seqcodeA) < minDiff) {
           indexA = i;
@@ -403,19 +404,19 @@ public final class BioModel extends Model implements JmolBioModel {
         return -1;
     }
     if (seqcodeB == Integer.MAX_VALUE) {
-      indexB = n - 1;
+      indexB = groupCount - 1;
       isInexact = true;
     } else {
-      for (indexB = indexA; indexB < n
+      for (indexB = indexA; indexB < groupCount
           && groups[indexB].seqcode != seqcodeB; indexB++) {
       }
-      if (indexB == n) {
+      if (indexB == groupCount) {
         // didn't find B exactly -- get the nearest that is LESS than this value
         if (index > 0)
           return -1;
         isInexact = true;
         minDiff = Integer.MAX_VALUE;
-        for (int i = indexA; i < n; i++)
+        for (int i = indexA; i < groupCount; i++)
           if ((seqcode = groups[i].seqcode) < seqcodeB
               && (seqcodeB - seqcode) < minDiff) {
             indexB = i;
@@ -836,7 +837,7 @@ public final class BioModel extends Model implements JmolBioModel {
 
 /////////////////////////////////////////////////////////////////////////  
   
-  
+
   BioModel(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex, 
       String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
     vwr = modelSet.vwr;
@@ -846,6 +847,28 @@ public final class BioModel extends Model implements JmolBioModel {
     clearBioPolymers();
   }
 
+  private void clearBioPolymers() {
+    bioPolymers = new BioPolymer[8];
+    bioPolymerCount = 0;
+  }
+
+  @Override
+  public int getBioPolymerCount() {
+    return bioPolymerCount;
+  }
+
+  @Override
+  public void fixIndices(int modelIndex, int nAtomsDeleted, BS bsDeleted) {
+    fixIndicesM(modelIndex, nAtomsDeleted, bsDeleted);
+    recalculateLeadMidpointsAndWingVectors();
+  }
+
+  private void recalculateLeadMidpointsAndWingVectors() {
+    for (int ip = 0; ip < bioPolymerCount; ip++)
+      bioPolymers[ip].recalculateLeadMidpointsAndWingVectors();
+  }
+
+  
   @Override
   public boolean freeze() {
     freezeM();
@@ -939,18 +962,9 @@ public final class BioModel extends Model implements JmolBioModel {
     if (bsConformation.nextSetBit(0) >= 0) {
       bsRet.or(bsConformation);      
       if (doSet)
-        setConformation(bsConformation);
+        for (int j = bioPolymerCount; --j >= 0;)
+          bioPolymers[j].setConformation(bsConformation);
     }
-  }
-
-  private void setConformation(BS bsConformation) {
-    for (int j = bioPolymerCount; --j >= 0;)
-      bioPolymers[j].setConformation(bsConformation);
-  }
-
-  @Override
-  public int getBioPolymerCount() {
-    return bioPolymerCount;
   }
 
   private void addBioPolymer(BioPolymer polymer) {
@@ -960,54 +974,6 @@ public final class BioModel extends Model implements JmolBioModel {
       bioPolymers = (BioPolymer[])AU.doubleLength(bioPolymers);
     polymer.bioPolymerIndexInModel = bioPolymerCount;
     bioPolymers[bioPolymerCount++] = polymer;
-  }
-
-  private void clearBioPolymers() {
-    bioPolymers = new BioPolymer[8];
-    bioPolymerCount = 0;
-  }
-
-  @Override
-  public void getDefaultLargePDBRendering(SB sb, int maxAtoms) {
-    BS bs = new BS();
-    if (getBondCount() == 0)
-      bs = bsAtoms;
-    // all biopolymer atoms...
-    if (bs != bsAtoms)
-      for (int i = 0; i < bioPolymerCount; i++)
-        bioPolymers[i].getRange(bs, isMutated);
-    if (bs.nextSetBit(0) < 0)
-      return;
-    // ...and not connected to backbone:
-    BS bs2 = new BS();
-    if (bs == bsAtoms) {
-      bs2 = bs;
-    } else {
-      for (int i = 0; i < bioPolymerCount; i++)
-        if (bioPolymers[i].getType() == BioPolymer.TYPE_NOBONDING)
-          bioPolymers[i].getRange(bs2, isMutated);
-    }
-    if (bs2.nextSetBit(0) >= 0)
-      sb.append("select ").append(Escape.eBS(bs2)).append(";backbone only;");
-    if (ac <= maxAtoms)
-      return;
-    // ...and it's a large model, to wireframe:
-      sb.append("select ").append(Escape.eBS(bs)).append(" & connected; wireframe only;");
-    // ... and all non-biopolymer and not connected to stars...
-    if (bs != bsAtoms) {
-      bs2.clearAll();
-      bs2.or(bsAtoms);
-      bs2.andNot(bs);
-      if (bs2.nextSetBit(0) >= 0)
-        sb.append("select " + Escape.eBS(bs2) + " & !connected;stars 0.5;spacefill off;");
-    }
-  }
-  
-  @Override
-  public void fixIndices(int modelIndex, int nAtomsDeleted, BS bsDeleted) {
-    fixIndicesM(modelIndex, nAtomsDeleted, bsDeleted);
-    for (int i = 0; i < bioPolymerCount; i++)
-      bioPolymers[i].recalculateLeadMidpointsAndWingVectors();
   }
 
   @Override
@@ -1028,7 +994,7 @@ public final class BioModel extends Model implements JmolBioModel {
   }
 
   @Override
-  public void getAllPolymerInfo(
+  public void getPolymerInfo(
                                 BS bs,
                                 Map<String, Lst<Map<String, Object>>> finalInfo,
                                 Lst<Map<String, Object>> modelVector) {
@@ -1114,12 +1080,6 @@ public final class BioModel extends Model implements JmolBioModel {
           pdbCONECT, bsWritten, ptTemp);
   }
   
-  private void recalculateLeadMidpointsAndWingVectors() {
-    for (int ip = 0; ip < bioPolymerCount; ip++)
-      bioPolymers[ip].recalculateLeadMidpointsAndWingVectors();
-  }
-
-  
   /**
    * from ModelSet.setAtomPositions
    * 
@@ -1144,5 +1104,41 @@ public final class BioModel extends Model implements JmolBioModel {
     getRasmolHydrogenBonds(bs, bs, null, false, Integer.MAX_VALUE, false, null);
   }
 
+  @Override
+  public void getDefaultLargePDBRendering(SB sb, int maxAtoms) {
+    BS bs = new BS();
+    if (getBondCount() == 0)
+      bs = bsAtoms;
+    // all biopolymer atoms...
+    if (bs != bsAtoms)
+      for (int i = 0; i < bioPolymerCount; i++)
+        bioPolymers[i].getRange(bs, isMutated);
+    if (bs.nextSetBit(0) < 0)
+      return;
+    // ...and not connected to backbone:
+    BS bs2 = new BS();
+    if (bs == bsAtoms) {
+      bs2 = bs;
+    } else {
+      for (int i = 0; i < bioPolymerCount; i++)
+        if (bioPolymers[i].getType() == BioPolymer.TYPE_NOBONDING)
+          bioPolymers[i].getRange(bs2, isMutated);
+    }
+    if (bs2.nextSetBit(0) >= 0)
+      sb.append("select ").append(Escape.eBS(bs2)).append(";backbone only;");
+    if (ac <= maxAtoms)
+      return;
+    // ...and it's a large model, to wireframe:
+      sb.append("select ").append(Escape.eBS(bs)).append(" & connected; wireframe only;");
+    // ... and all non-biopolymer and not connected to stars...
+    if (bs != bsAtoms) {
+      bs2.clearAll();
+      bs2.or(bsAtoms);
+      bs2.andNot(bs);
+      if (bs2.nextSetBit(0) >= 0)
+        sb.append("select " + Escape.eBS(bs2) + " & !connected;stars 0.5;spacefill off;");
+    }
+  }
+  
 
 }

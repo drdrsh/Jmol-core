@@ -1491,7 +1491,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     Model[] models = vwr.ms.am;
     for (int i = 0; i < modelCount; ++i)
       if (models[i].isBioModel)
-        ((JmolBioModel) models[i]).getAllPolymerInfo(bs, finalInfo, modelVector);
+        ((JmolBioModel) models[i]).getPolymerInfo(bs, finalInfo, modelVector);
     finalInfo.put("models", modelVector);
     return finalInfo;
   }

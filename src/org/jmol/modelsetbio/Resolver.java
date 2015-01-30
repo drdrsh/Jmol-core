@@ -1826,7 +1826,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
           + "  load append "+fileName+"\n"
           + "  set appendNew " + b + "\n"
           + "  var res1 = {!atoms0};var r1 = res1[1];var r0 = res1[0]\n"
-          + "  if ({r1 & within(group, r0)}){" 
+          + "  if ({r1 & within(group, r0)}){\n" 
           + "    var haveHs = ({_H and connected(res0)} != 0)\n"
           + "    if (!haveHs) {delete _H and res1}\n"
           + "    var sm = '[*.N][*.CA][*.C][*.O]'\n"
