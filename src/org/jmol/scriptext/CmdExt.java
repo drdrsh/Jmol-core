@@ -2215,7 +2215,7 @@ public class CmdExt implements JmolCmdExtension {
     e.checkLast(i);
     if (chk)
       return;
-    boolean isFile = (tokAt(i) == T.string);
+    boolean isFile = (tokAt(i) == T.string && !group.startsWith("~"));
     String[] list = null;
     if (isFile) {
       list = new String[] { group };
