@@ -81,6 +81,7 @@ public final class BioModel extends Model implements JmolBioModel {
   
   private int bioPolymerCount = 0;
   public BioPolymer[] bioPolymers;
+  boolean isMutated;
 
   private String defaultStructure;
   private Viewer vwr;
@@ -298,6 +299,10 @@ public final class BioModel extends Model implements JmolBioModel {
   @Override
   public void calculateAllPolymers(Group[] groups, int groupCount,
                                    int baseGroupIndex, BS modelsExcluded) {
+    boolean checkConnections = !vwr.getBoolean(T.pdbsequential);
+    if (groupCount < 0)
+      groupCount = groups.length;
+    
     if (modelsExcluded != null)
       for (int j = 0; j < groupCount; ++j) {
         Group group = groups[j];
@@ -309,8 +314,22 @@ public final class BioModel extends Model implements JmolBioModel {
       }
     for (int i = 0, mc = ms.mc; i < mc; i++)
       if ((modelsExcluded == null || !modelsExcluded.get(i))
-          && ms.am[i].isBioModel)
-        calculateAllPolymers2(groups, groupCount, baseGroupIndex);
+          && ms.am[i].isBioModel) {
+        for (int j = baseGroupIndex; j < groupCount; ++j) {
+          Group g = groups[j];
+          Model model = g.getModel();
+          if (!model.isBioModel || !(g instanceof Monomer))
+            continue;
+          boolean doCheck = checkConnections
+              && !ms.isJmolDataFrameForModel(ms.at[g.firstAtomIndex].mi);
+          BioPolymer bp = (((Monomer) g).bioPolymer == null ? Resolver
+              .allocateBioPolymer(groups, j, doCheck) : null);
+          if (bp == null || bp.monomerCount == 0)
+            continue;
+          ((BioModel) model).addBioPolymer(bp);
+          j += bp.monomerCount - 1;
+        }
+      }
   }
   
   @Override
@@ -318,29 +337,8 @@ public final class BioModel extends Model implements JmolBioModel {
     for (int i = 0; i < ms.mc; i++)
       if (ms.am[i].isBioModel && !bsModelsExcluded.get(i))
         ((BioModel) ms.am[i]).clearBioPolymers();
-    calculateAllPolymers2(groups, -1, 0);
+    calculateAllPolymers(groups, -1, 0, bsModelsExcluded);
   }
-
-  private void calculateAllPolymers2(Group[] groups,
-                                        int groupCount, int baseGroupIndex) {
-    boolean checkConnections = !vwr.getBoolean(T.pdbsequential);
-    if (groupCount < 0)
-      groupCount = groups.length;
-    for (int j = baseGroupIndex; j < groupCount; ++j) {
-      Group g = groups[j];
-      Model model = g.getModel();
-      if (!model.isBioModel || !(g instanceof Monomer))
-        continue;
-      boolean doCheck = checkConnections
-          && !ms.isJmolDataFrameForModel(ms.at[g.firstAtomIndex].mi);
-      BioPolymer bp = (((Monomer) g).bioPolymer == null ? Resolver
-          .allocateBioPolymer(groups, j, doCheck) : null);
-      if (bp == null || bp.monomerCount == 0)
-        continue;
-      ((BioModel) model).addBioPolymer(bp);
-      j += bp.monomerCount - 1;
-    }
-  }  
 
   @Override
   public BS getGroupsWithinAll(int nResidues, BS bs) {
@@ -976,7 +974,7 @@ public final class BioModel extends Model implements JmolBioModel {
     // all biopolymer atoms...
     if (bs != bsAtoms)
       for (int i = 0; i < bioPolymerCount; i++)
-        bioPolymers[i].getRange(bs);
+        bioPolymers[i].getRange(bs, isMutated);
     if (bs.nextSetBit(0) < 0)
       return;
     // ...and not connected to backbone:
@@ -986,7 +984,7 @@ public final class BioModel extends Model implements JmolBioModel {
     } else {
       for (int i = 0; i < bioPolymerCount; i++)
         if (bioPolymers[i].getType() == BioPolymer.TYPE_NOBONDING)
-          bioPolymers[i].getRange(bs2);
+          bioPolymers[i].getRange(bs2, isMutated);
     }
     if (bs2.nextSetBit(0) >= 0)
       sb.append("select ").append(Escape.eBS(bs2)).append(";backbone only;");
@@ -1017,7 +1015,7 @@ public final class BioModel extends Model implements JmolBioModel {
     BS bsBranch;
     for (int j = 0; j < bioPolymerCount; j++) {
       bsBranch = new BS();
-      bioPolymers[j].getRange(bsBranch);
+      bioPolymers[j].getRange(bsBranch, isMutated);
       int iAtom = bsBranch.nextSetBit(0);
       if (iAtom >= 0) {
         if (biobranches == null)

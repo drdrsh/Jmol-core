@@ -871,11 +871,15 @@ public final class Resolver implements JmolBioResolver {
     }
   }
 
+  /**
+   * @param g3
+   * @param max max ID (e.g. 20); can be Integer.MAX_VALUE to allow carbohydrate
+   * @return true if found
+   */
   @Override
-  public boolean isKnownPDBGroup(String g3) {
-    // mol2 reader only
-    return knownGroupID(g3) >= 0 
-        || checkCarbohydrate(g3);
+  public boolean isKnownPDBGroup(String g3, int max) {
+    int pt = knownGroupID(g3);
+    return (pt > 0 ? pt < max : max == Integer.MAX_VALUE && checkCarbohydrate(g3));
   }
 
   @Override
@@ -1149,6 +1153,7 @@ public final class Resolver implements JmolBioResolver {
     int pt = Group.standardGroupList.indexOf(group3);
     return (pt < 0 || pt / 6 + 1 >= JC.GROUPID_WATER);
   }
+  
   public static short group3NameCount;
   private final static String[] predefinedGroup3Names = {
     // taken from PDB spec
@@ -1215,8 +1220,35 @@ public final class Resolver implements JmolBioResolver {
     "SO4", // 47 sulphate ions
     "UNL", // 48 unknown ligand
     
-  
   };
+  
+  /*
+   * Convert "AVG" to "ALA VAL GLY"; unknowns to UNK
+   * 
+   */
+  @Override
+  public String toStdAmino3(String g1) {
+    if (g1.length() == 0)
+      return "";
+    SB s = new SB();
+    int pt = knownGroupID("==A");
+    if (pt < 0) {
+      // just the amino acids
+      for (int i = 1; i <= 20; i++) {
+        pt = knownGroupID(predefinedGroup3Names[i]);
+        htGroup.put("==" + predefinedGroup1Names[i], Short.valueOf((short) pt));
+      }
+    }
+    for (int i = 0, n = g1.length(); i < n; i++) {
+      char ch = g1.charAt(i);
+      pt = knownGroupID("==" + ch);
+      if (pt < 0)
+        pt = 23;
+      s.append(" ").append(predefinedGroup3Names[pt]);
+    }
+    return s.toString().substring(1);
+  }
+  
   private static int getStandardPdbHydrogenCount(String group3) {
     int pt = knownGroupID(group3);
     return (pt < 0 || pt >= pdbHydrogenCount.length ? -1 : pdbHydrogenCount[pt]);
@@ -1737,9 +1769,36 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
   }
 
   @Override
-  public boolean mutate(int iatom, String fileName) {
+  public boolean mutate(BS bs, String group, String[] sequence) {
+    
+    int i0 = bs.nextSetBit(0);
+    if (sequence == null)
+      return mutateAtom(i0, group);
+    boolean isFile = (group == null);
+    if (isFile)
+      group = sequence[0];
+    Group lastGroup = null;
+    boolean isOK = true;
+    for (int i = i0, pt = 0; i >= 0; i = bs.nextSetBit(i + 1)) {
+      Group g = vwr.ms.at[i].group;
+      if (g == lastGroup)
+        continue;
+      lastGroup = g;
+      if (!isFile) {
+        group = sequence[pt++ % sequence.length];
+        if (group.equals("UNK"))
+          continue;
+        group = "==" + group;
+      }
+      mutateAtom(i, group);
+    }
+    return isOK;
+  }
+  
+  private boolean mutateAtom(int iatom, String fileName) {
     // no mutating a trajectory. What would that mean???
-    if (vwr.ms.isTrajectory(vwr.ms.at[iatom].mi))
+    int iModel = vwr.ms.at[iatom].mi;
+    if (vwr.ms.isTrajectory(iModel))
       return false; 
     
     String[] info = vwr.fm.getFileInfo();
@@ -1749,6 +1808,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       // get the initial group -- protein for now
       if (!(g instanceof AminoMonomer))
         return false;
+      ((BioModel) vwr.ms.am[iModel]).isMutated = true;
       AminoMonomer res0 = (AminoMonomer) g;
       int ac = vwr.ms.ac;
       BS bsRes0 = new BS();
@@ -1757,34 +1817,41 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       
       // just use a script -- it is much easier!
       
-      String script = "try{var atoms0 = {*}\n"
-          + "var res0 = " + BS.escape(bsRes0,'(',')')  + "\n"
-          + "set appendNew false\n"
-          + "load append \""+fileName+"\"\n"
-          + "set appendNew " + b + "\n"
-          + "var res1 = {!atoms0};var r1 = res1[1];var r0 = res1[0]\n"
-          + "if ({r1 & within(group, r0)}){" 
-          + "var haveHs = ({_H and connected(res0)} != 0)\n"
-          + "if (!haveHs) {delete _H and res1}\n"
-          + "var sm = '[*.N][*.CA][*.C][*.O]'\n"
-          + "var keyatoms = res1.find(sm)\n"
-          + "var x = compare(res1,res0,sm,'BONDS')\n"
-          + "if(x){\n"
-          + "rotate branch @x 1\n"
-          + "compare res1 res0 SMARTS @sm rotate translate 0\n"
-          + "var N2 = {*.N and !res0 && connected(res0)}\n"
-          + "var C0 = {*.C and !res0 && connected(res0)}\n"
-          + "delete res0\n"
-          + "if (N2) {\n"
-          + "delete *.OXT and res1\n"
-          + "connect {N2} {res1 & *.C}\n"
-          + "}\n"
-          + "if (C0) {\n"
-          + "connect {C0} {res1 & *.N}\n"
-          + "}\n"
-          + "}\n"
-          + "}}catch(e){print e}\n";
+      fileName = PT.esc(fileName);
+      String script = "" +
+      		  "try{\n"
+      		+ "  var atoms0 = {*}\n"
+          + "  var res0 = " + BS.escape(bsRes0,'(',')')  + "\n"
+          + "  set appendNew false\n"
+          + "  load append "+fileName+"\n"
+          + "  set appendNew " + b + "\n"
+          + "  var res1 = {!atoms0};var r1 = res1[1];var r0 = res1[0]\n"
+          + "  if ({r1 & within(group, r0)}){" 
+          + "    var haveHs = ({_H and connected(res0)} != 0)\n"
+          + "    if (!haveHs) {delete _H and res1}\n"
+          + "    var sm = '[*.N][*.CA][*.C][*.O]'\n"
+          + "    var keyatoms = res1.find(sm)\n"
+          + "    var x = compare(res1,res0,sm,'BONDS')\n"
+          + "    if(x){\n"
+          + "      print 'mutating ' + res0[1].label('%n%r') + ' to ' + "+fileName+".trim('=')\n"
+          + "      rotate branch @x\n"
+          + "      compare res1 res0 SMARTS @sm rotate translate 0\n"
+          + "      var N2 = {*.N and !res0 && connected(res0)}\n"
+          + "      var C0 = {*.C and !res0 && connected(res0)}\n"
+          + "      delete res0\n"
+          + "      if (N2) {\n"
+          + "        delete *.OXT and res1\n"
+          + "        connect {N2} {res1 & *.C}\n"
+          + "      }\n"
+          + "      if (C0) {\n"
+          + "        connect {C0} {res1 & *.N}\n"
+          + "      }\n"
+          + "    }\n"
+          + "  }\n"
+          + "}catch(e){print e}\n";
       try {
+        if (Logger.debugging)
+          Logger.debug(script);
         vwr.eval.runScript(script);
       } catch (ScriptException e) {
         // TODO
@@ -1815,6 +1882,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       BS bsExclude = BSUtil.newBitSet2(0, vwr.ms.mc);
       bsExclude.clear(res1.chain.model.modelIndex);
       res1.chain.model.groupCount = -1;
+      res1.chain.model.freeze();
       vwr.ms.recalculatePolymers(bsExclude);      
     //} catch (Exception e) {
      // System.out.println("" + e);

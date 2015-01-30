@@ -884,7 +884,8 @@ public class MathExt implements JmolMathExtension {
     // {*}.find("CF",true|false)
     // {*}.find("MF")
     // {*}.find("MF", "C2H4")
-    // {*}.find("SEQENCE")
+    // {*}.find("SEQUENCE")
+    // "AVA".find("SEQUENCE")
     // {*}.find("SMARTS", "CCCC")
     // "CCCC".find("SMARTS", "CC")
     // "CCCC".find("SMILES", "MF")
@@ -1015,6 +1016,9 @@ public class MathExt implements JmolMathExtension {
             listNew[n] = (asMatch ? (String) v.get(n) : list[i]);
           }
       return mp.addXAS(listNew);
+    }
+    if (isSequence) {
+     return mp.addXStr(vwr.getJBR().toStdAmino3(SV.sValue(x1))); 
     }
     return mp.addXInt(SV.sValue(x1).indexOf(sFind) + 1);
   }

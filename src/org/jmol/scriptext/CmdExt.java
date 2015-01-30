@@ -2188,20 +2188,49 @@ public class CmdExt implements JmolCmdExtension {
 
   private void mutate() throws ScriptException {
     // mutate {resno} "LYS" or "file identifier"
-    if (tokAt(1) == T.integer)
-      st[1] =T.o(T.string,  "" + st[1].value); // allows @x 
-    int iatom = atomExpressionAt(1).length() - 1;
-    
+    // mutate {1-3} ~GGGL
+    BS bs;
+    int i;
+    switch (tokAt(1)) {
+    case T.integer:
+      st[1] = T.o(T.string, "" + st[1].value); // allows @x and "*"
+      //$FALL-THROUGH$
+    default:
+      bs = atomExpressionAt(1);
+      i = ++e.iToken;
+      break;
+    case T.times:
+      bs = vwr.getAllAtoms();
+      i = 2;
+      break;
+    }
+
     // check for last model 
-    if (iatom < 0 || vwr.ms.mc != vwr.ms.at[iatom].mi + 1)
+    bs.and(vwr.getModelUndeletedAtomsBitSet(vwr.ms.mc - 1));
+    int iatom = bs.length() - 1;
+    if (iatom < 0 || vwr.ms.at[iatom].mi + 1 != vwr.ms.mc
+        || vwr.ms.isTrajectory(vwr.ms.at[iatom].mi))
       return;
-    int i = ++e.iToken;
-    String group = e.optParameterAsString(e.checkLast(i));
+    String group = e.optParameterAsString(i);
+    e.checkLast(i);
     if (chk)
       return;
-    if (tokAt(i) != T.string)
-      group = "==" + group;
-    vwr.getJBR().mutate(iatom, group);
+    boolean isFile = (tokAt(i) == T.string);
+    String[] list = null;
+    if (isFile) {
+      list = new String[] { group };
+      group = null;
+    } else {
+      group = PT.replaceAllCharacters(group, ",; \t\n", " ").trim()
+          .toUpperCase();
+      if (group.startsWith("~") || group.length() != 3
+          || !vwr.getJBR().isKnownPDBGroup(group, 20))
+        group = vwr.getJBR().toStdAmino3(group);
+    }
+    list = PT.getTokens(group);
+    if (list.length == 0)
+      return;
+    vwr.getJBR().mutate(bs, group, list);
   }
 
   private void navigate() throws ScriptException {

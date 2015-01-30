@@ -103,13 +103,18 @@ public abstract class BioPolymer {
       monomers[i].setBioPolymer(this, i);
     model = monomers[0].getModel();
   }
-
-  public void getRange(BS bs) {
+  
+  public void getRange(BS bs, boolean isMutated) {
     // this is OK -- doesn't relate to added hydrogens
     if (monomerCount == 0)
       return;
-    bs.setBits(monomers[0].firstAtomIndex,
-        monomers[monomerCount - 1].lastAtomIndex + 1);
+    if (isMutated) {
+      for (int i = monomerCount; --i >= 0;)
+        monomers[i].setAtomBits(bs);
+    } else {
+      bs.setBits(monomers[0].firstAtomIndex,
+          monomers[monomerCount - 1].lastAtomIndex + 1);
+    }
   }
 
   public void clearStructures() {

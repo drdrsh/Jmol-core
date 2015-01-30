@@ -251,6 +251,12 @@ public class Model {
   }
 
   protected void freezeM() {
+    for (int i = 0; i < chainCount; i++)
+      if (chains[i].groupCount == 0) {
+        for (int j = i + 1; j < chainCount; j++)
+          chains[j - 1] = chains[j];
+        chainCount--;
+      }    
     chains = (Chain[]) AU.arrayCopyObject(chains, chainCount);
     groupCount = -1;
     getGroupCount();

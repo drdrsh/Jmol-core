@@ -41,7 +41,7 @@ public interface JmolBioResolver {
 
   public void setGroupLists(int ipt);
 
-  public boolean isKnownPDBGroup(String g3);
+  public boolean isKnownPDBGroup(String g3, int maxID);
 
   public boolean isHetero(String g3);
 
@@ -56,7 +56,9 @@ public interface JmolBioResolver {
 
   public short getGroupID(String g3);
 
-  public boolean mutate(int iatom, String fileName);
+  public boolean mutate(BS bs, String fileName, String[] sequence);
+
+  public String toStdAmino3(String sValue);
   
   }
 

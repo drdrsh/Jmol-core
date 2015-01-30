@@ -229,7 +229,7 @@ public class Mol2Reader extends ForceFieldReader {
           int pt = getPDBGroupLength(atoms[i].group3);
           if (pt == 0 || pt > 3)
             break;
-          if (vwr.getJBR().isKnownPDBGroup(g3.substring(0, pt))) {
+          if (vwr.getJBR().isKnownPDBGroup(g3.substring(0, pt), Integer.MAX_VALUE)) {
             isPDB = this.isPDB = true;
             break;
           }
