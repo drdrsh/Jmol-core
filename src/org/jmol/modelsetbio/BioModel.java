@@ -371,28 +371,29 @@ public final class BioModel extends Model implements JmolBioModel {
           if (chainID == -1 || chainID == (id = chain.chainID) || !caseSensitive
               && id > 0 && id < 300 && chainID == AtomCollection.chainToUpper(id)) {
             Group[] groups = chain.groups;
+            int n = chain.groupCount;
             for (int index = 0; index >= 0;) 
-              index = selectSeqcodeRange(groups, index, seqcodeA, seqcodeB, bs);
+              index = selectSeqcodeRange(groups, n, index, seqcodeA, seqcodeB, bs);
           }
         }
       }
     return bs;
   }
 
-  private int selectSeqcodeRange(Group[] groups, int index, int seqcodeA, int seqcodeB,
+  private static int selectSeqcodeRange(Group[] groups, int n, int index, int seqcodeA, int seqcodeB,
                                 BS bs) {
     int seqcode, indexA, indexB, minDiff;
     boolean isInexact = false;
-    for (indexA = index; indexA < groupCount
+    for (indexA = index; indexA < n
         && groups[indexA].seqcode != seqcodeA; indexA++) {
     }
-    if (indexA == groupCount) {
+    if (indexA == n) {
       // didn't find A exactly -- go find the nearest that is GREATER than this value
       if (index > 0)
         return -1;
       isInexact = true;
       minDiff = Integer.MAX_VALUE;
-      for (int i = groupCount; --i >= 0;)
+      for (int i = n; --i >= 0;)
         if ((seqcode = groups[i].seqcode) > seqcodeA
             && (seqcode - seqcodeA) < minDiff) {
           indexA = i;
@@ -402,19 +403,19 @@ public final class BioModel extends Model implements JmolBioModel {
         return -1;
     }
     if (seqcodeB == Integer.MAX_VALUE) {
-      indexB = groupCount - 1;
+      indexB = n - 1;
       isInexact = true;
     } else {
-      for (indexB = indexA; indexB < groupCount
+      for (indexB = indexA; indexB < n
           && groups[indexB].seqcode != seqcodeB; indexB++) {
       }
-      if (indexB == groupCount) {
+      if (indexB == n) {
         // didn't find B exactly -- get the nearest that is LESS than this value
         if (index > 0)
           return -1;
         isInexact = true;
         minDiff = Integer.MAX_VALUE;
-        for (int i = indexA; i < groupCount; i++)
+        for (int i = indexA; i < n; i++)
           if ((seqcode = groups[i].seqcode) < seqcodeB
               && (seqcodeB - seqcode) < minDiff) {
             indexB = i;
