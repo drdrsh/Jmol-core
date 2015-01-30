@@ -175,7 +175,7 @@ public abstract class BioPolymer {
   }
 
   public void getConformation(BS bsConformation, int conformationIndex) {
-    Atom[] atoms = model.getModelSet().at;
+    Atom[] atoms = model.ms.at;
     for (int j = monomerCount; --j >= 0;) {
       Monomer m = monomers[j];
       //clear out bits that are not associated with the nth conformation
@@ -208,7 +208,7 @@ public abstract class BioPolymer {
   }
 
   public void setConformation(BS bsSelected) {
-    Atom[] atoms = model.getModelSet().at;
+    Atom[] atoms = model.ms.at;
     for (int i = monomerCount; --i >= 0;)
       monomers[i].updateOffsetsForAlternativeLocations(atoms, bsSelected);
     recalculateLeadMidpointsAndWingVectors();

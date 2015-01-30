@@ -19,4 +19,6 @@ public interface JmolChimeMessenger {
 
   void update(String msg);
 
+  void getAllChimeInfo(SB sb);
+
 }

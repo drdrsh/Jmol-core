@@ -143,7 +143,7 @@ public class ShapeManager {
     return shapes[shapeID] = shape;
   }
 
-  public void refreshShapeTrajectories(int baseModel, BS bs, M4 mat) {
+  public void notifyAtomPositionsChanged(int baseModel, BS bs, M4 mat) {
     Integer Imodel = Integer.valueOf(baseModel);
     BS bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(baseModel);
     for (int i = 0; i < JC.SHAPE_MAX; i++)

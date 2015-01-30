@@ -23,10 +23,16 @@
  */
 package org.jmol.viewer;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.SB;
 
 import org.jmol.c.CBK;
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.Group;
+import org.jmol.modelset.Model;
+import org.jmol.modelset.ModelSet;
 
 /**
  * 
@@ -122,6 +128,78 @@ public class ChimeMessenger implements JmolChimeMessenger {
       sm.cbl.notifyCallback(CBK.SCRIPT, data);
     sm.processScript(data);
     return "Jmol script completed.";
+  }
+
+  @SuppressWarnings("incomplete-switch")
+  @Override
+  public void getAllChimeInfo(SB sb) {
+    int nHetero = 0;
+    int nH = -1;
+    int nS = 0;
+    int nT = 0;
+    ModelSet ms = vwr.ms;
+    if (ms.haveBioModels) {
+      int n = 0;
+      Model[] models = ms.am;
+      int modelCount = ms.mc;
+      int ac = ms.ac;
+      Atom[] atoms = ms.at;
+      sb.append("\nMolecule name ....... " + ms.getInfoM("COMPND"));
+      sb.append("\nSecondary Structure . PDB Data Records");
+      sb.append("\nBrookhaven Code ..... " + ms.modelSetName);
+      for (int i = modelCount; --i >= 0;)
+        n += models[i].getChainCount(false);
+      sb.append("\nNumber of Chains .... " + n);
+      int ng = 0;
+      int ngHetero = 0;
+      Map<Group, Boolean> map = new Hashtable<Group, Boolean>();
+      int id;
+      int lastid = -1;
+      nH = 0;
+      for (int i = ac; --i >= 0;) {
+        boolean isHetero = atoms[i].isHetero();
+        if (isHetero)
+          nHetero++;
+        Group g = atoms[i].group;
+        if (!map.containsKey(g)) {
+          map.put(g, Boolean.TRUE);
+          if (isHetero)
+            ngHetero++;
+          else
+            ng++;
+        }
+        if (atoms[i].mi == 0) {
+          if ((id = g.getStrucNo()) != lastid && id != 0) {
+            lastid = id;
+            switch (g.getProteinStructureType()) {
+            case HELIX:
+              nH++;
+              break;
+            case SHEET:
+              nS++;
+              break;
+            case TURN:
+              nT++;
+              break;
+            }
+          }
+        }
+      }
+      sb.append("\nNumber of Groups .... " + ng);
+      if (ngHetero > 0)
+        sb.append(" (" + ngHetero + ")");
+    }
+    sb.append("\nNumber of Atoms ..... " + (ms.ac - nHetero));
+    if (nHetero > 0)
+      sb.append(" (" + nHetero + ")");
+    sb.append("\nNumber of Bonds ..... " + ms.bondCount);
+    sb.append("\nNumber of Models ...... " + ms.mc);
+
+    if (nH >= 0) {
+      sb.append("\nNumber of Helices ... " + nH);
+      sb.append("\nNumber of Strands ... " + nS);
+      sb.append("\nNumber of Turns ..... " + nT);
+    }
   }
 
 }

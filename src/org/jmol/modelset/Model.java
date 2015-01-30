@@ -29,18 +29,13 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jmol.api.SymmetryInterface;
-import org.jmol.c.STR;
 import org.jmol.java.BS;
 
 
 import javajs.util.AU;
-import javajs.util.OC;
-import javajs.util.Lst;
-import javajs.util.P3;
 import javajs.util.SB;
 
 import org.jmol.util.BSUtil;
-import org.jmol.viewer.Viewer;
 
 public class Model {
 
@@ -78,17 +73,12 @@ public class Model {
    *  
    */
 
-  public ModelSet ms;
-
   /**
    * BE CAREFUL: FAILURE TO NULL REFERENCES TO modelSet WILL PREVENT
    * FINALIZATION AND CREATE A MEMORY LEAK.
    * 
-   * @return associated ModelSet
    */
-  public ModelSet getModelSet() {
-    return ms;
-  }
+  public ModelSet ms;
 
   public int modelIndex; // our 0-based reference
   int fileIndex; // 0-based file reference
@@ -160,7 +150,6 @@ public class Model {
   protected Map<String, Object> auxiliaryInfo;
   public Properties properties;
   float defaultRotationRadius;
-  String defaultStructure;
   public SymmetryInterface biosymmetry;
 
   public Orientation orientation;
@@ -240,6 +229,7 @@ public class Model {
   }
 
   public void fixIndices(int modelIndex, int nAtomsDeleted, BS bsDeleted) {
+    // also in BioModel
     fixIndicesM(modelIndex, nAtomsDeleted, bsDeleted);
   }
 
@@ -255,8 +245,9 @@ public class Model {
     BSUtil.deleteBits(bsAtomsDeleted, bsDeleted);
   }
 
-  public void freeze() {
+  public boolean freeze() {
     freezeM();
+    return false;
   }
 
   protected void freezeM() {
@@ -266,259 +257,6 @@ public class Model {
     for (int i = 0; i < chainCount; ++i)
       chains[i].groups = (Group[]) AU.arrayCopyObject(chains[i].groups,
           chains[i].groupCount);
-  }
-
-  /////// BioModel only ///////
-
-  /**
-   * @param vwr
-   * @param type
-   * @param ctype
-   * @param isDraw
-   * @param bsSelected
-   * @param out
-   * @param bsWritten
-   * @param pdbCONECT
-   * @param tokens
-   */
-  public void getPdbData(Viewer vwr, String type, char ctype,
-                         boolean isDraw, BS bsSelected, OC out,
-                         LabelToken[] tokens, SB pdbCONECT, BS bsWritten) {
-  }
-
-  /**
-   * @param bioBranches
-   * @return updated bioBranches
-   */
-  public Lst<BS> getBioBranches(Lst<BS> bioBranches) {
-    return bioBranches;
-  }
-
-  public void clearBioPolymers() {
-  }
-
-  /**
-   * @param bs
-   * @param finalInfo
-   * @param modelVector
-   */
-  public void getPolymerInfo(
-                                BS bs,
-                                Map<String, Lst<Map<String, Object>>> finalInfo,
-                                Lst<Map<String, Object>> modelVector) {
-  }
-
-  public int getBioPolymerCount() {
-    return 0;
-  }
-
-  /**
-   * @param asDSSP
-   * @param doReport
-   * @param dsspIgnoreHydrogen
-   * @param setStructure
-   * @param includeAlpha
-   * @return structure list
-   */
-  public String calculateStructures(boolean asDSSP, boolean doReport,
-                                    boolean dsspIgnoreHydrogen,
-                                    boolean setStructure, boolean includeAlpha) {
-    return "";
-  }
-
-  /**
-   * @param structureList
-   */
-  public void setStructureList(Map<STR, float[]> structureList) {
-  }
-
-  public void getAllChimeInfo(SB sb) {
-    getChimeInfoM(sb, 0);
-  }
-
-  protected void getChimeInfoM(SB sb, int nHetero) {
-    sb.append("\nNumber of Atoms ..... " + (ms.ac - nHetero));
-    if (nHetero > 0)
-      sb.append(" (" + nHetero + ")");
-    sb.append("\nNumber of Bonds ..... " + ms.bondCount);
-    sb.append("\nNumber of Models ...... " + ms.mc);
-  }
-
-  /**
-   * @param bsConformation
-   */
-  public void setConformation(BS bsConformation) {
-    //
-  }
-
-  public String getFullPDBHeader() {
-    return null;
-  }
-
-  /**
-   * @param ms 
-   * @param specInfo 
-   * @param bs   
-   * @return sequence bits
-   */
-  public BS getAllSequenceBits(ModelSet ms, String specInfo, BS bs) {
-    // biomodel only
-    return null;
-  }
-
-  /**
-   * @param ms  
-   * @param specInfo 
-   * @return base pair bits
-   */
-  public BS getAllBasePairBits(ModelSet ms, String specInfo) {
-    // biomodel only
-    return null;
-  }
-
-  /**
-   * @param bs 
-   */
-  public void resetRasmolBonds(BS bs) {
-    // biomodel only
-  }
-
-  /**
-   * @param ms 
-   * @param bsA 
-   * @param bsB 
-   * @param vHBonds 
-   * @param nucleicOnly 
-   * @param nMax 
-   * @param dsspIgnoreHydrogens  
-   * @param bsHBonds 
-   */
-  public void calcAllRasmolHydrogenBonds(ModelSet ms, BS bsA, BS bsB, Lst<Bond> vHBonds,
-                                      boolean nucleicOnly, int nMax,
-                                      boolean dsspIgnoreHydrogens, BS bsHBonds) {
-    // biomodel only
-  }
-
-  /**
-   * @param modelSet  
-   * @param bsAtoms2 
-   * @param taintedOnly 
-   * @param needPhiPsi 
-   * @param mode 
-   * @return state
-   */
-  public String getFullProteinStructureState(ModelSet modelSet, BS bsAtoms2,
-                                             boolean taintedOnly,
-                                             boolean needPhiPsi, int mode) {
-    // biomodel only
-    return null;
-  }
-
-  /**
-   * @param ms 
-   * @param groups  
-   * @param groupCount2 
-   * @param baseGroupIndex 
-   * @param modelsExcluded 
-   */
-  public void calculateAllPolymers(ModelSet ms, Group[] groups, int groupCount2,
-                                   int baseGroupIndex, BS modelsExcluded) {
-    // biomodel only
-  }
-
-  /**
-   * @param ms  
-   * @param nResidues 
-   * @param bs 
-   * @return bitset 
-   */
-  public BS getGroupsWithinAll(ModelSet ms, int nResidues, BS bs) {
-    // biomodel only
-    return null;
-  }
-
-  /**
-   * @param ms  
-   * @param specInfo 
-   * @return bitset
-   */
-  public BS getSelectCodeRange(ModelSet ms, int[] specInfo) {
-    // biomodel only
-    return null;
-  }
-
-  /**
-   * @param ms  
-   * @param bs1 
-   * @param bs2 
-   * @return number of struts
-   */
-  public int calculateStruts(ModelSet ms, BS bs1, BS bs2) {
-    // biomodel only
-    return 0;
-  }
-
-  /**
-   * @param bs 
-   * @param vList 
-   * @param isTraceAlpha 
-   * @param sheetSmoothing 
-   */
-  public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList,
-                                         boolean isTraceAlpha,
-                                         float sheetSmoothing) {
-    // biomodel only
-  }
-
-  /**
-   * @param ms 
-   * @param modelIndex  
-   */
-  public void recalculatePoints(ModelSet ms, int modelIndex) {
-    // biomodel only
-  }
-
-  /**
-   * @param sb  
-   * @param maxAtoms 
-   */
-  public void getDefaultLargePDBRendering(SB sb, int maxAtoms) {
-    // biomodel only    
-  }
-
-  /**
-   * @param bsSelected  
-   */
-  public void calcSelectedMonomersCount(BS bsSelected) {
-    // biomodel only    
-  }
-
-  /**
-   * @param ms  
-   * @param modelIndex 
-   * @return count
-   */
-  public int getBioPolymerCountInModel(ModelSet ms, int modelIndex) {
-    // biomodel only
-    return 0;
-  }
-
-  /**
-   * @param ms  
-   */
-  public void calculateStraightnessAll(ModelSet ms) {
-    // biomodel only
-  }
-
-  /**
-   * @param conformationIndex  
-   * @param doSet 
-   * @param bsAtoms 
-   * @param bs 
-   */
-  public void getConformation(int conformationIndex, boolean doSet, BS bsAtoms,
-                              BS bs) {
-    // biomodel only
   }
 
  }

@@ -84,10 +84,8 @@ public class AxesRenderer extends FontLineShapeRenderer {
         && !vwr.ms.getJmolFrameType(modelIndex).equals(
             "plot data"))
       return false;
-    if (isUnitCell && modelIndex < 0) {
-      if (vwr.getCurrentUnitCell() == null)
-        return false;
-    }
+    if (isUnitCell && modelIndex < 0 && vwr.getCurrentUnitCell() == null)
+      return false;
     int nPoints = 6;
     int labelPtr = 0;
     if (isUnitCell && ms.unitCells != null) {

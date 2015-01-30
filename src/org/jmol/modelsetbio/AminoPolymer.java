@@ -381,7 +381,7 @@ public class AminoPolymer extends AlphaPolymer {
     if (alphaOnly)
       return;
     if (structureList == null)
-      structureList = model.getModelSet().getStructureList();
+      structureList = model.ms.getStructureList();
     char[] structureTags = new char[monomerCount];
     for (int i = 0; i < monomerCount - 1; ++i) {
       AminoMonomer leadingResidue = (AminoMonomer) monomers[i];

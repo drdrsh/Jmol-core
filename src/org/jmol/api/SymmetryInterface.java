@@ -17,6 +17,7 @@ import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.P3i;
 import javajs.util.Quat;
+import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -194,5 +195,9 @@ public interface SymmetryInterface {
   public Tensor getTensor(Viewer vwr, float[] anisoBorU);
 
   public T3 getFractionalOrigin();
+
+  public void setAxes(float scale, P3[] axisPoints, P3 fixedOrigin, P3 originPoint);
+
+  public boolean getState(SB commands);
 
 }

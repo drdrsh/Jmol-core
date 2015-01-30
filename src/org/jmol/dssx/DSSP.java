@@ -429,7 +429,7 @@ public class DSSP implements DSSPInterface {
   private void getBridges(int[][][][] min) {
     // ooooooh! It IS possible to have 3 bridges to the same residue. (3A5F) 
     // 
-    Atom[] atoms = bioPolymers[0].model.getModelSet().at;
+    Atom[] atoms = bioPolymers[0].model.ms.at;
     Bridge bridge = null;
 
     Map<String, Boolean> htTemp = new Hashtable<String, Boolean>();

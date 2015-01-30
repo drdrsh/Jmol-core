@@ -35,6 +35,7 @@ import org.jmol.c.PAL;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
+import org.jmol.modelset.JmolBioModel;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
 import org.jmol.util.ColorEncoder;
@@ -198,7 +199,8 @@ public class ColorManager {
     case PAL.PALETTE_POLYMER:
       Model m = vwr.ms.am[atom.mi];
       return ce.getColorIndexFromPalette(
-          atom.group.getBioPolymerIndexInModel(), 0, m.getBioPolymerCount() - 1,
+          atom.group.getBioPolymerIndexInModel(), 0, (m.isBioModel ? 
+              ((JmolBioModel) m).getBioPolymerCount() : 0) - 1,
           ColorEncoder.BGYOR, false);
     case PAL.PALETTE_MONOMER:
       // vwr.calcSelectedMonomersCount() must be called first ...

@@ -45,6 +45,7 @@ import org.jmol.modelset.Bond;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.HBond;
+import org.jmol.modelset.JmolBioModel;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
@@ -59,7 +60,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 
-public final class BioModel extends Model{
+public final class BioModel extends Model implements JmolBioModel {
 
   /*
    *   
@@ -81,23 +82,221 @@ public final class BioModel extends Model{
   private int bioPolymerCount = 0;
   public BioPolymer[] bioPolymers;
 
-//// effectively static methods, but called nonstatically because BioModel is hidden to JavaScript
-  
+  private String defaultStructure;
+  private Viewer vwr;
+
+
+  //// effectively static methods, but called nonstatically because BioModel is hidden to JavaScript
+
   @Override
-  public int getBioPolymerCountInModel(ModelSet ms, int modelIndex) {
-    if (modelIndex < 0) {
-      int polymerCount = 0;
-      for (int i = ms.mc; --i >= 0;)
-        if (!ms.isTrajectorySubFrame(i))
-          polymerCount += ms.am[i].getBioPolymerCount();
-      return polymerCount;
-    }
-    return (ms.isTrajectorySubFrame(modelIndex) ? 0 : ms.am[modelIndex]
-        .getBioPolymerCount());
+  public Map<String, String> getAllHeteroList(int modelIndex) {
+    Map<String, String> htFull = new Hashtable<String, String>();
+    boolean ok = false;
+    for (int i = ms.mc; --i >= 0;)
+      if (modelIndex < 0 || i == modelIndex) {
+        @SuppressWarnings("unchecked")
+        Map<String, String> ht = (Map<String, String>) ms.getInfo(i, "hetNames");
+        if (ht == null)
+          continue;
+        ok = true;
+        for (Map.Entry<String, String> entry : ht.entrySet()) {
+          String key = entry.getKey();
+          htFull.put(key, entry.getValue());
+        }
+      }
+    return (ok ? htFull : null);
   }
 
   @Override
-  public void calculateAllPolymers(ModelSet ms, Group[] groups, int groupCount,
+  public void setAllProteinType(BS bs, STR type) {
+    int monomerIndexCurrent = -1;
+    int iLast = -1;
+    BS bsModels = ms.getModelBS(bs, false);
+    setAllDefaultStructure(bsModels);
+    Atom[] at = ms.at;
+    Model[] am = ms.am;
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      if (iLast != i - 1)
+        monomerIndexCurrent = -1;
+      monomerIndexCurrent = at[i].group.setProteinStructureType(type,
+          monomerIndexCurrent);
+      int modelIndex = at[i].mi;
+      ms.proteinStructureTainted = am[modelIndex].structureTainted = true;
+      iLast = i = at[i].group.lastAtomIndex;
+    }
+    int[] lastStrucNo = new int[ms.mc];
+    for (int i = 0; i < ms.ac;) {
+      int modelIndex = at[i].mi;
+      if (!bsModels.get(modelIndex)) {
+        i = am[modelIndex].firstAtomIndex + am[modelIndex].ac;
+        continue;
+      }
+      iLast = at[i].group.getStrucNo();
+      if (iLast < 1000 && iLast > lastStrucNo[modelIndex])
+        lastStrucNo[modelIndex] = iLast;
+      i = at[i].group.lastAtomIndex + 1;
+    }
+    for (int i = 0; i < ac;) {
+      int modelIndex = at[i].mi;
+      if (!bsModels.get(modelIndex)) {
+        i = am[modelIndex].firstAtomIndex + am[modelIndex].ac;
+        continue;
+      }
+      if (at[i].group.getStrucNo() > 1000)
+        at[i].group.setStrucNo(++lastStrucNo[modelIndex]);
+      i = at[i].group.lastAtomIndex + 1;
+    }
+  }
+
+
+  /**
+   * general purpose; return models associated with specific atoms
+   * @param bsAtoms
+   * @param bsAtomsRet all atoms associated with these models. 
+   * @return bitset of base models
+   */
+  private BS modelsOf(BS bsAtoms, BS bsAtomsRet) {
+    BS bsModels = BS.newN(ms.mc);
+    boolean isAll = (bsAtoms == null);
+    int i0 = (isAll ? ms.ac - 1 : bsAtoms.nextSetBit(0));
+    for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsAtoms.nextSetBit(i + 1))) {
+      int modelIndex = ms.am[ms.at[i].mi].trajectoryBaseIndex;
+      if (ms.isJmolDataFrameForModel(modelIndex))
+        continue;
+      bsModels.set(modelIndex);
+      bsAtomsRet.set(i);
+    }
+    return bsModels;
+  }
+
+  @Override
+  public String getAllDefaultStructures(BS bsAtoms, BS bsModified) {
+    BS bsModels = modelsOf(bsAtoms, bsModified);
+    SB ret = new SB();
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) 
+      if (ms.am[i].isBioModel && ((BioModel) ms.am[i]).defaultStructure != null)
+        ret.append(((BioModel) ms.am[i]).defaultStructure);
+    return ret.toString();
+  }
+
+  @Override
+  public String calculateAllStuctures(BS bsAtoms, boolean asDSSP,
+                                        boolean doReport,
+                                        boolean dsspIgnoreHydrogen,
+                                        boolean setStructure) {
+    BS bsAllAtoms = new BS();
+    BS bsModelsExcluded = BSUtil.copyInvert(modelsOf(bsAtoms, bsAllAtoms),
+        ms.mc);
+    if (!setStructure)
+      return ms.calculateStructuresAllExcept(bsModelsExcluded, asDSSP, doReport,
+          dsspIgnoreHydrogen, false, false);
+    ms.recalculatePolymers(bsModelsExcluded);
+    String ret = ms.calculateStructuresAllExcept(bsModelsExcluded, asDSSP, doReport,
+        dsspIgnoreHydrogen, true, false);
+    vwr.shm.resetBioshapes(bsAllAtoms);
+    ms.setStructureIndexes();
+    return ret;
+  }
+
+  @Override
+  public String calculateAllStructuresExcept(BS alreadyDefined, boolean asDSSP,
+                                       boolean doReport,
+                                       boolean dsspIgnoreHydrogen,
+                                       boolean setStructure,
+                                       boolean includeAlpha) {
+    String ret = "";
+    BS bsModels = BSUtil.copyInvert(alreadyDefined, ms.mc);
+    //working here -- testing reset
+    //TODO bsModels first for not setStructure, after that for setstructure....
+    if (setStructure)
+      setAllDefaultStructure(bsModels);
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
+      if (ms.am[i].isBioModel)
+        ret += ((BioModel) ms.am[i]).calculateStructures(asDSSP, doReport,
+            dsspIgnoreHydrogen, setStructure, includeAlpha);
+    if (setStructure)
+      ms.setStructureIndexes();
+    return ret;
+  }
+
+  public void setAllDefaultStructure(BS bsModels) {
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
+      if (ms.am[i].isBioModel) {
+        BioModel m = (BioModel) ms.am[i];
+        if (m.defaultStructure == null)
+          m.defaultStructure = getFullProteinStructureState(m.bsAtoms, false,
+              false, 0);
+      }
+  }
+
+  @Override
+  public void setAllStructureList(Map<STR, float[]> structureList) {
+    for (int iModel = ms.mc; --iModel >= 0;)
+      if (ms.am[iModel].isBioModel) {
+        BioModel m = (BioModel) ms.am[iModel];
+        m.bioPolymers = (BioPolymer[]) AU.arrayCopyObject(m.bioPolymers,
+            m.bioPolymerCount);
+        for (int i = m.bioPolymerCount; --i >= 0;)
+          m.bioPolymers[i].setStructureList(structureList);
+      }
+  }
+
+  @Override
+  public void setAllConformation(BS bsAtoms) {
+    BS bsModels = ms.getModelBS(bsAtoms, false);
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
+      if (ms.am[i].isBioModel) {
+        BioModel m = (BioModel) ms.am[i];
+        if (m.nAltLocs > 0)
+          m.setConformation(bsAtoms);
+      }
+  }
+
+
+  @Override
+  public void getAllPolymerPointsAndVectors(BS bs, Lst<P3[]> vList,
+                                         boolean isTraceAlpha,
+                                         float sheetSmoothing) {
+    for (int i = 0; i < ms.mc; ++i)
+      if (ms.am[i].isBioModel) {
+        BioModel m = (BioModel) ms.am[i];
+        int last = Integer.MAX_VALUE - 1;
+        for (int ip = 0; ip < m.bioPolymerCount; ip++)
+          last = m.bioPolymers[ip].getPolymerPointsAndVectors(last, bs, vList,
+              isTraceAlpha, sheetSmoothing);
+      }
+  }
+
+  @Override
+  public void calcSelectedMonomersCount() {
+    BS bsSelected = vwr.bsA();
+    for (int i = ms.mc; --i >= 0;)
+      if (ms.am[i].isBioModel) {
+        BioModel m = (BioModel) ms.am[i];
+        for (int j = m.bioPolymerCount; --j >= 0;)
+          m.bioPolymers[j].calcSelectedMonomersCount(bsSelected);
+      }
+  }
+
+  /**
+   * @param modelIndex
+   * @return number of polymers
+   */
+  @Override
+  public int getBioPolymerCountInModel(int modelIndex) {
+    if (modelIndex < 0) {
+      int polymerCount = 0;
+      for (int i = ms.mc; --i >= 0;)
+        if (!ms.isTrajectorySubFrame(i) && ms.am[i].isBioModel)
+          polymerCount += ((BioModel) ms.am[i]).getBioPolymerCount();
+      return polymerCount;
+    }
+    return (ms.isTrajectorySubFrame(modelIndex) || !ms.am[modelIndex].isBioModel ? 0
+        : ((BioModel) ms.am[modelIndex]).getBioPolymerCount());
+  }
+
+  @Override
+  public void calculateAllPolymers(Group[] groups, int groupCount,
                                    int baseGroupIndex, BS modelsExcluded) {
     if (modelsExcluded != null)
       for (int j = 0; j < groupCount; ++j) {
@@ -111,12 +310,20 @@ public final class BioModel extends Model{
     for (int i = 0, mc = ms.mc; i < mc; i++)
       if ((modelsExcluded == null || !modelsExcluded.get(i))
           && ms.am[i].isBioModel)
-        calculatePolymers(ms, groups, groupCount, baseGroupIndex);
+        calculateAllPolymers2(groups, groupCount, baseGroupIndex);
   }
   
-  private static void calculatePolymers(ModelSet ms, Group[] groups,
+  @Override
+  public void recalculateAllPolymers(BS bsModelsExcluded, Group[] groups) {
+    for (int i = 0; i < ms.mc; i++)
+      if (ms.am[i].isBioModel && !bsModelsExcluded.get(i))
+        ((BioModel) ms.am[i]).clearBioPolymers();
+    calculateAllPolymers2(groups, -1, 0);
+  }
+
+  private void calculateAllPolymers2(Group[] groups,
                                         int groupCount, int baseGroupIndex) {
-    boolean checkConnections = !ms.vwr.getBoolean(T.pdbsequential);
+    boolean checkConnections = !vwr.getBoolean(T.pdbsequential);
     if (groupCount < 0)
       groupCount = groups.length;
     for (int j = baseGroupIndex; j < groupCount; ++j) {
@@ -136,7 +343,7 @@ public final class BioModel extends Model{
   }  
 
   @Override
-  public BS getGroupsWithinAll(ModelSet ms, int nResidues, BS bs) {
+  public BS getGroupsWithinAll(int nResidues, BS bs) {
     BS bsResult = new BS();
     BS bsCheck = ms.getIterativeModels(false);
     for (int iModel = ms.mc; --iModel >= 0;)
@@ -149,12 +356,12 @@ public final class BioModel extends Model{
   }
 
   @Override
-  public BS getSelectCodeRange(ModelSet ms, int[] info) {
+  public BS getSelectCodeRange(int[] info) {
     BS bs = new BS();
     int seqcodeA = info[0];
     int seqcodeB = info[1];
     int chainID = info[2];
-    boolean caseSensitive = ms.vwr.getBoolean(T.chaincasesensitive);
+    boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
     if (chainID >= 0 && chainID < 300 && !caseSensitive)
       chainID = AtomCollection.chainToUpper(chainID);
     for (int iModel = ms.mc; --iModel >= 0;)
@@ -226,8 +433,8 @@ public final class BioModel extends Model{
   
 
   @Override
-  public int calculateStruts(ModelSet ms, BS bs1, BS bs2) {
-    ms.vwr.setModelVisibility();
+  public int calculateStruts(BS bs1, BS bs2) {
+    vwr.setModelVisibility();
     // select only ONE model
     ms.makeConnections2(0, Float.MAX_VALUE, Edge.BOND_STRUT, T.delete, bs1,
         bs2, null, false, false, 0);
@@ -248,7 +455,6 @@ public final class BioModel extends Model{
       bsCheck.or(bs2);
     }
     Atom[] atoms = ms.at;
-    Viewer vwr = ms.vwr;
     bsCheck.and(vwr.getModelUndeletedAtomsBitSet(m.modelIndex));
     for (int i = bsCheck.nextSetBit(0); i >= 0; i = bsCheck.nextSetBit(i + 1))
       if (atoms[i].checkVisible()
@@ -271,7 +477,7 @@ public final class BioModel extends Model{
   }
 
   @Override
-  public void recalculatePoints(ModelSet ms, int modelIndex) {
+  public void recalculatePoints(int modelIndex) {
     if (modelIndex < 0) {
       for (int i = ms.mc; --i >= 0;)
         if (!ms.isTrajectorySubFrame(i) && ms.am[i].isBioModel)
@@ -284,7 +490,7 @@ public final class BioModel extends Model{
 
   @SuppressWarnings("incomplete-switch")
   @Override
-  public String getFullProteinStructureState(ModelSet ms, BS bsAtoms2,
+  public String getFullProteinStructureState(BS bsAtoms2,
                                              boolean taintedOnly,
                                              boolean needPhiPsi, int mode) {
     for (int im = 0, mc = ms.mc; im < mc; im++) {
@@ -464,10 +670,10 @@ public final class BioModel extends Model{
 
 
   @Override
-  public BS getAllSequenceBits(ModelSet ms, String specInfo, BS bs) {
+  public BS getAllSequenceBits(String specInfo, BS bs) {
     BS bsResult = new BS();
     if (bs == null)
-      bs = ms.vwr.getAllAtoms();
+      bs = vwr.getAllAtoms();
     Model[] am = ms.am;
     for (int i = ms.mc; --i >= 0;)
       if (am[i].isBioModel) {
@@ -484,13 +690,13 @@ public final class BioModel extends Model{
   }
   
   @Override
-  public BS getAllBasePairBits(ModelSet ms, String specInfo) {
+  public BS getAllBasePairBits(String specInfo) {
     BS bsA = null;
     BS bsB = null;
     Lst<Bond> vHBonds = new Lst<Bond>();
     if (specInfo.length() == 0) {
-      bsA = bsB = ms.vwr.getAllAtoms();
-      calcAllRasmolHydrogenBonds(ms, bsA, bsB, vHBonds, true, 1, false, null);
+      bsA = bsB = vwr.getAllAtoms();
+      calcAllRasmolHydrogenBonds(bsA, bsB, vHBonds, true, 1, false, null);
     } else {
       for (int i = 0; i < specInfo.length();) {
         bsA = ms.getSequenceBits(specInfo.substring(i, ++i), null);
@@ -499,7 +705,7 @@ public final class BioModel extends Model{
         bsB = ms.getSequenceBits(specInfo.substring(i, ++i), null);
         if (bsB.cardinality() == 0)
           continue;
-        calcAllRasmolHydrogenBonds(ms, bsA, bsB, vHBonds, true, 1, false, null);
+        calcAllRasmolHydrogenBonds(bsA, bsB, vHBonds, true, 1, false, null);
       }
     }
     BS bsAtoms = new BS();
@@ -513,7 +719,6 @@ public final class BioModel extends Model{
 
   /**
    *  only for base models, not trajectories
-   * @param ms 
    * @param bsA 
    * @param bsB 
    * @param vHBonds will be null for autobonding
@@ -523,7 +728,7 @@ public final class BioModel extends Model{
    * @param bsHBonds 
    */
   @Override
-  public void calcAllRasmolHydrogenBonds(ModelSet ms, BS bsA, BS bsB, Lst<Bond> vHBonds,
+  public void calcAllRasmolHydrogenBonds(BS bsA, BS bsB, Lst<Bond> vHBonds,
                                       boolean nucleicOnly, int nMax,
                                       boolean dsspIgnoreHydrogens, BS bsHBonds) {
     Model[] am = ms.am;
@@ -611,72 +816,11 @@ public final class BioModel extends Model{
      }
    }
 
-  @SuppressWarnings("incomplete-switch")
   @Override
-  public void getAllChimeInfo(SB sb) {
-    int n = 0;
-    Model[] models = ms.am;
-    int modelCount = ms.mc;
-    int ac = ms.ac;
-    Atom[] atoms = ms.at;
-    sb.append("\nMolecule name ....... " + ms.getInfoM("COMPND"));
-    sb.append("\nSecondary Structure . PDB Data Records");
-    sb.append("\nBrookhaven Code ..... " + ms.modelSetName);
-    for (int i = modelCount; --i >= 0;)
-      n += models[i].getChainCount(false);
-    sb.append("\nNumber of Chains .... " + n);
-    int ng = 0;
-    int ngHetero = 0;
-    int nHetero = 0;
-    Map<Group, Boolean> map = new Hashtable<Group, Boolean>();
-    int nH = 0;
-    int nS = 0;
-    int nT = 0;
-    int id;
-    int lastid = -1;
-    for (int i = ac; --i >= 0;) {
-      boolean isHetero = atoms[i].isHetero();
-      if (isHetero)
-        nHetero++;
-      Group g = atoms[i].group;
-      if (!map.containsKey(g)) {
-        map.put(g, Boolean.TRUE);
-        if (isHetero)
-          ngHetero++;
-        else
-          ng++;
-      }
-      if (atoms[i].mi == 0) {
-        if ((id = g.getStrucNo()) != lastid && id != 0) {
-          lastid = id;
-          switch (g.getProteinStructureType()) {
-          case HELIX:
-            nH++;
-            break;
-          case SHEET:
-            nS++;
-            break;
-          case TURN:
-            nT++;
-            break;
-          }
-        }
-      }
-    }
-    sb.append("\nNumber of Groups .... " + ng);
-    if (ngHetero > 0)
-      sb.append(" (" + ngHetero + ")");
-    getChimeInfoM(sb, nHetero);
-    sb.append("\nNumber of Helices ... " + nH);
-    sb.append("\nNumber of Strands ... " + nS);
-    sb.append("\nNumber of Turns ..... " + nT);
-  }
-
-  @Override
-  public void calculateStraightnessAll(ModelSet ms) {
+  public void calculateStraightnessAll() {
     char ctype = 'S';//(vwr.getTestFlag3() ? 's' : 'S');
-    char qtype = ms.vwr.getQuaternionFrame();
-    int mStep = ms.vwr.getInt(T.helixstep);
+    char qtype = vwr.getQuaternionFrame();
+    int mStep = vwr.getInt(T.helixstep);
     // testflag3 ON  --> preliminary: Hanson's original normal-based straightness
     // testflag3 OFF --> final: Kohler's new quaternion-based straightness
     for (int i = ms.mc; --i >= 0;)
@@ -684,7 +828,7 @@ public final class BioModel extends Model{
         BioModel m = (BioModel)ms.am[i];
         P3 ptTemp = new P3();
         for (int p = 0; p < m.bioPolymerCount; p++)
-          m.bioPolymers[p].getPdbData(ms.vwr, ctype, qtype, mStep, 2, null, 
+          m.bioPolymers[p].getPdbData(vwr, ctype, qtype, mStep, 2, null, 
               null, false, false, false, null, null, null, new BS(), ptTemp);        
       }
     ms.haveStraightness = true;
@@ -696,6 +840,7 @@ public final class BioModel extends Model{
   
   BioModel(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex, 
       String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
+    vwr = modelSet.vwr;
     set(modelSet, modelIndex, trajectoryBaseIndex, jmolData, properties, auxiliaryInfo);
     isBioModel = true;
     modelSet.bioModel = this;
@@ -703,9 +848,10 @@ public final class BioModel extends Model{
   }
 
   @Override
-  public void freeze() {
+  public boolean freeze() {
     freezeM();
     bioPolymers = (BioPolymer[])AU.arrayCopyObject(bioPolymers, bioPolymerCount);
+    return true;
   }
   
   public void addSecondaryStructure(STR type, String structureID,
@@ -720,8 +866,7 @@ public final class BioModel extends Model{
             endSeqcode, istart, iend, bsAssigned);
   }
 
-  @Override
-  public String calculateStructures(boolean asDSSP, boolean doReport,
+  private String calculateStructures(boolean asDSSP, boolean doReport,
                                     boolean dsspIgnoreHydrogen,
                                     boolean setStructure, boolean includeAlpha) {
     if (bioPolymerCount == 0 || !setStructure && !asDSSP)
@@ -750,33 +895,35 @@ public final class BioModel extends Model{
     }
     String s = "";
     if (haveProt)
-      s += ((DSSPInterface) Interface.getOption("dssx.DSSP", ms.vwr, "ms"))
+      s += ((DSSPInterface) Interface.getOption("dssx.DSSP", vwr, "ms"))
         .calculateDssp(bioPolymers, bioPolymerCount, vHBonds, doReport,
             dsspIgnoreHydrogen, setStructure);
     if (haveNucl && auxiliaryInfo.containsKey("dssr") && vHBonds != null)
-      s += ms.vwr.getAnnotationParser().getHBonds(ms, modelIndex, vHBonds, doReport);
+      s += vwr.getAnnotationParser().getHBonds(ms, modelIndex, vHBonds, doReport);
     return s;
   }
 
   @Override
-  public void setConformation(BS bsConformation) {
-    if (nAltLocs > 0)
-      for (int i = bioPolymerCount; --i >= 0; )
-        bioPolymers[i].setConformation(bsConformation);
+  public void getConformations(int modelIndex, int conformationIndex,
+                              boolean doSet, BS bsAtoms, BS bsRet) {
+    for (int i = ms.mc; --i >= 0;)
+      if (i == modelIndex || modelIndex < 0)
+        if (ms.am[i].isBioModel)
+        ((BioModel) ms.am[i]).getConformation(conformationIndex, doSet, bsAtoms, bsRet);
   }
 
   /**
    * @param conformationIndex
-   * @param bs
+   * @param doSet 
+   * @param bsRet
    * @param bsSelected
    */
-  @Override
-  public void getConformation(int conformationIndex, boolean doSet, BS bsSelected, BS bs) {
+  public void getConformation(int conformationIndex, boolean doSet, BS bsSelected, BS bsRet) {
     String altLocs = ms.getAltLocListInModel(modelIndex);
     int nAltLocs = ms.getAltLocCountInModel(modelIndex);
     if (conformationIndex > 0 && conformationIndex >= nAltLocs)
       return;
-    BS bsConformation = ms.vwr.getModelUndeletedAtomsBitSet(modelIndex);
+    BS bsConformation = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     if (bsSelected != null)
       bsConformation.and(bsSelected);
     if (bsConformation.nextSetBit(0) < 0)
@@ -791,10 +938,15 @@ public final class BioModel extends Model{
               altLocs.substring(c, c + 1)));
     }
     if (bsConformation.nextSetBit(0) >= 0) {
-      bs.or(bsConformation);      
+      bsRet.or(bsConformation);      
       if (doSet)
         setConformation(bsConformation);
     }
+  }
+
+  private void setConformation(BS bsConformation) {
+    for (int j = bioPolymerCount; --j >= 0;)
+      bioPolymers[j].setConformation(bsConformation);
   }
 
   @Override
@@ -811,8 +963,7 @@ public final class BioModel extends Model{
     bioPolymers[bioPolymerCount++] = polymer;
   }
 
-  @Override
-  public void clearBioPolymers() {
+  private void clearBioPolymers() {
     bioPolymers = new BioPolymer[8];
     bioPolymerCount = 0;
   }
@@ -861,23 +1012,6 @@ public final class BioModel extends Model{
   }
 
   @Override
-  public void setStructureList(Map<STR, float[]> structureList) {
-    bioPolymers = (BioPolymer[])AU.arrayCopyObject(bioPolymers, bioPolymerCount);
-    for (int i = bioPolymerCount; --i >= 0; )
-      bioPolymers[i].setStructureList(structureList);
-  }
-
-  @Override
-  public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList,
-                                         boolean isTraceAlpha,
-                                         float sheetSmoothing) {
-    int last = Integer.MAX_VALUE - 1;
-    for (int ip = 0; ip < bioPolymerCount; ip++)
-      last = bioPolymers[ip]
-          .getPolymerPointsAndVectors(last, bs, vList, isTraceAlpha, sheetSmoothing);
-  }
-
-  @Override
   public Lst<BS> getBioBranches(Lst<BS> biobranches) {
     // scan through biopolymers quickly -- 
     BS bsBranch;
@@ -895,7 +1029,7 @@ public final class BioModel extends Model{
   }
 
   @Override
-  public void getPolymerInfo(
+  public void getAllPolymerInfo(
                                 BS bs,
                                 Map<String, Lst<Map<String, Object>>> finalInfo,
                                 Lst<Map<String, Object>> modelVector) {
@@ -922,7 +1056,7 @@ public final class BioModel extends Model{
     String info = (String) auxiliaryInfo.get("fileHeader");
     if (info != null)
       return info;
-    info = ms.vwr.getCurrentFileAsString("biomodel");
+    info = vwr.getCurrentFileAsString("biomodel");
     int ichMin = info.length();
     for (int i = pdbRecords.length; --i >= 0;) {
       int ichFound;
@@ -945,9 +1079,9 @@ public final class BioModel extends Model{
   }
 
   @Override
-  public void getPdbData(Viewer vwr, String type, char ctype,
-                         boolean isDraw, BS bsSelected,
-                         OC out, LabelToken[] tokens, SB pdbCONECT, BS bsWritten) {
+  public void getPdbData(String type, char ctype, boolean isDraw,
+                         BS bsSelected, OC out,
+                         LabelToken[] tokens, SB pdbCONECT, BS bsWritten) {
     boolean bothEnds = false;
     char qtype = (ctype != 'R' ? 'r' : type.length() > 13
         && type.indexOf("ramachandran ") >= 0 ? type.charAt(13) : 'R');
@@ -987,12 +1121,6 @@ public final class BioModel extends Model{
   }
 
   
-  @Override
-  public void calcSelectedMonomersCount(BS bsSelected) {
-    for (int i = bioPolymerCount; --i >= 0; )
-      bioPolymers[i].calcSelectedMonomersCount(bsSelected);
-  }
-  
   /**
    * from ModelSet.setAtomPositions
    * 
@@ -1002,19 +1130,20 @@ public final class BioModel extends Model{
   public void resetRasmolBonds(BS bs) {
     BS bsDelete = new BS();
     hasRasmolHBonds = false;
-    Model[] models = ms.am;
-    Bond[] bonds = ms.bo;
+    Model[] am = ms.am;
+    Bond[] bo = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
-      Bond bond = bonds[i];
+      Bond bond = bo[i];
       // trajectory atom .mi will be pointing to the trajectory;
       // here we check to see if their base model is this model
       if ((bond.order & Edge.BOND_H_CALC_MASK) != 0
-          && models[bond.atom1.mi].trajectoryBaseIndex == modelIndex)
+          && am[bond.atom1.mi].trajectoryBaseIndex == modelIndex)
         bsDelete.set(i);
     }
     if (bsDelete.nextSetBit(0) >= 0)
       ms.deleteBonds(bsDelete, false);
     getRasmolHydrogenBonds(bs, bs, null, false, Integer.MAX_VALUE, false, null);
   }
+
 
 }

@@ -50,8 +50,6 @@ public abstract class JmolStateCreator {
 
   abstract String getAtomShapeState(AtomShape shape);
 
-  abstract String getTrajectoryState();
-
   abstract String getFunctionCalls(String selectedFunction);
 
   abstract String getAtomicPropertyState(byte taintCoord, BS bsSelected);

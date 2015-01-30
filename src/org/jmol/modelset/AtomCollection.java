@@ -79,6 +79,8 @@ abstract public class AtomCollection {
   public Atom[] at;
   public int ac;
 
+  public Trajectory trajectory;
+
   ////////////////////////////////////////////////////////////////
   // these may or may not be allocated
   // depending upon the AtomSetCollection characteristics
@@ -515,16 +517,8 @@ abstract public class AtomCollection {
   }
 
   private void fixTrajectory(Atom a) {
-    int m = a.mi;
-    ModelSet mc = (ModelSet) this;
-    boolean isTraj = mc.isTrajectory(m);
-    if (!isTraj)
-      return;
-    boolean isFrac = mc.unitCells != null && mc.unitCells[m].getCoordinatesAreFractional();
-    P3 pt = mc.trajectorySteps.get(m)[a.i - mc.am[m].firstAtomIndex];
-    pt.set(a.x, a.y, a.z);
-    if (isFrac)
-      mc.unitCells[m].toFractional(pt, true);
+    if (((ModelSet) this).isTrajectory(a.mi))
+      trajectory.fixAtom(a);
   }
 
   public void setAtomCoordRelative(int atomIndex, float x, float y, float z) {

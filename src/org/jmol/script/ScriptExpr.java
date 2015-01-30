@@ -800,7 +800,8 @@ abstract class ScriptExpr extends ScriptParam {
         allowRefresh = false;
         break;
       case T.spec_atom:
-        if (vwr.ms.allowSpecAtom()) {
+        if (vwr.ms.mc != 1 || vwr.ms.haveBioModels) {
+          // old Chime scripts use *.C for _C
           int atomID = instruction.intValue;
           if (atomID > 0)
             rpn.addXBs(compareInt(T.atomid, T.opEQ, atomID));

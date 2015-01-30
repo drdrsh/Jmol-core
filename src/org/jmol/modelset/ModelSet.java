@@ -116,8 +116,9 @@ import java.util.Properties;
     */
    public int mc;
    
-   public Model bioModel; // Model also holds modelset methods relating only to biomodels
+   public JmolBioModel bioModel; // Model also holds modelset methods relating only to biomodels
    
+  
    public SymmetryInterface[] unitCells;
    public boolean haveUnitCells;
 
@@ -130,7 +131,7 @@ import java.util.Properties;
    protected BS[] elementsPresent;
 
    protected boolean isXYZ;
-   protected boolean haveBioModels;
+   public boolean haveBioModels;
 
    public Properties modelSetProperties;
    public Map<String, Object> msInfo;
@@ -157,7 +158,6 @@ import java.util.Properties;
     */
    private int thisStateModel;
 
-   public Lst<P3[]> trajectorySteps;
    protected Lst<V3[]> vibrationSteps;
 
    private BS selectedMolecules;
@@ -294,138 +294,27 @@ import java.util.Properties;
     return -1;
   }
 
+  public void setTrajectory(int modelIndex) {
+    if (modelIndex >= 0 && isTrajectory(modelIndex) && at[am[modelIndex].firstAtomIndex].mi != modelIndex)
+      trajectory.setModel(modelIndex);
+  }  
+
   public BS getBitSetTrajectories() {
-    if (trajectorySteps == null)
-      return null;
-    BS bsModels = new BS();
-    for (int i = mc; --i >= 0;) {
-      int t = am[i].selectedTrajectory; 
-      if (t >= 0) {
-        bsModels.set(t);
-        i = am[i].trajectoryBaseIndex; //skip other trajectories
-      }
-    }
-    return bsModels;
+    return (trajectory == null ? null : trajectory.getModelsSelected());
   }
 
   public void setTrajectoryBs(BS bsModels) {
-    for (int i = 0; i < mc; i++)
-      if (bsModels.get(i))
-        setTrajectory(i);
+    if (trajectory != null)
+      for (int i = 0; i < mc; i++)
+        if (bsModels.get(i))
+          setTrajectory(i);
   }
-
-  public void setTrajectory(int modelIndex) {
-    if (modelIndex < 0 || !isTrajectory(modelIndex))
-      return;
-    // The user has used the MODEL command to switch to a new set of atom coordinates
-    // Or has specified a trajectory in a select, display, or hide command.
-
-    // Assign the coordinates and the model index for this set of atoms
-    if (at[am[modelIndex].firstAtomIndex].mi == modelIndex)
-      return;
-    int baseModelIndex = am[modelIndex].trajectoryBaseIndex;
-    am[baseModelIndex].selectedTrajectory = modelIndex;
-    setAtomPositions(baseModelIndex, modelIndex, trajectorySteps.get(modelIndex),
-        null, 0,
-        (vibrationSteps == null ? null : vibrationSteps.get(modelIndex)), true);    
-    int m = vwr.am.cmi;
-    if (m >= 0 && m != modelIndex 
-        && am[m].fileIndex == am[modelIndex].fileIndex)
-      vwr.setCurrentModelIndexClear(modelIndex, false);
-  }  
 
   public void morphTrajectories(int m1, int m2, float f) {
-    if (m1 < 0 || m2 < 0 || !isTrajectory(m1) || !isTrajectory(m2))
-      return;
-    if (f == 0) {
-      setTrajectory(m1);
-      return;
-    }
-    if (f == 1) {
-      setTrajectory(m2);
-      return;
-    }
-    int baseModelIndex = am[m1].trajectoryBaseIndex;
-    am[baseModelIndex].selectedTrajectory = m1;
-    setAtomPositions(baseModelIndex, m1, trajectorySteps.get(m1),
-        trajectorySteps.get(m2), f, (vibrationSteps == null ? null
-            : vibrationSteps.get(m1)), true);
-    int m = vwr.am.cmi;
-    if (m >= 0 && m != m1 && am[m].fileIndex == am[m1].fileIndex)
-      vwr.setCurrentModelIndexClear(m1, false);
+    if (m1 >= 0 && m2 >= 0 && isTrajectory(m1) && isTrajectory(m2))
+      trajectory.morph(m1, m2, f);
   }  
-
-  /**
-   * A generic way to set atom positions, possibly from trajectories but also
-   * possibly from an array. Takes care of all associated issues of changing
-   * coordinates.
-   * 
-   * @param baseModelIndex
-   * @param modelIndex
-   * @param t1
-   * @param t2
-   * @param f
-   * @param vibs
-   * @param isFractional
-   */
-  private void setAtomPositions(int baseModelIndex, int modelIndex,
-                                P3[] t1, P3[] t2,
-                                float f, V3[] vibs,
-                                boolean isFractional) {
-    BS bs = new BS();
-    V3 vib = new V3();
-    int iFirst = am[baseModelIndex].firstAtomIndex;
-    int iMax = iFirst + getAtomCountInModel(baseModelIndex);
-    if (f == 0) {
-      for (int pt = 0, i = iFirst; i < iMax && pt < t1.length; i++, pt++) {
-        at[i].mi = (short) modelIndex;
-        if (t1[pt] == null)
-          continue;
-        if (isFractional)
-          at[i].setFractionalCoordTo(t1[pt], true);
-        else
-          at[i].setT(t1[pt]);
-        if (vibrationSteps != null) {
-          if (vibs != null && vibs[pt] != null)
-            vib = vibs[pt];
-          setVibrationVector(i, vib);
-        }
-        bs.set(i);
-      }
-    } else {
-      P3 p = new P3();
-      int n = Math.min(t1.length, t2.length);
-      for (int pt = 0, i = iFirst; i < iMax && pt < n; i++, pt++) {
-        at[i].mi = (short) modelIndex;
-        if (t1[pt] == null || t2[pt] == null)
-          continue;
-        p.sub2(t2[pt], t1[pt]);
-        p.scaleAdd2(f, p, t1[pt]);
-        if (isFractional)
-          at[i].setFractionalCoordTo(p, true);
-        else
-          at[i].setT(p);
-        bs.set(i);
-      } 
-    }
-    // Clear the Binary Search so that select within(),
-    // isosurface, and dots will work properly
-    initializeBspf();
-    validateBspfForModel(baseModelIndex, false);
-    // Recalculate critical points for cartoons and such
-    // note that models[baseModel] and models[modelIndex]
-    // point to the same model. So there is only one copy of 
-    // the shape business.
-
-    recalculateLeadMidpointsAndWingVectors(baseModelIndex);
-    // Recalculate all measures that involve trajectories
-
-    sm.refreshShapeTrajectories(baseModelIndex, bs, null);
-
-    if (am[baseModelIndex].hasRasmolHBonds)
-      am[baseModelIndex].resetRasmolBonds(bs);
-  }
-
+  
   public P3[] getFrameOffsets(BS bsAtoms) {
     if (bsAtoms == null)
       return null;
@@ -435,7 +324,7 @@ import java.util.Properties;
     int lastModel = 0;
     int n = 0;
     P3 offset = offsets[0];
-    boolean asTrajectory = (trajectorySteps != null && trajectorySteps.size() == mc);
+    boolean asTrajectory = (trajectory != null && trajectory.steps.size() == mc);
     int m1 = (asTrajectory ? mc : 1);
     for (int m = 0; m < m1; m++) {
       if (asTrajectory)
@@ -565,27 +454,8 @@ import java.util.Properties;
         : "") + ret);
   }
   
-  private BS modelsOf(BS bsAtoms, BS bsAllAtoms) {
-    BS bsModels = BS.newN(mc);
-    boolean isAll = (bsAtoms == null);
-    int i0 = (isAll ? ac - 1 : bsAtoms.nextSetBit(0));
-    for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsAtoms.nextSetBit(i + 1))) {
-      int modelIndex = am[at[i].mi].trajectoryBaseIndex;
-      if (isJmolDataFrameForModel(modelIndex))
-        continue;
-      bsModels.set(modelIndex);
-      bsAllAtoms.set(i);
-    }
-    return bsModels;
-  }
-
   public String getDefaultStructure(BS bsAtoms, BS bsModified) {
-    BS bsModels = modelsOf(bsAtoms, bsModified);
-    SB ret = new SB();
-    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) 
-      if (am[i].isBioModel && am[i].defaultStructure != null)
-        ret.append(am[i].defaultStructure);
-    return ret.toString();
+    return (haveBioModels ? bioModel.getAllDefaultStructures(bsAtoms, bsModified) : "");
   }
 
 
@@ -675,24 +545,20 @@ import java.util.Properties;
    ********************************************************/
 
   private void includeAllRelatedFrames(BS bsModels) {
-    int j;
+    int baseModel = 0;
     for (int i = 0; i < mc; i++) {
+      boolean isTraj = isTrajectory(i);
+      boolean isBase = (isTraj && bsModels.get(baseModel = am[i].trajectoryBaseIndex));
       if (bsModels.get(i)) {
-       // if (isJmolDataFrame(i) && !bsModels.get(j = models[i].dataSourceFrame)) {
-         // bsModels.set(j);
-        //  includeAllRelatedFrames(bsModels);
-          //return;
-       // }
-        if (isTrajectory(i) && !bsModels.get(j = am[i].trajectoryBaseIndex)) {
-          bsModels.set(j);
+        if (isTraj && !isBase) {
+          bsModels.set(baseModel);
           includeAllRelatedFrames(bsModels);
           return;
         }
-        continue;
-      }
-      if (isTrajectory(i) && bsModels.get(am[i].trajectoryBaseIndex)
-          || isJmolDataFrameForModel(i) && bsModels.get(am[i].dataSourceFrame))
+      } else if (isTraj || isJmolDataFrameForModel(i)
+          && bsModels.get(am[i].dataSourceFrame)) {
         bsModels.set(i);
+      }
     }
   }
   
@@ -745,7 +611,7 @@ import java.util.Properties;
     for (int i = 0, mpt = 0; i < oldModelCount; i++) {
       if (!bsModels.get(i)) {
         mpt++;
-        continue;
+         continue;
       }
       int nAtoms = oldModels[i].ac;
       if (nAtoms == 0)
@@ -771,8 +637,71 @@ import java.util.Properties;
     }
 
     // set final values
-    deleteModel(-1, 0, 0, null, null);
+    //final deletions
+    haveBioModels = false;
+    for (int i = mc; --i >= 0;)
+      if (am[i].isBioModel) {
+        haveBioModels= true;
+        bioModel = (JmolBioModel) am[i];
+      }
+    validateBspf(false);
+    bsAll = null;
+    resetMolecules();
+    isBbcageDefault = false;
+    calcBoundBoxDimensions(null, 1);
     return bsDeleted;
+  }
+
+  private void deleteModel(int modelIndex, int firstAtomIndex, int nAtoms,
+                           BS bsModelAtoms, BS bsBonds) {
+    /*
+     *   ModelCollection.modelSetAuxiliaryInfo["group3Lists", "group3Counts, "models"]
+     * ModelCollection.stateScripts ?????
+     */
+    if (modelIndex < 0) {
+      return;
+    }
+
+    modelNumbers = (int[]) AU.deleteElements(modelNumbers, modelIndex, 1);
+    modelFileNumbers = (int[]) AU.deleteElements(modelFileNumbers, modelIndex,
+        1);
+    modelNumbersForAtomLabel = (String[]) AU.deleteElements(
+        modelNumbersForAtomLabel, modelIndex, 1);
+    modelNames = (String[]) AU.deleteElements(modelNames, modelIndex, 1);
+    frameTitles = (String[]) AU.deleteElements(frameTitles, modelIndex, 1);
+    thisStateModel = -1;
+    String[] group3Lists = (String[]) getInfoM("group3Lists");
+    int[][] group3Counts = (int[][]) getInfoM("group3Counts");
+    int ptm = modelIndex + 1;
+    if (group3Lists != null && group3Lists[ptm] != null) {
+      for (int i = group3Lists[ptm].length() / 6; --i >= 0;)
+        if (group3Counts[ptm][i] > 0) {
+          group3Counts[0][i] -= group3Counts[ptm][i];
+          if (group3Counts[0][i] == 0)
+            group3Lists[0] = group3Lists[0].substring(0, i * 6) + ",["
+                + group3Lists[0].substring(i * 6 + 2);
+        }
+    }
+    if (group3Lists != null) {
+      msInfo.put("group3Lists", AU.deleteElements(group3Lists, modelIndex, 1));
+      msInfo
+          .put("group3Counts", AU.deleteElements(group3Counts, modelIndex, 1));
+    }
+
+    //fix cellInfos array
+    if (unitCells != null) {
+      unitCells = (SymmetryInterface[]) AU.deleteElements(unitCells,
+          modelIndex, 1);
+    }
+
+    // correct stateScripts, particularly CONNECT scripts
+    for (int i = stateScripts.size(); --i >= 0;) {
+      if (!stateScripts.get(i).deleteAtoms(modelIndex, bsBonds, bsModelAtoms)) {
+        stateScripts.remove(i);
+      }
+    }
+    deleteModelAtoms(firstAtomIndex, nAtoms, bsModelAtoms);
+    vwr.deleteModelAtoms(modelIndex, firstAtomIndex, nAtoms, bsModelAtoms);
   }
 
   public void setAtomProperty(BS bs, int tok, int iValue, float fValue,
@@ -844,7 +773,8 @@ import java.util.Properties;
     int modelIndex = mc - 1;
     BS bs = new BS();
     if (isTrajectory(modelIndex) || am[modelIndex].getGroupCount() > 1) {
-      return bs; // can't add atoms to a trajectory or a system with multiple groups!
+      // can't add atoms to a trajectory or a system with multiple groups!
+      return bs; 
     }
     growAtomArrays(ac + pts.length);
     RadiusData rd = vwr.rd;
@@ -895,19 +825,18 @@ import java.util.Properties;
   }
 
   public SymmetryInterface getUnitCell(int modelIndex) {
-    if (!haveUnitCells || modelIndex < 0 || modelIndex >= mc)
-      return null;
-    if (am[modelIndex].simpleCage != null)
-      return am[modelIndex].simpleCage;
-    return (unitCells == null || modelIndex >= unitCells.length
-        || !unitCells[modelIndex].haveUnitCell() ? null : unitCells[modelIndex]);
+    return (!haveUnitCells || modelIndex < 0 || modelIndex >= mc ? null
+        : am[modelIndex].simpleCage != null ? am[modelIndex].simpleCage
+            : unitCells == null || modelIndex >= unitCells.length
+                || !unitCells[modelIndex].haveUnitCell() ? null
+                : unitCells[modelIndex]);
   }
 
   public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {
-    if (modelIndex < 0 || modelIndex >= mc)
-      return;
-    am[modelIndex].simpleCage = simpleCage;
-    haveUnitCells = true;
+    if (modelIndex >= 0 && modelIndex < mc) {
+      am[modelIndex].simpleCage = simpleCage;
+      haveUnitCells = true;
+    }
   }
 
   /**
@@ -1276,135 +1205,15 @@ import java.util.Properties;
     return stateScript;
   }
 
-  /**
-   * allows rebuilding of PDB structures; also accessed by ModelManager from
-   * Eval
-   * 
-   * @param alreadyDefined
-   *        set to skip calculation
-   * @param asDSSP
-   * @param doReport
-   * @param dsspIgnoreHydrogen
-   * @param setStructure
-   * @param includeAlpha
-   * @return report
-   * 
-   */
-  protected String calculateStructuresAllExcept(BS alreadyDefined,
-                                                boolean asDSSP,
-                                                boolean doReport,
-                                                boolean dsspIgnoreHydrogen,
-                                                boolean setStructure,
-                                                boolean includeAlpha) {
-    freezeModels();
-    String ret = "";
-    BS bsModels = BSUtil.copyInvert(alreadyDefined, mc);
-    //working here -- testing reset
-    //TODO bsModels first for not setStructure, after that for setstructure....
-    if (setStructure)
-      setDefaultStructure(bsModels);
-    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
-      ret += am[i].calculateStructures(asDSSP, doReport,
-          dsspIgnoreHydrogen, setStructure, includeAlpha);
-    }
-    if (setStructure) {
-      setStructureIndexes();
-    }
-    return ret;
-  }
-
-  public void setDefaultStructure(BS bsModels) {
-    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
-      if (am[i].isBioModel && am[i].defaultStructure == null)
-        am[i].defaultStructure = getProteinStructureState(
-            am[i].bsAtoms, false, false, 0);
-  }
-
-  public void setProteinType(BS bs, STR type) {
-    int monomerIndexCurrent = -1;
-    int iLast = -1;
-    BS bsModels = getModelBS(bs, false);
-    setDefaultStructure(bsModels);
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      if (iLast != i - 1)
-        monomerIndexCurrent = -1;
-      monomerIndexCurrent = at[i].group.setProteinStructureType(type,
-          monomerIndexCurrent);
-      int modelIndex = at[i].mi;
-      proteinStructureTainted = am[modelIndex].structureTainted = true;
-      iLast = i = at[i].group.lastAtomIndex;
-    }
-    int[] lastStrucNo = new int[mc];
-    for (int i = 0; i < ac;) {
-      int modelIndex = at[i].mi;
-      if (!bsModels.get(modelIndex)) {
-        i = am[modelIndex].firstAtomIndex + am[modelIndex].ac;
-        continue;
-      }
-      iLast = at[i].group.getStrucNo();
-      if (iLast < 1000 && iLast > lastStrucNo[modelIndex])
-        lastStrucNo[modelIndex] = iLast;
-      i = at[i].group.lastAtomIndex + 1;
-    }
-    for (int i = 0; i < ac;) {
-      int modelIndex = at[i].mi;
-      if (!bsModels.get(modelIndex)) {
-        i = am[modelIndex].firstAtomIndex + am[modelIndex].ac;
-        continue;
-      }
-      if (at[i].group.getStrucNo() > 1000)
-        at[i].group.setStrucNo(++lastStrucNo[modelIndex]);
-      i = at[i].group.lastAtomIndex + 1;
-    }
-  }
-
   void freezeModels() {
+    haveBioModels = false;
     for (int iModel = mc; --iModel >= 0;)
-      am[iModel].freeze();
+      haveBioModels |= am[iModel].freeze();
   }
 
   public Map<STR, float[]> getStructureList() {
     return vwr.getStructureList();
   }
-
-  public void setStructureList(Map<STR, float[]> structureList) {
-    for (int iModel = mc; --iModel >= 0;)
-      am[iModel].setStructureList(structureList);
-  }
-
-  public BS setConformation(BS bsAtoms) {
-    BS bsModels = getModelBS(bsAtoms, false);
-    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
-      am[i].setConformation(bsAtoms);
-    return bsAtoms;
-  }
-
-  public BS getConformation(int modelIndex, int conformationIndex, boolean doSet, BS bsAtoms) {
-    BS bs = new BS();
-    for (int i = mc; --i >= 0;)
-      if (i == modelIndex || modelIndex < 0) 
-        am[i].getConformation(conformationIndex, doSet, bsAtoms, bs);
-    return bs;
-  }
-
-  @SuppressWarnings("unchecked")
-  public Map<String, String> getHeteroList(int modelIndex) {
-    Map<String, String> htFull = new Hashtable<String, String>();
-    boolean ok = false;
-    for (int i = mc; --i >= 0;)
-      if (modelIndex < 0 || i == modelIndex) {
-        Map<String, String> ht = (Map<String, String>) getInfo(i, "hetNames");
-        if (ht == null)
-          continue;
-        ok = true;
-        for (Map.Entry<String, String> entry : ht.entrySet()) {
-          String key = entry.getKey();
-          htFull.put(key, entry.getValue());
-        }
-      }
-    return (ok ? htFull : (Map<String, String>) getInfoM("hetNames"));
-  }
-
   public Object getInfoM(String keyName) {
     // the preferred method now
     return (msInfo == null ? null : msInfo
@@ -1414,18 +1223,6 @@ import java.util.Properties;
   public boolean getMSInfoB(String keyName) {
     Object val = getInfoM(keyName);
     return (val instanceof Boolean && ((Boolean) val).booleanValue());
-  }
-
-
-  protected int mergeTrajectories(boolean isTrajectory) {
-    if (trajectorySteps == null) {
-      if (!isTrajectory)
-        return 0;
-      trajectorySteps = new Lst<P3[]>();
-    }
-    for (int i = trajectorySteps.size(); i < mc; i++)
-      trajectorySteps.addLast(null);
-    return mc;
   }
 
   /**
@@ -1443,31 +1240,20 @@ import java.util.Properties;
   }
 
   public boolean isTrajectoryMeasurement(int[] countPlusIndices) {
-    if (countPlusIndices != null) {
-      int count = countPlusIndices[0];
-      int atomIndex;
-      for (int i = 1; i <= count; i++)
-        if ((atomIndex = countPlusIndices[i]) >= 0
-            && isTrajectory(at[atomIndex].mi))
-          return true;
-    }
-    return false;
+    return (trajectory != null && trajectory.hasMeasure(countPlusIndices));
   }
 
   public BS getModelBS(BS atomList, boolean allTrajectories) {
     BS bs = new BS();
     int modelIndex = 0;
     boolean isAll = (atomList == null);
+    allTrajectories &= (trajectory != null);
     int i0 = (isAll ? 0 : atomList.nextSetBit(0));
     for (int i = i0; i >= 0 && i < ac; i = (isAll ? i + 1 : atomList
         .nextSetBit(i + 1))) {
       bs.set(modelIndex = at[i].mi);
-      if (allTrajectories) {
-        int iBase = am[modelIndex].trajectoryBaseIndex;
-        for (int j = 0; j < mc; j++)
-          if (am[j].trajectoryBaseIndex == iBase)
-            bs.set(j);
-      }
+      if (allTrajectories)
+        trajectory.getModelBS(modelIndex, bs);
       i = am[modelIndex].firstAtomIndex + am[modelIndex].ac - 1;
     }
     return bs;
@@ -1487,18 +1273,6 @@ import java.util.Properties;
         continue;
       if (!isTrajectorySubFrame(i))
         bs.set(i);
-    }
-    return bs;
-  }
-
-  public BS selectDisplayedTrajectories(BS bs) {
-    //when a trajectory is selected, the atom's modelIndex is
-    //switched to that of the selected trajectory
-    //even though the underlying model itself is not changed.
-    for (int i = 0; i < mc; i++) {
-      if (isTrajectory(i)
-          && at[am[i].firstAtomIndex].mi != i)
-        bs.clear(i);
     }
     return bs;
   }
@@ -1620,12 +1394,6 @@ import java.util.Properties;
       am[i].calcSelectedGroupsCount(bsSelected);
   }
 
-  public void calcSelectedMonomersCount() {
-    BS bsSelected = vwr.bsA();
-    for (int i = mc; --i >= 0;)
-      am[i].calcSelectedMonomersCount(bsSelected);
-  }
-
   public boolean isJmolDataFrameForModel(int modelIndex) {
     return (modelIndex >= 0 && modelIndex < mc && am[modelIndex].isJmolDataFrame);
   }
@@ -1703,7 +1471,7 @@ import java.util.Properties;
    */
 
   public String getPDBHeader(int modelIndex) {
-    return (am[modelIndex].isBioModel ? am[modelIndex]
+    return (am[modelIndex].isBioModel ? ((JmolBioModel) am[modelIndex])
         .getFullPDBHeader() : getFileHeader(modelIndex));
   }
 
@@ -1711,7 +1479,7 @@ import java.util.Properties;
     if (modelIndex < 0)
       return "";
     if (am[modelIndex].isBioModel)
-      return am[modelIndex].getFullPDBHeader();
+      return getPDBHeader(modelIndex);
     String info = (String) getInfo(modelIndex, "fileHeader");
     if (info == null)
       info = modelSetName;
@@ -1760,9 +1528,7 @@ import java.util.Properties;
   }
 
   public int[] getModelCellRange(int modelIndex) {
-    if (unitCells == null)
-      return null;
-    return unitCells[modelIndex].getCellRange();
+    return (unitCells == null ? null : unitCells[modelIndex].getCellRange());
   }
 
   public int getLastVibrationVector(int modelIndex, int tok) {
@@ -1967,7 +1733,7 @@ import java.util.Properties;
       bsModelAtoms[i] = vwr.getModelUndeletedAtomsBitSet(i);
       m = am[i];
       m.moleculeCount = 0;
-      biobranches = m.getBioBranches(biobranches);
+      biobranches = (m.isBioModel ? ((JmolBioModel) m).getBioBranches(biobranches) : null);
     }
     // problem, as with 1gzx, is that this does not include non-protein cofactors that are 
     // covalently bonded. So we indicate a set of "biobranches" in JmolMolecule.getMolecules
@@ -2149,8 +1915,8 @@ import java.util.Properties;
     case T.basepair:
       String s = (String) specInfo;
       bs = new BS();
-      return (!haveBioModels || s.length() % 2 != 0 ? bs : getAtomBitsMDa(T.group,
-          bioModel.getAllBasePairBits(this, s)));
+      return (!haveBioModels || s.length() % 2 != 0 ? bs 
+          : getAtomBitsMDa(T.group, bioModel.getAllBasePairBits(s)));
     case T.boundbox:
       BoxInfo boxInfo = getBoxInfo((BS) specInfo, 1);
       bs = getAtomsWithin(boxInfo.getBoundBoxCornerVector().length() + 0.0001f,
@@ -2200,7 +1966,7 @@ import java.util.Properties;
     case T.sequence:
       return getSequenceBits((String) specInfo, null);
     case T.spec_seqcode_range:
-      return (haveBioModels ? bioModel.getSelectCodeRange(this, (int[]) specInfo) : new BS());
+      return (haveBioModels ? bioModel.getSelectCodeRange((int[]) specInfo) : new BS());
     case T.specialposition:
       bs = BS.newN(ac);
       int modelIndex = -1;
@@ -2901,7 +2667,7 @@ import java.util.Properties;
 
   //////////// state definition ///////////
 
-  void setStructureIndexes() {
+  public void setStructureIndexes() {
     int id;
     int idnew = 0;
     int lastid = -1;
@@ -3001,65 +2767,6 @@ import java.util.Properties;
     }
     am = newModels;
     mc = newModelCount;
-  }
-
-  protected void deleteModel(int modelIndex, int firstAtomIndex, int nAtoms,
-                             BS bsModelAtoms, BS bsBonds) {
-    /*
-     *   ModelCollection.modelSetAuxiliaryInfo["group3Lists", "group3Counts, "models"]
-     * ModelCollection.stateScripts ?????
-     */
-    if (modelIndex < 0) {
-      //final deletions
-      validateBspf(false);
-      bsAll = null;
-      resetMolecules();
-      isBbcageDefault = false;
-      calcBoundBoxDimensions(null, 1);
-      return;
-    }
-
-    modelNumbers = (int[]) AU.deleteElements(modelNumbers, modelIndex, 1);
-    modelFileNumbers = (int[]) AU.deleteElements(modelFileNumbers, modelIndex,
-        1);
-    modelNumbersForAtomLabel = (String[]) AU.deleteElements(
-        modelNumbersForAtomLabel, modelIndex, 1);
-    modelNames = (String[]) AU.deleteElements(modelNames, modelIndex, 1);
-    frameTitles = (String[]) AU.deleteElements(frameTitles, modelIndex, 1);
-    thisStateModel = -1;
-    String[] group3Lists = (String[]) getInfoM("group3Lists");
-    int[][] group3Counts = (int[][]) getInfoM("group3Counts");
-    int ptm = modelIndex + 1;
-    if (group3Lists != null && group3Lists[ptm] != null) {
-      for (int i = group3Lists[ptm].length() / 6; --i >= 0;)
-        if (group3Counts[ptm][i] > 0) {
-          group3Counts[0][i] -= group3Counts[ptm][i];
-          if (group3Counts[0][i] == 0)
-            group3Lists[0] = group3Lists[0].substring(0, i * 6) + ",["
-                + group3Lists[0].substring(i * 6 + 2);
-        }
-    }
-    if (group3Lists != null) {
-      msInfo.put("group3Lists",
-          AU.deleteElements(group3Lists, modelIndex, 1));
-      msInfo.put("group3Counts",
-          AU.deleteElements(group3Counts, modelIndex, 1));
-    }
-
-    //fix cellInfos array
-    if (unitCells != null) {
-      unitCells = (SymmetryInterface[]) AU.deleteElements(unitCells,
-          modelIndex, 1);
-    }
-
-    // correct stateScripts, particularly CONNECT scripts
-    for (int i = stateScripts.size(); --i >= 0;) {
-      if (!stateScripts.get(i).deleteAtoms(modelIndex, bsBonds, bsModelAtoms)) {
-        stateScripts.remove(i);
-      }
-    }
-    deleteModelAtoms(firstAtomIndex, nAtoms, bsModelAtoms);
-    vwr.deleteModelAtoms(modelIndex, firstAtomIndex, nAtoms, bsModelAtoms);
   }
 
   public void assignAtom(int atomIndex, String type, boolean autoBond) {
@@ -3430,11 +3137,6 @@ import java.util.Properties;
       deleteBonds(bsDelete, false);
   }
 
-  public boolean allowSpecAtom() {
-    // old Chime scripts use *.C for _C
-    return mc != 1 || am[0].isBioModel;
-  }
-
   public void setFrameDelayMs(long millis, BS bsModels) {
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
       am[am[i].trajectoryBaseIndex].frameDelay = millis;
@@ -3715,11 +3417,11 @@ import java.util.Properties;
 
   public void recalculatePositionDependentQuantities(BS bs, M4 mat) {
     if (haveStraightness)
-      calculateStraightness();
+      calculateStraightnessAll();
     recalculateLeadMidpointsAndWingVectors(-1);
     BS bsModels = getModelBS(bs, false);
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
-      sm.refreshShapeTrajectories(i, bs, mat);
+      sm.notifyAtomPositionsChanged(i, bs, mat);
     averageAtomPoint = null;
     /* but we would need to somehow indicate this in the state
     if (ellipsoids != null)
@@ -3933,32 +3635,31 @@ import java.util.Properties;
   
   public BS getSequenceBits(String specInfo, BS bs) {
     return (haveBioModels && specInfo.length() > 0 ?
-        bioModel.getAllSequenceBits(this, specInfo, bs) : new BS());
-  }
-
-  protected void calculatePolymers(Group[] groups, int groupCount,
-                                   int baseGroupIndex, BS modelsExcluded) {
-    if (haveBioModels)
-      bioModel.calculateAllPolymers(this, groups, groupCount, baseGroupIndex,
-          modelsExcluded);
+        bioModel.getAllSequenceBits(specInfo, bs) : new BS());
   }
 
   public int getBioPolymerCountInModel(int modelIndex) {
-    return (haveBioModels ? bioModel.getBioPolymerCountInModel(this, modelIndex) : 0);
+    return (haveBioModels ? bioModel.getBioPolymerCountInModel(modelIndex) : 0);
   }
 
   public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList,
                                          boolean isTraceAlpha,
                                          float sheetSmoothing) {
     if (haveBioModels)
-      for (int i = 0; i < mc; ++i)
-        am[i].getPolymerPointsAndVectors(bs, vList, isTraceAlpha,
-            sheetSmoothing);
+      bioModel.getAllPolymerPointsAndVectors(bs, vList, isTraceAlpha,
+          sheetSmoothing);
   }
 
   public void recalculateLeadMidpointsAndWingVectors(int modelIndex) {
     if (haveBioModels)
-      bioModel.recalculatePoints(this, modelIndex); 
+      bioModel.recalculatePoints(modelIndex); 
+  }
+
+  public BS getConformation(int modelIndex, int conformationIndex, boolean doSet, BS bsAtoms) {
+    BS bs = new BS();
+    if (haveBioModels)
+      bioModel.getConformations(modelIndex, conformationIndex, doSet, bsAtoms, bs); 
+    return bs;
   }
 
   /**
@@ -3980,13 +3681,13 @@ import java.util.Properties;
                                       boolean nucleicOnly, int nMax,
                                       boolean dsspIgnoreHydrogens, BS bsHBonds) {
     if (haveBioModels)
-      bioModel.calcAllRasmolHydrogenBonds(this, bsA, bsB, vHBonds, nucleicOnly,
+      bioModel.calcAllRasmolHydrogenBonds(bsA, bsB, vHBonds, nucleicOnly,
           nMax, dsspIgnoreHydrogens, bsHBonds);
   }
 
-  public void calculateStraightness() {
+  public void calculateStraightnessAll() {
     if (haveBioModels && !haveStraightness)
-      bioModel.calculateStraightnessAll(this);
+      bioModel.calculateStraightnessAll();
   }
 
   /** see comments in org.jmol.modelsetbio.AlphaPolymer.java
@@ -3999,16 +3700,16 @@ import java.util.Properties;
    * @return     number of struts found
    */
   public int calculateStruts(BS bs1, BS bs2) {
-    return (haveBioModels ? bioModel.calculateStruts(this, bs1, bs2) : 0);
+    return (haveBioModels ? bioModel.calculateStruts(bs1, bs2) : 0);
   }
   
   public BS getGroupsWithin(int nResidues, BS bs) {
-    return (haveBioModels ? bioModel.getGroupsWithinAll(this, nResidues, bs) : new BS());
+    return (haveBioModels ? bioModel.getGroupsWithinAll(nResidues, bs) : new BS());
   }
 
   public String getProteinStructureState(BS bsAtoms, boolean taintedOnly,
                                          boolean needPhiPsi, int mode) {
-    return (haveBioModels ? bioModel.getFullProteinStructureState(this, bsAtoms, taintedOnly,
+    return (haveBioModels ? bioModel.getFullProteinStructureState(bsAtoms, taintedOnly,
         needPhiPsi, mode) : "");
   }
 
@@ -4016,28 +3717,72 @@ import java.util.Properties;
                                     boolean doReport,
                                     boolean dsspIgnoreHydrogen,
                                     boolean setStructure) {
-    if (!haveBioModels)
-      return "";
-    BS bsAllAtoms = new BS();
-    BS bsModelsExcluded = BSUtil.copyInvert(modelsOf(bsAtoms, bsAllAtoms),
-        mc);
-    if (!setStructure)
-      return calculateStructuresAllExcept(bsModelsExcluded, asDSSP, doReport,
-          dsspIgnoreHydrogen, false, false);
-    recalculatePolymers(bsModelsExcluded);
-    String ret = calculateStructuresAllExcept(bsModelsExcluded, asDSSP, doReport,
-        dsspIgnoreHydrogen, true, false);
-    vwr.shm.resetBioshapes(bsAllAtoms);
-    setStructureIndexes();
-    return ret;
+    return (haveBioModels ? bioModel.calculateAllStuctures(bsAtoms, asDSSP, doReport, dsspIgnoreHydrogen, setStructure) : "");
   }
   
   public void recalculatePolymers(BS bsModelsExcluded) {
-    for (int i = 0; i < mc; i++)
-      if (!bsModelsExcluded.get(i))
-        am[i].clearBioPolymers();
-    calculatePolymers(getGroups(), -1, 0, bsModelsExcluded);
+    bioModel.recalculateAllPolymers(bsModelsExcluded, getGroups());
   }
 
+  protected void calculatePolymers(Group[] groups, int groupCount,
+                                   int baseGroupIndex, BS modelsExcluded) {
+    if (haveBioModels)
+      bioModel.calculateAllPolymers(groups, groupCount, baseGroupIndex,
+          modelsExcluded);
+  }
+
+
+  public void calcSelectedMonomersCount() {
+    if (haveBioModels)
+      bioModel.calcSelectedMonomersCount();
+  }
+
+
+  /**
+   * allows rebuilding of PDB structures; also accessed by ModelManager from
+   * Eval
+   * 
+   * @param alreadyDefined
+   *        set to skip calculation
+   * @param asDSSP
+   * @param doReport
+   * @param dsspIgnoreHydrogen
+   * @param setStructure
+   * @param includeAlpha
+   * @return report
+   * 
+   */
+  public String calculateStructuresAllExcept(BS alreadyDefined,
+                                                boolean asDSSP,
+                                                boolean doReport,
+                                                boolean dsspIgnoreHydrogen,
+                                                boolean setStructure,
+                                                boolean includeAlpha) {
+    freezeModels();
+    return (haveBioModels ? bioModel.calculateAllStructuresExcept(alreadyDefined, asDSSP, doReport, dsspIgnoreHydrogen, setStructure, includeAlpha): "");
+  }
+
+  public void setProteinType(BS bs, STR type) {
+    if (haveBioModels)
+      bioModel.setAllProteinType(bs, type);
+  }
+
+  public void setStructureList(Map<STR, float[]> structureList) {
+    if (haveBioModels)
+      bioModel.setAllStructureList(structureList);
+  }
+
+  public BS setConformation(BS bsAtoms) {
+    if (haveBioModels)
+      bioModel.setAllConformation(bsAtoms);
+    return bsAtoms;
+  }
+
+  @SuppressWarnings("unchecked")
+  public Map<String, String> getHeteroList(int modelIndex) {
+    Object o = (haveBioModels ? bioModel.getAllHeteroList(modelIndex) : null);
+    return (Map<String, String>) (o == null ? getInfoM("hetNames") : o);
+  }
+  
 }
 

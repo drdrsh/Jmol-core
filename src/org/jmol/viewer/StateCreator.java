@@ -350,27 +350,15 @@ public class StateCreator extends JmolStateCreator {
           if (symmetry == null)
             continue;
           commands.append("  frame ").append(ms.getModelNumberDotted(i));
-          P3 pt = symmetry.getFractionalOffset();
-          if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
-            commands.append("; set unitcell ").append(Escape.eP(pt));
+          if (symmetry.getState(commands))
             loadUC = true;
-          }
-          pt = symmetry.getUnitCellMultiplier();
-          if (pt != null) {
-            commands.append("; set unitcell ").append(Escape.eP(pt));
-            loadUC = true;
-          }
           commands.append(";\n");
           haveModulation |= (vwr.ms.getLastVibrationVector(i, T.modulation) >= 0);
         }
         if (loadUC)
           vwr.shm.loadShape(JC.SHAPE_UCCAGE); // just in case
         getShapeState(commands, isAll, JC.SHAPE_UCCAGE);
-        //        if (vwr.getObjectMad(StateManager.OBJ_UNITCELL) == 0)
-        //        commands.append("  unitcell OFF;\n");
         if (haveModulation) {
-          //commands.append("  modulation fps "
-          //  + vwr.am.modulationFps + ";\n");
           Map<String, BS> temp = new Hashtable<String, BS>();
           int ivib;
           for (int i = modelCount; --i >= 0;) {
@@ -381,8 +369,7 @@ public class StateCreator extends JmolStateCreator {
                   BSUtil.setMapBitSet(temp, j, j, mset.getState());
               }
           }
-          String s = getCommands(temp, null, "select");
-          commands.append(s);
+          commands.append(getCommands(temp, null, "select"));
         }
       }
       commands.append("  set fontScaling " + vwr.getBoolean(T.fontscaling)
@@ -732,7 +719,8 @@ public class StateCreator extends JmolStateCreator {
       sfunc.append("  _setSelectionState;\n");
       commands.append("function _setSelectionState() {\n");
     }
-    app(commands, getTrajectoryState());
+    if (vwr.ms.trajectory != null)
+      app(commands, vwr.ms.trajectory.getState());
     Map<String, BS> temp = new Hashtable<String, BS>();
     String cmd = null;
     addBs(commands, "hide ", sm.bsHidden);
@@ -753,24 +741,6 @@ public class StateCreator extends JmolStateCreator {
     if (sfunc != null)
       commands.append("}\n\n");
     return commands.toString();
-  }
-
-  @Override
-  String getTrajectoryState() {
-    String s = "";
-    ModelSet m = vwr.ms;
-    if (m.trajectorySteps == null)
-      return "";
-    for (int i = m.mc; --i >= 0;) {
-      int t = m.am[i].selectedTrajectory;
-      if (t >= 0) {
-        s = " or " + m.getModelNumberDotted(t) + s;
-        i = m.am[i].trajectoryBaseIndex; //skip other trajectories
-      }
-    }
-    if (s.length() > 0)
-      s = "set trajectory {" + s.substring(4) + "}";
-    return s;
   }
 
   private String getViewState(TransformManager tm, SB sfunc) {

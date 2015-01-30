@@ -56,6 +56,7 @@ import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
+import org.jmol.modelset.JmolBioModel;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
@@ -797,7 +798,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       model.put("bondCount", Integer.valueOf(mi.getBondCount()));
       model.put("groupCount", Integer.valueOf(mi.getGroupCount()));
       model.put("moleculeCount", Integer.valueOf(mi.moleculeCount));
-      model.put("polymerCount", Integer.valueOf(mi.getBioPolymerCount()));
+      if (mi.isBioModel)
+        model.put("polymerCount", Integer.valueOf(((JmolBioModel) mi).getBioPolymerCount()));
       model.put("chainCount", Integer.valueOf(m.getChainCountInModelWater(i, true)));
       if (mi.properties != null) {
         model.put("modelProperties", mi.properties);
@@ -1104,8 +1106,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     //012345678901234567890123456789012
     
     if (ms.isTrajectory(a.mi))
-      a.setFractionalCoordPt(ptTemp, ms.trajectorySteps.get(a.mi)[a.i
-          - ms.am[a.mi].firstAtomIndex], true);
+      ms.trajectory.getFractional(a, ptTemp);
     else
       pTemp.setT(a);
     if (q != null)
@@ -1210,7 +1211,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       return getChimeInfoA(vwr.ms.at, tok, bs);
     }
     SB sb = new SB();
-    vwr.ms.am[0].getAllChimeInfo(sb);
+    vwr.getChimeMessenger().getAllChimeInfo(sb);
     return sb.appendC('\n').toString().substring(1);
   }
 
@@ -1490,7 +1491,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     Model[] models = vwr.ms.am;
     for (int i = 0; i < modelCount; ++i)
       if (models[i].isBioModel)
-        models[i].getPolymerInfo(bs, finalInfo, modelVector);
+        ((JmolBioModel) models[i]).getAllPolymerInfo(bs, finalInfo, modelVector);
     finalInfo.put("models", modelVector);
     return finalInfo;
   }
@@ -1834,8 +1835,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     if (parameters == null) {
       ctype = (type.length() > 11 && type.indexOf("quaternion ") >= 0 ? type
           .charAt(11) : 'R');
-      model.getPdbData(vwr, type, ctype, isDraw, bsSelected, out, tokens,
-          pdbCONECT, bsWritten);
+      ((JmolBioModel) model).getPdbData(type, ctype, isDraw, bsSelected, out, tokens, pdbCONECT,
+          bsWritten);
       bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     } else {
       // plot property x y z....

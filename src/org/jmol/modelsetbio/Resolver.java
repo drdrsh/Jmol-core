@@ -1738,6 +1738,10 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
 
   @Override
   public boolean mutate(int iatom, String fileName) {
+    // no mutating a trajectory. What would that mean???
+    if (vwr.ms.isTrajectory(vwr.ms.at[iatom].mi))
+      return false; 
+    
     String[] info = vwr.fm.getFileInfo();
     boolean b = vwr.getBoolean(T.appendnew);
     Group g = vwr.ms.at[iatom].group;
@@ -1750,6 +1754,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       BS bsRes0 = new BS();
       res0.setAtomBits(bsRes0);
       int r = g.getResno();
+      
       // just use a script -- it is much easier!
       
       String script = "try{var atoms0 = {*}\n"

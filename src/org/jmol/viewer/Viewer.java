@@ -2305,7 +2305,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
       ms.getSurfaceDistanceMax();
       break;
     case T.straightness:
-      ms.calculateStraightness();
+      ms.calculateStraightnessAll();
       break;
     }
   }
@@ -2326,7 +2326,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   public void calculateStraightness() {
     ms.haveStraightness = false;
-    ms.calculateStraightness();
+    ms.calculateStraightnessAll();
   }
 
   public P3[] calculateSurface(BS bsSelected, float envelopeRadius) {
@@ -3035,8 +3035,11 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
 
   @Override
   public BS getVisibleFramesBitSet() {
-    return ms.selectDisplayedTrajectories(BSUtil
-        .copy(am.bsVisibleModels));
+    BS bs = BSUtil.copy(am.bsVisibleModels);
+    if (ms.trajectory != null)
+      ms.trajectory.selectDisplayed(bs);
+    return bs;
+
   }
 
   public BS getFrameAtoms() {
@@ -3066,7 +3069,7 @@ public class Viewer extends JmolViewer implements AtomDataServer, PlatformViewer
   }
 
   public String getTrajectoryState() {
-    return getStateCreator().getTrajectoryState();
+      return (ms.trajectory == null ? "" : ms.trajectory.getState());
   }
 
   BS bsFrameOffsets;

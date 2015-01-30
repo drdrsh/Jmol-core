@@ -212,9 +212,8 @@ public abstract class BioShapeCollection extends Shape {
     if (bioShapes == null)
       return;
     bsModels = BSUtil.copy(bsModels);
-    for (int i = ms.mc; --i >= 0; )
-      if (bsModels.get(i) && ms.isTrajectory(i))
-        bsModels.set(ms.am[i].trajectoryBaseIndex);    
+    if (ms.trajectory != null)
+      ms.trajectory.setBaseModels(bsModels);
     for (int i = bioShapes.length; --i >= 0;) {
       BioShape b = bioShapes[i];
       b.modelVisibilityFlags = (bsModels.get(b.modelIndex) ? vf : 0);

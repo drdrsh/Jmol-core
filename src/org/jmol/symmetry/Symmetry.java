@@ -33,8 +33,11 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import javajs.util.Lst;
 
+import org.jmol.script.T;
 import org.jmol.util.JmolMolecule;
 import javajs.util.P3;
+
+import org.jmol.util.Escape;
 import org.jmol.util.Tensor;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
@@ -45,6 +48,7 @@ import javajs.util.M4;
 import javajs.util.Matrix;
 import javajs.util.P3i;
 import javajs.util.Quat;
+import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -695,6 +699,35 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public T3 getFractionalOrigin() {
     return unitCell.getFractionalOrigin();
+  }
+
+  @Override
+  public void setAxes(float scale, P3[] axisPoints, P3 fixedOrigin, P3 originPoint) {
+    P3[] vertices = getUnitCellVertices();
+    P3 offset = getCartesianOffset();
+    if (fixedOrigin == null)
+      originPoint.add2(offset, vertices[0]);
+    else 
+      offset = fixedOrigin;
+    axisPoints[0].scaleAdd2(scale, vertices[4], offset);
+    axisPoints[1].scaleAdd2(scale, vertices[2], offset);
+    axisPoints[2].scaleAdd2(scale, vertices[1], offset);
+  }
+
+  @Override
+  public boolean getState(SB commands) {
+    P3 pt = getFractionalOffset();
+    boolean loadUC = false;
+    if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
+      commands.append("; set unitcell ").append(Escape.eP(pt));
+      loadUC = true;
+    }
+    pt = getUnitCellMultiplier();
+    if (pt != null) {
+      commands.append("; set unitcell ").append(Escape.eP(pt));
+      loadUC = true;
+    }
+    return loadUC;
   }
 
 }

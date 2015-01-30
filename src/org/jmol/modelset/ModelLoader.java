@@ -164,17 +164,17 @@ public final class ModelLoader {
     ms.modelSetTypeName = name;
     ms.isXYZ = (name == "xyz");
     ms.msInfo = info;
-    ms.modelSetProperties = (Properties) ms
-        .getInfoM("properties");
+    ms.modelSetProperties = (Properties) ms.getInfoM("properties");
     //isMultiFile = getModelSetAuxiliaryInfoBoolean("isMultiFile"); -- no longer necessary
     ms.haveBioModels = ms.getMSInfoB("isPDB");
     if (ms.haveBioModels)
       jbr = vwr.getJBR().setLoader(this);
     jmolData = (String) ms.getInfoM("jmolData");
     fileHeader = (String) ms.getInfoM("fileHeader");
-    ms.trajectorySteps = (Lst<P3[]>) ms
-        .getInfoM("trajectorySteps");
-    isTrajectory = (ms.trajectorySteps != null);
+    Lst<P3[]> steps = (Lst<P3[]>) ms.getInfoM("trajectorySteps");
+    isTrajectory = (steps != null);
+    if (isTrajectory)
+      ms.trajectory = newTrajectory(ms, steps);
     isPyMOLsession = ms.getMSInfoB("isPyMOL");
     doAddHydrogens = (jbr != null && !isTrajectory && !isPyMOLsession
         && !ms.getMSInfoB("pdbNoHydrogens") && (ms
@@ -200,14 +200,10 @@ public final class ModelLoader {
     noAutoBond = ms.getMSInfoB("noAutoBond");
     is2D = ms.getMSInfoB("is2D");
     doMinimize = is2D && ms.getMSInfoB("doMinimize");
-    adapterTrajectoryCount = (ms.trajectorySteps == null ? 0
-        : ms.trajectorySteps.size());
-    ms.someModelsHaveSymmetry = ms
-        .getMSInfoB("someModelsHaveSymmetry");
-    someModelsHaveUnitcells = ms
-        .getMSInfoB("someModelsHaveUnitcells");
-    someModelsAreModulated = ms
-        .getMSInfoB("someModelsAreModulated");
+    adapterTrajectoryCount = (isTrajectory ? ms.trajectory.steps.size() : 0);
+    ms.someModelsHaveSymmetry = ms.getMSInfoB("someModelsHaveSymmetry");
+    someModelsHaveUnitcells = ms.getMSInfoB("someModelsHaveUnitcells");
+    someModelsAreModulated = ms.getMSInfoB("someModelsAreModulated");
     ms.someModelsHaveFractionalCoordinates = ms
         .getMSInfoB("someModelsHaveFractionalCoordinates");
     if (merging) {
@@ -229,6 +225,10 @@ public final class ModelLoader {
       ms.msInfo.put("someModelsHaveAromaticBonds",
           Boolean.valueOf(ms.someModelsHaveAromaticBonds));
     }
+  }
+
+  private Trajectory newTrajectory(ModelSet ms, Lst<P3[]> steps) {
+    return ((Trajectory) Interface.getInterface("org.jmol.modelset.Trajectory", vwr, "load")).set(vwr, ms, steps);
   }
 
   private final Map<Object, Atom> htAtomMap = new Hashtable<Object, Atom>();
@@ -298,25 +298,8 @@ public final class ModelLoader {
     currentGroup3 = "xxxxx";
     iModel = -1;
     model = null;
-    if (merging) {
-      baseModelCount = mergeModelSet.mc;
-      baseTrajectoryCount = mergeModelSet.mergeTrajectories(isTrajectory);
-      if (baseTrajectoryCount > 0) {
-        if (isTrajectory) {
-          if (mergeModelSet.vibrationSteps == null) {
-            mergeModelSet.vibrationSteps = new  Lst<V3[]>();
-            for (int i = mergeModelSet.trajectorySteps.size(); --i >= 0; )
-              mergeModelSet.vibrationSteps.addLast(null);
-          }
-          for (int i = 0; i < ms.trajectorySteps.size(); i++) {
-            mergeModelSet.trajectorySteps.addLast(ms.trajectorySteps.get(i));
-            mergeModelSet.vibrationSteps.addLast(ms.vibrationSteps == null ? null  : ms.vibrationSteps.get(i));
-          }
-        }
-        ms.trajectorySteps = mergeModelSet.trajectorySteps;
-        ms.vibrationSteps = mergeModelSet.vibrationSteps;
-      }
-    }
+    if (merging)
+      mergeTrajAndVib(mergeModelSet, ms);
     initializeAtomBondModelCounts(nAtoms);
     if (bsNew != null && (doMinimize || is2D)) {
       bsNew.setBits(baseAtomIndex, baseAtomIndex + nAtoms);
@@ -394,6 +377,38 @@ public final class ModelLoader {
     mergeModelSet = null;
   }
 
+  private void mergeTrajAndVib(ModelSet oldSet, ModelSet newSet) {
+    // merge is the OLD set
+    baseModelCount = oldSet.mc;
+    baseTrajectoryCount = 0;
+    if (oldSet.trajectory == null) {
+      if (isTrajectory)
+        newTrajectory(oldSet, new Lst<P3[]>());
+    }
+    if (oldSet.trajectory == null || oldSet.mc == 0)
+      return;
+    baseTrajectoryCount = oldSet.mc;
+    int  n = oldSet.trajectory.steps.size();
+    for (int i = n; i < baseTrajectoryCount; i++)
+      oldSet.trajectory.steps.addLast(null);
+    if (isTrajectory) {
+      if (oldSet.vibrationSteps == null) {
+        oldSet.vibrationSteps = new Lst<V3[]>();
+        for (int i = n; --i >= 0;)
+          oldSet.vibrationSteps.addLast(null);
+      }
+      n = newSet.trajectory.steps.size();
+      for (int i = 0; i < n; i++) {
+        oldSet.trajectory.steps.addLast(newSet.trajectory.steps.get(i));
+        oldSet.vibrationSteps.addLast(newSet.vibrationSteps == null ? null
+            : newSet.vibrationSteps.get(i));
+      }
+    }
+    newSet.vibrationSteps = oldSet.vibrationSteps;
+    newSet.trajectory.steps = oldSet.trajectory.steps;
+    oldSet.trajectory = null;
+  }
+
   private void setDefaultRendering(int maxAtoms) {
     if (isPyMOLsession)
       return;
@@ -402,7 +417,7 @@ public final class ModelLoader {
     Model[] models = ms.am;
     for (int i = baseModelIndex; i < modelCount; i++)
       if (models[i].isBioModel)
-        models[i].getDefaultLargePDBRendering(sb, maxAtoms);
+        ((JmolBioModel) models[i]).getDefaultLargePDBRendering(sb, maxAtoms);
     if (sb.length() == 0)
       return;
     sb.append("select *;");
@@ -1069,17 +1084,9 @@ public final class ModelLoader {
             PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);          
         }
       }
-      for (int imodel = baseModelIndex; imodel < ms.mc; imodel++) {
-        if (ms.isTrajectory(imodel)) {
-          c = ms.getUnitCell(imodel);
-          if (c != null && c.getCoordinatesAreFractional() && c.isSupercell()) {
-            P3[] list = ms.trajectorySteps.get(imodel);
-            for (int i = list.length; --i >= 0;)
-              if (list[i] != null)
-                c.toSupercell(list[i]);
-          }
-        }
-      }
+      for (int imodel = baseModelIndex; imodel < ms.mc; imodel++)
+        if (ms.isTrajectory(imodel))
+          ms.trajectory.setUnitCell(imodel);
     }
   }
 
