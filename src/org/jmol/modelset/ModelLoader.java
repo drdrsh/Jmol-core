@@ -620,7 +620,7 @@ public final class ModelLoader {
     models[modelIndex].bsAtoms.set(atoms.length + 1);
     models[modelIndex].bsAtoms.clear(atoms.length + 1);
     String codes = (String) ms.getInfo(modelIndex, "altLocs");
-    models[modelIndex].nAltLocs = (codes == null ? 0 : codes.length());
+    models[modelIndex].altLocCount = (codes == null ? 0 : codes.length());
     if (codes != null) {
       char[] altlocs = codes.toCharArray();
       Arrays.sort(altlocs);
@@ -628,7 +628,7 @@ public final class ModelLoader {
       ms.setInfo(modelIndex, "altLocs", codes);
     }
     codes = (String) ms.getInfo(modelIndex, "insertionCodes");
-    models[modelIndex].nInsertions = (codes == null ? 0 : codes.length());
+    models[modelIndex].insertionCount = (codes == null ? 0 : codes.length());
     boolean isModelKit = (ms.modelSetName != null
         && ms.modelSetName.startsWith("Jmol Model Kit")
         || modelName.startsWith("Jmol Model Kit") || "Jme"

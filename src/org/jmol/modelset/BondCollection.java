@@ -706,12 +706,11 @@ abstract public class BondCollection extends AtomCollection {
   }
 
   protected BS getAtomBitsMDb(int tokType, Object specInfo) {
-    BS bs;
+    BS bs = new BS();
     switch (tokType) {
     default:
-      return getAtomBitsMDa(tokType, specInfo);
+      return getAtomBitsMDa(tokType, specInfo, bs);
     case T.bonds:
-      bs = new BS();
       BS bsBonds = (BS) specInfo;
       for (int i = bsBonds.nextSetBit(0); i >= 0; i = bsBonds.nextSetBit(i + 1)) {
         bs.set(bo[i].atom1.i);
@@ -719,7 +718,6 @@ abstract public class BondCollection extends AtomCollection {
       }
       return bs;
     case T.isaromatic:
-      bs = new BS();
       for (int i = bondCount; --i >= 0;)
         if (bo[i].isAromatic()) {
           bs.set(bo[i].atom1.i);

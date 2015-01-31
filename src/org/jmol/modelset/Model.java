@@ -82,77 +82,56 @@ public class Model {
 
   public int modelIndex; // our 0-based reference
   int fileIndex; // 0-based file reference
-
-  public int hydrogenCount;
   public boolean isBioModel;
   public boolean isPdbWithMultipleBonds;
-  protected boolean hasRasmolHBonds;
+  public boolean isModelKit;
+
+
+  public Chain[] chains = new Chain[8];
+
+  public SymmetryInterface simpleCage;
+  public Map<String, Object> dssrCache;
+  public Orientation orientation;
+  protected Map<String, Object> auxiliaryInfo;
+  public Properties properties;
+  public SymmetryInterface biosymmetry;
+  Map<String, Integer> dataFrames;
+
+  int dataSourceFrame = -1;
+
 
   public String loadState = "";
   public SB loadScript = new SB();
 
-  public boolean isModelKit;
+  protected boolean hasRasmolHBonds;
+  public boolean structureTainted;
+  public boolean isJmolDataFrame;
+  boolean isTrajectory;
 
-  public boolean isModelkit() {
-    return isModelKit;
-  }
-
-  Map<String, Integer> dataFrames;
-  int dataSourceFrame = -1;
-  String jmolData; // from a PDB remark "Jmol PDB-encoded data"
-  String jmolFrameType;
-
-  // set in ModelLoader phase:
+  public int trajectoryBaseIndex;
+  
+  public int altLocCount;
+  int insertionCount;
+  public int act = 0; // atom count; includes deleted atoms
+  private int bondCount = -1;
+  protected int chainCount = 0;
+  public int groupCount = -1;
+  public int hydrogenCount;
+  public int moleculeCount;
+  int biosymmetryCount;
+  
   public int firstAtomIndex;
-  public int ac = 0; // includes deleted atoms
+  int firstMoleculeIndex;
+  
   public final BS bsAtoms = new BS();
   public final BS bsAtomsDeleted = new BS();
 
-  // this one is variable and calculated only if necessary:
-  public int getTrueAtomCount() {
-    return bsAtoms.cardinality() - bsAtomsDeleted.cardinality();
-  }
-
-  public int trajectoryBaseIndex;
-  boolean isTrajectory;
+  float defaultRotationRadius;
+  public long frameDelay;
   public int selectedTrajectory = -1;
 
-  private int bondCount = -1;
-
-  public void resetBoundCount() {
-    bondCount = -1;
-  }
-
-  public int getBondCount() {
-    if (bondCount >= 0)
-      return bondCount;
-    Bond[] bonds = ms.bo;
-    bondCount = 0;
-    for (int i = ms.bondCount; --i >= 0;)
-      if (bonds[i].atom1.mi == modelIndex)
-        bondCount++;
-    return bondCount;
-  }
-
-  int firstMoleculeIndex;
-  public int moleculeCount;
-
-  public int nAltLocs;
-  int nInsertions;
-
-  public int groupCount = -1;
-
-  protected int chainCount = 0;
-  public Chain[] chains = new Chain[8];
-
-  int biosymmetryCount;
-
-  protected Map<String, Object> auxiliaryInfo;
-  public Properties properties;
-  float defaultRotationRadius;
-  public SymmetryInterface biosymmetry;
-
-  public Orientation orientation;
+  String jmolData; // from a PDB remark "Jmol PDB-encoded data"
+  String jmolFrameType;
 
   public Model() {
     
@@ -187,11 +166,29 @@ public class Model {
     return this;
   }
 
-  public boolean structureTainted;
-  public boolean isJmolDataFrame;
-  public long frameDelay;
-  public SymmetryInterface simpleCage;
-  public Map<String, Object> dssrCache;
+  /**
+   * not actually accessed -- just pointing out what it is
+   * @return 
+   */
+  // this one is variable and calculated only if necessary:
+  public int getTrueAtomCount() {
+    return bsAtoms.cardinality() - bsAtomsDeleted.cardinality();
+  }
+
+  public void resetBoundCount() {
+    bondCount = -1;
+  }
+
+  public int getBondCount() {
+    if (bondCount >= 0)
+      return bondCount;
+    Bond[] bonds = ms.bo;
+    bondCount = 0;
+    for (int i = ms.bondCount; --i >= 0;)
+      if (bonds[i].atom1.mi == modelIndex)
+        bondCount++;
+    return bondCount;
+  }
 
   public int getChainCount(boolean countWater) {
     if (chainCount > 1 && !countWater)

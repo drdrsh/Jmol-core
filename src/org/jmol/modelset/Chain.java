@@ -99,7 +99,7 @@ public final class Chain {
       groups[i].fixIndices(atomsDeleted, bsDeleted);
   }
 
-  void setAtomBits(BS bs) {
+  public void setAtomBits(BS bs) {
     for (int i = 0; i < groupCount; i++)
       groups[i].setAtomBits(bs);
   }

@@ -166,11 +166,6 @@ public class Atom extends Point3fi implements BNode {
     setShapeVisibility(stickVisibilityFlag, (nBondsDisplayed > 0));
   } 
   
-  public void addDisplayedBackbone(int backboneVisibilityFlag, boolean isVisible) {
-    nBackbonesDisplayed += (isVisible ? 1 : -1);
-    setShapeVisibility(backboneVisibilityFlag, isVisible);
-  }
-  
   void deleteBond(Bond bond) {
     // this one is used -- from Bond.deleteAtomReferences
     if (bonds != null)
@@ -354,17 +349,6 @@ public class Atom extends Point3fi implements BNode {
   
   public String getElementSymbol() {
     return getElementSymbolIso(true);
-  }
-
-  boolean isAltLoc(String strPattern) {
-    if (strPattern == null)
-      return (altloc == '\0');
-    if (strPattern.length() != 1)
-      return false;
-    char ch = strPattern.charAt(0);
-    return (ch == '*' 
-        || ch == '?' && altloc != '\0' 
-        || altloc == ch);
   }
 
   public boolean isHetero() {
@@ -913,10 +897,6 @@ public class Atom extends Point3fi implements BNode {
   @Override
   public boolean isProtein() {
     return group.isProtein();
-  }
-
-  boolean isCarbohydrate() {
-    return group.isCarbohydrate();
   }
 
   @Override

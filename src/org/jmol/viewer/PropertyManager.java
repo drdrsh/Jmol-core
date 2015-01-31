@@ -794,7 +794,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
         model.put("id", s);
       model.put("vibrationVectors", Boolean.valueOf(vwr.modelHasVibrationVectors(i)));
       Model mi = m.am[i];
-      model.put("atomCount", Integer.valueOf(mi.ac));
+      model.put("atomCount", Integer.valueOf(mi.act));
       model.put("bondCount", Integer.valueOf(mi.getBondCount()));
       model.put("groupCount", Integer.valueOf(mi.getGroupCount()));
       model.put("moleculeCount", Integer.valueOf(mi.moleculeCount));
@@ -808,7 +808,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       if (energy != null) {
         model.put("energy", energy);
       }
-      model.put("atomCount", Integer.valueOf(mi.ac));
+      model.put("atomCount", Integer.valueOf(mi.act));
       vModels.addLast(model);
     }
     info.put("models", vModels);

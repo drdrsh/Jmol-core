@@ -263,7 +263,7 @@ public class DSSP implements DSSPInterface {
     if (setStructure && m.modelIndex == 0)
       sb.append("\nAll bioshapes have been deleted and must be regenerated.\n");
 
-    if (m.nAltLocs > 0)
+    if (m.altLocCount > 0)
       sb
           .append("\nNote: This model contains alternative locations. Use  'CONFIGURATION 1' to be consistent with CMBI DSSP.\n");
 

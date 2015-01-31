@@ -37,10 +37,10 @@ import java.util.Properties;
 
 import org.jmol.api.DSSPInterface;
 import org.jmol.api.Interface;
+import org.jmol.api.JmolAnnotationParser;
 import org.jmol.c.STR;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
-import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
@@ -49,10 +49,13 @@ import org.jmol.modelset.JmolBioModel;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
+import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Edge;
+import org.jmol.util.Logger;
+
 import javajs.util.P3;
 
 
@@ -129,7 +132,7 @@ public final class BioModel extends Model implements JmolBioModel {
     for (int i = 0; i < ms.ac;) {
       int modelIndex = at[i].mi;
       if (!bsModels.get(modelIndex)) {
-        i = am[modelIndex].firstAtomIndex + am[modelIndex].ac;
+        i = am[modelIndex].firstAtomIndex + am[modelIndex].act;
         continue;
       }
       iLast = at[i].group.getStrucNo();
@@ -137,10 +140,10 @@ public final class BioModel extends Model implements JmolBioModel {
         lastStrucNo[modelIndex] = iLast;
       i = at[i].group.lastAtomIndex + 1;
     }
-    for (int i = 0; i < ac;) {
+    for (int i = 0; i < ms.ac;) {
       int modelIndex = at[i].mi;
       if (!bsModels.get(modelIndex)) {
-        i = am[modelIndex].firstAtomIndex + am[modelIndex].ac;
+        i = am[modelIndex].firstAtomIndex + am[modelIndex].act;
         continue;
       }
       if (at[i].group.getStrucNo() > 1000)
@@ -248,7 +251,7 @@ public final class BioModel extends Model implements JmolBioModel {
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
       if (ms.am[i].isBioModel) {
         BioModel m = (BioModel) ms.am[i];
-        if (m.nAltLocs > 0)
+        if (m.altLocCount > 0)
           for (int j = m.bioPolymerCount; --j >= 0;)
             m.bioPolymers[j].setConformation(bsAtoms);
       }
@@ -354,15 +357,14 @@ public final class BioModel extends Model implements JmolBioModel {
     return bsResult;
   }
 
-  @Override
-  public BS getSelectCodeRange(int[] info) {
+  private BS getSelectCodeRange(int[] info) {
     BS bs = new BS();
     int seqcodeA = info[0];
     int seqcodeB = info[1];
     int chainID = info[2];
     boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
     if (chainID >= 0 && chainID < 300 && !caseSensitive)
-      chainID = AtomCollection.chainToUpper(chainID);
+      chainID = ms.chainToUpper(chainID);
     for (int iModel = ms.mc; --iModel >= 0;)
       if (ms.am[iModel].isBioModel) {
         BioModel m = (BioModel) ms.am[iModel];
@@ -370,7 +372,7 @@ public final class BioModel extends Model implements JmolBioModel {
         for (int i = m.chainCount; --i >= 0;) {
           Chain chain = m.chains[i];
           if (chainID == -1 || chainID == (id = chain.chainID) || !caseSensitive
-              && id > 0 && id < 300 && chainID == AtomCollection.chainToUpper(id)) {
+              && id > 0 && id < 300 && chainID == ms.chainToUpper(id)) {
             Group[] groups = chain.groups;
             int n = chain.groupCount;
             for (int index = 0; index >= 0;) 
@@ -667,30 +669,30 @@ public final class BioModel extends Model implements JmolBioModel {
     return "";
   }
 
-
-
   @Override
   public BS getAllSequenceBits(String specInfo, BS bs) {
     BS bsResult = new BS();
-    if (bs == null)
-      bs = vwr.getAllAtoms();
-    Model[] am = ms.am;
-    for (int i = ms.mc; --i >= 0;)
-      if (am[i].isBioModel) {
-        BioModel m = (BioModel) am[i];
-        int lenInfo = specInfo.length();
-        for (int ip = 0; ip < m.bioPolymerCount; ip++) {
-          String sequence = m.bioPolymers[ip].getSequence();
-          int j = -1;
-          while ((j = sequence.indexOf(specInfo, ++j)) >= 0)
-            m.bioPolymers[ip].getPolymerSequenceAtoms(j, lenInfo, bs, bsResult);
+    if (specInfo.length() > 0) {
+      if (bs == null)
+        bs = vwr.getAllAtoms();
+      Model[] am = ms.am;
+      for (int i = ms.mc; --i >= 0;)
+        if (am[i].isBioModel) {
+          BioModel m = (BioModel) am[i];
+          int lenInfo = specInfo.length();
+          for (int ip = 0; ip < m.bioPolymerCount; ip++) {
+            String sequence = m.bioPolymers[ip].getSequence();
+            int j = -1;
+            while ((j = sequence.indexOf(specInfo, ++j)) >= 0)
+              m.bioPolymers[ip].getPolymerSequenceAtoms(j, lenInfo, bs,
+                  bsResult);
+          }
         }
-      }
+    }
     return bsResult;
   }
   
-  @Override
-  public BS getAllBasePairBits(String specInfo) {
+  private BS getAllBasePairBits(String specInfo) {
     BS bsA = null;
     BS bsB = null;
     Lst<Bond> vHBonds = new Lst<Bond>();
@@ -954,10 +956,11 @@ public final class BioModel extends Model implements JmolBioModel {
       if (nAltLocs > 0)
         for (int i = bioPolymerCount; --i >= 0;)
           bioPolymers[i].getConformation(bsConformation, conformationIndex);
+      BS bs = new BS();
       for (int c = nAltLocs; --c >= 0;)
         if (c != conformationIndex)
-          bsConformation.andNot(ms.getAtomBitsMDa(T.spec_alternate,
-              altLocs.substring(c, c + 1)));
+          bsConformation.andNot(getAtomBits(T.spec_alternate,
+              altLocs.substring(c, c + 1), bs));
     }
     if (bsConformation.nextSetBit(0) >= 0) {
       bsRet.or(bsConformation);      
@@ -1126,7 +1129,7 @@ public final class BioModel extends Model implements JmolBioModel {
     }
     if (bs2.nextSetBit(0) >= 0)
       sb.append("select ").append(Escape.eBS(bs2)).append(";backbone only;");
-    if (ac <= maxAtoms)
+    if (act <= maxAtoms)
       return;
     // ...and it's a large model, to wireframe:
       sb.append("select ").append(Escape.eBS(bs)).append(" & connected; wireframe only;");
@@ -1140,5 +1143,223 @@ public final class BioModel extends Model implements JmolBioModel {
     }
   }
   
+  @Override
+  public BS getAtomBits(int tokType, Object specInfo, BS bs) {
+    BS bsInfo;
+
+    // this first set does not assume sequential order in the file
+
+    Atom[] at = ms.at;
+    int ac = ms.ac;
+    int i = 0;
+    switch (tokType) {
+    case T.protein:
+      for (i = ac; --i >= 0;)
+        if (at[i].isProtein())
+          bs.set(i);
+      break;
+    case T.carbohydrate:
+      for (i = ac; --i >= 0;)
+        if (at[i].group.isCarbohydrate())
+          bs.set(i);
+      break;
+    case T.helix: // WITHIN -- not ends
+    case T.sheet: // WITHIN -- not ends
+      STR type = (tokType == T.helix ? STR.HELIX
+          : STR.SHEET);
+      for (i = ac; --i >= 0;)
+        if (at[i].group.isWithinStructure(type))
+          bs.set(i);
+      break;
+    case T.nucleic:
+      for (i = ac; --i >= 0;)
+        if (at[i].isNucleic())
+          bs.set(i);
+      break;
+    case T.dna:
+      for (i = ac; --i >= 0;)
+        if (at[i].isDna())
+          bs.set(i);
+      break;
+    case T.rna:
+      for (i = ac; --i >= 0;)
+        if (at[i].isRna())
+          bs.set(i);
+      break;
+    case T.purine:
+      for (i = ac; --i >= 0;)
+        if (at[i].isPurine())
+          bs.set(i);
+      break;
+    case T.pyrimidine:
+      for (i = ac; --i >= 0;)
+        if (at[i].isPyrimidine())
+          bs.set(i);
+      break;
+    }
+    if (i < 0)
+      return bs;
+
+    // these next assume sequential position in the file
+    // speeding delivery -- Jmol 11.9.24
+
+    // TODO WHAT ABOUT MUTATED?
+
+    bsInfo = (BS) specInfo;
+    int i0 = bsInfo.nextSetBit(0);
+    if (i0 < 0)
+      return bs;    
+    i = 0;
+    switch (tokType) {
+    case T.chain:
+      bsInfo = BSUtil.copy((BS) specInfo);
+      for (i = bsInfo.nextSetBit(0); i >= 0; i = bsInfo.nextSetBit(i + 1)) {
+        Chain chain = at[i].group.chain;
+        chain.setAtomBits(bs);
+        bsInfo.andNot(bs);
+      }
+      break;
+    case T.polymer:
+      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
+        if (bs.get(i))
+          continue;
+        int iPolymer = at[i].group.getBioPolymerIndexInModel();
+        bs.set(i);
+        for (int j = i; --j >= 0;)
+          if (at[j].group.getBioPolymerIndexInModel() == iPolymer)
+            bs.set(j);
+          else
+            break;
+        for (; ++i < ac;)
+          if (at[i].group.getBioPolymerIndexInModel() == iPolymer)
+            bs.set(i);
+          else
+            break;
+      }
+      break;
+    case T.structure:
+      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
+        if (bs.get(i))
+          continue;
+        Object structure = at[i].group.getStructure();
+        bs.set(i);
+        for (int j = i; --j >= 0;)
+          if (at[j].group.getStructure() == structure)
+            bs.set(j);
+          else
+            break;
+        for (; ++i < ac;)
+          if (at[i].group.getStructure() == structure)
+            bs.set(i);
+          else
+            break;
+      }
+      break;
+    }
+    if (i == 0)
+      Logger.error("MISSING getAtomBits entry for " + T.nameOf(tokType));
+    return bs;
+  }
+
+  @Override
+  public BS getAtomBitsMaybeDeleted(int tokType, Object specInfo, BS bs) {
+    switch (tokType) {
+    default:
+      return new BS();
+    case T.domains:
+      return getAnnotationBits("domains", T.domains, (String) specInfo);
+    case T.validation:
+      return getAnnotationBits("validation", T.validation, (String) specInfo);
+      //    case T.annotations:
+      //      TODO -- generalize this
+    case T.dssr:
+      return getAnnotationBits("dssr", T.dssr, (String) specInfo);
+    case T.rna3d:
+      return getAnnotationBits("rna3d", T.rna3d, (String) specInfo);
+    case T.basepair:
+      String s = (String) specInfo;
+      bs = new BS();
+      return (s.length() % 2 != 0 ? bs 
+          : ms.getAtomBitsMDa(T.group, getAllBasePairBits(s), bs));
+    case T.sequence:
+      return getAllSequenceBits((String) specInfo, null);
+    case T.spec_seqcode_range:
+      return getSelectCodeRange((int[]) specInfo);
+    }
+  }
+
+  private BS getAnnotationBits(String name, int tok, String specInfo) {
+    BS bs = new BS();
+    JmolAnnotationParser pa = vwr.getAnnotationParser();
+    Object ann;
+    for (int i = ms.mc; --i >= 0;)
+      if ((ann = ms.getInfo(i, name)) != null)
+        bs.or(pa.getAtomBits(vwr, specInfo,
+            ((BioModel) ms.am[i]).getCachedAnnotationMap(name + " V ", ann), ms.am[i].dssrCache, tok,
+            i, ms.am[i].bsAtoms));
+    return bs;
+  }
+
+  Object getCachedAnnotationMap(String key, Object ann) {
+    Map<String, Object> cache = (dssrCache == null && ann != null ? dssrCache = new Hashtable<String, Object>()
+        : dssrCache);
+    if (cache == null)
+      return null;
+    Object annotv = cache.get(key);
+    if (annotv == null && ann != null) {
+      annotv = (ann instanceof SV || ann instanceof Hashtable ? ann
+              : vwr.evaluateExpressionAsVariable(ann));
+      cache.put(key, annotv);
+    }
+    return (annotv instanceof SV || annotv instanceof Hashtable ? annotv : null);
+  }
+
+  @Override
+  public BS getIdentifierOrNull(String identifier) {
+    int len = identifier.length();
+    int pt = 0;
+    while (pt < len && PT.isLetter(identifier.charAt(pt)))
+      ++pt;
+    BS bs = ms.getSpecNameOrNull(identifier.substring(0, pt), false);
+    if (pt == len)
+      return bs;
+    if (bs == null)
+      bs = new BS();
+    //
+    // look for a sequence number or sequence number ^ insertion code
+    //
+    int pt0 = pt;
+    while (pt < len && PT.isDigit(identifier.charAt(pt)))
+      ++pt;
+    int seqNumber = 0;
+    try {
+      seqNumber = Integer.parseInt(identifier.substring(pt0, pt));
+    } catch (NumberFormatException nfe) {
+      return null;
+    }
+    char insertionCode = ' ';
+    if (pt < len && identifier.charAt(pt) == '^')
+      if (++pt < len)
+        insertionCode = identifier.charAt(pt);
+    int seqcode = Group.getSeqcodeFor(seqNumber, insertionCode);
+    BS bsInsert = ms.getSeqcodeBits(seqcode, false);
+    if (bsInsert == null) {
+      if (insertionCode != ' ')
+        bsInsert = ms.getSeqcodeBits(Character.toUpperCase(identifier.charAt(pt)),
+            false);
+      if (bsInsert == null)
+        return null;
+      pt++;
+    }
+    bs.and(bsInsert);
+    if (pt >= len)
+      return bs;
+    if(pt != len - 1)
+      return null;
+    // ALA32B  (no colon; not ALA32:B)
+    // old school; not supported for multi-character chains
+    bs.and(ms.getChainBits(identifier.charAt(pt)));
+    return bs;
+  }
 
 }

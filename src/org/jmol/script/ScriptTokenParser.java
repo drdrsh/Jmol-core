@@ -1292,6 +1292,10 @@ abstract class ScriptTokenParser {
     case T.string:
     case T.integer:
     case T.identifier:
+    case T.x:
+    case T.y:
+    case T.z:
+    case T.w:
       break;
     default:
       return error(ERROR_invalidModelSpecification);

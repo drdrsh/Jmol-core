@@ -2563,13 +2563,33 @@ public class MathExt implements JmolMathExtension {
   private BS getAtomsNearSurface(float distance, String surfaceId) {
     Object[] data = new Object[] { surfaceId, null, null };
     if (e.getShapePropertyData(JC.SHAPE_ISOSURFACE, "getVertices", data))
-      return vwr.ms.getAtomsNearPts(distance, (P3[]) data[1], (BS) data[2]);
+      return getAtomsNearPts(distance, (T3[]) data[1], (BS) data[2]);
     data[1] = Integer.valueOf(0);
     data[2] = Integer.valueOf(-1);
     if (e.getShapePropertyData(JC.SHAPE_DRAW, "getCenter", data))
       return vwr.getAtomsNearPt(distance, (P3) data[2]);
     return new BS();
   }
+
+  private BS getAtomsNearPts(float distance, T3[] points, BS bsInclude) {
+    BS bsResult = new BS();
+    if (points.length == 0 || bsInclude != null && bsInclude.cardinality() == 0)
+      return bsResult;
+    if (bsInclude == null)
+      bsInclude = BSUtil.setAll(points.length);
+    Atom[] at = vwr.ms.at;
+    for (int i = vwr.ms.ac; --i >= 0;) {
+      Atom atom = at[i];
+      for (int j = bsInclude.nextSetBit(0); j >= 0; j = bsInclude
+          .nextSetBit(j + 1))
+        if (atom.distance(points[j]) < distance) {
+          bsResult.set(i);
+          break;
+        }
+    }
+    return bsResult;
+  }
+
 
   private float getDistance(ScriptMathProcessor mp, SV x1, SV x2, int tok)
       throws ScriptException {

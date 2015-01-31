@@ -42,7 +42,6 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.bspt.Bspf;
 import org.jmol.c.PAL;
-import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.java.BS;
 
@@ -76,6 +75,10 @@ abstract public class AtomCollection {
   public Viewer vwr;
   protected GData g3d;
 
+  public JmolBioModel bioModel; // Model also holds modelset methods relating only to biomodels
+  public boolean haveBioModels;
+  
+  
   public Atom[] at;
   public int ac;
 
@@ -2066,10 +2069,10 @@ abstract public class AtomCollection {
    * 
    * @param tokType
    * @param specInfo
+   * @param bs - to be filled
    * @return BitSet; or null if we mess up the type
    */
-  public BS getAtomBitsMDa(int tokType, Object specInfo) {
-    BS bs = new BS()  ;
+  public BS getAtomBitsMDa(int tokType, Object specInfo, BS bs) {
     BS bsInfo;
     BS bsTemp;
     int iSpec = (specInfo instanceof Integer ? ((Integer) specInfo).intValue() : 0);
@@ -2078,14 +2081,48 @@ abstract public class AtomCollection {
 
     int i = 0;
     switch (tokType) {
-    case T.solvent:
-      // fast search for water
-      return getWaterAtoms(bs);
+    // could be PDB type file with UNK
+    case T.chain:
+    case T.spec_alternate:
+      String spec = (String) specInfo;
+      for (i = ac; --i >= 0;)
+        if (isAltLoc(at[i].altloc, spec))
+          bs.set(i);
+      break;
     case T.resno:
       for (i = ac; --i >= 0;)
         if (at[i].getResno() == iSpec)
           bs.set(i);
       break;
+    case T.spec_resid:
+      for (i = ac; --i >= 0;)
+        if (at[i].group.groupID == iSpec)
+          bs.set(i);
+      break;
+    case T.spec_chain:
+      return BSUtil.copy(getChainBits(iSpec));
+    case T.spec_seqcode:
+      return BSUtil.copy(getSeqcodeBits(iSpec, true));
+    case T.hetero:
+      for (i = ac; --i >= 0;)
+        if (at[i].isHetero())
+          bs.set(i);
+      break;
+    case T.carbohydrate:
+    case T.dna:
+    case T.helix: // WITHIN -- not ends
+    case T.nucleic:
+    case T.polymer:
+    case T.protein:
+    case T.purine:
+    case T.pyrimidine:
+    case T.rna:
+    case T.sheet: // WITHIN -- not ends
+    case T.structure:
+      return (haveBioModels ? bioModel.getAtomBits(tokType, specInfo, bs) : bs);            
+    case T.solvent:
+      // fast search for water
+      return getWaterAtoms(bs);
     case T.symop:
       for (i = ac; --i >= 0;)
         if (at[i].getSymOp() == iSpec)
@@ -2119,20 +2156,6 @@ abstract public class AtomCollection {
             bs.set(i);
       }
       break;
-    case T.spec_resid:
-      for (i = ac; --i >= 0;)
-        if (at[i].group.groupID == iSpec)
-          bs.set(i);
-      break;
-    case T.spec_chain:
-      return BSUtil.copy(getChainBits(iSpec));
-    case T.spec_seqcode:
-      return BSUtil.copy(getSeqcodeBits(iSpec, true));
-    case T.hetero:
-      for (i = ac; --i >= 0;)
-        if (at[i].isHetero())
-          bs.set(i);
-      break;
     case T.hydrogen:
       for (i = ac; --i >= 0;)
         if (at[i].getElementNumber() == 1)
@@ -2141,49 +2164,6 @@ abstract public class AtomCollection {
     case T.leadatom:
       for (i = ac; --i >= 0;)
         if (at[i].isLeadAtom())
-          bs.set(i);
-      break;
-    case T.protein:
-      for (i = ac; --i >= 0;)
-        if (at[i].isProtein())
-          bs.set(i);
-      break;
-    case T.carbohydrate:
-      for (i = ac; --i >= 0;)
-        if (at[i].isCarbohydrate())
-          bs.set(i);
-      break;
-    case T.helix: // WITHIN -- not ends
-    case T.sheet: // WITHIN -- not ends
-      STR type = (tokType == T.helix ? STR.HELIX
-          : STR.SHEET);
-      for (i = ac; --i >= 0;)
-        if (at[i].group.isWithinStructure(type))
-          bs.set(i);
-      break;
-    case T.nucleic:
-      for (i = ac; --i >= 0;)
-        if (at[i].isNucleic())
-          bs.set(i);
-      break;
-    case T.dna:
-      for (i = ac; --i >= 0;)
-        if (at[i].isDna())
-          bs.set(i);
-      break;
-    case T.rna:
-      for (i = ac; --i >= 0;)
-        if (at[i].isRna())
-          bs.set(i);
-      break;
-    case T.purine:
-      for (i = ac; --i >= 0;)
-        if (at[i].isPurine())
-          bs.set(i);
-      break;
-    case T.pyrimidine:
-      for (i = ac; --i >= 0;)
-        if (at[i].isPyrimidine())
           bs.set(i);
       break;
     case T.element:
@@ -2218,12 +2198,6 @@ abstract public class AtomCollection {
         if (isAtomNameMatch(at[i], atomSpec, allowStar, allowStar))
           bs.set(i);
       break;
-    case T.spec_alternate:
-      String spec = (String) specInfo;
-      for (i = ac; --i >= 0;)
-        if (at[i].isAltLoc(spec))
-          bs.set(i);
-      break;
     case T.spec_name_pattern:
       return getSpecName((String) specInfo);
     }
@@ -2232,26 +2206,19 @@ abstract public class AtomCollection {
 
     // these next assume sequential position in the file
     // speeding delivery -- Jmol 11.9.24
+    // TODO WHAT ABOUT MUTATED?
 
     bsInfo = (BS) specInfo;
-    int iModel, iPolymer;
     int i0 = bsInfo.nextSetBit(0);
     if (i0 < 0)
       return bs;    
     i = 0;
     switch (tokType) {
-    case T.group:
-      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        int j = at[i].group.setAtomBits(bs);
-        if (j > i)
-          i = j;
-      }
-      break;
     case T.model:
       for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
         if (bs.get(i))
           continue;
-        iModel = at[i].mi;
+        int iModel = at[i].mi;
         bs.set(i);
         for (int j = i; --j >= 0;)
           if (at[j].mi == iModel)
@@ -2265,48 +2232,11 @@ abstract public class AtomCollection {
             break;
       }
       break;
-    case T.chain:
-      bsInfo = BSUtil.copy((BS) specInfo);
-      for (i = bsInfo.nextSetBit(0); i >= 0; i = bsInfo.nextSetBit(i + 1)) {
-        Chain chain = at[i].group.chain;
-        chain.setAtomBits(bs);
-        bsInfo.andNot(bs);
-      }
-      break;
-    case T.polymer:
+    case T.group:
       for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        if (bs.get(i))
-          continue;
-        iPolymer = at[i].group.getBioPolymerIndexInModel();
-        bs.set(i);
-        for (int j = i; --j >= 0;)
-          if (at[j].group.getBioPolymerIndexInModel() == iPolymer)
-            bs.set(j);
-          else
-            break;
-        for (; ++i < ac;)
-          if (at[i].group.getBioPolymerIndexInModel() == iPolymer)
-            bs.set(i);
-          else
-            break;
-      }
-      break;
-    case T.structure:
-      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        if (bs.get(i))
-          continue;
-        Object structure = at[i].group.getStructure();
-        bs.set(i);
-        for (int j = i; --j >= 0;)
-          if (at[j].group.getStructure() == structure)
-            bs.set(j);
-          else
-            break;
-        for (; ++i < ac;)
-          if (at[i].group.getStructure() == structure)
-            bs.set(i);
-          else
-            break;
+        int j = at[i].group.setAtomBits(bs);
+        if (j > i)
+          i = j;
       }
       break;
     }
@@ -2315,6 +2245,76 @@ abstract public class AtomCollection {
     return bs;
   }
   
+  public BS getChainBits(int chainID) {
+    boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
+    if (chainID >= 0 && chainID < 300 && !caseSensitive)
+      chainID = chainToUpper(chainID);
+    BS bs = new BS();
+    BS bsDone = BS.newN(ac);
+    int id;
+    for (int i = bsDone.nextClearBit(0); i < ac; i = bsDone.nextClearBit(i + 1)) {
+      Chain chain = at[i].group.chain;
+      if (chainID == (id = chain.chainID) || !caseSensitive 
+          && id >= 0 && id < 300 && chainID == chainToUpper(id)) {
+        chain.setAtomBits(bs);
+        bsDone.or(bs);
+      } else {
+        chain.setAtomBits(bsDone);
+      }
+    }
+    return bs;
+  }
+
+  public int chainToUpper(int chainID) {
+    return (chainID >= 97 && chainID <= 122 ? chainID - 32 
+        : chainID >= 256 && chainID < 300 ? chainID - 191
+          // must be single-character lower-case 256=="a" 
+          // to lower case is to 65, so subtract (256-65) 
+        : chainID);
+  }
+
+  private boolean isAltLoc(char altloc, String strPattern) {
+    if (strPattern == null)
+      return (altloc == '\0');
+    if (strPattern.length() != 1)
+      return false;
+    char ch = strPattern.charAt(0);
+    return (ch == '*' || ch == '?' && altloc != '\0' || altloc == ch);
+  }
+
+  public BS getSeqcodeBits(int seqcode, boolean returnEmpty) {
+    BS bs = new BS();
+    int seqNum = Group.getSeqNumberFor(seqcode);
+    boolean haveSeqNumber = (seqNum != Integer.MAX_VALUE);
+    boolean isEmpty = true;
+    char insCode = Group.getInsertionCodeChar(seqcode);
+    switch (insCode) {
+    case '?':
+      for (int i = ac; --i >= 0;) {
+        int atomSeqcode = at[i].group.seqcode;
+        if (!haveSeqNumber 
+            || seqNum == Group.getSeqNumberFor(atomSeqcode)
+            && Group.getInsertionCodeFor(atomSeqcode) != 0) {
+          bs.set(i);
+          isEmpty = false;
+        }
+      }
+      break;
+    default:
+      for (int i = ac; --i >= 0;) {
+        int atomSeqcode = at[i].group.seqcode;
+        if (seqcode == atomSeqcode || 
+            !haveSeqNumber && seqcode == Group.getInsertionCodeFor(atomSeqcode) 
+            || insCode == '*' && seqNum == Group.getSeqNumberFor(atomSeqcode)) {
+          bs.set(i);
+          isEmpty = false;
+        }
+      }
+    }
+    return (!isEmpty || returnEmpty ? bs : null);
+  }
+  
+
   private BS getWaterAtoms(BS bs) {
     
     // this is faster by a factor of 2  Jmol 14.1.12  -BH
@@ -2378,57 +2378,10 @@ abstract public class AtomCollection {
     
     if (identifier.indexOf("\\?") >= 0)
       identifier = PT.rep(identifier, "\\?","\1");
-    if (bs != null || identifier.indexOf("?") > 0)
-      return bs;
-    // now check with * option ON
-    if (identifier.indexOf("*") > 0) {
-      return getSpecNameOrNull(identifier, true);
-    }
-    
-    int len = identifier.length();
-    int pt = 0;
-    while (pt < len && PT.isLetter(identifier.charAt(pt)))
-      ++pt;
-    bs = getSpecNameOrNull(identifier.substring(0, pt), false);
-    if (pt == len)
-      return bs;
-    if (bs == null)
-      bs = new BS();
-    //
-    // look for a sequence number or sequence number ^ insertion code
-    //
-    int pt0 = pt;
-    while (pt < len && PT.isDigit(identifier.charAt(pt)))
-      ++pt;
-    int seqNumber = 0;
-    try {
-      seqNumber = Integer.parseInt(identifier.substring(pt0, pt));
-    } catch (NumberFormatException nfe) {
-      return null;
-    }
-    char insertionCode = ' ';
-    if (pt < len && identifier.charAt(pt) == '^')
-      if (++pt < len)
-        insertionCode = identifier.charAt(pt);
-    int seqcode = Group.getSeqcodeFor(seqNumber, insertionCode);
-    BS bsInsert = getSeqcodeBits(seqcode, false);
-    if (bsInsert == null) {
-      if (insertionCode != ' ')
-        bsInsert = getSeqcodeBits(Character.toUpperCase(identifier.charAt(pt)),
-            false);
-      if (bsInsert == null)
-        return null;
-      pt++;
-    }
-    bs.and(bsInsert);
-    if (pt >= len)
-      return bs;
-    if(pt != len - 1)
-      return null;
-    // ALA32B  (no colon; not ALA32:B)
-    // old school; not supported for multi-character chains
-    bs.and(getChainBits(identifier.charAt(pt)));
-    return bs;
+    return (bs != null || identifier.indexOf("?") > 0 ? bs
+        : identifier.indexOf("*") > 0 ? getSpecNameOrNull(identifier, true)
+        : haveBioModels ? bioModel.getIdentifierOrNull(identifier) 
+        : null);
   }
 
   private BS getSpecName(String name) {
@@ -2441,7 +2394,7 @@ abstract public class AtomCollection {
     return (bs == null ? new BS() : bs);
   }
 
-  private BS getSpecNameOrNull(String name, boolean checkStar) {
+  public BS getSpecNameOrNull(String name, boolean checkStar) {
     /// here xx*yy is changed to "xx??????????yy" when coming from getSpecName
     /// but not necessarily when coming from getIdentifierOrNull
     BS bs = null;
@@ -2482,66 +2435,6 @@ abstract public class AtomCollection {
         checkStar, allowInitialStar);
   }
   
-  protected BS getSeqcodeBits(int seqcode, boolean returnEmpty) {
-    BS bs = new BS();
-    int seqNum = Group.getSeqNumberFor(seqcode);
-    boolean haveSeqNumber = (seqNum != Integer.MAX_VALUE);
-    boolean isEmpty = true;
-    char insCode = Group.getInsertionCodeChar(seqcode);
-    switch (insCode) {
-    case '?':
-      for (int i = ac; --i >= 0;) {
-        int atomSeqcode = at[i].group.seqcode;
-        if (!haveSeqNumber 
-            || seqNum == Group.getSeqNumberFor(atomSeqcode)
-            && Group.getInsertionCodeFor(atomSeqcode) != 0) {
-          bs.set(i);
-          isEmpty = false;
-        }
-      }
-      break;
-    default:
-      for (int i = ac; --i >= 0;) {
-        int atomSeqcode = at[i].group.seqcode;
-        if (seqcode == atomSeqcode || 
-            !haveSeqNumber && seqcode == Group.getInsertionCodeFor(atomSeqcode) 
-            || insCode == '*' && seqNum == Group.getSeqNumberFor(atomSeqcode)) {
-          bs.set(i);
-          isEmpty = false;
-        }
-      }
-    }
-    return (!isEmpty || returnEmpty ? bs : null);
-  }
-  
-  protected BS getChainBits(int chainID) {
-    boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
-    if (chainID >= 0 && chainID < 300 && !caseSensitive)
-      chainID = chainToUpper(chainID);
-    BS bs = new BS();
-    BS bsDone = BS.newN(ac);
-    int id;
-    for (int i = bsDone.nextClearBit(0); i < ac; i = bsDone.nextClearBit(i + 1)) {
-      Chain chain = at[i].group.chain;
-      if (chainID == (id = chain.chainID) || !caseSensitive 
-          && id >= 0 && id < 300 && chainID == chainToUpper(id)) {
-        chain.setAtomBits(bs);
-        bsDone.or(bs);
-      } else {
-        chain.setAtomBits(bsDone);
-      }
-    }
-    return bs;
-  }
-
-  public static int chainToUpper(int chainID) {
-    return (chainID >= 97 && chainID <= 122 ? chainID - 32 
-        : chainID >= 256 && chainID < 300 ? chainID - 191
-          // must be single-character lower-case 256=="a" 
-          // to lower case is to 65, so subtract (256-65) 
-        : chainID);
-  }
-
   public int[] getAtomIndices(BS bs) {
     int n = 0;
     int[] indices = new int[ac];
@@ -2561,26 +2454,6 @@ abstract public class AtomCollection {
     }
     return bsResult;
   }
-  
-  public BS getAtomsNearPts(float distance, P3[] points,
-                               BS bsInclude) {
-    BS bsResult = new BS();
-    if (points.length == 0 || bsInclude != null && bsInclude.cardinality() == 0)
-      return bsResult;
-    if (bsInclude == null)
-      bsInclude = BSUtil.setAll(points.length);
-    for (int i = ac; --i >= 0;) {
-      Atom atom = at[i];
-      for (int j = bsInclude.nextSetBit(0); j >= 0; j = bsInclude
-          .nextSetBit(j + 1))
-        if (atom.distance(points[j]) < distance) {
-          bsResult.set(i);
-          break;
-        }
-    }
-    return bsResult;
-  }
-
   
   public void clearVisibleSets() {
     haveBSVisible = false;

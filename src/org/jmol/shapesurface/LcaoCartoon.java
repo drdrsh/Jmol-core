@@ -75,7 +75,7 @@ public class LcaoCartoon extends Isosurface {
     // then send it all at once. 
 
     boolean setInfo = false;
-    
+
     if ("init" == propertyName) {
       myColorPt = 0;
       lcaoID = null;

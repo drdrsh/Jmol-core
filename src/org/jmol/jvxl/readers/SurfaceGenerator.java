@@ -790,7 +790,7 @@ public class SurfaceGenerator {
     if ("lcaoCartoonCenter" == propertyName) {
       if (++params.state != Parameters.STATE_DATA_READ)
         return true;
-      if (params.center.x == Float.MAX_VALUE)
+      if (Float.isNaN(params.center.x))
         params.center.setT((V3) value);
       return false;
     }

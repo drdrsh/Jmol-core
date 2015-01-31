@@ -243,7 +243,7 @@ public final class Resolver implements JmolBioResolver {
 
   @Override
   public void initializeHydrogenAddition() {
-    baseBondIndex = ml.ms.bondCount;
+    baseBondIndex = ms.bondCount;
     bsAddedHydrogens = new BS();
     bsAtomsForHs = new BS();
     htBondMap = new Hashtable<String, String>();
@@ -570,7 +570,7 @@ public final class Resolver implements JmolBioResolver {
       models[atoms[i].mi].bsAtomsDeleted.clear(i);
       if (bsDeletedAtoms.get(i)) {
         mapOldToNew[i] = n - 1;
-        models[atoms[i].mi].ac--;
+        models[atoms[i].mi].act--;
       } else {
         mapNewToOld[n] = i;
         mapOldToNew[i] = n++;
@@ -593,8 +593,8 @@ public final class Resolver implements JmolBioResolver {
     ms.resetMolecules();
     ms.validateBspf(false);
     bsAddedMask = BSUtil.deleteBits(bsAddedMask, bsDeletedAtoms);
-    System.out.println("res bsAddedMask = " + bsAddedMask);
-    for (int i = ml.baseModelIndex; i < ml.ms.mc; i++) {
+    //System.out.println("res bsAddedMask = " + bsAddedMask);
+    for (int i = ml.baseModelIndex; i < ms.mc; i++) { 
       fixAnnotations(i, "domains", T.domains);
       fixAnnotations(i, "validation", T.validation);
     }
@@ -603,7 +603,7 @@ public final class Resolver implements JmolBioResolver {
   private void fixAnnotations(int i, String name, int type) {
     Object o = ml.ms.getInfo(i, name);
     if (o != null) {
-      Object dbObj = ml.ms.getCachedAnnotationMap(i, name, o);
+      Object dbObj = ((BioModel)ml.ms.bioModel).getCachedAnnotationMap(name, o);
       if (dbObj != null)
         vwr.getAnnotationParser().fixAtoms(i, (SV) dbObj, bsAddedMask, type, 20);
     }
@@ -1827,8 +1827,8 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
           + "  set appendNew " + b + "\n"
           + "  var res1 = {!atoms0};var r1 = res1[1];var r0 = res1[0]\n"
           + "  if ({r1 & within(group, r0)}){\n" 
-          + "    var haveHs = ({_H and connected(res0)} != 0)\n"
-          + "    if (!haveHs) {delete _H and res1}\n"
+          + "    var haveHs = ({_H & connected(res0)} != 0)\n"
+          + "    if (!haveHs) {delete _H & res1}\n"
           + "    var sm = '[*.N][*.CA][*.C][*.O]'\n"
           + "    var keyatoms = res1.find(sm)\n"
           + "    var x = compare(res1,res0,sm,'BONDS')\n"
@@ -1836,15 +1836,16 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
           + "      print 'mutating ' + res0[1].label('%n%r') + ' to ' + "+fileName+".trim('=')\n"
           + "      rotate branch @x\n"
           + "      compare res1 res0 SMARTS @sm rotate translate 0\n"
-          + "      var N2 = {*.N and !res0 && connected(res0)}\n"
-          + "      var C0 = {*.C and !res0 && connected(res0)}\n"
+          + "      var c = {!res0 & connected(res0)}\n"
+          + "      var N2 = {*.N & c}\n"
+          + "      var C0 = {*.C & c}\n"
           + "      delete res0\n"
           + "      if (N2) {\n"
           + "        delete *.OXT and res1\n"
-          + "        connect {N2} {res1 & *.C}\n"
+          + "        connect {N2} {keyatoms & *.C}\n"
           + "      }\n"
           + "      if (C0) {\n"
-          + "        connect {C0} {res1 & *.N}\n"
+          + "        connect {C0} {keyatoms & *.N}\n"
           + "      }\n"
           + "    }\n"
           + "  }\n"

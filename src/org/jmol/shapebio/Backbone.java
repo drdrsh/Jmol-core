@@ -93,8 +93,8 @@ public class Backbone extends BioShapeCollection {
           Atom atomB = ms.at[index2];
           boolean wasVisible = (bioShape.mads[i] != 0); 
           if (wasVisible != isVisible) {
-            atomA.addDisplayedBackbone(vf, isVisible);
-            atomB.addDisplayedBackbone(vf, isVisible);
+            addDisplayedBackbone(atomA, isVisible);
+            addDisplayedBackbone(atomB, isVisible);
           }
           bioShape.mads[i] = mad;
           bioShape.bsSizeSet.setBitTo(i, isVisible);
@@ -104,6 +104,11 @@ public class Backbone extends BioShapeCollection {
     }
     if (useThisBsSelected) //one shot deal
       this.bsSelected = null;
+  }
+  
+  public void addDisplayedBackbone(Atom a, boolean isVisible) {
+    a.nBackbonesDisplayed += (isVisible ? 1 : -1);
+    a.setShapeVisibility(vf, isVisible);
   }
   
   @Override

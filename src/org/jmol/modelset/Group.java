@@ -119,6 +119,13 @@ public class Group {
     bsAdded.set(atomIndex);
   }
   
+  /**
+   * note that we may pick up additional bits here
+   * that were added later
+   * 
+   * @param bs
+   * @return last of the contiguous atoms
+   */
   public int setAtomBits(BS bs) {
     bs.setBits(firstAtomIndex, lastAtomIndex + 1);
     if (bsAdded != null)

@@ -467,7 +467,7 @@ public class Parameters {
     cutoff = PT.FLOAT_MIN_SAFE;
     isCutoffAbsolute = false;
     isSilent = !logMessages;
-    if (center.x == Float.MAX_VALUE)
+    if (Float.isNaN(center.x))
       center.set(0, 0, 0);
     if (resolution == Float.MAX_VALUE)
       resolution = 6;

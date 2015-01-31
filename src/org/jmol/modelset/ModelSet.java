@@ -58,11 +58,9 @@ import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.java.BS;
-import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
-import org.jmol.api.JmolAnnotationParser;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.AtomData;
@@ -116,9 +114,6 @@ import java.util.Properties;
     */
    public int mc;
    
-   public JmolBioModel bioModel; // Model also holds modelset methods relating only to biomodels
-   
-  
    public SymmetryInterface[] unitCells;
    public boolean haveUnitCells;
 
@@ -131,7 +126,6 @@ import java.util.Properties;
    protected BS[] elementsPresent;
 
    protected boolean isXYZ;
-   public boolean haveBioModels;
 
    public Properties modelSetProperties;
    public Map<String, Object> msInfo;
@@ -613,7 +607,7 @@ import java.util.Properties;
         mpt++;
          continue;
       }
-      int nAtoms = oldModels[i].ac;
+      int nAtoms = oldModels[i].act;
       if (nAtoms == 0)
         continue;
       BS bsModelAtoms = oldModels[i].bsAtoms;
@@ -780,7 +774,7 @@ import java.util.Properties;
     RadiusData rd = vwr.rd;
     short mad = getDefaultMadFromOrder(1);
     am[modelIndex].dssrCache = null;
-    for (int i = 0, n = am[modelIndex].ac + 1; i < vConnections.size(); i++, n++) {
+    for (int i = 0, n = am[modelIndex].act + 1; i < vConnections.size(); i++, n++) {
       Atom atom1 = vConnections.get(i);
       // hmm. atom1.group will not be expanded, though...
       // something like within(group,...) will not select these atoms!
@@ -1254,7 +1248,7 @@ import java.util.Properties;
       bs.set(modelIndex = at[i].mi);
       if (allTrajectories)
         trajectory.getModelBS(modelIndex, bs);
-      i = am[modelIndex].firstAtomIndex + am[modelIndex].ac - 1;
+      i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
     }
     return bs;
   }
@@ -1350,7 +1344,7 @@ import java.util.Properties;
   }
 
   public int getInsertionCountInModel(int modelIndex) {
-    return am[modelIndex].nInsertions;
+    return am[modelIndex].insertionCount;
   }
 
   public static int modelFileNumberFromFloat(float fDotM) {
@@ -1365,7 +1359,7 @@ import java.util.Properties;
   }
 
   public int getAltLocCountInModel(int modelIndex) {
-    return am[modelIndex].nAltLocs;
+    return am[modelIndex].altLocCount;
   }
 
   public int getChainCountInModelWater(int modelIndex, boolean countWater) {
@@ -1854,7 +1848,7 @@ import java.util.Properties;
 
 
   public int getAtomCountInModel(int modelIndex) {
-    return (modelIndex < 0 ? ac : am[modelIndex].ac);
+    return (modelIndex < 0 ? ac : am[modelIndex].act);
   }
 
   /**
@@ -1898,25 +1892,19 @@ import java.util.Properties;
     BS bs;
     switch (tokType) {
     default:
-      return getAtomBitsMDa(tokType, specInfo);
+      return getAtomBitsMDa(tokType, specInfo, bs = new BS());
     case T.domains:
-      return getAnnotationBits("domains", T.domains, (String) specInfo);
     case T.validation:
-      return getAnnotationBits("validation", T.validation, (String) specInfo);
-      //    case T.annotations:
-      //      TODO -- generalize this
     case T.dssr:
-      return getAnnotationBits("dssr", T.dssr, (String) specInfo);
     case T.rna3d:
-      return getAnnotationBits("rna3d", T.rna3d, (String) specInfo);
+    case T.basepair:
+    case T.sequence:
+    case T.spec_seqcode_range:
+      bs = new BS();
+      return (haveBioModels ? bioModel.getAtomBitsMaybeDeleted(tokType, specInfo, bs) : bs);
     case T.bonds:
     case T.isaromatic:
       return getAtomBitsMDb(tokType, specInfo);
-    case T.basepair:
-      String s = (String) specInfo;
-      bs = new BS();
-      return (!haveBioModels || s.length() % 2 != 0 ? bs 
-          : getAtomBitsMDa(T.group, bioModel.getAllBasePairBits(s)));
     case T.boundbox:
       BoxInfo boxInfo = getBoxInfo((BS) specInfo, 1);
       bs = getAtomsWithin(boxInfo.getBoundBoxCornerVector().length() + 0.0001f,
@@ -1963,10 +1951,6 @@ import java.util.Properties;
       //      //$FALL-THROUGH$
     case T.molecule:
       return getMoleculeBitSet((BS) specInfo);
-    case T.sequence:
-      return getSequenceBits((String) specInfo, null);
-    case T.spec_seqcode_range:
-      return (haveBioModels ? bioModel.getSelectCodeRange((int[]) specInfo) : new BS());
     case T.specialposition:
       bs = BS.newN(ac);
       int modelIndex = -1;
@@ -2011,32 +1995,6 @@ import java.util.Properties;
           bs.set(i);
       return bs;
     }
-  }
-
-  private BS getAnnotationBits(String name, int tok, String specInfo) {
-    BS bs = new BS();
-    JmolAnnotationParser pa = vwr.getAnnotationParser();
-    Object ann;
-    for (int i = mc; --i >= 0;)
-      if ((ann = getInfo(i, name)) != null)
-        bs.or(pa.getAtomBits(vwr, specInfo,
-            getCachedAnnotationMap(i, name + " V ", ann), am[i].dssrCache, tok,
-            i, am[i].bsAtoms));
-    return bs;
-  }
-
-  public Object getCachedAnnotationMap(int i, String key, Object ann) {
-    Map<String, Object> cache = (am[i].dssrCache == null && ann != null ? am[i].dssrCache = new Hashtable<String, Object>()
-        : am[i].dssrCache);
-    if (cache == null)
-      return null;
-    Object annotv = cache.get(key);
-    if (annotv == null && ann != null) {
-      annotv = (ann instanceof SV || ann instanceof Hashtable ? ann
-              : vwr.evaluateExpressionAsVariable(ann));
-      cache.put(key, annotv);
-    }
-    return (annotv instanceof SV || annotv instanceof Hashtable ? annotv : null);
   }
 
   private boolean isInLatticeCell(int i, P3 cell, P3 ptTemp, boolean isAbsolute) {
@@ -2320,7 +2278,7 @@ import java.util.Properties;
       if (modelIndex != lastModelIndex) {
         lastModelIndex = modelIndex;
         if (isJmolDataFrameForModel(modelIndex)) {
-          i = am[modelIndex].firstAtomIndex + am[modelIndex].ac
+          i = am[modelIndex].firstAtomIndex + am[modelIndex].act
               - 1;
           continue;
         }
@@ -2838,7 +2796,7 @@ import java.util.Properties;
       // 5) attach nearby non-hydrogen atoms (rings)
 
       bs = vwr.getModelUndeletedAtomsBitSet(atom.mi);
-      bs.andNot(getAtomBitsMDa(T.hydrogen, null));
+      bs.andNot(getAtomBitsMDa(T.hydrogen, null, new BS()));
       makeConnections2(0.1f, 1.8f, 1, T.create, bsA, bs, null, false, false, 0);
 
       // 6) add hydrogen atoms
@@ -2956,7 +2914,7 @@ import java.util.Properties;
     Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius,
         atomSymmetry, atomSite, (short) atomicAndIsotopeNumber, formalCharge,
         isHetero);
-    am[modelIndex].ac++;
+    am[modelIndex].act++;
     am[modelIndex].bsAtoms.set(ac);
     if (Elements.isElement(atomicAndIsotopeNumber, 1))
       am[modelIndex].hydrogenCount++;
@@ -3634,7 +3592,7 @@ import java.util.Properties;
   ///// bio-only methods /////
   
   public BS getSequenceBits(String specInfo, BS bs) {
-    return (haveBioModels && specInfo.length() > 0 ?
+    return (haveBioModels ?
         bioModel.getAllSequenceBits(specInfo, bs) : new BS());
   }
 

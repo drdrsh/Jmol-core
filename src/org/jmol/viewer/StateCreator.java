@@ -1669,7 +1669,7 @@ public class StateCreator extends JmolStateCreator {
       }
       //System.out.println("redo type = " + type + " size=" + actionStates.size()
       //    + " " + +actionStatesRedo.size());
-      if (vwr.ms.am[modelIndex].isModelkit()
+      if (vwr.ms.am[modelIndex].isModelKit
           || s.indexOf("zap ") < 0) {
         if (Logger.debugging)
           vwr.log(s);
