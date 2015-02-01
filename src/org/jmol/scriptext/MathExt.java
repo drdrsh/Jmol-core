@@ -683,20 +683,27 @@ public class MathExt implements JmolMathExtension {
     // x = data(someData,ptrFieldOrColumn,nBytes,firstLine) # extraction of a
     // column of data based on a field (nBytes = 0) or column range (nBytes >
     // 0)
-    if (args.length != 1 && args.length != 2 && args.length != 4)
-      return false;
     String selected = SV.sValue(args[0]);
-    String type = (args.length == 2 ? SV.sValue(args[1]) : "");
-
-    if (args.length == 4) {
+    String type = "";
+    switch (args.length) {
+    case 1:
+      break;
+    case 2:
+    case 3:
+      if (args[0].tok == T.bitset)
+        return mp.addXStr(vwr.getModelFileData(selected, SV.sValue(args[1]), 
+            args.length == 3 && SV.bValue(args[2])));
+      break;
+    case 4:
       int iField = args[1].asInt();
       int nBytes = args[2].asInt();
       int firstLine = args[3].asInt();
-      float[] f = Parser.parseFloatArrayFromMatchAndField(selected, null, 0, 0,
+      float[] f = Parser.parseFloatArrayFromMatchAndField(SV.sValue(args[0]), null, 0, 0,
           null, iField, nBytes, null, firstLine);
       return mp.addXStr(Escape.escapeFloatA(f, false));
+    default:
+      return false;
     }
-
     if (selected.indexOf("data2d_") == 0) {
       // tab, newline separated data
       float[][] f1 = vwr.getDataFloat2D(selected);
@@ -731,12 +738,10 @@ public class MathExt implements JmolMathExtension {
 
     // some other data type -- just return it
 
-    if (args.length == 1) {
+    //if (args.length == 1) {
       Object[] data = vwr.getData(selected);
       return mp.addXStr(data == null ? "" : "" + data[1]);
-    }
-    // {selected atoms} XYZ, MOL, PDB file format
-    return mp.addXStr(vwr.getData(selected, type));
+   // }
   }
 
   private boolean evaluateDot(ScriptMathProcessor mp, SV[] args, int tok,

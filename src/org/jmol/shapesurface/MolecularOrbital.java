@@ -356,7 +356,7 @@ public class MolecularOrbital extends Isosurface {
             setOrbital(i, null);
           }
           jvxlData.moleculeXml = vwr.getModelCml(
-              vwr.getModelUndeletedAtomsBitSet(thisMesh.modelIndex), 100, true);
+              vwr.getModelUndeletedAtomsBitSet(thisMesh.modelIndex), 100, true, false);
           if (!haveHeader) {
             str.append(JvxlCoder.jvxlGetFile(jvxlData, null, null,
                 "HEADERONLY", true, nTotal, null, null));

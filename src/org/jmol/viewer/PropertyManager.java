@@ -882,16 +882,64 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     return info;
   }
 
+  /**
+   * use lower case to indicate coord data only (xyz, xyzrn, xyzvib, pdb. use
+   * USER: or PROPERTY_xxxx for a property
+   * 
+   * all other types return full data
+   */
   @Override
-  public String getModelExtract(BS bs, boolean doTransform,
-                                boolean isModelKit, String type) {
+  public String getAtomData(String atomExpression, String type, boolean allTrajectories) {
+    // lower case is only used in Jmol script function print data({*}, "datatype")
+    if (!atomExpression.startsWith("{"))
+      atomExpression = "{" + atomExpression + "}";
+    boolean isUser = type.toLowerCase().startsWith("user:");
+    boolean isProp = type.toLowerCase().startsWith("property_");
+    if (allTrajectories && !isUser && !isProp)
+      type = type.toUpperCase();
+    String exp = (isProp ? "%{" + type + "}"
+        : isUser ? type.substring(5)
+            : type.equals("xyzrn") ? "%-2e %8.3x %8.3y %8.3z %4.2[vdw] 1 [%n]%r.%a#%i"
+                : type.equals("xyzvib") ? "%-2e %10.5x %10.5y %10.5z %10.5vx %10.5vy %10.5vz"
+                    : type.equals("pdb") ? "{selected and not hetero}.label(\"ATOM  %5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
+                        + "+{selected and hetero}.label(\"HETATM%5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
+                        : type.equals("xyz") ? "%-2e %10.5x %10.5y %10.5z"
+                            : null);
+    if (exp == null)
+      return getModelExtract(vwr.getAtomBitSet(atomExpression), false, false,
+          type.toUpperCase(), allTrajectories);
+    if (exp.indexOf("label") < 0)
+      exp = atomExpression + ".label(\"" + exp + "\").lines";
+    else if (!atomExpression.equals("selected"))
+      exp = PT.rep(exp, "selected", atomExpression.substring(1, atomExpression.length() - 1));
+    return (String) vwr.evaluateExpression(exp);
+  }
+
+
+  /**
+   * 
+   * V3000, SDF, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR
+   * 
+   */
+  @Override
+  public String getModelExtract(BS bs, boolean doTransform, boolean isModelKit,
+                                String type, boolean allTrajectories) {
+    
+    if (type.equalsIgnoreCase("CML"))
+      return getModelCml(bs, Integer.MAX_VALUE, true, doTransform, allTrajectories);
+    
+    if (type.equals("PDB") || type.equals("PQR"))
+      return getPdbAtomData(bs, null, type.equals("PQR"), doTransform, allTrajectories);
+    
     boolean asV3000 = type.equalsIgnoreCase("V3000");
     boolean asSDF = type.equalsIgnoreCase("SDF");
-    boolean asXYZVIB = type.equalsIgnoreCase("XYZVIB");
+    boolean asXYZVIB = (!doTransform && type.equalsIgnoreCase("XYZVIB"));
+    boolean asXYZRN = type.equalsIgnoreCase("XYZRN");
+    boolean isXYZ = type.toUpperCase().startsWith("XYZ");
     boolean asJSON = type.equalsIgnoreCase("JSON") || type.equalsIgnoreCase("CD");
     SB mol = new SB();
     ModelSet ms = vwr.ms;
-    if (!asXYZVIB && !asJSON) {
+    if (!isXYZ && !asJSON) {
       mol.append(isModelKit ? "Jmol Model Kit" : vwr.fm.getFullPathName(false)
           .replace('\\', '/'));
       String version = Viewer.getJmolVersion();
@@ -900,12 +948,9 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       /**
        * @j2sNative
        * 
-       * var c = new Date();
-       * cMM = c.getMonth();
-       * cDD = c.getDate();
-       * cYYYY = c.getFullYear();
-       * cHH = c.getHours();
-       * cmm = c.getMinutes();
+       *            var c = new Date(); cMM = c.getMonth(); cDD = c.getDate();
+       *            cYYYY = c.getFullYear(); cHH = c.getHours(); cmm =
+       *            c.getMinutes();
        */
       {
         Calendar c = Calendar.getInstance();
@@ -924,8 +969,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       //       This line has the format:
       //  IIPPPPPPPPMMDDYYHHmmddSSssssssssssEEEEEEEEEEEERRRRRR
       //  A2<--A8--><---A10-->A2I2<--F10.5-><---F12.5--><-I6->
-      mol.append("\nJmol version ").append(Viewer.getJmolVersion()).append(
-          " EXTRACT: ").append(Escape.eBS(bs)).append("\n");
+      mol.append("\nJmol version ").append(Viewer.getJmolVersion())
+          .append(" EXTRACT: ").append(Escape.eBS(bs)).append("\n");
     }
     BS bsAtoms = BSUtil.copy(bs);
     Atom[] atoms = ms.at;
@@ -936,27 +981,29 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     if (!asXYZVIB && bsAtoms.cardinality() == 0)
       return "";
     boolean isOK = true;
+    BS bsModels = vwr.ms.getModelBS(bsAtoms, true);
+    if (ms.trajectory != null && !allTrajectories)
+      ms.trajectory.selectDisplayed(bsModels);
     Quat q = (doTransform ? vwr.tm.getRotationQ() : null);
     if (asSDF) {
       String header = mol.toString();
       mol = new SB();
-      BS bsModels = vwr.ms.getModelBS(bsAtoms, true);
       for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
           .nextSetBit(i + 1)) {
         mol.append(header);
         BS bsTemp = BSUtil.copy(bsAtoms);
         bsTemp.and(ms.getModelAtomBitSetIncludingDeleted(i, false));
         bsBonds = getCovalentBondsForAtoms(ms.bo, ms.bondCount, bsTemp);
-        if (!(isOK = addMolFile(mol, bsTemp, bsBonds, false, false, q)))
+        if (!(isOK = addMolFile(i, mol, bsTemp, bsBonds, false, false, q)))
           break;
         mol.append("$$$$\n");
       }
-    } else if (asXYZVIB) {
-      LabelToken[] tokens1 = LabelToken.compile(vwr,
-          "%-2e %10.5x %10.5y %10.5z %10.5vx %10.5vy %10.5vz\n", '\0', null);
-      LabelToken[] tokens2 = LabelToken.compile(vwr,
-          "%-2e %10.5x %10.5y %10.5z\n", '\0', null);
-      BS bsModels = vwr.ms.getModelBS(bsAtoms, true);
+    } else if (isXYZ) {
+      LabelToken[] tokensXYZ = LabelToken.compile(vwr,
+          (asXYZRN ? "%-2e _XYZ_ %4.2[vdw] 1 [%n]%r.%a#%i\n" : "%-2e _XYZ_\n"),
+          '\0', null);
+      LabelToken[] tokensVib = (asXYZVIB ? LabelToken.compile(vwr,
+          "%-2e _XYZ_ %12.5vx %12.5vy %12.5vz\n", '\0', null) : null);
       P3 ptTemp = new P3();
       for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
           .nextSetBit(i + 1)) {
@@ -980,8 +1027,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
             if (propertyName.equals(".PATH"))
               path = props.getProperty(propertyName);
             else
-              sb.append(";").append(propertyName).append("=").append(
-                  props.getProperty(propertyName));
+              sb.append(";").append(propertyName).append("=")
+                  .append(props.getProperty(propertyName));
           }
           if (path != null)
             sb.append(";PATH=").append(path);
@@ -989,19 +1036,24 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           mol.append(path.replace('\n', ' '));
         }
         mol.appendC('\n');
-        for (int j = bsTemp.nextSetBit(0); j >= 0; j = bsTemp.nextSetBit(j + 1))
-          mol.append(LabelToken.formatLabelAtomArray(vwr, atoms[j],
-              (ms.getVibration(j, false) == null ? tokens2 : tokens1), '\0',
-              null, ptTemp));
+        Object[] o = new Object[] { ptTemp };
+        for (int j = bsTemp.nextSetBit(0); j >= 0; j = bsTemp.nextSetBit(j + 1)) {
+          String s = LabelToken.formatLabelAtomArray(vwr, atoms[j], (asXYZVIB
+              && ms.getVibration(j, false) != null ? tokensVib : tokensXYZ),
+              '\0', null, ptTemp);
+          getPointTransf(i, ms, atoms[j], q, ptTemp);
+          s = PT.rep(s, "_XYZ_", PT.sprintf("%12.5p %12.5p %12.5p", "p", o));
+          mol.append(s);
+        }
       }
     } else {
-      isOK = addMolFile(mol, bsAtoms, bsBonds, asV3000, asJSON, q);
+      isOK = addMolFile(-1, mol, bsAtoms, bsBonds, asV3000, asJSON, q);
     }
     return (isOK ? mol.toString()
         : "ERROR: Too many atoms or bonds -- use V3000 format.");
   }
 
-  private boolean addMolFile(SB mol, BS bsAtoms, BS bsBonds,
+  private boolean addMolFile(int iModel, SB mol, BS bsAtoms, BS bsBonds,
                              boolean asV3000, boolean asJSON, Quat q) {
     int nAtoms = bsAtoms.cardinality();
     int nBonds = bsBonds.cardinality();
@@ -1026,10 +1078,9 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           .append(" ").appendI(nBonds).append(" 0 0 0\n").append(
               "M  V30 BEGIN ATOM\n");
     }
-    P3 ptTemp = new P3();
     for (int i = bsAtoms.nextSetBit(0), n = 0; i >= 0; i = bsAtoms
         .nextSetBit(i + 1))
-      getAtomRecordMOL(ms, mol, atomMap[i] = ++n, ms.at[i], q, pTemp, ptTemp, asV3000,
+      getAtomRecordMOL(iModel, ms, mol, atomMap[i] = ++n, ms.at[i], q, pTemp, asV3000,
           asJSON);
     if (asV3000) {
       mol.append("M  V30 END ATOM\nM  V30 BEGIN BOND\n");
@@ -1098,28 +1149,21 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
   M  END
    */
 
-  private void getAtomRecordMOL(ModelSet ms, SB mol, int n, Atom a, Quat q,
-                                P3 pTemp, P3 ptTemp, boolean asV3000,
-                                boolean asJSON) {
+  private void getAtomRecordMOL(int iModel, ModelSet ms, SB mol, int n, Atom a, Quat q,
+                                P3 pTemp, boolean asV3000, boolean asJSON) {
     //   -0.9920    3.2030    9.1570 Cl  0  0  0  0  0
     //    3.4920    4.0920    5.8700 Cl  0  0  0  0  0
     //012345678901234567890123456789012
-    
-    if (ms.isTrajectory(a.mi))
-      ms.trajectory.getFractional(a, ptTemp);
-    else
-      pTemp.setT(a);
-    if (q != null)
-      q.transform2(pTemp, pTemp);
+    getPointTransf(iModel, ms, a, q, pTemp);
     int elemNo = a.getElementNumber();
     String sym = (a.isDeleted() ? "Xx" : Elements
         .elementSymbolFromNumber(elemNo));
     int iso = a.getIsotopeNumber();
     int charge = a.getFormalCharge();
+    Object [] o = new Object[] { pTemp };
     if (asV3000) {
-      mol.append("M  V30 ").appendI(n).append(" ").append(sym).append(" ")
-          .appendF(pTemp.x).append(" ").appendF(pTemp.y).append(" ").appendF(
-              pTemp.z).append(" 0");
+      mol.append("M  V30 ").appendI(n).append(" ").append(sym)
+            .append(PT.sprintf(" %12.5p %12.5p %12.5p 0", "p", o));
       if (charge != 0)
         mol.append(" CHG=").appendI(charge);
       if (iso != 0)
@@ -1135,11 +1179,10 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
         mol.append("\"c\":").appendI(charge).append(",");
       if (iso != 0 && iso != Elements.getNaturalIsotope(elemNo))
         mol.append("\"m\":").appendI(iso).append(",");
-      mol.append("\"x\":").appendF(a.x).append(",\"y\":").appendF(a.y).append(
-          ",\"z\":").appendF(a.z).append("}");
+      mol.append("\"x\":").appendF(a.x).append(",\"y\":").appendF(a.y)
+          .append(",\"z\":").appendF(a.z).append("}");
     } else {
-      mol.append(PT.sprintf("%10.5p%10.5p%10.5p",
-          "p", new Object[] {pTemp }));
+      mol.append(PT.sprintf("%10.5p%10.5p%10.5p", "p", o));
       mol.append(" ").append(sym);
       if (sym.length() == 1)
         mol.append(" ");
@@ -1150,6 +1193,24 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       PT.rightJustify(mol, "   ", "" + (charge == 0 ? 0 : 4 - charge));
       mol.append("  0  0  0  0\n");
     }
+  }
+
+  /**
+   * pick up the appropriate value for this atom
+   * @param i 
+   * 
+   * @param ms
+   * @param a
+   * @param q
+   * @param pTemp
+   */
+  private void getPointTransf(int i, ModelSet ms, Atom a, Quat q, P3 pTemp) {
+    if (ms.isTrajectory(i >= 0 ? i : a.mi))
+      ms.trajectory.getFractional(a, pTemp);
+    else
+      pTemp.setT(a);
+    if (q != null)
+      q.transform2(pTemp, pTemp);
   }
 
   private void getBondRecordMOL(SB mol, int n, Bond b, int[] atomMap,
@@ -1649,16 +1710,19 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
    * @return PDB file data string
    */
   @Override
-  public String getPdbAtomData(BS bs, OC out) {
+  public String getPdbAtomData(BS bs, OC out, boolean isPQR, boolean doTransform, boolean allTrajectories) {
     if (vwr.ms.ac == 0 || bs.nextSetBit(0) < 0)
       return "";
-    if (out == null)
+    if (out == null) {
       out = vwr.getOutputChannel(null, null);
+    } else {
+      isPQR |= (out.getType().indexOf("PQR") >= 0);
+      doTransform |= (out.getType().indexOf("-coord true") >= 0);
+    }
     Atom[] atoms = vwr.ms.at;
     Model[] models = vwr.ms.am;
     int iModel = atoms[bs.nextSetBit(0)].mi;
     int iModelLast = -1;
-    boolean isPQR = "PQR".equals(out.getType());
     boolean isBiomodel = false;
     String occTemp = "%6.2Q%6.2b          ";
     if (isPQR) {
@@ -1675,13 +1739,17 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
               "\nREMARK   6 Total charge on this protein: " + charge
                   + " e\nREMARK   6\n");
     }
+    
+    
     int lastAtomIndex = bs.length() - 1;
     boolean showModels = (iModel != atoms[lastAtomIndex].mi);
-    SB sbCONECT = (showModels ? null : new SB());
-    SB sbATOMS = new SB();
+    Lst<String> lines = new Lst<String>();
     boolean isMultipleBondPDB = models[iModel].isPdbWithMultipleBonds;
     LabelToken[] tokens;
     P3 ptTemp = new P3();
+    Object[] o = new Object[] { ptTemp };
+    String xyzFormat = "%8.3p%8.3p%8.3p";
+    Quat q = (doTransform ? vwr.tm.getRotationQ() : null);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       isBiomodel = models[a.mi].isBioModel;
@@ -1690,7 +1758,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           out.append("ENDMDL\n");
         iModelLast = a.mi;
         out.append("MODEL     " + (iModelLast + 1) + "\n");
-        sbATOMS = new SB();
+        lines = new Lst<String>();
       }
       String sa = a.getAtomName();
       boolean leftJustify = (a.getElementSymbol().length() == 2
@@ -1698,40 +1766,41 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       boolean isHetero = a.isHetero();
       if (!isBiomodel)
         tokens = (leftJustify ? LabelToken.compile(vwr,
-            "HETATM%5.-5i %-4.4a%1AUNK %1c   1%1E   %8.3x%8.3y%8.3z" + occTemp,
+            "HETATM%5.-5i %-4.4a%1AUNK %1c   1%1E   _XYZ_" + occTemp,
             '\0', null) : LabelToken
             .compile(vwr,
-                "HETATM%5.-5i  %-3.3a%1AUNK %1c   1%1E   %8.3x%8.3y%8.3z"
+                "HETATM%5.-5i  %-3.3a%1AUNK %1c   1%1E   _XYZ_"
                     + occTemp, '\0', null)
 
         );
       else if (isHetero)
         tokens = (leftJustify ? LabelToken.compile(vwr,
-            "HETATM%5.-5i %-4.4a%1A%3.-3n %1c%4.-4R%1E   %8.3x%8.3y%8.3z"
+            "HETATM%5.-5i %-4.4a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null) : LabelToken.compile(vwr,
-            "HETATM%5.-5i  %-3.3a%1A%3.-3n %1c%4.-4R%1E   %8.3x%8.3y%8.3z"
+            "HETATM%5.-5i  %-3.3a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null));
       else
         tokens = (leftJustify ? LabelToken.compile(vwr,
-            "ATOM  %5.-5i %-4.4a%1A%3.-3n %1c%4.-4R%1E   %8.3x%8.3y%8.3z"
+            "ATOM  %5.-5i %-4.4a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null) : LabelToken.compile(vwr,
-            "ATOM  %5.-5i  %-3.3a%1A%3.-3n %1c%4.-4R%1E   %8.3x%8.3y%8.3z"
+            "ATOM  %5.-5i  %-3.3a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null));
       String XX = a.getElementSymbolIso(false).toUpperCase();
-      sbATOMS
-          .append(
-              LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0', null,
-                  ptTemp))
-          .append(XX.length() == 1 ? " " + XX : XX.substring(0, 2))
-          .append("  \n");
+      XX = (a.group.getBioPolymerIndexInModel() + "    ").substring(0, 4)
+          + LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0', null, ptTemp)
+          + (XX.length() == 1 ? " " + XX : XX.substring(0, 2)) + "  ";
+      getPointTransf(-1, vwr.ms, a, q, ptTemp);
+      XX = PT.rep(XX, "_XYZ_", PT.sprintf(xyzFormat, "p", o));
+      lines.addLast(XX);
     }
-    boolean doConnect = (!showModels && isBiomodel);
-    Map<Integer, Integer> map = (doConnect ? new Hashtable<Integer, Integer>() : null);
-    String sAtoms = fixPDBFormat(sbATOMS.toString(), map);
-    if (doConnect) {
+    Map<Integer, Integer> map = new Hashtable<Integer, Integer>();
+    fixPDBFormat(lines, map, out);
+    if (showModels) {
+      out.append("ENDMDL\n");
+    } else {
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         Atom a = atoms[i];
-        boolean isHetero = a.isHetero();
+        boolean isHetero = (!isBiomodel || a.isHetero());
         boolean isCysS = !isHetero && (a.getElementNumber() == 16);
         if (isHetero || isMultipleBondPDB || isCysS) {
           Bond[] bonds = a.bonds;
@@ -1742,8 +1811,9 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
               if (!bs.get(a2.i))
                 continue;
               int n = bonds[j].getCovalentOrder();
-              if (n == 1 && (isMultipleBondPDB && !isHetero && !isCysS
-                  || isCysS && a2.getElementNumber() != 16))
+              if (n == 1
+                  && (isMultipleBondPDB && !isHetero && !isCysS || isCysS
+                      && a2.getElementNumber() != 16))
                 continue;
               int iOther = a2.getAtomNumber();
               switch (n) {
@@ -1753,58 +1823,87 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
                   continue; // only one entry in this case -- pseudo-PDB style
                 //$FALL-THROUGH$
               case 1:
-                sbCONECT.append("CONECT").append(
-                    PT.formatStringI("%5i", "i", map.get(Integer.valueOf(iThis)).intValue()));
-                String s = PT.formatStringI("%5i", "i", map.get(Integer.valueOf(iOther)).intValue());
+                out.append("CONECT").append(
+                    PT.formatStringI("%5i", "i", map
+                        .get(Integer.valueOf(iThis)).intValue()));
+                String s = PT.formatStringI("%5i", "i",
+                    map.get(Integer.valueOf(iOther)).intValue());
                 for (int k = 0; k < n; k++)
-                  sbCONECT.append(s);
-                sbCONECT.appendC('\n');
+                  out.append(s);
+                out.append("\n");
                 break;
               }
             }
         }
       }
     }
-    out.append(sAtoms);
-    if (showModels)
-      out.append("ENDMDL\n");
-    else
-      out.append(sbCONECT.toString());
     return out.toString();
   }
 
   /**
    * must re-order by resno and then renumber atoms
-   * @param s
-   * @param map 
-   * @return fixed string
+   * and add TER records based on BioPolymers
+   * 
+   * note: 3hbt has a break between residues 39 and 51 with
+   *       no TER record, but Jmol will put that in.
+   * 
+   * @param lines
+   * @param map
+   * @param out 
    */
-  private String fixPDBFormat(String s, Map<Integer, Integer> map) {
-    String[] lines = PT.split(s, "\n");
-    Arrays.sort(lines, this);
-      SB sb = new SB();
-      for (int i = 0; i < lines.length; i++) {
-        s = lines[i];
-        int p = PT.parseInt(lines[i].substring(6, 12));
-        if (map != null)
-          map.put(Integer.valueOf(p), Integer.valueOf(i + 1));
-        String si = "     " + (i + 1);
-        sb.append(s.substring(0, 6))
-        .append(si.substring(si.length() - 5))
-        .append(s.substring(11)).append("\n");
+  private void fixPDBFormat(Lst<String> lines, Map<Integer, Integer> map, OC out) {
+    lines.addLast("9999XXXXXX99999999999999999999!99!");
+    String[] alines = new String[lines.size()]; 
+    lines.toArray(alines);
+    Arrays.sort(alines, this);
+    lines.clear();
+    for (int i = 0, n = alines.length; i < n; i++)
+      lines.addLast(alines[i]);
+    int noff = 1;
+    String lastPoly = null;
+    String lastLine = null;
+    for (int i = 0, n = lines.size(); i < n; i++) {
+      String s = lines.get(i);
+      String poly = s.substring(0, 4);
+      s = s.substring(4);
+      boolean isTerm = false;
+      boolean isLast = (s.indexOf("!99!") >= 0);
+      if (!poly.equals(lastPoly) || isLast) {
+        if (lastPoly != null && !lastPoly.equals("-1  ")) {
+          isTerm = true;
+          //TER     458      ASN A  78C                                                      
+          s = "TER   " + s.substring(6, 11) + "      "
+              + lastLine.substring(17, 27);
+          lines.set(i, s);
+        }
+        lastPoly = poly;
       }
-    return sb.toString();
+      if (isLast && !isTerm)
+        break;
+      int p = PT.parseInt(s.substring(6, 11));
+      if (map != null && !isTerm)
+        map.put(Integer.valueOf(p), Integer.valueOf(i + noff));
+      String si = "     " + (i + noff);
+      out.append(s.substring(0, 6)).append(si.substring(si.length() - 5))
+          .append(s.substring(11)).append("\n");
+      if (isTerm) {
+        noff++;
+      }
+      lastLine = s;
+    }
   }
+
 
   @Override
   public int compare(String s1, String s2) {
-    int atA = PT.parseInt(s1.substring(6, 12));
-    int atB = PT.parseInt(s2.substring(6, 12));
-    int resA = PT.parseInt(s1.substring(22, 26));
-    int resB = PT.parseInt(s2.substring(22, 26));
+    int atA = PT.parseInt(s1.substring(10, 16));
+    int atB = PT.parseInt(s2.substring(10, 16));
+    int resA = PT.parseInt(s1.substring(26, 30));
+    int resB = PT.parseInt(s2.substring(26, 30));
     return (resA < resB ? -1 : resA > resB ? 1 : atA < atB ? -1
         : atA > atB ? 1 : 0);
   }
+
   /* **********************
    * 
    * Jmol Data Frame methods
@@ -1947,7 +2046,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
    * </bondArray> </molecule>
    */
   @Override
-  public String getModelCml(BS bs, int atomsMax, boolean addBonds) {
+  public String getModelCml(BS bs, int atomsMax, boolean addBonds, boolean doTransform, boolean allTrajectories) {
+    // not allowing full trajectory business here. 
     SB sb = new SB();
     int nAtoms = BSUtil.cardinalityOf(bs);
     if (nAtoms == 0)
@@ -1992,36 +2092,6 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     }
     XmlUtil.closeTag(sb, "molecule");
     return sb.toString();
-  }
-
-  @Override
-  public String getCoordinateFileData(String atomExpression, String type) {
-    String exp = "";
-    if (type.equalsIgnoreCase("MOL") || type.equalsIgnoreCase("SDF")
-        || type.equalsIgnoreCase("V2000") || type.equalsIgnoreCase("V3000")
-        || type.equalsIgnoreCase("XYZVIB") || type.equalsIgnoreCase("CD") || type.equalsIgnoreCase("JSON"))
-      return vwr.getModelExtract(atomExpression, false, false, type);
-    if (type.toLowerCase().indexOf("property_") == 0)
-      exp = "{selected}.label(\"%{" + type + "}\")";
-    else if (type.equalsIgnoreCase("CML"))
-      return getModelCml(vwr.getAtomBitSet(atomExpression), Integer.MAX_VALUE, true);
-    else if (type.equalsIgnoreCase("PDB"))
-      // very crude - no connections -- not used
-      exp = "{selected and not hetero}.label(\"ATOM  %5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
-             + "+{selected and hetero}.label(\"HETATM%5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines";
-    else if (type.equalsIgnoreCase("XYZRN"))
-      exp = "\"\" + {selected}.size + \"\n\n\"+{selected}.label(\"%-2e %8.3x %8.3y %8.3z %4.2[vdw] 1 [%n]%r.%a#%i\").lines";
-    else if (type.startsWith("USER:"))
-      exp = "{selected}.label(\"" + type.substring(5) + "\").lines";
-    else
-      // if(type.equals("XYZ"))
-      exp = "\"\" + {selected}.size + \"\n\n\"+{selected}.label(\"%-2e %10.5x %10.5y %10.5z\").lines";
-    if (!atomExpression.equals("selected"))
-      exp = PT.rep(exp, "selected", atomExpression);
-    String s = (String) vwr.evaluateExpression(exp);
-    if (type.equalsIgnoreCase("PDB"))
-      s = fixPDBFormat(s, null);
-    return s;
   }
 
 

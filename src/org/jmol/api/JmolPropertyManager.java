@@ -33,16 +33,16 @@ public interface JmolPropertyManager {
   String getChimeInfo(int tok, BS selectionSet);
 
   String getModelExtract(BS atomBitSet, boolean doTransform, boolean isModelKit,
-                         String type);
+                         String type, boolean allTrajectories);
 
-  String getPdbAtomData(BS bs, OC sb);
+  String getPdbAtomData(BS bs, OC out, boolean asPQR, boolean doTransform, boolean allTrajectories);
 
   String getPdbData(int modelIndex, String type, BS bsA, Object[] parameters,
                     OC oc, boolean addStructure);
 
-  String getModelCml(BS bs, int nAtomsMax, boolean addBonds);
+  String getModelCml(BS bs, int nAtomsMax, boolean addBonds, boolean doTransform, boolean allTrajectories);
 
-  String getCoordinateFileData(String atomExpression, String type);
+  String getAtomData(String atomExpression, String type, boolean allTrajectories);
 
 
 }

@@ -568,6 +568,8 @@ public class LabelToken {
         break;
       case 'r':
         strT = atom.group.getSeqcodeString();
+        if (strT == null)
+          strT = "1";
         break;
       case T.strucid:
         strT = atom.group.getStructureId();

@@ -331,13 +331,9 @@ abstract class ScriptTokenParser {
     return theToken;
   }
   
-  private boolean isToken(int tok) {
-    return theToken != null && theToken.tok == tok;
-  }
-  
   private boolean getNumericalToken() {
     return (getToken() != null 
-        && (isToken(T.integer) || isToken(T.decimal)));
+        && (theToken.tok == T.integer || theToken.tok == T.decimal));
   }
   
   private float floatValue() {
@@ -948,7 +944,7 @@ abstract class ScriptTokenParser {
   private boolean addCompare(T tokenAtomProperty, T tokenComparator) {
     if (getToken() == null)
       return errorStr(ERROR_unrecognizedExpressionToken, "" + valuePeek());
-    boolean isNegative = (isToken(T.minus));
+    boolean isNegative = (theToken.tok == T.minus);
     if (isNegative && getToken() == null)
       return error(ERROR_numberExpected);
     switch (theToken.tok) {
@@ -967,7 +963,7 @@ abstract class ScriptTokenParser {
         tokenComparator.value + (isNegative ? " -" : ""));
     if (tokenAtomProperty.tok == T.property)
       addTokenToPostfixToken(tokenAtomProperty);
-    if (isToken(T.leftbrace)) {
+    if (theToken.tok == T.leftbrace) {
       returnToken();
       return clausePrimitive();
     }
@@ -986,11 +982,11 @@ abstract class ScriptTokenParser {
       return error(ERROR_coordinateExpected);
     // 555 = {1 1 1}
     //Token coord = tokenNext(); // 555 == {1 1 1}
-    if (isToken(T.integer)) {
+    if (theToken.tok == T.integer) {
       SimpleUnitCell.ijkToPoint3f(theToken.intValue,  cell,  1);
       return addTokenToPostfix(tok, cell);
     }
-    if (!isToken(T.leftbrace) || !getNumericalToken())
+    if (theToken.tok != T.leftbrace || !getNumericalToken())
       return error(ERROR_coordinateExpected); // i
     cell.x = floatValue();
     if (tokPeekIs(T.comma)) // ,
@@ -1157,9 +1153,9 @@ abstract class ScriptTokenParser {
       return true;
     case T.leftsquare:
       String strSpec = "";
-      while (getToken() != null && !isToken(T.rightsquare))
+      while (getToken() != null && theToken.tok != T.rightsquare)
         strSpec += theValue;
-      if (!isToken(T.rightsquare))
+      if (theToken == null)
         return false;
       if (strSpec == "")
         return true;
@@ -1371,31 +1367,24 @@ abstract class ScriptTokenParser {
     if (getToken() == null)
       return true;
     String atomSpec = "";
-    if (isToken(T.integer)) {
+    if (theToken.tok == T.integer) {
       atomSpec += "" + theToken.intValue;
       if (getToken() == null)
         return error(ERROR_invalidAtomSpecification);
     }
-    switch (theToken.tok) {
-    case T.times:
+    if (theToken.tok == T.times)
       return true;
-      // here we cannot depend upon the atom spec being an identifier
-      // in other words, not a known Jmol word. As long as the period 
-      // was there, we accept whatever is next
-      //case Token.opIf:
-      //case Token.identifier:
-      //break;
-      //default:
-      //return error(ERROR_invalidAtomSpecification);
-    }
+    // here we cannot depend upon the atom spec being an identifier
+    // in other words, not a known Jmol word. As long as the period 
+    // was there, we accept whatever is next
     atomSpec += "" + theToken.value;
     if (tokPeekIs(T.times)) {
       tokenNext();
       // this one is a '*' as a prime, not a wildcard
       atomSpec += "'";
     }
-    int atomID = vwr.getJBR().lookupSpecialAtomID(atomSpec.toUpperCase());
-    return generateResidueSpecCode(T.tv(T.spec_atom, atomID, atomSpec));
+    return generateResidueSpecCode(T.tv(T.spec_atom, vwr.getJBR()
+        .lookupSpecialAtomID(atomSpec.toUpperCase()), atomSpec));
   }
   
 //----------------------------------------------------------------------------------------

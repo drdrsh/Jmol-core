@@ -271,7 +271,6 @@ abstract public class JmolViewer {
   abstract public void pushHoldRepaint();
   abstract public void popHoldRepaint(String why);
 
-  // for example: getData("selected","XYZ");
   abstract public String getData(String atomExpression, String type);
 
   abstract public String getSmiles(BS atoms) throws Exception;

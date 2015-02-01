@@ -403,6 +403,8 @@ public final class ModelLoader {
         oldSet.vibrationSteps.addLast(newSet.vibrationSteps == null ? null
             : newSet.vibrationSteps.get(i));
       }
+    } else {
+      newSet.trajectory = newTrajectory(newSet, null);
     }
     newSet.vibrationSteps = oldSet.vibrationSteps;
     newSet.trajectory.steps = oldSet.trajectory.steps;

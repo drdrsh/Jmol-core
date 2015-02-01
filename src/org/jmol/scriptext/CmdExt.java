@@ -3362,10 +3362,11 @@ public class CmdExt implements JmolCmdExtension {
           data = vwr.ms.getPointGroupAsString(vwr.bsA(), type2.equals("draw"), null, 0, 1.0f);
         } else if (data == "PDB" || data == "PQR") {
           if (isShow) {
-            data = vwr.getPdbAtomData(null, null);
+            data = vwr.getPdbAtomData(null, null, (data == "PQR"), isCoord);
           } else {
             doDefer = true;
-            /*
+            type = "PDB-" + data + "-coord " + isCoord;
+             /*
              * OutputStream os = vwr.getOutputStream(fileName, fullPath); msg =
              * vwr.getPdbData(null, new BufferedOutputStream(os)); if (msg !=
              * null) msg = "OK " + msg + " " + fullPath[0]; try { os.close(); }
@@ -3379,17 +3380,12 @@ public class CmdExt implements JmolCmdExtension {
             doDefer = true;
           if ("?".equals(fileName))
             fileName = "?Jmol." + vwr.getP("_fileType");
-        } else if ((data == "SDF" || data == "MOL" || data == "V2000"
-            || data == "V3000" || data == "CD" || data == "JSON")
-            && isCoord) {
-          data = vwr.getModelExtract("selected", true, false, data);
-          if (data.startsWith("ERROR:"))
-            bytes = data;
-        } else if (data == "XYZ" || data == "XYZRN" || data == "XYZVIB"
-            || data == "MOL" || data == "SDF" || data == "V2000"
-            || data == "V3000" || data == "CML" || data == "CD"
-            || data == "JSON") {
-          data = vwr.getData("selected", data);
+        } else if (data == "SDF" || data == "MOL" || data == "V2000"
+            || data == "V3000" || data == "CD" || data == "JSON"            
+            || data == "XYZ" || data == "XYZRN" || data == "XYZVIB"
+            || data == "CML"
+            ) {
+          data = vwr.getModelExtract("selected", isCoord, false, data);
           if (data.startsWith("ERROR:"))
             bytes = data;
         } else if (data == "FUNCTION") {

@@ -345,10 +345,9 @@ public class NBODialog extends JDialog implements ChangeListener {
     } else {
       info.put("action", "run");
       String fname = nboService.workingPath + File.separator + "jmol.orc";
-      String orcData = vwr.getData("*", "orc");
-      orcData = "%coords\ncoords" + orcData.substring(orcData.indexOf("\n\n") + 1) + "end\nend\n";
+      String orcData = "%coords\ncoords\n" + vwr.getData("*", "USER:%-2e %10.5x %10.5y %10.5z") + "end\nend\n";
       vwr.writeTextFile(fname, orcData);
-      cmd = "xxxuse.orc " + fname + "\n" + cmd;
+      cmd = "___use.orc " + fname + "\n" + cmd;
     }
     info.put("value", cmd.substring(3));
     if (!nboService.processRequest(info)) {

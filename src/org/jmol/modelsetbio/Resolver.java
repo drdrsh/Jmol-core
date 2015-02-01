@@ -753,7 +753,7 @@ public final class Resolver implements JmolBioResolver {
       previous = current;
       count++;
     }
-    if (count == 0)
+    if (count < 2)
       return null;
     Monomer[] monomers = new Monomer[count];
     for (int j = 0; j < count; ++j)

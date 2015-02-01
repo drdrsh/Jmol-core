@@ -1071,7 +1071,7 @@ public class AnnotationParser implements JmolAnnotationParser {
         String name = (String) vwr.setLoadFormat("=dssrModel/", '=', false);
         name = PT.rep(name, "%20", " ");
         Logger.info("fetching " + name + "[pdb data]");
-        String data = vwr.getPdbAtomData(bs, null);
+        String data = vwr.getPdbAtomData(bs, null, false, false);
         data = vwr.getFileAsString3(name + data, false, null);
         processDSSR(info, new Rdr(Rdr.getBR(data)), null, null);
       } catch (Exception e) {
