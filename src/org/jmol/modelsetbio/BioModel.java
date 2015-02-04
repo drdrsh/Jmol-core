@@ -836,6 +836,132 @@ public final class BioModel extends Model implements JmolBioModel {
     ms.haveStraightness = true;
   }
 
+  @Override
+  public boolean mutate(BS bs, String group, String[] sequence) {
+    
+    int i0 = bs.nextSetBit(0);
+    if (sequence == null)
+      return mutateAtom(i0, group);
+    boolean isFile = (group == null);
+    if (isFile)
+      group = sequence[0];
+    Group lastGroup = null;
+    boolean isOK = true;
+    for (int i = i0, pt = 0; i >= 0; i = bs.nextSetBit(i + 1)) {
+      Group g = ms.at[i].group;
+      if (g == lastGroup)
+        continue;
+      lastGroup = g;
+      if (!isFile) {
+        group = sequence[pt++ % sequence.length];
+        if (group.equals("UNK"))
+          continue;
+        group = "==" + group;
+      }
+      mutateAtom(i, group);
+    }
+    return isOK;
+  }
+  
+  private boolean mutateAtom(int iatom, String fileName) {
+    // no mutating a trajectory. What would that mean???
+    int iModel = ms.at[iatom].mi;
+    if (ms.isTrajectory(iModel))
+      return false; 
+    
+    String[] info = vwr.fm.getFileInfo();
+    boolean b = vwr.getBoolean(T.appendnew);
+    Group g = ms.at[iatom].group;
+    //try {
+      // get the initial group -- protein for now
+      if (!(g instanceof AminoMonomer))
+        return false;
+      ((BioModel) ms.am[iModel]).isMutated = true;
+      AminoMonomer res0 = (AminoMonomer) g;
+      int ac = ms.ac;
+      BS bsRes0 = new BS();
+      res0.setAtomBits(bsRes0);
+      int r = g.getResno();
+      
+      // just use a script -- it is much easier!
+      
+      fileName = PT.esc(fileName);
+      String script = "" +
+            "try{\n"
+          + "  var atoms0 = {*}\n"
+          + "  var res0 = " + BS.escape(bsRes0,'(',')')  + "\n"
+          + "  set appendNew false\n"
+          + "  load append "+fileName+"\n"
+          + "  set appendNew " + b + "\n"
+          + "  var res1 = {!atoms0};var r1 = res1[1];var r0 = res1[0]\n"
+          + "  if ({r1 & within(group, r0)}){\n" 
+          + "    var haveHs = ({_H & connected(res0)} != 0)\n"
+          + "    if (!haveHs) {delete _H & res1}\n"
+          + "    var sm = '[*.N][*.CA][*.C][*.O]'\n"
+          + "    var keyatoms = res1.find(sm)\n"
+          + "    var x = compare(res1,res0,sm,'BONDS')\n"
+          + "    if(x){\n"
+          + "      print 'mutating ' + res0[1].label('%n%r') + ' to ' + "+fileName+".trim('=')\n"
+          + "      rotate branch @x\n"
+          + "      compare res1 res0 SMARTS @sm rotate translate 0\n"
+          + "      var c = {!res0 & connected(res0)}\n"
+          + "      var N2 = {*.N & c}\n"
+          + "      var C0 = {*.C & c}\n"
+          + "      delete res0\n"
+          + "      if (N2) {\n"
+          + "        delete *.OXT and res1\n"
+          + "        connect {N2} {keyatoms & *.C}\n"
+          + "      }\n"
+          + "      if (C0) {\n"
+          + "        connect {C0} {keyatoms & *.N}\n"
+          + "      }\n"
+          + "    }\n"
+          + "  }\n"
+          + "}catch(e){print e}\n";
+      try {
+        if (Logger.debugging)
+          Logger.debug(script);
+        vwr.eval.runScript(script);
+      } catch (Exception e) {
+        // TODO
+      }
+      if (ms.ac == ac)
+        return false;
+      // check for protein monomer
+      g = ms.at[ms.ac - 1].group;
+      if (g != ms.at[ac + 1].group || !(g instanceof AminoMonomer)) {
+        BS bsAtoms = new BS();
+        g.setAtomBits(bsAtoms);
+        vwr.deleteAtoms(bsAtoms, false);
+        return  false;
+      }
+      AminoMonomer res1 = (AminoMonomer) g;
+      
+      // must get new group into old chain
+      
+      Group[] groups = res0.chain.groups;
+      for (int i = groups.length; --i >= 0;)
+        if (groups[i] == res0) {
+          groups[i] = res1;
+          break;
+        }
+      res1.setResno(r);
+      res1.chain.groupCount = 0;
+      res1.chain = res0.chain;
+      BS bsExclude = BSUtil.newBitSet2(0, ms.mc);
+      bsExclude.clear(res1.chain.model.modelIndex);
+      res1.chain.model.groupCount = -1;
+      res1.chain.model.freeze();
+      ms.recalculatePolymers(bsExclude);      
+    //} catch (Exception e) {
+     // System.out.println("" + e);
+   // }
+    vwr.setBooleanProperty("appendNew", b);
+    vwr.fm.setFileInfo(info);
+    return true;
+
+  }
+
 
 /////////////////////////////////////////////////////////////////////////  
   

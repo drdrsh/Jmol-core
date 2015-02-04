@@ -95,4 +95,6 @@ public interface JmolBioModel {
 
   public void resetRasmolBonds(BS bs);
 
+  boolean mutate(BS bs, String group, String[] sequence);
+
 }

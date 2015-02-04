@@ -2213,7 +2213,7 @@ public class CmdExt implements JmolCmdExtension {
       return;
     String group = e.optParameterAsString(i);
     e.checkLast(i);
-    if (chk)
+    if (chk || !vwr.ms.am[vwr.ms.mc - 1].isBioModel)
       return;
     boolean isFile = (tokAt(i) == T.string && !group.startsWith("~"));
     String[] list = null;
@@ -2223,14 +2223,14 @@ public class CmdExt implements JmolCmdExtension {
     } else {
       group = PT.replaceAllCharacters(group, ",; \t\n", " ").trim()
           .toUpperCase();
-      if (group.startsWith("~") || group.length() != 3
+      boolean isOneLetter = group.startsWith("~"); 
+      if (isOneLetter || group.length() != 3
           || !vwr.getJBR().isKnownPDBGroup(group, 20))
-        group = vwr.getJBR().toStdAmino3(group);
+        group = vwr.getJBR().toStdAmino3(isOneLetter ? group.substring(1) : group);
     }
     list = PT.getTokens(group);
-    if (list.length == 0)
-      return;
-    vwr.getJBR().mutate(bs, group, list);
+    if (list.length > 0)
+      vwr.ms.bioModel.mutate(bs, group, list);
   }
 
   private void navigate() throws ScriptException {

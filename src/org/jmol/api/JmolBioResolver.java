@@ -56,8 +56,6 @@ public interface JmolBioResolver {
 
   public short getGroupID(String g3);
 
-  public boolean mutate(BS bs, String fileName, String[] sequence);
-
   public String toStdAmino3(String sValue);
   
   }

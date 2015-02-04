@@ -307,7 +307,16 @@ abstract public class Binding {
     Lst<String>[] names = new Lst[actionInfo.length];
     Lst<String[]> user = new Lst<String[]>();
     for (Object obj : bindings.values()) {
-      if (PT.isAI(obj)) {
+      if (PT.isAS(obj)) {
+        String action = ((String[]) obj)[0];
+        String script = ((String[]) obj)[1];
+        if (qlow == null || qlow.indexOf("user") >= 0 || action.indexOf(qlow) >= 0 || script.indexOf(qlow) >= 0)
+          user.addLast((String[]) obj);
+      } else {
+        
+        // we cannot test using PT.isAI() here because of a Java2Script compiler error
+        // in relation to new int[] {.....}  BH  2015.02.03
+        
         int[] info = (int[]) obj;
         int i = info[1];
         if (names[i] == null)
@@ -316,11 +325,6 @@ abstract public class Binding {
         if (qlow == null
           || (actionNames[i] + ";" + actionInfo[i] + ";" + name).toLowerCase().indexOf(qlow) >= 0)
         names[i].addLast(name);
-      } else if (PT.isAS(obj)) {
-        String action = ((String[]) obj)[0];
-        String script = ((String[]) obj)[1];
-        if (qlow == null || qlow.indexOf("user") >= 0 || action.indexOf(qlow) >= 0 || script.indexOf(qlow) >= 0)
-          user.addLast((String[]) obj);
       }
     }
     for (int i = 0; i < actionInfo.length; i++) {
