@@ -158,13 +158,15 @@ public class DataManager implements JmolDataManager {
         // just get the selected token values
         bs = (BS) data[DATA_SELECTION_MAP];
         if (floatData != null) {
-          if (floatData.length == bs.cardinality())
+          int n = floatData.length;
+          if (n == bs.cardinality()) {
             for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs
                 .nextSetBit(i + 1), pt++)
               f[i] = floatData[pt];
-          else
-            for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+          } else {
+            for (int i = bs.nextSetBit(0); i >= 0 && i < n; i = bs.nextSetBit(i + 1))
               f[i] = floatData[i];
+          }
         } else {
           Parser.parseFloatArrayBsData(
               strData == null ? PT.getTokens(stringData) : strData, bs, f);

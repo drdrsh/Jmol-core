@@ -75,7 +75,7 @@ abstract public class AtomCollection {
   public Viewer vwr;
   protected GData g3d;
 
-  public JmolBioModel bioModel; // Model also holds modelset methods relating only to biomodels
+  public JmolBioModelSet bioModelset; // Model also holds modelset methods relating only to biomodels
   public boolean haveBioModels;
   
   
@@ -2069,123 +2069,113 @@ abstract public class AtomCollection {
    * 
    * @param tokType
    * @param specInfo
-   * @param bs - to be filled
+   * @param bs
+   *        - to be filled
    * @return BitSet; or null if we mess up the type
    */
   public BS getAtomBitsMDa(int tokType, Object specInfo, BS bs) {
-    BS bsInfo;
-    BS bsTemp;
-    int iSpec = (specInfo instanceof Integer ? ((Integer) specInfo).intValue() : 0);
-    
-    // this first set does not assume sequential order in the file
+    int iSpec = (specInfo instanceof Integer ? ((Integer) specInfo).intValue()
+        : 0);
 
-    int i = 0;
     switch (tokType) {
-    // could be PDB type file with UNK
-    case T.chain:
-    case T.spec_alternate:
-      String spec = (String) specInfo;
-      for (i = ac; --i >= 0;)
-        if (isAltLoc(at[i].altloc, spec))
+    case T.atomname:
+    case T.atomtype:
+      // within(atomname
+      // within(atomtype
+      boolean isType = (tokType == T.atomtype);
+      String names = "," + specInfo + ",";
+      for (int i = ac; --i >= 0;) {
+        String s = (isType ? at[i].getAtomType() : at[i].getAtomName());
+        if (names.indexOf("," + s + ",") >= 0)
           bs.set(i);
-      break;
-    case T.resno:
-      for (i = ac; --i >= 0;)
-        if (at[i].getResno() == iSpec)
+      }
+      return bs;
+    case T.atomno:
+      for (int i = ac; --i >= 0;)
+        if (at[i].getAtomNumber() == iSpec)
           bs.set(i);
-      break;
-    case T.spec_resid:
-      for (i = ac; --i >= 0;)
-        if (at[i].group.groupID == iSpec)
+      return bs;
+    case T.bonded:
+      for (int i = ac; --i >= 0;)
+        if (at[i].getCovalentBondCount() > 0)
           bs.set(i);
-      break;
-    case T.spec_chain:
-      return BSUtil.copy(getChainBits(iSpec));
-    case T.spec_seqcode:
-      return BSUtil.copy(getSeqcodeBits(iSpec, true));
-    case T.hetero:
-      for (i = ac; --i >= 0;)
-        if (at[i].isHetero())
-          bs.set(i);
-      break;
+      return bs;
     case T.carbohydrate:
     case T.dna:
     case T.helix: // WITHIN -- not ends
     case T.nucleic:
-    case T.polymer:
     case T.protein:
     case T.purine:
     case T.pyrimidine:
     case T.rna:
     case T.sheet: // WITHIN -- not ends
-    case T.structure:
-      return (haveBioModels ? bioModel.getAtomBits(tokType, specInfo, bs) : bs);            
-    case T.solvent:
-      // fast search for water
-      return getWaterAtoms(bs);
-    case T.symop:
-      for (i = ac; --i >= 0;)
-        if (at[i].getSymOp() == iSpec)
+      return (haveBioModels ? bioModelset.getAtomBitsBS(tokType, null, bs) : bs);
+    case T.hetero:
+      for (int i = ac; --i >= 0;)
+        if (at[i].isHetero())
           bs.set(i);
-      break;
-    case T.atomno:
-      for (i = ac; --i >= 0;)
-        if (at[i].getAtomNumber() == iSpec)
-          bs.set(i);
-      break;
-    case T.bonded:
-      for (i = ac; --i >= 0;)
-        if (at[i].getCovalentBondCount() > 0)
-          bs.set(i);
-      break;
-    case T.atomname:
-      String names = "," + specInfo + ",";
-      for (i = ac; --i >= 0;) {
-        String name = at[i].getAtomName();
-        if (names.indexOf(name) >= 0)
-          if (names.indexOf("," + name + ",") >= 0)
-            bs.set(i);
-      }
-      break;
-    case T.atomtype:
-      String types = "," + specInfo + ",";
-      for (i = ac; --i >= 0;) {
-        String type = at[i].getAtomType();
-        if (types.indexOf(type) >= 0)
-          if (types.indexOf("," + type + ",") >= 0)
-            bs.set(i);
-      }
-      break;
+      return bs;
     case T.hydrogen:
-      for (i = ac; --i >= 0;)
+      for (int i = ac; --i >= 0;)
         if (at[i].getElementNumber() == 1)
           bs.set(i);
-      break;
-    case T.leadatom:
-      for (i = ac; --i >= 0;)
-        if (at[i].isLeadAtom())
-          bs.set(i);
-      break;
-    case T.element:
-      bsInfo = (BS) specInfo;
-      bsTemp = new BS();
-      for (i = bsInfo.nextSetBit(0); i >= 0; i = bsInfo.nextSetBit(i + 1))
-        bsTemp.set(at[i].getElementNumber());
-      for (i = ac; --i >= 0;)
-        if (bsTemp.get(at[i].getElementNumber()))
-          bs.set(i);
-      break;
-    case T.site:
-      bsInfo = (BS) specInfo;
-      bsTemp = new BS();
-      for (i = bsInfo.nextSetBit(0); i >= 0; i = bsInfo.nextSetBit(i + 1))
-        bsTemp.set(at[i].atomSite);
-      for (i = ac; --i >= 0;)
-        if (bsTemp.get(at[i].atomSite))
-          bs.set(i);
-      break;
+      return bs;
     case T.identifier:
       return getIdentifierOrNull((String) specInfo);
+    case T.leadatom:
+      for (int i = ac; --i >= 0;)
+        if (at[i].isLeadAtom())
+          bs.set(i);
+      return bs;
+    case T.polymer:
+    case T.structure:
+      return (haveBioModels ? bioModelset.getAtomBitsBS(tokType, (BS) specInfo, bs)
+          : bs);
+    case T.resno:
+      // could be PDB type file with UNK
+      for (int i = ac; --i >= 0;)
+        if (at[i].getResno() == iSpec)
+          bs.set(i);
+      return bs;
+    case T.solvent:
+      // fast search for water
+
+      // this is faster by a factor of 2  Jmol 14.1.12  -BH
+
+      //"@water _g>=" + GROUPID_WATER + " & _g<" + GROUPID_SOLVENT_MIN
+      //+ ", oxygen & connected(2) & connected(2, hydrogen),  
+      //(hydrogen) & connected(oxygen & connected(2) & connected(2, hydrogen))",
+
+      int[] hs = new int[2];
+      Atom a;
+      for (int i = ac; --i >= 0;) {
+        int g = at[i].group.groupID;
+        if (g >= JC.GROUPID_WATER && g < JC.GROUPID_SOLVENT_MIN) {
+          bs.set(i);
+        } else if ((a = at[i]).getElementNumber() == 8
+            && a.getCovalentBondCount() == 2) {
+          Bond[] bonds = a.bonds;
+          int n = 0;
+          Atom b;
+          for (int j = bonds.length; --j >= 0 && n < 3;)
+            if (bonds[j].isCovalent()
+                && (b = bonds[j].getOtherAtom(a)).getElementNumber() == 1)
+              hs[n++ % 2] = b.i;
+          if (n == 2) {
+            bs.set(hs[1]);
+            bs.set(hs[0]);
+            bs.set(i);
+          }
+        }
+      }
+      return bs;
+    case T.spec_alternate:
+      // could be PDB type file with UNK
+      String spec = (String) specInfo;
+      for (int i = ac; --i >= 0;)
+        if (isAltLoc(at[i].altloc, spec))
+          bs.set(i);
+      return bs;
     case T.spec_atom:
       String atomSpec = ((String) specInfo).toUpperCase();
       if (atomSpec.indexOf("\\?") >= 0)
@@ -2194,54 +2184,79 @@ abstract public class AtomCollection {
       boolean allowStar = atomSpec.startsWith("?*");
       if (allowStar)
         atomSpec = atomSpec.substring(1);
-      for (i = ac; --i >= 0;)
+      for (int i = ac; --i >= 0;)
         if (isAtomNameMatch(at[i], atomSpec, allowStar, allowStar))
           bs.set(i);
-      break;
+      return bs;
+    case T.spec_chain:
+      return BSUtil.copy(getChainBits(iSpec));
     case T.spec_name_pattern:
       return getSpecName((String) specInfo);
-    }
-    if (i < 0)
+    case T.spec_resid:
+      // could be PDB type file with UNK
+      for (int i = ac; --i >= 0;)
+        if (at[i].group.groupID == iSpec)
+          bs.set(i);
       return bs;
+    case T.spec_seqcode:
+      return BSUtil.copy(getSeqcodeBits(iSpec, true));
+    case T.symop:
+      for (int i = ac; --i >= 0;)
+        if (at[i].getSymOp() == iSpec)
+          bs.set(i);
+      return bs;
+    }
 
-    // these next assume sequential position in the file
-    // speeding delivery -- Jmol 11.9.24
-    // TODO WHAT ABOUT MUTATED?
-
-    bsInfo = (BS) specInfo;
+    BS bsTemp;
+    BS bsInfo = (BS) specInfo;
     int i0 = bsInfo.nextSetBit(0);
     if (i0 < 0)
-      return bs;    
-    i = 0;
+      return bs;
     switch (tokType) {
     case T.model:
-      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        if (bs.get(i))
-          continue;
-        int iModel = at[i].mi;
-        bs.set(i);
-        for (int j = i; --j >= 0;)
-          if (at[j].mi == iModel)
-            bs.set(j);
-          else
-            break;
-        for (; ++i < ac;)
-          if (at[i].mi == iModel)
-            bs.set(i);
-          else
-            break;
+      // within(model
+      bsTemp = BSUtil.copy(bsInfo);
+      for (int i = i0; i >= 0; i = bsTemp.nextSetBit(i + 1)) {
+        bs.or(((ModelSet) this).am[at[i].mi].bsAtoms);
+        bsTemp.andNot(bs);
       }
-      break;
+      return bs;
+    case T.chain:
+      // within(chain
+      bsTemp = BSUtil.copy(bsInfo);
+      for (int i = i0; i >= 0; i = bsTemp.nextSetBit(i + 1)) {
+        at[i].group.chain.setAtomBits(bs);
+        bsTemp.andNot(bs);
+      }
+      return bs;
+    case T.element:
+      // within(element
+      bsTemp = new BS();
+      for (int i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1))
+        bsTemp.set(at[i].getElementNumber());
+      for (int i = ac; --i >= 0;)
+        if (bsTemp.get(at[i].getElementNumber()))
+          bs.set(i);
+      return bs;
     case T.group:
-      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        int j = at[i].group.setAtomBits(bs);
-        if (j > i)
-          i = j;
+      // within(group
+      bsTemp = BSUtil.copy(bsInfo);
+      for (int i = i0; i >= 0; i = bsTemp.nextSetBit(i + 1)) {
+        at[i].group.setAtomBits(bs);
+        bsTemp.andNot(bs);
       }
-      break;
+      return bs;
+    case T.site:
+      // within(site
+      bsTemp = new BS();
+      for (int i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1))
+        bsTemp.set(at[i].atomSite);
+      for (int i = ac; --i >= 0;)
+        if (bsTemp.get(at[i].atomSite))
+          bs.set(i);
+      return bs;
     }
-    if (i == 0)
-      Logger.error("MISSING getAtomBits entry for " + T.nameOf(tokType));
+    Logger.error("MISSING getAtomBits entry for " + T.nameOf(tokType));
     return bs;
   }
   
@@ -2315,38 +2330,6 @@ abstract public class AtomCollection {
   }
   
 
-  private BS getWaterAtoms(BS bs) {
-    
-    // this is faster by a factor of 2  Jmol 14.1.12  -BH
-    
-    //"@water _g>=" + GROUPID_WATER + " & _g<" + GROUPID_SOLVENT_MIN
-    //+ ", oxygen & connected(2) & connected(2, hydrogen),  
-    //(hydrogen) & connected(oxygen & connected(2) & connected(2, hydrogen))",
-    
-    int[] hs = new int[2];
-    Atom a;
-   for (int i = ac; --i >= 0;) {
-      int g = at[i].group.groupID;
-      if (g >= JC.GROUPID_WATER && g < JC.GROUPID_SOLVENT_MIN) {
-        bs.set(i);
-      } else if ((a = at[i]).getElementNumber() == 8 && a.getCovalentBondCount() == 2) {
-        Bond[] bonds = a.bonds;
-        int n = 0;
-        Atom b;
-        for (int j = bonds.length; --j >= 0 && n < 3;)
-          if (bonds[j].isCovalent()
-              && (b=bonds[j].getOtherAtom(a)).getElementNumber() == 1)
-            hs[n++ % 2] = b.i;
-        if (n == 2) {
-          bs.set(hs[1]);
-          bs.set(hs[0]);
-          bs.set(i);
-        }
-      }
-    }
-    return bs;
-  }
-
   /**
    * overhauled by RMH Nov 1, 2006.
    * 
@@ -2380,7 +2363,7 @@ abstract public class AtomCollection {
       identifier = PT.rep(identifier, "\\?","\1");
     return (bs != null || identifier.indexOf("?") > 0 ? bs
         : identifier.indexOf("*") > 0 ? getSpecNameOrNull(identifier, true)
-        : haveBioModels ? bioModel.getIdentifierOrNull(identifier) 
+        : haveBioModels ? bioModelset.getIdentifierOrNull(identifier) 
         : null);
   }
 

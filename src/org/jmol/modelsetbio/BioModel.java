@@ -42,10 +42,10 @@ import org.jmol.c.STR;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
-import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.HBond;
 import org.jmol.modelset.JmolBioModel;
+import org.jmol.modelset.JmolBioModelSet;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
@@ -63,7 +63,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 
-public final class BioModel extends Model implements JmolBioModel {
+public final class BioModel extends Model implements JmolBioModelSet, JmolBioModel {
 
   /*
    *   
@@ -356,83 +356,6 @@ public final class BioModel extends Model implements JmolBioModel {
       }
     return bsResult;
   }
-
-  private BS getSelectCodeRange(int[] info) {
-    BS bs = new BS();
-    int seqcodeA = info[0];
-    int seqcodeB = info[1];
-    int chainID = info[2];
-    boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
-    if (chainID >= 0 && chainID < 300 && !caseSensitive)
-      chainID = ms.chainToUpper(chainID);
-    for (int iModel = ms.mc; --iModel >= 0;)
-      if (ms.am[iModel].isBioModel) {
-        BioModel m = (BioModel) ms.am[iModel];
-        int id;
-        for (int i = m.chainCount; --i >= 0;) {
-          Chain chain = m.chains[i];
-          if (chainID == -1 || chainID == (id = chain.chainID) || !caseSensitive
-              && id > 0 && id < 300 && chainID == ms.chainToUpper(id)) {
-            Group[] groups = chain.groups;
-            int n = chain.groupCount;
-            for (int index = 0; index >= 0;) 
-              index = selectSeqcodeRange(groups, n, index, seqcodeA, seqcodeB, bs);
-          }
-        }
-      }
-    return bs;
-  }
-
-  private static int selectSeqcodeRange(Group[] groups, int groupCount, int index, int seqcodeA, int seqcodeB,
-                                BS bs) {
-    int seqcode, indexA, indexB, minDiff;
-    boolean isInexact = false;
-    for (indexA = index; indexA < groupCount
-        && groups[indexA].seqcode != seqcodeA; indexA++) {
-    }
-    if (indexA == groupCount) {
-      // didn't find A exactly -- go find the nearest that is GREATER than this value
-      if (index > 0)
-        return -1;
-      isInexact = true;
-      minDiff = Integer.MAX_VALUE;
-      for (int i = groupCount; --i >= 0;)
-        if ((seqcode = groups[i].seqcode) > seqcodeA
-            && (seqcode - seqcodeA) < minDiff) {
-          indexA = i;
-          minDiff = seqcode - seqcodeA;
-        }
-      if (minDiff == Integer.MAX_VALUE)
-        return -1;
-    }
-    if (seqcodeB == Integer.MAX_VALUE) {
-      indexB = groupCount - 1;
-      isInexact = true;
-    } else {
-      for (indexB = indexA; indexB < groupCount
-          && groups[indexB].seqcode != seqcodeB; indexB++) {
-      }
-      if (indexB == groupCount) {
-        // didn't find B exactly -- get the nearest that is LESS than this value
-        if (index > 0)
-          return -1;
-        isInexact = true;
-        minDiff = Integer.MAX_VALUE;
-        for (int i = indexA; i < groupCount; i++)
-          if ((seqcode = groups[i].seqcode) < seqcodeB
-              && (seqcodeB - seqcode) < minDiff) {
-            indexB = i;
-            minDiff = seqcodeB - seqcode;
-          }
-        if (minDiff == Integer.MAX_VALUE)
-          return -1;
-      }
-    }
-    for (int i = indexA; i <= indexB; ++i)
-      groups[i].setAtomBits(bs);
-    return (isInexact ? -1 : indexB + 1);
-  }
-  
 
   @Override
   public int calculateStruts(BS bs1, BS bs2) {
@@ -971,7 +894,7 @@ public final class BioModel extends Model implements JmolBioModel {
     vwr = modelSet.vwr;
     set(modelSet, modelIndex, trajectoryBaseIndex, jmolData, properties, auxiliaryInfo);
     isBioModel = true;
-    modelSet.bioModel = this;
+    modelSet.bioModelset = this;
     clearBioPolymers();
   }
 
@@ -1085,7 +1008,7 @@ public final class BioModel extends Model implements JmolBioModel {
       BS bs = new BS();
       for (int c = nAltLocs; --c >= 0;)
         if (c != conformationIndex)
-          bsConformation.andNot(getAtomBits(T.spec_alternate,
+          bsConformation.andNot(ms.getAtomBitsMDa(T.spec_alternate,
               altLocs.substring(c, c + 1), bs));
     }
     if (bsConformation.nextSetBit(0) >= 0) {
@@ -1270,8 +1193,32 @@ public final class BioModel extends Model implements JmolBioModel {
   }
   
   @Override
-  public BS getAtomBits(int tokType, Object specInfo, BS bs) {
-    BS bsInfo;
+  public BS getAtomBitsStr(int tokType, String specInfo, BS bs) {
+    switch (tokType) {
+    default:
+      return new BS();
+    case T.domains:
+      return getAnnotationBits("domains", T.domains, specInfo);
+    case T.validation:
+      return getAnnotationBits("validation", T.validation, specInfo);
+      //    case T.annotations:
+      //      TODO -- generalize this
+    case T.dssr:
+      return getAnnotationBits("dssr", T.dssr, specInfo);
+    case T.rna3d:
+      return getAnnotationBits("rna3d", T.rna3d, specInfo);
+    case T.basepair:
+      String s = specInfo;
+      bs = new BS();
+      return (s.length() % 2 != 0 ? bs 
+          : ms.getAtomBitsMDa(T.group, getAllBasePairBits(s), bs));
+    case T.sequence:
+      return getAllSequenceBits(specInfo, null);
+    }
+  }
+
+  @Override
+  public BS getAtomBitsBS(int tokType, BS bsInfo, BS bs) {
 
     // this first set does not assume sequential order in the file
 
@@ -1279,14 +1226,14 @@ public final class BioModel extends Model implements JmolBioModel {
     int ac = ms.ac;
     int i = 0;
     switch (tokType) {
-    case T.protein:
-      for (i = ac; --i >= 0;)
-        if (at[i].isProtein())
-          bs.set(i);
-      break;
     case T.carbohydrate:
       for (i = ac; --i >= 0;)
         if (at[i].group.isCarbohydrate())
+          bs.set(i);
+      break;
+    case T.dna:
+      for (i = ac; --i >= 0;)
+        if (at[i].isDna())
           bs.set(i);
       break;
     case T.helix: // WITHIN -- not ends
@@ -1302,14 +1249,9 @@ public final class BioModel extends Model implements JmolBioModel {
         if (at[i].isNucleic())
           bs.set(i);
       break;
-    case T.dna:
+    case T.protein:
       for (i = ac; --i >= 0;)
-        if (at[i].isDna())
-          bs.set(i);
-      break;
-    case T.rna:
-      for (i = ac; --i >= 0;)
-        if (at[i].isRna())
+        if (at[i].isProtein())
           bs.set(i);
       break;
     case T.purine:
@@ -1322,6 +1264,11 @@ public final class BioModel extends Model implements JmolBioModel {
         if (at[i].isPyrimidine())
           bs.set(i);
       break;
+    case T.rna:
+      for (i = ac; --i >= 0;)
+        if (at[i].isRna())
+          bs.set(i);
+      break;
     }
     if (i < 0)
       return bs;
@@ -1331,21 +1278,13 @@ public final class BioModel extends Model implements JmolBioModel {
 
     // TODO WHAT ABOUT MUTATED?
 
-    bsInfo = (BS) specInfo;
     int i0 = bsInfo.nextSetBit(0);
     if (i0 < 0)
       return bs;    
     i = 0;
     switch (tokType) {
-    case T.chain:
-      bsInfo = BSUtil.copy((BS) specInfo);
-      for (i = bsInfo.nextSetBit(0); i >= 0; i = bsInfo.nextSetBit(i + 1)) {
-        Chain chain = at[i].group.chain;
-        chain.setAtomBits(bs);
-        bsInfo.andNot(bs);
-      }
-      break;
     case T.polymer:
+      // within(polymer,...)
       for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
         if (bs.get(i))
           continue;
@@ -1364,6 +1303,7 @@ public final class BioModel extends Model implements JmolBioModel {
       }
       break;
     case T.structure:
+      // within(structure,...)
       for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
         if (bs.get(i))
           continue;
@@ -1385,33 +1325,6 @@ public final class BioModel extends Model implements JmolBioModel {
     if (i == 0)
       Logger.error("MISSING getAtomBits entry for " + T.nameOf(tokType));
     return bs;
-  }
-
-  @Override
-  public BS getAtomBitsMaybeDeleted(int tokType, Object specInfo, BS bs) {
-    switch (tokType) {
-    default:
-      return new BS();
-    case T.domains:
-      return getAnnotationBits("domains", T.domains, (String) specInfo);
-    case T.validation:
-      return getAnnotationBits("validation", T.validation, (String) specInfo);
-      //    case T.annotations:
-      //      TODO -- generalize this
-    case T.dssr:
-      return getAnnotationBits("dssr", T.dssr, (String) specInfo);
-    case T.rna3d:
-      return getAnnotationBits("rna3d", T.rna3d, (String) specInfo);
-    case T.basepair:
-      String s = (String) specInfo;
-      bs = new BS();
-      return (s.length() % 2 != 0 ? bs 
-          : ms.getAtomBitsMDa(T.group, getAllBasePairBits(s), bs));
-    case T.sequence:
-      return getAllSequenceBits((String) specInfo, null);
-    case T.spec_seqcode_range:
-      return getSelectCodeRange((int[]) specInfo);
-    }
   }
 
   private BS getAnnotationBits(String name, int tok, String specInfo) {

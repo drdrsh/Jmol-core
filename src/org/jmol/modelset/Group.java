@@ -124,13 +124,11 @@ public class Group {
    * that were added later
    * 
    * @param bs
-   * @return last of the contiguous atoms
    */
-  public int setAtomBits(BS bs) {
+  public void setAtomBits(BS bs) {
     bs.setBits(firstAtomIndex, lastAtomIndex + 1);
     if (bsAdded != null)
       bs.or(bsAdded);
-    return lastAtomIndex;
   }
 
   public boolean isSelected(BS bs) {

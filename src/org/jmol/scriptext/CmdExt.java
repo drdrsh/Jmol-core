@@ -2230,7 +2230,7 @@ public class CmdExt implements JmolCmdExtension {
     }
     list = PT.getTokens(group);
     if (list.length > 0)
-      vwr.ms.bioModel.mutate(bs, group, list);
+      vwr.ms.bioModelset.mutate(bs, group, list);
   }
 
   private void navigate() throws ScriptException {

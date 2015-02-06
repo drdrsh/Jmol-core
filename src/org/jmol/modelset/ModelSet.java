@@ -58,6 +58,7 @@ import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.java.BS;
+import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.T;
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
@@ -449,7 +450,7 @@ import java.util.Properties;
   }
   
   public String getDefaultStructure(BS bsAtoms, BS bsModified) {
-    return (haveBioModels ? bioModel.getAllDefaultStructures(bsAtoms, bsModified) : "");
+    return (haveBioModels ? bioModelset.getAllDefaultStructures(bsAtoms, bsModified) : "");
   }
 
 
@@ -636,7 +637,7 @@ import java.util.Properties;
     for (int i = mc; --i >= 0;)
       if (am[i].isBioModel) {
         haveBioModels= true;
-        bioModel = (JmolBioModel) am[i];
+        bioModelset = (JmolBioModelSet) am[i];
       }
     validateBspf(false);
     bsAll = null;
@@ -1899,9 +1900,8 @@ import java.util.Properties;
     case T.rna3d:
     case T.basepair:
     case T.sequence:
-    case T.spec_seqcode_range:
       bs = new BS();
-      return (haveBioModels ? bioModel.getAtomBitsMaybeDeleted(tokType, specInfo, bs) : bs);
+      return (haveBioModels ? bioModelset.getAtomBitsStr(tokType, (String) specInfo, bs) : bs);
     case T.bonds:
     case T.isaromatic:
       return getAtomBitsMDb(tokType, specInfo);
@@ -1951,6 +1951,8 @@ import java.util.Properties;
       //      //$FALL-THROUGH$
     case T.molecule:
       return getMoleculeBitSet((BS) specInfo);
+    case T.spec_seqcode_range:
+      return getSelectCodeRange((int[]) specInfo);
     case T.specialposition:
       bs = BS.newN(ac);
       int modelIndex = -1;
@@ -1995,6 +1997,84 @@ import java.util.Properties;
           bs.set(i);
       return bs;
     }
+  }
+
+  private BS getSelectCodeRange(int[] info) {
+    // could be a PDB format file that is all UNK
+    BS bs = new BS();
+    int seqcodeA = info[0];
+    int seqcodeB = info[1];
+    int chainID = info[2];
+    boolean caseSensitive = vwr.getBoolean(T.chaincasesensitive);
+    if (chainID >= 0 && chainID < 300 && !caseSensitive)
+      chainID = chainToUpper(chainID);
+    for (int iModel = mc; --iModel >= 0;)
+      if (am[iModel].isBioModel) {
+        BioModel m = (BioModel) am[iModel];
+        int id;
+        for (int i = m.chainCount; --i >= 0;) {
+          Chain chain = m.chains[i];
+          if (chainID == -1 || chainID == (id = chain.chainID) || !caseSensitive
+              && id > 0 && id < 300 && chainID == chainToUpper(id)) {
+            Group[] groups = chain.groups;
+            int n = chain.groupCount;
+            for (int index = 0; index >= 0;) {
+              index = selectSeqcodeRange(groups, n, index, seqcodeA, seqcodeB, bs);
+            }
+          }
+        }
+      }
+    return bs;
+  }
+
+  private static int selectSeqcodeRange(Group[] groups, int n, int index, int seqcodeA, int seqcodeB,
+                                BS bs) {
+    int seqcode, indexA, indexB, minDiff;
+    boolean isInexact = false;
+    for (indexA = index; indexA < n
+        && groups[indexA].seqcode != seqcodeA; indexA++) {
+    }
+    if (indexA == n) {
+      // didn't find A exactly -- go find the nearest that is GREATER than this value
+      if (index > 0)
+        return -1;
+      isInexact = true;
+      minDiff = Integer.MAX_VALUE;
+      for (int i = n; --i >= 0;)
+        if ((seqcode = groups[i].seqcode) > seqcodeA
+            && (seqcode - seqcodeA) < minDiff) {
+          indexA = i;
+          minDiff = seqcode - seqcodeA;
+        }
+      if (minDiff == Integer.MAX_VALUE)
+        return -1;
+    }
+    if (seqcodeB == Integer.MAX_VALUE) {
+      indexB = n - 1;
+      isInexact = true;
+    } else {
+      for (indexB = indexA; indexB < n
+          && groups[indexB].seqcode != seqcodeB; indexB++) {
+      }
+      if (indexB == n) {
+        // didn't find B exactly -- get the nearest that is LESS than this value
+        if (index > 0)
+          return -1;
+        isInexact = true;
+        minDiff = Integer.MAX_VALUE;
+        for (int i = indexA; i < n; i++)
+          if ((seqcode = groups[i].seqcode) < seqcodeB
+              && (seqcodeB - seqcode) < minDiff) {
+            indexB = i;
+            minDiff = seqcodeB - seqcode;
+          }
+        if (minDiff == Integer.MAX_VALUE)
+          return -1;
+      }
+    }
+    for (int i = indexA; i <= indexB; ++i)
+      groups[i].setAtomBits(bs);
+    return (isInexact ? -1 : indexB + 1);
   }
 
   private boolean isInLatticeCell(int i, P3 cell, P3 ptTemp, boolean isAbsolute) {
@@ -3572,19 +3652,22 @@ import java.util.Properties;
     // for PDB files, do not include NON-protein groups.
     int n = 0;
     Lst<Quat> v = new Lst<Quat>();
+    bsAtoms = BSUtil.copy(bsAtoms);
+    BS bsDone = new BS();
     for (int i = bsAtoms.nextSetBit(0); i >= 0 && n < nMax; i = bsAtoms
         .nextSetBit(i + 1)) {
       Group g = at[i].group;
+      g.setAtomBits(bsDone);
+      bsAtoms.andNot(bsDone);
       Quat q = g.getQuaternion(qtype);
       if (q == null) {
-        if (g.seqcode == Integer.MIN_VALUE)
+        if (!am[at[i].mi].isBioModel)
           q = g.getQuaternionFrame(at); // non-PDB just use first three atoms
         if (q == null)
           continue;
       }
       n++;
       v.addLast(q);
-      i = g.lastAtomIndex;
     }
     return v.toArray(new Quat[v.size()]);
   }
@@ -3593,30 +3676,30 @@ import java.util.Properties;
   
   public BS getSequenceBits(String specInfo, BS bs) {
     return (haveBioModels ?
-        bioModel.getAllSequenceBits(specInfo, bs) : new BS());
+        bioModelset.getAllSequenceBits(specInfo, bs) : new BS());
   }
 
   public int getBioPolymerCountInModel(int modelIndex) {
-    return (haveBioModels ? bioModel.getBioPolymerCountInModel(modelIndex) : 0);
+    return (haveBioModels ? bioModelset.getBioPolymerCountInModel(modelIndex) : 0);
   }
 
   public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList,
                                          boolean isTraceAlpha,
                                          float sheetSmoothing) {
     if (haveBioModels)
-      bioModel.getAllPolymerPointsAndVectors(bs, vList, isTraceAlpha,
+      bioModelset.getAllPolymerPointsAndVectors(bs, vList, isTraceAlpha,
           sheetSmoothing);
   }
 
   public void recalculateLeadMidpointsAndWingVectors(int modelIndex) {
     if (haveBioModels)
-      bioModel.recalculatePoints(modelIndex); 
+      bioModelset.recalculatePoints(modelIndex); 
   }
 
   public BS getConformation(int modelIndex, int conformationIndex, boolean doSet, BS bsAtoms) {
     BS bs = new BS();
     if (haveBioModels)
-      bioModel.getConformations(modelIndex, conformationIndex, doSet, bsAtoms, bs); 
+      bioModelset.getConformations(modelIndex, conformationIndex, doSet, bsAtoms, bs); 
     return bs;
   }
 
@@ -3639,13 +3722,13 @@ import java.util.Properties;
                                       boolean nucleicOnly, int nMax,
                                       boolean dsspIgnoreHydrogens, BS bsHBonds) {
     if (haveBioModels)
-      bioModel.calcAllRasmolHydrogenBonds(bsA, bsB, vHBonds, nucleicOnly,
+      bioModelset.calcAllRasmolHydrogenBonds(bsA, bsB, vHBonds, nucleicOnly,
           nMax, dsspIgnoreHydrogens, bsHBonds);
   }
 
   public void calculateStraightnessAll() {
     if (haveBioModels && !haveStraightness)
-      bioModel.calculateStraightnessAll();
+      bioModelset.calculateStraightnessAll();
   }
 
   /** see comments in org.jmol.modelsetbio.AlphaPolymer.java
@@ -3658,16 +3741,16 @@ import java.util.Properties;
    * @return     number of struts found
    */
   public int calculateStruts(BS bs1, BS bs2) {
-    return (haveBioModels ? bioModel.calculateStruts(bs1, bs2) : 0);
+    return (haveBioModels ? bioModelset.calculateStruts(bs1, bs2) : 0);
   }
   
   public BS getGroupsWithin(int nResidues, BS bs) {
-    return (haveBioModels ? bioModel.getGroupsWithinAll(nResidues, bs) : new BS());
+    return (haveBioModels ? bioModelset.getGroupsWithinAll(nResidues, bs) : new BS());
   }
 
   public String getProteinStructureState(BS bsAtoms, boolean taintedOnly,
                                          boolean needPhiPsi, int mode) {
-    return (haveBioModels ? bioModel.getFullProteinStructureState(bsAtoms, taintedOnly,
+    return (haveBioModels ? bioModelset.getFullProteinStructureState(bsAtoms, taintedOnly,
         needPhiPsi, mode) : "");
   }
 
@@ -3675,27 +3758,9 @@ import java.util.Properties;
                                     boolean doReport,
                                     boolean dsspIgnoreHydrogen,
                                     boolean setStructure) {
-    return (haveBioModels ? bioModel.calculateAllStuctures(bsAtoms, asDSSP, doReport, dsspIgnoreHydrogen, setStructure) : "");
+    return (haveBioModels ? bioModelset.calculateAllStuctures(bsAtoms, asDSSP, doReport, dsspIgnoreHydrogen, setStructure) : "");
   }
   
-  public void recalculatePolymers(BS bsModelsExcluded) {
-    bioModel.recalculateAllPolymers(bsModelsExcluded, getGroups());
-  }
-
-  protected void calculatePolymers(Group[] groups, int groupCount,
-                                   int baseGroupIndex, BS modelsExcluded) {
-    if (haveBioModels)
-      bioModel.calculateAllPolymers(groups, groupCount, baseGroupIndex,
-          modelsExcluded);
-  }
-
-
-  public void calcSelectedMonomersCount() {
-    if (haveBioModels)
-      bioModel.calcSelectedMonomersCount();
-  }
-
-
   /**
    * allows rebuilding of PDB structures; also accessed by ModelManager from
    * Eval
@@ -3717,28 +3782,46 @@ import java.util.Properties;
                                                 boolean setStructure,
                                                 boolean includeAlpha) {
     freezeModels();
-    return (haveBioModels ? bioModel.calculateAllStructuresExcept(alreadyDefined, asDSSP, doReport, dsspIgnoreHydrogen, setStructure, includeAlpha): "");
+    return (haveBioModels ? bioModelset.calculateAllStructuresExcept(alreadyDefined, asDSSP, doReport, dsspIgnoreHydrogen, setStructure, includeAlpha): "");
   }
+
+  public void recalculatePolymers(BS bsModelsExcluded) {
+    bioModelset.recalculateAllPolymers(bsModelsExcluded, getGroups());
+  }
+
+  protected void calculatePolymers(Group[] groups, int groupCount,
+                                   int baseGroupIndex, BS modelsExcluded) {
+    if (haveBioModels)
+      bioModelset.calculateAllPolymers(groups, groupCount, baseGroupIndex,
+          modelsExcluded);
+  }
+
+
+  public void calcSelectedMonomersCount() {
+    if (haveBioModels)
+      bioModelset.calcSelectedMonomersCount();
+  }
+
 
   public void setProteinType(BS bs, STR type) {
     if (haveBioModels)
-      bioModel.setAllProteinType(bs, type);
+      bioModelset.setAllProteinType(bs, type);
   }
 
   public void setStructureList(Map<STR, float[]> structureList) {
     if (haveBioModels)
-      bioModel.setAllStructureList(structureList);
+      bioModelset.setAllStructureList(structureList);
   }
 
   public BS setConformation(BS bsAtoms) {
     if (haveBioModels)
-      bioModel.setAllConformation(bsAtoms);
+      bioModelset.setAllConformation(bsAtoms);
     return bsAtoms;
   }
 
   @SuppressWarnings("unchecked")
   public Map<String, String> getHeteroList(int modelIndex) {
-    Object o = (haveBioModels ? bioModel.getAllHeteroList(modelIndex) : null);
+    Object o = (haveBioModels ? bioModelset.getAllHeteroList(modelIndex) : null);
     return (Map<String, String>) (o == null ? getInfoM("hetNames") : o);
   }
   

@@ -66,11 +66,6 @@ public class SphereRenderer {
     shader = g3d.shader;
   }
 
-  private int minX, maxX, minY, maxY, minZ, maxZ;
-  private int x, y, z, diameter;
-  //private boolean tScreened;
-  private int[] shades;
-  
   private final static int maxOddSizeSphere = 49;
   final static int maxSphereDiameter = 1000;
   final static int maxSphereDiameter2 = maxSphereDiameter * 2;
@@ -99,23 +94,18 @@ public class SphereRenderer {
     slab = g3d.slab;
     depth = g3d.depth;
     int radius = (diameter + 1) >> 1;
-    if ((maxZ = z + radius) < slab || (minZ = z - radius) > depth)
+    int minZ = z - radius;
+    if (z + radius < slab || minZ > depth)
       return;
-    minX = x - radius;
-    maxX = x + radius;
-    minY = y - radius;
-    maxY = y + radius;    
+    int minX = x - radius;
+    int maxX = x + radius;
+    int minY = y - radius;
+    int maxY = y + radius;    
     shader.nOut = shader.nIn = 0;
     zbuf = g3d.zbuf;
     height = g3d.height;
     width = g3d.width;
     offsetPbufBeginLine = width * y + x;
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.diameter = diameter;
-    //this.tScreened = tScreened;
-    this.shades = shades;
     Shader sh = shader;
     this.mat = mat;
     if (mat != null) {
@@ -138,11 +128,12 @@ public class SphereRenderer {
         }
       }
     }
+    
     if (mat != null || diameter > Shader.maxSphereCache) {
-      renderQuadrant(-1, -1);
-      renderQuadrant(-1, 1);
-      renderQuadrant(1, -1);
-      renderQuadrant(1, 1);
+      renderQuadrant(-1, -1, x, y, z, diameter, shades);
+      renderQuadrant(-1, 1, x, y, z, diameter, shades);
+      renderQuadrant(1, -1, x, y, z, diameter, shades);
+      renderQuadrant(1, 1, x, y, z, diameter, shades);
       if (mat != null) {
         // clear;
         this.mat = null;
@@ -198,21 +189,19 @@ public class SphereRenderer {
       }
       if (minX < 0 || maxX >= width || minY < 0 || maxY >= height
           || minZ < slab || z > depth)
-        renderSphereClipped(ss, x, y, z, diameter);
+        renderSphereClipped(ss, x, y, z, diameter, shades);
       else
-        renderSphereUnclipped(ss, z, diameter);
+        renderSphereUnclipped(ss, z, diameter, shades);
     }
-    this.shades = null;
     zbuf = null;
   } 
   
-  private void renderSphereUnclipped(int[] sphereShape, int z, int diameter) {
+  private void renderSphereUnclipped(int[] sphereShape, int z, int diameter, int[] shades) {
     int offsetSphere = 0;
     int evenSizeCorrection = 1 - (diameter & 1);
     int offsetSouthCenter = offsetPbufBeginLine;
     int offsetNorthCenter = offsetSouthCenter - evenSizeCorrection * width;
     int nLines = (diameter + 1) / 2;
-    int[] shades = this.shades;
     int[] zbuf = this.zbuf;
     int width = this.width;
     Pixelator p = g3d.pixel;
@@ -249,7 +238,7 @@ public class SphereRenderer {
 
   private final static int SHADE_SLAB_CLIPPED = Shader.SHADE_INDEX_NORMAL - 5;
 
-  private void renderSphereClipped(int[] sphereShape, int x, int y, int z, int diameter) {
+  private void renderSphereClipped(int[] sphereShape, int x, int y, int z, int diameter, int[] shades) {
     int w = width;
     int h = height;
     int offsetSphere = 0;
@@ -347,7 +336,7 @@ public class SphereRenderer {
   //////////////////////////////////////
 
 
-  private void renderQuadrant(int xSign, int ySign) {
+  private void renderQuadrant(int xSign, int ySign, int x, int y, int z, int diameter, int[] shades) {
     int radius = diameter / 2;
     int t = x + radius * xSign;
     int xStatus = (x < 0 ? -1 : x < width ? 0 : 1)
@@ -364,12 +353,12 @@ public class SphereRenderer {
     boolean unclipped = (mat == null && xStatus == 0 && yStatus == 0 
         && z - radius >= slab  && z <= depth);
     if (unclipped)
-      renderQuadrantUnclipped(radius, xSign, ySign);
+      renderQuadrantUnclipped(radius, xSign, ySign, z, shades);
     else
-      renderQuadrantClipped(radius, xSign, ySign);
+      renderQuadrantClipped(radius, xSign, ySign, x, y, z, shades);
   }
 
-  private void renderQuadrantUnclipped(int radius, int xSign, int ySign) {
+  private void renderQuadrantUnclipped(int radius, int xSign, int ySign, int z, int[] s) {
     int r2 = radius * radius;
     int dDivisor = radius * 2 + 1;
     int lineIncrement = (ySign < 0 ? -width : width);
@@ -377,7 +366,6 @@ public class SphereRenderer {
     int[] zb = zbuf;
     Pixelator p = g3d.pixel;
     byte[] indexes = shader.sphereShadeIndexes;
-    int[] s = this.shades;
     for (int i = 0, i2 = 0; i2 <= r2; 
         i2 += i + (++i),
         ptLine += lineIncrement) {
@@ -404,7 +392,7 @@ public class SphereRenderer {
   private final int[] planeShades = new int[3];
   private final float[][] dxyz = new float[3][3];
   
-  private void renderQuadrantClipped(int radius, int xSign, int ySign) {
+  private void renderQuadrantClipped(int radius, int xSign, int ySign, int x, int y, int z, int[] shades) {
     boolean isEllipsoid = (mat != null);
     boolean checkOctant = (selectedOctant >= 0);
     int r2 = radius * radius;
@@ -412,7 +400,6 @@ public class SphereRenderer {
     int lineIncrement = (ySign < 0 ? -width : width);
     int ptLine = offsetPbufBeginLine;
     int randu = (x << 16) + (y << 1) ^ 0x33333333;
-    int yC = y;
     int y8 = 0;
     int iShade = 0;
     Pixelator p = g3d.pixel;
@@ -431,13 +418,12 @@ public class SphereRenderer {
     double[] rt = zroot;
     int oct = selectedOctant;
     Shader s = shader;
-    int[] ss = shades;
     int[] pl = planeShades;
     byte[] indexes = s.sphereShadeIndexes;
-    int ps = this.planeShade;
+    int ps = planeShade;
     M3 m = mat;
 
-    for (int i = 0, i2 = 0; i2 <= r2; i2 += i + (++i), ptLine += lineIncrement, yC += ySign) {
+    for (int i = 0, i2 = 0, yC = y; i2 <= r2; i2 += i + (++i), ptLine += lineIncrement, yC += ySign) {
       if (yC < 0) {
         if (ySign < 0)
           return;
@@ -449,15 +435,12 @@ public class SphereRenderer {
         continue;
       }
       int s2 = r2 - (isEllipsoid ? 0 : i2);
-      int xC = x0;
       if (!isEllipsoid) {
         y8 = ((i * ySign + radius) << 8) / dDivisor;
       }
       randu = ((randu << 16) + (randu << 1) + randu) & 0x7FFFFFFF;
-      int iRoot = -1;
-      int mode = 1;
-      int offset = ptLine;
-      for (int j = 0, j2 = 0; j2 <= s2; j2 += j + (++j), offset += xSign, xC += xSign) {
+      int xC = x0;
+      for (int j = 0, j2 = 0, iRoot = -1, mode = 1, offset = ptLine; j2 <= s2; j2 += j + (++j), offset += xSign, xC += xSign) {
         if (xC < 0) {
           if (xSign < 0)
             break;
@@ -581,10 +564,8 @@ public class SphereRenderer {
           iShade = indexes[(y8 << 8) + x8];
           break;
         }
-        p.addPixel(offset, zPixel, ss[iShade]);
+        p.addPixel(offset, zPixel, shades[iShade]);
       }
-      // randu is failing me and generating moire patterns :-(
-      // so throw in a little more salt
       randu = ((randu + xC + yC) | 1) & 0x7FFFFFFF;
     }
   }

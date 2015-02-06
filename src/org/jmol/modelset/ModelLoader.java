@@ -208,7 +208,7 @@ public final class ModelLoader {
         .getMSInfoB("someModelsHaveFractionalCoordinates");
     if (merging) {
       ms.haveBioModels |= mergeModelSet.haveBioModels;
-      ms.bioModel = mergeModelSet.bioModel;
+      ms.bioModelset = mergeModelSet.bioModelset;
       ms.someModelsHaveSymmetry |= mergeModelSet
           .getMSInfoB("someModelsHaveSymmetry");
       someModelsHaveUnitcells |= mergeModelSet

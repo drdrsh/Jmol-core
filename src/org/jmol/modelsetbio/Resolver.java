@@ -602,7 +602,7 @@ public final class Resolver implements JmolBioResolver {
   private void fixAnnotations(int i, String name, int type) {
     Object o = ml.ms.getInfo(i, name);
     if (o != null) {
-      Object dbObj = ((BioModel)ml.ms.bioModel).getCachedAnnotationMap(name, o);
+      Object dbObj = ((BioModel)ml.ms.bioModelset).getCachedAnnotationMap(name, o);
       if (dbObj != null)
         vwr.getAnnotationParser().fixAtoms(i, (SV) dbObj, bsAddedMask, type, 20);
     }
@@ -961,9 +961,11 @@ public final class Resolver implements JmolBioResolver {
   public final static String[] pdbBondInfo = {
     // added O3' HO3' O5' HO5' for nucleic and added 1 H atom for res 1 for 13.1.17
     // this could throw off states from previous versions
+    // 2005.02.05  fixing methylene atom names
+    
     "",
     /*ALA*/ "N N CA HA C O CB HB?",
-    /*ARG*/ "N N CA HA C O CB HB2@HB3 CG HG2@HG3 CD D NE HE CZ NH1 NH1 HH11@HH12 NH2 HH21@HH22", 
+    /*ARG*/ "N N CA HA C O CB HB3@HB2 CG HG3@HG2 CD D NE HE CZ NH1 NH1 HH11@HH12 NH2 HH21@HH22", 
     /*ASN*/ "N N CA HA C O CB B CG OD1 ND2 HD21@HD22", 
     /*ASP*/ "N N CA HA C O CB B CG OD1", 
     /*CYS*/ "N N CA HA C O CB B SG HG", 
@@ -971,12 +973,12 @@ public final class Resolver implements JmolBioResolver {
     /*GLU*/ "N N CA HA C O CB B CG G CD OE1", 
     /*GLY*/ "N N CA HA2@HA3 C O", 
     /*HIS*/ "N N CA HA C O CB B CG CD2 ND1 CE1 ND1 HD1 CD2 HD2 CE1 HE1 NE2 HE2", 
-    /*ILE*/ "N N CA HA C O CB HB CG1 HG12@HG13 CG2 HG2? CD1 HD1?", 
-    /*LEU*/ "N N CA HA C O CB HB2@HB3 CG HG CD1 HD1? CD2 HD2?", 
+    /*ILE*/ "N N CA HA C O CB HB CG1 HG13@HG12 CG2 HG2? CD1 HD1?", 
+    /*LEU*/ "N N CA HA C O CB HB3@HB2 CG HG CD1 HD1? CD2 HD2?", 
     /*LYS*/ "N N CA HA C O CB B CG G CD HD2@HD3 CE HE3@HE2 NZ HZ?", 
     /*MET*/ "N N CA HA C O CB HB2@HB3 CG HG2@HG3 CE HE?", 
     /*PHE*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 CD2 HD2 CE1 CZ CE1 HE1 CE2 HE2 CZ HZ", 
-    /*PRO*/ "N H CA HA C O CB B CG G CD HD2@HD3", 
+    /*PRO*/ "N H CA HA C O CB B CG G CD HD3@HD2", 
     /*SER*/ "N N CA HA C O CB B OG HG", 
     /*THR*/ "N N CA HA C O CB HB OG1 HG1 CG2 HG2?", 
     /*TRP*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 NE1 HE1 CE3 CZ3 CE3 HE3 CZ2 CH2 CZ2 HZ2 CZ3 HZ3 CH2 HH2", 

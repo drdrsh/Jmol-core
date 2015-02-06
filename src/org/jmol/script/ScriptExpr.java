@@ -349,18 +349,18 @@ abstract class ScriptExpr extends ScriptParam {
       case T.boundbox:
       case T.chain:
       case T.coord:
+      case T.dssr:
       case T.element:
       case T.group:
       case T.model:
       case T.molecule:
+      case T.rna3d:
+      case T.search:
       case T.sequence:
       case T.site:
-      case T.search:
       case T.smiles:
       case T.substructure:
       case T.structure:
-      case T.dssr:
-      case T.rna3d:
         ////
       case T.on:
       case T.off:

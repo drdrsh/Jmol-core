@@ -33,7 +33,6 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import javajs.util.Lst;
 
-import org.jmol.script.T;
 import org.jmol.util.JmolMolecule;
 import javajs.util.P3;
 

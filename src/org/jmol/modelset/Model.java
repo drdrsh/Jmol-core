@@ -168,7 +168,7 @@ public class Model {
 
   /**
    * not actually accessed -- just pointing out what it is
-   * @return 
+   * @return true atom count
    */
   // this one is variable and calculated only if necessary:
   public int getTrueAtomCount() {
