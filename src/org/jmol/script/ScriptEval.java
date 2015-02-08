@@ -8168,10 +8168,10 @@ public class ScriptEval extends ScriptExpr {
     }
     if (chk)
       return;
-    //if (Float.isNaN(xTrans))
-    //xTrans = 0;
-    //if (Float.isNaN(yTrans))
-    //yTrans = 0;
+    if (Float.isNaN(xTrans))
+      xTrans = 0;
+    if (Float.isNaN(yTrans))
+      yTrans = 0;
     if (isSameAtom && Math.abs(zoom - newZoom) < 1)
       floatSecondsTotal = 0;
     vwr.moveTo(this, floatSecondsTotal, center, JC.center, Float.NaN, null,

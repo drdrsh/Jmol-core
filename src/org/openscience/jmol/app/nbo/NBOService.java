@@ -36,7 +36,6 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Scanner;
 
-import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 

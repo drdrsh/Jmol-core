@@ -128,7 +128,7 @@ public final class Resolver implements JmolBioResolver {
       group3Count = s.length() / 6;
       Group.standardGroupList = s.toString();
       for (int i = 0, n = predefinedGroup3Names.length; i < n; ++i)
-        addGroup3Name(predefinedGroup3Names[i]);
+        addGroup3Name(predefinedGroup3Names[i].trim());
     }
     return this;
   }
@@ -925,13 +925,13 @@ public final class Resolver implements JmolBioResolver {
           target = "HB3@HB2";
           break;
         case 'D': // CD
-          target = "HD2@HD3";
+          target = "HD3@HD2";
           break;
         case 'G': // CG
           target = "HG3@HG2";
           break;
         case '2': // C2'
-          target = "H2''@H2'";
+          target = "H2'@H2''";
           break;
         case '5': // C5'
           target = "H5''@H5'";
@@ -961,43 +961,43 @@ public final class Resolver implements JmolBioResolver {
   public final static String[] pdbBondInfo = {
     // added O3' HO3' O5' HO5' for nucleic and added 1 H atom for res 1 for 13.1.17
     // this could throw off states from previous versions
-    // 2005.02.05  fixing methylene atom names
+    // CH2 and NH2 labeling revised 2015.02.07
     
     "",
     /*ALA*/ "N N CA HA C O CB HB?",
-    /*ARG*/ "N N CA HA C O CB HB3@HB2 CG HG3@HG2 CD D NE HE CZ NH1 NH1 HH11@HH12 NH2 HH21@HH22", 
+    /*ARG*/ "N N CA HA C O CB B CG G CD D NE HE CZ NH1 NH1 HH11@HH12 NH2 HH22@HH21", 
     /*ASN*/ "N N CA HA C O CB B CG OD1 ND2 HD21@HD22", 
     /*ASP*/ "N N CA HA C O CB B CG OD1", 
     /*CYS*/ "N N CA HA C O CB B SG HG", 
-    /*GLN*/ "N N CA HA C O CB B CG G CD OE1 NE2 HE21@HE22", 
+    /*GLN*/ "N N CA HA C O CB B CG G CD OE1 NE2 HE22@HE21", 
     /*GLU*/ "N N CA HA C O CB B CG G CD OE1", 
     /*GLY*/ "N N CA HA2@HA3 C O", 
     /*HIS*/ "N N CA HA C O CB B CG CD2 ND1 CE1 ND1 HD1 CD2 HD2 CE1 HE1 NE2 HE2", 
     /*ILE*/ "N N CA HA C O CB HB CG1 HG13@HG12 CG2 HG2? CD1 HD1?", 
-    /*LEU*/ "N N CA HA C O CB HB3@HB2 CG HG CD1 HD1? CD2 HD2?", 
+    /*LEU*/ "N N CA HA C O CB B CG HG CD1 HD1? CD2 HD2?", 
     /*LYS*/ "N N CA HA C O CB B CG G CD HD2@HD3 CE HE3@HE2 NZ HZ?", 
-    /*MET*/ "N N CA HA C O CB HB2@HB3 CG HG2@HG3 CE HE?", 
+    /*MET*/ "N N CA HA C O CB B CG G CE HE?", 
     /*PHE*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 CD2 HD2 CE1 CZ CE1 HE1 CE2 HE2 CZ HZ", 
-    /*PRO*/ "N H CA HA C O CB B CG G CD HD3@HD2", 
+    /*PRO*/ "N H CA HA C O CB B CG G CD D", 
     /*SER*/ "N N CA HA C O CB B OG HG", 
     /*THR*/ "N N CA HA C O CB HB OG1 HG1 CG2 HG2?", 
     /*TRP*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 NE1 HE1 CE3 CZ3 CE3 HE3 CZ2 CH2 CZ2 HZ2 CZ3 HZ3 CH2 HH2", 
     /*TYR*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 CD2 HD2 CE1 CZ CE1 HE1 CE2 HE2 OH HH", 
     /*VAL*/ "N N CA HA C O CB HB CG1 HG1? CG2 HG2?",
-    /*ASX*/ "CA HA C O CB HB2@HB1 C H",
-    /*GLX*/ "CA HA C O CB HB1 CB HB2 CG HG1 CG HG2", 
+    /*ASX*/ "N N CA HA C O CB B",
+    /*GLX*/ "N N CA HA C O CB B CG G", 
     /*UNK*/ "",
-    /*G*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 N2 H21@H22 O3' HO3' O5' HO5'", 
+    /*G*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 N2 H22@H21 O3' HO3' O5' HO5'", 
     /*C*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C2 O2 N3 C4 N4 H41@H42 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
     /*A*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 N1 N6 H61@H62 C2 N3 C2 H2 O3' HO3' O5' HO5'",
     /*T*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C7 H7? C6 H6 O3' HO3' O5' HO5'",
     /*U*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
     /*I*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 C2 H2 O3' HO3' O5' HO5'",
-    /*DG*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 N2 H21@H22 O3' HO3' O5' HO5'", 
+    /*DG*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 N2 H22@H21 O3' HO3' O5' HO5'", 
     /*DC*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 C4 N4 H41@H42 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
     /*DA*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 N1 N6 H61@H62 C2 N3 C2 H2 O3' HO3' O5' HO5'", 
-    /*DT*/ "P OP1 C5' H5'@H5'' C4' H4' C3' H3' C2' H2'@H2'' C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C7 H7? C6 H6 O3' HO3' O5' HO5'",
-    /*DU*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2'@H2'' C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'",  
+    /*DT*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C7 H7? C6 H6 O3' HO3' O5' HO5'",
+    /*DU*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'",  
     /*DI*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 C2 H2 O3' HO3' O5' HO5'",  
       };
   private final static int[] pdbHydrogenCount = {
@@ -1023,7 +1023,7 @@ public final class Resolver implements JmolBioResolver {
     /*TYR*/ 10,
     /*VAL*/ 10,  
     /*ASX*/ 3,
-    /*GSX*/ 5,
+    /*GLX*/ 5,
     /*UNK*/ 0,
     /*G*/ 13,
     /*C*/ 13,
@@ -1250,6 +1250,32 @@ public final class Resolver implements JmolBioResolver {
     return s.toString().substring(1);
   }
   
+  @Override
+  public short getGroupID(String g3) {
+    return getGroupIdFor(g3);
+  }
+
+  static short getGroupIdFor(String group3) {
+    group3 = group3.trim();
+    short groupID = knownGroupID(group3);
+    return (groupID == -1 ? addGroup3Name(group3) : groupID);
+  }
+
+  /**
+   * These can overrun 3 characters; that is not significant.
+   * 
+   * @param group3
+   * @return  a short group ID
+   */
+  private synchronized static short addGroup3Name(String group3) {
+    if (group3NameCount == Group.group3Names.length)
+      Group.group3Names = AU.doubleLengthS(Group.group3Names);
+    short groupID = group3NameCount++;
+    Group.group3Names[groupID] = group3;
+    htGroup.put(group3, Short.valueOf(groupID));
+    return groupID;
+  }
+
   private static int getStandardPdbHydrogenCount(String group3) {
     int pt = knownGroupID(group3);
     return (pt < 0 || pt >= pdbHydrogenCount.length ? -1 : pdbHydrogenCount[pt]);
@@ -1742,31 +1768,6 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       return argbsChainHetero;
     }
     return null;
-  }
-
-  @Override
-  public short getGroupID(String g3) {
-    return getGroupIdFor(g3);
-  }
-
-  /**
-   * These can overrun 3 characters; that is not significant.
-   * 
-   * @param group3
-   * @return  a short group ID
-   */
-  public synchronized static short addGroup3Name(String group3) {
-    if (group3NameCount == Group.group3Names.length)
-      Group.group3Names = AU.doubleLengthS(Group.group3Names);
-    short groupID = group3NameCount++;
-    Group.group3Names[groupID] = group3;
-    htGroup.put(group3, Short.valueOf(groupID));
-    return groupID;
-  }
-
-  public static short getGroupIdFor(String group3) {
-    short groupID = knownGroupID(group3);
-    return (groupID == -1 ? addGroup3Name(group3) : groupID);
   }
 
 }
