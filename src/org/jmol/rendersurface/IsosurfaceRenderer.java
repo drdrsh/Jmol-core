@@ -87,6 +87,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
 
   private void setGlobals() {
     needTranslucent = false;
+    antialias = g3d.isAntialiased(); 
     iShowNormals = vwr.getTestFlag(4);
     showNumbers = vwr.getTestFlag(3);
     isosurface = (Isosurface) shape;
@@ -130,7 +131,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
     }
     if (n < 2)
       return;
-    int factor = (g3d.isAntialiased() ? 2 : 1);
+    int factor = (antialias ? 2 : 1);
     int height = vwr.getScreenHeight() * factor;
     int dy = height / 2 / (n - 1);
     int y = height / 4 * 3 - dy;
@@ -252,9 +253,6 @@ public class IsosurfaceRenderer extends MeshRenderer {
         hasColorRange = true;
       return;
     }
-    
-    //if (imesh.jvxlData.vertexDataOnly)
-      //return;
     hasColorRange = (mesh.meshColix == 0);
     for (int i = vContours.length; --i >= 0;) {
       Lst<Object> v = vContours[i];
@@ -265,6 +263,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       if (!g3d.setC(colix))
         return;
       int n = v.size() - 1;
+      int diam = getDiameter();
       for (int j = JvxlCoder.CONTOUR_POINTS; j < n; j++) {
         T3 pt1 = (T3) v.get(j);
         T3 pt2 = (T3) v.get(++j);
@@ -274,7 +273,12 @@ public class IsosurfaceRenderer extends MeshRenderer {
           break;
         pt1i.z -= 2;
         pt2i.z -= 2;
-        g3d.drawLineAB(pt1i, pt2i);
+        if (!antialias && diam == 1) {
+          g3d.drawLineAB(pt1i, pt2i);
+        } else {
+          g3d.fillCylinderXYZ(colix, colix, GData.ENDCAPS_OPEN, diam, pt1i.x,
+              pt1i.y, pt1i.z, pt2i.x, pt2i.y, pt2i.z);
+        }
       }
     }
   }
@@ -399,17 +403,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
     // two-sided means like a plane, with no front/back distinction
 
     hasColorRange = !colorSolid && !isBicolorMap;
-    int diam;
-    if (mesh.diameter <= 0) {
-      diam = (meshScale < 0 ? meshScale = vwr.getInt(T.meshscale)
-          : meshScale);
-      if (g3d.isAntialiased())
-        diam *= 2;
-    } else {
-      diam = vwr.getScreenDim() / 100;
-    }
-    if (diam < 1)
-      diam = 1;
+    int diam = getDiameter();
     int i0 = 0;
     for (int i = mesh.pc; --i >= i0;) {
       int[] polygon = polygonIndexes[i];
@@ -514,6 +508,21 @@ public class IsosurfaceRenderer extends MeshRenderer {
     }
     if (generateSet)
       exportSurface(colorSolid ? colix : 0);
+  }
+
+  private int getDiameter() {
+    int diam;
+    if (mesh.diameter <= 0) {
+      diam = (meshScale < 0 ? meshScale = vwr.getInt(T.meshscale)
+          : meshScale);
+      if (antialias)
+        diam *= 2;
+    } else {
+      diam = vwr.getScreenDim() / 100;
+    }
+    if (diam < 1)
+      diam = 1;
+    return diam;
   }
 
   private void renderNormals() {

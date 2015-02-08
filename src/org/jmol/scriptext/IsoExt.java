@@ -3649,5 +3649,13 @@ public class IsoExt extends CmdExt {
     return null;
   }
 
+  private boolean listIsosurface(int iShape) throws ScriptException {
+    String s = (slen > 3 ? "0" : tokAt(2) == T.nada ? "" : " "
+        + getToken(2).value);
+    if (!chk)
+      showString((String) getShapeProperty(iShape, "list" + s));
+    return true;
+  }
+
 
 }

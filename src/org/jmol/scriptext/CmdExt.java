@@ -4380,10 +4380,8 @@ public class CmdExt implements JmolCmdExtension {
   }
 
   private String getIsosurfaceJvxl(boolean asMesh, int iShape) {
-    if (chk)
-      return "";
-    return (String) getShapeProperty(iShape, asMesh ? "jvxlMeshX"
-        : "jvxlDataXml");
+    return (chk ? "" : (String) getShapeProperty(iShape, asMesh ? "jvxlMeshX"
+        : "jvxlDataXml"));
   }
 
   @SuppressWarnings("unchecked")
@@ -4532,14 +4530,6 @@ public class CmdExt implements JmolCmdExtension {
         break;
     }
     return nmax == 1 && !isExplicitlyAll ? sout[0] : (Object) sout;
-  }
-
-  boolean listIsosurface(int iShape) throws ScriptException {
-    String s = (slen > 3 ? "0" : tokAt(2) == T.nada ? "" : " "
-        + getToken(2).value);
-    if (!chk)
-      showString((String) getShapeProperty(iShape, "list" + s));
-    return true;
   }
 
   protected String setShapeId(int iShape, int i, boolean idSeen)
