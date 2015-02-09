@@ -2421,7 +2421,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public void clearModelDependentObjects() {
-    setFrameOffsets(null);
+    setFrameOffsets(null, false);
     stopMinimization();
     minimizer = null;
     smilesMatcher = null;
@@ -3073,11 +3073,13 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return (ms.trajectory == null ? "" : ms.trajectory.getState());
   }
 
-  BS bsFrameOffsets;
-  P3[] frameOffsets;
-
-  public void setFrameOffsets(BS bsAtoms) {
-    frameOffsets = ms.getFrameOffsets(bsFrameOffsets = bsAtoms);
+  public void setFrameOffsets(BS bsAtoms, boolean isFull) {
+    tm.bsFrameOffsets = null;
+    if (isFull)
+      clearModelDependentObjects();
+    else
+      tm.bsFrameOffsets = bsAtoms;
+    tm.frameOffsets = ms.getFrameOffsets(bsAtoms, isFull);
   }
 
   public void setCurrentModelIndexClear(int modelIndex, boolean clearBackground) {
@@ -7954,7 +7956,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
                                BS bsModelAtoms) {
     // called from ModelCollection.deleteModel
     sm.modifySend(-1, modelIndex, 1, "delete atoms " + Escape.eBS(bsModelAtoms));
-    BSUtil.deleteBits(bsFrameOffsets, bsModelAtoms);
+    BSUtil.deleteBits(tm.bsFrameOffsets, bsModelAtoms);
     getDataManager().deleteModelAtoms(firstAtomIndex, nAtoms, bsModelAtoms);
     sm.modifySend(-1, modelIndex, -1, "OK");
   }

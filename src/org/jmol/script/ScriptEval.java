@@ -5019,9 +5019,14 @@ public class ScriptEval extends ScriptExpr {
               : (tokAt(2) == T.varray ? SV.strListValue(st[2]) : paramAsStr(2)));
       return;
     case T.align:
-      BS bs = (slen == 2 || tokAt(2) == T.none ? null : atomExpressionAt(2));
+      boolean isNone = (tokAt(2) == T.none);
+      BS bs = (slen == 2 || isNone ? null : atomExpressionAt(2));
+      if (isNone)
+        iToken = 2;
+      boolean isFixed = (tokAt(iToken + 1) == T.fixed);
+      checkLength(iToken + (isFixed ? 2 : 1));
       if (!chk)
-        vwr.setFrameOffsets(bs);
+        vwr.setFrameOffsets(bs, isFixed);
       return;
     }
     if (getToken(offset).tok == T.minus) {
@@ -5042,6 +5047,7 @@ public class ScriptEval extends ScriptExpr {
     int[] frameList = new int[] { -1, -1 };
     int nFrames = 0;
     float fFrame = 0;
+    P3 frameAlign = null;
     boolean haveFileSet = vwr.haveFileSet();
     if (isArrayParameter(1)) {
       setFrameSet(1);
@@ -5049,6 +5055,13 @@ public class ScriptEval extends ScriptExpr {
     } else {
       for (int i = offset; i < slen; i++) {
         switch (getToken(i).tok) {
+        case T.align:
+          // model 2.3 align {0 0 0}  // from state 
+          if (i != 2)
+            invArg();
+          frameAlign = centerParameter(3);
+          checkLength(i = iToken + 1);
+          break;
         case T.all:
         case T.times:
           checkLength(offset + (isRange ? 2 : 1));
@@ -5088,14 +5101,11 @@ public class ScriptEval extends ScriptExpr {
           if (iFrame == Integer.MAX_VALUE) {
             if (i == 1) {
               String id = theToken.value.toString();
-              int modelIndex = (chk ? -1 : vwr.getModelIndexFromId(id));
-              if (modelIndex >= 0) {
-                checkLength(2);
-                vwr.setCurrentModelIndex(modelIndex);
-                return;
-              }
+              iFrame = (chk ? -2 : vwr.getModelIndexFromId(id));
+            } else {
+              iFrame = 0; // frame 0.0
             }
-            iFrame = 0; // frame 0.0
+            useModelNumber = false;
           }
           if (iFrame == -1) {
             checkLength(offset + 1);
@@ -5130,10 +5140,10 @@ public class ScriptEval extends ScriptExpr {
         }
       }
     }
-    if (isRange && nFrames == 0)
-      isAll = true;
     if (chk)
       return;
+    if (isRange && nFrames == 0)
+      isAll = true;
     if (isAll) {
       vwr.setAnimationOn(false);
       vwr.setAnimationRange(-1, -1);
@@ -5151,7 +5161,13 @@ public class ScriptEval extends ScriptExpr {
           frameList[i] %= 1000000;
     int modelIndex = vwr.ms.getModelNumberIndex(frameList[0], useModelNumber,
         false);
-
+    if (frameAlign != null) {
+      if (modelIndex >= 0) {
+        vwr.ms.translateModel(modelIndex, null);
+        vwr.ms.translateModel(modelIndex, frameAlign);
+      }
+      return;
+    }
     int modelIndex2 = -1;
     if (haveFileSet && modelIndex < 0 && frameList[0] != 0) {
       // may have frame 2.0 or frame 2 meaning the range of models in file 2

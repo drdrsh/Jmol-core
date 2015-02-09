@@ -574,8 +574,15 @@ public class StateCreator extends JmolStateCreator {
     if (am.backgroundModelIndex >= 0)
       app(commands, "set backgroundModel "
           + vwr.getModelNumberDotted(am.backgroundModelIndex));
-    if (vwr.bsFrameOffsets != null)
-      app(commands, "frame align " + Escape.eBS(vwr.bsFrameOffsets));
+    if (vwr.tm.bsFrameOffsets != null) {
+      app(commands, "frame align " + Escape.eBS(vwr.tm.bsFrameOffsets));
+    } else if (vwr.ms.translations != null) {
+      for (int i = modelCount; --i >= 0;) {
+        P3 t = (vwr.ms.getTranslation(i));
+        if (t != null)
+          app(commands, "frame " + vwr.ms.getModelNumberDotted(i) + " align " + t);          
+      }
+    }
     app(commands, "frame RANGE "
         + am.getModelSpecial(AnimationManager.FRAME_FIRST) + " "
         + am.getModelSpecial(AnimationManager.FRAME_LAST));

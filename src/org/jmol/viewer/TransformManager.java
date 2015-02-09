@@ -1457,7 +1457,7 @@ public class TransformManager {
     matrixTransform.setIdentity();
 
     // first, translate the coordinates back to the center
-
+    
     vectorTemp.sub2(frameOffset, fixedRotationCenter);
     matrixTransform.setTranslation(vectorTemp);
 
@@ -2351,13 +2351,15 @@ public class TransformManager {
    ****************************************************************/
 
   final P3 frameOffset = new P3();
+  P3[] frameOffsets;
+  public BS bsFrameOffsets;
 
   void setFrameOffset(int modelIndex) {
-    if (vwr.frameOffsets == null || modelIndex < 0
-        || modelIndex >= vwr.frameOffsets.length)
+    if (frameOffsets == null || modelIndex < 0
+        || modelIndex >= frameOffsets.length)
       frameOffset.set(0, 0, 0);
     else
-      frameOffset.setT(vwr.frameOffsets[modelIndex]);
+      frameOffset.setT(frameOffsets[modelIndex]);
   }
 
   /////////// Allow during-rendering mouse operations ///////////
@@ -2642,6 +2644,7 @@ public class TransformManager {
   //////////////  optional navigation support ///////////////////////
 
   private JmolNavigatorInterface nav;
+
 
   private void navInterrupt() {
     if (nav != null)

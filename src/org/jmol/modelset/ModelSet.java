@@ -310,17 +310,82 @@ import java.util.Properties;
       trajectory.morph(m1, m2, f);
   }  
   
-  public P3[] getFrameOffsets(BS bsAtoms) {
-    if (bsAtoms == null)
+  public P3[] translations;
+  
+  public P3 getTranslation(int iModel) {
+    return (translations == null || iModel >= translations.length ? null : translations[iModel]); 
+  }
+  
+  /**
+   * move atoms by vector pt; used for co-centering with FRAME ALIGN {atoms} TRUE
+   * 
+   * @param iModel
+   * @param pt
+   */
+  public void translateModel(int iModel, T3 pt) {
+    if (pt == null) {
+      P3 t = getTranslation(iModel);
+      if (t == null)
+        return;
+      pt = P3.newP(t);
+      pt.scale(-1);
+      translateModel(iModel, pt);
+      translations[iModel] = null;
+      return;
+    }
+    if (translations == null || translations.length <= iModel)
+      translations = new P3[mc];
+    if (translations[iModel] == null)
+      translations[iModel] = new P3();
+    translations[iModel].add(pt);
+    BS bs = am[iModel].bsAtoms;
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      at[i].add(pt);
+  }
+
+  public P3[] getFrameOffsets(BS bsAtoms, boolean isFull) {
+    if (bsAtoms == null) {
+      if (isFull)
+        for (int i = mc; --i >= 0;) {
+          Model m = am[i];
+          if (!m.isJmolDataFrame && !m.isTrajectory)
+            translateModel(m.modelIndex, null);
+        }
       return null;
+    }
+    int i0 = bsAtoms.nextSetBit(0);
+    if (i0 < 0)
+      return null;
+    if (isFull) {
+      BS bs = BSUtil.copy(bsAtoms);
+      P3 pt = null;
+      P3 pdiff = new P3();
+      for (int i = 0; i < mc; i++) {
+        Model m = am[i];
+        if (!m.isJmolDataFrame && !m.isTrajectory) {
+          int j = bs.nextSetBit(0);
+          if (m.bsAtoms.get(j)) {
+            if (pt == null) {
+              pt = P3.newP(at[j]);
+            } else {
+              pdiff.sub2(pt, at[j]);
+              translateModel(i, pdiff);
+            }
+          }
+        }
+        bs.andNot(m.bsAtoms);
+      }
+      return null;
+    }
     P3[] offsets = new P3[mc];
-    for (int i = 0; i < mc; i++)
+    for (int i = mc; --i >= 0;)
       offsets[i] = new P3();
     int lastModel = 0;
     int n = 0;
     P3 offset = offsets[0];
     boolean asTrajectory = (trajectory != null && trajectory.steps.size() == mc);
     int m1 = (asTrajectory ? mc : 1);
+    offsets[0].set(0, 0, 0);
     for (int m = 0; m < m1; m++) {
       if (asTrajectory)
         setTrajectory(m);
@@ -343,7 +408,6 @@ import java.util.Properties;
         n++;
       }
     }
-    offsets[0].set(0, 0, 0);
     return offsets;
   }
 
