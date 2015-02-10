@@ -35,7 +35,6 @@ import org.jmol.java.BS;
 import javajs.util.AU;
 import javajs.util.P3;
 import javajs.util.SB;
-import javajs.util.T3;
 
 import org.jmol.util.BSUtil;
 

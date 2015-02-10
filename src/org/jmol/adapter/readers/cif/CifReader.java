@@ -475,6 +475,8 @@ public class CifReader extends AtomSetCollectionReader {
     if (asc.iSet >= 0) {
       // note that there can be problems with multi-data mmCIF sets each with
       // multiple models; and we could be loading multiple files!
+      if (isMMCIF)
+        setModelPDB(true); // first model can be missed
       asc.newAtomSet();
       if (isMMCIF)
         setModelPDB(true);
@@ -1289,6 +1291,8 @@ public class CifReader extends AtomSetCollectionReader {
       setAtomCoord(atom);
       if (isMMCIF && !processSubclassAtom(atom, assemblyId, strChain))
         continue;
+      if (asc.iSet < 0)
+        nextAtomSet();
       asc.addAtomWithMappedName(atom);
       if (id != null) {
         asc.atomSymbolicMap.put(id, atom);
@@ -1304,7 +1308,7 @@ public class CifReader extends AtomSetCollectionReader {
         atom.vib = V3.new3(siteMult, 0, Float.NaN);
     }
     asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
-    if (isMMCIF)
+    if (isMMCIF && !isLigand)
       setModelPDB(true);
     if (isMMCIF && skipping)
       skipping = false;
