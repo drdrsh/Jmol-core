@@ -2227,8 +2227,8 @@ public class CmdExt implements JmolCmdExtension {
       if (isOneLetter || group.length() != 3
           || !vwr.getJBR().isKnownPDBGroup(group, 20))
         group = vwr.getJBR().toStdAmino3(isOneLetter ? group.substring(1) : group);
+      list = PT.getTokens(group);
     }
-    list = PT.getTokens(group);
     if (list.length > 0)
       vwr.ms.bioModelset.mutate(bs, group, list);
   }

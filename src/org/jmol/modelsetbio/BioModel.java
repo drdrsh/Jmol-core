@@ -860,6 +860,10 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
       }
       if (ms.ac == ac)
         return false;
+      SB sb = ms.am[iModel].loadScript;
+      String s = PT.rep(sb.toString(), "load append", "mutate ({" + iatom + "})");
+      sb.setLength(0);
+      sb.append(s);
       // check for protein monomer
       g = ms.at[ms.ac - 1].group;
       if (g != ms.at[ac + 1].group || !(g instanceof AminoMonomer)) {

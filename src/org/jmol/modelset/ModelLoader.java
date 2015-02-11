@@ -571,6 +571,8 @@ public final class ModelLoader {
       }
       m.loadState += m.loadScript.toString() + sb.toString();
       m.loadScript = new SB();
+      if (loadScript.indexOf("load append ") >= 0)
+        loadScript.append("; set appendNew true");
       m.loadScript.append("  ").appendSB(loadScript).append(";\n");
       
     }
