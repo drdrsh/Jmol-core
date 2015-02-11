@@ -8396,7 +8396,7 @@ public class ScriptEval extends ScriptExpr {
             if (max == Float.MAX_VALUE)
               ce.hi = max;
             setShapeProperty(shapeType, "remapColor", ce);
-            showString(((String) getShapeProperty(JC.SHAPE_ISOSURFACE, "dataRangeStr")).replace('\n',' '));
+            showString(((String) getShapeProperty(shapeType, "dataRangeStr")).replace('\n',' '));
             if (translucentLevel == Float.MAX_VALUE)
               return;
           } else if (max != Float.MAX_VALUE) {
