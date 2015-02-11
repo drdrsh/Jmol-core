@@ -1308,7 +1308,7 @@ public class CifReader extends AtomSetCollectionReader {
         atom.vib = V3.new3(siteMult, 0, Float.NaN);
     }
     asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
-    if (isMMCIF && !isLigand)
+    if (isMMCIF)
       setModelPDB(true);
     if (isMMCIF && skipping)
       skipping = false;

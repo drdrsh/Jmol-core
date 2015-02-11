@@ -804,6 +804,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
       int ac = ms.ac;
       BS bsRes0 = new BS();
       res0.setAtomBits(bsRes0);
+      Atom[] backbone = getBackbone(res0, null);
       int r = g.getResno();
       
       // just use a script -- it is much easier!
@@ -830,12 +831,21 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
           + "      var c = {!res0 & connected(res0)}\n"
           + "      var N2 = {*.N & c}\n"
           + "      var C0 = {*.C & c}\n"
+          + "      var angleH = ({*.H and res0} ? angle({*.C and res0},{*.CA and res0},{*.N and res0},{*.H and res0}) : 1000)\n"
           + "      delete res0\n"
           + "      if (N2) {\n"
-          + "        delete *.OXT and res1\n"
+          + "        delete (*.OXT,*.HXT) and res1\n"
           + "        connect {N2} {keyatoms & *.C}\n"
           + "      }\n"
-          + "      if (C0) {\n"
+          + "      if (C0) {\n" // not terminal
+          + "        if ({res1 and _H & connected(*.N)} == 1) {\n" // proline or proline-like
+          + "          delete *.H and res1\n"
+          + "        } else {\n"
+          + "          var x = angle({*.C and res1},{*.CA and res1},{*.N and res1},{*.H and res1})\n"
+          + "          rotate branch {*.CA and res1} {*.N and res1} @{angleH-x}\n"
+          + "          delete *.H2 and res1\n"
+          + "          delete *.H3 and res1\n"
+          + "        }\n"
           + "        connect {C0} {keyatoms & *.N}\n"
           + "      }\n"
           + "    }\n"
@@ -859,8 +869,12 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
         return  false;
       }
       AminoMonomer res1 = (AminoMonomer) g;
-      
+
+      // fix h position as same as previous group
+      getBackbone(res1, backbone);
       // must get new group into old chain
+      
+      // note that the terminal N if replacing the N-terminus will only have two H atoms
       
       Group[] groups = res0.chain.groups;
       for (int i = groups.length; --i >= 0;)
@@ -888,6 +902,34 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
 
 /////////////////////////////////////////////////////////////////////////  
   
+
+  /**
+   * @param res1
+   * @param backbone
+   * @return [C O CA N H]
+   */
+  private Atom[] getBackbone(AminoMonomer res1, Atom[] backbone) {
+    Atom[] b = new Atom[] {res1.getCarbonylCarbonAtom(), res1.getCarbonylOxygenAtom(), 
+        res1.getLeadAtom(), res1.getNitrogenAtom(), res1.getExplicitNH() };
+    if (backbone == null) {
+      // don't place H if there is more than one covalent H on res0.N
+      if (b[3].getCovalentHydrogenCount() > 1)
+        b[4] = null;
+    } else {
+      for (int i = 0; i < 5; i++) {
+        Atom a0 = backbone[i];
+        Atom a1 = b[i];
+        if (a0 != null && a1 != null)
+          a1.setT(a0);
+      }
+    }
+    return b;
+      
+
+
+    // TODO
+    
+  }
 
   BioModel(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex, 
       String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {

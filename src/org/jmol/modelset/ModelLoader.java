@@ -81,7 +81,7 @@ public final class ModelLoader {
   
   private Viewer vwr;
   public ModelSet ms;
-  private ModelSet mergeModelSet;
+  private ModelSet modelSet0;
 
   private boolean merging;
   private boolean appendNew;
@@ -92,13 +92,13 @@ public final class ModelLoader {
   public int[] specialAtomIndexes;
   
   public ModelLoader(Viewer vwr, String modelSetName,
-      SB loadScript, Object asc, ModelSet mergeModelSet,
+      SB loadScript, Object asc, ModelSet modelSet0,
       BS bsNew) {
     this.vwr = vwr;
     ms = new ModelSet(vwr, modelSetName);
     JmolAdapter adapter = vwr.getModelAdapter();
-    this.mergeModelSet = mergeModelSet;
-    merging = (this.mergeModelSet != null && this.mergeModelSet.ac > 0);
+    this.modelSet0 = modelSet0;
+    merging = (modelSet0 != null && modelSet0.ac > 0);
     if (merging) {
       ms.canSkipLoad = false;
     } else {
@@ -207,15 +207,15 @@ public final class ModelLoader {
     ms.someModelsHaveFractionalCoordinates = ms
         .getMSInfoB("someModelsHaveFractionalCoordinates");
     if (merging) {
-      ms.haveBioModels |= mergeModelSet.haveBioModels;
-      ms.bioModelset = mergeModelSet.bioModelset;
-      ms.someModelsHaveSymmetry |= mergeModelSet
+      ms.haveBioModels |= modelSet0.haveBioModels;
+      ms.bioModelset = modelSet0.bioModelset;
+      ms.someModelsHaveSymmetry |= modelSet0
           .getMSInfoB("someModelsHaveSymmetry");
-      someModelsHaveUnitcells |= mergeModelSet
+      someModelsHaveUnitcells |= modelSet0
           .getMSInfoB("someModelsHaveUnitcells");
-      ms.someModelsHaveFractionalCoordinates |= mergeModelSet
+      ms.someModelsHaveFractionalCoordinates |= modelSet0
           .getMSInfoB("someModelsHaveFractionalCoordinates");
-      ms.someModelsHaveAromaticBonds |= mergeModelSet.someModelsHaveAromaticBonds;
+      ms.someModelsHaveAromaticBonds |= modelSet0.someModelsHaveAromaticBonds;
       ms.msInfo.put("someModelsHaveSymmetry",
           Boolean.valueOf(ms.someModelsHaveSymmetry));
       ms.msInfo.put("someModelsHaveUnitcells",
@@ -299,7 +299,7 @@ public final class ModelLoader {
     iModel = -1;
     model = null;
     if (merging)
-      mergeTrajAndVib(mergeModelSet, ms);
+      mergeTrajAndVib(modelSet0, ms);
     initializeAtomBondModelCounts(nAtoms);
     if (bsNew != null && (doMinimize || is2D)) {
       bsNew.setBits(baseAtomIndex, baseAtomIndex + nAtoms);
@@ -371,10 +371,10 @@ public final class ModelLoader {
     setAtomProperties();
     if (adapter != null)
       adapter.finish(asc);    
-    if (mergeModelSet != null) {
-      mergeModelSet.releaseModelSet();
+    if (modelSet0 != null) {
+      modelSet0.releaseModelSet();
     }
-    mergeModelSet = null;
+    modelSet0 = null;
   }
 
   private void mergeTrajAndVib(ModelSet oldSet, ModelSet newSet) {
@@ -475,11 +475,11 @@ public final class ModelLoader {
           baseModelIndex = baseModelCount - 1;
         ms.mc = baseModelCount;
       }
-      ms.ac = baseAtomIndex = mergeModelSet.ac;
-      ms.bondCount = mergeModelSet.bondCount;
-      mergeGroups = mergeModelSet.getGroups();
+      ms.ac = baseAtomIndex = modelSet0.ac;
+      ms.bondCount = modelSet0.bondCount;
+      mergeGroups = modelSet0.getGroups();
       groupCount = baseGroupIndex = mergeGroups.length;
-      ms.mergeModelArrays(mergeModelSet);
+      ms.mergeModelArrays(modelSet0);
       ms.growAtomArrays(ms.ac + nAtoms);
     } else {
       ms.mc = adapterModelCount;
@@ -499,12 +499,12 @@ public final class ModelLoader {
     ms.modelNames = AU.arrayCopyS(ms.modelNames, ms.mc);
     ms.frameTitles = AU.arrayCopyS(ms.frameTitles, ms.mc);
     if (merging)
-      for (int i = 0; i < mergeModelSet.mc; i++)
-        (ms.am[i] = mergeModelSet.am[i]).ms = ms;
+      for (int i = 0; i < modelSet0.mc; i++)
+        (ms.am[i] = modelSet0.am[i]).ms = ms;
   }
 
   private void mergeGroups() {
-    Map<String, Object> info = mergeModelSet.getAuxiliaryInfo(null);
+    Map<String, Object> info = modelSet0.getAuxiliaryInfo(null);
     String[] mergeGroup3Lists = (String[]) info.get("group3Lists");
     int[][] mergeGroup3Counts = (int[][]) info.get("group3Counts");
     if (mergeGroup3Lists != null) {
@@ -518,7 +518,7 @@ public final class ModelLoader {
     }
     //if merging PDB data into an already-present model, and the 
     //structure is defined, consider the current structures in that 
-    //model to be undefined. Not guarantee to work.
+    //model to be undefined. Not guaranteed to work.
     if (!appendNew && ms.haveBioModels) 
       structuresDefinedInFile.clear(baseModelIndex);
   }
@@ -551,11 +551,9 @@ public final class ModelLoader {
         modelName = (jmolData != null && jmolData.indexOf(";") > 2 ? jmolData.substring(jmolData
             .indexOf(":") + 2, jmolData.indexOf(";"))
             : appendNew ? "" + (modelNumber % 1000000): "");
-      boolean isPDBModel = setModelNameNumberProperties(ipt, iTrajectory,
+      setModelNameNumberProperties(ipt, iTrajectory,
           modelName, modelNumber, modelProperties, modelAuxiliaryInfo,
           jmolData);
-      if (isPDBModel)
-        jbr.setGroupLists(ipt);
       if (ms.getInfo(ipt, "periodicOriginXyz") != null)
         ms.someModelsHaveSymmetry = true;
     }
@@ -591,29 +589,29 @@ public final class ModelLoader {
     finalizeModels(baseModelCount);
   }
     
-  private boolean setModelNameNumberProperties(
-                                               int modelIndex,
-                                               int trajectoryBaseIndex,
-                                               String modelName,
-                                               int modelNumber,
-                                               Properties modelProperties,
-                                               Map<String, Object> modelAuxiliaryInfo,
-                                               String jmolData) {
-    boolean modelIsPDB = (modelAuxiliaryInfo != null 
-        && Boolean.TRUE == modelAuxiliaryInfo.get("isPDB"));
+  private void setModelNameNumberProperties(int modelIndex,
+                                            int trajectoryBaseIndex,
+                                            String modelName,
+                                            int modelNumber,
+                                            Properties modelProperties,
+                                            Map<String, Object> modelAuxiliaryInfo,
+                                            String jmolData) {
     if (appendNew) {
-      ms.am[modelIndex] = (modelIsPDB ? 
-          jbr.getBioModel(modelIndex, trajectoryBaseIndex,
-          jmolData, modelProperties, modelAuxiliaryInfo)
-          : new Model().set(ms, modelIndex, trajectoryBaseIndex,
-              jmolData, modelProperties, modelAuxiliaryInfo));
+      boolean modelIsPDB = (modelAuxiliaryInfo != null && Boolean.TRUE == modelAuxiliaryInfo
+          .get("isPDB"));
+      ms.am[modelIndex] = (modelIsPDB ? jbr.getBioModel(modelIndex,
+          trajectoryBaseIndex, jmolData, modelProperties, modelAuxiliaryInfo)
+          : new Model().set(ms, modelIndex, trajectoryBaseIndex, jmolData,
+              modelProperties, modelAuxiliaryInfo));
       ms.modelNumbers[modelIndex] = modelNumber;
       ms.modelNames[modelIndex] = modelName;
+      if (modelIsPDB)
+        jbr.setGroupLists(modelIndex);
     } else {
-      // set appendNew false
-      Object atomInfo = modelAuxiliaryInfo.get("PDB_CONECT_firstAtom_count_max"); 
+      Object atomInfo = modelAuxiliaryInfo
+          .get("PDB_CONECT_firstAtom_count_max");
       if (atomInfo != null)
-        ms.setInfo(modelIndex, "PDB_CONECT_firstAtom_count_max", atomInfo); 
+        ms.setInfo(modelIndex, "PDB_CONECT_firstAtom_count_max", atomInfo);
     }
     // this next sets the bitset length to avoid 
     // unnecessary calls to System.arrayCopy
@@ -633,10 +631,9 @@ public final class ModelLoader {
     models[modelIndex].insertionCount = (codes == null ? 0 : codes.length());
     boolean isModelKit = (ms.modelSetName != null
         && ms.modelSetName.startsWith("Jmol Model Kit")
-        || modelName.startsWith("Jmol Model Kit") || "Jme"
-        .equals(ms.getInfo(modelIndex, "fileType")));
+        || modelName.startsWith("Jmol Model Kit") || "Jme".equals(ms.getInfo(
+        modelIndex, "fileType")));
     models[modelIndex].isModelKit = isModelKit;
-    return modelIsPDB;
   }
 
   /**
@@ -1032,10 +1029,10 @@ public final class ModelLoader {
     if (someModelsHaveUnitcells) {
       ms.unitCells = new SymmetryInterface[ms.mc];
       ms.haveUnitCells = true;
-      boolean haveMergeCells = (mergeModelSet != null && mergeModelSet.unitCells != null);
+      boolean haveMergeCells = (modelSet0 != null && modelSet0.unitCells != null);
       for (int i = 0, pt = 0; i < ms.mc; i++) {
         if (haveMergeCells && i < baseModelCount) {
-          ms.unitCells[i] = mergeModelSet.unitCells[i];
+          ms.unitCells[i] = modelSet0.unitCells[i];
         } else {
           ms.unitCells[i] = Interface.getSymmetry(vwr, "file");
           float[] notionalCell = null;
@@ -1288,7 +1285,7 @@ public final class ModelLoader {
         bondsCache[j] = null;
     }
 
-    ms.setAtomNamesAndNumbers(0, baseAtomIndex, mergeModelSet);
+    ms.setAtomNamesAndNumbers(0, baseAtomIndex, modelSet0);
 
     // find elements for the popup menus
 

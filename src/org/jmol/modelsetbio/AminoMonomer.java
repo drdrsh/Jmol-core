@@ -195,12 +195,11 @@ public class AminoMonomer extends AlphaMonomer {
     return nitrogenHydrogenPoint;
   }
   
-  public P3 getExplicitNH() {
+  public Atom getExplicitNH() {
     Atom nitrogen = getNitrogenAtom();
     Atom h = null;
     Bond[] bonds = nitrogen.bonds;
-    if (bonds == null)
-      return null;
+    if (bonds != null)
     for (int i = 0; i < bonds.length; i++)
       if ((h = bonds[i].getOtherAtom(nitrogen)).getElementNumber() == 1)
         return h;
