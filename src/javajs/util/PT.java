@@ -388,18 +388,14 @@ public class PT {
 
   public static String parseTokenNext(String str, int[] next) {
     int cch = str.length();
-    if (next[0] < 0 || next[0] >= cch)
-      return null;
-    return parseTokenChecked(str, cch, next);
+    return (next[0] < 0 || next[0] >= cch ? null : parseTokenChecked(str, cch, next));
   }
 
   public static String parseTokenRange(String str, int ichMax, int[] next) {
     int cch = str.length();
     if (ichMax > cch)
       ichMax = cch;
-    if (next[0] < 0 || next[0] >= ichMax)
-      return null;
-    return parseTokenChecked(str, ichMax, next);
+    return (next[0] < 0 || next[0] >= ichMax ? null : parseTokenChecked(str, ichMax, next));
   }
 
   public static String parseTokenChecked(String str, int ichMax, int[] next) {
@@ -410,9 +406,7 @@ public class PT {
     while (ich < ichMax && !isWhiteSpace(str, ich))
       ++ich;
     next[0] = ich;
-    if (ichNonWhite == ich)
-      return null;
-    return str.substring(ichNonWhite, ich);
+    return (ichNonWhite == ich ? null : str.substring(ichNonWhite, ich));
   }
 
   public static String parseTrimmedChecked(String str, int ich, int ichMax) {
@@ -421,9 +415,7 @@ public class PT {
     int ichLast = ichMax - 1;
     while (ichLast >= ich && isWhiteSpace(str, ichLast))
       --ichLast;
-    if (ichLast < ich)
-      return "";
-    return str.substring(ich, ichLast + 1);
+    return (ichLast < ich ? "" : str.substring(ich, ichLast + 1));
   }
 
   public static double dVal(String s) throws NumberFormatException {
@@ -458,9 +450,7 @@ public class PT {
     int cch = str.length();
     if (ichMax > cch)
       ichMax = cch;
-    if (next[0] < 0 || next[0] >= ichMax)
-      return Integer.MIN_VALUE;
-    return parseIntChecked(str, ichMax, next);
+    return (next[0] < 0 || next[0] >= ichMax ? Integer.MIN_VALUE : parseIntChecked(str, ichMax, next));
   }
 
   /**

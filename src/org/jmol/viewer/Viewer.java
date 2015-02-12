@@ -1719,17 +1719,21 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   /**
    * obtain CIF data for a ligand for purposes of adding hydrogens
+   * or for any other purpose in terms of saving a data set for a file
+   * in a state
    * 
    * @param id
-   *        if null, clear "bad" entries from the set.
+   *        unique key; if null, clear "bad" entries from the set.
    * @param prefix
-   * @param suffix
+   * @param suffix or fileName
    * @param terminator
    *        Only save to this if not null
    * @return a ligand model or a string if just file data or null
    */
   public Object getLigandModel(String id, String prefix, String suffix,
                                String terminator) {
+    // getLigandModel(id, m40File, "_file", "----"));
+    // getLigandModel(group3, "ligand_", "_data", null);
     if (id == null) {
       if (ligandModelSet != null) {
         Iterator<Map.Entry<String, Object>> e = ligandModels.entrySet()
@@ -1745,6 +1749,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     boolean isLigand = prefix.equals("ligand_");
     if (isLigand)
       id = id.toUpperCase();
+    else 
+      id = id.substring(id.lastIndexOf("/") + 1);
     if (ligandModelSet == null)
       ligandModelSet = new Hashtable<String, Boolean>();
     ligandModelSet.put(id, Boolean.TRUE);
@@ -1782,6 +1788,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     }
     if (!isLigand)
       return model;
+    // process ligand business
+    
     if (!isError && model instanceof String) {
       data = (String) model;
       // TODO: check for errors in reading file
