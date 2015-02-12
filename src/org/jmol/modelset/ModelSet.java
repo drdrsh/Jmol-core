@@ -270,6 +270,15 @@ import java.util.Properties;
     return modelSetTypeName;
   }
 
+  /**
+   * 
+   * @param modelNumber
+   *        can be a PDB MODEL number or a simple index number, or a fffnnnnnn
+   *        f.n number
+   * @param useModelNumber
+   * @param doSetTrajectory
+   * @return
+   */
   public int getModelNumberIndex(int modelNumber, boolean useModelNumber,
                                  boolean doSetTrajectory) {
     if (useModelNumber) {
@@ -279,6 +288,8 @@ import java.util.Properties;
           return i;
       return -1;
     }
+    if (modelNumber < 1000000)
+      return modelNumber;
     //new decimal format:   frame 1.2 1.3 1.4
     for (int i = 0; i < mc; i++)
       if (modelFileNumbers[i] == modelNumber) {

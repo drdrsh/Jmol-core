@@ -5099,13 +5099,9 @@ public class ScriptEval extends ScriptExpr {
           if (theTok == T.decimal && haveFileSet && fFrame == (int) fFrame)
             iFrame = (int) fFrame * 1000000;
           if (iFrame == Integer.MAX_VALUE) {
-            if (i == 1) {
-              String id = theToken.value.toString();
-              iFrame = (chk ? -2 : vwr.getModelIndexFromId(id));
-            } else {
-              iFrame = 0; // frame 0.0
-            }
             useModelNumber = false;
+            frameList[nFrames++] = (chk || i != 1 ? 0 : vwr.getModelIndexFromId(theToken.value.toString()));
+            break;
           }
           if (iFrame == -1) {
             checkLength(offset + 1);
