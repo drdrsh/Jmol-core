@@ -335,8 +335,6 @@ public class JanaReader extends AtomSetCollectionReader {
         return;
       m40File = m40File.substring(0, ipt + 2) + "40";
       String id = m40File.substring(0, ipt);
-      ipt = id.lastIndexOf("/");
-      id = id.substring(ipt + 1);
       reader.close();
       reader = Rdr.getBR((String) vwr.getLigandModel(id, m40File, "_file", "----"));
       if (out != null)

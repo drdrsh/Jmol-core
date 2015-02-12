@@ -525,9 +525,10 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
   }
 
   private void title() {
-    if (lineLength < 10)
-      return;
-    appendLoadNote(line.substring(10).trim());
+    if (lineLength > 72)
+      line = line.substring(0, 72);
+    if (lineLength >= 10)
+      appendLoadNote(line.substring(10).trim());
   }
   
   private void compnd(boolean isSource) {
@@ -863,7 +864,7 @@ REMARK 290 REMARK: NULL
     atom.atomName = name;
     if (altID != ' ')
       atom.altLoc = altID;
-    atom.group3 = group3;
+    atom.group3 = (group3 == null ? "UNK" : group3);
     atom.chainID = chainID;
     if (biomtChainAtomCounts != null)
       biomtChainAtomCounts[chainID % 256]++;
