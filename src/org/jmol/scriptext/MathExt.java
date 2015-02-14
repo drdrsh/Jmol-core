@@ -401,7 +401,8 @@ public class MathExt implements JmolMathExtension {
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }
-      float[] data = e.getSmilesExt().getFlexFitList(bs1, bs2, smiles1, !isSmiles);
+      float[] data = e.getSmilesExt().getFlexFitList(bs1, bs2, smiles1,
+          !isSmiles);
       return (data == null ? mp.addXStr("") : mp.addXAF(data));
     }
     try {
@@ -411,23 +412,24 @@ public class MathExt implements JmolMathExtension {
         if (bs1 == null && bs2 == null)
           return mp.addXStr(vwr.getSmilesMatcher()
               .getRelationship(smiles1, smiles2).toUpperCase());
-        String mf1 = (bs1 == null ? vwr.getSmilesMatcher()
-            .getMolecularFormula(smiles1, false) : JmolMolecule
-            .getMolecularFormula(vwr.ms.at, bs1, false, null, false));
-        String mf2 = (bs2 == null ? vwr.getSmilesMatcher()
-            .getMolecularFormula(smiles2, false) : JmolMolecule
-            .getMolecularFormula(vwr.ms.at, bs2, false, null, false));
+        String mf1 = (bs1 == null ? vwr.getSmilesMatcher().getMolecularFormula(
+            smiles1, false) : JmolMolecule.getMolecularFormula(vwr.ms.at, bs1,
+            false, null, false));
+        String mf2 = (bs2 == null ? vwr.getSmilesMatcher().getMolecularFormula(
+            smiles2, false) : JmolMolecule.getMolecularFormula(vwr.ms.at, bs2,
+            false, null, false));
         if (!mf1.equals(mf2))
           return mp.addXStr("NONE");
         if (bs1 != null)
-          smiles1 = (String) e.getSmilesExt().getSmilesMatches("", null, bs1, null, false, true);
+          smiles1 = (String) e.getSmilesExt().getSmilesMatches("", null, bs1,
+              null, false, true);
         boolean check;
         if (bs2 == null) {
           // note: find smiles1 IN smiles2 here
           check = (vwr.getSmilesMatcher().areEqual(smiles2, smiles1) > 0);
         } else {
-          check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null, bs2, null, false, true))
-              .nextSetBit(0) >= 0);
+          check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null, bs2,
+              null, false, true)).nextSetBit(0) >= 0);
         }
         if (!check) {
           // MF matched, but didn't match SMILES
@@ -441,19 +443,19 @@ public class MathExt implements JmolMathExtension {
               if (bs2 == null) {
                 check = (vwr.getSmilesMatcher().areEqual(smiles1, smiles2) > 0);
               } else {
-                check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null, bs2, null,
-                    false, true)).nextSetBit(0) >= 0);
+                check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null,
+                    bs2, null, false, true)).nextSetBit(0) >= 0);
               }
               if (check)
                 return mp.addXStr("ENANTIOMERS");
             }
             // remove all stereochemistry from SMILES string
             if (bs2 == null) {
-              check = (vwr.getSmilesMatcher().areEqual(
-                  "/nostereo/" + smiles2, smiles1) > 0);
+              check = (vwr.getSmilesMatcher().areEqual("/nostereo/" + smiles2,
+                  smiles1) > 0);
             } else {
-              Object ret = e.getSmilesExt().getSmilesMatches("/nostereo/" + smiles1, null, bs2,
-                  null, false, true);
+              Object ret = e.getSmilesExt().getSmilesMatches(
+                  "/nostereo/" + smiles1, null, bs2, null, false, true);
               check = (((BS) ret).nextSetBit(0) >= 0);
             }
             if (check)
@@ -465,8 +467,8 @@ public class MathExt implements JmolMathExtension {
         //identical or conformational 
         if (bs1 == null || bs2 == null)
           return mp.addXStr("IDENTICAL");
-        stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, smiles1, null, null, null,
-            null, false, false, null, null, false, false);
+        stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, smiles1, null,
+            null, null, null, false, false, null, null, false, false);
         return mp.addXStr(stddev < 0.2f ? "IDENTICAL"
             : "IDENTICAL or CONFORMATIONAL ISOMERS (RMSD=" + stddev + ")");
       } else if (isSmiles) {
@@ -484,19 +486,18 @@ public class MathExt implements JmolMathExtension {
         boolean bestMap = (("best".equals(sOpt) || "bestH".equals(sOpt)));
         if (sOpt == null || hMaps || allMaps || bestMap) {
           // with explicitH we set to find only the first match.
-          if (isMap || isSmiles) {
-            sOpt = "/noaromatic"
-                + (allMaps || bestMap ? "/" : " nostereo/")
-                + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null, bs1, null, false,
-                    true);
-          } else {
+          if (!isMap && !isSmiles)
             return false;
-          }
+          sOpt = "/noaromatic"
+              + (allMaps || bestMap ? "/" : " nostereo/")
+              + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null,
+                  bs1, null, false, true);
         } else {
           allMaps = true;
         }
-        stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, sOpt, ptsA, ptsB, m, null,
-            !isSmiles, isMap, null, null, !allMaps && !bestMap, bestMap);
+        stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, sOpt, ptsA,
+            ptsB, m, null, !isSmiles, isMap, null, null, !allMaps && !bestMap,
+            bestMap);
         if (isMap) {
           int nAtoms = ptsA.size();
           if (nAtoms == 0)
@@ -510,9 +511,8 @@ public class MathExt implements JmolMathExtension {
               a[j] = new int[] { ((Atom) ptsA.get(j)).i,
                   ((Atom) ptsB.get(pt)).i };
           }
-          if (!allMaps)
-            return (ret.size() > 0 ? mp.addXAII(ret.get(0)) : mp.addXStr(""));
-          return mp.addXList(ret);
+          return (allMaps ? mp.addXList(ret) : ret.size() > 0 ? mp.addXAII(ret
+              .get(0)) : mp.addXStr(""));
         }
       } else {
         ptsA = e.getPointVector(args[0], 0);

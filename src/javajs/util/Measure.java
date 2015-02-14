@@ -682,19 +682,34 @@ final public class Measure {
     return q;
   }
 
+  /**
+   * Fills a 4x4 matrix with rotation-translation of mapped points A to B.
+   * If centerA is null, this is a standard 4x4 rotation-translation matrix;
+   * otherwise, this 4x4 matrix is a rotation around a vector through the center of ptsA,
+   * and centerA is filled with that center; 
+   * Prior to Jmol 14.3.12_2014.02.14, when used from the JmolScript compare() function,
+   * this method returned the second of these options instead of the first.
+   * 
+   * @param ptsA
+   * @param ptsB
+   * @param m  4x4 matrix to be returned 
+   * @param centerA return center of rotation; if null, then standard 4x4 matrix is returned
+   * @return stdDev
+   */
   public static float getTransformMatrix4(Lst<P3> ptsA, Lst<P3> ptsB, M4 m,
                                           P3 centerA) {
     P3[] cptsA = getCenterAndPoints(ptsA);
     P3[] cptsB = getCenterAndPoints(ptsB);
-    //System.out.println("draw d1 " + cptsA[0]);
-    //System.out.println("draw d2 " + cptsB[0]);
     float[] retStddev = new float[2];
     Quat q = calculateQuaternionRotation(new P3[][] { cptsA, cptsB },
-        retStddev); // was false
-    V3 v = V3.newVsub(cptsB[0], cptsA[0]);
-    m.setMV(q.getMatrix(), v);
-    if (centerA != null)
+        retStddev);
+    M3 r = q.getMatrix();
+    if (centerA == null)
+      r.rotate(cptsA[0]);
+    else
       centerA.setT(cptsA[0]);
+    V3 t = V3.newVsub(cptsB[0], cptsA[0]);
+    m.setMV(r, t);
     return retStddev[1];
   }
 
