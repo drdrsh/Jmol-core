@@ -1019,6 +1019,7 @@ public class BioExt {
       } catch (Exception e) {
         // TODO
       }
+      ms = vwr.ms;
       if (ms.ac == ac)
         return false;
       SB sb = ms.am[iModel].loadScript;
