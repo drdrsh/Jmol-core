@@ -293,12 +293,20 @@ public class ShapeManager {
     return mad / 2000f;
   }
 
+  public void replaceGroup(Group g0, Group g1) {
+    if (shapes == null)
+      return;
+    for (int i = JC.SHAPE_MIN_SECONDARY; i < JC.SHAPE_MAX_SECONDARY; i++)
+      if (shapes[i] != null)
+        shapes[i].replaceGroup(g0, g1);
+  }
+
   void getObjectMap(Map<String, ?> map, boolean withDollar) {
     if (shapes == null)
       return;
     Boolean bDollar = Boolean.valueOf(withDollar);
-      for (int i = JC.SHAPE_MIN_SPECIAL; i < JC.SHAPE_MAX_MESH_COLLECTION; ++i)
-          getShapePropertyData(i, "getNames", new Object[] { map , bDollar } );
+    for (int i = JC.SHAPE_MIN_SPECIAL; i < JC.SHAPE_MAX_MESH_COLLECTION; ++i)
+      getShapePropertyData(i, "getNames", new Object[] { map, bDollar });
   }
 
   Object getProperty(Object paramInfo) {

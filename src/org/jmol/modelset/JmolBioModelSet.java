@@ -76,4 +76,6 @@ public interface JmolBioModelSet {
 
   void setAllStructureList(Map<STR, float[]> structureList);
 
+  void getAllPolymerInfo(BS bs, Map<String, Lst<Map<String, Object>>> info);
+
  }

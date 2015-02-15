@@ -397,7 +397,8 @@ public class StateCreator extends JmolStateCreator {
       imax = (i = iShape) + 1;
     }
     for (; i < imax; ++i)
-      if ((shape = shapes[i]) != null && (isAll || JC.isShapeSecondary(i))
+      if ((shape = shapes[i]) != null && (isAll || 
+          i >= JC.SHAPE_MIN_SECONDARY && i < JC.SHAPE_MAX_SECONDARY)
           && (cmd = shape.getShapeState()) != null && cmd.length() > 1)
         commands.append(cmd);
     commands.append("  select *;\n");

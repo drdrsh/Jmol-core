@@ -31,7 +31,10 @@ public class RocketRenderer {
   private boolean renderArrowHeads;
   private boolean isRockets;
 
-  public RocketRenderer(RocketsRenderer rr, boolean isRockets) {
+  public RocketRenderer(){
+  }
+  
+  RocketRenderer set(RocketsRenderer rr) {
     screenA = new P3();
     screenB = new P3();
     screenC = new P3();
@@ -39,10 +42,11 @@ public class RocketRenderer {
     this.rr = rr;
     vwr = rr.vwr;
     tm = rr.vwr.tm;
-    this.isRockets = isRockets;
+    isRockets = rr.isRockets;
+    return this;
   }
 
-  protected void renderRockets() {
+  void renderRockets() {
     // doing the cylinders separately because we want to connect them if we can.
 
     // Key structures that must render properly

@@ -277,7 +277,7 @@ import java.util.Properties;
    *        f.n number
    * @param useModelNumber
    * @param doSetTrajectory
-   * @return
+   * @return index
    */
   public int getModelNumberIndex(int modelNumber, boolean useModelNumber,
                                  boolean doSetTrajectory) {

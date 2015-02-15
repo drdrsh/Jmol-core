@@ -774,7 +774,7 @@ public class JsonNioService extends NIOService implements JsonNioServer {
 
     public Object get(String key) {
       Object o = super.get(key);
-      return (o instanceof SV ? SV.oValue((SV) o) : o);
+      return (o instanceof SV ? SV.oValue(o) : o);
     }
     
     public long getLong(String key) throws Exception {

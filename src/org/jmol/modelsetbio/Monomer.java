@@ -263,14 +263,6 @@ public abstract class Monomer extends Group {
                             short madBegin, short madEnd) {
   }
 
-  protected boolean calcBioParameters() {
-    return bioPolymer.calcParameters();
-  }
-
-  public boolean haveParameters() {
-    return bioPolymer.haveParameters;
-  }
-  
   public Map<String, Object> getMyInfo(P3 ptTemp) {
     Map<String, Object> info = getGroupInfo(groupIndex, ptTemp);
     info.put("chain", chain.getIDStr());
@@ -486,8 +478,8 @@ public abstract class Monomer extends Group {
 
   @Override
   public float getGroupParameter(int tok) {
-    if (!haveParameters())
-      calcBioParameters();
+    if (!bioPolymer.haveParameters)
+      bioPolymer.calcParameters();
     switch (tok) {
     case T.monomer:
       return 1;

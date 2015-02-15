@@ -697,10 +697,6 @@ public final class JC {
   public final static int SHAPE_FRANK      = 36;
   public final static int SHAPE_MAX        = SHAPE_FRANK + 1;
 
-  public final static boolean isShapeSecondary(int i ) {
-    return i >= JC.SHAPE_MIN_SECONDARY && i < JC.SHAPE_MAX_SECONDARY;
-  }
-  
   // ATOM_IN_FRAME simply associates an atom with the current model
   // but doesn't necessarily mean it is visible
   // ATOM_VIS_SET and ATOM_VISIBLE are checked once only for each atom per rendering

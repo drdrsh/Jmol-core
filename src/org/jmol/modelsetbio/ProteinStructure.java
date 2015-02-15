@@ -26,8 +26,6 @@ package org.jmol.modelsetbio;
 import java.util.Hashtable;
 import java.util.Map;
 
-
-import javajs.util.AU;
 import javajs.util.P3;
 import javajs.util.V3;
 
@@ -131,7 +129,40 @@ public abstract class ProteinStructure {
     // implemented in helix and sheet
   }
 
-  void calcSegments() {
+  public boolean isWithin(int monomerIndex) {
+    return (monomerIndex > monomerIndexFirst 
+        && monomerIndex < monomerIndexLast);
+  }
+
+  private Map<Monomer, Integer> resMap;
+  public int getIndex(Monomer monomer) {
+    if (resMap == null) {
+      resMap = new Hashtable<Monomer, Integer>();
+      for (int i = nRes; --i >= 0; )
+        resMap.put(apolymer.monomers[monomerIndexFirst + i], Integer.valueOf(i));
+    }
+    Integer ii = resMap.get(monomer);
+    return (ii == null ? -1 : ii.intValue());
+  }
+
+  /**
+   * 
+   * 
+   * @return points for rocket segment rendering 
+   */
+  public P3[] getSegments() {
+    if (segments == null)
+      calcSegments();
+    return segments;
+  }
+
+  P3 getStructureMidPoint(int index) {
+    if (segments == null)
+      calcSegments();
+    return segments[index];
+  }
+
+  private void calcSegments() {
     if (segments != null)
       return;
     calcAxis();
@@ -153,28 +184,6 @@ public abstract class ProteinStructure {
     }
   }
 
-  public boolean isWithin(int monomerIndex) {
-    return (monomerIndex > monomerIndexFirst 
-        && monomerIndex < monomerIndexLast);
-  }
-
-  private Map<Monomer, Integer> resMap;
-  public int getIndex(Monomer monomer) {
-    if (resMap == null) {
-      resMap = new Hashtable<Monomer, Integer>();
-      for (int i = nRes; --i >= 0; )
-        resMap.put(apolymer.monomers[monomerIndexFirst + i], Integer.valueOf(i));
-    }
-    Integer ii = resMap.get(monomer);
-    return (ii == null ? -1 : ii.intValue());
-  }
-
-  public P3[] getSegments() {
-    if (segments == null)
-      calcSegments();
-    return segments;
-  }
-
   public P3 getAxisStartPoint() {
     calcAxis();
     return axisA;
@@ -183,25 +192,6 @@ public abstract class ProteinStructure {
   public P3 getAxisEndPoint() {
     calcAxis();
     return axisB;
-  }
-
-  P3 getStructureMidPoint(int index) {
-    if (segments == null)
-      calcSegments();
-    return segments[index];
-  }
-
-  public void getInfo(Map<String, Object> info) {
-    info.put("type", type.getBioStructureTypeName(false));
-    int[] leadAtomIndices = apolymer.getLeadAtomIndices();
-    int[] iArray = AU.arrayCopyRangeI(leadAtomIndices, monomerIndexFirst, monomerIndexFirst + nRes);
-    info.put("leadAtomIndices", iArray);
-    calcAxis();
-    if (axisA == null)
-      return;
-    info.put("axisA", axisA);
-    info.put("axisB", axisB);
-    info.put("axisUnitVector", axisUnitVector);
   }
 
   void resetAxes() {

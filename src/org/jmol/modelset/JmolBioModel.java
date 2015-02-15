@@ -1,7 +1,5 @@
 package org.jmol.modelset;
 
-import java.util.Map;
-
 import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.SB;
@@ -21,10 +19,6 @@ public interface JmolBioModel {
   void getPdbData(String type, char ctype, boolean isDraw,
                          BS bsSelected, OC out, LabelToken[] tokens,
                          SB pdbCONECT, BS bsWritten);
-
-  void getPolymerInfo(BS bs,
-                      Map<String, Lst<Map<String, Object>>> finalInfo,
-                      Lst<Map<String, Object>> modelVector);
 
   void resetRasmolBonds(BS bs);
 

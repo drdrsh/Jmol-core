@@ -1546,15 +1546,10 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
   }
 
   private Map<String, Lst<Map<String, Object>>> getAllPolymerInfo(BS bs) {
-    Map<String, Lst<Map<String, Object>>> finalInfo = new Hashtable<String, Lst<Map<String, Object>>>();
-    Lst<Map<String, Object>> modelVector = new  Lst<Map<String, Object>>();
-    int modelCount = vwr.ms.mc;
-    Model[] models = vwr.ms.am;
-    for (int i = 0; i < modelCount; ++i)
-      if (models[i].isBioModel)
-        ((JmolBioModel) models[i]).getPolymerInfo(bs, finalInfo, modelVector);
-    finalInfo.put("models", modelVector);
-    return finalInfo;
+    Map<String, Lst<Map<String, Object>>> info = new Hashtable<String, Lst<Map<String, Object>>>();
+    if (vwr.ms.bioModelset != null)
+      vwr.ms.bioModelset.getAllPolymerInfo(bs, info);
+    return info;
   }
 
   private String getBasePairInfo(BS bs) {

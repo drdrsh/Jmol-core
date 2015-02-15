@@ -500,7 +500,10 @@ public class AminoPolymer extends AlphaPolymer {
 
   private Map<STR, float[]> structureList; // kept in StateManager.globalSettings
 
-  @Override
+  /**
+   * @param structureList
+   *        protein only -- helix, sheet, turn definitions
+   */
   public void setStructureList(Map<STR, float[]> structureList) {
     this.structureList = structureList;
   }

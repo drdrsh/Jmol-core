@@ -144,13 +144,21 @@ public abstract class Shape {
   }
 
   /**
-   * BioShapeCollection only
+   * 
    * 
    * @param group
    * @return size
    */
   public int getSizeG(Group group) {
     return 0;
+  }
+
+  /**
+   * @param g0
+   * @param g1
+   */
+  public void replaceGroup(Group g0, Group g1) {
+    //BioShapeCollection only; after MUTATE
   }
 
   public void setModelSet(ModelSet modelSet) {
@@ -396,4 +404,5 @@ public abstract class Shape {
       return;
     s.append("  ").append(cmd).append(";\n");
   }    
+  
 }

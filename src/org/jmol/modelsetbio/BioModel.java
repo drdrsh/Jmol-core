@@ -59,7 +59,6 @@ import org.jmol.util.Logger;
 import javajs.util.P3;
 
 
-import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 
@@ -82,7 +81,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
    *  
    */
   
-  private int bioPolymerCount = 0;
+  int bioPolymerCount = 0;
   public BioPolymer[] bioPolymers;
   boolean isMutated;
 
@@ -240,8 +239,12 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
         BioModel m = (BioModel) ms.am[iModel];
         m.bioPolymers = (BioPolymer[]) AU.arrayCopyObject(m.bioPolymers,
             m.bioPolymerCount);
-        for (int i = m.bioPolymerCount; --i >= 0;)
-          m.bioPolymers[i].setStructureList(structureList);
+        for (int i = m.bioPolymerCount; --i >= 0;) {
+          BioPolymer bp = 
+          m.bioPolymers[i];
+          if (bp instanceof AminoPolymer)
+            ((AminoPolymer) bp).setStructureList(structureList);
+        }
       }
   }
 
@@ -359,46 +362,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
 
   @Override
   public int calculateStruts(BS bs1, BS bs2) {
-    vwr.setModelVisibility();
-    // select only ONE model
-    ms.makeConnections2(0, Float.MAX_VALUE, Edge.BOND_STRUT, T.delete, bs1,
-        bs2, null, false, false, 0);
-    int iAtom = bs1.nextSetBit(0);
-    if (iAtom < 0)
-      return 0;
-    Model m = ms.am[ms.at[iAtom].mi];
-    if (!m.isBioModel)
-      return 0;
-    // only check the atoms in THIS model
-    Lst<Atom> vCA = new  Lst<Atom>();
-    Atom a1 = null;
-    BS bsCheck;
-    if (bs1.equals(bs2)) {
-      bsCheck = bs1;
-    } else {
-      bsCheck = BSUtil.copy(bs1);
-      bsCheck.or(bs2);
-    }
-    Atom[] atoms = ms.at;
-    bsCheck.and(vwr.getModelUndeletedAtomsBitSet(m.modelIndex));
-    for (int i = bsCheck.nextSetBit(0); i >= 0; i = bsCheck.nextSetBit(i + 1))
-      if (atoms[i].checkVisible()
-          && atoms[i].atomID == JC.ATOMID_ALPHA_CARBON
-          && atoms[i].group.groupID != JC.GROUPID_CYSTEINE)
-        vCA.addLast((a1 = atoms[i]));
-    if (vCA.size() == 0)
-      return 0;    
-    float thresh = vwr.getFloat(T.strutlengthmaximum);
-    short mad = (short) (vwr.getFloat(T.strutdefaultradius) * 2000);
-    int delta = vwr.getInt(T.strutspacing);
-    boolean strutsMultiple = vwr.getBoolean(T.strutsmultiple);
-    Lst<Atom[]> struts = ((BioModel) m).bioPolymers[a1.group.getBioPolymerIndexInModel()]
-        .calculateStruts(ms, bs1, bs2, vCA, thresh, delta, strutsMultiple);
-    for (int i = 0; i < struts.size(); i++) {
-      Atom[] o = struts.get(i);
-      ms.bondAtoms(o[0], o[1], Edge.BOND_STRUT, mad, null, 0, false, true);
-    }
-    return struts.size(); 
+    return getBioExt().calculateAllstruts(vwr, ms, bs1, bs2);
   }
 
   @Override
@@ -743,197 +707,15 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
 
   @Override
   public void calculateStraightnessAll() {
-    char ctype = 'S';//(vwr.getTestFlag3() ? 's' : 'S');
-    char qtype = vwr.getQuaternionFrame();
-    int mStep = vwr.getInt(T.helixstep);
-    // testflag3 ON  --> preliminary: Hanson's original normal-based straightness
-    // testflag3 OFF --> final: Kohler's new quaternion-based straightness
-    for (int i = ms.mc; --i >= 0;)
-      if (ms.am[i].isBioModel) {
-        BioModel m = (BioModel)ms.am[i];
-        P3 ptTemp = new P3();
-        for (int p = 0; p < m.bioPolymerCount; p++)
-          m.bioPolymers[p].getPdbData(vwr, ctype, qtype, mStep, 2, null, 
-              null, false, false, false, null, null, null, new BS(), ptTemp);        
-      }
-    ms.haveStraightness = true;
+    getBioExt().calculateStraightnessAll(vwr, ms);
   }
 
   @Override
   public boolean mutate(BS bs, String group, String[] sequence) {
-    
-    int i0 = bs.nextSetBit(0);
-    if (sequence == null)
-      return mutateAtom(i0, group);
-    boolean isFile = (group == null);
-    if (isFile)
-      group = sequence[0];
-    Group lastGroup = null;
-    boolean isOK = true;
-    for (int i = i0, pt = 0; i >= 0; i = bs.nextSetBit(i + 1)) {
-      Group g = ms.at[i].group;
-      if (g == lastGroup)
-        continue;
-      lastGroup = g;
-      if (!isFile) {
-        group = sequence[pt++ % sequence.length];
-        if (group.equals("UNK"))
-          continue;
-        group = "==" + group;
-      }
-      mutateAtom(i, group);
-    }
-    return isOK;
-  }
-  
-  private boolean mutateAtom(int iatom, String fileName) {
-    // no mutating a trajectory. What would that mean???
-    int iModel = ms.at[iatom].mi;
-    if (ms.isTrajectory(iModel))
-      return false; 
-    
-    String[] info = vwr.fm.getFileInfo();
-    boolean b = vwr.getBoolean(T.appendnew);
-    Group g = ms.at[iatom].group;
-    //try {
-      // get the initial group -- protein for now
-      if (!(g instanceof AminoMonomer))
-        return false;
-      ((BioModel) ms.am[iModel]).isMutated = true;
-      AminoMonomer res0 = (AminoMonomer) g;
-      int ac = ms.ac;
-      BS bsRes0 = new BS();
-      res0.setAtomBits(bsRes0);
-      Atom[] backbone = getBackbone(res0, null);
-      int r = g.getResno();
-      
-      // just use a script -- it is much easier!
-      
-      fileName = PT.esc(fileName);
-      String script = "" +
-            "try{\n"
-          + "  var atoms0 = {*}\n"
-          + "  var res0 = " + BS.escape(bsRes0,'(',')')  + "\n"
-          + "  set appendNew false\n"
-          + "  load append "+fileName+"\n"
-          + "  set appendNew " + b + "\n"
-          + "  var res1 = {!atoms0};var r1 = res1[1];var r0 = res1[0]\n"
-          + "  if ({r1 & within(group, r0)}){\n" 
-          + "    var haveHs = ({_H & connected(res0)} != 0)\n"
-          + "    if (!haveHs) {delete _H & res1}\n"
-          + "    var sm = '[*.N][*.CA][*.C][*.O]'\n"
-          + "    var keyatoms = res1.find(sm)\n"
-          + "    var x = compare(res1,res0,sm,'BONDS')\n"
-          + "    if(x){\n"
-          + "      print 'mutating ' + res0[1].label('%n%r') + ' to ' + "+fileName+".trim('=')\n"
-          + "      rotate branch @x\n"
-          + "      compare res1 res0 SMARTS @sm rotate translate 0\n"
-          + "      var c = {!res0 & connected(res0)}\n"
-          + "      var N2 = {*.N & c}\n"
-          + "      var C0 = {*.C & c}\n"
-          + "      var angleH = ({*.H and res0} ? angle({*.C and res0},{*.CA and res0},{*.N and res0},{*.H and res0}) : 1000)\n"
-          + "      delete res0\n"
-          + "      if (N2) {\n"
-          + "        delete (*.OXT,*.HXT) and res1\n"
-          + "        connect {N2} {keyatoms & *.C}\n"
-          + "      }\n"
-          + "      if (C0) {\n" // not terminal
-          + "        if ({res1 and _H & connected(*.N)} == 1) {\n" // proline or proline-like
-          + "          delete *.H and res1\n"
-          + "        } else {\n"
-          + "          var x = angle({*.C and res1},{*.CA and res1},{*.N and res1},{*.H and res1})\n"
-          + "          rotate branch {*.CA and res1} {*.N and res1} @{angleH-x}\n"
-          + "          delete *.H2 and res1\n"
-          + "          delete *.H3 and res1\n"
-          + "        }\n"
-          + "        connect {C0} {keyatoms & *.N}\n"
-          + "      }\n"
-          + "    }\n"
-          + "  }\n"
-          + "}catch(e){print e}\n";
-      try {
-        if (Logger.debugging)
-          Logger.debug(script);
-        vwr.eval.runScript(script);
-      } catch (Exception e) {
-        // TODO
-      }
-      if (ms.ac == ac)
-        return false;
-      SB sb = ms.am[iModel].loadScript;
-      String s = PT.rep(sb.toString(), "load append", "mutate ({" + iatom + "})");
-      sb.setLength(0);
-      sb.append(s);
-      // check for protein monomer
-      g = ms.at[ms.ac - 1].group;
-      if (g != ms.at[ac + 1].group || !(g instanceof AminoMonomer)) {
-        BS bsAtoms = new BS();
-        g.setAtomBits(bsAtoms);
-        vwr.deleteAtoms(bsAtoms, false);
-        return  false;
-      }
-      AminoMonomer res1 = (AminoMonomer) g;
-
-      // fix h position as same as previous group
-      getBackbone(res1, backbone);
-      // must get new group into old chain
-      
-      // note that the terminal N if replacing the N-terminus will only have two H atoms
-      
-      Group[] groups = res0.chain.groups;
-      for (int i = groups.length; --i >= 0;)
-        if (groups[i] == res0) {
-          groups[i] = res1;
-          break;
-        }
-      res1.setResno(r);
-      res1.chain.groupCount = 0;
-      res1.chain = res0.chain;
-      BS bsExclude = BSUtil.newBitSet2(0, ms.mc);
-      bsExclude.clear(res1.chain.model.modelIndex);
-      res1.chain.model.groupCount = -1;
-      res1.chain.model.freeze();
-      ms.recalculatePolymers(bsExclude);      
-    //} catch (Exception e) {
-     // System.out.println("" + e);
-   // }
-    vwr.setBooleanProperty("appendNew", b);
-    vwr.fm.setFileInfo(info);
-    return true;
-
+    return getBioExt().mutate(vwr, ms, bs, group, sequence);
   }
 
-
-/////////////////////////////////////////////////////////////////////////  
-  
-
-  /**
-   * @param res1
-   * @param backbone
-   * @return [C O CA N H]
-   */
-  private Atom[] getBackbone(AminoMonomer res1, Atom[] backbone) {
-    Atom[] b = new Atom[] {res1.getCarbonylCarbonAtom(), res1.getCarbonylOxygenAtom(), 
-        res1.getLeadAtom(), res1.getNitrogenAtom(), res1.getExplicitNH() };
-    if (backbone == null) {
-      // don't place H if there is more than one covalent H on res0.N
-      if (b[3].getCovalentHydrogenCount() > 1)
-        b[4] = null;
-    } else {
-      for (int i = 0; i < 5; i++) {
-        Atom a0 = backbone[i];
-        Atom a1 = b[i];
-        if (a0 != null && a1 != null)
-          a1.setT(a0);
-      }
-    }
-    return b;
-      
-
-
-    // TODO
-    
-  }
+  /////////////////////////////////////////////////////////////////////////  
 
   BioModel(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex, 
       String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
@@ -1092,24 +874,15 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
   }
 
   @Override
-  public void getPolymerInfo(
-                                BS bs,
-                                Map<String, Lst<Map<String, Object>>> finalInfo,
-                                Lst<Map<String, Object>> modelVector) {
-    Map<String, Object> modelInfo = new Hashtable<String, Object>();
-    Lst<Map<String, Object>> info = new  Lst<Map<String, Object>>();
-    for (int ip = 0; ip < bioPolymerCount; ip++) {
-      Map<String, Object> polyInfo = bioPolymers[ip].getPolymerInfo(bs); 
-      if (!polyInfo.isEmpty())
-        info.addLast(polyInfo);
-    }
-    if (info.size() > 0) {
-      modelInfo.put("modelIndex", Integer.valueOf(modelIndex));
-      modelInfo.put("polymers", info);
-      modelVector.addLast(modelInfo);
-    }
+  public void getAllPolymerInfo(BS bs, Map<String, Lst<Map<String, Object>>> info) {
+    getBioExt().getAllPolymerInfo(ms, bs, info);
   }
-  
+
+  private BioExt bx;
+  private BioExt getBioExt() {
+    return (bx == null ? (bx = ((BioExt) Interface.getInterface("org.jmol.modelsetbio.BioExt", vwr, "script"))) : bx);
+  }
+
   private final static String[] pdbRecords = { "ATOM  ", "MODEL ", "HETATM" };
 
   @Override
@@ -1145,37 +918,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
   public void getPdbData(String type, char ctype, boolean isDraw,
                          BS bsSelected, OC out,
                          LabelToken[] tokens, SB pdbCONECT, BS bsWritten) {
-    boolean bothEnds = false;
-    char qtype = (ctype != 'R' ? 'r' : type.length() > 13
-        && type.indexOf("ramachandran ") >= 0 ? type.charAt(13) : 'R');
-    if (qtype == 'r')
-      qtype = vwr.getQuaternionFrame();
-    int mStep = vwr.getInt(T.helixstep);
-    int derivType = (type.indexOf("diff") < 0 ? 0 : type.indexOf("2") < 0 ? 1
-        : 2);
-    if (!isDraw) {
-      out.append("REMARK   6 Jmol PDB-encoded data: " + type + ";");
-      if (ctype != 'R') {
-        out.append("  quaternionFrame = \"" + qtype + "\"");
-        bothEnds = true; //???
-      }
-      out.append("\nREMARK   6 Jmol Version ").append(Viewer.getJmolVersion())
-          .append("\n");
-      if (ctype == 'R')
-        out
-            .append("REMARK   6 Jmol data min = {-180 -180 -180} max = {180 180 180} "
-                + "unScaledXyz = xyz * {1 1 1} + {0 0 0} plotScale = {100 100 100}\n");
-      else
-        out
-            .append("REMARK   6 Jmol data min = {-1 -1 -1} max = {1 1 1} "
-                + "unScaledXyz = xyz * {0.1 0.1 0.1} + {0 0 0} plotScale = {100 100 100}\n");
-    }
-    
-    P3 ptTemp = new P3();
-    for (int p = 0; p < bioPolymerCount; p++)
-      bioPolymers[p].getPdbData(vwr, ctype, qtype, mStep, derivType,
-          bsAtoms, bsSelected, bothEnds, isDraw, p == 0, tokens, out, 
-          pdbCONECT, bsWritten, ptTemp);
+    getBioExt().getPdbDataM(this, vwr, type, ctype, isDraw, bsSelected, out, tokens, pdbCONECT, bsWritten);
   }
   
   /**

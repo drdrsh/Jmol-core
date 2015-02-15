@@ -28,13 +28,15 @@ import org.jmol.c.STR;
 import org.jmol.modelsetbio.ProteinStructure;
 import org.jmol.script.T;
 import org.jmol.shapebio.BioShape;
+
+import javajs.api.Interface;
 import javajs.util.P3;
 
 public class RocketsRenderer extends StrandsRenderer {
 
   //private final static float MIN_CONE_HEIGHT = 0.05f;
 
-  private boolean isRockets;
+  boolean isRockets;
   protected boolean helixRockets = true;
   protected boolean renderArrowHeads;
 
@@ -52,7 +54,7 @@ public class RocketsRenderer extends StrandsRenderer {
 
   protected void renderRockets() {
     if (rr == null)
-      rr = new RocketRenderer(this, isRockets);
+      rr = ((RocketRenderer) Interface.getInterface("org.jmol.renderbio.RocketRenderer")).set(this);
     rr.renderRockets();
   }
 

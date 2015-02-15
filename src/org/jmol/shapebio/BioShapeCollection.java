@@ -90,6 +90,20 @@ public abstract class BioShapeCollection extends Shape {
   }
   
   @Override
+  public void replaceGroup(Group g0, Group g1) {
+    //BioShapeCollection only; after MUTATE
+    for (int i = bioShapes.length; --i >= 0;) {
+      BioShape bioShape = bioShapes[i];
+      for (int j = 0; j < bioShape.monomerCount; j++)
+        if (bioShape.monomers[j] == g0) {
+          bioShape.monomers[j] = (Monomer) g1;
+          break;
+        }
+    }
+  }
+
+
+  @Override
   public void setShapeSizeRD(int size, RadiusData rd, BS bsSelected) {
     short mad = (short) size;
     initialize();
