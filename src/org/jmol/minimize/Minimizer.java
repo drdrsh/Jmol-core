@@ -223,7 +223,7 @@ public class Minimizer implements MinimizerInterface {
     }
     Logger.info("minimize: initializing " + pFF.name + " (steps = " + steps + " criterion = "
         + crit + ") ...");
-    if (bsSelected.cardinality() == 0) {
+    if (bsSelected.nextSetBit(0) < 0) {
       Logger.error(GT._("No atoms selected -- nothing to do!"));
       return false;
     }

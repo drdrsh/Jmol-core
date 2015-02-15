@@ -955,7 +955,6 @@ public class BioExt {
       return false; 
     
     String[] info = vwr.fm.getFileInfo();
-    boolean b = vwr.getBoolean(T.appendnew);
     Group g = ms.at[iatom].group;
     //try {
       // get the initial group -- protein for now
@@ -975,9 +974,7 @@ public class BioExt {
             "try{\n"
           + "  var atoms0 = {*}\n"
           + "  var res0 = " + BS.escape(bsRes0,'(',')')  + "\n"
-          + "  set appendNew false\n"
-          + "  load append "+fileName+"\n"
-          + "  set appendNew " + b + "\n"
+          + "  load mutate "+fileName+"\n"
           + "  var res1 = {!atoms0};var r1 = res1[1];var r0 = res1[0]\n"
           + "  if ({r1 & within(group, r0)}){\n" 
           + "    var haveHs = ({_H & connected(res0)} != 0)\n"
@@ -999,13 +996,20 @@ public class BioExt {
           + "        connect {N2} {keyatoms & *.C}\n"
           + "      }\n"
           + "      if (C0) {\n" // not terminal
-          + "        if ({res1 and _H & connected(*.N)} == 1) {\n" // proline or proline-like
-          + "          delete *.H and res1\n"
-          + "        } else {\n"
-          + "          var x = angle({*.C and res1},{*.CA and res1},{*.N and res1},{*.H and res1})\n"
+          + "        var h1 = {*.H and res1}\n"
+          + "        var n = (h1 ? 0 + {res1 and _H & connected(*.N)} : 0)\n"
+          + "        switch (n) {\n" 
+          + "        case 0:\n" // no hydrogens
+          + "          break\n" 
+          + "        case 1:\n" // proline or proline-like
+          + "          delete h1\n"
+          + "          break\n"
+          + "        default:\n"
+          + "          var x = angle({*.C and res1},{*.CA and res1},{*.N and res1},h1)\n"
           + "          rotate branch {*.CA and res1} {*.N and res1} @{angleH-x}\n"
           + "          delete *.H2 and res1\n"
           + "          delete *.H3 and res1\n"
+          + "          break\n"
           + "        }\n"
           + "        connect {C0} {keyatoms & *.N}\n"
           + "      }\n"
@@ -1017,13 +1021,16 @@ public class BioExt {
           Logger.debug(script);
         vwr.eval.runScript(script);
       } catch (Exception e) {
-        // TODO
+        // serious Jmol bug here!
+        if (!vwr.isJS)
+          e.printStackTrace();
+        System.out.println(e);
       }
       ms = vwr.ms;
       if (ms.ac == ac)
         return false;
       SB sb = ms.am[iModel].loadScript;
-      String s = PT.rep(sb.toString(), "load append", "mutate ({" + iatom + "})");
+      String s = PT.rep(sb.toString(), "load mutate ", "mutate ({" + iatom + "})");
       sb.setLength(0);
       sb.append(s);
       // check for protein monomer
@@ -1048,7 +1055,6 @@ public class BioExt {
     //} catch (Exception e) {
      // System.out.println("" + e);
    // }
-    vwr.setBooleanProperty("appendNew", b);
     vwr.fm.setFileInfo(info);
     return true;
 

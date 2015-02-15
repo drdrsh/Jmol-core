@@ -2184,7 +2184,7 @@ public class ScriptEval extends ScriptExpr {
         continue;
       }
       thisCommand = getCommand(pc, false, true);
-      if (debugScript)
+      if (debugHigh || debugScript)
         Logger.info(thisCommand);
       String nextCommand = getCommand(pc + 1, false, true);
       fullCommand = thisCommand
@@ -4037,6 +4037,7 @@ public class ScriptEval extends ScriptExpr {
     boolean isAppend = false;
     boolean isInline = false;
     boolean isSmiles = false;
+    boolean isMutate = false;
     boolean isData = false;
     boolean isAsync = vwr.async;
     boolean isConcat = false;
@@ -4144,6 +4145,13 @@ public class ScriptEval extends ScriptExpr {
           loadScript.append(" end ").append(PT.esc(key));
           i += 2; // skip END "key"
         }
+        break;
+      case T.mutate:
+        isMutate = isAppend = true;
+        appendNew = false;
+        loadScript.append(" mutate");
+        modelName = optParameterAsString(++i);
+        tok = T.getTokFromName(modelName);
         break;
       case T.append:
         isAppend = true;
@@ -4503,6 +4511,8 @@ public class ScriptEval extends ScriptExpr {
       Logger.startTimer("load");
     if (!isStateScript && !isAppend)
       vwr.setBooleanProperty("legacyJavaFloat", false);
+    if (isMutate)
+      htParams.put("isMutate", Boolean.TRUE);
     errMsg = vwr.loadModelFromFile(null, filename, filenames, null, isAppend,
         htParams, loadScript, sOptions, tokType, isConcat);
     if (timeMsg)

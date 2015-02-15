@@ -71,6 +71,8 @@ public class MMCifReader extends CifReader {
   protected void initSubclass() {
     setIsPDB();
     isMMCIF = true;
+    if (htParams.containsKey("isMutate"))
+      asc.setInfo("isMutate",Boolean.TRUE);      
     byChain = checkFilterKey("BYCHAIN");
     bySymop = checkFilterKey("BYSYMOP");
     isCourseGrained = byChain || bySymop;

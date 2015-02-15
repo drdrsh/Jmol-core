@@ -138,10 +138,11 @@ public class MathExt implements JmolMathExtension {
       return evaluateCross(mp, args);
     case T.data:
       return evaluateData(mp, args);
-    case T.distance:
     case T.dot:
+      return evaluateDotDist(mp, args, 0);
+    case T.distance:
       if (op.tok == T.propselector)
-        return evaluateDot(mp, args, tok, op.intValue);
+        return evaluateDotDist(mp, args, op.intValue);
       //$FALL-THROUGH$
     case T.angle:
     case T.measure:
@@ -744,24 +745,67 @@ public class MathExt implements JmolMathExtension {
    // }
   }
 
-  private boolean evaluateDot(ScriptMathProcessor mp, SV[] args, int tok,
-                              int intValue) throws ScriptException {
+  /**
+   * x = y.distance({atoms}) the average distance from elements of y to the
+   * CENTER of {atoms}
+   * 
+   * x = {atomset1}.distance.min({atomset2}, asAtomSet) If asAtomSet is true,
+   * returns the closest atom in atomset1 to any atom of atomset2; if false or
+   * omitted, returns an array listing the distance of each atom in atomset1 to
+   * the closest atom in atomset2. This array can be used to assign properties
+   * to atomset1: {1.1}.property_d = {1.1}.distance.min({2.1}); color {1.1}
+   * property_d.
+   * 
+   * x = {atomset1}.distance.min({point}, asAtomSet) If asAtomSet is true,
+   * returns the atom in atomset1 closest to the specified point;if false or
+   * omitted, returns the closest distance to the specified point from any atom
+   * in atomset1.
+   * 
+   * x = {atomset1}.distance.min({atomset2}).min returns the shortest distance
+   * from any atom in atomset1 to any atom in atomset2.
+   * 
+   * x = {atomset1}.distance.max({atomset2}, asAtomSet) If asAtomSet is true,
+   * returns the furthest atom in atomset1 to any atom of atomset2; if false or
+   * omitted, returns an array listing the distance of each atom in atomset1 to
+   * the furthest atom in atomset2.
+   * 
+   * x = {atomset1}.distance.max({point}, asAtomSet) If asAtomSet is true,
+   * returns the atom in atomset1 furthest from the specified point;if false or
+   * omitted, returns the furthest distance to the specified point from any atom
+   * in atomset1.
+   * 
+   * x = {atomset1}.distance.max({atomset2}).max returns the furthest distance
+   * from any atom in atomset1 to any atom in atomset2.
+   * 
+   * x = {atomset1}.distance.all({atomset2}) returns an array or array of arrays of values
+   * 
+   * @param mp 
+   * @param args 
+   * @param intValue optional .min .max
+   * @return true if successful
+   * @throws ScriptException 
+   */
+
+  private boolean evaluateDotDist(ScriptMathProcessor mp, SV[] args,
+                                  int intValue) throws ScriptException {
     // distance and dot
+
+    boolean isDist = (intValue != 0);
     switch (args.length) {
     case 1:
-      if (tok == T.dot)
-        return false;
-      //$FALL-THROUGH$
-    case 2:
       break;
+    case 2:
+      if (isDist)
+        break;
+      //$FALL-THROUGH$
     default:
       return false;
     }
     SV x1 = mp.getX();
     SV x2 = args[0];
-    P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, false));
+    P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2));
     P4 plane2 = mp.planeValue(x2);
-    if (tok == T.distance) {
+    if (isDist) {
       int minMax = intValue & T.minmaxmask;
       boolean isMinMax = (minMax == T.min || minMax == T.max);
       boolean isAll = minMax == T.minmaxmask;
@@ -813,9 +857,8 @@ public class MathExt implements JmolMathExtension {
             float[] data = new float[bs.cardinality()];
             for (int i = bs.nextSetBit(0), p = 0; i >= 0; i = bs
                 .nextSetBit(i + 1))
-              data[p++] = ((Float) e.getBitsetProperty(bs2, intValue,
-                  atoms[i], plane2, x1.value, null, false, x1.index, false))
-                  .floatValue();
+              data[p++] = ((Float) e.getBitsetProperty(bs2, intValue, atoms[i],
+                  plane2, x1.value, null, false, x1.index, false)).floatValue();
             return mp.addXAF(data);
           }
           return mp.addXObj(e.getBitsetProperty(bs, intValue, pt2, plane2,
@@ -823,7 +866,32 @@ public class MathExt implements JmolMathExtension {
         }
       }
     }
-    return mp.addXFloat(getDistance(mp, x1, x2, tok));
+    P3 pt1 = mp.ptValue(x1);
+    P4 plane1 = mp.planeValue(x1);
+    float f = Float.NaN;
+    try {
+      if (isDist) {
+        f = (plane1 == null ? (plane2 == null ? pt2.distance(pt1) : Measure
+            .distanceToPlane(plane2, pt1)) : Measure.distanceToPlane(plane1,
+            pt2));
+      } else {
+        if (plane1 != null && plane2 != null) {
+          // q1.dot(q2) assume quaternions
+          f = plane1.x * plane2.x + plane1.y * plane2.y + plane1.z * plane2.z
+              + plane1.w * plane2.w;
+          // plane.dot(point) =
+        } else {
+          if (plane1 != null)
+            pt1 = P3.new3(plane1.x, plane1.y, plane1.z);
+          // point.dot(plane)
+          else if (plane2 != null)
+            pt2 = P3.new3(plane2.x, plane2.y, plane2.z);
+          f = pt1.dot(pt2);
+        }
+      }
+    } catch (Exception e) {
+    }
+    return mp.addXFloat(f);
   }
 
   private boolean evaluateHelix(ScriptMathProcessor mp, SV[] args)
@@ -841,9 +909,9 @@ public class MathExt implements JmolMathExtension {
     int tok = T.getTokFromName(type);
     if (args.length > 2) {
       // helix(pt1, pt2, dq ...)
-      P3 pta = mp.ptValue(args[0], true);
-      P3 ptb = mp.ptValue(args[1], true);
-      if (tok == T.nada || args[2].tok != T.point4f)
+      P3 pta = mp.ptValue(args[0]);
+      P3 ptb = mp.ptValue(args[1]);
+      if (tok == T.nada || args[2].tok != T.point4f || pta == null || ptb == null)
         return false;
       Quat dq = Quat.newP4((P4) args[2].value);
       T3[] data = Measure.computeHelicalAxis(pta, ptb, dq);
@@ -1556,8 +1624,10 @@ public class MathExt implements JmolMathExtension {
         return false;
     }
     P3[] pts = new P3[nPoints];
-    for (int i = 0; i < nPoints; i++)
-      pts[i] = mp.ptValue(args[i], true);
+    for (int i = 0; i < nPoints; i++) {
+      if ((pts[i] = mp.ptValue(args[i])) == null)
+        return false;
+    }
     switch (nPoints) {
     case 2:
       return mp.addXFloat(pts[0].distance(pts[1]));
@@ -1647,7 +1717,7 @@ public class MathExt implements JmolMathExtension {
             return mp.addXStr("");
           return mp.addXList(list);
         }
-        pt2 = mp.ptValue(args[0], false);
+        pt2 = mp.ptValue(args[0]);
         if (pt2 == null)
           return mp.addXStr("");
         return mp.addXPt(Measure.getIntersection(pt2, null, plane, pt3, norm,
@@ -1662,8 +1732,8 @@ public class MathExt implements JmolMathExtension {
         return mp.addXPt4(e.getHklPlane(P3.new3(SV.fValue(args[0]),
             SV.fValue(args[1]), SV.fValue(args[2]))));
       case T.intersection:
-        pt1 = mp.ptValue(args[0], false);
-        pt2 = mp.ptValue(args[1], false);
+        pt1 = mp.ptValue(args[0]);
+        pt2 = mp.ptValue(args[1]);
         if (pt1 == null || pt2 == null)
           return mp.addXStr("");
         V3 vLine = V3.newV(pt2);
@@ -1679,7 +1749,7 @@ public class MathExt implements JmolMathExtension {
             return mp.addXStr("");
           return mp.addXPt(pt1);
         }
-        pt3 = mp.ptValue(args[2], false);
+        pt3 = mp.ptValue(args[2]);
         if (pt3 == null)
           return mp.addXStr("");
         // intersection(ptLine, vLine, pt2); 
@@ -1714,13 +1784,13 @@ public class MathExt implements JmolMathExtension {
         break;
       case T.bitset:
       case T.point3f:
-        pt1 = mp.ptValue(args[0], false);
-        pt2 = mp.ptValue(args[1], false);
+        pt1 = mp.ptValue(args[0]);
+        pt2 = mp.ptValue(args[1]);
         if (pt2 == null)
           return false;
         pt3 = (args.length > 2
             && (args[2].tok == T.bitset || args[2].tok == T.point3f) ? mp
-            .ptValue(args[2], false) : null);
+            .ptValue(args[2]) : null);
         norm = V3.newV(pt2);
         if (pt3 == null) {
           plane = new P4();
@@ -1747,8 +1817,11 @@ public class MathExt implements JmolMathExtension {
         // plane(<point1>,<point2>,<point3>)
         // plane(<point1>,<point2>,<point3>,<pointref>)
         V3 vAB = new V3();
+        P3 ptref = (args.length == 4 ? mp.ptValue(args[3]) : null);
+        if (ptref == null)
+          return false;
         float nd = Measure.getDirectedNormalThroughPoints(pt1, pt2, pt3,
-            (args.length == 4 ? mp.ptValue(args[3], true) : null), norm, vAB);
+            ptref, norm, vAB);
         return mp.addXPt4(P4.new4(norm.x, norm.y, norm.z, nd));
       }
     }
@@ -1868,7 +1941,7 @@ public class MathExt implements JmolMathExtension {
             && (args[1].tok == T.integer || args[1].tok == T.bitset))
           break;
       }
-      if ((pt0 = mp.ptValue(args[0], false)) == null || tok != T.quaternion
+      if ((pt0 = mp.ptValue(args[0])) == null || tok != T.quaternion
           && args[1].tok == T.point3f)
         return false;
       break;
@@ -1940,7 +2013,7 @@ public class MathExt implements JmolMathExtension {
           break;
         }
       }
-      P3 pt1 = mp.ptValue(args[1], false);
+      P3 pt1 = mp.ptValue(args[1]);
       p4 = mp.planeValue(args[0]);
       if (pt1 != null)
         q = Quat.getQuaternionFrame(P3.new3(0, 0, 0), pt0, pt1);
@@ -2280,8 +2353,26 @@ public class MathExt implements JmolMathExtension {
 
   private boolean evaluateSymop(ScriptMathProcessor mp, SV[] args,
                                 boolean haveBitSet) throws ScriptException {
-    // {xxx}.symop()
-    // symop({xxx}    
+    
+    // x = y.symop(op,atomOrPoint) 
+    // Returns the point that is the result of the transformation of atomOrPoint 
+    // via a crystallographic symmetry operation. The atom set y selects the unit 
+    // cell and spacegroup to be used. If only one model is present, this can simply be all. 
+    // Otherwise, it could be any atom or group of atoms from any model, for example 
+    // {*/1.2} or {atomno=1}. The first parameter, op, is a symmetry operation. 
+    // This can be the 1-based index of a symmetry operation in a file (use show spacegroup to get this listing) 
+    // or a specific Jones-Faithful expression in quotes such as "x,1/2-y,z".
+    //
+    // x = y.symop(op,"label")
+    // This form of the .symop() function returns a set of draw commands that describe 
+    // the symmetry operation in terms of rotation axes, inversion centers, planes, and 
+    // translational vectors. The draw objects will all have IDs starting with whatever 
+    // is given for the label. 
+    //
+    // x = symop("x,y,-z")
+    // x = symop(3)
+    
+    
     if (args.length == 0)
       return false;
     SV x1 = (haveBitSet ? mp.getX() : null);
@@ -2301,14 +2392,14 @@ public class MathExt implements JmolMathExtension {
       xyz = null;
     }
     int iOp = (xyz == null ? args[0].asInt() : 0);
-    P3 pt = (args.length > 1 ? mp.ptValue(args[1], true) : null);
-    if (args.length == 2 && !Float.isNaN(pt.x))
+    P3 pt = (args.length > 1 ?  mp.ptValue(args[1]) : null);
+    if (args.length == 2 && pt != null)
       return mp.addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bs, xyz, iOp, pt, null, null,
           T.point));
-    String desc = (args.length == 1 ? "" : SV.sValue(args[args.length - 1]))
+    String desc = (args.length == 1 ? "matrix" : SV.sValue(args[args.length - 1]))
         .toLowerCase();
     int tok = T.draw;
-    if (args.length == 1 || desc.equalsIgnoreCase("matrix")) {
+    if (desc.equalsIgnoreCase("matrix")) {
       tok = T.matrix4f;
     } else if (desc.equalsIgnoreCase("array") || desc.equalsIgnoreCase("list")) {
       tok = T.list;
@@ -2595,32 +2686,6 @@ public class MathExt implements JmolMathExtension {
     return bsResult;
   }
 
-
-  private float getDistance(ScriptMathProcessor mp, SV x1, SV x2, int tok)
-      throws ScriptException {
-    P3 pt1 = mp.ptValue(x1, true);
-    P4 plane1 = mp.planeValue(x1);
-    P3 pt2 = mp.ptValue(x2, true);
-    P4 plane2 = mp.planeValue(x2);
-    if (tok == T.dot) {
-      if (plane1 != null && plane2 != null)
-        // q1.dot(q2) assume quaternions
-        return plane1.x * plane2.x + plane1.y * plane2.y + plane1.z * plane2.z
-            + plane1.w * plane2.w;
-      // plane.dot(point) =
-      if (plane1 != null)
-        pt1 = P3.new3(plane1.x, plane1.y, plane1.z);
-      // point.dot(plane)
-      if (plane2 != null)
-        pt2 = P3.new3(plane2.x, plane2.y, plane2.z);
-      return pt1.x * pt2.x + pt1.y * pt2.y + pt1.z * pt2.z;
-    }
-
-    if (plane1 == null)
-      return (plane2 == null ? pt2.distance(pt1) : Measure.distanceToPlane(
-          plane2, pt1));
-    return Measure.distanceToPlane(plane1, pt2);
-  }
 
   @Override
   @SuppressWarnings("unchecked")

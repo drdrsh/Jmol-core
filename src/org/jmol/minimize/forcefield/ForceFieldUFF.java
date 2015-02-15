@@ -171,12 +171,12 @@ public class ForceFieldUFF extends ForceField {
     if (!(v instanceof BS))
       return null;
     BS bs = (BS) v;
-    if (isAromatic && bs.cardinality() > 0) {
+    if (isAromatic && bs.nextSetBit(0) >= 0) {
       if (bsAromatic == null)
         bsAromatic = (BS) minimizer.vwr.evaluateExpression(tokenTypes[TOKEN_AROMATIC]);
       bs.and(bsAromatic);
     }
-    if (Logger.debugging && bs.cardinality() > 0)
+    if (Logger.debugging && bs.nextSetBit(0) >= 0)
       Logger.debug(smarts + " minimize atoms=" + bs);
     return bs;
   }

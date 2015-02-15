@@ -1069,7 +1069,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         return OK;
       }
       if (tokCommand == T.load) {
-        if (nTokens == 1 || nTokens == 2 && tokAt(1) == T.append) {
+        if (nTokens == 1 || nTokens == 2 && (tokAt(1) == T.append)) {
           boolean isDataBase = Viewer.isDatabaseCode(charAt(ichToken));
           if (lookingAtLoadFormat(isDataBase)) {
             String strFormat = script.substring(ichToken, ichToken + cchToken);
@@ -1079,6 +1079,7 @@ public class ScriptCompiler extends ScriptTokenParser {
             case T.orientation:
             case T.append:
             case T.history:
+            case T.mutate:
             case T.nbo:
               if (nTokens != 1)
                 return ERROR;

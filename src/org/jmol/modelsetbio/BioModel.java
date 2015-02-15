@@ -589,10 +589,10 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     } else {
       for (int i = 0; i < specInfo.length();) {
         bsA = ms.getSequenceBits(specInfo.substring(i, ++i), null);
-        if (bsA.cardinality() == 0)
+        if (bsA.nextSetBit(0) < 0)
           continue;
         bsB = ms.getSequenceBits(specInfo.substring(i, ++i), null);
-        if (bsB.cardinality() == 0)
+        if (bsB.nextSetBit(0) < 0)
           continue;
         calcAllRasmolHydrogenBonds(bsA, bsB, vHBonds, true, 1, false, null);
       }

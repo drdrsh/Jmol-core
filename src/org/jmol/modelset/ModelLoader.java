@@ -144,7 +144,7 @@ public final class ModelLoader {
 
   private boolean someModelsHaveUnitcells;
   private boolean someModelsAreModulated;
-  private boolean is2D;
+  private boolean is2D, isMutate;
   public boolean isTrajectory; 
   private boolean isPyMOLsession;
   private boolean doMinimize;
@@ -167,6 +167,7 @@ public final class ModelLoader {
     ms.modelSetProperties = (Properties) ms.getInfoM("properties");
     //isMultiFile = getModelSetAuxiliaryInfoBoolean("isMultiFile"); -- no longer necessary
     ms.haveBioModels = ms.getMSInfoB("isPDB");
+    isMutate = ms.getMSInfoB("isMutate");
     if (ms.haveBioModels)
       jbr = vwr.getJBR().setLoader(this);
     jmolData = (String) ms.getInfoM("jmolData");
@@ -285,7 +286,7 @@ public final class ModelLoader {
     adapterModelCount = (adapter == null ? 1 : adapter
         .getAtomSetCount(asc));
     // cannot append a trajectory into a previous model
-    appendNew = (!merging || adapter == null || adapterModelCount > 1
+    appendNew = !isMutate && (!merging || adapter == null || adapterModelCount > 1
         || isTrajectory || vwr.getBoolean(T.appendnew));
     htAtomMap.clear();
     chainOf = new Chain[defaultGroupCount];
@@ -574,7 +575,6 @@ public final class ModelLoader {
       if (loadScript.indexOf("load append ") >= 0)
         loadScript.append("; set appendNew true");
       m.loadScript.append("  ").appendSB(loadScript).append(";\n");
-      
     }
     if (isTrajectory) {
       // fill in the rest of the data
@@ -1299,7 +1299,7 @@ public final class ModelLoader {
 
     // finalize all structures
 
-    if (!ms.haveBioModels || isPyMOLsession) {
+    if (!ms.haveBioModels || isPyMOLsession || isMutate) {
       ms.freezeModels();
       return;
     }

@@ -277,7 +277,7 @@ public class MarchingCubes extends TriangleData {
       break;
     }
     allInside = (colorDensity && (cutoff == 0 
-        || mode == MODE_JVXL && bsVoxels.cardinality() == 0));
+        || mode == MODE_JVXL && bsVoxels.nextSetBit(0) < 0));
     boolean colorDensityAll = (colorDensity && cutoff == 0);
     float v = 0;
     for (int x = x0; x != x1; x += xStep, ptX += ptStep, pt = ptX) {

@@ -190,7 +190,12 @@ public class A4 implements JSONEncodable, Serializable {
     y = (float) (m02 - m20);
     z = (float) (m10 - m01);
     double sin = 0.5 * Math.sqrt(x * x + y * y + z * z);
-    angle = (float) Math.atan2(sin, cos);
+    if (sin == 0 && cos == 1) {
+      x = y = 0;
+      z = 1;
+    } else {
+      angle = (float) Math.atan2(sin, cos);
+    }
 
     // no need to normalize
     // x /= n;

@@ -236,7 +236,7 @@ public class MeshData extends MeshSurface {
       return;
     int nNull = 0;
     for (int i = 0; i < nSets; i++) {
-      if (surfaceSet[i] != null && surfaceSet[i].cardinality() == 0)
+      if (surfaceSet[i] != null && surfaceSet[i].nextSetBit(0) < 0)
         surfaceSet[i] = null;
       if (surfaceSet[i] == null)
         nNull++;
