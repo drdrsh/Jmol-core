@@ -712,7 +712,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
 
   @Override
   public boolean mutate(BS bs, String group, String[] sequence) {
-    return getBioExt().mutate(vwr, ms, bs, group, sequence);
+    return getBioExt().mutate(vwr, bs, group, sequence);
   }
 
   /////////////////////////////////////////////////////////////////////////  

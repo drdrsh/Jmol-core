@@ -71,7 +71,7 @@ import org.jmol.c.STR;
  *
  * 
  */
-public final class Resolver implements JmolBioResolver {
+public final class Resolver implements JmolBioResolver, Comparator<String[]> {
 
   public final static Map<String, Short> htGroup = new Hashtable<String, Short>();
 
@@ -331,7 +331,7 @@ public final class Resolver implements JmolBioResolver {
         bondInfo[n++] = new String[] { b[1], b[0], b[2],
             b[0].startsWith("H") ? "0" : "1" };
     }
-    Arrays.sort(bondInfo, new BondSorter());
+    Arrays.sort(bondInfo, this);
     // now look for 
     String[] t;
     for (int i = 0; i < n;) {
@@ -384,14 +384,12 @@ public final class Resolver implements JmolBioResolver {
     return bondInfo;
   }
   
-  protected class BondSorter implements Comparator<String[]>{
-    @Override
-    public int compare(String[] a, String[] b) {
-      return (b == null ? (a == null ? 0 : -1) : a == null ? 1 : a[0]
-          .compareTo(b[0]) < 0 ? -1 : a[0].compareTo(b[0]) > 0 ? 1 : a[3]
-          .compareTo(b[3]) < 0 ? -1 : a[3].compareTo(b[3]) > 0 ? 1 : a[1]
-          .compareTo(b[1]) < 0 ? -1 : a[1].compareTo(b[1]) > 0 ? 1 : 0);
-    }
+  @Override
+  public int compare(String[] a, String[] b) {
+    return (b == null ? (a == null ? 0 : -1) : a == null ? 1 : a[0]
+        .compareTo(b[0]) < 0 ? -1 : a[0].compareTo(b[0]) > 0 ? 1 : a[3]
+        .compareTo(b[3]) < 0 ? -1 : a[3].compareTo(b[3]) > 0 ? 1 : a[1]
+        .compareTo(b[1]) < 0 ? -1 : a[1].compareTo(b[1]) > 0 ? 1 : 0);
   }
   
   @Override

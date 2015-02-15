@@ -920,19 +920,19 @@ public class BioExt {
     }
   }
 
-  boolean mutate(Viewer vwr, ModelSet ms, BS bs, String group,
+  boolean mutate(Viewer vwr, BS bs, String group,
                      String[] sequence) {
     
     int i0 = bs.nextSetBit(0);
     if (sequence == null)
-      return mutateAtom(vwr, ms, i0, group);
+      return mutateAtom(vwr, i0, group);
     boolean isFile = (group == null);
     if (isFile)
       group = sequence[0];
     Group lastGroup = null;
     boolean isOK = true;
     for (int i = i0, pt = 0; i >= 0; i = bs.nextSetBit(i + 1)) {
-      Group g = ms.at[i].group;
+      Group g = vwr.ms.at[i].group;
       if (g == lastGroup)
         continue;
       lastGroup = g;
@@ -942,13 +942,14 @@ public class BioExt {
           continue;
         group = "==" + group;
       }
-      mutateAtom(vwr, ms, i, group);
+      mutateAtom(vwr, i, group);
     }
     return isOK;
   }
   
-  private static boolean mutateAtom(Viewer vwr, ModelSet ms, int iatom, String fileName) {
+  private static boolean mutateAtom(Viewer vwr, int iatom, String fileName) {
     // no mutating a trajectory. What would that mean???
+    ModelSet ms = vwr.ms;
     int iModel = ms.at[iatom].mi;
     if (ms.isTrajectory(iModel))
       return false; 
