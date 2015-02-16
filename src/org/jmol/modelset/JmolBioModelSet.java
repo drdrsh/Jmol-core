@@ -57,8 +57,7 @@ public interface JmolBioModelSet {
   void getConformations(int modelIndex, int conformationIndex,
                                boolean doSet, BS bsAtoms, BS bsRet);
 
-  String getFullProteinStructureState(BS bsAtoms, boolean taintedOnly,
-                                             boolean needPhiPsi, int mode);
+  String getFullProteinStructureState(BS bsAtoms, int mode);
 
   BS getIdentifierOrNull(String identifier);
 

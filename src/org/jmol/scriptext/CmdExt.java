@@ -3905,7 +3905,7 @@ public class CmdExt implements JmolCmdExtension {
     case T.structure:
       if ((len = slen) == 2) {
         if (!chk)
-          msg = vwr.getProteinStructureState();
+          msg = vwr.ms.getProteinStructureState(vwr.bsA(), T.show);
         break;
       }
       String shape = paramAsStr(2);

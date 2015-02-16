@@ -2838,10 +2838,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return getStateCreator().getModelState(null, false, true);
   }
 
-  public String getProteinStructureState() {
-    return ms.getProteinStructureState(bsA(), false, false, 3);
-  }
-
   public String getCoordinateState(BS bsSelected) {
     return getStateCreator().getAtomicPropertyState(AtomCollection.TAINT_COORD,
         bsSelected);

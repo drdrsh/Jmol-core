@@ -227,8 +227,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
       if (ms.am[i].isBioModel) {
         BioModel m = (BioModel) ms.am[i];
         if (m.defaultStructure == null)
-          m.defaultStructure = getFullProteinStructureState(m.bsAtoms, false,
-              false, 0);
+          m.defaultStructure = getFullProteinStructureState(m.bsAtoms, T.state);
       }
   }
 
@@ -377,183 +376,166 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
       ((BioModel) ms.am[modelIndex]).recalculateLeadMidpointsAndWingVectors();
   }
 
-  @SuppressWarnings("incomplete-switch")
   @Override
-  public String getFullProteinStructureState(BS bsAtoms2,
-                                             boolean taintedOnly,
-                                             boolean needPhiPsi, int mode) {
-    for (int im = 0, mc = ms.mc; im < mc; im++) {
+  public String getFullProteinStructureState(BS bsAtoms, int mode) {
+    boolean taintedOnly = (mode == T.all);
+    if (taintedOnly && !ms.proteinStructureTainted)
+      return "";
+    boolean scriptMode = (mode == T.state || mode == T.all);
+    Atom[] atoms = ms.at;
+    int at0 = (bsAtoms == null ? 0 : bsAtoms.nextSetBit(0));
+    if (at0 < 0)
+      return "";
+    if (bsAtoms != null && mode == T.ramachandran) {
+      bsAtoms = BSUtil.copy(bsAtoms);
+      for (int i = ms.ac; --i >= 0;)
+        if (Float.isNaN(atoms[i].group.getGroupParameter(T.phi))
+            || Float.isNaN(atoms[i].group.getGroupParameter(T.psi)))
+          bsAtoms.clear(i);
+    }
+    int at1 = (bsAtoms == null ? ms.ac : bsAtoms.length()) - 1;
+    int im0 = atoms[at0].mi;
+    int im1 = atoms[at1].mi;
+    Lst<ProteinStructure> lstStr = new Lst<ProteinStructure>();
+    Map<ProteinStructure, Boolean> map = new Hashtable<ProteinStructure, Boolean>();
+    SB cmd = new SB();
+    for (int im = im0; im <= im1; im++) {
       if (!ms.am[im].isBioModel)
         continue;
       BioModel m = (BioModel) ms.am[im];
-      boolean showMode = (mode == 3);
-      boolean pdbFileMode = (mode == 1);
-      boolean scriptMode = (mode == 0);
-      BS bs = null;
-      SB cmd = new SB();
-      SB sbTurn = new SB();
-      SB sbHelix = new SB();
-      SB sbSheet = new SB();
-      STR type = STR.NONE;
-      STR subtype = STR.NONE;
-      int id = 0;
-      int iLastAtom = 0;
-      int iLastModel = -1;
-      int lastId = -1;
-      int res1 = 0;
-      int res2 = 0;
-      String sid = "";
-      String group1 = "";
-      String group2 = "";
-      String chain1 = "";
-      String chain2 = "";
-      int n = 0;
-      int nHelix = 0;
-      int nTurn = 0;
-      int nSheet = 0;
-      BS bsTainted = null;
-      Model[] models = ms.am;
-      Atom[] atoms = ms.at;
-      int ac = ms.ac;
-
-      if (taintedOnly) {
-        if (!ms.proteinStructureTainted)
-          return "";
-        bsTainted = new BS();
-        for (int i = m.firstAtomIndex; i < ac; i++)
-          if (models[atoms[i].mi].structureTainted)
-            bsTainted.set(i);
-        bsTainted.set(ac);
+      if (taintedOnly && !m.structureTainted)
+        continue;
+      BS bsA = new BS();
+      bsA.or(m.bsAtoms);
+      bsA.andNot(m.bsAtomsDeleted);
+      int i0 = bsA.nextSetBit(0);
+      if (i0 < 0)
+        continue;
+      if (scriptMode) {
+        cmd.append("  structure none ")
+            .append(
+                Escape.eBS(ms.getModelAtomBitSetIncludingDeleted(im, false)))
+            .append("    \t# model=" + ms.getModelNumberDotted(im))
+            .append(";\n");
       }
-      for (int i = 0; i <= ac; i++)
-        if (i == ac || bsAtoms == null || bsAtoms.get(i)) {
-          if (taintedOnly && !bsTainted.get(i))
-            continue;
-          id = 0;
-          if (i == ac || (id = atoms[i].group.getStrucNo()) != lastId) {
-            if (bs != null) {
-              switch (type) {
-              case HELIX:
-              case TURN:
-              case SHEET:
-                n++;
-                if (scriptMode) {
-                  int iModel = atoms[iLastAtom].mi;
-                  String comment = "    \t# model="
-                      + ms.getModelNumberDotted(iModel);
-                  if (iLastModel != iModel) {
-                    iLastModel = iModel;
-                    cmd.append("  structure none ")
-                        .append(
-                            Escape.eBS(ms.getModelAtomBitSetIncludingDeleted(
-                                iModel, false))).append(comment).append(";\n");
-                  }
-                  comment += " & (" + res1 + " - " + res2 + ")";
-                  String stype = subtype.getBioStructureTypeName(false);
-                  cmd.append("  structure ").append(stype).append(" ")
-                      .append(Escape.eBS(bs)).append(comment).append(";\n");
-                } else {
-                  String str;
-                  int nx;
-                  SB sb;
-                  // NNN III GGG C RRRR GGG C RRRR
-                  // HELIX 99 99 LYS F 281 LEU F 293 1
-                  // NNN III 2 GGG CRRRR GGG CRRRR
-                  // SHEET 1 A 8 ILE A 43 ASP A 45 0
-                  // NNN III GGG CRRRR GGG CRRRR
-                  // TURN 1 T1 PRO A 41 TYR A 44
-                  switch (type) {
-                  case HELIX:
-                    nx = ++nHelix;
-                    if (sid == null || pdbFileMode)
-                      sid = PT.formatStringI("%3N %3N", "N", nx);
-                    str = "HELIX  %ID %3GROUPA %1CA %4RESA  %3GROUPB %1CB %4RESB";
-                    sb = sbHelix;
-                    String stype = null;
-                    switch (subtype) {
-                    case HELIX:
-                    case HELIXALPHA:
-                      stype = "  1";
-                      break;
-                    case HELIX310:
-                      stype = "  5";
-                      break;
-                    case HELIXPI:
-                      stype = "  3";
-                      break;
-                    }
-                    if (stype != null)
-                      str += stype;
-                    break;
-                  case SHEET:
-                    nx = ++nSheet;
-                    if (sid == null || pdbFileMode) {
-                      sid = PT.formatStringI("%3N %3A 0", "N", nx);
-                      sid = PT.formatStringS(sid, "A", "S" + nx);
-                    }
-                    str = "SHEET  %ID %3GROUPA %1CA%4RESA  %3GROUPB %1CB%4RESB";
-                    sb = sbSheet;
-                    break;
-                  case TURN:
-                  default:
-                    nx = ++nTurn;
-                    if (sid == null || pdbFileMode)
-                      sid = PT.formatStringI("%3N %3N", "N", nx);
-                    str = "TURN   %ID %3GROUPA %1CA%4RESA  %3GROUPB %1CB%4RESB";
-                    sb = sbTurn;
-                    break;
-                  }
-                  str = PT.formatStringS(str, "ID", sid);
-                  str = PT.formatStringS(str, "GROUPA", group1);
-                  str = PT.formatStringS(str, "CA", chain1);
-                  str = PT.formatStringI(str, "RESA", res1);
-                  str = PT.formatStringS(str, "GROUPB", group2);
-                  str = PT.formatStringS(str, "CB", chain2);
-                  str = PT.formatStringI(str, "RESB", res2);
-                  sb.append(str);
-                  if (showMode)
-                    sb.append(" strucno= ").appendI(lastId);
-                  sb.append("\n");
-
-                  /*
-                   * HELIX 1 H1 ILE 7 PRO 19 1 3/10 CONFORMATION RES 17,19 1CRN 55
-                   * HELIX 2 H2 GLU 23 THR 30 1 DISTORTED 3/10 AT RES 30 1CRN 56
-                   * SHEET 1 S1 2 THR 1 CYS 4 0 1CRNA 4 SHEET 2 S1 2 CYS 32 ILE 35
-                   */
-                }
-              }
-              bs = null;
-            }
-            if (id == 0
-                || bsAtoms != null
-                && needPhiPsi
-                && (Float.isNaN(atoms[i].group.getGroupParameter(T.phi)) || Float
-                    .isNaN(atoms[i].group.getGroupParameter(T.psi))))
-              continue;
-          }
-          String ch = atoms[i].getChainIDStr();
-          if (bs == null) {
-            bs = new BS();
-            res1 = atoms[i].getResno();
-            group1 = atoms[i].getGroup3(false);
-            chain1 = ch;
-          }
-          type = atoms[i].group.getProteinStructureType();
-          subtype = atoms[i].group.getProteinStructureSubType();
-          sid = atoms[i].group.getProteinStructureTag();
-          bs.set(i);
-          lastId = id;
-          res2 = atoms[i].getResno();
-          group2 = atoms[i].getGroup3(false);
-          chain2 = ch;
-          iLastAtom = i;
-        }
-      if (n > 0)
-        cmd.append("\n");
-      return (scriptMode ? cmd.toString() : sbHelix.appendSB(sbSheet)
-          .appendSB(sbTurn).appendSB(cmd).toString());
+      ProteinStructure ps;
+      for (int i = i0; i >= 0; i = bsA.nextSetBit(i + 1)) {
+        Atom a = atoms[i];
+        if (!(a.group instanceof AlphaMonomer)
+            || (ps = ((AlphaMonomer) a.group).proteinStructure) == null
+            || map.containsKey(ps))
+          continue;
+        lstStr.addLast(ps);
+        map.put(ps, Boolean.TRUE);
+      }
     }
-    return "";
+    getStructureLines(bsAtoms, cmd, lstStr, STR.HELIX, scriptMode, mode);
+    getStructureLines(bsAtoms, cmd, lstStr, STR.SHEET, scriptMode, mode);
+    getStructureLines(bsAtoms, cmd, lstStr, STR.TURN, scriptMode, mode);
+    return cmd.toString();
+  }
+
+  @SuppressWarnings("incomplete-switch")
+  private int getStructureLines(BS bsAtoms, SB cmd, Lst<ProteinStructure> lstStr, STR type,
+                                boolean scriptMode, int mode) {
+    //boolean pdbFileMode = (mode == T.pdb || mode == T.ramachandran);
+    boolean showMode = (mode == T.show);
+    int nHelix = 0, nSheet = 0, nTurn = 0;
+    String sid = null;
+    BS bs = new BS();
+    int n = 0;
+    for (int i = 0, ns = lstStr.size(); i < ns; i++) {
+      ProteinStructure ps = lstStr.get(i);
+      if (ps.type != type)
+        continue;
+      bs.clearAll();
+      // could be a subset of atoms, not just the ends
+      Monomer m1 = ps.findMonomer(bsAtoms, true);
+      Monomer m2 = ps.findMonomer(bsAtoms, false);
+      if (m1 == null || m2 == null)
+        continue;
+      int iModel = ps.apolymer.model.modelIndex;
+      String comment = (scriptMode ? "    \t# model="
+          + ms.getModelNumberDotted(iModel) : null);
+      int res1 = m1.getResno();
+      int res2 = m2.getResno();
+      STR subtype = ps.subtype;
+      switch (type) {
+      case HELIX:
+      case TURN:
+      case SHEET:
+        n++;
+        if (scriptMode) {
+          String stype = subtype.getBioStructureTypeName(false);
+          cmd.append("  structure ").append(stype).append(" ")
+              .append(Escape.eBS(ps.getAtoms(bs))).append(comment)
+              .append(" & (" + res1 + " - " + res2 + ")").append(";\n");
+        } else {
+          String str;
+          int nx;
+          // NNN III GGG C RRRR GGG C RRRR
+          // HELIX 99 99 LYS F 281 LEU F 293 1
+          // NNN III 2 GGG CRRRR GGG CRRRR
+          // SHEET 1 A 8 ILE A 43 ASP A 45 0
+          // NNN III GGG CRRRR GGG CRRRR
+          // TURN 1 T1 PRO A 41 TYR A 44
+          switch (type) {
+          case HELIX:
+            nx = ++nHelix;
+            sid = PT.formatStringI("%3N %3N", "N", nx);
+            str = "HELIX  %ID %3GROUPA %1CA %4RESA  %3GROUPB %1CB %4RESB";
+            String stype = null;
+            switch (subtype) {
+            case HELIX:
+            case HELIXALPHA:
+              stype = "  1";
+              break;
+            case HELIX310:
+              stype = "  5";
+              break;
+            case HELIXPI:
+              stype = "  3";
+              break;
+            }
+            if (stype != null)
+              str += stype;
+            break;
+          case SHEET:
+            nx = ++nSheet;
+            sid = PT.formatStringI("%3N %3A 0", "N", nx);
+            sid = PT.formatStringS(sid, "A", "S" + nx);
+            str = "SHEET  %ID %3GROUPA %1CA%4RESA  %3GROUPB %1CB%4RESB";
+            break;
+          case TURN:
+          default:
+            nx = ++nTurn;
+            sid = PT.formatStringI("%3N %3N", "N", nx);
+            str = "TURN   %ID %3GROUPA %1CA%4RESA  %3GROUPB %1CB%4RESB";
+            break;
+          }
+          str = PT.formatStringS(str, "ID", sid);
+          str = PT.formatStringS(str, "GROUPA", m1.getGroup3());
+          str = PT.formatStringS(str, "CA", m1.getLeadAtom().getChainIDStr());
+          str = PT.formatStringI(str, "RESA", res1);
+          str = PT.formatStringS(str, "GROUPB", m2.getGroup3());
+          str = PT.formatStringS(str, "CB", m2.getLeadAtom().getChainIDStr());
+          str = PT.formatStringI(str, "RESB", res2);
+          cmd.append(str);
+          if (showMode)
+            cmd.append(" strucno= ").appendI(ps.strucNo);
+          cmd.append("\n");
+
+          /*
+           * HELIX 1 1 ILE 7 PRO 19 1 3/10 CONFORMATION RES 17,19 1CRN 55
+           * HELIX 2 2 GLU 23 THR 30 1 DISTORTED 3/10 AT RES 30 1CRN 56
+           * SHEET 1 S1 2 THR 1 CYS 4 0 1CRNA 4 SHEET 2 S1 2 CYS 32 ILE 35
+           */
+        }
+      }
+    }
+    if (n > 0)
+      cmd.append("\n");
+    return n;
   }
 
   @Override

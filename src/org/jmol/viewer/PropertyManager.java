@@ -2018,7 +2018,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     bsSelected.and(bsAtoms);
     if (isPDB && addStructure)
       out.append("\n\n"
-          + vwr.ms.getProteinStructureState(bsWritten, false, ctype == 'R', 1));
+          + vwr.ms.getProteinStructureState(bsWritten, ctype == 'R' ? T.ramachandran : T.pdb));
     return out.toString();
   }
 

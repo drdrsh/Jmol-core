@@ -3823,10 +3823,8 @@ import java.util.Properties;
     return (haveBioModels ? bioModelset.getGroupsWithinAll(nResidues, bs) : new BS());
   }
 
-  public String getProteinStructureState(BS bsAtoms, boolean taintedOnly,
-                                         boolean needPhiPsi, int mode) {
-    return (haveBioModels ? bioModelset.getFullProteinStructureState(bsAtoms, taintedOnly,
-        needPhiPsi, mode) : "");
+  public String getProteinStructureState(BS bsAtoms, int mode) {
+    return (haveBioModels ? bioModelset.getFullProteinStructureState(bsAtoms, mode) : "");
   }
 
   public String calculateStructures(BS bsAtoms, boolean asDSSP,

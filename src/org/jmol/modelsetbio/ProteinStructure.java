@@ -30,6 +30,7 @@ import javajs.util.P3;
 import javajs.util.V3;
 
 import org.jmol.c.STR;
+import org.jmol.java.BS;
 import org.jmol.util.Logger;
 
 public abstract class ProteinStructure {
@@ -49,7 +50,7 @@ public abstract class ProteinStructure {
   protected V3 vectorProjection;
 
   private static int globalStrucNo = 1000;
-  private int monomerIndexLast;
+  int monomerIndexLast;
   private P3[] segments;
   
   /**
@@ -197,5 +198,26 @@ public abstract class ProteinStructure {
   void resetAxes() {
     axisA = null;
     segments = null;
+  }
+
+  BS getAtoms(BS bs) {
+    Monomer[] ms = apolymer.monomers;
+    for (int i = monomerIndexFirst; i <= monomerIndexLast; i++)
+      ms[i].setAtomBits(bs);
+    return bs;
+  }
+
+  public Monomer findMonomer(BS bsAtoms, boolean isFirst) {
+    Monomer[] ms = apolymer.monomers;
+    if (isFirst) {
+      for (int i = monomerIndexFirst; i <= monomerIndexLast; i++) 
+        if (bsAtoms == null || bsAtoms.get(ms[i].leadAtomIndex))
+          return ms[i];
+    } else {
+      for (int i = monomerIndexLast; i >= monomerIndexFirst; --i)
+        if (bsAtoms == null || bsAtoms.get(ms[i].leadAtomIndex))
+          return ms[i];
+    }    
+    return null;
   }
 }

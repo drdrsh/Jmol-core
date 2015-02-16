@@ -305,7 +305,7 @@ public class StateCreator extends JmolStateCreator {
     // unnecessary. Removed in 11.5.35 -- oops!
 
     if (withProteinStructure)
-      commands.append(ms.getProteinStructureState(null, isAll, false, 0));
+      commands.append(ms.getProteinStructureState(null, isAll ? T.all : T.state));
 
     getShapeState(commands, isAll, Integer.MAX_VALUE);
 
