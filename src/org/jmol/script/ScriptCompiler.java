@@ -1160,7 +1160,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         if (lookingAtImpliedString(true, true, true)) {
           int pt = cchToken;
           String str = script.substring(ichToken, ichToken + cchToken);
-          if (str.indexOf(" ") < 0) {
+          if (str.indexOf(" ") < 0 && str.indexOf(".") >= 0) {
             addTokenToPrefix(T.o(T.string, str));
             iHaveQuotedString = true;
             return CONTINUE;

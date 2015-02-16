@@ -3232,19 +3232,6 @@ public class CmdExt implements JmolCmdExtension {
       case T.identifier:
       case T.string:
         fileName = SV.sValue(tokenAt(pt, args));
-        if (pt == argCount - 3 && tokAtArray(pt + 1, args) == T.per) {
-          // write filename.xxx gets separated as filename .spt
-          // write isosurface filename.xxx also
-          fileName += "." + SV.sValue(tokenAt(pt + 2, args));
-        }
-        if (type != "VAR" && pt == pt0 && !isCoord)
-          type = "IMAGE";
-        else if (fileName.length() > 0 && fileName.charAt(0) == '.'
-            && (pt == pt0 + 1 || pt == pt0 + 2)) {
-          fileName = SV.sValue(tokenAt(pt - 1, args)) + fileName;
-          if (type != "VAR" && pt == pt0 + 1)
-            type = "IMAGE";
-        }
         if (fileName.equalsIgnoreCase("clipboard")
             || !vwr.haveAccess(ACCESS.ALL))
           fileName = null;
