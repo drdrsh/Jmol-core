@@ -378,6 +378,11 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       if (isPass2 && pbufT != null)
         for (int offset = pbufT.length; --offset >= 0;)
           mergeBufferPixel(pbuf, offset, pbufT[offset], bgcolor);
+      
+      if (pixelShaded != null && pixelShaded.zShadePower == 0)
+        pixelShaded.showZBuffer();
+      
+
       //      if (ambientOcclusion != 0) {
       //        if (aobuf == null)
       //          aobuf = new int[pbuf.length];
@@ -391,6 +396,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         downsampleFullSceneAntialiasing(false);
     }
     platform.setBackgroundColor(bgcolor);
+
     platform.notifyEndOfRendering();
     //setWidthHeight(antialiasEnabled);
     currentlyRendering = false;

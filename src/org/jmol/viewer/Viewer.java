@@ -5791,7 +5791,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       tm.slabToPercent(value);
       break;
     case T.zshadepower:
-      g.zShadePower = Math.max(value, 1);
+      g.zShadePower = value = Math.max(value, 0);
       break;
     case T.ribbonaspectratio:
       g.ribbonAspectRatio = value;

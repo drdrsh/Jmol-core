@@ -33,7 +33,8 @@ class PixelatorShaded extends Pixelator {
 
 
   private int[] bgRGB, tmp;
-  private int zSlab, zDepth, zShadePower;
+  private int zSlab, zDepth;
+  int zShadePower;
 
   /**
    * @param g
@@ -76,5 +77,14 @@ class PixelatorShaded extends Pixelator {
       p = (t[2] << 16) | (t[1] << 8) | t[0] | (p & 0xFF000000);
     }
     p0.addPixel(offset, z, p);
+  }
+
+  void showZBuffer() {
+    for (int i = p0.zb.length; --i >= 0;) {
+      if (p0.pb[i] == 0) // ignore background
+        continue; 
+      int z = (int) Math.min(255, Math.max(0, 255f * (zDepth - p0.zb[i]) / (zDepth - zSlab)));
+      p0.pb[i] = 0xFF000000 | z | (z << 8) | (z << 16);
+    }
   }
 }
