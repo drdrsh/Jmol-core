@@ -379,7 +379,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         for (int offset = pbufT.length; --offset >= 0;)
           mergeBufferPixel(pbuf, offset, pbufT[offset], bgcolor);
       
-      if (pixelShaded != null && pixelShaded.zShadePower == 0)
+      if (pixel == pixelShaded && pixelShaded.zShadePower == 0)
         pixelShaded.showZBuffer();
       
 

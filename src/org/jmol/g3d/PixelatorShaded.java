@@ -62,7 +62,7 @@ class PixelatorShaded extends Pixelator {
     // z starts with 0 at camera and runs toward model, with zSlab <= zDepth
     if (z > zDepth)
       return;
-    if (z >= zSlab) {
+    if (z >= zSlab && zShadePower > 0) {
       int[] t = tmp;
       int[] zs = bgRGB;
       t[0] = p;
