@@ -5,8 +5,6 @@ import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 
-import org.jmol.util.Logger;
-
 /**
  * http://cms.mpi.univie.ac.at/vasp/
  * 

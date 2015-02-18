@@ -256,7 +256,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         binaryDoc.setOutputChannel(out);
         processBinaryDocument();
       }
-      finalizeSubclassReader(); // upstairs
+       finalizeSubclassReader(); // upstairs
       if (!isFinalized)
         finalizeReaderASCR();
     } catch (Throwable e) {
@@ -466,8 +466,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (asc.errorMessage != null)
       return asc.errorMessage + "\nfor file " + filePath
           + "\ntype " + name;
-    if ((asc.bsAtoms == null ? asc.ac
-        : asc.bsAtoms.nextSetBit(0)) <= 0
+    if ((asc.bsAtoms == null ? asc.ac == 0
+        : asc.bsAtoms.nextSetBit(0) < 0)
         && fileType.indexOf("DataOnly") < 0 && asc.atomSetInfo.get("dataOnly") == null)
       return "No atoms found\nfor file " + filePath + "\ntype " + name;
     fixBaseIndices();

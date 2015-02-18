@@ -986,6 +986,7 @@ public class XtalSymmetry {
     if (biomts.size() < 2)
       return;
     symmetry = null;
+    // it's not clear to me why you would do this:
     if (!Float.isNaN(notionalUnitCell[0])) // PDB can do this; 
       setNotionalUnitCell(notionalUnitCell, null, unitCellOffset);
     getSymmetry().setSpaceGroup(doNormalize);
