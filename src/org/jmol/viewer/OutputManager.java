@@ -259,12 +259,18 @@ abstract class OutputManager {
   private boolean createTheImage(Object objImage, String type, OC out,
                                  Map<String, Object> params, String[] errRet) {
     type = type.substring(0, 1) + type.substring(1).toLowerCase();
-    if (type.equals("Zipdata") || type.equals("Binary")) {
+    boolean isZipData = type.equals("Zipdata");
+    if (isZipData || type.equals("Binary")) {
       @SuppressWarnings("unchecked")
       Lst<Object> v = (Lst<Object>) params.get("imageData");
       if (v.size() >= 2 && v.get(0).equals("_IMAGE_")) {
+        if (isZipData) {
+          errRet[0] = writeZipFile(out, v, "OK JMOL", null);
+          return true;          
+        }
         objImage = null;
         v.remove(0);
+        v.remove(0); // also "_IMAGE_"
         params.put("pngImgData", v.remove(0));
         OC oz = getOutputChannel(null, null);
         errRet[0] = writeZipFile(oz, v, "OK JMOL", null);

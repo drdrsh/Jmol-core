@@ -3411,7 +3411,8 @@ public class CmdExt implements JmolCmdExtension {
                     break;
                   } else if (key.equals("_IMAGE_")) {
                     v.add(0, key);
-                    v.add(1, bytes);
+                    v.add(1, null);
+                    v.add(2, bytes);
                   } else {
                     v.addLast(key);
                     v.addLast(null);

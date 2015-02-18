@@ -4129,22 +4129,22 @@ public class ScriptEval extends ScriptExpr {
         isData = true;
         loadScript.append(" /*data*/ data");
         String key = stringParameter(++i).toLowerCase();
+        int ptVar = key.indexOf("@");
+        if (ptVar >= 0)
+          key = key.replace('@', '_');
         loadScript.append(" ").append(PT.esc(key));
         isAppend = key.startsWith("append");
         doOrient = (key.indexOf("orientation") >= 0);
-        String strModel = (key.indexOf("@") >= 0 ? ""
-            + getParameter(key.substring(key.indexOf("@") + 1), T.string, true)
+        String strModel = (ptVar >= 0 ? ""
+            + getParameter(key.substring(ptVar + 1), T.string, true)
             : paramAsStr(++i));
         strModel = Viewer.fixInlineString(strModel, vwr.getInlineChar());
         htParams.put("fileData", strModel);
         htParams.put("isData", Boolean.TRUE);
         //note: ScriptCompiler will remove an initial \n if present
-        loadScript.appendC('\n');
-        loadScript.append(strModel);
-        if (key.indexOf("@") < 0) {
-          loadScript.append(" end ").append(PT.esc(key));
+        loadScript.appendC('\n').append(strModel).append(" end ").append(PT.esc(key));
+        if (ptVar < 0)
           i += 2; // skip END "key"
-        }
         break;
       case T.mutate:
         isMutate = isAppend = true;

@@ -11,15 +11,16 @@ import org.jmol.util.Logger;
  * http://cms.mpi.univie.ac.at/vasp/
  * 
  * @author Pieremanuele Canepa, Wake Forest University, Department of Physics
- *         Winston Salem, NC 27106, canepap@wfu.edu
+ *         Winston Salem, NC 27106, canepap@wfu.edu (pcanepa@mit.edu)
  * 
  * @version 1.0
  */
 
 public class VaspPoscarReader extends AtomSetCollectionReader {
 
-  private Lst<String> atomLabels = new Lst<String>();
+  private Lst<String> atomLabels;
   private int ac;
+  private String title;
 
   @Override
   protected void initializeReader() throws Exception {
@@ -31,7 +32,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
   }
 
   private void readJobTitle() throws Exception {
-    asc.setAtomSetName(rd().trim());
+    asc.setAtomSetName(title = rd().trim());
   }
 
   private void readUnitCellVectors() throws Exception {
@@ -51,10 +52,21 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
 
   private void readMolecularFormula() throws Exception {
     //   H    C    O    Be   C    H
-    String elementLabel[] = PT.getTokens(discardLinesUntilNonBlank());
+    String[] elementLabel = PT.getTokens(discardLinesUntilNonBlank());
+    String[] elementCounts;
+    if (PT.parseInt(elementLabel[0]) == Integer.MIN_VALUE) {
+      elementCounts = PT.getTokens(rd());
     //   6    24    18     6     6    24
-    String elementCounts[] = PT.getTokens(rd());
+    } else {
+      elementCounts = elementLabel;
+      elementLabel = PT.split(title, " ");
+      if (elementLabel.length != elementCounts.length) {
+        elementLabel = PT.split("Al B C Db Eu F Ga Hf I K Li Mn N O P Ru S Te U V W Xe Yb Zn", " ");
+        appendLoadNote("using pseudo atoms Al B C Db...");
+      }
+    }
     SB mf = new SB();
+    atomLabels = new Lst<String>();
     for (int i = 0; i < elementCounts.length; i++) { 
       int n = Integer.parseInt(elementCounts[i]);
       ac += n;
@@ -64,7 +76,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
         atomLabels.addLast(label);
     }
     String s = mf.toString();
-    Logger.info("VaspPoscar reader: " + ac + " atoms identified for" + s);
+    appendLoadNote(ac + " atoms identified for" + s);
     appendLoadNote(s);
     asc.newAtomSet();
     asc.setAtomSetName(s);

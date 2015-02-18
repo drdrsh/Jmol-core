@@ -1936,12 +1936,12 @@ public class IsoExt extends CmdExt {
         if (!isIsosurface)
           invArg();
         isCavity = true;
-        if (chk)
-          continue;
         float cavityRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
             : 1.2f);
         float envelopeRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
             : 10f);
+        if (chk)
+          continue;
         if (envelopeRadius > 10f) {
           eval.integerOutOfRange(0, 10);
           return;
