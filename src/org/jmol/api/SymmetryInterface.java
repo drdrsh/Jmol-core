@@ -60,7 +60,7 @@ public interface SymmetryInterface {
 
   Lst<String> getMoreInfo();
 
-  public float[] getNotionalUnitCell();
+  public float[] getUnitCellParams();
 
   public Matrix getOperationRsVs(int op);
   
@@ -172,7 +172,7 @@ public interface SymmetryInterface {
 
   public void setTimeReversal(int op, int val);
 
-  public void setUnitCell(float[] notionalUnitCell, boolean setRelative);
+  public void setUnitCell(float[] params, boolean setRelative);
 
   public void initializeOrientation(M3 matUnitCellOrientation);
 

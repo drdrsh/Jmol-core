@@ -396,10 +396,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         downsampleFullSceneAntialiasing(false);
     }
     platform.setBackgroundColor(bgcolor);
-
     platform.notifyEndOfRendering();
-    //setWidthHeight(antialiasEnabled);
-    currentlyRendering = false;
+    currentlyRendering = isPass2 = false;
   }
 
   public static void mergeBufferPixel(int[] pbuf, int offset, int argbB,

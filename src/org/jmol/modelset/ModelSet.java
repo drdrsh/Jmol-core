@@ -1005,9 +1005,9 @@ import java.util.Properties;
    * @return just the first unit cell
    * 
    */
-  public float[] getNotionalUnitcell() {
+  public float[] getUnitCellParams() {
     SymmetryInterface c = getUnitCell(0);
-    return (c == null ? null : c.getNotionalUnitCell());
+    return (c == null ? null : c.getUnitCellParams());
   }
 
   public boolean setCrystallographicDefaults() {

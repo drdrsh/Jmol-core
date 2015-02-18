@@ -551,7 +551,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   private float[] axesLengths;
 
   float[] getAxesLengths() {
-    return (axesLengths == null ? (axesLengths = symmetry.getNotionalUnitCell())
+    return (axesLengths == null ? (axesLengths = symmetry.getUnitCellParams())
         : axesLengths);
   }
 

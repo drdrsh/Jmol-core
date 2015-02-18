@@ -378,7 +378,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     isPDB = checkBoolean("isPDB");
     isMultiFrame = (modelCount > 1);
     isSymmetry = checkBoolean("hasSymmetry");
-    isUnitCell = modelInfo.containsKey("notionalUnitcell");
+    isUnitCell = modelInfo.containsKey("unitCellParams");
     fileHasUnitCell = (isPDB && isUnitCell || checkBoolean("fileHasUnitCell"));
     isLastFrame = (modelIndex == modelCount - 1);
     altlocs = vwr.ms.getAltLocListInModel(modelIndex);

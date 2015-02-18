@@ -331,12 +331,12 @@ public class Symmetry implements SymmetryInterface {
   @SuppressWarnings("unchecked")
   @Override
   public void setSymmetryInfo(int modelIndex,
-                              Map<String, Object> modelAuxiliaryInfo, float[] notionalCell) {
+                              Map<String, Object> modelAuxiliaryInfo, float[] unitCellParams) {
     symmetryInfo = new SymmetryInfo();
-    float[] notionalUnitcell = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo, notionalCell);
-    if (notionalUnitcell == null)
+    float[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo, unitCellParams);
+    if (params == null)
       return;
-    setUnitCell(notionalUnitcell, modelAuxiliaryInfo.containsKey("jmolData"));
+    setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"));
     unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo.get("moreUnitCellInfo");
     modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
     setOffsetPt((P3) modelAuxiliaryInfo.get("unitCellOffset"));
@@ -368,8 +368,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setUnitCell(float[] notionalUnitCell, boolean setRelative) {
-    unitCell = UnitCell.newA(notionalUnitCell, setRelative);
+  public void setUnitCell(float[] unitCellParams, boolean setRelative) {
+    unitCell = UnitCell.newA(unitCellParams, setRelative);
   }
 
   @Override
@@ -424,8 +424,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public float[] getNotionalUnitCell() {
-    return unitCell.getNotionalUnitCell();
+  public float[] getUnitCellParams() {
+    return unitCell.getUnitCellParams();
   }
 
   @Override

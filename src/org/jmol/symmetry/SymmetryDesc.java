@@ -871,7 +871,7 @@ public class SymmetryDesc {
     if (type == T.point) {
       if (isBio)
         return "";
-      symTemp.setUnitCell(uc.getNotionalUnitCell(), false);
+      symTemp.setUnitCell(uc.getUnitCellParams(), false);
       uc.toFractional(pt, false);
       if (Float.isNaN(pt.x))
         return "";

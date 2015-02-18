@@ -43,7 +43,7 @@ import javajs.util.T3;
 
 public class SimpleUnitCell {
 
-  protected float[] notionalUnitcell; //6 parameters + optional 16 matrix items
+  protected float[] unitCellParams; //6 parameters + optional 16 matrix items
   public M4 matrixCartesianToFractional;
   public M4 matrixFractionalToCartesian;
   public double volume;
@@ -74,39 +74,39 @@ public class SimpleUnitCell {
     fractionalOrigin = new P3();
   }
   
-  public static SimpleUnitCell newA(float[] parameters) {
+  public static SimpleUnitCell newA(float[] params) {
     SimpleUnitCell c = new SimpleUnitCell();
-    c.init(parameters);
+    c.init(params);
     return c;
   }
   
-  protected void init(float[] parameters) {
-    if (parameters == null)
-      parameters = new float[] {1, 1, 1, 90, 90, 90};
-    if (!isValid(parameters))
+  protected void init(float[] params) {
+    if (params == null)
+      params = new float[] {1, 1, 1, 90, 90, 90};
+    if (!isValid(params))
       return;
-    notionalUnitcell = AU.arrayCopyF(parameters, parameters.length);
+    unitCellParams = AU.arrayCopyF(params, params.length);
 
-    a = parameters[0];
-    b = parameters[1];
-    c = parameters[2];
-    alpha = parameters[3];
-    beta = parameters[4];
-    gamma = parameters[5];
+    a = params[0];
+    b = params[1];
+    c = params[2];
+    alpha = params[3];
+    beta = params[4];
+    gamma = params[5];
     
     // (int) Float.NaN == 0 (but not in JavaScript!)
-    na = Math.max(1, parameters.length >= 25 && !Float.isNaN(parameters[22]) ? (int) parameters[22] : 1);
-    nb = Math.max(1, parameters.length >= 25 && !Float.isNaN(parameters[23]) ? (int) parameters[23] : 1);
-    nc = Math.max(1, parameters.length >= 25 && !Float.isNaN(parameters[24]) ? (int) parameters[24] : 1);
+    na = Math.max(1, params.length >= 25 && !Float.isNaN(params[22]) ? (int) params[22] : 1);
+    nb = Math.max(1, params.length >= 25 && !Float.isNaN(params[23]) ? (int) params[23] : 1);
+    nc = Math.max(1, params.length >= 25 && !Float.isNaN(params[24]) ? (int) params[24] : 1);
 
     if (a <= 0) {
       // must calculate a, b, c alpha beta gamma from Cartesian vectors;
-      V3 va = V3.new3(parameters[6], parameters[7], parameters[8]);
-      V3 vb = V3.new3(parameters[9], parameters[10], parameters[11]);
-      V3 vc = V3.new3(parameters[12], parameters[13], parameters[14]);
+      V3 va = V3.new3(params[6], params[7], params[8]);
+      V3 vb = V3.new3(params[9], params[10], params[11]);
+      V3 vc = V3.new3(params[12], params[13], params[14]);
       setABC(va, vb, vc);
       if (c < 0) {
-        float[] n = AU.arrayCopyF(parameters, -1);
+        float[] n = AU.arrayCopyF(params, -1);
         if (b < 0) {
           vb.set(0, 0, 1);
           vb.cross(vb, va);
@@ -124,7 +124,7 @@ public class SimpleUnitCell {
           n[13] = vc.y;
           n[14] = vc.z;
         }
-        parameters = n;
+        params = n;
       }
     }
     
@@ -144,7 +144,7 @@ public class SimpleUnitCell {
 
     setCellParams();
     
-    if (parameters.length > 21 && !Float.isNaN(parameters[21])) {
+    if (params.length > 21 && !Float.isNaN(params[21])) {
       // parameters with a 4x4 matrix
       // [a b c alpha beta gamma m00 m01 m02 m03 m10 m11.... m20...]
       // this is for PDB and CIF reader
@@ -165,20 +165,20 @@ public class SimpleUnitCell {
           f = 1;
           break;
         }
-        scaleMatrix[i] = parameters[6 + i] * f;
+        scaleMatrix[i] = params[6 + i] * f;
       }      
       matrixCartesianToFractional = M4.newA16(scaleMatrix);
       matrixCartesianToFractional.getTranslation(fractionalOrigin);
       matrixFractionalToCartesian = M4.newM4(matrixCartesianToFractional).invert();
-      if (parameters[0] == 1)
+      if (params[0] == 1)
         setParamsFromMatrix();
-    } else if (parameters.length > 14 && !Float.isNaN(parameters[14])) {
+    } else if (params.length > 14 && !Float.isNaN(params[14])) {
       // parameters with a 3 vectors
       // [a b c alpha beta gamma ax ay az bx by bz cx cy cz...]
       M4 m = matrixFractionalToCartesian = new M4();
-      m.setColumn4(0, parameters[6] * na, parameters[7] * na, parameters[8] * na, 0);
-      m.setColumn4(1, parameters[9] * nb, parameters[10] * nb, parameters[11] * nb, 0);
-      m.setColumn4(2, parameters[12] * nc, parameters[13] * nc, parameters[14] * nc, 0);
+      m.setColumn4(0, params[6] * na, params[7] * na, params[8] * na, 0);
+      m.setColumn4(1, params[9] * nb, params[10] * nb, params[11] * nb, 0);
+      m.setColumn4(2, params[12] * nc, params[13] * nc, params[14] * nc, 0);
       m.setColumn4(3, 0, 0, 0, 1);
       matrixCartesianToFractional = M4.newM4(matrixFractionalToCartesian).invert();
     } else {
@@ -291,8 +291,8 @@ public class SimpleUnitCell {
     return (dimension == 2);
   }
 
-  public final float[] getNotionalUnitCell() {
-    return notionalUnitcell;
+  public final float[] getUnitCellParams() {
+    return unitCellParams;
   }
 
   public final float[] getUnitCellAsArray(boolean vectorsOnly) {

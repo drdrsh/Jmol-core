@@ -88,7 +88,6 @@ abstract class BioShapeRenderer extends MeshRenderer {
   protected short[] colixesBack;
   protected STR[] structureTypes;
   
-  protected boolean isPass2;
   protected boolean wireframeOnly;
 
   protected abstract void renderBioShape(BioShape bioShape);
@@ -103,7 +102,6 @@ abstract class BioShapeRenderer extends MeshRenderer {
   }
 
   private void setGlobals() {
-    isPass2 = vwr.gdata.isPass2;
     invalidateMesh = false;
     needTranslucent = false;
     g3d.addRenderer(T.hermitelevel);

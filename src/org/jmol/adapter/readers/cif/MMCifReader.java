@@ -129,7 +129,7 @@ public class MMCifReader extends CifReader {
       setBiomolecules(ht);
       if (thisBiomolecule != null) {
         asc.getXSymmetry().applySymmetryBio(thisBiomolecule,
-            notionalUnitCell, applySymmetryToBonds, filter);
+            unitCellParams, applySymmetryToBonds, filter);
         asc.xtalSymmetry = null;
       }
     }

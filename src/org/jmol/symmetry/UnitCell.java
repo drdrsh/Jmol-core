@@ -86,9 +86,9 @@ class UnitCell extends SimpleUnitCell {
     return c;
   }
   
-  public static UnitCell newA(float[] notionalUnitcell, boolean setRelative) {
+  public static UnitCell newA(float[] params, boolean setRelative) {
     UnitCell c = new UnitCell();
-    c.init(notionalUnitcell);
+    c.init(params);
     c.initUnitcellVertices();
     c.allFractionalRelative = setRelative;
     return  c;
@@ -488,12 +488,12 @@ class UnitCell extends SimpleUnitCell {
   }
 
   public boolean isSameAs(UnitCell uc) {
-    if (uc.notionalUnitcell.length != notionalUnitcell.length)
+    if (uc.unitCellParams.length != unitCellParams.length)
       return false;
-    for (int i = notionalUnitcell.length; --i >= 0;)
-      if (notionalUnitcell[i] != uc.notionalUnitcell[i]
-          && !(Float.isNaN(notionalUnitcell[i]) && Float
-              .isNaN(uc.notionalUnitcell[i])))
+    for (int i = unitCellParams.length; --i >= 0;)
+      if (unitCellParams[i] != uc.unitCellParams[i]
+          && !(Float.isNaN(unitCellParams[i]) && Float
+              .isNaN(uc.unitCellParams[i])))
         return false;
     return (fractionalOffset == null ? !uc.hasOffset()
         : uc.fractionalOffset == null ? !hasOffset() 

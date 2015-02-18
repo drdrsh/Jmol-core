@@ -183,7 +183,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected String sgName;
   protected boolean ignoreFileUnitCell;
   protected boolean ignoreFileSpaceGroupName;
-  public float[] notionalUnitCell; //0-5 a b c alpha beta gamma; 6-21 matrix c->f
+  public float[] unitCellParams; //0-5 a b c alpha beta gamma; 6-21 matrix c->f
   protected int desiredModelNumber = Integer.MIN_VALUE;
   public SymmetryInterface symmetry;
   protected OC out;
@@ -688,15 +688,15 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   protected void initializeSymmetry() {
     previousSpaceGroup = sgName;
-    previousUnitCell = notionalUnitCell;
+    previousUnitCell = unitCellParams;
     iHaveUnitCell = ignoreFileUnitCell;
     if (!ignoreFileUnitCell) {
-      notionalUnitCell = new float[25];
+      unitCellParams = new float[25];
       //0-5 a b c alpha beta gamma
       //6-21 m00 m01... m33 cartesian-->fractional
       //22-24 supercell.x supercell.y supercell.z
       for (int i = 25; --i >= 0;)
-        notionalUnitCell[i] = Float.NaN;
+        unitCellParams[i] = Float.NaN;
       symmetry = null;
     }
     if (!ignoreFileSpaceGroupName)
@@ -722,7 +722,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       iHaveUnitCell = true;
       doCheckUnitCell = true;
       sgName = previousSpaceGroup;
-      notionalUnitCell = previousUnitCell;
+      unitCellParams = previousUnitCell;
     }
     return lastAtomCount;
   }
@@ -748,10 +748,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   private void initializeCartesianToFractional() {
     for (int i = 0; i < 16; i++)
-      if (!Float.isNaN(notionalUnitCell[6 + i]))
+      if (!Float.isNaN(unitCellParams[6 + i]))
         return; //just do this once
     for (int i = 0; i < 16; i++)
-      notionalUnitCell[6 + i] = ((i % 5 == 0 ? 1 : 0));
+      unitCellParams[6 + i] = ((i % 5 == 0 ? 1 : 0));
     nMatrixElements = 0;
   }
 
@@ -759,7 +759,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (ignoreFileUnitCell)
       return;
     for (int i = 6; i < 22; i++)
-      notionalUnitCell[i] = Float.NaN;
+      unitCellParams[i] = Float.NaN;
     checkUnitCell(6);
   }
 
@@ -768,9 +768,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       return;
     if (i == 0 && x == 1 || i == 3 && x == 0)
       return;
-    if (!Float.isNaN(x) && i >= 6 && Float.isNaN(notionalUnitCell[6]))
+    if (!Float.isNaN(x) && i >= 6 && Float.isNaN(unitCellParams[6]))
       initializeCartesianToFractional();
-    notionalUnitCell[i] = x;
+    unitCellParams[i] = x;
     if (Logger.debugging) {
       Logger.debug("setunitcellitem " + i + " " + x);
     }
@@ -787,15 +787,15 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (ignoreFileUnitCell)
       return;
     clearUnitCell();
-    notionalUnitCell[0] = a;
-    notionalUnitCell[1] = b;
-    notionalUnitCell[2] = c;
+    unitCellParams[0] = a;
+    unitCellParams[1] = b;
+    unitCellParams[2] = c;
     if (alpha != 0)
-      notionalUnitCell[3] = alpha;
+      unitCellParams[3] = alpha;
     if (beta != 0)
-      notionalUnitCell[4] = beta;
+      unitCellParams[4] = beta;
     if (gamma != 0)
-      notionalUnitCell[5] = gamma;
+      unitCellParams[5] = gamma;
     iHaveUnitCell = checkUnitCell(6);
   }
 
@@ -804,28 +804,28 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       return;
     if (i == 0)
       for (int j = 0; j < 6; j++)
-        notionalUnitCell[j] = 0;
+        unitCellParams[j] = 0;
     i = 6 + i * 3;
-    notionalUnitCell[i++] = xyz[i0++];
-    notionalUnitCell[i++] = xyz[i0++];
-    notionalUnitCell[i] = xyz[i0];
-    if (Float.isNaN(notionalUnitCell[0])) {
+    unitCellParams[i++] = xyz[i0++];
+    unitCellParams[i++] = xyz[i0++];
+    unitCellParams[i] = xyz[i0];
+    if (Float.isNaN(unitCellParams[0])) {
       for (i = 0; i < 6; i++)
-        notionalUnitCell[i] = -1;
+        unitCellParams[i] = -1;
     }
     iHaveUnitCell = checkUnitCell(15);
   }
 
   private boolean checkUnitCell(int n) {
     for (int i = 0; i < n; i++)
-      if (Float.isNaN(notionalUnitCell[i]))
+      if (Float.isNaN(unitCellParams[i]))
         return false;
-    if (n == 22 && notionalUnitCell[0] == 1) {
-      if (notionalUnitCell[1] == 1 
-          && notionalUnitCell[2] == 1 
-          && notionalUnitCell[6] == 1 
-          && notionalUnitCell[11] == 1 
-          && notionalUnitCell[16] == 1 
+    if (n == 22 && unitCellParams[0] == 1) {
+      if (unitCellParams[1] == 1 
+          && unitCellParams[2] == 1 
+          && unitCellParams[6] == 1 
+          && unitCellParams[11] == 1 
+          && unitCellParams[16] == 1 
           )
         return false; 
       // this is an mmCIF or PDB case for NMR models having
@@ -850,7 +850,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (!iHaveUnitCell)
       return null;
     if (symmetry == null) {
-      getNewSymmetry().setUnitCell(notionalUnitCell, false);
+      getNewSymmetry().setUnitCell(unitCellParams, false);
       checkUnitCellOffset();
     }
     return symmetry;
@@ -1161,7 +1161,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     if (doConvertToFractional && !fileCoordinatesAreFractional && getSymmetry() != null) {
       if (!symmetry.haveUnitCell())
-        symmetry.setUnitCell(notionalUnitCell, false);
+        symmetry.setUnitCell(unitCellParams, false);
       symmetry.toFractional(atom, false);
       iHaveFractionalCoordinates = true;
     }

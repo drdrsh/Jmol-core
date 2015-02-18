@@ -53,7 +53,14 @@ class SymmetryInfo {
   SymmetryInfo() {    
   }
   
-  float[] setSymmetryInfo(Map<String, Object> info, float[] notionalUnitCell) {
+  
+  /**
+   * 
+   * @param info
+   * @param unitCellParams an array of parameters could be from model, but also could be from a trajectory listing 
+   * @return actual unit cell parameters 
+   */
+  float[] setSymmetryInfo(Map<String, Object> info, float[] unitCellParams) {
     cellRange = (int[]) info.get("unitCellRange");
     periodicOriginXyz = (P3) info.get("periodicOriginXyz");
     sgName = (String) info.get("spaceGroup");
@@ -86,15 +93,15 @@ class SymmetryInfo {
       infoStr += s;
     }
     infoStr += "\n";
-    if (notionalUnitCell == null)
-      notionalUnitCell = (float[]) info.get("notionalUnitcell");
-    if (!SimpleUnitCell.isValid(notionalUnitCell))
+    if (unitCellParams == null)
+      unitCellParams = (float[]) info.get("unitCellParams");
+    if (!SimpleUnitCell.isValid(unitCellParams))
       return null;
     coordinatesAreFractional = info.containsKey("coordinatesAreFractional") ? 
         ((Boolean) info.get("coordinatesAreFractional")).booleanValue() 
         : false;    
     isMultiCell = (coordinatesAreFractional && symmetryOperations != null);
-    return notionalUnitCell;
+    return unitCellParams;
   }
 }
 

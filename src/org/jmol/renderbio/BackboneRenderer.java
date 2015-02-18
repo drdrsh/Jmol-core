@@ -41,6 +41,7 @@ public class BackboneRenderer extends BioShapeRenderer {
 
   @Override
   protected void renderBioShape(BioShape bioShape) {
+    boolean checkPass2 = (!isExport && !vwr.gdata.isPass2);
     boolean showSteps = vwr.getBoolean(T.backbonesteps)
         && bioShape.bioPolymer.isNucleic();
     isDataFrame = vwr.ms.isJmolDataFrameForModel(bioShape.modelIndex);
@@ -49,7 +50,7 @@ public class BackboneRenderer extends BioShapeRenderer {
       Atom atomA = ms.at[leadAtomIndices[i]];
       short cA = colixes[i];
       mad = mads[i];
-      drawSegment(atomA, ms.at[leadAtomIndices[i + 1]], cA, colixes[i + 1], 100);
+      drawSegment(atomA, ms.at[leadAtomIndices[i + 1]], cA, colixes[i + 1], 100, checkPass2);
       if (showSteps) {
         NucleicMonomer g = (NucleicMonomer) monomers[i];
         Lst<BasePair> bps = g.getBasePairs();
@@ -57,22 +58,22 @@ public class BackboneRenderer extends BioShapeRenderer {
           for (int j = bps.size(); --j >= 0;) {
             int iAtom = bps.get(j).getPartnerAtom(g);
             if (iAtom > i)
-              drawSegment(atomA, ms.at[iAtom], cA, cA, 1000);
+              drawSegment(atomA, ms.at[iAtom], cA, cA, 1000, checkPass2);
           }
         }
       }
     }
   }
 
-  private void drawSegment(Atom atomA, Atom atomB, short colixA, short colixB, float max) {    
-    if (atomA.nBackbonesDisplayed == 0
-        || atomB.nBackbonesDisplayed == 0
-        || ms.isAtomHidden(atomB.i)
-        || !isDataFrame && atomA.distanceSquared(atomB) > max)
+  private void drawSegment(Atom atomA, Atom atomB, short colixA, short colixB,
+                           float max, boolean checkPass2) {
+    if (atomA.nBackbonesDisplayed == 0 || atomB.nBackbonesDisplayed == 0
+        || ms.isAtomHidden(atomB.i) || !isDataFrame
+        && atomA.distanceSquared(atomB) > max)
       return;
     colixA = C.getColixInherited(colixA, atomA.colixAtom);
     colixB = C.getColixInherited(colixB, atomB.colixAtom);
-    if (!isExport && !isPass2 && !setBioColix(colixA) && !setBioColix(colixB))
+    if (checkPass2 && !setBioColix(colixA) && !setBioColix(colixB))
       return;
     int xA = atomA.sX, yA = atomA.sY, zA = atomA.sZ;
     int xB = atomB.sX, yB = atomB.sY, zB = atomB.sZ;
@@ -82,8 +83,8 @@ public class BackboneRenderer extends BioShapeRenderer {
     if (mad < 0) {
       g3d.drawLine(colixA, colixB, xA, yA, zA, xB, yB, zB);
     } else {
-      int width = (int) (exportType == GData.EXPORT_CARTESIAN ? mad : vwr
-          .tm.scaleToScreen((zA + zB) / 2, mad));
+      int width = (int) (isExport ? mad : vwr.tm.scaleToScreen((zA + zB) / 2,
+          mad));
       g3d.fillCylinderXYZ(colixA, colixB, GData.ENDCAPS_SPHERICAL, width, xA,
           yA, zA, xB, yB, zB);
     }

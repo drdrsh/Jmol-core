@@ -97,7 +97,7 @@ public class XmlCmlReader extends XmlReader {
   // the same atom array gets reused
   // it will grow to the maximum length;
   // ac holds the current number of atoms
-  private int ac;
+  private int aaLen;
   private Atom[] atomArray = new Atom[100];
 
   private int bondCount;
@@ -138,6 +138,7 @@ public class XmlCmlReader extends XmlReader {
    * the current state
    */
   protected int state = START;
+  private int atomIndex0;
 
   /*
    * added 2/2007  Bob Hanson:
@@ -279,7 +280,7 @@ public class XmlCmlReader extends XmlReader {
       }
       if (name.equalsIgnoreCase("atomArray")) {
         state = MOLECULE_ATOM_ARRAY;
-        ac = 0;
+        aaLen = 0;
         boolean coords3D = false;
         if (atts.containsKey("atomID")) {
           breakOutAtomTokens(atts.get("atomID"));
@@ -317,7 +318,7 @@ public class XmlCmlReader extends XmlReader {
           for (int i = tokenCount; --i >= 0;)
             atomArray[i].elementSymbol = tokens[i];
         }
-        for (int i = ac; --i >= 0;) {
+        for (int i = aaLen; --i >= 0;) {
           Atom atom = atomArray[i];
           if (!coords3D)
             atom.z = 0;
@@ -421,7 +422,7 @@ public class XmlCmlReader extends XmlReader {
     }
   }
 
-  final private static String[] notionalUnitcellTags = { "a", "b", "c", "alpha",
+  final private static String[] unitCellParamTags = { "a", "b", "c", "alpha",
     "beta", "gamma" };
 
   @Override
@@ -476,7 +477,7 @@ public class XmlCmlReader extends XmlReader {
       if (name.equals("scalar")) {
         state = CRYSTAL;
         if (scalarTitle != null)
-          checkUnitCellItem(notionalUnitcellTags, scalarTitle);
+          checkUnitCellItem(unitCellParamTags, scalarTitle);
         else if (scalarDictRef != null)
           checkUnitCellItem(JmolAdapter.cellParamNames, (scalarDictValue
               .startsWith("_") ? scalarDictValue : "_" + scalarDictValue));
@@ -533,7 +534,7 @@ public class XmlCmlReader extends XmlReader {
     case MOLECULE_ATOM_ARRAY:
       if (name.equalsIgnoreCase("atomArray")) {
         state = MOLECULE;
-        for (int i = 0; i < ac; ++i)
+        for (int i = 0; i < aaLen; ++i)
           addAtom(atomArray[i]);
       }
       break;
@@ -603,10 +604,11 @@ public class XmlCmlReader extends XmlReader {
         return;
       String s;
       Atom[] atoms = asc.atoms;
-      for (int i = 0; i < ac; i++)
+      for (int i = atomIndex0; i < asc.ac; i++)
         if ((s = atomIdNames.getProperty(atoms[i].atomName)) != null)
           atoms[i].atomName = s;
       atomIdNames = null;
+      atomIndex0 = asc.ac;
     }
 
   private void addNewBond(String a1, String a2, int order) {
@@ -694,13 +696,13 @@ public class XmlCmlReader extends XmlReader {
   }
 
   void checkAtomArrayLength(int newAtomCount) {
-    if (ac == 0) {
+    if (aaLen == 0) {
       if (newAtomCount > atomArray.length)
         atomArray = new Atom[newAtomCount];
       for (int i = newAtomCount; --i >= 0;)
         atomArray[i] = new Atom();
-      ac = newAtomCount;
-    } else if (newAtomCount != ac) {
+      aaLen = newAtomCount;
+    } else if (newAtomCount != aaLen) {
       throw new IndexOutOfBoundsException("bad atom attribute length");
     }
   }

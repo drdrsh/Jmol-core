@@ -256,7 +256,7 @@ class SpaceGroup {
         spaceGroup = spaceGroup.substring(0, spaceGroup.indexOf("[")).trim();
       if (spaceGroup.equals("unspecified!"))
         return "no space group identified in file";
-      sg = SpaceGroup.determineSpaceGroupNA(spaceGroup, cellInfo.getNotionalUnitCell());
+      sg = SpaceGroup.determineSpaceGroupNA(spaceGroup, cellInfo.getUnitCellParams());
     } else if (spaceGroup.equalsIgnoreCase("ALL")) {
       return SpaceGroup.dumpAll();
     } else if (spaceGroup.equalsIgnoreCase("ALLSEITZ")) {
@@ -575,11 +575,11 @@ class SpaceGroup {
   }
 
   private final static SpaceGroup determineSpaceGroupNA(String name,
-                                                     float[] notionalUnitcell) {
-    return (notionalUnitcell == null ? determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, -1)
-        : determineSpaceGroup(name, notionalUnitcell[0], notionalUnitcell[1],
-        notionalUnitcell[2], notionalUnitcell[3], notionalUnitcell[4],
-        notionalUnitcell[5], -1));
+                                                     float[] unitCellParams) {
+    return (unitCellParams == null ? determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, -1)
+        : determineSpaceGroup(name, unitCellParams[0], unitCellParams[1],
+        unitCellParams[2], unitCellParams[3], unitCellParams[4],
+        unitCellParams[5], -1));
   }
 
   private final static SpaceGroup determineSpaceGroup(String name, float a, float b,

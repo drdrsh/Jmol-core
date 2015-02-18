@@ -81,7 +81,7 @@ public class XtalSymmetry {
     return (this.symmetry = symmetry);
   }
 
-  private float[] notionalUnitCell = new float[6];
+  private float[] unitCellParams = new float[6];
   private float[] baseUnitCell;
   // expands to 26 for cartesianToFractional matrix as array (PDB) and supercell
 
@@ -151,23 +151,23 @@ public class XtalSymmetry {
   
   private Lst<float[]> trajectoryUnitCells;
   
-  private void setNotionalUnitCell(float[] info, M3 matUnitCellOrientation,
+  private void setUnitCell(float[] info, M3 matUnitCellOrientation,
                                    P3 unitCellOffset) {
-    notionalUnitCell = new float[info.length];
+    unitCellParams = new float[info.length];
     this.unitCellOffset = unitCellOffset;
     for (int i = 0; i < info.length; i++)
-      notionalUnitCell[i] = info[i];
+      unitCellParams[i] = info[i];
     asc.haveUnitCell = true;
-    asc.setCurrentModelInfo("notionalUnitcell", notionalUnitCell);
+    asc.setCurrentModelInfo("unitCellParams", unitCellParams);
     if (asc.isTrajectory) {
       if (trajectoryUnitCells == null) {
         trajectoryUnitCells = new Lst<float[]>();
         asc.setInfo("unitCells", trajectoryUnitCells);
       }
-      trajectoryUnitCells.addLast(notionalUnitCell);
+      trajectoryUnitCells.addLast(unitCellParams);
     }
     asc.setGlobalBoolean(AtomSetCollection.GLOBAL_UNITCELLS);
-    getSymmetry().setUnitCell(notionalUnitCell, false);
+    getSymmetry().setUnitCell(unitCellParams, false);
     // we need to set the auxiliary info as well, because 
     // ModelLoader creates a new symmetry object.
     if (unitCellOffset != null) {
@@ -201,7 +201,7 @@ public class XtalSymmetry {
   SymmetryInterface applySymmetryFromReader(SymmetryInterface readerSymmetry)
       throws Exception {
     asc.setCoordinatesAreFractional(acr.iHaveFractionalCoordinates);
-    setNotionalUnitCell(acr.notionalUnitCell, acr.matUnitCellOrientation,
+    setUnitCell(acr.unitCellParams, acr.matUnitCellOrientation,
         acr.unitCellOffset);
     setAtomSetSpaceGroupName(acr.sgName);
     setSymmetryRange(acr.symmetryRange);
@@ -213,7 +213,7 @@ public class XtalSymmetry {
           readerSymmetry = acr.getNewSymmetry();
         doApplySymmetry = readerSymmetry.createSpaceGroup(
             acr.desiredSpaceGroupIndex, (acr.sgName.indexOf("!") >= 0 ? "P1"
-                : acr.sgName), acr.notionalUnitCell);
+                : acr.sgName), acr.unitCellParams);
       } else {
         acr.doPreSymmetry();
         readerSymmetry = null;
@@ -392,7 +392,7 @@ public class XtalSymmetry {
 
       symmetry = null;
       symmetry = getSymmetry();
-      setNotionalUnitCell(new float[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z,
+      setUnitCell(new float[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z,
           vb.x, vb.y, vb.z, vc.x, vc.y, vc.z }, null, offset);
       setAtomSetSpaceGroupName(oabc == null ? "P1" : "cell=" + supercell);
       symmetry.setSpaceGroup(doNormalize);
@@ -720,8 +720,8 @@ public class XtalSymmetry {
         symmetry.getLatticeDesignation());
     asc.setCurrentModelInfo("unitCellRange", unitCells);
     asc.setCurrentModelInfo("unitCellTranslations", unitCellTranslations);
-    baseUnitCell = notionalUnitCell;
-    notionalUnitCell = new float[6];
+    baseUnitCell = unitCellParams;
+    unitCellParams = new float[6];
     reset();
   }
 
@@ -972,7 +972,7 @@ public class XtalSymmetry {
 
   @SuppressWarnings("unchecked")
   public void applySymmetryBio(Map<String, Object> thisBiomolecule,
-                               float[] notionalUnitCell,
+                               float[] unitCellParams,
                                boolean applySymmetryToBonds, String filter) {
     if (latticeCells != null && latticeCells[0] != 0) {
       Logger.error("Cannot apply biomolecule when lattice cells are indicated");
@@ -987,13 +987,13 @@ public class XtalSymmetry {
       return;
     symmetry = null;
     // it's not clear to me why you would do this:
-    if (!Float.isNaN(notionalUnitCell[0])) // PDB can do this; 
-      setNotionalUnitCell(notionalUnitCell, null, unitCellOffset);
+    if (!Float.isNaN(unitCellParams[0])) // PDB can do this; 
+      setUnitCell(unitCellParams, null, unitCellOffset);
     getSymmetry().setSpaceGroup(doNormalize);
     //symmetry.setUnitCell(null);
     addSpaceGroupOperation("x,y,z", false);
     String name = (String) thisBiomolecule.get("name");
-    setAtomSetSpaceGroupName(name);
+    setAtomSetSpaceGroupName(acr.sgName = name);
     int len = biomts.size();
     this.applySymmetryToBonds = applySymmetryToBonds;
     bondCount0 = asc.bondCount;
@@ -1095,11 +1095,6 @@ public class XtalSymmetry {
           asc.errorMessage = "appendAtomCollection error: " + e;
         }
       }
-      //      mat.m03 /= notionalUnitCell[0]; // PDB could have set this to Float.NaN
-      //      if (Float.isNaN(mat.m03))
-      //        mat.m03 = 1;
-      //      mat.m13 /= notionalUnitCell[1];
-      //      mat.m23 /= notionalUnitCell[2];
       if (i > 0)
         symmetry.addBioMoleculeOperation(mat, false);
     }
@@ -1199,28 +1194,12 @@ public class XtalSymmetry {
    * 
    */
   public void scaleFractionalVibs() {
-    float[] params = getBaseSymmetry().getNotionalUnitCell();
+    float[] params = getBaseSymmetry().getUnitCellParams();
     P3 ptScale = P3.new3(1 / params[0], 1 / params[1], 1 / params[2]);
-//    P3 pt = new P3();
     int i0 = asc.getAtomSetAtomIndex(asc.iSet);
     for (int i = asc.ac; --i >= i0;) {
       Vibration v = (Vibration) asc.atoms[i].vib;
       if (v != null) {
-//      pt = ptScale;
-//        if (mod != null) {
-          // this is not relevant, because this has to be done in doPreSymmetry()
-          // before subsystems are set, I think. 
-//          // if there are modulations, then a fractional vib would be
-//          // a vib within a modulation set.
-//          v = mod.getVibration(false);
-//          if (v == null)
-//            continue;
-//          SymmetryInterface subsym = mod.getSubSystemUnitCell();
-//          if (subsym != null) {
-//            params = subsym.getNotionalUnitCell();
-//            pt.set(1 / params[0], 1 / params[1], 1 / params[2]);
-//          }
-//        }
         v.scaleT(ptScale);
       }
     }

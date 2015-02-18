@@ -94,21 +94,22 @@ public class SticksRenderer extends FontLineShapeRenderer {
     hbondsSolid = vwr.getBoolean(T.hbondssolid);
     isAntialiased = g3d.isAntialiased();
     boolean needTranslucent = false;
-    if (!isExport && isPass2)
-      for (int i = bsForPass2.nextSetBit(0); i >= 0; i = bsForPass2
-          .nextSetBit(i + 1)) {
-        bond = bonds[i];
-        renderBond();
-      }
-    else
+    if (isPass2) {
+      if (!isExport)
+        for (int i = bsForPass2.nextSetBit(0); i >= 0; i = bsForPass2
+            .nextSetBit(i + 1)) {
+          bond = bonds[i];
+          renderBond();
+        }
+    } else {
       for (int i = ms.bondCount; --i >= 0;) {
         bond = bonds[i];
-        if ((bond.shapeVisibilityFlags & myVisibilityFlag) != 0
-            && renderBond()) {
+        if ((bond.shapeVisibilityFlags & myVisibilityFlag) != 0 && renderBond()) {
           needTranslucent = true;
           bsForPass2.set(i);
         }
       }
+    }
     return needTranslucent;
   }
 
@@ -249,6 +250,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
       }
     }
 
+    
     // set the diameter
 
     xA = a.sX;

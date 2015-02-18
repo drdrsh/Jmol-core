@@ -428,7 +428,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
       asc.setCurrentModelInfo("biomolecules", vBiomolecules);
       setBiomoleculeAtomCounts();
       if (thisBiomolecule != null && applySymmetry) {
-        asc.getXSymmetry().applySymmetryBio(thisBiomolecule, notionalUnitCell, applySymmetryToBonds, filter);
+        asc.getXSymmetry().applySymmetryBio(thisBiomolecule, unitCellParams, applySymmetryToBonds, filter);
         vTlsModels = null; // for now, no TLS groups for biomolecules
         asc.xtalSymmetry = null;
       }
@@ -1343,14 +1343,14 @@ REMARK 290 REMARK: NULL
   }
 
   private void scale(int n) throws Exception {
-    if (notionalUnitCell == null)
+    if (unitCellParams == null)
       return; 
     // Could be an EM image
     // this information will only be processed
     // if a lattice is requested.
     
     int pt = n * 4 + 2;
-    notionalUnitCell[0] = cryst1;
+    unitCellParams[0] = cryst1;
     setUnitCellItem(pt++,getFloat(10, 10));
     setUnitCellItem(pt++,getFloat(20, 10));
     setUnitCellItem(pt++,getFloat(30, 10));

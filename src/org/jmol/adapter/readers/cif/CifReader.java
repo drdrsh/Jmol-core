@@ -241,7 +241,7 @@ public class CifReader extends AtomSetCollectionReader {
         if (htAudit != null && auditBlockCode.contains("_MOD_")) {
           String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
           if (asc.setSymmetry((SymmetryInterface) htAudit.get(key)) != null) {
-            notionalUnitCell = asc.getSymmetry().getNotionalUnitCell();
+            unitCellParams = asc.getSymmetry().getUnitCellParams();
             iHaveUnitCell = true;
           }
         } else if (htAudit != null) {
@@ -630,7 +630,7 @@ public class CifReader extends AtomSetCollectionReader {
     float v = parseFloatStr(data);
     if (Float.isNaN(v))
       return;
-    //could enable EM box: notionalUnitCell[0] = 1;
+    //could enable EM box: unitCellParams[0] = 1;
     for (int i = 0; i < TransformFields.length; i++) {
       if (key.indexOf(TransformFields[i]) >= 0) {
         setUnitCellItem(6 + i, v);
@@ -1720,7 +1720,7 @@ public class CifReader extends AtomSetCollectionReader {
           Logger.debug(molecularType + " removing " + i + " "
               + atoms[i].atomName + " " + atoms[i]);
       }
-      asc.setCurrentModelInfo("notionalUnitcell", null);
+      asc.setCurrentModelInfo("unitCellParams", null);
       if (nMolecular++ == asc.iSet) {
         asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_FRACTCOORD);
         asc.clearGlobalBoolean(AtomSetCollection.GLOBAL_SYMMETRY);
