@@ -3149,7 +3149,7 @@ public class CmdExt implements JmolCmdExtension {
         tok = T.image;
         break;
       }
-      if (tok == T.image) {
+      if (tok == T.image && pt < args.length) {
         T t = T.getTokenFromName(SV.sValue(args[pt]).toLowerCase());
         if (t != null) {
           type = SV.sValue(t).toUpperCase();
@@ -3229,6 +3229,9 @@ public class CmdExt implements JmolCmdExtension {
         break;
       case T.clipboard:
         break;
+      case T.opIf:
+        fileName = (type.equals("IMAGE") || type.equals("(image)") ? "?jmol.png" : "?jmol." + type.toLowerCase());
+        break;
       case T.identifier:
       case T.string:
         fileName = SV.sValue(tokenAt(pt, args));
@@ -3237,6 +3240,7 @@ public class CmdExt implements JmolCmdExtension {
           fileName = null;
         break;
       default:
+        System.out.println(T.nameOf(tokAtArray(pt, args)));
         invArg();
       }
       if (type.equals("IMAGE") || type.equals("(image)")

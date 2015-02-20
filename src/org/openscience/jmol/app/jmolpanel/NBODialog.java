@@ -32,6 +32,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -48,6 +49,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -72,17 +74,19 @@ public class NBODialog extends JDialog implements ChangeListener {
 
   private JTextPane nboOutput;
 
-  private JScrollPane editPane2;
+  protected JScrollPane editPane2;
 
   private JTabbedPane inputTabs;
 
   private Component modelPanel;
 
+  private Component rawPanel;
+
   private Component viewPanel;
 
   private Component runPanel;
 
-  private JTextField modelField, viewField, runField;
+  private JTextField modelField, rawField, viewField, runField;
   
   private NBOService nboService;
 
@@ -151,6 +155,15 @@ public class NBODialog extends JDialog implements ChangeListener {
     });
     buttonBox.add(b);
 
+    b = new JButton("Clear");
+    b.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        clearPressed();
+      }
+    });
+    buttonBox.add(b);
+
     b = new JButton("Close");
     b.addActionListener(new ActionListener() {
       @Override
@@ -213,6 +226,7 @@ public class NBODialog extends JDialog implements ChangeListener {
     inputTabs.addTab("Model", null, modelPanel = getModelPanel());
     inputTabs.addTab("Run", null, runPanel = getRunPanel());
     inputTabs.addTab("View", null, viewPanel = getViewPanel());
+    inputTabs.addTab("Raw", null, rawPanel = getRawPanel());
     inputTabs.setSelectedComponent(modelPanel);
     inputTabs.addChangeListener(this);
     showPanel.add(inputTabs,  BorderLayout.CENTER);
@@ -230,7 +244,8 @@ public class NBODialog extends JDialog implements ChangeListener {
     nboOutput = new JTextPane();
     nboOutput.setContentType("text/plain");
     nboOutput.setFont(new Font("Monospaced", Font.PLAIN, 10));
-    editPane2 = new JScrollPane(nboOutput);
+    editPane2 = new JScrollPane();
+    editPane2.getViewport().add(nboOutput);
     editPanel.add(editPane2);
 
     editPanel.setPreferredSize(new Dimension(500,100));
@@ -248,6 +263,7 @@ public class NBODialog extends JDialog implements ChangeListener {
     Component c = inputTabs.getSelectedComponent();
     modelPanel.setVisible(c == modelPanel);
     viewPanel.setVisible(c == viewPanel);
+    rawPanel.setVisible(c == rawPanel);
     runPanel.setVisible(c == runPanel);
     pack();
   }
@@ -315,6 +331,27 @@ public class NBODialog extends JDialog implements ChangeListener {
     return showPanel;
   }
 
+  private Component getRawPanel() {
+    rawField = new JTextField("");
+    rawField.setPreferredSize(new Dimension(100, 10));
+    rawField.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        rawCmd();        
+      }}
+    );
+    JPanel showPanel = new JPanel(new BorderLayout());
+    Box a = Box.createVerticalBox();
+    Box b = Box.createHorizontalBox();
+    b.add(newLabel("Raw Command"));
+    b.add(rawField);
+    a.add(b);
+    a.add(Box.createVerticalGlue());
+    showPanel.add(a, BorderLayout.NORTH);
+    //showPanel.add(Box.createGlue(), BorderLayout.CENTER);
+    return showPanel;
+  }
+
   private Component newLabel(String label) {
     JTextField t = new JTextField(label);
     t.setEditable(false);
@@ -323,15 +360,6 @@ public class NBODialog extends JDialog implements ChangeListener {
   }
 
   /////////////////////////////////////////////////////////
-
-  public void nboReport(String s) {
-    nboOutput.setText(s == null ? "" : nboOutput.getText() + s + "\n");
-    try {
-      editPane2.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
-    } catch (Exception e) {
-      //
-    }
-  }
 
   protected void modelCmd() {
     nboReport(null);
@@ -351,7 +379,7 @@ public class NBODialog extends JDialog implements ChangeListener {
     }
     info.put("value", cmd.substring(3));
     if (!nboService.processRequest(info)) {
-      clearInfo();
+      nboReport(null);
       nboReport("You must connect first.");
     }
   }
@@ -365,7 +393,7 @@ public class NBODialog extends JDialog implements ChangeListener {
     String cmd = runField.getText();
     info.put("value", cmd);
     if (!nboService.processRequest(info)) {
-      clearInfo();
+      nboReport(null);
       nboReport("not implemented");
     }
   }
@@ -379,20 +407,39 @@ public class NBODialog extends JDialog implements ChangeListener {
     String cmd = viewField.getText();
     info.put("value", cmd);
     if (!nboService.processRequest(info)) {
-      clearInfo();
+      nboReport(null);
+      nboReport("not implemented");
+    }
+  }
+  
+  protected void rawCmd() {
+    nboReport(null);
+    Map<String, Object> info = new Hashtable<String, Object>();
+    info.put("mode", Integer.valueOf(NBOService.RAW));
+    info.put("sync", Boolean.FALSE);
+    info.put("action", "cmd");
+    String cmd = rawField.getText();
+    rawField.setText("");
+    info.put("value", cmd);
+    if (!nboService.processRequest(info)) {
+      nboReport(null);
       nboReport("not implemented");
     }
   }
   
   protected void connectPressed() {
     nboService.closeProcess();
-    clearInfo();
+    nboReport(null);
     String err = nboService.startProcess(true); // synchronous? 
     if (err == null) {
       nboReport("listening...");
     } else {
       nboReport(err);
     }
+  }
+
+  protected void clearPressed() {
+    nboReport(null);
   }
 
   /**
@@ -480,9 +527,21 @@ public class NBODialog extends JDialog implements ChangeListener {
     //workingPathLabel.setText(nboService.workingPath);
   }
 
-  void clearInfo() {
-    nboOutput.setText("");
+  public synchronized void nboReport(String s) {
+    try {
+      nboOutput.setText(s == null ? "" : nboOutput.getText() + s + "\n");
+    } catch (Exception e) {
+      System.out.println(e);
+    }
+    try {
+      SwingUtilities.invokeLater(new Runnable(){
+        @Override
+        public void run() {
+          editPane2.getVerticalScrollBar().setValue(editPane2.getVerticalScrollBar().getMaximum());
+        }});
+    } catch (Exception e) {
+      System.out.println(e);
+    }
   }
 
-  
 }

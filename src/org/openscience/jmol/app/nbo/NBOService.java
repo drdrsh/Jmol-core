@@ -53,6 +53,7 @@ public class NBOService {
 
   public static final int VIEW = 3;
 
+  public static final int RAW = 4;
 
   private transient Viewer vwr;
   
@@ -135,6 +136,9 @@ public class NBOService {
     case VIEW:
       s = (String) info.get("value");
       break;
+    case RAW:
+      s = (String) info.get("value");
+      break;
     default:
       nboReport("unknown mode");
       s = null;
@@ -163,7 +167,7 @@ public class NBOService {
    * @param s
    */
   private void sendToNBO(int mode, String s) {
-    s = mode + "\n" + s + "\nexit" + (nboSync ? "\nexit" : "");
+    s = (mode == RAW ? s + "\n" : mode + "\n" + s + "\nexit" + (nboSync ? "\nexit" : ""));
     sendCmd(s);
   }
   
