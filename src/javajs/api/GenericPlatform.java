@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.Map;
 
 import org.jmol.api.JmolImageDialog;
-import org.jmol.viewer.Viewer;
 
 import javajs.awt.Font;
 import javajs.util.P3;

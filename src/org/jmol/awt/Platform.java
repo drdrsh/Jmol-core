@@ -18,7 +18,6 @@ import netscape.javascript.JSObject;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolImageDialog;
-import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericPlatform;
 import javajs.api.GenericFileInterface;

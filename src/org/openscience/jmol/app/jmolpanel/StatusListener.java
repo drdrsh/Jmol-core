@@ -26,14 +26,11 @@ package org.openscience.jmol.app.jmolpanel;
 import org.jmol.api.JSVInterface;
 import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.api.JmolCallbackListener;
-import org.jmol.api.JmolImageDialog;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolSyncInterface;
 import org.jmol.c.CBK;
-import org.jmol.console.ImageDialog;
 import org.jmol.dialog.Dialog;
 import javajs.awt.Dimension;
-import javajs.util.Lst;
 import javajs.util.PT;
 
 import org.jmol.util.Logger;
@@ -42,12 +39,10 @@ import org.openscience.jmol.app.jmolpanel.console.AppConsole;
 import org.openscience.jmol.app.webexport.WebExport;
 
 import java.awt.Component;
-import java.awt.Image;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
