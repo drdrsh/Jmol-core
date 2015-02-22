@@ -83,6 +83,7 @@ class MyStatusListener implements JmolStatusListener {
     case ATOMMOVED:
     case ERROR:
     case HOVER:
+    case IMAGE:
     case MEASURE:
     case MINIMIZATION:
     case SERVICE:
