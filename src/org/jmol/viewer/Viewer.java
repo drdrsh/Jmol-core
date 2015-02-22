@@ -4822,13 +4822,18 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     // Eval
     try {
       if (appConsole == null && showConsole)
-        getProperty("DATA_API", "getAppConsole", Boolean.TRUE);
+        getConsole();
       appConsole.setVisible(true);
     } catch (Throwable e) {
       // no console for this client... maybe no Swing
     }
   }
 
+  public JmolAppConsoleInterface getConsole() {
+   getProperty("DATA_API", "getAppConsole", Boolean.TRUE);
+   return appConsole;
+  }
+  
   @Override
   public Object getParameter(String key) {
     return getP(key);
@@ -7981,7 +7986,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    */
   void loadImageData(Object image, String nameOrError, String echoName,
                      ScriptContext sc) {
-    if (image == null)
+    if (image == null && !"\1none".equalsIgnoreCase(echoName))
       scriptEcho(nameOrError);
     if (echoName == null) {
       setBackgroundImage((image == null ? null : nameOrError), image);

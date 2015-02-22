@@ -135,4 +135,15 @@ public class AppletConsole extends GenericConsole {
     return null;
   }
 
+  @Override
+  public Object newJMenu(String key) {
+    return null;
+  }
+
+  @Override
+  public Object newJMenuItem(String key) {
+    return null;
+  }
+
+
 }

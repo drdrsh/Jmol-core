@@ -21,22 +21,22 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package org.openscience.jmol.app.jmolpanel;
+package org.jmol.console;
 
 
 import javajs.util.PT;
 
-import javax.swing.ImageIcon;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -47,9 +47,12 @@ import java.awt.Image;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.JmolAppConsoleInterface;
+import org.jmol.api.JmolImageDialog;
+import org.jmol.awt.Platform;
 import org.jmol.viewer.Viewer;
 
-class ImageDialog extends JDialog implements WindowListener, ActionListener {
+public class ImageDialog extends JDialog implements JmolImageDialog, WindowListener, ActionListener {
 
 
   private JMenuBar menubar;
@@ -59,11 +62,14 @@ class ImageDialog extends JDialog implements WindowListener, ActionListener {
   protected Viewer vwr;
   protected Canvas canvas;
   private String title;
-  private Map<String, ImageDialog> imageMap;
-  
-  ImageDialog(JmolPanel jmol, Viewer vwr, String title, Map<String, ImageDialog> imageMap) {
-    super(jmol.frame, title, false);
+  private Map<String, JmolImageDialog> imageMap;
+
+  private JmolAppConsoleInterface console;
+
+  public ImageDialog(Viewer vwr, String title, Map<String, JmolImageDialog> imageMap){
+    super(Platform.getWindow((Container) vwr.display) instanceof JFrame ? (JFrame) Platform.getWindow((Container) vwr.display) : null, title, false);
     this.vwr = vwr;
+    console = vwr.getConsole();
     addWindowListener(this);
     this.title = title;
     this.imageMap = imageMap;
@@ -76,7 +82,7 @@ class ImageDialog extends JDialog implements WindowListener, ActionListener {
     container.setLayout(new BorderLayout());
     menubar = new JMenuBar();
     // see app.jmolpanel.jmol.Properties.Jmol-reseources.properties
-    menubar.add(createMenu(jmol.guimap, "idfileMenu"));
+    menubar.add(createMenu());
     setJMenuBar(menubar);
     container.add(wrapper, BorderLayout.CENTER);
     getContentPane().add(container);
@@ -85,42 +91,25 @@ class ImageDialog extends JDialog implements WindowListener, ActionListener {
     setVisible(true);
   }
 
-  private JMenu createMenu(GuiMap guimap, String key) {
+  private JMenu createMenu() {
 
     // Get list of items from resource file:
-    String[] itemKeys = PT.getTokens(JmolResourceHandler.getStringX(key));
+    String[] itemKeys = PT.getTokens("saveas close");
     // Get label associated with this menu:
-    JMenu menu = guimap.newJMenu(key);
-    ImageIcon f = JmolResourceHandler.getIconX(key + "Image");
-    if (f != null) {
-      menu.setHorizontalTextPosition(SwingConstants.RIGHT);
-      menu.setIcon(f);
-    }
-
+    vwr.getConsole();
+    JMenu menu = (JMenu) console.newJMenu("file");
     // Loop over the items in this menu:
     for (int i = 0; i < itemKeys.length; i++) {
       String item = itemKeys[i];
-      if (item.equals("-")) {
-        menu.addSeparator();
-      } else if (item.endsWith("Menu")) {
-        menu.add(createMenu(guimap, item));
-      } else {
-        JMenuItem mi = createMenuItem(guimap, item);
+        JMenuItem mi = createMenuItem(item);
         menu.add(mi);
-      }
     }
     menu.setVisible(true);
     return menu;
   }
 
-  private JMenuItem createMenuItem(GuiMap guimap, String cmd) {
-
-    JMenuItem mi = guimap.newJMenuItem(cmd);
-    ImageIcon f = JmolResourceHandler.getIconX(cmd + "Image");
-    if (f != null) {
-      mi.setHorizontalTextPosition(SwingConstants.RIGHT);
-      mi.setIcon(f);
-    }
+  private JMenuItem createMenuItem(String cmd) {
+    JMenuItem mi = (JMenuItem) console.newJMenuItem(cmd);
     mi.setActionCommand(cmd);
     mi.addActionListener(this);
     mi.setVisible(true);
@@ -158,23 +147,28 @@ class ImageDialog extends JDialog implements WindowListener, ActionListener {
     }).start();
   }
 
-  private void closeMe() {
+  @Override
+  public void closeMe() {
     imageMap.remove(title);
     dispose();
   }
 
-  public void setImage(Image image) {
-    if (image != null) {
-      this.image = image;
-      int w = image.getWidth(null);
-      int h = image.getHeight(null);
-      setTitle(title.substring(title.lastIndexOf("/") + 1) + " [" + w + " x " + h + "]");
-      Dimension d = new Dimension(w, h);
-      canvas.setSize(d);
-      //canvas.setBackground(new Color(55,0,0));
-      //setPreferredSize(d);
-      pack();
+  @Override
+  public void setImage(Object oimage) {
+    if (oimage == null) {
+      closeMe();
+      return;
     }
+    this.image = (Image) oimage;
+    int w = image.getWidth(null);
+    int h = image.getHeight(null);
+    setTitle(title.substring(title.lastIndexOf("/") + 1) + " [" + w + " x " + h
+        + "]");
+    Dimension d = new Dimension(w, h);
+    canvas.setSize(d);
+    //canvas.setBackground(new Color(55,0,0));
+    //setPreferredSize(d);
+    pack();
     repaint();
   }  
   

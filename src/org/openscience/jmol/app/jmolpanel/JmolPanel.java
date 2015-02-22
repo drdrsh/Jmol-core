@@ -125,7 +125,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected NBODialog nboDialog;
   protected RecentFilesDialog recentFiles;
   protected AtomSetChooser atomSetChooser;
-  protected JFrame frame;
+  public JFrame frame;
   protected SplashInterface splash;
   protected JFrame consoleframe;  
   protected JsonNioServer service;
@@ -133,7 +133,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected int qualityPNG = -1;
   protected String imageType;
 
-  protected GuiMap guimap = new GuiMap();
+  public GuiMap guimap = new GuiMap();
   private ExecuteScriptAction executeScriptAction;
   private PreferencesDialog preferencesDialog;
   private StatusListener myStatusListener;

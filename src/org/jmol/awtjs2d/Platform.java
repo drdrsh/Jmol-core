@@ -2,8 +2,10 @@ package org.jmol.awtjs2d;
 
 import java.io.BufferedInputStream;
 import java.net.URL;
+import java.util.Map;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolImageDialog;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericPlatform;
@@ -85,7 +87,7 @@ public class Platform implements GenericPlatform {
 
   @Override
   public GenericMouseInterface getMouseManager(double privateKey, Object display) {
-    return new Mouse(privateKey, vwr, display);
+    return new Mouse(privateKey, (Viewer) vwr, display);
   }
 
   // /// Display
@@ -455,6 +457,12 @@ public class Platform implements GenericPlatform {
   public String getLocalUrl(String fileName) {
     // n/a (dialogs only)
     return null;
+  }
+
+  @Override
+  public JmolImageDialog getImageDialog(String title,
+                                        Map<String, JmolImageDialog> imageMap) {
+    return Image.getImageDialog((Viewer) vwr, title, imageMap);
   }
 
 

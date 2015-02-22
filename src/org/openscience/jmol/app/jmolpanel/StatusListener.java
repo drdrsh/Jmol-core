@@ -26,11 +26,14 @@ package org.openscience.jmol.app.jmolpanel;
 import org.jmol.api.JSVInterface;
 import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.api.JmolCallbackListener;
+import org.jmol.api.JmolImageDialog;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolSyncInterface;
 import org.jmol.c.CBK;
+import org.jmol.console.ImageDialog;
 import org.jmol.dialog.Dialog;
 import javajs.awt.Dimension;
+import javajs.util.Lst;
 import javajs.util.PT;
 
 import org.jmol.util.Logger;
@@ -126,9 +129,6 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         .toString());
     Map<String, Object> info;
     switch (type) {
-    case IMAGE:
-      notifyImageCreated(strInfo, (Image) data[2]);
-      return;
     case LOADSTRUCT:
       notifyFileLoaded(strInfo, (String) data[2], (String) data[3],
           (String) data[4], (Boolean) data[8]);
@@ -210,6 +210,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
     case DRAGDROP:
     case ERROR:
     case HOVER:
+    case IMAGE:
     case MINIMIZATION:
     case RESIZE:
     case EVAL:
@@ -228,15 +229,6 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       appConsole.notifyCallback(type, data);
   }
 
-  private Map<String, ImageDialog> imageMap;
-  private void notifyImageCreated(String title, Image image) {
-    if (imageMap == null)
-      imageMap = new Hashtable<String, ImageDialog>();
-    ImageDialog d = imageMap.get(title);
-    if (d == null)
-      d = new ImageDialog(jmol, vwr, title, imageMap);
-    d.setImage(image);
-  }
 
   /**
    * @param atomIndex  

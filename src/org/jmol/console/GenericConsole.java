@@ -49,9 +49,16 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   
   protected void setViewer(Viewer vwr) {
     this.vwr = vwr;
+    if (labels == null) {
+      Map<String, String> l = new Hashtable<String, String>();
+      l.put("title", GT._("Jmol Script Console") + " " + Viewer.getJmolVersion());
+      setupLabels(l);
+      labels = l;
+    }
+
   }
 
-  protected Map<String, String> labels;
+  protected static Map<String, String> labels;
   protected Map<String, Object> menuMap = new Hashtable<String, Object>();
   protected JmolAbstractButton editButton, runButton, historyButton, stateButton;
   protected JmolAbstractButton clearOutButton, clearInButton, loadButton;
@@ -71,14 +78,22 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   protected JmolAbstractButton addButton(JmolAbstractButton b, String label) {
     b.addConsoleListener(this);
     menuMap.put(label, b);
-    return b;    
+    return b; 
   }
 
   protected JmolAbstractButton getLabel1() {
     return null;
   }
 
-  protected void setupLabels() {
+  protected void setupLabels(Map<String, String>  labels) {
+    // these three are for ImageDialog 
+    labels.put("saveas", GT._("&Save As..."));
+    labels.put("file", GT._("&File"));
+    labels.put("close", GT._("&Close"));
+    setupLabels0(labels);
+  }
+
+  protected void setupLabels0(Map<String, String>  labels) {
     labels.put("help", GT._("&Help"));
     labels.put("search", GT._("&Search..."));
     labels.put("commands", GT._("&Commands"));
@@ -112,12 +127,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     GT.setDoTranslate(doTranslate);
   }
 
-  protected String getLabel(String key) {
-    if (labels == null) {
-      labels = new Hashtable<String, String>();
-      labels.put("title", GT._("Jmol Script Console") + " " + Viewer.getJmolVersion());
-      setupLabels();
-    }
+  public static String getLabel(String key) {
     return labels.get(key);
   }
 
@@ -275,7 +285,8 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     char mnemonic = getMnemonic(label);
     if (mnemonic != ' ')
       ((JmolAbstractButton) button).setMnemonic(mnemonic);
-    menuMap.put(key, button);
+    if (menuMap != null)
+      menuMap.put(key, button);
   }
 
   ///////////// JmolCallbackListener interface
@@ -517,7 +528,6 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     sout[3] = (nBrace > 0 ? "{" : null);
     return sout;
   }
-
 
 
 }

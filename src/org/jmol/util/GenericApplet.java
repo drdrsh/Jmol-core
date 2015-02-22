@@ -90,7 +90,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
   abstract protected void doShowDocument(URL url);
 
   abstract protected void doShowStatus(String errorMsg);
-
+  
   protected void init(Object applet) {
     callbacks = new Hashtable<CBK, String>();
     if (htRegistry == null)

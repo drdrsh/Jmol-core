@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 import javax.swing.JDialog;
 
@@ -16,6 +17,8 @@ import javax.swing.JDialog;
 import netscape.javascript.JSObject;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolImageDialog;
+import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericPlatform;
 import javajs.api.GenericFileInterface;
@@ -313,6 +316,12 @@ public class Platform implements GenericPlatform {
   @Override
   public String getLocalUrl(String fileName) {
     return AwtFile.getLocalUrl(newFile(fileName));
+  }
+
+  @Override
+  public JmolImageDialog getImageDialog(String title,
+                                        Map<String, JmolImageDialog> imageMap) {
+    return Image.getImageDialog(vwr, title, imageMap);
   }
 
     

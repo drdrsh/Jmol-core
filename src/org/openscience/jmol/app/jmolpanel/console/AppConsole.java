@@ -33,6 +33,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.ActionEvent;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 
 import javajs.util.PT;
@@ -159,7 +160,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
   }
 
   @Override
-  protected void setupLabels() {
+  protected void setupLabels0(Map<String, String> labels) {
     labels.put("Check", GT._("Check"));
     labels.put("Clear", GT._("Clear"));
     labels.put("Close", GT._("Close"));

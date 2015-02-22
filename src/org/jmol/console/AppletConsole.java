@@ -91,10 +91,10 @@ public class AppletConsole extends JmolConsole {
   public void start(Viewer vwr) {
     setViewer(vwr);
     Component display = (Component) vwr.display;
-    this.vwrFrame = (display instanceof JFrame ? (JFrame) display : null);
+    vwrFrame = (display instanceof JFrame ? (JFrame) display : null);
     JFrame jf = new JFrame();
     jf.setSize(600, 400);
-    this.externalContainer = jf;
+    externalContainer = jf;
     setLabels();
     JTextArea ta = (JTextArea) input;
     ta.setLineWrap(true);
@@ -263,5 +263,4 @@ public class AppletConsole extends JmolConsole {
       }
     }
   }
-
 }

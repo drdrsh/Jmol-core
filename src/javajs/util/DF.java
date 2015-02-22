@@ -92,12 +92,14 @@ public class DF {
     if (decimalDigits >= formattingStrings.length)
       decimalDigits = formattingStrings.length - 1;
     String s1 = ("" + value).toUpperCase();
-    boolean isNeg = s1.startsWith("-");
-    if (isNeg)
-      s1 = s1.substring(1);
     int pt = s1.indexOf(".");
-    if (pt < 0)
+    if (pt < 0) // specifically JavaScript "-2" not "-2.0"
       return s1 + formattingStrings[decimalDigits].substring(1);
+    boolean isNeg = s1.startsWith("-");
+    if (isNeg) {
+      s1 = s1.substring(1);
+      pt--;
+    }
     int pt1 = s1.indexOf("E-");
     if (pt1 > 0) {
       n = PT.parseInt(s1.substring(pt1 + 1));

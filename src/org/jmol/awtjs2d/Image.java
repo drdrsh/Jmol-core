@@ -25,6 +25,11 @@
 
 package org.jmol.awtjs2d;
 
+import java.util.Map;
+
+import org.jmol.api.JmolImageDialog;
+import org.jmol.viewer.Viewer;
+
 import javajs.awt.Font;
 
 /**
@@ -180,6 +185,21 @@ class Image {
      * @j2sNative
      * 
      * return canvas.getContext("2d");
+     */
+    {
+      return null;
+    }
+  }
+
+  public static JmolImageDialog getImageDialog(Viewer vwr,
+                                               String title,
+                                               Map<String, JmolImageDialog> imageMap) {
+    //TODO
+    
+    /**
+     * @j2sNative
+     * 
+     * return null;
      */
     {
       return null;

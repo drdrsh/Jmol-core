@@ -20,5 +20,9 @@ public interface JmolAppConsoleInterface {
 
   public String getText();
 
+  public Object newJMenu(String key);
+
+  public Object newJMenuItem(String key);
+
 
 }

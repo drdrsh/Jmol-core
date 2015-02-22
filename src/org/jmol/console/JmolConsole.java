@@ -227,4 +227,17 @@ public abstract class JmolConsole extends GenericConsole implements ActionListen
   public void windowOpened(WindowEvent we) {
   }
 
+
+  @Override
+  public Object newJMenu(String key) {
+    return new KeyJMenu(key, getLabel(key), null);
+  }
+
+  @Override
+  public Object newJMenuItem(String key) {
+    return new KeyJMenuItem(key, getLabel(key), null);
+  }
+
+
+
 }

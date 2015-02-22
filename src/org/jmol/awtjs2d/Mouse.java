@@ -33,7 +33,6 @@ import org.jmol.util.Logger;
 import javajs.J2SRequireImport;
 import javajs.api.EventManager;
 import javajs.api.GenericMouseInterface;
-import javajs.api.PlatformViewer;
 import javajs.awt.event.Event;
 import javajs.util.PT;
 import javajs.util.V3;
@@ -58,9 +57,9 @@ public class Mouse implements GenericMouseInterface {
    * @param vwr 
    * @param display 
    */
-  public Mouse(double privateKey, PlatformViewer vwr, Object display) {
+  public Mouse(double privateKey, Viewer vwr, Object display) {
     //this.privateKey = privateKey; could be used for clipboard access
-    this.vwr = (Viewer) vwr;
+    this.vwr = vwr;
     manager = this.vwr.acm;
   }
 

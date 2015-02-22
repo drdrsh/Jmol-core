@@ -41,6 +41,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolDialogInterface;
+import org.jmol.api.JmolImageDialog;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.c.CBK;
 import org.jmol.java.BS;
@@ -353,11 +354,37 @@ public class StatusManager {
           new Object[] {sJmol, strInfo, Integer.valueOf(-1), id, Float.valueOf(pt.x), Float.valueOf(pt.y), Float.valueOf(pt.z) });
   }
   
+  private Map<String, JmolImageDialog> imageMap;
+
   synchronized void showImage(String title, Object image) {
     String sJmol = jmolScriptCallback(CBK.IMAGE);
     if (notifyEnabled(CBK.IMAGE))
-      cbl.notifyCallback(CBK.IMAGE, 
-          new Object[] {sJmol, title, image });
+      cbl.notifyCallback(CBK.IMAGE, new Object[] { sJmol, title, image });
+    if (title.equalsIgnoreCase("none")) {
+      if (imageMap == null)
+        return;
+      Lst<String> lst = new Lst<String>();
+      for (String key : imageMap.keySet())
+        lst.addLast(key);
+      for (int i = lst.size(); --i >= 0;)
+        imageMap.get(lst.get(i)).closeMe();
+      return;
+    }
+    if (imageMap == null)
+      imageMap = new Hashtable<String, JmolImageDialog>();
+    JmolImageDialog d = imageMap.get(title);
+    System.out.println("statusma1n " + d + " " + image);
+    if (d == null && image != null)
+      d = vwr.apiPlatform.getImageDialog(title, imageMap);
+    System.out.println("statusman2 " + d + " " + image);
+    if (d == null)
+      return;
+    if (image == null)
+      d.closeMe();
+    else
+      d.setImage(image);
+    System.out.println("statusman done");
+
   }
   
   synchronized void setFileLoadStatus(String fullPathName, String fileName,
