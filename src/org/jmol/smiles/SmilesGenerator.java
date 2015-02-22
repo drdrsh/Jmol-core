@@ -93,7 +93,7 @@ public class SmilesGenerator {
     this.ac = ac;
     this.bsSelected = bsSelected = BSUtil.copy(bsSelected);
     this.explicitH = explicitH;
-    return getSmilesComponent(atoms[i], bsSelected, false);
+    return getSmilesComponent(atoms[i], bsSelected, true, false);
   }
 
   String getBioSmiles(BNode[] atoms, int ac, BS bsSelected,
@@ -133,7 +133,7 @@ public class SmilesGenerator {
             sb.append("~").appendC(bioStructureName.charAt(0)).append("~");
             len++;
           } else {
-            s = getSmilesComponent(a, bs, true);
+            s = getSmilesComponent(a, bs, false, true);
             if (s.equals(lastComponent)) {
               end = "";
             } else {
@@ -220,18 +220,19 @@ public class SmilesGenerator {
    * 
    * @param atom
    * @param bs
+   * @param allowBioResidues 
    * @param allowConnectionsToOutsideWorld
    * @return SMILES
    * @throws InvalidSmilesException
    */
-  private String getSmilesComponent(Node atom, BS bs,
+  private String getSmilesComponent(Node atom, BS bs, boolean allowBioResidues,
                                     boolean allowConnectionsToOutsideWorld)
       throws InvalidSmilesException {
 
     if (!explicitH && atom.getElementNumber() == 1 && atom.getEdges().length > 0)
       atom = atoms[atom.getBondedAtomIndex(0)]; // don't start with H
     bsSelected = JmolMolecule.getBranchBitSet(atoms, atom.getIndex(),
-        BSUtil.copy(bs), null, -1, true, false);
+        BSUtil.copy(bs), null, -1, true, allowBioResidues);
     bs.andNot(bsSelected);
     bsIncludingH = BSUtil.copy(bsSelected);
     if (!explicitH)

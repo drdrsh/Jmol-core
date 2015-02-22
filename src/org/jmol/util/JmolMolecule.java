@@ -283,7 +283,7 @@ public class JmolMolecule {
     int atomIndex = atom.getIndex();
     if (!bsToTest.get(atomIndex))
       return allowCyclic;
-    if (!allowBioResidue && (atom instanceof BNode)
+    if (!allowBioResidue && atom instanceof BNode
         && ((BNode) atom).getBioStructureTypeName().length() > 0)
       return allowCyclic;
     bsToTest.clear(atomIndex);

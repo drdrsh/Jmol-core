@@ -138,11 +138,9 @@ public class SmilesMatcher implements SmilesMatcherInterface {
                           boolean bioAddCrossLinks, String bioComment,
                           boolean explicitH) throws Exception {
     InvalidSmilesException.clear();
-    if (asBioSmiles)
-      return (new SmilesGenerator()).getBioSmiles((BNode[]) atoms, ac, bsSelected,
-          bioAllowUnmatchedRings, bioAddCrossLinks, bioComment);
-    return (new SmilesGenerator()).getSmiles(atoms, ac, bsSelected,
-        explicitH);
+    return (asBioSmiles ? (new SmilesGenerator()).getBioSmiles((BNode[]) atoms,
+        ac, bsSelected, bioAllowUnmatchedRings, bioAddCrossLinks, bioComment)
+        : (new SmilesGenerator()).getSmiles(atoms, ac, bsSelected, explicitH));
   }
 
   @Override
