@@ -309,7 +309,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
       int step = width + space;
       int y = yA - (bondOrder - 1) * step / 2;
       do {
-        fillCylinder(colixA, colixA, endcaps, width, xA, y, zA, xA, y, zA);
+        fillCylinder(colixA, colixB, endcaps, width, xA, y, zA, xB, y, zB);
         y += step;
       } while (--bondOrder > 0);
       return;
