@@ -69,10 +69,10 @@ public class BMPDecoder {
       // read BITMAPFILEHEADER
       if (readByte() != 'B' || readByte() != 'M')
         return null;
-      readInt();   // file size; ignored
+      readInt(); // file size; ignored
       readShort(); // reserved
       readShort(); // reserved
-      readInt();   // ptr to pixel array; ignored
+      readInt(); // ptr to pixel array; ignored
       int imageWidth, imageHeight, bitsPerPixel, nColors = 0, imageSize = 0;
       // read BITMAP header
       int headerSize = readInt();
@@ -99,7 +99,7 @@ public class BMPDecoder {
         imageSize = readInt();
         readInt(); // hres
         readInt(); // vres
-        nColors = readInt(); 
+        nColors = readInt();
         readInt(); // colors used
         break;
       default:
@@ -109,58 +109,62 @@ public class BMPDecoder {
       }
       boolean isYReversed = (imageHeight < 0);
       if (isYReversed)
-        imageHeight = - imageHeight;
+        imageHeight = -imageHeight;
       int nPixels = imageHeight * imageWidth;
       int bytesPerPixel = bitsPerPixel / 8;
-      int npad = (bytesPerPixel == 4 ? 0 : imageSize == 0 ? 4 - (imageWidth % 4)
-          : (imageSize / imageHeight) - imageWidth * bytesPerPixel) % 4;
+      nColors = (nColors > 0 ? nColors : 1 << bitsPerPixel);
+      int npad = (bytesPerPixel == 4 ? 0
+          : imageSize == 0 ? 4 - (imageWidth % 4) : (imageSize / imageHeight)
+              - imageWidth * bytesPerPixel) % 4;
+      int[] palette;
       int[] buf = new int[nPixels];
       int dpt = (isYReversed ? imageWidth : -imageWidth);
       int pt0 = (isYReversed ? 0 : nPixels + dpt);
-      int pt1 = (isYReversed ? nPixels : -dpt);
+      int pt1 = (isYReversed ? nPixels : dpt);
       switch (bitsPerPixel) {
       case 32:
       case 24:
-        for (int pt = pt0; pt != pt1; pt += dpt) {
+        for (int pt = pt0; pt != pt1; pt += dpt, pad(npad))
           for (int i = 0; i < imageWidth; i++)
             buf[pt + i] = readColor(bytesPerPixel);
-          for (int i = 0; i < npad; i++)
-            readByte();
-        }
         break;
       case 8:
-        nColors = (nColors > 0 ? nColors : 1 << bitsPerPixel);
-        int[] palette = new int[nColors];
+        palette = new int[nColors];
         for (int i = 0; i < nColors; i++)
           palette[i] = readColor(4);
-        for (int pt = pt0; pt != pt1; pt += dpt) {
+        for (int pt = pt0; pt != pt1; pt += dpt, pad(npad))
           for (int i = 0; i < imageWidth; i++)
             buf[pt + i] = palette[readByte()];
-          for (int i = 0; i < npad; i++)
-            readByte();
-        }
+        break;
+      case 4:
+        npad = (4 - (((imageWidth + 1) / 2) % 4)) % 4;
+        palette = new int[nColors];
+        for (int i = 0; i < nColors; i++)
+          palette[i] = readColor(4);
+        int b4 = 0;
+        for (int pt = pt0; pt != pt1; pt += dpt, pad(npad))
+          for (int i = 0, shift = 4; i < imageWidth; i++, shift = 4 - shift)
+            buf[pt + i] = palette[((shift == 4 ? (b4 = readByte()) : b4) >> shift) & 0xF];
         break;
       case 1:
         int color1 = readColor(3);
         int color2 = readColor(3);
         npad = (4 - (((imageWidth + 7) / 8) % 4)) % 4;
         int b = 0;
-        for (int pt = pt0; pt != pt1; pt += dpt) {
+        for (int pt = pt0; pt != pt1; pt += dpt, pad(npad))
           for (int i = 0, bpt = -1; i < imageWidth; i++, bpt--) {
             if (bpt < 0) {
               b = readByte();
               bpt = 7;
             }
-            buf[pt + i] = ((b & (1 << bpt)) == 0 ? color1
-                : color2);
+            buf[pt + i] = ((b & (1 << bpt)) == 0 ? color1 : color2);
           }
-          for (int i = 0; i < npad; i++)
-            readByte();
-        }
         break;
+      case 64:
+      case 2:
       default:
         System.out
-            .println("Not a 32-, 24-, 8-, or 1-bit Windows Bitmap, aborting...");
+            .println("Not a 32-, 24-, 8-, 4-, or 1-bit Windows Bitmap, aborting...");
         return null;
       }
       return new Object[] { buf, Integer.valueOf(imageWidth),
@@ -169,6 +173,12 @@ public class BMPDecoder {
       System.out.println("Caught exception in loadbitmap!");
     }
     return null;
+  }
+
+  private boolean pad(int npad) throws IOException {
+    for (int i = 0; i < npad; i++)
+      readByte();
+    return true;
   }
 
   private byte[] temp;

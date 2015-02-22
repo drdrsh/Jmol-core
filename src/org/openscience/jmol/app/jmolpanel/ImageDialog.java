@@ -36,6 +36,7 @@ import javax.swing.SwingConstants;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -68,6 +69,7 @@ class ImageDialog extends JDialog implements WindowListener, ActionListener {
     this.imageMap = imageMap;
     imageMap.put(title, this);
     JPanel wrapper = new JPanel(new BorderLayout());
+    wrapper.setBackground(new Color(255,0,0));
     canvas = new ImageCanvas();
     wrapper.add(canvas, BorderLayout.CENTER);
     JPanel container = new JPanel();
