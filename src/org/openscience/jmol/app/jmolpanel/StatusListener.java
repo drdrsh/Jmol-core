@@ -39,10 +39,12 @@ import org.openscience.jmol.app.jmolpanel.console.AppConsole;
 import org.openscience.jmol.app.webexport.WebExport;
 
 import java.awt.Component;
+import java.awt.Image;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
@@ -92,6 +94,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
     switch (type) {
     case ANIMFRAME:
     case ECHO:
+    case IMAGE:
     case LOADSTRUCT:
     case STRUCTUREMODIFIED:
     case MEASURE:
@@ -123,6 +126,9 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         .toString());
     Map<String, Object> info;
     switch (type) {
+    case IMAGE:
+      notifyImageCreated(strInfo, (Image) data[2]);
+      return;
     case LOADSTRUCT:
       notifyFileLoaded(strInfo, (String) data[2], (String) data[3],
           (String) data[4], (Boolean) data[8]);
@@ -220,6 +226,16 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         "DATA_API", "getAppConsole", null);
     if (appConsole != null)
       appConsole.notifyCallback(type, data);
+  }
+
+  private Map<String, ImageDialog> imageMap;
+  private void notifyImageCreated(String title, Image image) {
+    if (imageMap == null)
+      imageMap = new Hashtable<String, ImageDialog>();
+    ImageDialog d = imageMap.get(title);
+    if (d == null)
+      d = new ImageDialog(jmol, vwr, title, imageMap);
+    d.setImage(image);
   }
 
   /**

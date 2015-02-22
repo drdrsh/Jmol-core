@@ -67,6 +67,7 @@ public class GuiMap {
   private void setupLabels() {
     labels = new Hashtable<String, String>();
     labels.put("macros", GT._("&Macros"));
+    labels.put("idfileMenu", GT._("&File"));
     labels.put("file", GT._("&File"));
     labels.put("newwin", GT._("&New"));
     labels.put("open", GT._("&Open"));

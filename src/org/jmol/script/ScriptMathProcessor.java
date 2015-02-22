@@ -947,6 +947,11 @@ public class ScriptMathProcessor {
         // special flag to get all properties.
         return (x2.tok == T.bitset && (chk ? addXStr("") : getAllProperties(x2,
             (String) op.value)));
+      case T.type:
+        return addXStr(typeOf(x2));
+      case T.keys:
+        return getKeys(x2, (op.intValue & T.minmaxmask) == T.minmaxmask);
+      case T.length:
       case T.count:
       case T.size:
         if (iv == T.length && x2.value instanceof BondSet)

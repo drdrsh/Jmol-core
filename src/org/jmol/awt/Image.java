@@ -37,17 +37,20 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DirectColorModel;
 import java.awt.image.DataBufferInt;
+import java.awt.image.MemoryImageSource;
 import java.awt.image.PixelGrabber;
 import java.awt.image.Raster;
 import java.awt.image.SinglePixelPackedSampleModel;
 import java.net.URL;
 
 import javajs.api.PlatformViewer;
+import javajs.img.BMPDecoder;
 import javajs.util.AU;
 import javajs.util.PT;
 
 import javax.swing.JPanel;
 
+import org.jmol.api.Interface;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -58,7 +61,7 @@ import org.jmol.viewer.Viewer;
  */
 class Image {
 
-  static Object createImage(Object data) {
+  static Object createImage(Object data, PlatformViewer vwr) {
     if (data instanceof URL)
       return Toolkit.getDefaultToolkit().createImage((URL) data);
     if (data instanceof String)
@@ -66,12 +69,26 @@ class Image {
     if (PT.isAB(data)) {
       // for the SUN processor, we need to fix the CRC
       byte[] b = (byte[]) data;
-      if (b.length > 53 && b[51] == 32 && b[52] == 78 && b[53] == 71) { //<space>NG
+      if (b.length < 3)
+        return null;
+      if (b[0] == 'B' && b[1] == 'M') {
+        // Windows BMP file
+        Component c = ((Component) ((Viewer) vwr).display);
+        if (c == null)
+          return null;
+        BMPDecoder ie = (BMPDecoder) Interface.getInterface(
+            "javajs.img.BMPDecoder", (Viewer) vwr, "createImage");
+        Object[] o = ie.decodeWindowsBMP(b);
+        if (o == null || o[0] == null)
+          return null;
+        int w = ((Integer) o[1]).intValue();
+        int h = ((Integer) o[2]).intValue();
+        return c.createImage(new MemoryImageSource(w, h, (int[]) o[0], 0, w));
+      } else if (b.length > 53 && b[51] == 32 && b[52] == 78 && b[53] == 71) { //<space>NG
         b = AU.arrayCopyByte(b, -1);
         b[51] = 80; // P
       }
       return Toolkit.getDefaultToolkit().createImage(b);
-      
     }
     return null;
   }

@@ -353,6 +353,13 @@ public class StatusManager {
           new Object[] {sJmol, strInfo, Integer.valueOf(-1), id, Float.valueOf(pt.x), Float.valueOf(pt.y), Float.valueOf(pt.z) });
   }
   
+  synchronized void showImage(String title, Object image) {
+    String sJmol = jmolScriptCallback(CBK.IMAGE);
+    if (notifyEnabled(CBK.IMAGE))
+      cbl.notifyCallback(CBK.IMAGE, 
+          new Object[] {sJmol, title, image });
+  }
+  
   synchronized void setFileLoadStatus(String fullPathName, String fileName,
                                       String modelName, String errorMsg,
                                       int ptLoad, boolean doCallback,
@@ -701,22 +708,28 @@ public class StatusManager {
   private int qualityPNG = -1;
   private String imageType;
 
-  String dialogAsk(String type, String fileName) {
+  String dialogAsk(String type, String fileName, Map<String, Object> params) {
     boolean isImage = type.equals("Save Image");
-    JmolDialogInterface sd = (JmolDialogInterface) Interface
-    .getOption("dialog.Dialog", vwr, "status");
+    JmolDialogInterface sd = (JmolDialogInterface) Interface.getOption(
+        "dialog.Dialog", vwr, "status");
     if (sd == null)
       return null;
     sd.setupUI(false);
-    if (isImage) 
+    if (isImage)
       sd.setImageInfo(qualityJPG, qualityPNG, imageType);
-    String outputFileName = sd.getFileNameFromDialog(vwr, type, fileName);             // may have #NOCARTOONS#; and/or "#APPEND#; prepended
+    String outputFileName = sd.getFileNameFromDialog(vwr, type, fileName); // may have #NOCARTOONS#; and/or "#APPEND#; prepended
     // may have #NOCARTOONS#; and/or "#APPEND#; prepended
-   
+
     if (isImage && outputFileName != null) {
       qualityJPG = sd.getQuality("JPG");
       qualityPNG = sd.getQuality("PNG");
       String sType = sd.getType();
+      if (params != null) {
+        params.put("qualityJPG", Integer.valueOf(qualityJPG));
+        params.put("qualityPNG", Integer.valueOf(qualityPNG));
+        if (sType != null)
+          params.put("dialogImageType", sType);
+      }
       if (sType != null)
         imageType = sType;
     }

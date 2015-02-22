@@ -8,4 +8,5 @@ public interface GenericImageEncoder {
 
   public boolean createImage(String type, OC out,
                              Map<String, Object> params) throws Exception;
+
 }

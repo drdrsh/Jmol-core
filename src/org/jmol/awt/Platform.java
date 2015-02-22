@@ -123,7 +123,7 @@ public class Platform implements GenericPlatform {
    */
   @Override
   public Object createImage(Object data) {
-    return Image.createImage(data);
+    return Image.createImage(data, vwr);
   }
 
   @Override

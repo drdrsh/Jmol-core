@@ -693,7 +693,8 @@ public class JmolUtil implements JmolZipUtilities {
     boolean createImage = false;
     String fullPathName = "" + fullPathNameOrBytes;
     if (fullPathNameOrBytes instanceof String) {
-      if (fullPathName.indexOf("|") > 0) {
+      boolean isBMP = fullPathName.toUpperCase().endsWith("BMP");
+      if (fullPathName.indexOf("|") > 0 || isBMP) {
         Object ret = vwr.fm.getFileAsBytes(fullPathName, null);
         if (!PT.isAB(ret))
           return "" + ret;

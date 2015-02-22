@@ -112,8 +112,9 @@ public class PngEncoder extends CRCEncoder {
   @Override
   protected void setParams(Map<String, Object> params) {
     if (quality < 0)
-      quality = 2;
-    else if (quality > 9)
+      quality = (params.containsKey("qualityPNG") ? ((Integer) params
+          .get("qualityPNG")).intValue() : 2);
+    if (quality > 9)
       quality = 9;
     encodeAlpha = false;
     filter = FILTER_NONE;

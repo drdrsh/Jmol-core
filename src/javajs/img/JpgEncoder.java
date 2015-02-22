@@ -75,7 +75,7 @@ public class JpgEncoder extends ImageEncoder {
   @Override
   protected void setParams(Map<String, Object> params) {
     if (quality <= 0)
-      quality = defaultQuality;
+      quality = (params.containsKey("qualityJPG") ? ((Integer) params.get("qualityJPG")).intValue() : defaultQuality);
     jpegObj = new JpegObj();
     jpegObj.comment = (String) params.get("comment");
     applicationTag = (String) params.get("jpgAppTag");

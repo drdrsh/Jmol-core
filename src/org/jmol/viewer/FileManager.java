@@ -903,23 +903,24 @@ public class FileManager implements BytePoster {
     String nameOrError = null;
     byte[] bytes = null;
     if (nameOrBytes instanceof Map) {
-     if (((Map<String, Object>) nameOrBytes).containsKey("_DATA_"))
-      nameOrBytes = ((Map<String, Object>) nameOrBytes).get("_DATA_");
-    else
-      nameOrBytes = ((Map<String, Object>) nameOrBytes).get("_IMAGE_");
-    } if (nameOrBytes instanceof SV)
+      nameOrBytes = (((Map<String, Object>) nameOrBytes).containsKey("_DATA_") ? ((Map<String, Object>) nameOrBytes)
+          .get("_DATA_") : ((Map<String, Object>) nameOrBytes).get("_IMAGE_"));
+    }
+    if (nameOrBytes instanceof SV)
       nameOrBytes = ((SV) nameOrBytes).value;
     String name = (nameOrBytes instanceof String ? (String) nameOrBytes : null);
     if (name != null && name.startsWith(";base64,")) {
       bytes = Base64.decodeBase64(name);
     } else if (nameOrBytes instanceof BArray) {
       bytes = ((BArray) nameOrBytes).data;
-    } else {
+    } else if (echoName == null || nameOrBytes instanceof String){
       String[] names = getClassifiedName((String) nameOrBytes, true);
       nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
           : names[0].replace('\\', '/'));
       if (names != null)
         image = jmb.getImage(vwr, nameOrError, echoName);
+    } else {
+      image = nameOrBytes;
     }
     if (bytes != null)
       image = jmb.getImage(vwr, bytes, echoName);
@@ -949,7 +950,7 @@ public class FileManager implements BytePoster {
       return new String[] { null };
     boolean doSetPathForAllFiles = (pathForAllFiles.length() > 0);
     if (name.startsWith("?") || name.startsWith("http://?")) {
-      if ((name = vwr.dialogAsk("Load", name)) == null)
+      if ((name = vwr.dialogAsk("Load", name, null)) == null)
         return new String[] { isFullLoad ? "#CANCELED#" : null };
       doSetPathForAllFiles = false;
     }

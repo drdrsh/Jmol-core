@@ -135,12 +135,20 @@ abstract class OutputManager {
     boolean asBytes = (out == null && fileName == null);
     boolean closeChannel = (out == null && fileName != null);
     boolean releaseImage = (objImage == null);
-    Object image = (type.equals("BINARY") || type.equals("ZIPDATA") ? "" : rgbbuf != null ? rgbbuf
-        : objImage != null ? objImage : vwr.getScreenImageBuffer(null, true));
+    Object image = (type.equals("BINARY") || type.equals("ZIPDATA") ? ""
+        : rgbbuf != null ? rgbbuf : objImage != null ? objImage : vwr
+            .getScreenImageBuffer(null, true));
     boolean isOK = false;
     try {
       if (image == null)
         return errMsg = vwr.getErrorMessage();
+      if (fileName != null && fileName.startsWith("\1")) {
+        isOK = true;
+        Map<String, Object> info = new Hashtable<String, Object>();
+        info.put("_IMAGE_", image);
+        vwr.fm.loadImage(info, fileName);
+        return errMsg = "OK - viewing " + fileName.substring(1);
+      }
       if (out == null)
         out = openOutputChannel(privateKey, fileName, false, false);
       if (out == null)
@@ -168,7 +176,8 @@ abstract class OutputManager {
           OC outTemp = getOutputChannel(null, null);
           getWrappedState(fileName, scripts, image, outTemp);
           stateData = outTemp.toByteArray();
-        } else if (rgbbuf == null && !asBytes && !params.containsKey("captureMode")) {
+        } else if (rgbbuf == null && !asBytes
+            && !params.containsKey("captureMode")) {
           stateData = ((String) getWrappedState(null, scripts, image, null))
               .getBytes();
         }
@@ -178,10 +187,10 @@ abstract class OutputManager {
         }
       }
       if (type.equals("PNGT") || type.equals("GIFT"))
-        params.put("transparentColor",
-            Integer.valueOf(vwr.getBackgroundArgb()));
+        params
+            .put("transparentColor", Integer.valueOf(vwr.getBackgroundArgb()));
       if (type.length() == 4) // PNGT PNGJ GIFT
-        type = type.substring(0, 3);        
+        type = type.substring(0, 3);
       if (comment != null)
         params.put("comment", comment.length() == 0 ? Viewer.getJmolVersion()
             : comment);
@@ -190,7 +199,8 @@ abstract class OutputManager {
       if (closeChannel)
         out.closeChannel();
       if (isOK) {
-        if (params.containsKey("captureMsg") && !params.containsKey("captureSilent"))
+        if (params.containsKey("captureMsg")
+            && !params.containsKey("captureSilent"))
           vwr.prompt((String) params.get("captureMsg"), "OK", null, true);
         if (asBytes)
           bytes = out.toByteArray();
@@ -203,8 +213,9 @@ abstract class OutputManager {
     } finally {
       if (releaseImage)
         vwr.releaseScreenImage();
-      params.put("byteCount", Integer.valueOf(bytes != null ? bytes.length
-          : isOK ? out.getByteCount() : -1));
+      if (bytes != null || out != null)
+        params.put("byteCount", Integer.valueOf(bytes != null ? bytes.length
+            : isOK ? out.getByteCount() : -1));
       if (objImage != null) {
         // _ObjExport is saving the texture file -- just return file name, regardless of whether there is an error
         return fileName;
@@ -365,7 +376,7 @@ abstract class OutputManager {
     if (!vwr.haveAccess(ACCESS.ALL))
       return null;
     if (fileName != null) {
-      fileName = getOutputFileNameFromDialog(fileName, Integer.MIN_VALUE);
+      fileName = getOutputFileNameFromDialog(fileName, Integer.MIN_VALUE, null);
       if (fileName == null)
         return null;
     }
@@ -411,7 +422,7 @@ abstract class OutputManager {
     int n = 0;
     int quality = getInt(params, "quality", -1);
     fileName = setFullPath(params, getOutputFileNameFromDialog(fileName,
-        quality));
+        quality, null));
     if (fileName == null)
       return null;
     String[] rootExt = new String[2];
@@ -474,7 +485,7 @@ abstract class OutputManager {
     String fileName = (String) params.get("fileName");
     if (fileName != null) {
       fileName = setFullPath(params, getOutputFileNameFromDialog(fileName,
-          Integer.MIN_VALUE));
+          Integer.MIN_VALUE, null));
       if (fileName == null)
         return null;
     }
@@ -544,13 +555,13 @@ abstract class OutputManager {
    * @param type
    *        one of: PDB PQR FILE PLOT
    * @param modelIndex
-   * @param parameters
+   * @param plotParameters
    * @return "OK..." or "" or null
    * 
    */
 
   String writeFileData(String fileName, String type, int modelIndex,
-                       Object[] parameters) {
+                       Object[] plotParameters) {
     String[] fullPath = new String[1];
     OC out = getOutputChannel(fileName, fullPath);
     if (out == null)
@@ -574,7 +585,7 @@ abstract class OutputManager {
         type.startsWith("PDB") ?  
             vwr.getPdbAtomData(null, out, false, false) 
         : type.startsWith("PLOT") ? 
-            vwr.getPdbData(modelIndex, type.substring(5), null, parameters, out, true) 
+            vwr.getPdbData(modelIndex, type.substring(5), null, plotParameters, out, true) 
         : getCurrentFile ? 
             out.append(vwr.getCurrentFileAsString("write")).toString() 
         : (String) vwr.fm.getFileAsBytes(pathName, out));
@@ -596,7 +607,7 @@ abstract class OutputManager {
     return msg.startsWith("OK");
   }
 
-  private String getOutputFileNameFromDialog(String fileName, int quality) {
+  private String getOutputFileNameFromDialog(String fileName, int quality, Map<String, Object> params) {
     if (fileName == null || vwr.isKiosk)
       return null;
     boolean useDialog = fileName.startsWith("?");
@@ -606,7 +617,7 @@ abstract class OutputManager {
     fileName = FileManager.getLocalPathForWritingFile(vwr, fileName);
     if (useDialog)
       fileName = vwr.dialogAsk(quality == Integer.MIN_VALUE ? "Save"
-          : "Save Image", fileName);
+          : "Save Image", fileName, params);
     return fileName;
   }
 
@@ -650,9 +661,11 @@ abstract class OutputManager {
       doCheck = false; // will be checked later
       mustRender = false;
     }
-    if (doCheck)
-      fileName = getOutputFileNameFromDialog(fileName, quality);
-    fileName = setFullPath(params, fileName);
+    if (!fileName.startsWith("\1")) {
+      if (doCheck)
+        fileName = getOutputFileNameFromDialog(fileName, quality, params);
+      fileName = setFullPath(params, fileName);
+    }
     if (fileName == null)
       return null;
     params.put("fileName", fileName);

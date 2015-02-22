@@ -575,6 +575,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
     case DRAGDROP:
     case ERROR:
     case EVAL:
+    case IMAGE:
     case LOADSTRUCT:
     case SCRIPT:
       return !isJNLP;
@@ -609,6 +610,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
     case ERROR:
     case EVAL:
     case HOVER:
+    case IMAGE:
     case MINIMIZATION:
     case SERVICE:
     case RESIZE:

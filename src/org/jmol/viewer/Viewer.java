@@ -4764,7 +4764,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * StatusManager.syncSend Viewer.setSyncTarget Viewer.syncScript
    */
 
-  String dialogAsk(String type, String fileName) {
+  public String dialogAsk(String type, String fileName, Map<String, Object> params) {
     /**
      * @j2sNative
      * 
@@ -4774,7 +4774,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     {
       // may have #NOCARTOONS#; and/or "#APPEND#; prepended
       return (isKiosk || !haveAccess(ACCESS.ALL) ? null : sm.dialogAsk(type,
-          fileName));
+          fileName, params));
     }
   }
 
@@ -7985,6 +7985,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       scriptEcho(nameOrError);
     if (echoName == null) {
       setBackgroundImage((image == null ? null : nameOrError), image);
+    } else if (echoName.startsWith("\1")){
+      sm.showImage(echoName.substring(1), image);
     } else {
       shm.loadShape(JC.SHAPE_ECHO);
       setShapeProperty(JC.SHAPE_ECHO, "text", nameOrError);
@@ -7995,7 +7997,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       sc.mustResumeEval = true;
       eval.resumeEval(sc);
     }
-
   }
 
   public String cd(String dir) {

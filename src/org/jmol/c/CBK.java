@@ -38,6 +38,7 @@ public enum CBK {
   ERROR,
   EVAL,
   HOVER,
+  IMAGE,
   LOADSTRUCT,
   MEASURE,
   MESSAGE,

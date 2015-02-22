@@ -250,6 +250,7 @@ public class MPJmolApp implements JsonNioClient {
     }
 
     // / JmolCallbackListener interface ///
+    @SuppressWarnings("incomplete-switch")
     @Override
     public boolean notifyEnabled(CBK type) {
       switch (type) {
@@ -257,23 +258,6 @@ public class MPJmolApp implements JsonNioClient {
       case ECHO:
       case MESSAGE:
         return true;
-      case ANIMFRAME:
-      case APPLETREADY:
-      case ATOMMOVED:
-      case CLICK:
-      case ERROR:
-      case EVAL:
-      case HOVER:
-      case LOADSTRUCT:
-      case MEASURE:
-      case MINIMIZATION:
-      case SERVICE:
-      case PICK:
-      case RESIZE:
-      case SYNC:
-      case STRUCTUREMODIFIED:
-      case DRAGDROP:
-        return false;
       }
       return false;
     }

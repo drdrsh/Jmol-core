@@ -3283,6 +3283,10 @@ public class CmdExt implements JmolCmdExtension {
         type = (fileName != null && fileName.indexOf(".") >= 0 ? fileName
             .substring(fileName.lastIndexOf(".") + 1).toUpperCase() : "XYZ");
       isImage = PT.isOneOf(type.toLowerCase(), JC.IMAGE_OR_SCENE);
+      if (isImage && isShow && fileName == null) {
+        isShow = false;
+        fileName = "\1write " +  type;
+      }
       if (scripts != null) {
         if (type.equals("PNG"))
           type = "PNGJ";
@@ -3582,6 +3586,14 @@ public class CmdExt implements JmolCmdExtension {
     case T.nada:
       if (!chk)
         msg = ((SV) eval.theToken).escape();
+      break;
+    case T.image:
+      eval.checkLength23();
+      len = st.length;
+      String fileName = eval.optParameterAsString(2);
+      if (!chk)
+        vwr.fm.loadImage(fileName, "\1" + fileName);
+      str = null;
       break;
     case T.domains:
       eval.checkLength23();

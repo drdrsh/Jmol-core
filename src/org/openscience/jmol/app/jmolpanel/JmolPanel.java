@@ -80,7 +80,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.StringTokenizer;
+
+import javajs.util.PT;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -140,7 +141,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   private Map<String, Action> commands;
   private Map<String, JMenuItem> menuItems;
-  private JMenuBar menubar;
   private JToolBar toolbar;
 
   // --- action implementations -----------------------------------
@@ -309,7 +309,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       menuItems = new Hashtable<String, JMenuItem>();
       say(GT._("Building Menubar..."));
       executeScriptAction = new ExecuteScriptAction();
-      menubar = createMenubar();
+      JMenuBar menubar = createMenubar();
       add("North", menubar);
       panel.setLayout(new BorderLayout());
       toolbar = createToolbar();
@@ -672,7 +672,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
    * @return Menu item created
    * @see #getMenuItem
    */
-  protected JMenuItem createMenuItem(String cmd) {
+  private JMenuItem createMenuItem(String cmd) {
 
     JMenuItem mi;
     if (cmd.endsWith("Check")) {
@@ -734,7 +734,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private JToolBar createToolbar() {
 
     toolbar = new JToolBar();
-    String[] tool1Keys = tokenize(JmolResourceHandler.getStringX("toolbar"));
+    String[] tool1Keys = PT.getTokens(JmolResourceHandler.getStringX("toolbar"));
     for (int i = 0; i < tool1Keys.length; i++) {
       if (tool1Keys[i].equals("-")) {
         toolbar.addSeparator();
@@ -826,27 +826,11 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   /**
-   * Take the given string and chop it up into a series
-   * of strings on whitespace boundries.  This is useful
-   * for trying to get an array of strings out of the
-   * resource file.
-   * @param input String to chop
-   * @return Strings chopped on whitespace boundaries
-   */
-  protected String[] tokenize(String input) {
-    List<String> v = new  ArrayList<String>();
-    StringTokenizer t = new StringTokenizer(input);
-    while (t.hasMoreTokens())
-      v.add(t.nextToken());
-    return v.toArray(new String[v.size()]);
-  }
-
-  /**
    * Create the menubar for the app.  By default this pulls the
    * definition of the menu from the associated resource file.
    * @return Menubar
    */
-  protected JMenuBar createMenubar() {
+  private JMenuBar createMenubar() {
     JMenuBar mb = new JMenuBar();
     addNormalMenuBar(mb);
     // The Macros Menu
@@ -861,7 +845,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     return mb;
   }
 
-  protected void addMacrosMenuBar(JMenuBar menuBar) {
+  private void addMacrosMenuBar(JMenuBar menuBar) {
     // ok, here needs to be added the funny stuff
     JMenu macroMenu = guimap.newJMenu("macros");
     File macroDir = new File(System.getProperty("user.home")
@@ -908,8 +892,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     menuBar.add(macroMenu);
   }
 
-  protected void addNormalMenuBar(JMenuBar menuBar) {
-    String[] menuKeys = tokenize(JmolResourceHandler.getStringX("menubar"));
+  private void addNormalMenuBar(JMenuBar menuBar) {
+    String[] menuKeys = PT.getTokens(JmolResourceHandler.getStringX("menubar"));
     for (int i = 0; i < menuKeys.length; i++) {
       if (menuKeys[i].equals("-")) {
         menuBar.add(Box.createHorizontalGlue());
@@ -921,7 +905,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     }
   }
 
-  protected void addHelpMenuBar(JMenuBar menuBar) {
+  private void addHelpMenuBar(JMenuBar menuBar) {
     JMenu m = createMenu("help");
     if (m != null) {
       menuBar.add(m);
@@ -934,10 +918,10 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
    * @param key
    * @return Menu created
    */
-  protected JMenu createMenu(String key) {
+  JMenu createMenu(String key) {
 
     // Get list of items from resource file:
-    String[] itemKeys = tokenize(JmolResourceHandler.getStringX(key));
+    String[] itemKeys = PT.getTokens(JmolResourceHandler.getStringX(key));
     // Get label associated with this menu:
     JMenu menu = guimap.newJMenu(key);
     ImageIcon f = JmolResourceHandler.getIconX(key + "Image");
