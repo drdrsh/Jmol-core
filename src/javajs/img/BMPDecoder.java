@@ -107,17 +107,23 @@ public class BMPDecoder {
             + " -- aborting");
         return null;
       }
+      boolean isYReversed = (imageHeight < 0);
+      if (isYReversed)
+        imageHeight = - imageHeight;
       int nPixels = imageHeight * imageWidth;
-      int nread = bitsPerPixel / 8;
-      int npad = (imageSize == 0 ? 4 - (imageWidth % 4)
-          : (imageSize / imageHeight) - imageWidth * nread) % 4;
+      int bytesPerPixel = bitsPerPixel / 8;
+      int npad = (bytesPerPixel == 4 ? 0 : imageSize == 0 ? 4 - (imageWidth % 4)
+          : (imageSize / imageHeight) - imageWidth * bytesPerPixel) % 4;
       int[] buf = new int[nPixels];
+      int dpt = (isYReversed ? imageWidth : -imageWidth);
+      int pt0 = (isYReversed ? 0 : nPixels + dpt);
+      int pt1 = (isYReversed ? nPixels : -dpt);
       switch (bitsPerPixel) {
       case 32:
       case 24:
-        for (int pt = nPixels - imageWidth; pt >= 0; pt -= imageWidth) {
+        for (int pt = pt0; pt != pt1; pt += dpt) {
           for (int i = 0; i < imageWidth; i++)
-            buf[pt + i] = readColor(nread);
+            buf[pt + i] = readColor(bytesPerPixel);
           for (int i = 0; i < npad; i++)
             readByte();
         }
@@ -127,7 +133,7 @@ public class BMPDecoder {
         int[] palette = new int[nColors];
         for (int i = 0; i < nColors; i++)
           palette[i] = readColor(4);
-        for (int pt = nPixels - imageWidth; pt >= 0; pt -= imageWidth) {
+        for (int pt = pt0; pt != pt1; pt += dpt) {
           for (int i = 0; i < imageWidth; i++)
             buf[pt + i] = palette[readByte()];
           for (int i = 0; i < npad; i++)
@@ -139,7 +145,7 @@ public class BMPDecoder {
         int color2 = readColor(3);
         npad = (4 - (((imageWidth + 7) / 8) % 4)) % 4;
         int b = 0;
-        for (int pt = nPixels - imageWidth; pt >= 0; pt -= imageWidth) {
+        for (int pt = pt0; pt != pt1; pt += dpt) {
           for (int i = 0, bpt = -1; i < imageWidth; i++, bpt--) {
             if (bpt < 0) {
               b = readByte();
