@@ -364,6 +364,9 @@ public class Minimizer implements MinimizerInterface {
       }
       int bondOrder = bond.getCovalentOrder();
       switch (bondOrder) {
+      case 0:
+        // hydrogen bond
+        continue;
       case 1:
       case 2:
       case 3:

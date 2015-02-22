@@ -1743,7 +1743,6 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     LabelToken[] tokens;
     P3 ptTemp = new P3();
     Object[] o = new Object[] { ptTemp };
-    String xyzFormat = "%8.3p%8.3p%8.3p";
     Quat q = (doTransform ? vwr.tm.getRotationQ() : null);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
@@ -1785,7 +1784,10 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           + LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0', null, ptTemp)
           + (XX.length() == 1 ? " " + XX : XX.substring(0, 2)) + "  ";
       getPointTransf(-1, vwr.ms, a, q, ptTemp);
-      XX = PT.rep(XX, "_XYZ_", PT.sprintf(xyzFormat, "p", o));
+      String xyz = PT.sprintf("%8.3p%8.3p%8.3p", "p", o);
+      if (xyz.length() > 24)
+        xyz = PT.sprintf("%8.2p%8.2p%8.2p", "p", o);
+      XX = PT.rep(XX, "_XYZ_", xyz);
       lines.addLast(XX);
     }
     Map<Integer, Integer> map = new Hashtable<Integer, Integer>();
