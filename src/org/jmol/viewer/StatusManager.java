@@ -373,18 +373,19 @@ public class StatusManager {
     if (imageMap == null)
       imageMap = new Hashtable<String, JmolImageDialog>();
     JmolImageDialog d = imageMap.get(title);
-    System.out.println("statusma1n " + d + " " + image);
+    if (Boolean.FALSE.equals(image)) {
+      if (d != null)
+        d.closeMe();
+      return;
+    }
     if (d == null && image != null)
       d = vwr.apiPlatform.getImageDialog(title, imageMap);
-    System.out.println("statusman2 " + d + " " + image);
     if (d == null)
       return;
     if (image == null)
       d.closeMe();
     else
       d.setImage(image);
-    System.out.println("statusman done");
-
   }
   
   synchronized void setFileLoadStatus(String fullPathName, String fileName,

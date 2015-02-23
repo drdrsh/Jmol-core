@@ -902,6 +902,10 @@ public class FileManager implements BytePoster {
     Object image = null;
     String nameOrError = null;
     byte[] bytes = null;
+    if ("\1close".equals(nameOrBytes)) {
+      vwr.loadImageData(null, "\1close", echoName, null);
+      return;
+    }
     if (nameOrBytes instanceof Map) {
       nameOrBytes = (((Map<String, Object>) nameOrBytes).containsKey("_DATA_") ? ((Map<String, Object>) nameOrBytes)
           .get("_DATA_") : ((Map<String, Object>) nameOrBytes).get("_IMAGE_"));
@@ -915,8 +919,8 @@ public class FileManager implements BytePoster {
       bytes = ((BArray) nameOrBytes).data;
     } else if (echoName == null || nameOrBytes instanceof String){
       String[] names = getClassifiedName((String) nameOrBytes, true);
-      nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
-          : names[0].replace('\\', '/'));
+        nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
+            : names[0].replace('\\', '/'));
       if (names != null)
         image = jmb.getImage(vwr, nameOrError, echoName);
     } else {

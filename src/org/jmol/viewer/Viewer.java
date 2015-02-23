@@ -7986,12 +7986,14 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    */
   void loadImageData(Object image, String nameOrError, String echoName,
                      ScriptContext sc) {
-    if (image == null && !"\1none".equalsIgnoreCase(echoName))
+    boolean isClose = ("\1close".equalsIgnoreCase(nameOrError));
+    if (image == null && !"\1none".equalsIgnoreCase(echoName) &&  
+        nameOrError != null && !isClose)
       scriptEcho(nameOrError);
     if (echoName == null) {
       setBackgroundImage((image == null ? null : nameOrError), image);
     } else if (echoName.startsWith("\1")){
-      sm.showImage(echoName.substring(1), image);
+      sm.showImage(echoName.substring(1), (isClose ? Boolean.FALSE : image));
     } else {
       shm.loadShape(JC.SHAPE_ECHO);
       setShapeProperty(JC.SHAPE_ECHO, "text", nameOrError);

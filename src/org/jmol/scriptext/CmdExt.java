@@ -3285,7 +3285,7 @@ public class CmdExt implements JmolCmdExtension {
       isImage = PT.isOneOf(type.toLowerCase(), JC.IMAGE_OR_SCENE);
       if (isImage && isShow && fileName == null) {
         isShow = false;
-        fileName = "\1write " +  type;
+        fileName = "\1";
       }
       if (scripts != null) {
         if (type.equals("PNG"))
@@ -3576,7 +3576,7 @@ public class CmdExt implements JmolCmdExtension {
       if (token != null)
         tok = token.tok;
     }
-    if (tok != T.symop && tok != T.state && tok != T.property)
+    if (tok != T.symop && tok != T.state && tok != T.property && tok != T.image)
       checkLength(-3);
     if (slen == 2 && str.indexOf("?") >= 0) {
       showString(vwr.getAllSettings(str.substring(0, str.indexOf("?"))));
@@ -3588,11 +3588,22 @@ public class CmdExt implements JmolCmdExtension {
         msg = ((SV) eval.theToken).escape();
       break;
     case T.image:
-      eval.checkLength23();
-      len = st.length;
+      if (slen == 2 && !chk) {
+        write(null);
+        return;
+      }
       String fileName = eval.optParameterAsString(2);
+      boolean isClose = false;
+      if (fileName.equalsIgnoreCase("close")) {
+        eval.checkLength(-4);
+        isClose = true;
+        fileName = (slen == 3 ? "none" : eval.optParameterAsString(3));
+      } else {
+        eval.checkLength23();
+      }
+      len = st.length;
       if (!chk)
-        vwr.fm.loadImage(fileName, "\1" + fileName);
+        vwr.fm.loadImage(len == 2 ? null : isClose ? "\1close" : fileName, "\1" + fileName);
       str = null;
       break;
     case T.domains:

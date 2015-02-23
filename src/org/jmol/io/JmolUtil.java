@@ -716,7 +716,7 @@ public class JmolUtil implements JmolZipUtilities {
       createImage = true;
     }
     if (createImage)
-      image = apiPlatform.createImage(fullPathNameOrBytes);
+      image = apiPlatform.createImage("\1close".equals(fullPathNameOrBytes) ? "\1close" + echoName : fullPathNameOrBytes);
 
     /**
      * @j2sNative
