@@ -7579,10 +7579,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     showUrl(g.helpPath + what);
   }
 
-  public void show2D(String smiles) {
-    showUrl((String) setLoadFormat("_" + smiles, '2', false));
-  }
-
   public String getChemicalInfo(String smiles, T t) {
     String info = null;
     char type = '/';
@@ -7602,14 +7598,23 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     case T.name:
       type = 'N';
       break;
+    case T.image:
+      type = '2';
+      break;
     default:
       info = SV.sValue(t);
+      if (info.equalsIgnoreCase("drawing") || info.equalsIgnoreCase("image"))
+        type = '2';
       // the following should not be necessary
       // but an NCI server fault on 3/29/2014 required this
       //if (info.equals("sdf"))
       //info = "file?format=sdf";
     }
     String s = (String) setLoadFormat("_" + smiles, type, false);
+    if (type == '2') { 
+      fm.loadImage(s, "\1" + smiles);
+      return  s;
+    }
     if (type == '/')
       s += PT.rep(info, " ", "%20");
     return getFileAsString4(s, -1, false, false, false, "file");

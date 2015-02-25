@@ -3720,7 +3720,7 @@ public class CmdExt implements JmolCmdExtension {
       switch (tok) {
       case T.drawing:
         if (msg.length() > 0) {
-          vwr.show2D(msg);
+          vwr.fm.loadImage(vwr.setLoadFormat("_" + msg, '2', false), "\1" + msg);
           return;
         }
         msg = "Could not show drawing -- Either insufficient atoms are selected or the model is a PDB file.";
