@@ -2060,8 +2060,7 @@ public class MathExt implements JmolMathExtension {
     if (args.length > 2)
       return false;
     float lower = (args.length < 2 ? 0 : SV.fValue(args[0]));
-    float range = (args.length == 0 ? 1 : SV.fValue(args[args.length - 1]));
-    range -= lower;
+    float range = (args.length == 0 ? 1 : SV.fValue(args[args.length - 1])) - lower;
     return mp.addXFloat((float) (Math.random() * range) + lower);
   }
 
