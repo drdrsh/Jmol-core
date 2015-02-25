@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 import javajs.api.GenericFileInterface;
+import javajs.api.GenericImageDialog;
 import javajs.api.GenericMenuInterface;
 import javajs.api.GenericMouseInterface;
 import javajs.api.GenericPlatform;
@@ -301,6 +303,13 @@ public class AwtPlatform implements GenericPlatform {
 	@Override
 	public String getLocalUrl(String fileName) {
 		// not used in JSpecView
+		return null;
+	}
+
+	@Override
+	public GenericImageDialog getImageDialog(String title,
+			Map<String, GenericImageDialog> imageMap) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

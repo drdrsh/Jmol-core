@@ -2,11 +2,13 @@ package jspecview.js2d;
 
 import java.io.BufferedInputStream;
 import java.net.URL;
+import java.util.Map;
 
 import javajs.api.GenericFileInterface;
 import javajs.api.GenericMenuInterface;
 import javajs.api.GenericMouseInterface;
 import javajs.api.GenericPlatform;
+import javajs.api.GenericImageDialog;
 import javajs.api.PlatformViewer;
 import javajs.awt.Font;
 import javajs.util.P3;
@@ -374,6 +376,13 @@ public class JsPlatform implements GenericPlatform {
 	@Override
 	public String getLocalUrl(String fileName) {
 		// not used in JSpecView
+		return null;
+	}
+
+	@Override
+	public GenericImageDialog getImageDialog(String title,
+			Map<String, GenericImageDialog> imageMap) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
