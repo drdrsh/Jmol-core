@@ -194,7 +194,8 @@ public class FileManager implements BytePoster {
       setLoadState(htParams);
     String name0 = name;
     name = vwr.resolveDatabaseFormat(name);
-    if (!name0.equals(name) && (name0.startsWith("$") || name0.startsWith(":") || name0.startsWith("==")))
+    if (!name0.equals(name) && name0.indexOf("/") < 0 
+        && (name0.startsWith("$") || name0.startsWith(":") || name0.startsWith("==")))
       htParams.put("dbName", name0);
     int pt = name.indexOf("::");
     String nameAsGiven = (pt >= 0 ? name.substring(pt + 2) : name);
