@@ -589,7 +589,7 @@ public class Resolver {
   }
 
   private final static String[] mmcifLineStartRecords =
-  { "MMCif", "_entry.id", "_database_PDB_", "_pdbx_", "_chem_comp.pdbx_type", "_audit_author.name" };
+  { "MMCif", "_entry.id", "_database_PDB_", "_pdbx_", "_chem_comp.pdbx_type", "_audit_author.name", "_atom_site." };
 
   private final static String[] cifLineStartRecords =
   { "Cif", "data_", "_publ" };
