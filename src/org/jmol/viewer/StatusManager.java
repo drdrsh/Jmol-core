@@ -356,11 +356,17 @@ public class StatusManager {
   
   private Map<String, JmolImageDialog> imageMap;
 
+  /**
+   * called by Viewer.loadImageData to pop up a window with an image in it
+   * 
+   * @param title
+   * @param image  or Boolean.TRUE for "none" or Boolean.FALSE for "close"
+   */
   synchronized void showImage(String title, Object image) {
     String sJmol = jmolScriptCallback(CBK.IMAGE);
     if (notifyEnabled(CBK.IMAGE))
       cbl.notifyCallback(CBK.IMAGE, new Object[] { sJmol, title, image });
-    if (title.equalsIgnoreCase("none")) {
+    if (Boolean.TRUE.equals(image)) {
       if (imageMap == null)
         return;
       Lst<String> lst = new Lst<String>();

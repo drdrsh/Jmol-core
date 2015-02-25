@@ -2980,52 +2980,55 @@ public class CmdExt implements JmolCmdExtension {
     return true;
   }
 
+  /**
+   * 
+   * @param args
+   * @return string for write() function
+   * @throws ScriptException
+   */
   private String write(T[] args) throws ScriptException {
-    int pt = 0, pt0 = 0;
     ScriptEval eval = e;
-    boolean isCommand, isShow;
-    if (args == null) {
-      args = st;
-      pt = pt0 = 1;
-      isCommand = true;
-      isShow = (vwr.isApplet && !vwr.isSignedApplet
-          || !vwr.haveAccess(ACCESS.ALL) || vwr.fm.getPathForAllFiles().length() > 0);
-    } else {
-      isCommand = false;
-      isShow = true;
-    }
-    int argCount = (isCommand ? slen : args.length);
-    int len = 0;
-    int nVibes = 0;
-    int width = -1;
-    int height = -1;
-    int quality = Integer.MIN_VALUE;
-    boolean timeMsg = vwr.getBoolean(T.showtiming);
-    String driverList = vwr.getExportDriverList();
-    String sceneType = "PNGJ";
-    String data = null;
-    String type2 = "";
-    String fileName = null;
+    int pt = 1, pt0 = 1;
+    String[] scripts = null;
+    String msg = null;
     String localPath = null;
     String remotePath = null;
-    String val = null;
-    String msg = null;
-    SV tVar = null;
-    String[] fullPath = new String[1];
-    boolean isCoord = false;
-    boolean isExport = false;
-    boolean isImage = false;
-    BS bsFrames = null;
-    String[] scripts = null;
-    Map<String, Object> params;
     String type = "SPT";
-    int tok = (isCommand && args.length == 1 ? T.clipboard : tokAtArray(pt,
-        args));
+    boolean isCommand = true;
+    boolean showOnly = false;
+    if (args == null) {
+      // write command or show IMAGE
+      args = st;
+      showOnly = (vwr.isApplet && !vwr.isSignedApplet
+          || !vwr.haveAccess(ACCESS.ALL) || vwr.fm.getPathForAllFiles()
+          .length() > 0);
+    } else {
+      // write() function
+      pt = pt0 = 0;
+      isCommand = false;
+      showOnly = true;
+    }
+
+    // check for special considerations involving first parameter
+
+    int tok = tokAtArray(pt, args);
+    if (tok == T.string && !isCommand) {
+      T t0 = T.getTokenFromName(SV.sValue(args[0]).toLowerCase());
+      if (t0 != null)
+        tok = t0.tok;
+    }
     switch (tok) {
     case T.nada:
       break;
+    case T.quaternion:
+    case T.ramachandran:
+    case T.property:
+      msg = plot(args);
+      return (showOnly ? msg : writeMsg(msg));
     case T.script:
       // would fail in write() command.
+      // not documented?
+      // use?
       if (eval.isArrayParameter(pt + 1)) {
         scripts = eval.stringParameterSet(++pt);
         localPath = ".";
@@ -3037,12 +3040,33 @@ public class CmdExt implements JmolCmdExtension {
     default:
       type = SV.sValue(tokenAt(pt, args)).toUpperCase();
     }
-    if (isCommand && tokAt(slen - 2) == T.as) {
+
+    String driverList = vwr.getExportDriverList();
+    String data = null;
+    int argCount = (isCommand ? slen : args.length);
+    String type2 = "";
+    String val = null;
+    SV tVar = null;
+    int nVibes = 0;
+    String sceneType = "PNGJ";
+    boolean isCoord = false;
+    BS bsFrames = null;
+    int width = -1;
+    int height = -1;
+    boolean isExport = false;
+    String fileName = null;
+
+    // accept write ...... AS type
+
+    if (tok != T.nada && isCommand && tokAt(slen - 2) == T.as) {
       type = paramAsStr(slen - 1).toUpperCase();
       pt0 = argCount;
       argCount -= 2;
       tok = T.nada;
     }
+
+    // check type
+
     switch (tok) {
     case T.nada:
       break;
@@ -3050,13 +3074,6 @@ public class CmdExt implements JmolCmdExtension {
     case T.hash:
       type = "VAR";
       tVar = (SV) tokenAt(pt++, args);
-      break;
-    case T.quaternion:
-    case T.ramachandran:
-    case T.property:
-      msg = plot(args);
-      if (!isCommand)
-        return msg;
       break;
     case T.inline:
       type = "INLINE";
@@ -3106,26 +3123,12 @@ public class CmdExt implements JmolCmdExtension {
       pt += 2;
       break;
     case T.frame:
-    case T.identifier:
     case T.image:
     case T.scene:
-    case T.string:
     case T.vibration:
+    case T.identifier:
+    case T.string:
       switch (tok) {
-      case T.image:
-        pt++;
-        break;
-      case T.vibration:
-        nVibes = eval.intParameterRange(++pt, 1, 10);
-        if (nVibes == Integer.MAX_VALUE)
-          return "";
-        if (!chk) {
-          vwr.tm.setVibrationPeriod(0);
-          if (!eval.isJS)
-            eval.delayScript(100);
-        }
-        pt++;
-        break;
       case T.frame:
         BS bsAtoms;
         if (pt + 1 < argCount && args[++pt].tok == T.expressionBegin
@@ -3138,6 +3141,10 @@ public class CmdExt implements JmolCmdExtension {
         if (!chk)
           bsFrames = vwr.ms.getModelBS(bsAtoms, true);
         break;
+      case T.image:
+        type = "IMAGE";
+        pt++;
+        break;
       case T.scene:
         val = SV.sValue(tokenAt(++pt, args)).toUpperCase();
         if (PT.isOneOf(val, ";PNG;PNGJ;")) {
@@ -3145,18 +3152,28 @@ public class CmdExt implements JmolCmdExtension {
           pt++;
         }
         break;
+      case T.vibration:
+        nVibes = eval.intParameterRange(++pt, 1, 10);
+        if (nVibes == Integer.MAX_VALUE)
+          return "";
+        if (!chk) {
+          vwr.tm.setVibrationPeriod(0);
+          if (!eval.isJS)
+            eval.delayScript(100);
+        }
+        pt++;
+        break;
       default:
+        // identifier or string
         tok = T.image;
         break;
       }
       if (tok == T.image && pt < args.length) {
+        // write IMAGE JPG
+        // write JPG
         T t = T.getTokenFromName(SV.sValue(args[pt]).toLowerCase());
-        if (t != null) {
+        if (t != null)
           type = SV.sValue(t).toUpperCase();
-          isCoord = (t.tok == T.coord);
-          if (isCoord)
-            pt++;
-        }
         if (PT.isOneOf(type, driverList.toUpperCase())) {
           // povray, maya, vrml, idtf
           pt++;
@@ -3170,8 +3187,8 @@ public class CmdExt implements JmolCmdExtension {
         } else if (PT.isOneOf(type, ";ZIP;ZIPALL;SPT;STATE;")) {
           pt++;
           break;
-        } else if (!isCoord) {
-          type = "(image)";
+        } else {
+          type = "IMAGE";
         }
       }
       if (tokAtArray(pt, args) == T.integer) {
@@ -3181,75 +3198,87 @@ public class CmdExt implements JmolCmdExtension {
       break;
     }
 
-    if (msg == null) {
-      if (pt0 < argCount) {
-        val = SV.sValue(tokenAt(pt, args));
-        if (val.equalsIgnoreCase("clipboard")) {
-          if (chk)
-            return "";
-          // if (isApplet)
-          // evalError(GT._("The {0} command is not available for the applet.",
-          // "WRITE CLIPBOARD"));
-        } else if (PT.isOneOf(val.toLowerCase(), JC.IMAGE_TYPES)) {
-          if (tokAtArray(pt + 1, args) == T.integer
-              && tokAtArray(pt + 2, args) == T.integer) {
-            width = SV.iValue(tokenAt(++pt, args));
-            height = SV.iValue(tokenAt(++pt, args));
-          }
-          if (tokAtArray(pt + 1, args) == T.integer)
-            quality = SV.iValue(tokenAt(++pt, args));
-        } else if (PT.isOneOf(val.toLowerCase(),
-            ";xyz;xyzrn;xyzvib;mol;sdf;v2000;v3000;json;pdb;pqr;cml;")) {
-          type = val.toUpperCase();
-          if (pt + 1 == argCount)
-            pt++;
+    int quality = Integer.MIN_VALUE;
+    if (pt0 < argCount) {
+      val = SV.sValue(tokenAt(pt, args));
+      if (val.equalsIgnoreCase("clipboard")) {
+        if (chk)
+          return "";
+        // if (isApplet)
+        // evalError(GT._("The {0} command is not available for the applet.",
+        // "WRITE CLIPBOARD"));
+      } else if (PT.isOneOf(val.toLowerCase(), JC.IMAGE_TYPES)) {
+        if (tokAtArray(pt + 1, args) == T.integer
+            && tokAtArray(pt + 2, args) == T.integer) {
+          width = SV.iValue(tokenAt(++pt, args));
+          height = SV.iValue(tokenAt(++pt, args));
         }
-
-        // write [image|history|state] clipboard
-
-        // write [optional image|history|state] [JPG quality|JPEG quality|JPG64
-        // quality|PNG|PPM|SPT] "filename"
-        // write script "filename"
-        // write isosurface t.jvxl
-
-        if (type.equals("(image)")
-            && PT.isOneOf(val.toLowerCase(), JC.IMAGE_OR_SCENE)) {
-          type = val.toUpperCase();
+        if (tokAtArray(pt + 1, args) == T.integer)
+          quality = SV.iValue(tokenAt(++pt, args));
+      } else if (PT.isOneOf(val.toLowerCase(),
+          ";xyz;xyzrn;xyzvib;mol;sdf;v2000;v3000;json;pdb;pqr;cml;")) {
+        type = val.toUpperCase();
+        if (pt + 1 == argCount)
           pt++;
-        }
       }
-      if (pt + 2 == argCount) {
-        String s = SV.sValue(tokenAt(++pt, args));
-        if (s.length() > 0 && s.charAt(0) != '.')
-          type = val.toUpperCase();
+
+      // write [image|history|state] clipboard
+
+      // write [optional image|history|state] [JPG quality|JPEG quality|JPG64
+      // quality|PNG|PPM|SPT] "filename"
+      // write script "filename"
+      // write isosurface t.jvxl
+
+      if (type.equals("IMAGE")
+          && PT.isOneOf(val.toLowerCase(), JC.IMAGE_OR_SCENE)) {
+        type = val.toUpperCase();
+        pt++;
       }
-      switch (tokAtArray(pt, args)) {
-      case T.nada:
-        isShow = true;
-        break;
-      case T.clipboard:
-        break;
-      case T.opIf:
-        fileName = (type.equals("IMAGE") || type.equals("(image)") ? "?jmol.png" : "?jmol." + type.toLowerCase());
-        break;
-      case T.identifier:
-      case T.string:
-        fileName = SV.sValue(tokenAt(pt, args));
-        if (fileName.equalsIgnoreCase("clipboard")
-            || !vwr.haveAccess(ACCESS.ALL))
-          fileName = null;
-        break;
-      default:
-        System.out.println(T.nameOf(tokAtArray(pt, args)));
-        invArg();
-      }
-      if (type.equals("IMAGE") || type.equals("(image)")
-          || type.equals("FRAME") || type.equals("VIBRATION")) {
-        type = (fileName != null && fileName.indexOf(".") >= 0 ? fileName
-            .substring(fileName.lastIndexOf(".") + 1).toUpperCase() : "JPG");
-        if (PT.isOneOf(type, ";PNGJ;PNGT;GIFT;"))
-          fileName = fileName.substring(0, fileName.length() - 1);
-      }
+    }
+    if (pt + 2 == argCount) {
+      String s = SV.sValue(tokenAt(++pt, args));
+      if (s.length() > 0 && s.charAt(0) != '.')
+        type = val.toUpperCase();
+    }
+
+    // set the file name
+
+    switch (tokAtArray(pt, args)) {
+    case T.nada:
+      // WRITE by itself will do WRITE SPT to console
+      showOnly = true;
+      break;
+    case T.clipboard:
+      break;
+    case T.opIf:
+      // ? by itself
+      fileName = (type.equals("IMAGE") ? "?jmol.png" : "?jmol."
+          + type.toLowerCase());
+      break;
+    case T.identifier:
+    case T.string:
+      fileName = SV.sValue(tokenAt(pt, args));
+      if (fileName.equalsIgnoreCase("clipboard") || !vwr.haveAccess(ACCESS.ALL))
+        fileName = null;
+      break;
+    default:
+      invArg();
+    }
+
+    // adjust the type from the filename and set whether this is an export
+
+    if (type.equals("IMAGE") || type.equals("FRAME")
+        || type.equals("VIBRATION")) {
+      type = (fileName != null && fileName.indexOf(".") >= 0 ? fileName
+          .substring(fileName.lastIndexOf(".") + 1).toUpperCase() : "JPG");
+      // Introduced in 14.3.9_2014.11.23; removed 14.3.12_2015.02.24
+      // This was a bad idea; changing the file name automatically is not appropriate -- that is what AS is for
+      // if (PT.isOneOf(type, ";PNGJ;PNGT;GIFT;"))
+      //   fileName = fileName.substring(0, fileName.length() - 1);
+    }
+
+    boolean isImage = PT.isOneOf(type.toLowerCase(), JC.IMAGE_OR_SCENE);
+    if (!isImage) {
       if (type.equals("MNU")) {
         type = "MENU";
       } else if (type.equals("WRL") || type.equals("VRML")) {
@@ -3282,284 +3311,284 @@ public class CmdExt implements JmolCmdExtension {
       if (type.equals("COORD") || type.equals("COORDS"))
         type = (fileName != null && fileName.indexOf(".") >= 0 ? fileName
             .substring(fileName.lastIndexOf(".") + 1).toUpperCase() : "XYZ");
-      isImage = PT.isOneOf(type.toLowerCase(), JC.IMAGE_OR_SCENE);
-      if (isImage && isShow && fileName == null) {
-        isShow = false;
-        fileName = "\1";
-      }
-      if (scripts != null) {
-        if (type.equals("PNG"))
-          type = "PNGJ";
-        if (!type.equals("PNGJ") && !type.equals("ZIPALL"))
-          invArg();
-      }
-      if (!isImage
-          && !isExport
-          && !PT
-              .isOneOf(
-                  type,
-                  ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;VAR;FILE;FUNCTION;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;PDB;PGRP;PQR;QUAT;RAMA;SDF;V2000;V3000;INLINE;"))
-        eval.errorStr2(
-            ScriptError.ERROR_writeWhat,
-            "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|NBO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
-                + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL  CLIPBOARD",
-            "CML|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|SDF|CD|JSON|V2000|V3000|SPT|XJVXL|XYZ|XYZRN|XYZVIB|ZIP"
-                + driverList.toUpperCase().replace(';', '|'));
-      if (chk)
+    }
+    if (scripts != null) {
+      if (type.equals("PNG"))
+        type = "PNGJ";
+      if (!type.equals("PNGJ") && !type.equals("ZIPALL") && !type.equals("ZIP"))
+        invArg();
+    }
+    if (!isImage
+        && !isExport
+        && !PT
+            .isOneOf(
+                type,
+                ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;VAR;FILE;FUNCTION;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;PDB;PGRP;PQR;QUAT;RAMA;SDF;V2000;V3000;INLINE;"))
+      eval.errorStr2(
+          ScriptError.ERROR_writeWhat,
+          "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|NBO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
+              + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL  CLIPBOARD",
+          "CML|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|SDF|CD|JSON|V2000|V3000|SPT|XJVXL|XYZ|XYZRN|XYZVIB|ZIP"
+              + driverList.toUpperCase().replace(';', '|'));
+    if (chk)
+      return "";
+
+    String[] fullPath = new String[1];
+    Map<String, Object> params;
+    boolean timeMsg = vwr.getBoolean(T.showtiming);
+
+    // process write command based on data type
+
+    if (isExport) {
+      if (timeMsg)
+        Logger.startTimer("export");
+      Map<String, Object> eparams = new Hashtable<String, Object>();
+      eparams.put("type", data);
+      if (fileName != null)
+        eparams.put("fileName", fileName);
+      if (isCommand || fileName != null)
+        eparams.put("fullPath", fullPath);
+      eparams.put("width", Integer.valueOf(width));
+      eparams.put("height", Integer.valueOf(height));
+      data = vwr.generateOutputForExport(eparams);
+      if (data == null || data.length() == 0)
         return "";
-      Object bytes = null;
-      boolean doDefer = false;
-      if (data == null || isExport) {
-        data = type.intern();
-        if (isExport) {
-          if (timeMsg)
-            Logger.startTimer("export");
-          Map<String, Object> eparams = new Hashtable<String, Object>();
-          eparams.put("type", data);
-          if (fileName != null)
-            eparams.put("fileName", fileName);
-          if (isCommand || fileName != null)
-            eparams.put("fullPath", fullPath);
-          eparams.put("width", Integer.valueOf(width));
-          eparams.put("height", Integer.valueOf(height));
-          data = vwr.generateOutputForExport(eparams);
-          if (data == null || data.length() == 0)
-            return "";
-          if (!isCommand)
-            return data;
-          if ((type.equals("Povray") || type.equals("Idtf"))
-              && fullPath[0] != null) {
-            String ext = (type.equals("Idtf") ? ".tex" : ".ini");
-            fileName = fullPath[0] + ext;
-            params = new Hashtable<String, Object>();
-            params.put("fileName", fileName);
-            params.put("type", ext);
-            params.put("text", data);
-            params.put("fullPath", fullPath);
-            msg = vwr.processWriteOrCapture(params);
-            if (type.equals("Idtf"))
-              data = data.substring(0, data.indexOf("\\begin{comment}"));
-            data = "Created " + fullPath[0] + ":\n\n" + data;
-            if (timeMsg)
-              showString(Logger.getTimerMsg("export", 0));
-          } else {
-            msg = data;
-          }
-          if (msg != null) {
-            if (!msg.startsWith("OK"))
-              eval.evalError(msg, null);
-            eval.report(data);
-          }
-          return "";
-        } else if (data == "MENU") {
-          data = vwr.getMenu("");
-        } else if (data == "PGRP") {
-          data = vwr.ms.getPointGroupAsString(vwr.bsA(), type2.equals("draw"), null, 0, 1.0f);
-        } else if (data == "PDB" || data == "PQR") {
-          if (isShow) {
-            data = vwr.getPdbAtomData(null, null, (data == "PQR"), isCoord);
-          } else {
-            doDefer = true;
-            type = "PDB-" + data + "-coord " + isCoord;
-             /*
-             * OutputStream os = vwr.getOutputStream(fileName, fullPath); msg =
-             * vwr.getPdbData(null, new BufferedOutputStream(os)); if (msg !=
-             * null) msg = "OK " + msg + " " + fullPath[0]; try { os.close(); }
-             * catch (IOException e) { // TODO }
-             */
-          }
-        } else if (data == "FILE") {
-          if (isShow)
-            data = vwr.getCurrentFileAsString("script");
-          else
-            doDefer = true;
-          if ("?".equals(fileName))
-            fileName = "?Jmol." + vwr.getP("_fileType");
-        } else if (data == "SDF" || data == "MOL" || data == "V2000"
-            || data == "V3000" || data == "CD" || data == "JSON"            
-            || data == "XYZ" || data == "XYZRN" || data == "XYZVIB"
-            || data == "CML"
-            ) {
-          data = vwr.getModelExtract("selected", isCoord, false, data);
-          if (data.startsWith("ERROR:"))
-            bytes = data;
-        } else if (data == "FUNCTION") {
-          data = vwr.getFunctionCalls(null);
-          type = "TXT";
-        } else if (data == "VAR") {
-          if (tVar == null) {
-            tVar = (SV) eval.getParameter(
-                SV.sValue(tokenAt(isCommand ? 2 : 1, args)), T.variable, true);
-          }
-          Lst<Object> v = null;
-          if (tVar.tok == T.barray) {
-            v = new Lst<Object>();
-            v.addLast(((BArray) tVar.value).data);
-          } else if (tVar.tok == T.hash) {
-            @SuppressWarnings("unchecked")
-            Map<String, SV> m = (Map<String, SV>) tVar.value;
-            if (m.containsKey("$_BINARY_$")) {
-              v = new Lst<Object>();
-              if (fileName != null)
-                for (Entry<String, SV> e : m.entrySet()) {
-                  String key = e.getKey();
-                  if (key.equals("$_BINARY_$"))
-                    continue;
-                  SV o = e.getValue();
-                  bytes = (o.tok == T.barray ? ((BArray) o.value).data : null);
-                  if (bytes == null) {
-                    String s = o.asString();
-                    bytes = (s.startsWith(";base64,") ? Base64.decodeBase64(s)
-                        : s.getBytes());
-                  }
-                  if (key.equals("_DATA_")) {
-                    v = null;
-                    if (bytes == null)
-                      bytes = ((BArray) o.value).data;
-                    break;
-                  } else if (key.equals("_IMAGE_")) {
-                    v.add(0, key);
-                    v.add(1, null);
-                    v.add(2, bytes);
-                  } else {
-                    v.addLast(key);
-                    v.addLast(null);
-                    v.addLast(bytes);
-                  }
-                }
-            }
-          }
-          if (v == null) {
-            if (bytes == null) {
-              data = tVar.asString();
-              type = "TXT";
-            }
-          } else {
-            if (fileName != null
-                && (bytes = data = vwr.createZip(fileName,
-                    v.size() == 1 ? "BINARY" : "ZIPDATA", v)) == null)
-              eval.evalError("#CANCELED#", null);
-          }
-        } else if (data == "SPT") {
-          if (isCoord) {
-            BS tainted = vwr.ms.getTaintedAtoms(AtomCollection.TAINT_COORD);
-            vwr.setAtomCoordsRelative(P3.new3(0, 0, 0), null);
-            data = vwr.getStateInfo();
-            vwr.ms.setTaintedAtoms(tainted, AtomCollection.TAINT_COORD);
-          } else {
-            data = vwr.getStateInfo();
-            if (localPath != null || remotePath != null)
-              data = FileManager.setScriptFileReferences(data, localPath,
-                  remotePath, null);
-          }
-        } else if (data == "ZIP" || data == "ZIPALL") {
-          if (fileName != null
-              && (bytes = data = vwr.createZip(fileName, type, scripts)) == null)
-            eval.evalError("#CANCELED#", null);
-        } else if (data == "HISTORY") {
-          data = vwr.getSetHistory(Integer.MAX_VALUE);
-          type = "SPT";
-        } else if (data == "MO" || data == "NBO") {
-          data = getMoJvxl(Integer.MAX_VALUE, data == "NBO");
-          type = "XJVXL";
-        } else if (data == "PMESH") {
-          if ((data = getIsosurfaceJvxl(true, JC.SHAPE_PMESH)) == null)
-            error(ScriptError.ERROR_noData);
-          type = "XJVXL";
-        } else if (data == "ISOSURFACE" || data == "MESH") {
-          if ((data = getIsosurfaceJvxl(data == "MESH", JC.SHAPE_ISOSURFACE)) == null)
-            error(ScriptError.ERROR_noData);
-          type = (data.indexOf("<?xml") >= 0 ? "XJVXL" : "JVXL");
-          if (!isShow)
-            showString((String) getShapeProperty(JC.SHAPE_ISOSURFACE,
-                "jvxlFileInfo"));
-        } else {
-          // image
-          len = -1;
-          if (quality < 0)
-            quality = -1;
-        }
-        if (data == null && !doDefer)
-          data = "";
-        if (len == 0 && !doDefer)
-          len = (bytes == null ? data.length()
-              : bytes instanceof String ? ((String) bytes).length()
-                  : ((byte[]) bytes).length);
-        if (isImage) {
-          eval.refresh(false);
-          if (width < 0)
-            width = vwr.getScreenWidth();
-          if (height < 0)
-            height = vwr.getScreenHeight();
-        }
-      }
-      if (!isCommand)
+      if (showOnly)
         return data;
-      if (isShow) {
-        eval.showStringPrint(data, true);
-        return "";
-      }
-      if (bytes != null && bytes instanceof String) {
-        // load error or completion message here
-        /**
-         * @j2sNative
-         * 
-         *            if (bytes.indexOf("OK") != 0)alert(bytes);
-         * 
-         */
-        {
-        }
-        eval.report((String) bytes);
-        return (String) bytes;
-      }
-      if (type.equals("SCENE"))
-        bytes = sceneType;
-      else if (bytes == null && (!isImage || fileName != null))
-        bytes = data;
+      if (!type.equals("Povray") && !type.equals("Idtf") || fullPath[0] == null)
+        return writeMsg(data);
+      // must also produce .ini or .tex file
+      String ext = (type.equals("Idtf") ? ".tex" : ".ini");
+      fileName = fullPath[0] + ext;
+      params = new Hashtable<String, Object>();
+      params.put("fileName", fileName);
+      params.put("type", ext);
+      params.put("text", data);
+      params.put("fullPath", fullPath);
+      msg = vwr.processWriteOrCapture(params);
+      // fullPath may be changed here
+      if (type.equals("Idtf"))
+        data = data.substring(0, data.indexOf("\\begin{comment}"));
+      data = "Created " + fullPath[0] + ":\n\n" + data;
       if (timeMsg)
-        Logger.startTimer("write");
-      if (doDefer) {
-        msg = vwr.writeFileData(fileName, type, 0, null);
+        showString(Logger.getTimerMsg("export", 0));
+      if (msg != null) {
+        if (!msg.startsWith("OK"))
+          eval.evalError(msg, null);
+        eval.report(data);
+      }
+      return "";
+    }
+
+    // creating bytes or data
+
+    Object bytes = null;
+    boolean writeFileData = false;
+    if (data == null) {
+      int len = 0;
+      data = type.intern();
+      if (data == "MENU") {
+        data = vwr.getMenu("");
+      } else if (data == "PGRP") {
+        data = vwr.ms.getPointGroupAsString(vwr.bsA(), type2.equals("draw"),
+            null, 0, 1.0f);
+      } else if (data == "PDB" || data == "PQR") {
+        if (showOnly) {
+          data = vwr.getPdbAtomData(null, null, (data == "PQR"), isCoord);
+        } else {
+          writeFileData = true;
+          type = "PDB_" + data + "-coord " + isCoord;
+        }
+      } else if (data == "FILE") {
+        if ("?".equals(fileName))
+          fileName = "?Jmol." + vwr.getP("_fileType");
+        if (showOnly)
+          data = vwr.getCurrentFileAsString("script");
+        else
+          writeFileData = true;
+      } else if (data == "SDF" || data == "MOL" || data == "V2000"
+          || data == "V3000" || data == "CD" || data == "JSON" || data == "XYZ"
+          || data == "XYZRN" || data == "XYZVIB" || data == "CML") {
+        data = vwr.getModelExtract("selected", isCoord, false, data);
+        if (data.startsWith("ERROR:"))
+          bytes = data;
+      } else if (data == "FUNCTION") {
+        data = vwr.getFunctionCalls(null);
+        type = "TXT";
+      } else if (data == "VAR") {
+        if (tVar == null) {
+          tVar = (SV) eval.getParameter(
+              SV.sValue(tokenAt(isCommand ? 2 : 1, args)), T.variable, true);
+        }
+        Lst<Object> v = null;
+        if (tVar.tok == T.barray) {
+          v = new Lst<Object>();
+          v.addLast(((BArray) tVar.value).data);
+        } else if (tVar.tok == T.hash) {
+          @SuppressWarnings("unchecked")
+          Map<String, SV> m = (Map<String, SV>) tVar.value;
+          if (m.containsKey("$_BINARY_$")) {
+            v = new Lst<Object>();
+            if (fileName != null)
+              for (Entry<String, SV> e : m.entrySet()) {
+                String key = e.getKey();
+                if (key.equals("$_BINARY_$"))
+                  continue;
+                SV o = e.getValue();
+                bytes = (o.tok == T.barray ? ((BArray) o.value).data : null);
+                if (bytes == null) {
+                  String s = o.asString();
+                  bytes = (s.startsWith(";base64,") ? Base64.decodeBase64(s)
+                      : s.getBytes());
+                }
+                if (key.equals("_DATA_")) {
+                  v = null;
+                  if (bytes == null)
+                    bytes = ((BArray) o.value).data;
+                  break;
+                } else if (key.equals("_IMAGE_")) {
+                  v.add(0, key);
+                  v.add(1, null);
+                  v.add(2, bytes);
+                } else {
+                  v.addLast(key);
+                  v.addLast(null);
+                  v.addLast(bytes);
+                }
+              }
+          }
+        }
+        if (v == null) {
+          if (bytes == null) {
+            data = tVar.asString();
+            type = "TXT";
+          }
+        } else {
+          if (fileName != null
+              && (bytes = data = vwr.createZip(fileName,
+                  v.size() == 1 ? "BINARY" : "ZIPDATA", v)) == null)
+            eval.evalError("#CANCELED#", null);
+        }
+      } else if (data == "SPT") {
+        if (isCoord) {
+          BS tainted = vwr.ms.getTaintedAtoms(AtomCollection.TAINT_COORD);
+          vwr.setAtomCoordsRelative(P3.new3(0, 0, 0), null);
+          data = vwr.getStateInfo();
+          vwr.ms.setTaintedAtoms(tainted, AtomCollection.TAINT_COORD);
+        } else {
+          data = vwr.getStateInfo();
+          if (localPath != null || remotePath != null)
+            data = FileManager.setScriptFileReferences(data, localPath,
+                remotePath, null);
+        }
+      } else if (data == "ZIP" || data == "ZIPALL") {
+        if (fileName != null
+            && (bytes = data = vwr.createZip(fileName, type, scripts)) == null)
+          eval.evalError("#CANCELED#", null);
+      } else if (data == "HISTORY") {
+        data = vwr.getSetHistory(Integer.MAX_VALUE);
+        type = "SPT";
+      } else if (data == "MO" || data == "NBO") {
+        data = getMoJvxl(Integer.MAX_VALUE, data == "NBO");
+        type = "XJVXL";
+      } else if (data == "PMESH") {
+        if ((data = getIsosurfaceJvxl(true, JC.SHAPE_PMESH)) == null)
+          error(ScriptError.ERROR_noData);
+        type = "XJVXL";
+      } else if (data == "ISOSURFACE" || data == "MESH") {
+        if ((data = getIsosurfaceJvxl(data == "MESH", JC.SHAPE_ISOSURFACE)) == null)
+          error(ScriptError.ERROR_noData);
+        type = (data.indexOf("<?xml") >= 0 ? "XJVXL" : "JVXL");
+        if (!showOnly)
+          showString((String) getShapeProperty(JC.SHAPE_ISOSURFACE,
+              "jvxlFileInfo"));
       } else {
-        params = new Hashtable<String, Object>();
-        if (fileName != null)
-          params.put("fileName", fileName);
-        params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
-        params.put("type", type);
-        if (bytes instanceof String && quality == Integer.MIN_VALUE)
-          params.put("text", bytes);
-        else if (bytes instanceof byte[])
-          params.put("bytes", bytes);
-        if (scripts != null)
-          params.put("scripts", scripts);
-        if (bsFrames != null)
-          params.put("bsFrames", bsFrames);
-        params.put("fullPath", fullPath);
-        params.put("quality", Integer.valueOf(quality));
-        params.put("width", Integer.valueOf(width));
-        params.put("height", Integer.valueOf(height));
-        params.put("nVibes", Integer.valueOf(nVibes));
-        msg = vwr.processWriteOrCapture(params);
-        //? (byte[]) bytes : null), scripts,  quality, width, height, bsFrames, nVibes, fullPath);
-      }
-      if (timeMsg)
-        showString(Logger.getTimerMsg("write", 0));
-    }
-    if (!chk && msg != null) {
-      if (!msg.startsWith("OK")) {
-        eval.evalError(msg, null);
-        /**
-         * @j2sNative
-         * 
-         *            alert(msg);
-         */
-        {
+        // image
+        if (isCommand && showOnly && fileName == null) {
+          showOnly = false;
+          fileName = "\1";
         }
+        len = -1;
+        if (quality < 0)
+          quality = -1;
       }
-      eval.report(msg + (isImage ? "; width=" + width + "; height=" + height : ""));
-      return msg;
+      if (data == null)
+        data = "";
+      if (len == 0)
+        len = (bytes == null ? data.length()
+            : bytes instanceof String ? ((String) bytes).length()
+                : ((byte[]) bytes).length);
     }
-    return "";
+
+    // if write() function, then just return data
+    if (!isCommand)
+      return data;
+    // if WRITE command, but cannot write files, send through PRINT channel
+    if (showOnly) {
+      eval.showStringPrint(data, true);
+      return "";
+    }
+    // String bytes indicates an error message 
+    if (bytes != null && bytes instanceof String)
+      return writeMsg((String) bytes);
+    // Just save the file data and return a confirmation message 
+    if (writeFileData)
+      return writeMsg(vwr.writeFileData(fileName, type, 0, null));
+    // use vwr.processWriteOrCapture(params) for all other situations
+    if (type.equals("SCENE"))
+      bytes = sceneType;
+    else if (bytes == null && (!isImage || fileName != null))
+      bytes = data;
+    if (timeMsg)
+      Logger.startTimer("write");
+    if (isImage) {
+      eval.refresh(false);
+      if (width < 0)
+        width = vwr.getScreenWidth();
+      if (height < 0)
+        height = vwr.getScreenHeight();
+    }
+    params = new Hashtable<String, Object>();
+    if (fileName != null)
+      params.put("fileName", fileName);
+    params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
+    params.put("type", type);
+    if (bytes instanceof String && quality == Integer.MIN_VALUE)
+      params.put("text", bytes);
+    else if (bytes instanceof byte[])
+      params.put("bytes", bytes);
+    if (scripts != null)
+      params.put("scripts", scripts);
+    if (bsFrames != null)
+      params.put("bsFrames", bsFrames);
+    params.put("fullPath", fullPath);
+    params.put("quality", Integer.valueOf(quality));
+    params.put("width", Integer.valueOf(width));
+    params.put("height", Integer.valueOf(height));
+    params.put("nVibes", Integer.valueOf(nVibes));
+    msg = vwr.processWriteOrCapture(params);
+    if (isImage && msg.startsWith("OK"))
+      msg += "; width=" + width + "; height=" + height;
+    if (timeMsg)
+      showString(Logger.getTimerMsg("write", 0));
+    return writeMsg(msg);
+  }
+
+  private String writeMsg(String msg) throws ScriptException {
+    if (chk || msg == null)
+      return "";
+    if (!msg.startsWith("OK")) {
+      e.evalError(msg, null);
+      /**
+       * @j2sNative
+       * 
+       *            alert(msg);
+       */
+      {
+      }
+    }
+    e.report(msg);
+    return msg;
   }
 
   private void show() throws ScriptException {
@@ -3588,7 +3617,7 @@ public class CmdExt implements JmolCmdExtension {
         msg = ((SV) eval.theToken).escape();
       break;
     case T.image:
-      if (slen == 2 && !chk) {
+      if (slen == 2 || slen == 4 && !chk) {
         write(null);
         return;
       }

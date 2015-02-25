@@ -194,12 +194,10 @@ class Image {
   public static JmolImageDialog getImageDialog(Viewer vwr,
                                                String title,
                                                Map<String, JmolImageDialog> imageMap) {
-    //TODO
-    
     /**
      * @j2sNative
      * 
-     * return null;
+     * return new Jmol.Console.Image(vwr, title, imageMap);
      */
     {
       return null;

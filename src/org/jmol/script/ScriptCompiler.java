@@ -1058,8 +1058,13 @@ public class ScriptCompiler extends ScriptTokenParser {
     switch (tokCommand) {
     case T.show:
       // allowing for show domains and validation to take up rest of line
-      if (nTokens != 2 || lastToken.tok != T.domains && lastToken.tok != T.validation)
-        return OK;
+      if (nTokens == 2) {
+        if (lastToken.tok == T.image)
+          iHaveQuotedString = true;
+      } else
+        if (!iHaveQuotedString && lastToken.tok != T.domains && lastToken.tok != T.validation) {
+          return OK;
+      }
       //$FALL-THROUGH$
     case T.load:
     case T.script:

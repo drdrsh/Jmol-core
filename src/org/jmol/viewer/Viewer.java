@@ -7974,7 +7974,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   /**
    * 
    * NOTE: This method is called from within a j2sNative block in
-   * awtjs2d.Platform.java.
+   * awtjs2d.Platform.java as well as from FileManager.loadImage
    * 
    * @param image
    *        could be a byte array
@@ -7986,14 +7986,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    */
   void loadImageData(Object image, String nameOrError, String echoName,
                      ScriptContext sc) {
-    boolean isClose = ("\1close".equalsIgnoreCase(nameOrError));
-    if (image == null && !"\1none".equalsIgnoreCase(echoName) &&  
-        nameOrError != null && !isClose)
+    if (image == null && nameOrError != null)
       scriptEcho(nameOrError);
     if (echoName == null) {
       setBackgroundImage((image == null ? null : nameOrError), image);
-    } else if (echoName.startsWith("\1")){
-      sm.showImage(echoName.substring(1), (isClose ? Boolean.FALSE : image));
+    } else if (echoName.startsWith("\1")) {
+      sm.showImage(echoName.substring(1), image);
     } else {
       shm.loadShape(JC.SHAPE_ECHO);
       setShapeProperty(JC.SHAPE_ECHO, "text", nameOrError);

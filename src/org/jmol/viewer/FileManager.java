@@ -902,9 +902,16 @@ public class FileManager implements BytePoster {
     Object image = null;
     String nameOrError = null;
     byte[] bytes = null;
-    if ("\1close".equals(nameOrBytes)) {
-      vwr.loadImageData(null, "\1close", echoName, null);
-      return;
+    boolean isWriteImage = (echoName != null && echoName.startsWith("\1"));
+    if (isWriteImage) {
+      if (echoName.equals("\1none")) {
+        vwr.loadImageData(Boolean.TRUE, "\1none", echoName, null);
+        return;
+      }
+      if ("\1close".equals(nameOrBytes)) {
+        vwr.loadImageData(Boolean.FALSE, "\1close", echoName, null);
+        return;
+      }
     }
     if (nameOrBytes instanceof Map) {
       nameOrBytes = (((Map<String, Object>) nameOrBytes).containsKey("_DATA_") ? ((Map<String, Object>) nameOrBytes)
@@ -917,10 +924,10 @@ public class FileManager implements BytePoster {
       bytes = Base64.decodeBase64(name);
     } else if (nameOrBytes instanceof BArray) {
       bytes = ((BArray) nameOrBytes).data;
-    } else if (echoName == null || nameOrBytes instanceof String){
+    } else if (echoName == null || nameOrBytes instanceof String) {
       String[] names = getClassifiedName((String) nameOrBytes, true);
-        nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
-            : names[0].replace('\\', '/'));
+      nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
+          : names[0].replace('\\', '/'));
       if (names != null)
         image = jmb.getImage(vwr, nameOrError, echoName);
     } else {
@@ -932,11 +939,10 @@ public class FileManager implements BytePoster {
       nameOrError = (String) image;
       image = null;
     }
-    if (!vwr.isJS) {
-      if (image != null && bytes != null)
-        nameOrError = ";base64," + Base64.getBase64(bytes).toString();
+    if (!vwr.isJS && image != null && bytes != null)
+      nameOrError = ";base64," + Base64.getBase64(bytes).toString();
+    if (!vwr.isJS || isWriteImage && nameOrError == null)
       vwr.loadImageData(image, nameOrError, echoName, null);
-    }
     // JSmol will call that from awtjs2d.Platform.java asynchronously
   }
 
