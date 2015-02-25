@@ -4,7 +4,6 @@ package javajs.api;
 import java.net.URL;
 import java.util.Map;
 
-import org.jmol.api.JmolImageDialog;
 
 import javajs.awt.Font;
 import javajs.util.P3;
@@ -136,7 +135,7 @@ public interface GenericPlatform extends FontManager {
 
   String getLocalUrl(String fileName);
 
-  JmolImageDialog getImageDialog(String title,
-                                 Map<String, JmolImageDialog> imageMap);
+  GenericImageDialog getImageDialog(String title,
+                                 Map<String, GenericImageDialog> imageMap);
 
 }

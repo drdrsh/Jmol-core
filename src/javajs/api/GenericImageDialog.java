@@ -1,6 +1,6 @@
-package org.jmol.api;
+package javajs.api;
 
-public interface JmolImageDialog {
+public interface GenericImageDialog {
 
   void closeMe();
 

@@ -5,9 +5,9 @@ import java.net.URL;
 import java.util.Map;
 
 import org.jmol.api.Interface;
-import org.jmol.api.JmolImageDialog;
 import org.jmol.viewer.Viewer;
 
+import javajs.api.GenericImageDialog;
 import javajs.api.GenericPlatform;
 import javajs.api.GenericFileInterface;
 import javajs.api.GenericMouseInterface;
@@ -460,8 +460,8 @@ public class Platform implements GenericPlatform {
   }
 
   @Override
-  public JmolImageDialog getImageDialog(String title,
-                                        Map<String, JmolImageDialog> imageMap) {
+  public GenericImageDialog getImageDialog(String title,
+                                        Map<String, GenericImageDialog> imageMap) {
     return Image.getImageDialog((Viewer) vwr, title, imageMap);
   }
 

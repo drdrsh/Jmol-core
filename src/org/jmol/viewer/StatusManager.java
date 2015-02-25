@@ -25,6 +25,8 @@ package org.jmol.viewer;
 
 import org.jmol.script.SV;
 import org.jmol.script.T;
+
+import javajs.api.GenericImageDialog;
 import javajs.awt.Dimension;
 import org.jmol.util.Logger;
 import javajs.util.Lst;
@@ -41,7 +43,6 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolAppConsoleInterface;
 import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolDialogInterface;
-import org.jmol.api.JmolImageDialog;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.c.CBK;
 import org.jmol.java.BS;
@@ -354,7 +355,7 @@ public class StatusManager {
           new Object[] {sJmol, strInfo, Integer.valueOf(-1), id, Float.valueOf(pt.x), Float.valueOf(pt.y), Float.valueOf(pt.z) });
   }
   
-  private Map<String, JmolImageDialog> imageMap;
+  private Map<String, GenericImageDialog> imageMap;
 
   /**
    * called by Viewer.loadImageData to pop up a window with an image in it
@@ -377,8 +378,8 @@ public class StatusManager {
       return;
     }
     if (imageMap == null)
-      imageMap = new Hashtable<String, JmolImageDialog>();
-    JmolImageDialog d = imageMap.get(title);
+      imageMap = new Hashtable<String, GenericImageDialog>();
+    GenericImageDialog d = imageMap.get(title);
     if (Boolean.FALSE.equals(image)) {
       if (d != null)
         d.closeMe();

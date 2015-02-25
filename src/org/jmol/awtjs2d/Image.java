@@ -27,9 +27,9 @@ package org.jmol.awtjs2d;
 
 import java.util.Map;
 
-import org.jmol.api.JmolImageDialog;
 import org.jmol.viewer.Viewer;
 
+import javajs.api.GenericImageDialog;
 import javajs.awt.Font;
 
 /**
@@ -191,9 +191,9 @@ class Image {
     }
   }
 
-  public static JmolImageDialog getImageDialog(Viewer vwr,
+  public static GenericImageDialog getImageDialog(Viewer vwr,
                                                String title,
-                                               Map<String, JmolImageDialog> imageMap) {
+                                               Map<String, GenericImageDialog> imageMap) {
     /**
      * @j2sNative
      * 

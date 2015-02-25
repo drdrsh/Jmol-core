@@ -44,6 +44,7 @@ import java.awt.image.SinglePixelPackedSampleModel;
 import java.net.URL;
 import java.util.Map;
 
+import javajs.api.GenericImageDialog;
 import javajs.api.PlatformViewer;
 import javajs.img.BMPDecoder;
 import javajs.util.AU;
@@ -52,7 +53,6 @@ import javajs.util.PT;
 import javax.swing.JPanel;
 
 import org.jmol.api.Interface;
-import org.jmol.api.JmolImageDialog;
 import org.jmol.console.ImageDialog;
 import org.jmol.viewer.Viewer;
 
@@ -263,9 +263,9 @@ class Image {
     ((java.awt.Graphics) graphicForText).dispose();
   }
 
-  public static JmolImageDialog getImageDialog(PlatformViewer vwr,
+  public static GenericImageDialog getImageDialog(PlatformViewer vwr,
                                                String title,
-                                               Map<String, JmolImageDialog> imageMap) {
+                                               Map<String, GenericImageDialog> imageMap) {
     return new ImageDialog((Viewer) vwr, title, imageMap);
     }
 

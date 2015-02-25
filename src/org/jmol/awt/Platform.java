@@ -17,8 +17,8 @@ import javax.swing.JDialog;
 import netscape.javascript.JSObject;
 
 import org.jmol.api.Interface;
-import org.jmol.api.JmolImageDialog;
 
+import javajs.api.GenericImageDialog;
 import javajs.api.GenericPlatform;
 import javajs.api.GenericFileInterface;
 import javajs.api.GenericMouseInterface;
@@ -318,8 +318,8 @@ public class Platform implements GenericPlatform {
   }
 
   @Override
-  public JmolImageDialog getImageDialog(String title,
-                                        Map<String, JmolImageDialog> imageMap) {
+  public GenericImageDialog getImageDialog(String title,
+                                        Map<String, GenericImageDialog> imageMap) {
     return Image.getImageDialog(vwr, title, imageMap);
   }
 

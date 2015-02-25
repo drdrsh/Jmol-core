@@ -3617,10 +3617,15 @@ public class CmdExt implements JmolCmdExtension {
         msg = ((SV) eval.theToken).escape();
       break;
     case T.image:
+      vwr.getConsole();// especially important for JavaScript
       if (slen == 2 || slen == 4 && !chk) {
+        // show image
+        // show image 400 400
         write(null);
         return;
       }
+      // show image close
+      // show image close "myfile"
       String fileName = eval.optParameterAsString(2);
       boolean isClose = false;
       if (fileName.equalsIgnoreCase("close")) {

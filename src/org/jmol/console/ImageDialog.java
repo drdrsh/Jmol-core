@@ -24,6 +24,7 @@
 package org.jmol.console;
 
 
+import javajs.api.GenericImageDialog;
 import javajs.util.PT;
 
 import javax.swing.JDialog;
@@ -48,11 +49,10 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.JmolAppConsoleInterface;
-import org.jmol.api.JmolImageDialog;
 import org.jmol.awt.Platform;
 import org.jmol.viewer.Viewer;
 
-public class ImageDialog extends JDialog implements JmolImageDialog, WindowListener, ActionListener {
+public class ImageDialog extends JDialog implements GenericImageDialog, WindowListener, ActionListener {
 
 
   private JMenuBar menubar;
@@ -62,11 +62,11 @@ public class ImageDialog extends JDialog implements JmolImageDialog, WindowListe
   protected Viewer vwr;
   protected Canvas canvas;
   private String title;
-  private Map<String, JmolImageDialog> imageMap;
+  private Map<String, GenericImageDialog> imageMap;
 
   private JmolAppConsoleInterface console;
 
-  public ImageDialog(Viewer vwr, String title, Map<String, JmolImageDialog> imageMap){
+  public ImageDialog(Viewer vwr, String title, Map<String, GenericImageDialog> imageMap){
     super(Platform.getWindow((Container) vwr.display) instanceof JFrame ? (JFrame) Platform.getWindow((Container) vwr.display) : null, title, false);
     this.vwr = vwr;
     console = vwr.getConsole();
