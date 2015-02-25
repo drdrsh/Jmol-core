@@ -756,7 +756,6 @@ public class T {
   
   public final static int cross = 1 | 2 << 9 | mathfunc;
   public final static int load         = 3 | 2 << 9 | mathfunc | scriptCommand;
-  public final static int random       = 4 | 2 << 9 | mathfunc;
   public final static int script       = 5 | 2 << 9 | mathfunc | scriptCommand;
   public final static int substructure = 6 | 2 << 9 | mathfunc | intproperty | strproperty;
   public final static int search       = 7 | 2 << 9 | mathfunc;
@@ -783,7 +782,8 @@ public class T {
   public final static int hkl          = 1 | 3 << 9 | mathfunc;
   public final static int intersection = 2 | 3 << 9 | mathfunc;
   public final static int prompt       = 3 | 3 << 9 | mathfunc | mathExpressionCommand;
-  public final static int select       = 4 | 3 << 9 | mathfunc | atomExpressionCommand;
+  public final static int random       = 4 | 3 << 9 | mathfunc;
+  public final static int select       = 5 | 3 << 9 | mathfunc | atomExpressionCommand;
 
   // ___.xxx(a,b,c)
   

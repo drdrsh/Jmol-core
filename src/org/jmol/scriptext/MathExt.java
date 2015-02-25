@@ -26,6 +26,7 @@ package org.jmol.scriptext;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -2056,12 +2057,30 @@ public class MathExt implements JmolMathExtension {
     return mp.addXPt4((q == null ? Quat.newP4(p4) : q).toPoint4f());
   }
 
+  private Random rand;
+
   private boolean evaluateRandom(ScriptMathProcessor mp, SV[] args) {
-    if (args.length > 2)
+    if (args.length > 3)
       return false;
-    float lower = (args.length < 2 ? 0 : SV.fValue(args[0]));
-    float range = (args.length == 0 ? 1 : SV.fValue(args[args.length - 1])) - lower;
-    return mp.addXFloat((float) (Math.random() * range) + lower);
+    if (rand == null)
+      rand = new Random();
+    float lower = 0, upper = 1, seed = Float.NaN;
+    switch (args.length) {
+    case 3:
+      rand.setSeed((int) SV.fValue(args[2]));
+      //$FALL-THROUGH$
+    case 2:
+      upper = SV.fValue(args[1]);
+      //$FALL-THROUGH$
+    case 1:
+      lower = SV.fValue(args[0]);
+      //$FALL-THROUGH$
+    case 0:
+      break;
+    default:
+      return false;
+    }
+    return mp.addXFloat((rand.nextFloat() * (upper - lower)) + lower);
   }
 
   private boolean evaluateRowCol(ScriptMathProcessor mp, SV[] args, int tok)
