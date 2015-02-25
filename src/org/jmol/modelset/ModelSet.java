@@ -300,6 +300,15 @@ import java.util.Properties;
     return -1;
   }
 
+  public String getModelDataBaseName(BS bsAtoms) {
+    for (int i = 0; i < mc; i++) {
+      if (bsAtoms.equals(am[i].bsAtoms))
+        return (String) getInfo(i, "dbName");
+    }
+    return null;
+  }
+  
+
   public void setTrajectory(int modelIndex) {
     if (modelIndex >= 0 && isTrajectory(modelIndex) && at[am[modelIndex].firstAtomIndex].mi != modelIndex)
       trajectory.setModel(modelIndex);
@@ -3897,6 +3906,6 @@ import java.util.Properties;
     Object o = (haveBioModels ? bioModelset.getAllHeteroList(modelIndex) : null);
     return (Map<String, String>) (o == null ? getInfoM("hetNames") : o);
   }
-  
+
 }
 

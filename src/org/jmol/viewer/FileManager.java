@@ -192,7 +192,10 @@ public class FileManager implements BytePoster {
                                          boolean isAppend) {
     if (htParams.get("atomDataOnly") == null)
       setLoadState(htParams);
+    String name0 = name;
     name = vwr.resolveDatabaseFormat(name);
+    if (!name0.equals(name) && (name0.startsWith("$") || name0.startsWith(":") || name0.startsWith("==")))
+      htParams.put("dbName", name0);
     int pt = name.indexOf("::");
     String nameAsGiven = (pt >= 0 ? name.substring(pt + 2) : name);
     String fileType = (pt >= 0 ? name.substring(0, pt) : null);

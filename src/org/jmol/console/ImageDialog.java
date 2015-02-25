@@ -69,6 +69,7 @@ public class ImageDialog extends JDialog implements GenericImageDialog, WindowLi
   public ImageDialog(Viewer vwr, String title, Map<String, GenericImageDialog> imageMap){
     super(Platform.getWindow((Container) vwr.display) instanceof JFrame ? (JFrame) Platform.getWindow((Container) vwr.display) : null, title, false);
     this.vwr = vwr;
+    this.setResizable(false);
     console = vwr.getConsole();
     addWindowListener(this);
     this.title = title;

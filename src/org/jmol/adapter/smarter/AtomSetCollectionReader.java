@@ -256,7 +256,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         binaryDoc.setOutputChannel(out);
         processBinaryDocument();
       }
-       finalizeSubclassReader(); // upstairs
+      finalizeSubclassReader(); // upstairs
       if (!isFinalized)
         finalizeReaderASCR();
     } catch (Throwable e) {
@@ -375,6 +375,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected void finalizeReaderASCR() throws Exception {
     isFinalized = true;
     if (asc.atomSetCount > 0) {
+      if (asc.atomSetCount == 1) 
+        asc.setCurrentModelInfo("dbName", htParams.get("dbName"));
       applySymmetryAndSetTrajectory();
       asc.finalizeStructures();
       if (doCentralize)

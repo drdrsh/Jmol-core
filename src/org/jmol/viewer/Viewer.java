@@ -8508,6 +8508,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     setShapeProperty(JC.SHAPE_MEASURES, "delete", Integer.valueOf(i));
   }
 
+  public String getDataBaseName(BS bs) throws Exception {
+    return ms.getModelDataBaseName(bs == null ? bsA() : bs);
+  }
+
   @Override
   public String getSmiles(BS bs) throws Exception {
     return getSmilesOpt(bs, -1, -1, false, false, false, false, false);

@@ -3706,18 +3706,28 @@ public class CmdExt implements JmolCmdExtension {
       if (!chk)
         vwr.getNMRPredict(true);
       return;
-    case T.smiles:
     case T.drawing:
     case T.chemical:
+    case T.smiles:
       checkLength(tok == T.chemical ? 3 : 2);
       if (chk)
         return;
       try {
-        msg = vwr.getSmiles(null);
+        if (tok != T.smiles)
+          msg = vwr.getDataBaseName(null);
+        if (msg != null && (msg.startsWith("$") || msg.startsWith(":"))) {
+          msg = msg.substring(1);
+        } else {
+          msg = null;
+        }
+        if (msg == null)
+          msg = vwr.getSmiles(null);
       } catch (Exception ex) {
         msg = ex.getMessage();
       }
       switch (tok) {
+      case T.smiles:
+        break;
       case T.drawing:
         if (msg.length() > 0) {
           vwr.fm.loadImage(vwr.setLoadFormat("_" + msg, '2', false), "\1" + msg);
