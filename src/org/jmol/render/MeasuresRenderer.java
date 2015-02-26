@@ -81,7 +81,7 @@ public class MeasuresRenderer extends LabelsRenderer {
     doJustify = vwr.getBoolean(T.justifymeasurements);
     modulating = ms.bsModulated != null; 
     // note that this COULD be screen pixels if <= 20. 
-    imageFontScaling = vwr.getImageFontScaling();
+    imageFontScaling = vwr.imageFontScaling;
     mad0 = measures.mad;
     font3d =vwr.gdata.getFont3DScaled(measures.font3d, imageFontScaling);
     m = measures.mPending;

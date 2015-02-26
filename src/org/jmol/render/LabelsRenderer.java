@@ -94,7 +94,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     sppm = vwr.getScalePixelsPerAngstrom(true);
     scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? sppm * 10000f
         : 0);
-    imageFontScaling = vwr.getImageFontScaling();
+    imageFontScaling = vwr.imageFontScaling;
     int iGroup = -1;
     minZ[0] = Integer.MAX_VALUE;
     boolean isAntialiased = g3d.isAntialiased();

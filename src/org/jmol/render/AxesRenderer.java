@@ -68,7 +68,7 @@ public class AxesRenderer extends FontLineShapeRenderer {
     boolean isXY = (axes.axisXY.z != 0);
     if (!isXY && tm.isNavigating() && vwr.getBoolean(T.navigationperiodic))
       return false;
-    imageFontScaling = vwr.getImageFontScaling();
+    imageFontScaling = vwr.imageFontScaling;
     if (vwr.areAxesTainted()) {
       Font f = axes.font3d;
       axes.initShape();

@@ -53,7 +53,7 @@ public class UccageRenderer extends CageRenderer {
   
   @Override
   protected boolean render() {
-    imageFontScaling = vwr.getImageFontScaling();
+    imageFontScaling = vwr.imageFontScaling;
     font3d = vwr.gdata.getFont3DScaled(((Uccage) shape).font3d, imageFontScaling);
     int mad = vwr.getObjectMad(StateManager.OBJ_UNITCELL);
     if (mad == 0 || vwr.isJmolDataFrame() || tm.isNavigating()

@@ -3302,8 +3302,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     resizeImage(width, height, false, false, true);
   }
 
-  private float imageFontScaling = 1;
-
   /**
    * A graphics from a "slave" stereo display that has been synchronized with
    * this this applet.
@@ -3323,9 +3321,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     this.gRight = gRight;
   }
 
-  public float getImageFontScaling() {
-    return imageFontScaling;
-  }
+  public float imageFontScaling = 1;
 
   void resizeImage(int width, int height, boolean isImageWrite,
                    boolean isExport, boolean isReset) {
@@ -3337,7 +3333,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         && checkMotionRendering(T.antialiasdisplay)
         : isImageWrite && !isExport ? g.antialiasImages : false);
     imageFontScaling = (isReset || width <= 0 ? 1
-        : (antialiased ? 2 : 1) * (g.zoomLarge == (height > width) ? height : width) / getScreenDim());
+        : (antialiased ? 2f : 1f) * (g.zoomLarge == (height > width) ? height : width) / getScreenDim());
     if (width > 0) {
       dimScreen.width = width;
       dimScreen.height = height;

@@ -30,7 +30,7 @@ public class MolecularOrbitalRenderer extends IsosurfaceRenderer {
 
   @Override
   protected boolean render() {
-    imageFontScaling = vwr.getImageFontScaling();
+    imageFontScaling = vwr.imageFontScaling;
     renderIso();
     return needTranslucent;
   }

@@ -67,7 +67,7 @@ public class DrawRenderer extends MeshRenderer {
      * 
      */
     needTranslucent = false;
-    imageFontScaling = vwr.getImageFontScaling();
+    imageFontScaling = vwr.imageFontScaling;
     Draw draw = (Draw) shape;
     for (int i = draw.meshCount; --i >= 0;)
       if (renderMesh(dmesh = (DrawMesh) draw.meshes[i]))

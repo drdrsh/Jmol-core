@@ -40,7 +40,7 @@ public class EchoRenderer extends LabelsRenderer {
     Echo echo = (Echo) shape;
     float scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? vwr
         .getScalePixelsPerAngstrom(true) * 10000 : 0);
-    imageFontScaling = vwr.getImageFontScaling();
+    imageFontScaling = vwr.imageFontScaling;
     boolean haveTranslucent = false;
     setZcutoff();
     for (Text t: echo.objects.values()) {

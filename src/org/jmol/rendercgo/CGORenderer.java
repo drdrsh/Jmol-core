@@ -66,7 +66,7 @@ public class CGORenderer extends DrawRenderer {
   @Override
   protected boolean render() {
     needTranslucent = false;
-    imageFontScaling = vwr.getImageFontScaling();
+    imageFontScaling = vwr.imageFontScaling;
     CGO cgo = (CGO) shape;
     for (int i = cgo.meshCount; --i >= 0;)
       renderMesh(cgoMesh = (CGOMesh) cgo.meshes[i]);

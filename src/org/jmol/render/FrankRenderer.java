@@ -45,7 +45,7 @@ public class FrankRenderer extends ShapeRenderer {
     if (!g3d.setC(C.getColixTranslucent3(colix,
             g3d.haveTranslucentObjects(), 0.5f)))
       return true;
-    float imageFontScaling = vwr.getImageFontScaling();
+    float imageFontScaling = vwr.imageFontScaling;
     frank.getFont(imageFontScaling);
     int dx = (int) (frank.frankWidth + Frank.frankMargin * imageFontScaling);
     int dy = frank.frankDescent;
