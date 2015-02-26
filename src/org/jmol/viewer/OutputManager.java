@@ -757,9 +757,6 @@ abstract class OutputManager {
                   } else {
                     int count = getInt(params, "captureCount", 0);
                     params.put("captureCount", Integer.valueOf(++count));
-                    if (count == 10)
-                      System.out.println("outman 10");
-
                     if ((rootExt = (String[]) params.get("captureRootExt")) != null) {
                       localName = (String) getRootExt(null, rootExt, count);
                       captureMsg = null;

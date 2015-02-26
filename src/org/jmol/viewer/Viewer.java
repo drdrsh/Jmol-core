@@ -826,21 +826,37 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * @return enough data to update a WebGL view
    * 
    */
+  @SuppressWarnings("unused")
   public Object getGLmolView() {
-    @SuppressWarnings("unused")
     TransformManager tm = this.tm;
+    T3 center = tm.fixedRotationCenter;
+    Quat q = tm.getRotationQ();
+    float xtrans = tm.xTranslationFraction;
+    float ytrans = tm.yTranslationFraction;
+    float scale = tm.scalePixelsPerAngstrom;
+    float zoom = tm.zmPctSet;
+    float cd = tm.cameraDistance;
+    float pc = tm.screenPixelCount;
+    boolean pd = tm.perspectiveDepth;
+    int width = tm.width;
+    int height = tm.height;
+    
     /**
      * @j2sNative
      * 
-     *            return { center:tm.fixedRotationCenter,
-     *            quaternion:tm.getRotationQuaternion(),
-     *            xtrans:tm.xTranslationFraction,
-     *            ytrans:tm.yTranslationFraction,
-     *            scale:tm.scalePixelsPerAngstrom, zoom:tm.zoomPercent,
-     *            cameraDistance:tm.cameraDistance,
-     *            pixelCount:tm.screenPixelCount,
-     *            perspective:tm.perspectiveDepth, width:tm.width,
-     *            height:tm.height };
+    *             return {
+    *              center:center,
+    *              quaternion:q,
+    *              xtrans:xtrans,
+    *              ytrans:ytrans,
+    *              scale:scale,
+    *              zoom:zoom,
+    *              cameraDistance:cd,
+    *              pixelCount:pc,
+    *              perspective:pd,
+    *              width:width,
+    *              height:height                          
+    *             };
      */
     {
       return null;
@@ -3321,8 +3337,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         && checkMotionRendering(T.antialiasdisplay)
         : isImageWrite && !isExport ? g.antialiasImages : false);
     imageFontScaling = (isReset || width <= 0 ? 1
-        : (g.zoomLarge == (height > width) ? height : width) / getScreenDim())
-        * (antialiased ? 2 : 1);
+        : (antialiased ? 2 : 1) * (g.zoomLarge == (height > width) ? height : width) / getScreenDim());
     if (width > 0) {
       dimScreen.width = width;
       dimScreen.height = height;
