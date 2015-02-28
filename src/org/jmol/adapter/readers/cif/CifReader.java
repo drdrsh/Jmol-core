@@ -353,9 +353,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    if (isMMCIF)
-      finalizeSubclass();
-    else
+    if (!isMMCIF || !finalizeSubclass())
       applySymmetryAndSetTrajectory();
     int n = asc.atomSetCount;
     if (n > 1)
@@ -374,8 +372,9 @@ public class CifReader extends AtomSetCollectionReader {
       addJmolScript("calculate aromatic");
   }
 
-  protected void finalizeSubclass() throws Exception {
+  protected boolean finalizeSubclass() throws Exception {
     // MMCifReader only    
+    return false;
   }
 
   @Override
@@ -1021,7 +1020,6 @@ public class CifReader extends AtomSetCollectionReader {
     int modelField = fieldOf[MODEL_NO];
     int siteMult = 0;
     while (parser.getData()) {
-      if (isMMCIF) {
         if (modelField >= 0) {
           fieldProperty(modelField);
           int modelNo = parseIntStr(field);
@@ -1047,7 +1045,6 @@ public class CifReader extends AtomSetCollectionReader {
           if (skipping)
             continue;
         }
-      }
       Atom atom = null;
       if (haveCoord) {
         atom = new Atom();
@@ -1184,6 +1181,10 @@ public class CifReader extends AtomSetCollectionReader {
           }
           break;
         case GROUP_PDB:
+          if (!isMMCIF) {
+            setIsPDB();
+            isMMCIF = true;
+          }
           if ("HETATM".equals(field))
             atom.isHetero = true;
           break;
@@ -1315,9 +1316,8 @@ public class CifReader extends AtomSetCollectionReader {
     return true;
   }
 
-//  private  Lst<Map<String, String>> vCompnds;
-//  private Map<String, Map<String, String>> htModels;
-  
+  protected Map<String, String> htHetero;
+
   /**
    * @param atom  
    * @param assemblyId 
@@ -1325,7 +1325,12 @@ public class CifReader extends AtomSetCollectionReader {
    * @return true if valid atom
    */
   protected boolean processSubclassAtom(Atom atom, String assemblyId, String strChain) {
-    return false; // MMCifReader only
+    if (atom.isHetero && htHetero != null) {
+      asc.setCurrentModelInfo("hetNames", htHetero);
+      asc.setInfo("hetNames", htHetero);
+      htHetero = null;
+    }
+    return true;
   }
 
   protected boolean filterCIFAtom(Atom atom, String assemblyId) {

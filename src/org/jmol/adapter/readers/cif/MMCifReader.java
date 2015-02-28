@@ -94,7 +94,7 @@ public class MMCifReader extends CifReader {
   }
 
   @Override
-  protected void finalizeSubclass() throws Exception {
+  protected boolean finalizeSubclass() throws Exception {
     if (byChain && !isBiomolecule)
       for (String id : chainAtomMap.keySet())
         createParticle(id);
@@ -133,7 +133,7 @@ public class MMCifReader extends CifReader {
         asc.xtalSymmetry = null;
       }
     }
-
+    return true;
   }
 
   ////////////////////////////////////////////////////////////////
@@ -510,8 +510,6 @@ public class MMCifReader extends CifReader {
     }
     return true;
   }
-
-  private Map<String, String> htHetero;
 
   private void addHetero(String groupName, String hetName) {
     if (!vwr.getJBR().isHetero(groupName))
