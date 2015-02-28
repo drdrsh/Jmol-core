@@ -370,6 +370,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     try {
       SmilesSearch search = SmilesParser.getMolecule(pattern, isSmarts);
       search.jmolAtoms = atoms;
+      if (atoms instanceof BNode[])
+        search.bioAtoms = (BNode[]) atoms;
       search.jmolAtomCount = Math.abs(ac);
       if (ac < 0)
         search.isSmilesFind = true;
@@ -393,6 +395,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         return vl.toArray(AU.newInt2(vl.size()));
       }
     } catch (Exception e) {
+      e.printStackTrace();
       if (InvalidSmilesException.getLastError() == null)
         InvalidSmilesException.clear();
       throw new InvalidSmilesException(InvalidSmilesException.getLastError());
