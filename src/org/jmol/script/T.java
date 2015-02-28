@@ -305,34 +305,35 @@ public class T {
   public final static int bind         = scriptCommand | 4;
   public final static int bondorder    = scriptCommand | 5;
   public final static int calculate    = scriptCommand | 6;
-//public final static int cache        see mathfunc
+//public final static int cache  see mathfunc
   public final static int capture      = scriptCommand | 7;
   public final static int cd           = scriptCommand | 8 /* must be even */| implicitStringCommand | expression; // must be even
   public final static int centerat     = scriptCommand | 9;
-//public final static int color        see intproperty
+//public final static int color  see intproperty
 //public final static int configuration see intproperty
-  public final static int connect = scriptCommand | 10;
+  public final static int connect      = scriptCommand | 10;
   public final static int console      = scriptCommand | 11 | defaultON;
-//public final static int data         see mathfunc
+//public final static int data  see mathfunc
   public final static int delay        = scriptCommand | 13 | defaultON;
-  public final static int depth = scriptCommand | 14 | intparam | defaultON;
+  public final static int depth        = scriptCommand | 14 | intparam | defaultON;
   public final static int exit         = scriptCommand | 15 | noArgs;
   public final static int exitjmol     = scriptCommand | 16 | noArgs;
-//public final static int file         see intproperty
+//public final static int file  see intproperty
   public final static int font         = scriptCommand | 18;
   public final static int frame        = scriptCommand | 19;
 //public final static int getproperty  see mathfunc
   public final static int gotocmd      = scriptCommand | 20 /*must be even*/| implicitStringCommand;
-  public final static int hbond = scriptCommand | 22 | deprecatedparam | expression | defaultON;
+  public final static int hbond        = scriptCommand | 22 | deprecatedparam | expression | defaultON;
   public final static int history      = scriptCommand | 23 | deprecatedparam;
-  public final static int initialize   = scriptCommand | 24 | noArgs;
-  public final static int invertSelected = scriptCommand | 25;
-//public final static int load         see mathfunc
-  public final static int loop         = scriptCommand | 26 | defaultON;
+  public final static int image        = scriptCommand | 24;
+  public final static int initialize   = scriptCommand | 25 | noArgs;
+  public final static int invertSelected = scriptCommand | 26;
+//public final static int load   see mathfunc
+  public final static int loop         = scriptCommand | 27 | defaultON;
   public final static int mapproperty  = scriptCommand | 28 | expression;
   public final static int minimize     = scriptCommand | 30;
-//public final static int model        see mathfunc
-//public final static int measure      see mathfunc
+//public final static int model  see mathfunc
+//public final static int measure   see mathfunc
   public final static int move         = scriptCommand | 32;
   public final static int moveto       = scriptCommand | 33;
   public final static int mutate       = scriptCommand | 34;
@@ -341,8 +342,8 @@ public class T {
   public final static int parallel     = flowCommand   | 36;
   public final static int plot         = scriptCommand | 37;
   public final static int process      = flowCommand   | 39;
-//  public final static int prompt     see mathfunc
-//  public final static int push       see mathfunc  = scriptCommand | 40 | noArgs; //internal only
+//  public final static int prompt  see mathfunc
+//  public final static int push  see mathfunc //internal only
   public final static int quit         = scriptCommand | 41 | noArgs;
   public final static int ramachandran = scriptCommand | 42 | expression;
   public final static int redomove = scriptCommand | 43;
@@ -1207,7 +1208,6 @@ public class T {
   public final static int ignore         = misc  | 152;
   public final static int inchi          = misc  | 153;
   public final static int inchikey       = misc  | 154;
-  public final static int image          = misc  | 155;
   public final static int increment      = misc  | 157;
   public final static int info    = misc  | 158;
   public final static int inline         = misc  | 159;

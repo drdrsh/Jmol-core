@@ -906,10 +906,10 @@ public class FileManager implements BytePoster {
     Object image = null;
     String nameOrError = null;
     byte[] bytes = null;
-    boolean isWriteImage = (echoName != null && echoName.startsWith("\1"));
-    if (isWriteImage) {
-      if (echoName.equals("\1none")) {
-        vwr.loadImageData(Boolean.TRUE, "\1none", echoName, null);
+    boolean isShowImage = (echoName != null && echoName.startsWith("\1"));
+    if (isShowImage) {
+      if (echoName.equals("\1closeall\1null")) {
+        vwr.loadImageData(Boolean.TRUE, "\1closeall", "\1closeall", null);
         return;
       }
       if ("\1close".equals(nameOrBytes)) {
@@ -945,7 +945,7 @@ public class FileManager implements BytePoster {
     }
     if (!vwr.isJS && image != null && bytes != null)
       nameOrError = ";base64," + Base64.getBase64(bytes).toString();
-    if (!vwr.isJS || isWriteImage && nameOrError == null)
+    if (!vwr.isJS || isShowImage && nameOrError == null)
       vwr.loadImageData(image, nameOrError, echoName, null);
     // JSmol will call that from awtjs2d.Platform.java asynchronously
   }

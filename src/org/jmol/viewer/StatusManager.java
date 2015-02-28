@@ -86,7 +86,7 @@ vwrRefreshed
 public class StatusManager {
 
   protected Viewer vwr;
-  private JmolStatusListener jsl;
+  JmolStatusListener jsl;
   JmolCallbackListener cbl;
   public String statusList = "";
 
@@ -246,16 +246,7 @@ public class StatusManager {
     return list;
   }
 
-  synchronized void setJmolStatusListener(JmolStatusListener jmolStatusListener, JmolCallbackListener jmolCallbackListener) {
-    this.jsl = jmolStatusListener;
-    this.cbl = (jmolCallbackListener == null ? (JmolCallbackListener) jmolStatusListener : jmolCallbackListener);
-  }
-  
-  synchronized void setJmolCallbackListener(JmolCallbackListener jmolCallbackListener) {
-    this.cbl = jmolCallbackListener;
-  }
-  
-  Map<CBK, String> jmolScriptCallbacks = new Hashtable<CBK, String>();
+  private Map<CBK, String> jmolScriptCallbacks = new Hashtable<CBK, String>();
 
   private String jmolScriptCallback(CBK callback) {
     String s = jmolScriptCallbacks.get(callback);
@@ -361,7 +352,7 @@ public class StatusManager {
    * called by Viewer.loadImageData to pop up a window with an image in it
    * 
    * @param title
-   * @param image  or Boolean.TRUE for "none" or Boolean.FALSE for "close"
+   * @param image  or Boolean.TRUE for "close all" or Boolean.FALSE for "close"
    */
   synchronized void showImage(String title, Object image) {
     String sJmol = jmolScriptCallback(CBK.IMAGE);
@@ -379,6 +370,9 @@ public class StatusManager {
     }
     if (imageMap == null)
       imageMap = new Hashtable<String, GenericImageDialog>();
+    title = title.substring(title.indexOf("\1") + 1);
+    if (title.equals("null"))
+      title = "";
     GenericImageDialog d = imageMap.get(title);
     if (Boolean.FALSE.equals(image)) {
       if (d != null)

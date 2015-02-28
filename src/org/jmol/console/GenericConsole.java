@@ -297,31 +297,74 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   @Override
   public boolean notifyEnabled(CBK type) {
     // See org.jmol.viewer.JmolConstants.java for a complete list
-    switch (type) {
-    case ECHO:
-    case MEASURE:
-    case MESSAGE:
-    case PICK:
-      return true;
-    case ANIMFRAME:
-    case APPLETREADY:
-    case ATOMMOVED:
-    case CLICK:
-    case DRAGDROP:
-    case ERROR:
-    case EVAL:
-    case HOVER:
-    case IMAGE:
-    case LOADSTRUCT:
-    case MINIMIZATION:
-    case SERVICE:
-    case RESIZE:
-    case SCRIPT:
-    case SYNC:
-    case STRUCTUREMODIFIED:
-      break;
+    // ignore in JavaScript
+    /**
+     * @j2sNative
+     * 
+     * 
+     */
+    {
+      switch (type) {
+      case ECHO:
+      case MEASURE:
+      case MESSAGE:
+      case PICK:
+        return true;
+      case ANIMFRAME:
+      case APPLETREADY:
+      case ATOMMOVED:
+      case CLICK:
+      case DRAGDROP:
+      case ERROR:
+      case EVAL:
+      case HOVER:
+      case IMAGE:
+      case LOADSTRUCT:
+      case MINIMIZATION:
+      case SERVICE:
+      case RESIZE:
+      case SCRIPT:
+      case SYNC:
+      case STRUCTUREMODIFIED:
+        break;
+      }
     }
     return false;
+  }
+
+  @Override
+  @SuppressWarnings("incomplete-switch")
+  public void notifyCallback(CBK type, Object[] data) {
+    // ignore in JavaScript
+    /**
+     * @j2sNative
+     * 
+     * 
+     */
+    {
+      String strInfo = (data == null || data[1] == null ? null : data[1]
+          .toString());
+      switch (type) {
+      case ECHO:
+        sendConsoleEcho(strInfo);
+        break;
+      case MEASURE:
+        String mystatus = (String) data[3];
+        if (mystatus.indexOf("Picked") >= 0
+            || mystatus.indexOf("Sequence") >= 0) // picking mode
+          sendConsoleMessage(strInfo);
+        else if (mystatus.indexOf("Completed") >= 0)
+          sendConsoleEcho(strInfo.substring(strInfo.lastIndexOf(",") + 2,
+              strInfo.length() - 1));
+        break;
+      case MESSAGE:
+        sendConsoleMessage(data == null ? null : strInfo);
+        break;
+      case PICK:
+        sendConsoleMessage(strInfo);
+        break;
+      }
+    }
   }
 
   @Override
@@ -362,32 +405,6 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     outputMsg(strInfo);
   }
   
-  @Override
-  @SuppressWarnings("incomplete-switch")
-  public void notifyCallback(CBK type, Object[] data) {
-    String strInfo = (data == null || data[1] == null ? null : data[1]
-        .toString());
-    switch (type) {
-    case ECHO:
-      sendConsoleEcho(strInfo);
-      break;
-    case MEASURE:
-      String mystatus = (String) data[3];
-      if (mystatus.indexOf("Picked") >= 0 || mystatus.indexOf("Sequence") >= 0) // picking mode
-        sendConsoleMessage(strInfo);
-      else if (mystatus.indexOf("Completed") >= 0)
-        sendConsoleEcho(strInfo.substring(strInfo.lastIndexOf(",") + 2, strInfo
-            .length() - 1));
-      break;
-    case MESSAGE:
-      sendConsoleMessage(data == null ? null : strInfo);
-      break;
-    case PICK:
-      sendConsoleMessage(strInfo);
-      break;
-    }
-  }
-
   @Override
   public void setCallbackFunction(String callbackType, String callbackFunction) {
     // application-dependent option

@@ -4186,13 +4186,13 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   @Override
-  public void setJmolCallbackListener(JmolCallbackListener jmolCallbackListener) {
-    sm.setJmolCallbackListener(jmolCallbackListener);
+  public void setJmolCallbackListener(JmolCallbackListener listener) {
+    sm.cbl = listener;
   }
 
   @Override
-  public void setJmolStatusListener(JmolStatusListener jmolStatusListener) {
-    sm.setJmolStatusListener(jmolStatusListener, null);
+  public void setJmolStatusListener(JmolStatusListener listener) {
+    sm.cbl = sm.jsl = listener;
   }
 
   public Lst<Lst<Lst<Object>>> getStatusChanged(String statusNameList) {

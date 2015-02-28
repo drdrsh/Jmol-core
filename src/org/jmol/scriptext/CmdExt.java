@@ -149,6 +149,9 @@ public class CmdExt implements JmolCmdExtension {
     case T.hbond:
       connect(0);
       break;
+    case T.image:
+      image();
+      break;
     case T.mapproperty:
       mapProperty();
       break;
@@ -1870,6 +1873,58 @@ public class CmdExt implements JmolCmdExtension {
     setShapeProperty(JC.SHAPE_ELLIPSOIDS, "thisID", null);
   }
 
+  private void image() throws ScriptException {
+    // image ...
+    // image id XXXX...
+    // ... "filename"
+    // ... close
+    // ... close "filename"
+    if (!chk)
+      vwr.getConsole();// especially important for JavaScript
+    int pt = 1;
+    String id = null;
+    if (tokAt(1) == T.id) {
+      // image ID ...
+      id = e.optParameterAsString(++pt);
+      pt++;
+    }
+    String fileName = e.optParameterAsString(pt);
+    if (!fileName.equals("close") && (slen == pt || slen == pt + 2)) {
+      // image
+      // image 400 400
+      // image id "testing"
+      // image id "testing" 400 400
+      int width = (slen == pt + 2 ? intParameter(pt++) : -1);
+      int height = (width < 0 ? -1 : intParameter(pt));
+      Map<String, Object> params = new Hashtable<String, Object>();
+      params.put("fileName", "\1\1" + id);
+      params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
+      params.put("type", "png");
+      params.put("quality", Integer.valueOf(-1));
+      params.put("width", Integer.valueOf(width));
+      params.put("height", Integer.valueOf(height));
+      if (!chk)
+        vwr.processWriteOrCapture(params);
+      return;
+    }
+    pt++;
+    boolean isClose = false;
+    if (fileName.equalsIgnoreCase("close")) {
+      // image close
+      // image ID "testing" close
+      // image close "filename"
+      e.checkLength(slen == pt || id != null ? pt : pt + 1);
+      isClose = true;
+      fileName = (slen == pt && id == null ? "closeall" : e
+          .optParameterAsString(pt));
+    } else {
+      e.checkLength(pt);
+    }
+    if (!chk)
+      vwr.fm.loadImage(isClose ? "\1close" : fileName, "\1" + fileName + "\1"
+          + id);
+  }
+  
   private void mapProperty() throws ScriptException {
     // map {1.1}.straightness  {2.1}.property_x resno
     BS bsFrom, bsTo;
@@ -2997,16 +3052,16 @@ public class CmdExt implements JmolCmdExtension {
     boolean isCommand = true;
     boolean showOnly = false;
     if (args == null) {
-      // write command or show IMAGE
+      // write command
       args = st;
       showOnly = (vwr.isApplet && !vwr.isSignedApplet
           || !vwr.haveAccess(ACCESS.ALL) || vwr.fm.getPathForAllFiles()
           .length() > 0);
     } else {
-      // write() function
+      // write() function or image
       pt = pt0 = 0;
-      isCommand = false;
-      showOnly = true;
+      isCommand = (args == st);
+      showOnly = !isCommand;
     }
 
     // check for special considerations involving first parameter
@@ -3058,7 +3113,7 @@ public class CmdExt implements JmolCmdExtension {
 
     // accept write ...... AS type
 
-    if (tok != T.nada && isCommand && tokAt(slen - 2) == T.as) {
+    if (tok != T.nada && isCommand && slen > 1 && tokAt(slen - 2) == T.as) {
       type = paramAsStr(slen - 1).toUpperCase();
       pt0 = argCount;
       argCount -= 2;
@@ -3605,7 +3660,7 @@ public class CmdExt implements JmolCmdExtension {
       if (token != null)
         tok = token.tok;
     }
-    if (tok != T.symop && tok != T.state && tok != T.property && tok != T.image)
+    if (tok != T.symop && tok != T.state && tok != T.property)
       checkLength(-3);
     if (slen == 2 && str.indexOf("?") >= 0) {
       showString(vwr.getAllSettings(str.substring(0, str.indexOf("?"))));
@@ -3615,30 +3670,6 @@ public class CmdExt implements JmolCmdExtension {
     case T.nada:
       if (!chk)
         msg = ((SV) eval.theToken).escape();
-      break;
-    case T.image:
-      vwr.getConsole();// especially important for JavaScript
-      if (slen == 2 || slen == 4 && !chk) {
-        // show image
-        // show image 400 400
-        write(null);
-        return;
-      }
-      // show image close
-      // show image close "myfile"
-      String fileName = eval.optParameterAsString(2);
-      boolean isClose = false;
-      if (fileName.equalsIgnoreCase("close")) {
-        eval.checkLength(-4);
-        isClose = true;
-        fileName = (slen == 3 ? "none" : eval.optParameterAsString(3));
-      } else {
-        eval.checkLength23();
-      }
-      len = st.length;
-      if (!chk)
-        vwr.fm.loadImage(len == 2 ? null : isClose ? "\1close" : fileName, "\1" + fileName);
-      str = null;
       break;
     case T.domains:
       eval.checkLength23();
