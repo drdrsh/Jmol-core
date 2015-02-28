@@ -36,6 +36,7 @@ import javajs.util.Lst;
 import org.jmol.script.SV;
 import org.jmol.util.Logger;
 import javajs.util.P3;
+import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;
@@ -199,7 +200,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
     if (htParams.containsKey("concatenate")) {
       String s = "";
       for (int i = 0; i < size; i++) {
-        String f = vwr.getFileAsString3(names[i], false, null);
+        String name = names[i];
+        String f = vwr.getFileAsString3(name, false, null);
         if (i > 0 && size <= 3 && f.startsWith("{")) {
           // JSON domains and validations; could have both
           // hack to determine type:
@@ -209,11 +211,13 @@ public class SmarterJmolAdapter extends JmolAdapter {
             htParams.put(type, x);
           continue;
         }
-        if (names[i].indexOf("/rna3dhub/") >= 0) {
+        if (name.indexOf("|") >= 0)
+          name = PT.rep(name, "_", "/");
+        if (name.indexOf("/rna3dhub/") >= 0) {
           s += "\n_rna3d \n;" + f + "\n;\n";
           continue;
         }
-        if (names[i].indexOf("/dssr/") >= 0) {
+        if (name.indexOf("/dssr/") >= 0) {
           s += "\n_dssr \n;" + f + "\n;\n";
           continue;
         }
