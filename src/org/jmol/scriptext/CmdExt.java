@@ -1889,7 +1889,8 @@ public class CmdExt implements JmolCmdExtension {
       pt++;
     }
     String fileName = e.optParameterAsString(pt);
-    if (!fileName.equals("close") && (slen == pt || slen == pt + 2)) {
+    boolean isClose = e.optParameterAsString(slen - 1).equalsIgnoreCase("close");
+    if (!isClose && (slen == pt || slen == pt + 2)) {
       // image
       // image 400 400
       // image id "testing"
@@ -1908,21 +1909,24 @@ public class CmdExt implements JmolCmdExtension {
       return;
     }
     pt++;
-    boolean isClose = false;
-    if (fileName.equalsIgnoreCase("close")) {
-      // image close
-      // image ID "testing" close
-      // image close "filename"
-      e.checkLength(slen == pt || id != null ? pt : pt + 1);
-      isClose = true;
-      fileName = (slen == pt && id == null ? "closeall" : e
-          .optParameterAsString(pt));
-    } else {
-      e.checkLength(pt);
+    if (isClose) {
+      switch (slen) {
+      case 2:
+        // image close
+        fileName = "closeall";
+        break;
+      case 3: 
+      case 4:
+        // image "filename" close
+        // image ID "testing" close
+        break;
+      default:
+        checkLength(0);
+      }
     }
     if (!chk)
       vwr.fm.loadImage(isClose ? "\1close" : fileName, "\1" + fileName + "\1"
-          + id);
+          + ("".equals(id) || id == null ? null : id));
   }
   
   private void mapProperty() throws ScriptException {

@@ -355,6 +355,8 @@ public class StatusManager {
    * @param image  or Boolean.TRUE for "close all" or Boolean.FALSE for "close"
    */
   synchronized void showImage(String title, Object image) {
+    String[] a = PT.split(title,  "\1");
+    title = (a.length < 3 || a[2].equals("null") ? a[1].substring(a[1].lastIndexOf("/") + 1) : a[2]);
     String sJmol = jmolScriptCallback(CBK.IMAGE);
     if (notifyEnabled(CBK.IMAGE))
       cbl.notifyCallback(CBK.IMAGE, new Object[] { sJmol, title, image });
@@ -370,9 +372,6 @@ public class StatusManager {
     }
     if (imageMap == null)
       imageMap = new Hashtable<String, GenericImageDialog>();
-    title = title.substring(title.indexOf("\1") + 1);
-    if (title.equals("null"))
-      title = "";
     GenericImageDialog d = imageMap.get(title);
     if (Boolean.FALSE.equals(image)) {
       if (d != null)

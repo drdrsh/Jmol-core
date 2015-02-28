@@ -62,6 +62,7 @@ public class ImageDialog extends JDialog implements GenericImageDialog, WindowLi
   protected Viewer vwr;
   protected Canvas canvas;
   private String title;
+
   private Map<String, GenericImageDialog> imageMap;
 
   private JmolAppConsoleInterface console;
@@ -163,12 +164,9 @@ public class ImageDialog extends JDialog implements GenericImageDialog, WindowLi
     this.image = (Image) oimage;
     int w = image.getWidth(null);
     int h = image.getHeight(null);
-    setTitle(title.substring(title.lastIndexOf("/") + 1) + " [" + w + " x " + h
-        + "]");
+    setTitle(title + " [" + w + " x " + h + "]");
     Dimension d = new Dimension(w, h);
     canvas.setSize(d);
-    //canvas.setBackground(new Color(55,0,0));
-    //setPreferredSize(d);
     pack();
     repaint();
   }  

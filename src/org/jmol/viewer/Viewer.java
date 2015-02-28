@@ -8007,7 +8007,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (echoName == null) {
       setBackgroundImage((image == null ? null : nameOrError), image);
     } else if (echoName.startsWith("\1")) {
-      sm.showImage(echoName.substring(1), image);
+      sm.showImage(echoName, image);
     } else {
       shm.loadShape(JC.SHAPE_ECHO);
       setShapeProperty(JC.SHAPE_ECHO, "text", nameOrError);
