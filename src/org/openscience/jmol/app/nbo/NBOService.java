@@ -178,7 +178,7 @@ public class NBOService {
   }
 
   public void nboReport(String line) {
-    vwr.log("receiving: " + line);
+    vwr.log(inData + " " + nboSync + " " + sbRet.length() + " " + "receiving: " + line);
     if (line.startsWith("DATA ")) {
       if (line.startsWith("DATA \"model")) {
         nboModel = PT.getQuotedStringAt(line, 0);
@@ -193,11 +193,11 @@ public class NBOService {
       sbRet.append(line + "\n");
       if (line.indexOf("END") >= 0) {
         inData = false;
-        String s = sbRet.toString();
-        sbRet.setLength(0);
         String m = "\"" + nboModel + "\"";
         nboModel = "\0";
         if (!nboSync && line.indexOf(m) >= 0) {
+          String s = sbRet.toString();
+          sbRet.setLength(0);
           vwr.log("running Jmol script:\n" + s);
           vwr.script(s);
         }
