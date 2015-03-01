@@ -167,39 +167,45 @@ public class NBOService {
    * @param s
    */
   private void sendToNBO(int mode, String s) {
-    s = (mode == RAW ? s + "\n" : mode + "\n" + s + "\nexit" + (nboSync ? "\nexit" : ""));
+    s = (mode == RAW ? s : mode + "\n" + s + "\nexit" + (nboSync ? "\nexit" : ""));
     sendCmd(s);
   }
   
-  private void sendCmd(String s) {    
-    System.out.println("sending: " + s + "\n");
+  private void sendCmd(String s) {
+    vwr.log("sending:\n>>>\n" + s + "\n<<<");
     stdinWriter.println(s);
     stdinWriter.flush();
   }
 
   public void nboReport(String line) {
-    System.out.println("receiving: " + line);
-    if (nboDialog != null)
-      nboDialog.nboReport(line);
+    vwr.log("receiving: " + line);
     if (line.startsWith("DATA ")) {
       if (line.startsWith("DATA \"model")) {
         nboModel = PT.getQuotedStringAt(line, 0);
         line += " NBO " + nboModel;
       }
       inData = (line.indexOf("exit") < 0);
+      if (inData)
+        sbRet.append(line + "\n");
+      return;
     }
     if (inData) {
       sbRet.append(line + "\n");
+      if (line.indexOf("END") >= 0) {
+        inData = false;
+        String s = sbRet.toString();
+        sbRet.setLength(0);
+        String m = "\"" + nboModel + "\"";
+        nboModel = "\0";
+        if (!nboSync && line.indexOf(m) >= 0) {
+          vwr.log("running Jmol script:\n" + s);
+          vwr.script(s);
+        }
+        return;
+      }
     }
-    if (inData && line.indexOf("END") >= 0) {
-      inData = false;
-      String s = sbRet.toString();
-      sbRet.setLength(0);
-      String m = "\"" + nboModel + "\"";
-      nboModel = "\0";
-      if (!nboSync && line.indexOf(m) >= 0)
-        vwr.script(s);
-    }
+    if (nboDialog != null)
+      nboDialog.nboReport(line);
   }
 
 
