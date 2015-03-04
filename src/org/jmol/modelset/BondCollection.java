@@ -496,6 +496,7 @@ abstract public class BondCollection extends AtomCollection {
           continue;
         if (!assignAromaticDouble(bond))
           assignAromaticSingle(bond);
+        System.out.println(bond + " "+ bond.order);
       }
     // all done: do the actual assignments and clear arrays.
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {

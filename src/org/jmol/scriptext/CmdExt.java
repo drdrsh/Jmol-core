@@ -3402,7 +3402,7 @@ public class CmdExt implements JmolCmdExtension {
       if (timeMsg)
         Logger.startTimer("export");
       Map<String, Object> eparams = new Hashtable<String, Object>();
-      eparams.put("type", data);
+      eparams.put("type", type);
       if (fileName != null)
         eparams.put("fileName", fileName);
       if (isCommand || fileName != null)
