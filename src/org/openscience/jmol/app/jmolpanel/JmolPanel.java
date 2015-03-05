@@ -38,6 +38,7 @@ import org.openscience.jmol.app.jsonkiosk.BannerFrame;
 import org.openscience.jmol.app.jsonkiosk.JsonNioClient;
 import org.openscience.jmol.app.jsonkiosk.JsonNioServer;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
+import org.openscience.jmol.app.nbo.NBODialog;
 import org.openscience.jmol.app.nbo.NBOService;
 import org.openscience.jmol.app.surfacetool.SurfaceTool;
 import org.jmol.script.T;

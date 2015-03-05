@@ -21,23 +21,22 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package org.openscience.jmol.app.jmolpanel;
+package org.openscience.jmol.app.nbo;
 
 import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
-import org.openscience.jmol.app.nbo.NBOService;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+//import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
+//import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -45,7 +44,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
+//import javax.swing.JSplitPane;
 //import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -65,7 +64,7 @@ import java.util.Map;
  */
 public class NBODialog extends JDialog implements ChangeListener {
 
-  private transient Viewer vwr;
+  protected Viewer vwr;
   
   protected JButton nboPathButton;
   //protected JTextField commandLineField;

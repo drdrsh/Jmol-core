@@ -25,7 +25,6 @@ package org.openscience.jmol.app.nbo;
 
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
-import org.openscience.jmol.app.jmolpanel.NBODialog;
 
 import java.io.BufferedReader;
 import java.io.File;
