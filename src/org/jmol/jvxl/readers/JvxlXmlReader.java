@@ -692,12 +692,13 @@ public class JvxlXmlReader extends VolumeFileReader {
       params.mappedDataMin = contourPlaneMinimumValue;
       params.mappedDataMax = contourPlaneMaximumValue;
     }
-    if (jvxlData.colorScheme != null)
+    if (jvxlData.colorScheme != null) {
+      boolean setContourValue = (marchingSquares != null && params.isContoured);
       for (int i = 0; i < vertexCount; i += vertexIncrement) {
         float value = vertexValues[i];
         //note: these are just default colorings
         //orbital color had a bug through 11.2.6/11.3.6
-        if (marchingSquares != null && params.isContoured) {
+        if (setContourValue) {
           marchingSquares.setContourData(i, value);
           continue;
         }
@@ -707,6 +708,7 @@ public class JvxlXmlReader extends VolumeFileReader {
         colixes[i] = C.getColixTranslucent3(colix, true,
             jvxlData.translucency);
       }
+    }
     return jvxlColorDataRead + "\n";
   }
 

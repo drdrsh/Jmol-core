@@ -113,6 +113,11 @@ public class MarchingSquares {
     void setValue(float value) {
       this.value = value;
     }
+    
+    @Override
+    public String toString() {
+      return value + " " + x + " " + y + " " + z;
+    }
 
   }
 
@@ -167,7 +172,6 @@ public class MarchingSquares {
    * @return       0
    */
   public int addTriangle(int iA, int iB, int iC, int check, int iContour) {
-    //System.out.println("addT " + iA + " " + iB + " " + iC);
     if (triangleCount == triangles.length)
       triangles = (Triangle[]) AU.doubleLength(triangles);
     triangles[triangleCount++] = new Triangle(iA, iB, iC, check, iContour);
@@ -253,11 +257,12 @@ public class MarchingSquares {
         cutoff = (cutoff < 0 ? -zeroOffset : zeroOffset);
       contourValuesUsed[i] = cutoff;
 
-      Logger.info("#contour " + (i + 1)+ " " + cutoff);
+      Logger.info("#contour " + (i + 1)+ " " + cutoff + " " + triangleCount);
       htPts.clear();
-      for (int ii = triangleCount; --ii >= 0;)
+      for (int ii = triangleCount; --ii >= 0;) {
         if (triangles[ii].isValid)
           checkContour(triangles[ii], i, cutoff);
+      }
       if (thisContour > 0) {
         if (i + 1 == thisContour)
           minCutoff = cutoff;
@@ -305,7 +310,6 @@ public class MarchingSquares {
       return htPts.get(key).intValue();
     float valueA = contourVertexes[iA].value;
     float valueB = contourVertexes[iB].value;
-    //System.out.println(iA + " " + iB + " " + valueA + " " + value + " " + valueB);
     int iPt = -1;
     if (valueA != valueB) {
       float f = (value - valueA) / (valueB - valueA);
@@ -331,9 +335,6 @@ public class MarchingSquares {
   private void checkContour(Triangle t, int i, float value) {
     if (thisContour > 0 && i + 1 != thisContour)
       return;
-   //System.out.println(" ms  i=" + i + " " + contourVertexes[pts[0]].value + " " + contourVertexes[pts[1]].value + " " + contourVertexes[pts[2]].value + " " + value);
-   //System.out.println(pts[0] + " " + pts[1] + " " + pts[2]);
-   //System.out.println(contourVertexes[pts[0]] + "\n" + contourVertexes[pts[1]] + "\n" + contourVertexes[pts[2]]);
     int ipt0 = intercept(t, 0, value);
     int ipt1 = intercept(t, 1, value);
     int ipt2 = intercept(t, 2, value);
@@ -377,7 +378,6 @@ public class MarchingSquares {
     for (int i = 0; i < triangleCount; i++)
       if (triangles[i].isValid) {
         Triangle t = triangles[i];
-        //System.out.println(contourVertexes[t.pts[0]].value + " " + contourVertexes[t.pts[1]].value + " "  + contourVertexes[t.pts[2]].value + " "  );
         surfaceReader.addTriangleCheck(t.pts[0], t.pts[1], t.pts[2], t.check,
             t.contourIndex, false, -1);
       }

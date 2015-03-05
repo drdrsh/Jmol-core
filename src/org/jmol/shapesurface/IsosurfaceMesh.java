@@ -798,6 +798,7 @@ public class IsosurfaceMesh extends Mesh {
       // still, if the scheme is translucent, we don't want to color the vertices translucent
       isTranslucent = false;
     }
+    vcs = AU.ensureLengthShort(vcs, vc); // when reading contour plane may be remapped
     for (int i = vc; --i >= mergeVertexCount0;)
       vcs[i] = ce.getColorIndex(vvs[i]);
     setTranslucent(isTranslucent, translucentLevel);
@@ -813,7 +814,6 @@ public class IsosurfaceMesh extends Mesh {
         color[0] = C.getArgb(colix[0]);
       }
     }
-    //TODO -- still not right.
     if (contourValues != null) {
       contourColixes = new short[contourValues.length];
       for (int i = 0; i < contourValues.length; i++)
