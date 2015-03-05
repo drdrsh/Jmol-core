@@ -325,7 +325,7 @@ public class NBODialog extends JDialog implements ChangeListener {
 //    JPanel showPanel = new JPanel(new BorderLayout());
 //    Box a = Box.createVerticalBox();
 //    Box b = Box.createHorizontalBox();
-//    b.add(newLabel("Model Command"));
+//    b.add(new JLabel("Model Command"));
 //    b.add(modelField);
 //    a.add(b);
 //    a.add(Box.createVerticalGlue());
@@ -346,7 +346,7 @@ public class NBODialog extends JDialog implements ChangeListener {
 //    JPanel showPanel = new JPanel(new BorderLayout());
 //    Box a = Box.createVerticalBox();
 //    Box b = Box.createHorizontalBox();
-//    b.add(newLabel("View Command"));
+//    b.add(new JLabel("View Command"));
 //    b.add(viewField);
 //    a.add(b);
 //    a.add(Box.createVerticalGlue());
@@ -367,7 +367,7 @@ public class NBODialog extends JDialog implements ChangeListener {
 //    JPanel showPanel = new JPanel(new BorderLayout());
 //    Box a = Box.createVerticalBox();
 //    Box b = Box.createHorizontalBox();
-//    b.add(newLabel("Run Command"));
+//    b.add(new JLabel("Run Command"));
 //    b.add(runField);
 //    a.add(b);
 //    a.add(Box.createVerticalGlue());
@@ -388,20 +388,13 @@ public class NBODialog extends JDialog implements ChangeListener {
     JPanel showPanel = new JPanel(new BorderLayout());
     Box a = Box.createVerticalBox();
     Box b = Box.createHorizontalBox();
-    b.add(newLabel("NBO Input:"));
+    b.add(new JLabel("NBO Input:"));
     b.add(nboInput);
     a.add(b);
     a.add(Box.createVerticalGlue());
     showPanel.add(a, BorderLayout.NORTH);
     //showPanel.add(Box.createGlue(), BorderLayout.CENTER);
     return showPanel;
-  }
-
-  private Component newLabel(String label) {
-    JTextField t = new JTextField(label);
-    t.setEditable(false);
-    t.setBorder(null);
-    return t;
   }
 
   /////////////////////////////////////////////////////////
