@@ -725,6 +725,16 @@ public class IsoExt extends CmdExt {
     BS bsModels = vwr.getVisibleFramesBitSet();
     Lst<Object[]> propertyList = new Lst<Object[]>();
     int i0 = 1;
+    if (tokAt(0) == T.nbo && e.slen == 1) {
+      // NBO command by itself starts the NBO Server Interface panel
+      if (!chk) {
+        Map<String, Object> htParams = new Hashtable<String, Object>();
+        htParams.put("service", "nbo");
+        htParams.put("action", "showPanel");
+        vwr.sm.processService(htParams);
+      }
+      return;
+    }
     if (tokAt(1) == T.model || tokAt(1) == T.frame) {
       i0 = eval.modelNumberParameter(2);
       if (i0 < 0)

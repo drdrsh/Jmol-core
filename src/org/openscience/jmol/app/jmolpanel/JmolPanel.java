@@ -1094,11 +1094,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     
     @Override
     public void actionPerformed(ActionEvent e) {
-      getNBOService();
-      if (nboDialog == null)
-        nboDialog = new NBODialog(frame, vwr, nboService);
-      else
-        nboDialog.setVisible(true);
+      startNBO();
     }
   }
     
@@ -1121,6 +1117,14 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     newFrame.setVisible(true);
   }
   
+  void startNBO() {
+    getNBOService();
+    if (nboDialog == null)
+      nboDialog = new NBODialog(frame, vwr, nboService);
+    else
+      nboDialog.setVisible(true);
+  }
+
   class UguideAction extends AbstractAction {
 
     public UguideAction() {

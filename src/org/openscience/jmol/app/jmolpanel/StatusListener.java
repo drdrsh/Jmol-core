@@ -175,7 +175,10 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       try {
       String service = (String) info.get("service");
       if ("nbo".equals(service)) {
-        display.jmolPanel.getNBOService().processRequest(info);
+        if ("showPanel".equals(info.get("action"))) 
+          jmol.startNBO();
+        else
+          jmol.getNBOService().processRequest(info);
       }
       } catch (Exception e) {
         // ignore
@@ -270,7 +273,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
           "getAppConsole", null);
       if (appConsole != null)
         appConsole.sendConsoleEcho(null);
-      display.jmolPanel.updateLabels();
+      jmol.updateLabels();
       return;
     }
   }
