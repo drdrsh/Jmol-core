@@ -476,7 +476,7 @@ public class NBODialog extends JDialog implements ChangeListener {
   protected void connectPressed() {
     nboService.closeProcess();
     nboReport(null);
-    String err = nboService.startProcess(true); // synchronous? 
+    String err = nboService.startProcess(false);  
     if (err == null) {
       nboReport("listening...");
     } else {
