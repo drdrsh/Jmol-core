@@ -233,7 +233,7 @@ public class JvxlReader extends JvxlXmlReader {
         || param3 < 0);
     params.isBicolorMap = (param1 > 0 && param2 < 0);
     jvxlDataIsColorMapped = (param3 != 0);
-    if (jvxlDataIsColorMapped && !params.isContoured)
+    if (jvxlDataIsColorMapped)
       jvxlData.colorScheme = "RGB"; // legacy; but can't remap contours
     jvxlDataIs2dContour = (jvxlDataIsColorMapped && params.isContoured);
 

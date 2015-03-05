@@ -149,7 +149,7 @@ class SpartanArchive {
       r.setAtomCoordScaled(atom, tokens, 1, AtomSetCollectionReader.ANGSTROMS_PER_BOHR);
     }
     if (doAddAtoms && Logger.debugging) {
-      Logger.debug(ac + " atoms read");
+      Logger.debug(r.asc.ac + " atoms read");
     }
   }
 
@@ -238,7 +238,7 @@ class SpartanArchive {
         iBasis = QS.S;
         break;
       case 1:
-        iBasis = QS.SP;
+        iBasis = (isSpherical ? QS.P : QS.SP);
         break;
       case 2:
         iBasis = (isSpherical ? QS.DS : QS.DC);
@@ -265,6 +265,9 @@ class SpartanArchive {
       switch (typeArray[i]) {
       case QS.S:
         data[1] = parseFloat(tokens[0]);
+        break;
+      case QS.P:
+        data[1] = parseFloat(tokens[1]);
         break;
       case QS.SP:
         data[1] = parseFloat(tokens[0]);
