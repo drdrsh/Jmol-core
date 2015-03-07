@@ -98,6 +98,21 @@ public class ScriptMathProcessor {
   private boolean allowUnderflow;
   private boolean isAssignment;
 
+  /**
+   * 
+   * @param eval
+   * @param isSpecialAssignment  
+   *       x[n] = ...
+   * @param isArrayItem
+   * @param asVector
+   *       return a Lst(SV) from getResult()
+   * @param asBitSet
+   *       return a (SV)bitset
+   * @param allowUnderflow
+   *       expression can terminate prior to end of statement
+   *       
+   * @param key
+   */
   ScriptMathProcessor(ScriptExpr eval, boolean isSpecialAssignment, boolean isArrayItem,
       boolean asVector, boolean asBitSet, boolean allowUnderflow, String key) {
     this.eval = eval;
@@ -538,7 +553,7 @@ public class ScriptMathProcessor {
           // x[3] = .... ; add a special flag for this, 
           // waiting until the very end to apply it.
           wasX = false;
-          addX(SV.newT(T.tokenArraySelector));
+          addX(SV.newT(T.tokenArrayOpen));
           break;
         }
         if (!doSelection())
@@ -851,7 +866,7 @@ public class ScriptMathProcessor {
       return true;
 
     SV x2 = getX();
-    if (x2 == T.tokenArraySelector)
+    if (x2 == T.tokenArrayOpen)
       return false;
 
     //unnecessary  -- getX() does this. x2 = selectX(x2);

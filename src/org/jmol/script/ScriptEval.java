@@ -7071,7 +7071,6 @@ public class ScriptEval extends ScriptExpr {
         vwr.removeUserVariable(key.toLowerCase());
       justShow = true;
     }
-
     if (!justShow) {
       setVariable(1, 0, key, true);
       if (!isJmolSet)

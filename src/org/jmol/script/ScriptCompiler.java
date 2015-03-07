@@ -1024,12 +1024,12 @@ public class ScriptCompiler extends ScriptTokenParser {
           cchToken = 1;
           switch (ch) {
           case '[':
-            addTokenToPrefix(T.o(T.leftsquare, "["));
+            addTokenToPrefix(T.tokenArrayOpen);
             bracketCount++;
             return CONTINUE;
           case '.':
             if (ch2 == '.') {
-              addTokenToPrefix(T.o(T.leftsquare, "["));
+              addTokenToPrefix(T.tokenArrayOpen);
               cchToken = 2;
               isDotDot = true;
               return CONTINUE;
@@ -1301,7 +1301,7 @@ public class ScriptCompiler extends ScriptTokenParser {
 
     if (isDotDot) {
       addTokenToPrefix(T.o(T.string, ident));
-      addTokenToPrefix(T.o(T.rightsquare, "]"));
+      addTokenToPrefix(T.tokenArrayClose);
       isDotDot = false;
       return CONTINUE;
     }
@@ -1496,7 +1496,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       break;
     case T.perper:
       isDotDot = true;
-      addTokenToPrefix(T.o(T.leftsquare, "["));
+      addTokenToPrefix(T.tokenArrayOpen);
       return CONTINUE;
     }
     return OK;
@@ -1763,24 +1763,23 @@ public class ScriptCompiler extends ScriptTokenParser {
         flowContext.setLine();
       }
       break;
-    case T.set:
     case T.var:
-      if (tokCommand == T.var) {
-        if (nTokens == 1) {
-          replaceCommand(T.tokenSetVar);
-          newContextVariable(ident);
-          break;
-        } else if (ident.equals(",")) {
-          return CONTINUE;
-        } else if (!PT.isLetter(ident.charAt(0))) {
-          if (nTokens != 2)
-            return ERROR(ERROR_badArgumentCount);
-          replaceCommand(T.tokenSet);
-        } else {
-          newContextVariable(ident);
-          break;
-        }
+      if (nTokens == 1) {
+        replaceCommand(T.tokenSetVar);
+        newContextVariable(ident);
+        break;
+      } else if (ident.equals(",")) {
+        return CONTINUE;
+      } else if (!PT.isLetter(ident.charAt(0))) {
+        if (nTokens != 2 || ident.equals("["))
+          return ERROR(ERROR_badArgumentCount);
+        replaceCommand(T.tokenSet);
+      } else {
+        newContextVariable(ident);
+        break;
       }
+      //$FALL-THROUGH$
+    case T.set:
       if (theTok == T.leftbrace)
         setBraceCount++;
       else if (theTok == T.rightbrace) {

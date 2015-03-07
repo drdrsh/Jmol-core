@@ -122,7 +122,8 @@ abstract class ScriptExpr extends ScriptParam {
    *        variables
    * @param localVar
    *        x or y in above for(), select() examples
-   * @param isSpecialAssignment TODO
+   * @param isSpecialAssignment 
+   *        x[n] = .... 
    * @return either a vector or a value, caller's choice.
    * @throws ScriptException
    *         errors are thrown directly to the Eval error system.
@@ -448,9 +449,10 @@ abstract class ScriptExpr extends ScriptParam {
               break;
             //$FALL-THROUGH$
           default:
-            rpn.addOp(T.o(T.leftsquare, "["));
+            // turn x.y into x[y] prior to equal sign
+            rpn.addOp(T.tokenArrayOpen);
             rpn.addXStr(optParameterAsString(++i));
-            rpn.addOp(T.o(T.rightsquare, "]"));
+            rpn.addOp(T.tokenArrayClose);
             continue;
           }
         }
@@ -1984,28 +1986,38 @@ abstract class ScriptExpr extends ScriptParam {
     // special assignment of a known variable
 
     if (isSet && !isExpression) {
-      // pt will be 1 unless...
+      // not {....}.x = 
       switch (tokAt(2)) {
-      case T.spacebeforesquare:
-      case T.leftsquare:
-        if (st[0].intValue == '=')
-          pt = 2;
-        break;
-      case T.per:
-      case T.perper:
-        break;
-      case T.opEQ:
-        // var a = ...
-        pt = 3;
-        break;
       default:
+        // standard case
         // a = ...
         // set a ...
         pt = 2;
         break;
-      }
-      if (pt == 1)
+      case T.opEQ:
+        // standard case for var
+        // var a = ...
+        pt = 3;
+        break;
+      case T.spacebeforesquare:
+      case T.leftsquare:
+        // x[n] = ...
+        if (st[0].intValue == 61) { // '='
+          // not clear what this is about...
+          pt = 2;
+          break;
+        } 
+        //$FALL-THROUGH$
+      case T.per:
+      case T.perper:
+        // x.y = ...
+        // pt will be 1 in this case -- evaluate x
+        // result array will hold selector .y and result
+        // do not assign a variable
+        // isspecialAssignment
         key = null;
+        break;
+      }
     }
     int nv = 0;
     Lst<SV> v = (Lst<SV>) parameterExpression(pt, ptMax, key, true, true, -1,
@@ -2015,7 +2027,7 @@ abstract class ScriptExpr extends ScriptParam {
       invArg();
     if (chk)
       return null;
-    SV tv = SV.newS("").setv(v.get(nv - 1));
+    SV tv = SV.selectItemVar(SV.newS("").setv(v.get(nv - 1)));
     if (nv > 1) {
       SV sel = (nv > 2 ? v.get(1) : null);
       t = v.get(0);
