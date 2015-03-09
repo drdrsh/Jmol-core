@@ -230,21 +230,6 @@ public class ScriptEval extends ScriptExpr {
   
   private static int iProcess;
 
-  private JmolMathExtension mathExt;
-  public JmolMathExtension getMathExt() {
-    return (mathExt == null ? (mathExt = (JmolMathExtension) getExt("Math")).init(this) : mathExt);
-  }
-
-  private JmolSmilesExtension smilesExt;
-  public JmolSmilesExtension getSmilesExt() {
-    return (smilesExt == null ? (smilesExt = (JmolSmilesExtension) getExt("Smiles")).init(this) : smilesExt);
-  }
-
-  private JmolCmdExtension cmdIso;
-  public JmolCmdExtension getIsoExt() {
-    return (cmdIso == null ? (cmdIso = (JmolCmdExtension) getExt("Iso")).init(this) : cmdIso);
-  }
-
   public ShapeManager sm;
 
   public boolean isJS;

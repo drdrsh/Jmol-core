@@ -23,6 +23,9 @@ import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.ModelSet;
+import org.jmol.scriptext.CmdExt;
+import org.jmol.scriptext.MathExt;
+import org.jmol.scriptext.SmilesExt;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
@@ -49,9 +52,24 @@ abstract class ScriptExpr extends ScriptParam {
   
   public boolean debugHigh;
 
-  private JmolCmdExtension cmdExt;
-  public JmolCmdExtension getCmdExt() {
-    return (cmdExt == null ? (cmdExt = (JmolCmdExtension) getExt("Cmd")).init(this) : cmdExt);
+  private CmdExt cmdExt;
+  public CmdExt getCmdExt() {
+    return (cmdExt == null ? (cmdExt = (CmdExt) getExt("Cmd")).init(this) : cmdExt);
+  }
+
+  private CmdExt isoExt;
+  public CmdExt getIsoExt() {
+    return (isoExt == null ? (isoExt = (CmdExt) getExt("Iso")).init(this) : isoExt);
+  }
+
+  private MathExt mathExt;
+  public MathExt getMathExt() {
+    return (mathExt == null ? (mathExt = (MathExt) getExt("Math")).init(this) : mathExt);
+  }
+
+  private SmilesExt smilesExt;
+  public SmilesExt getSmilesExt() {
+    return (smilesExt == null ? (smilesExt = (SmilesExt) getExt("Smiles")).init(this) : smilesExt);
   }
 
   public Object getExt(String type) {

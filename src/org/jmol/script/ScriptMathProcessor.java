@@ -841,7 +841,7 @@ public class ScriptMathProcessor {
     // just exit; otherwise we add a new TRUE to xStack
     
     if (!chk)
-      return getMathExt().evaluate(this, op, args, tok);
+      return eval.getMathExt().evaluate(this, op, args, tok);
     if (op.tok == T.propselector)
       xPt--; // pop x in "x.func(...)"
     return addXBool(true);
@@ -1660,7 +1660,7 @@ public class ScriptMathProcessor {
       case T.stddev:
       case T.sum:
       case T.sum2:
-        return addXObj(getMathExt().getMinMax(x2.getList(), op.intValue));
+        return addXObj(eval.getMathExt().getMinMax(x2.getList(), op.intValue));
       case T.pop:
         return addX(x2.pushPop(null, null));
       case T.sort:
@@ -1753,10 +1753,6 @@ public class ScriptMathProcessor {
           (BS) val, vwr.ms.getAtomIndices(bs))));
     }
     return false;
-  }
-
-  private JmolMathExtension getMathExt() {
-    return ((ScriptEval) eval).getMathExt();
   }
 
   public SV evalOp(T token) throws ScriptException {
