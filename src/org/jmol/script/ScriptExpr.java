@@ -24,7 +24,9 @@ import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.ModelSet;
 import org.jmol.scriptext.CmdExt;
+import org.jmol.scriptext.IsoExt;
 import org.jmol.scriptext.MathExt;
+import org.jmol.scriptext.ScriptExt;
 import org.jmol.scriptext.SmilesExt;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
@@ -54,12 +56,12 @@ abstract class ScriptExpr extends ScriptParam {
 
   private CmdExt cmdExt;
   public CmdExt getCmdExt() {
-    return (cmdExt == null ? (cmdExt = (CmdExt) getExt("Cmd")).init(this) : cmdExt);
+    return (cmdExt == null ? cmdExt = (CmdExt) ((ScriptExt) getExt("Cmd")).init(this) : cmdExt);
   }
 
-  private CmdExt isoExt;
-  public CmdExt getIsoExt() {
-    return (isoExt == null ? (isoExt = (CmdExt) getExt("Iso")).init(this) : isoExt);
+  private IsoExt isoExt;
+  public IsoExt getIsoExt() {
+    return (isoExt == null ? isoExt = (IsoExt) ((ScriptExt) getExt("Iso")).init(this) : isoExt);
   }
 
   private MathExt mathExt;
@@ -72,7 +74,7 @@ abstract class ScriptExpr extends ScriptParam {
     return (smilesExt == null ? (smilesExt = (SmilesExt) getExt("Smiles")).init(this) : smilesExt);
   }
 
-  public Object getExt(String type) {
+  private Object getExt(String type) {
     return Interface.getInterface("org.jmol.scriptext." + type + "Ext", vwr, "script");
   }
 

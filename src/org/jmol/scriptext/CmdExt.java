@@ -45,7 +45,6 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.modelset.StateScript;
 import org.jmol.modelset.Text;
 import org.jmol.modelset.TickInfo;
-import org.jmol.script.JmolCmdExtension;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptCompiler;
 import org.jmol.script.ScriptContext;
@@ -87,27 +86,14 @@ import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.StateManager;
 import org.jmol.viewer.TransformManager;
-import org.jmol.viewer.Viewer;
 import org.jmol.viewer.Viewer.ACCESS;
 
-public class CmdExt implements JmolCmdExtension {
-  protected Viewer vwr;
-  protected ScriptEval e;
-  protected boolean chk;
-  protected T[] st;
-  protected int slen;
+public class CmdExt extends ScriptExt {
 
   final static int ERROR_invalidArgument = 22;
 
   public CmdExt() {
     // used by Reflection
-  }
-
-  @Override
-  public JmolCmdExtension init(Object se) {
-    e = (ScriptEval) se;
-    vwr = e.vwr;
-    return this;
   }
 
   @Override
@@ -196,78 +182,96 @@ public class CmdExt implements JmolCmdExtension {
     return null;
   }
 
-  protected BS atomExpressionAt(int i) throws ScriptException {
-    return e.atomExpressionAt(i);
-  }
 
-  protected void checkLength(int i) throws ScriptException {
-    e.checkLength(i);
-  }
-  
-  protected void error(int err) throws ScriptException {
-    e.error(err);
-  }
-
-  protected void invArg() throws ScriptException {
-    e.invArg();
-  }
-
-  protected void invPO() throws ScriptException {
-    error(ScriptError.ERROR_invalidParameterOrder);
-  }
-
-  protected Object getShapeProperty(int shapeType, String propertyName) {
-    return e.getShapeProperty(shapeType, propertyName);
-  }
-
-  protected String paramAsStr(int i) throws ScriptException {
-    return e.paramAsStr(i);
-  }
-
-  protected P3 centerParameter(int i) throws ScriptException {
-    return e.centerParameter(i);
-  }
-
-  protected float floatParameter(int i) throws ScriptException {
-    return e.floatParameter(i);
-  }
-
-  protected P3 getPoint3f(int i, boolean allowFractional) throws ScriptException {
-    return e.getPoint3f(i, allowFractional);
-  }
-
-  protected int intParameter(int index) throws ScriptException {
-    return e.intParameter(index);
-  }
-
-  protected boolean isFloatParameter(int index) {
-    switch (e.tokAt(index)) {
-    case T.integer:
-    case T.decimal:
-      return true;
+  /**
+   * used for TRY command
+   * 
+   * @param context
+   * @param shapeManager
+   * @return true if successful; false if not
+   */
+  public boolean evalParallel(ScriptContext context,
+                                  ShapeManager shapeManager) {
+    ScriptEval se = new ScriptEval().setViewer(vwr);
+    se.historyDisabled = true;
+    se.compiler = new ScriptCompiler(vwr);
+    se.sm = shapeManager;
+    try {
+      se.restoreScriptContext(context, true, false, false);
+      // TODO: This will disallow some motion commands
+      //       within a TRY/CATCH block in JavaScript, and
+      //       the code will block. 
+      se.allowJSThreads = false;
+      se.dispatchCommands(false, false, false);
+    } catch (Exception ex) {
+      e.vwr.setStringProperty("_errormessage", "" + ex);
+      if (se.thisContext == null) {
+        Logger.error("Error evaluating context " + ex);
+        if (!vwr.isJS)
+          ex.printStackTrace();
+      }
+      return false;
     }
-    return false;
+    return true;
   }
 
-  protected void setShapeProperty(int shapeType, String propertyName,
-                                Object propertyValue) {
-    e.setShapeProperty(shapeType, propertyName, propertyValue);
-  }
-
-  protected void showString(String s) {
-    e.showString(s);
-  }
-
-  protected String stringParameter(int index) throws ScriptException {
-    return e.stringParameter(index);
-  }
-
-  protected T getToken(int i) throws ScriptException {
-    return e.getToken(i);
-  }
-
-  protected int tokAt(int i) {
-    return e.tokAt(i);
+  @SuppressWarnings("static-access")
+  public Object getBitsetIdent(BS bs, String label, Object tokenValue,
+                               boolean useAtomMap, int index,
+                               boolean isExplicitlyAll) {
+    boolean isAtoms = !(tokenValue instanceof BondSet);
+    if (isAtoms) {
+      if (label == null)
+        label = vwr.getStandardLabelFormat(0);
+      else if (label.length() == 0)
+        label = "%[label]";
+    }
+    int pt = (label == null ? -1 : label.indexOf("%"));
+    boolean haveIndex = (index != Integer.MAX_VALUE);
+    if (bs == null || chk || isAtoms && pt < 0) {
+      if (label == null)
+        label = "";
+      return isExplicitlyAll ? new String[] { label } : (Object) label;
+    }
+    ModelSet modelSet = vwr.ms;
+    int n = 0;
+    LabelToken labeler = modelSet.getLabeler();
+    int[] indices = (isAtoms || !useAtomMap ? null : ((BondSet) tokenValue)
+        .associatedAtoms);
+    if (indices == null && label != null && label.indexOf("%D") > 0)
+      indices = vwr.ms.getAtomIndices(bs);
+    boolean asIdentity = (label == null || label.length() == 0);
+    Map<String, Object> htValues = (isAtoms || asIdentity ? null : LabelToken
+        .getBondLabelValues());
+    LabelToken[] tokens = (asIdentity ? null : isAtoms ? labeler.compile(
+        vwr, label, '\0', null) : labeler.compile(vwr, label, '\1',
+        htValues));
+    int nmax = (haveIndex ? 1 : BSUtil.cardinalityOf(bs));
+    String[] sout = new String[nmax];
+    P3 ptTemp = new P3();
+    for (int j = (haveIndex ? index : bs.nextSetBit(0)); j >= 0; j = bs
+        .nextSetBit(j + 1)) {
+      String str;
+      if (isAtoms) {
+        if (asIdentity)
+          str = modelSet.at[j].getInfo();
+        else
+          str = labeler.formatLabelAtomArray(vwr, modelSet.at[j], tokens,
+              '\0', indices, ptTemp);
+      } else {
+        Bond bond = modelSet.bo[j];
+        if (asIdentity)
+          str = bond.getIdentity();
+        else
+          str = labeler
+              .formatLabelBond(vwr, bond, tokens, htValues, indices, ptTemp);
+      }
+      str = PT.formatStringI(str, "#", (n + 1));
+      sout[n++] = str;
+      if (haveIndex)
+        break;
+    }
+    return nmax == 1 && !isExplicitlyAll ? sout[0] : (Object) sout;
   }
 
   ///////////////// Jmol script commands ////////////
@@ -3007,39 +3011,6 @@ public class CmdExt implements JmolCmdExtension {
   }
 
   /**
-   * used for TRY command
-   * 
-   * @param context
-   * @param shapeManager
-   * @return true if successful; false if not
-   */
-  @Override
-  public boolean evalParallel(ScriptContext context,
-                                  ShapeManager shapeManager) {
-    ScriptEval se = new ScriptEval().setViewer(vwr);
-    se.historyDisabled = true;
-    se.compiler = new ScriptCompiler(vwr);
-    se.sm = shapeManager;
-    try {
-      se.restoreScriptContext(context, true, false, false);
-      // TODO: This will disallow some motion commands
-      //       within a TRY/CATCH block in JavaScript, and
-      //       the code will block. 
-      se.allowJSThreads = false;
-      se.dispatchCommands(false, false, false);
-    } catch (Exception ex) {
-      e.vwr.setStringProperty("_errormessage", "" + ex);
-      if (se.thisContext == null) {
-        Logger.error("Error evaluating context " + ex);
-        if (!vwr.isJS)
-          ex.printStackTrace();
-      }
-      return false;
-    }
-    return true;
-  }
-
-  /**
    * 
    * @param args
    * @return string for write() function
@@ -4434,45 +4405,6 @@ public class CmdExt implements JmolCmdExtension {
     return sb.toString();
   }
 
-  /**
-   * Checks color, translucent, opaque parameters.
-   * @param eval 
-   * @param i
-   * @param allowNone
-   * @param ret returned int argb color
-   * @return translucentLevel and sets iToken and ret[0]
-   * 
-   * @throws ScriptException
-   */
-  protected float getColorTrans(ScriptEval eval, int i, boolean allowNone, int ret[]) throws ScriptException {
-    float translucentLevel = Float.MAX_VALUE;
-    if (eval.theTok != T.color)
-      --i;
-    switch (tokAt(i + 1)) {
-    case T.translucent:
-      i++;
-      translucentLevel = (isFloatParameter(i + 1) ? eval.getTranslucentLevel(++i)
-          : vwr.getFloat(T.defaulttranslucent));
-      break;
-    case T.opaque:
-      i++;
-      translucentLevel = 0;
-      break;
-    }
-    if (eval.isColorParam(i + 1)) {
-      ret[0] = eval.getArgbParam(++i);
-    } else if (tokAt(i + 1) == T.none) {
-      ret[0] = 0;
-      eval.iToken = i + 1;
-    } else if (translucentLevel == Float.MAX_VALUE) {
-      invArg();
-    } else {
-      ret[0] = Integer.MIN_VALUE;
-    }
-    i = eval.iToken;
-    return translucentLevel;
-  }
-
   private String getIsosurfaceJvxl(boolean asMesh, int iShape) {
     return (chk ? "" : (String) getShapeProperty(iShape, asMesh ? "jvxlMeshX"
         : "jvxlDataXml"));
@@ -4520,27 +4452,6 @@ public class CmdExt implements JmolCmdExtension {
     return (i < args.length && args[i] != null ? args[i].tok : T.nada);
   }
 
-  protected void finalizeObject(int shapeID, int colorArgb,
-                              float translucentLevel, int intScale,
-                              boolean doSet, Object data,
-                              int iptDisplayProperty, BS bs)
-       throws ScriptException {
-     if (doSet) {
-       setShapeProperty(shapeID, "set", data);
-     }
-     if (colorArgb != Integer.MIN_VALUE)
-       e.setShapePropertyBs(shapeID, "color", Integer.valueOf(colorArgb), bs);
-     if (translucentLevel != Float.MAX_VALUE)
-       e.setShapeTranslucency(shapeID, "", "translucent", translucentLevel, bs);
-     if (intScale != 0) {
-       setShapeProperty(shapeID, "scale", Integer.valueOf(intScale));
-     }
-     if (iptDisplayProperty > 0) {
-       if (!e.setMeshDisplayProperty(shapeID, iptDisplayProperty, 0))
-         invArg();
-     }
-   }
-
   private float getPlotMinMax(float[] data, boolean isMax, int tok) {
     if (data == null)
       return 0;
@@ -4564,75 +4475,6 @@ public class CmdExt implements JmolCmdExtension {
         fmax = f;
     }
     return fmax;
-  }
-
-  @Override
-  @SuppressWarnings("static-access")
-  public Object getBitsetIdent(BS bs, String label, Object tokenValue,
-                               boolean useAtomMap, int index,
-                               boolean isExplicitlyAll) {
-    boolean isAtoms = !(tokenValue instanceof BondSet);
-    if (isAtoms) {
-      if (label == null)
-        label = vwr.getStandardLabelFormat(0);
-      else if (label.length() == 0)
-        label = "%[label]";
-    }
-    int pt = (label == null ? -1 : label.indexOf("%"));
-    boolean haveIndex = (index != Integer.MAX_VALUE);
-    if (bs == null || chk || isAtoms && pt < 0) {
-      if (label == null)
-        label = "";
-      return isExplicitlyAll ? new String[] { label } : (Object) label;
-    }
-    ModelSet modelSet = vwr.ms;
-    int n = 0;
-    LabelToken labeler = modelSet.getLabeler();
-    int[] indices = (isAtoms || !useAtomMap ? null : ((BondSet) tokenValue)
-        .associatedAtoms);
-    if (indices == null && label != null && label.indexOf("%D") > 0)
-      indices = vwr.ms.getAtomIndices(bs);
-    boolean asIdentity = (label == null || label.length() == 0);
-    Map<String, Object> htValues = (isAtoms || asIdentity ? null : LabelToken
-        .getBondLabelValues());
-    LabelToken[] tokens = (asIdentity ? null : isAtoms ? labeler.compile(
-        vwr, label, '\0', null) : labeler.compile(vwr, label, '\1',
-        htValues));
-    int nmax = (haveIndex ? 1 : BSUtil.cardinalityOf(bs));
-    String[] sout = new String[nmax];
-    P3 ptTemp = new P3();
-    for (int j = (haveIndex ? index : bs.nextSetBit(0)); j >= 0; j = bs
-        .nextSetBit(j + 1)) {
-      String str;
-      if (isAtoms) {
-        if (asIdentity)
-          str = modelSet.at[j].getInfo();
-        else
-          str = labeler.formatLabelAtomArray(vwr, modelSet.at[j], tokens,
-              '\0', indices, ptTemp);
-      } else {
-        Bond bond = modelSet.bo[j];
-        if (asIdentity)
-          str = bond.getIdentity();
-        else
-          str = labeler
-              .formatLabelBond(vwr, bond, tokens, htValues, indices, ptTemp);
-      }
-      str = PT.formatStringI(str, "#", (n + 1));
-      sout[n++] = str;
-      if (haveIndex)
-        break;
-    }
-    return nmax == 1 && !isExplicitlyAll ? sout[0] : (Object) sout;
-  }
-
-  protected String setShapeId(int iShape, int i, boolean idSeen)
-      throws ScriptException {
-      if (idSeen)
-        invArg();
-      String name = e.setShapeNameParameter(i).toLowerCase();
-      setShapeProperty(iShape, "thisID", name);
-      return name;
   }
 
   private Object parseDataArray(String str, boolean is3D) {

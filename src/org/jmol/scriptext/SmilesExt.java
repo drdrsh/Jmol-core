@@ -29,7 +29,6 @@ import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.BondSet;
-import org.jmol.script.JmolSmilesExtension;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
 import org.jmol.util.BSUtil;
@@ -43,7 +42,7 @@ import org.jmol.util.Logger;
 import javajs.util.M4;
 import javajs.util.P3;
 
-public class SmilesExt implements JmolSmilesExtension {
+public class SmilesExt {
   
   private ScriptEval e;
   private SmilesMatcherInterface sm;
@@ -52,8 +51,7 @@ public class SmilesExt implements JmolSmilesExtension {
     // used by Reflection
   }
 
-  @Override
-  public JmolSmilesExtension init(Object se) {
+  public SmilesExt init(Object se) {
     e = (ScriptEval) se;
     sm = e.vwr.getSmilesMatcher();
     return this;
@@ -81,7 +79,6 @@ public class SmilesExt implements JmolSmilesExtension {
    * @return standard deviation
    * @throws ScriptException
    */
-  @Override
   public float getSmilesCorrelation(BS bsA, BS bsB, String smiles,
                                      Lst<P3> ptsA, Lst<P3> ptsB, M4 m4,
                                      Lst<BS> vReturn, boolean isSmarts,
@@ -161,7 +158,6 @@ public class SmilesExt implements JmolSmilesExtension {
     return 0;
   }
 
-  @Override
   public Object getSmilesMatches(String pattern, String smiles, BS bsSelected,
                                  BS bsMatch3D, boolean isSmarts,
                                  boolean asOneBitset) throws ScriptException {
@@ -238,7 +234,6 @@ public class SmilesExt implements JmolSmilesExtension {
     return list;
   }
 
-  @Override
   public float[] getFlexFitList(BS bs1, BS bs2, String smiles1,
                                  boolean isSmarts) throws ScriptException {
     int[][] mapSet = AU.newInt2(2);

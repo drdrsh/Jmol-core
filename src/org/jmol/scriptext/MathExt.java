@@ -41,7 +41,6 @@ import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.ModelSet;
-import org.jmol.script.JmolMathExtension;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
@@ -76,7 +75,7 @@ import javajs.util.V3;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
-public class MathExt implements JmolMathExtension {
+public class MathExt {
   
   private Viewer vwr;
   private ScriptEval e;
@@ -85,8 +84,7 @@ public class MathExt implements JmolMathExtension {
     // used by Reflection
   }
 
-  @Override
-  public JmolMathExtension init(Object se) {
+  public MathExt init(Object se) {
     e = (ScriptEval) se;
     vwr = e.vwr;
     return this;
@@ -95,7 +93,6 @@ public class MathExt implements JmolMathExtension {
   ///////////// ScriptMathProcessor extensions ///////////
 
   
-  @Override
   public boolean evaluate(ScriptMathProcessor mp, T op, SV[] args, int tok)
       throws ScriptException {
     switch (tok) {
@@ -2064,7 +2061,7 @@ public class MathExt implements JmolMathExtension {
       return false;
     if (rand == null)
       rand = new Random();
-    float lower = 0, upper = 1, seed = Float.NaN;
+    float lower = 0, upper = 1;
     switch (args.length) {
     case 3:
       rand.setSeed((int) SV.fValue(args[2]));
@@ -2705,7 +2702,6 @@ public class MathExt implements JmolMathExtension {
   }
 
 
-  @Override
   @SuppressWarnings("unchecked")
   public Object getMinMax(Object floatOrSVArray, int tok) {
     float[] data = null;
@@ -2915,7 +2911,6 @@ public class MathExt implements JmolMathExtension {
     return null;
   }
 
-  @Override
   public BS setContactBitSets(BS bsA, BS bsB, boolean localOnly,
                                float distance, RadiusData rd,
                                boolean warnMultiModel) {

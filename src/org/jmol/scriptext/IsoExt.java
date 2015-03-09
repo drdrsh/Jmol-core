@@ -36,7 +36,6 @@ import org.jmol.c.VDW;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.quantum.QS;
-import org.jmol.script.JmolCmdExtension;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptError;
 import org.jmol.script.ScriptEval;
@@ -69,17 +68,12 @@ import org.jmol.util.TempArray;
 import org.jmol.viewer.JC;
 
 @J2SIgnoreImport(org.jmol.quantum.QS.class)
-public class IsoExt extends CmdExt {
+public class IsoExt extends ScriptExt {
 
-  public IsoExt() {}
-  
-  @Override 
-  public JmolCmdExtension init(Object eval) {
-    e = (ScriptEval) eval;
-    vwr = e.vwr;
-    return this;
+  public IsoExt() {
+    // used by Reflection
   }
-
+  
   @Override
   public String dispatch(int iTok, boolean b, T[] st) throws ScriptException {
     chk = e.chk;
@@ -274,7 +268,7 @@ public class IsoExt extends CmdExt {
     case T.helix:
     case T.quaternion:
     case T.ramachandran:
-      plot(st);
+      e.getCmdExt().plot(st);
       return false;
     }
     boolean havePoints = false;
