@@ -50,23 +50,20 @@ public class PolyhedraRenderer extends ShapeRenderer {
     drawEdges = polyhedra.drawEdges;
     g3d.addRenderer(T.triangles);
     vibs = (ms.vibrations != null && tm.vibrationOn);
-    short[] colixes = polyhedra.colixes;
     boolean needTranslucent = false;
-    for (int i = polyhedra.polyhedronCount; --i >= 0;) {
-      if (!polyhedrons[i].isValid)
-        continue;
-      int iAtom = polyhedrons[i].centralAtom.i;
-      short colix = (colixes == null || iAtom >= colixes.length ? 
-          C.INHERIT_ALL : polyhedra.colixes[iAtom]);
-      if (render1(polyhedrons[i], colix))
+    for (int i = polyhedra.polyhedronCount; --i >= 0;) 
+      if (polyhedrons[i].isValid && render1(polyhedrons[i]))
         needTranslucent = true;
-    }
     return needTranslucent;
   }
 
-  private boolean render1(Polyhedron p, short colix) {
+  private boolean render1(Polyhedron p) {
     if (p.visibilityFlags == 0)
       return false;
+    short[] colixes = ((Polyhedra) shape).colixes;
+    int iAtom = p.centralAtom.i;
+    short colix = (colixes == null || iAtom >= colixes.length ? C.INHERIT_ALL
+        : colixes[iAtom]);
     colix = C.getColixInherited(colix, p.centralAtom.colixAtom);
     boolean needTranslucent = false;
     if (C.renderPass2(colix)) {
@@ -103,10 +100,12 @@ public class PolyhedraRenderer extends ShapeRenderer {
         fillFace(p.normixes[i++], screens[planes[j++]], screens[planes[j++]],
             screens[planes[j++]]);
     // edges are not drawn translucently ever
+    if (p.colixEdge != C.INHERIT_ALL)
+      colix = p.colixEdge;
     if (g3d.setC(C.getColixTranslucent3(colix, false, 0)))
-    for (int i = 0, j = 0; j < planes.length;)
-      drawFace(p.normixes[i++], screens[planes[j++]],
-          screens[planes[j++]], screens[planes[j++]]);
+      for (int i = 0, j = 0; j < planes.length;)
+        drawFace(p.normixes[i++], screens[planes[j++]], screens[planes[j++]],
+            screens[planes[j++]]);
     return needTranslucent;
   }
 

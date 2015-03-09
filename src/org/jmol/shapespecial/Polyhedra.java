@@ -179,7 +179,16 @@ public class Polyhedra extends AtomShape {
     if (propertyName.indexOf("color") == 0) {
       // from polyhedra command, we may not be using the prior select
       // but from Color we need to identify the centers.
-      bs = ("colorThis" == propertyName && iHaveCenterBitSet ? centers : andBitSet(bs));
+      bs = ("colorThis" == propertyName && iHaveCenterBitSet ? centers
+          : andBitSet(bs));
+      short colixEdge = ("colorPhase" == propertyName ? C
+          .getColix(((Integer) ((Object[]) value)[0]).intValue())
+          : C.INHERIT_ALL);
+      for (int i = polyhedronCount; --i >= 0;)
+        if (bs.get(polyhedrons[i].centralAtom.i))
+          polyhedrons[i].colixEdge = colixEdge;
+      if ("colorPhase" == propertyName)
+        value = ((Object[]) value)[1];
       propertyName = "color";
       //allow super
     }
@@ -187,7 +196,8 @@ public class Polyhedra extends AtomShape {
     if (propertyName.indexOf("translucency") == 0) {
       // from polyhedra command, we may not be using the prior select
       // but from Color we need to identify the centers.
-      bs = ("translucentThis".equals(value) && iHaveCenterBitSet ? centers : andBitSet(bs));
+      bs = ("translucentThis".equals(value) && iHaveCenterBitSet ? centers
+          : andBitSet(bs));
       if (value.equals("translucentThis"))
         value = "translucent";
       //allow super
@@ -197,7 +207,7 @@ public class Polyhedra extends AtomShape {
       setLighting(((Integer) value).intValue() == T.fullylit, bs);
       return;
     }
-    
+
     if ("radius" == propertyName) {
       radius = ((Float) value).floatValue();
       return;
@@ -592,6 +602,13 @@ public class Polyhedra extends AtomShape {
     else if (drawEdges == EDGES_ALL)
       appendCmd(s, "polyhedra edges");
     s.append(vwr.getAtomShapeState(this));
+    for (int i = 0; i < polyhedronCount; i++) {
+      Polyhedron p = polyhedrons[i];
+      if (p.isValid && p.colixEdge != C.INHERIT_ALL && bsColixSet.get(p.centralAtom.i))
+        appendCmd(s, "select ({" + p.centralAtom.i + "}); color polyhedra " 
+      + (C.isColixTranslucent(colixes[p.centralAtom.i]) ? "translucent " : "") 
+      + C.getHexCode(colixes[p.centralAtom.i]) + " "  + C.getHexCode(p.colixEdge));
+  }
     return s.toString();
   }
 }

@@ -8262,20 +8262,21 @@ public class ScriptEval extends ScriptExpr {
       if ((!isIsosurface || tokAt(index + 1) != T.to) && isColorParam(index)) {
         int argb = getArgbParamOrNone(index, false);
         colorvalue = (argb == 0 ? null : Integer.valueOf(argb));
-        if (translucency == null && tokAt(index = iToken + 1) != T.nada) {
+        if (tokAt(index = iToken + 1) != T.nada && translucency == null) {
           getToken(index);
           isTranslucent = (theTok == T.translucent);
           if (isTranslucent || theTok == T.opaque) {
             translucency = paramAsStr(index);
             if (isTranslucent && isFloatParameter(index + 1))
               translucentLevel = getTranslucentLevel(++index);
-          } else if (isColorParam(index)) {
-            argb = getArgbParamOrNone(index, false);
-            colorvalue1 = (argb == 0 ? null : Integer.valueOf(argb));
           }
-          // checkLength(index + 1);
-          // iToken = index;
         }
+        if (isColorParam(index)) {
+          argb = getArgbParamOrNone(index, false);
+          colorvalue1 = (argb == 0 ? null : Integer.valueOf(argb));
+          index = iToken + 1;
+        }
+        checkLength(index);
       } else if (shapeType == JC.SHAPE_LCAOCARTOON) {
         iToken--; // back up one
       } else {
@@ -8387,7 +8388,8 @@ public class ScriptEval extends ScriptExpr {
             if (max == Float.MAX_VALUE)
               ce.hi = max;
             setShapeProperty(shapeType, "remapColor", ce);
-            showString(((String) getShapeProperty(shapeType, "dataRangeStr")).replace('\n',' '));
+            showString(((String) getShapeProperty(shapeType, "dataRangeStr"))
+                .replace('\n', ' '));
             if (translucentLevel == Float.MAX_VALUE)
               return;
           } else if (max != Float.MAX_VALUE) {
@@ -8455,7 +8457,8 @@ public class ScriptEval extends ScriptExpr {
         break;
       }
       if (colorvalue1 != null
-          && (isIsosurface || shapeType == JC.SHAPE_CARTOON || shapeType == JC.SHAPE_RIBBONS))
+          && (isIsosurface || shapeType == JC.SHAPE_CARTOON
+              || shapeType == JC.SHAPE_RIBBONS || shapeType == JC.SHAPE_POLYHEDRA))
         setShapeProperty(shapeType, "colorPhase", new Object[] { colorvalue1,
             colorvalue });
       else if (bs == null)

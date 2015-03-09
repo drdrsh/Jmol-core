@@ -1886,10 +1886,6 @@ public class ScriptCompiler extends ScriptTokenParser {
           && !(ch == '-' && ident.equals("=")))
         checkUnquotedFileName();
       break;
-    case T.show:
-      if (nTokens == 2 && tokAt(1) == T.state && theTok == T.divide)
-        implicitString = true;
-      break;
     }
     return OK;
   }

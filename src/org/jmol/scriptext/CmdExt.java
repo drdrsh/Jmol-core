@@ -3947,9 +3947,9 @@ public class CmdExt extends ScriptExt {
         break;
       }
       name = paramAsStr(2);
-      if (name.equals("/") && (len = slen) == 4) {
-        name = paramAsStr(3).toLowerCase();
+      if (name.startsWith("/") && (len = slen) == 3) {
         if (!chk) {
+          name = name.substring(1).toLowerCase();
           String[] info = PT.split(vwr.getStateInfo(), "\n");
           SB sb = new SB();
           for (int i = 0; i < info.length; i++)

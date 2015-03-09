@@ -4,6 +4,7 @@ import javajs.util.P3;
 
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
+import org.jmol.util.C;
 import org.jmol.util.Escape;
 
 public class Polyhedron {
@@ -24,6 +25,7 @@ public class Polyhedron {
   float faceCenterOffset, distanceFactor;
   boolean isFullyLit;
   public boolean isValid = true;
+  public short colixEdge = C.INHERIT_ALL;
 
   Polyhedron(Atom centralAtom, int ptCenter, int nPoints, int planeCount,
       P3[] otherAtoms, short[] normixes, byte[] planes, boolean collapsed, float faceCenterOffset, float distanceFactor) {
