@@ -6502,7 +6502,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public void showString(String str, boolean isPrint) {
-    if (!isJS && isScriptQueued() && (!isSilent || isPrint)) {
+    if (!isJS && isScriptQueued() && (!isSilent || isPrint) && !"\0".equals(str)) {
       Logger.warn(str); // warn here because we still want to be be able to turn this off
     }
     scriptEcho(str);

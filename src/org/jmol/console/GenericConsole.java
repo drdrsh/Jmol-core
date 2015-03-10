@@ -362,12 +362,20 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
       updateLabels();
       outputMsg(null);
       strEcho = defaultMessage;
+    } else if (strEcho.equals("\0")) {
+      /**
+       * @j2sNative
+       * 
+       * Clazz.Console.clear();
+       */
+      {}
+      strEcho = null;
     }
     outputMsg(strEcho);
   }
 
   private void outputMsg(String message) {
-    if (message == null || message.length() == 0) {
+    if (message == null) {
       output.setText("");
       return;
     }

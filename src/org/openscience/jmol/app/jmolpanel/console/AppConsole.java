@@ -133,6 +133,8 @@ public class AppConsole extends JmolConsole implements EnterListener {
   public void sendConsoleEcho(String strEcho) {
     if (strEcho == null)  // new language
       updateLabels();
+    else if (strEcho.equals("\0"))
+      sendConsoleMessage(null);
     else
       console.outputEcho(strEcho);
     setError(false);

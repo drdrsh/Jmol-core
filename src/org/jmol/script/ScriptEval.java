@@ -5543,8 +5543,11 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private void cmdPrint() throws ScriptException {
-    if (slen == 1)
-      bad();
+    if (slen == 1) {
+      if (!chk)
+        showStringPrint("\0", true);
+      return;
+    }
     showStringPrint(parameterExpressionString(1, 0), true);
   }
   
