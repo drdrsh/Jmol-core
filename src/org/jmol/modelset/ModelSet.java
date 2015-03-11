@@ -3873,7 +3873,7 @@ import java.util.Properties;
 
   protected void calculatePolymers(Group[] groups, int groupCount,
                                    int baseGroupIndex, BS modelsExcluded) {
-    if (haveBioModels)
+    if (bioModelset != null) // not using haveBioModels because not frozen yet
       bioModelset.calculateAllPolymers(groups, groupCount, baseGroupIndex,
           modelsExcluded);
   }

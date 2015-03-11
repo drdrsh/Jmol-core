@@ -196,6 +196,8 @@ public class PdbReader extends AtomSetCollectionReader {
    if (checkFilterKey("ASSEMBLY")) // CIF syntax
      filter = PT.rep(filter, "ASSEMBLY", "BIOMOLECULE");
    isbiomol = checkFilterKey("BIOMOLECULE");
+   if (isbiomol)
+     filter = filter.replace(':', ' '); // no chain choices if biomolecule
    boolean byChain = isbiomol && checkFilterKey("BYCHAIN");
    boolean bySymop = isbiomol && checkFilterKey("BYSYMOP");
    isCourseGrained = byChain || bySymop;
@@ -600,53 +602,58 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
   private void setBiomoleculeAtomCounts() {
     for (int i = vBiomolecules.size(); --i >= 0;) {
       Map<String, Object> biomolecule = vBiomolecules.get(i);
-      String chains = (String) biomolecule.get("chains");
-      int nTransforms = ((Lst<M4>) biomolecule.get("biomts")).size();
+      Lst<M4> biomts = (Lst<M4>) biomolecule.get("biomts");
+      Lst<String> biomtchains = (Lst<String>) biomolecule.get("chains");
+      int nTransforms = biomts.size();
       int nAtoms = 0;
-      for (int j = chains.length() - 1; --j >= 0;)
-        if (chains.charAt(j) == ':')
-          nAtoms += biomtChainAtomCounts[0 + chains.charAt(j + 1)];
-      biomolecule.put("atomCount", Integer.valueOf(nAtoms * nTransforms));
+      for (int k = nTransforms; --k >= 0;) {
+        String chains = biomtchains.get(k);
+        for (int j = chains.length() - 1; --j >= 0;)
+          if (chains.charAt(j) == ':')
+            nAtoms += biomtChainAtomCounts[0 + chains.charAt(j + 1)];
+      }
+      biomolecule.put("atomCount", Integer.valueOf(nAtoms));
     }
   }
 
-/* 
- REMARK 350 BIOMOLECULE: 1                                                       
- REMARK 350 APPLY THE FOLLOWING TO CHAINS: 1, 2, 3, 4, 5, 6,  
- REMARK 350 A, B, C
- REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            
- REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            
- REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            
- REMARK 350   BIOMT1   2  0.309017 -0.809017  0.500000        0.00000            
- REMARK 350   BIOMT2   2  0.809017  0.500000  0.309017        0.00000            
- REMARK 350   BIOMT3   2 -0.500000  0.309017  0.809017        0.00000
- 
-             
-             or, as fount in http://www.ebi.ac.uk/msd-srv/pqs/pqs-doc/macmol/1k28.mmol
-             
-REMARK 350 AN OLIGOMER OF TYPE :HEXAMERIC : CAN BE ASSEMBLED BY
-REMARK 350 APPLYING THE FOLLOWING TO CHAINS:
-REMARK 350 A, D
-REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000
-REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000
-REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000
-REMARK 350 IN ADDITION APPLY THE FOLLOWING TO CHAINS:
-REMARK 350 A, D
-REMARK 350   BIOMT1   2  0.000000 -1.000000  0.000000        0.00000
-REMARK 350   BIOMT2   2  1.000000 -1.000000  0.000000        0.00000
-REMARK 350   BIOMT3   2  0.000000  0.000000  1.000000        0.00000
-REMARK 350 IN ADDITION APPLY THE FOLLOWING TO CHAINS:
-REMARK 350 A, D
-REMARK 350   BIOMT1   3 -1.000000  1.000000  0.000000        0.00000
-REMARK 350   BIOMT2   3 -1.000000  0.000000  0.000000        0.00000
-REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
+  /* 
+   REMARK 350 BIOMOLECULE: 1                                                       
+   REMARK 350 APPLY THE FOLLOWING TO CHAINS: 1, 2, 3, 4, 5, 6,  
+   REMARK 350 A, B, C
+   REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            
+   REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            
+   REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            
+   REMARK 350   BIOMT1   2  0.309017 -0.809017  0.500000        0.00000            
+   REMARK 350   BIOMT2   2  0.809017  0.500000  0.309017        0.00000            
+   REMARK 350   BIOMT3   2 -0.500000  0.309017  0.809017        0.00000
+   
+               
+               or, as fount in http://www.ebi.ac.uk/msd-srv/pqs/pqs-doc/macmol/1k28.mmol
+               
+  REMARK 350 AN OLIGOMER OF TYPE :HEXAMERIC : CAN BE ASSEMBLED BY
+  REMARK 350 APPLYING THE FOLLOWING TO CHAINS:
+  REMARK 350 A, D
+  REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000
+  REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000
+  REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000
+  REMARK 350 IN ADDITION APPLY THE FOLLOWING TO CHAINS:
+  REMARK 350 A, D
+  REMARK 350   BIOMT1   2  0.000000 -1.000000  0.000000        0.00000
+  REMARK 350   BIOMT2   2  1.000000 -1.000000  0.000000        0.00000
+  REMARK 350   BIOMT3   2  0.000000  0.000000  1.000000        0.00000
+  REMARK 350 IN ADDITION APPLY THE FOLLOWING TO CHAINS:
+  REMARK 350 A, D
+  REMARK 350   BIOMT1   3 -1.000000  1.000000  0.000000        0.00000
+  REMARK 350   BIOMT2   3 -1.000000  0.000000  0.000000        0.00000
+  REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
 
-*/
- 
-  
+  */
+
+  @SuppressWarnings("unchecked")
   private void remark350() throws Exception {
-     Lst<M4> biomts = null;
-    vBiomolecules = new  Lst<Map<String,Object>>();
+    Lst<M4> biomts = null;
+    Lst<String> biomtchains = null;
+    vBiomolecules = new Lst<Map<String, Object>>();
     biomtChainAtomCounts = new int[255];
     String title = "";
     String chainlist = "";
@@ -668,15 +675,14 @@ REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
             Logger.info("biomolecule " + id + ": number of transforms: "
                 + nBiomt);
           info = new Hashtable<String, Object>();
-          biomts = new  Lst<M4>();
           id = line.substring(line.indexOf(":") + 1).trim();
-
           title = line.trim();
           info.put("name", "biomolecule " + id);
-          info.put("molecule", id.length() == 3 ? id : Integer.valueOf(parseIntStr(id)));
+          info.put("molecule",
+              id.length() == 3 ? id : Integer.valueOf(parseIntStr(id)));
           info.put("title", title);
-          info.put("chains", "");
-          info.put("biomts", biomts);
+          info.put("chains", biomtchains = new Lst<String>());
+          info.put("biomts", biomts = new Lst<M4>());
           vBiomolecules.addLast(info);
           nBiomt = 0;
           //continue; need to allow for next IF, in case this is a reconstruction
@@ -693,14 +699,16 @@ REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
           appendLoadNote("found biomolecule " + id + ": " + list);
           chainlist = ":" + list.replace(' ', ':');
           needLine = false;
-          while (readHeader(true) != null && line.indexOf("BIOMT") < 0 && line.indexOf("350") == 7)
+          while (readHeader(true) != null && line.indexOf("BIOMT") < 0
+              && line.indexOf("350") == 7)
             chainlist += ":" + line.substring(11).trim().replace(' ', ':');
-          if (checkFilterKey("BIOMOLECULE " + id + ";") || checkFilterKey("BIOMOLECULE=" + id + ";")) {
-            setFilter(filter.replace(':', '_') + chainlist);
+          chainlist += ";";
+          if (checkFilterKey("BIOMOLECULE " + id + ";")
+              || checkFilterKey("BIOMOLECULE=" + id + ";")) {
+            setFilter(filter + chainlist);
             Logger.info("filter set to \"" + filter + "\"");
             thisBiomolecule = info;
           }
-          info.put("chains", chainlist);
           continue;
         }
         /*
@@ -723,10 +731,13 @@ REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
           mat[15] = 1;
           M4 m4 = new M4();
           m4.setA(mat);
-          if (m4.equals(mIdent))
+          if (m4.equals(mIdent)) {
             biomts.add(0, m4);
-          else
+            biomtchains.add(0, chainlist);
+          } else {
             biomts.addLast(m4);
+            biomtchains.addLast(chainlist);
+          }
           continue;
         }
       } catch (Exception e) {
@@ -737,8 +748,7 @@ REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
       }
     }
     if (nBiomt > 0)
-      Logger.info("biomolecule " + id + ": number of transforms: "
-          + nBiomt);
+      Logger.info("biomolecule " + id + ": number of transforms: " + nBiomt);
   }
 
   /*

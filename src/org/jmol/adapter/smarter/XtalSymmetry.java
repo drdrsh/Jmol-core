@@ -983,8 +983,11 @@ public class XtalSymmetry {
 
     doNormalize = false;
     Lst<M4> biomts = (Lst<M4>) thisBiomolecule.get("biomts");
+    Lst<String> biomtchains = (Lst<String>) thisBiomolecule.get("chains");
     if (biomts.size() < 2)
       return;
+    if (biomtchains.get(0).equals(biomtchains.get(1)))
+      biomtchains = null;
     symmetry = null;
     // it's not clear to me why you would do this:
     if (!Float.isNaN(unitCellParams[0])) // PDB can do this; 
@@ -1057,7 +1060,7 @@ public class XtalSymmetry {
     }
     for (int iAtom = firstSymmetryAtom; iAtom < atomMax; iAtom++)
       atoms[iAtom].bsSymmetry = BSUtil.newAndSetBit(0);
-    for (int i = 1; i < len; i++) {
+    for (int i = (biomtchains == null ? 1 : 0); i < len; i++) {
       if (filter.indexOf("!#") >= 0) {
         if (filter.indexOf("!#" + (i + 1) + ";") >= 0)
           continue;
@@ -1066,9 +1069,14 @@ public class XtalSymmetry {
         continue;
       }
       M4 mat = biomts.get(i);
-      //Vector3f trans = new Vector3f();    
+      String chains = (biomtchains == null ? null : biomtchains.get(i));
+
       for (int iAtom = firstSymmetryAtom; iAtom < atomMax; iAtom++) {
         if (asc.bsAtoms != null && !asc.bsAtoms.get(iAtom))
+          continue;
+        if (chains != null
+            && chains.indexOf(":" + acr.vwr.getChainIDStr(atoms[iAtom].chainID)
+                + ";") < 0)
           continue;
         try {
           int atomSite = atoms[iAtom].atomSite;
@@ -1098,6 +1106,13 @@ public class XtalSymmetry {
       if (i > 0)
         symmetry.addBioMoleculeOperation(mat, false);
     }
+    if (biomtchains != null) {
+      if (asc.bsAtoms == null)
+        asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
+      for (int iAtom = firstSymmetryAtom; iAtom < atomMax; iAtom++)
+        asc.bsAtoms.clear(iAtom);
+    }
+
     noSymmetryCount = atomMax - firstSymmetryAtom;
     asc.setCurrentModelInfo("presymmetryAtomIndex",
         Integer.valueOf(firstSymmetryAtom));

@@ -1254,7 +1254,8 @@ public final class Resolver implements JmolBioResolver, Comparator<String[]> {
   }
 
   static short getGroupIdFor(String group3) {
-    group3 = group3.trim();
+    if (group3 != null)
+      group3 = group3.trim();
     short groupID = knownGroupID(group3);
     return (groupID == -1 ? addGroup3Name(group3) : groupID);
   }
