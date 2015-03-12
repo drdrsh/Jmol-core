@@ -31,7 +31,6 @@ import org.jmol.scriptext.SmilesExt;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
-import org.jmol.util.Logger;
 
 /**
  * The ScriptExpr class holds the main functions for 
@@ -465,6 +464,8 @@ abstract class ScriptExpr extends ScriptParam {
           case T.size:
           case T.keys:
           case T.type:
+          case T.push:
+          case T.pop:
             if (tok == T.per)
               break;
             //$FALL-THROUGH$
@@ -2000,7 +2001,7 @@ abstract class ScriptExpr extends ScriptParam {
     String propertyName = "";
     boolean settingData = key.startsWith("property_");
     boolean isThrown = key.equals("thrown_value");
-    boolean isExpression = (tokAt(1) == T.expressionBegin);
+    boolean isExpression = (tokAt(1) == T.expressionBegin || tokAt(1) == T.leftparen);
     SV t = (settingData ? null : key.length() == 0 ? new SV() : getContextVariableAsVariable(key));
     // determine whether this is some sort of 
     // special assignment of a known variable
@@ -2171,7 +2172,7 @@ abstract class ScriptExpr extends ScriptParam {
     } else if (vv instanceof String) {
       setStringProperty(key, (String) vv);
     } else {
-      Logger.error("ERROR -- return from propertyExpression was " + vv);
+      // could be an array and be OK   Logger.error("ERROR -- return from propertyExpression was " + vv);
     }
     return tv;
   }

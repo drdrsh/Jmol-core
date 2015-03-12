@@ -1906,7 +1906,8 @@ public class ScriptCompiler extends ScriptTokenParser {
     ptNewSetModifier = (isNewSet ? (ident.equals("(") ? 2 : 1)
         : Integer.MAX_VALUE);
     // unfortunately we have to look here for defaultLattice, because it must not turn into a string.
-    return ((isSetBrace || theToken.tok == T.defaultlattice
+    return ((isSetBrace || theToken.tok == T.leftparen 
+        || theToken.tok == T.defaultlattice
         || theToken.tok == T.plusPlus || theToken.tok == T.minusMinus) ? theToken
         : T.o(T.identifier, ident));
   }
