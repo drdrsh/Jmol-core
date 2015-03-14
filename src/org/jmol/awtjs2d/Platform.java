@@ -382,6 +382,7 @@ public class Platform implements GenericPlatform {
 //      return null;
 //    }
 //  }
+	
   @Override
   public String getDateFormat(String isoType) {
     /**
@@ -395,15 +396,18 @@ public class Platform implements GenericPlatform {
      * } else if (isoType.indexOf("8824") >= 0) {
      *   var d = new Date();
      *   var x = d.toString().split(" ");
-     *   var MM = "0" + d.getMonth(); MM = MM.substring(MM.length - 2);
+     *   var MM = "0" + (1 + d.getMonth()); MM = MM.substring(MM.length - 2);
      *   var dd = "0" + d.getDate(); dd = dd.substring(dd.length - 2);
      *   return x[3] + MM + dd + x[4].replace(/\:/g,"") + x[5].substring(3,6) + "'" + x[5].substring(6,8) + "'"   
      * } else if (isoType.indexOf("8601") >= 0){
      *   var d = new Date();
      *   var x = d.toString().split(" ");
-     *   var MM = "0" + d.getMonth(); MM = MM.substring(MM.length - 2);
+     *   // Firefox now doing this?
+     *   if (x.length == 1)
+     *     return x;
+     *   var MM = "0" + (1 + d.getMonth()); MM = MM.substring(MM.length - 2);
      *   var dd = "0" + d.getDate(); dd = dd.substring(dd.length - 2);
-     *   return x[3] + MM + dd + x[4].replace(/\:/g,"") + x[5].substring(3,6) + "'" + x[5].substring(6,8) + "'"   
+     *   return x[3] + '-' + MM + '-' + dd + 'T' + x[4]   
      * }
      * return ("" + (new Date())).split(" (")[0];
      */

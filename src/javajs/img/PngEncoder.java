@@ -48,11 +48,11 @@ import java.io.IOException;
  * 
  * // IHDR chunk 
  * 
- * // iTXt chunk "Jmol type - <PNG0|PNGJ><0000000pt>+<000000len>" 
+ * // tEXt chunk "Jmol type - <PNG0|PNGJ><0000000pt>+<000000len>" 
  * 
- * // iTXt chunk "Software - Jmol <version>"
+ * // tEXt chunk "Software - Jmol <version>"
  * 
- * // iTXt chunk "Creation Time - <date>"
+ * // tEXt chunk "Creation Time - <date>"
  * 
  * // tRNS chunk transparent color, if desired
  *
@@ -194,12 +194,12 @@ public class PngEncoder extends CRCEncoder {
    * @param type
    */
   private static void setJmolTypeText(String prefix, byte[] b, int nPNG, int nState, String type) {
-    String s = "iTXt" + getApplicationText(prefix, type, nPNG, nState);
+    String s = "tEXt" + getApplicationText(prefix, type, nPNG, nState);
     CRCEncoder encoder = new PngEncoder();
     byte[] test = s.substring(0, 4 + prefix.length()).getBytes();
     for (int i = test.length; -- i >= 0;) 
       if (b[i + PT_FIRST_TAG] != test[i]) {
-        System.out.println("i mage is not of the right form; appending data, but not adding iTXt tag.");
+        System.out.println("image is not of the right form; appending data, but not adding tEXt tag.");
         return;
       }
     encoder.setData(b, PT_FIRST_TAG);
@@ -275,7 +275,7 @@ public class PngEncoder extends CRCEncoder {
   private void writeText(String msg) {
     writeInt4(msg.length());
     startPos = bytePos;
-    writeString("iTXt" + msg);
+    writeString("tEXt" + msg);
     writeCRC();
   }
 

@@ -156,7 +156,7 @@ abstract class OutputManager {
       fileName = out.getFileName();
       String comment = null;
       Object stateData = null;
-      params.put("date", vwr.apiPlatform.getDateFormat(null));
+      params.put("date", vwr.apiPlatform.getDateFormat("8601"));
       if (type.startsWith("JP")) {
         type = PT.rep(type, "E", "");
         if (type.equals("JPG64")) {

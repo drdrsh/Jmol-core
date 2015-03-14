@@ -3332,8 +3332,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     antialiased = (isReset ? g.antialiasDisplay
         && checkMotionRendering(T.antialiasdisplay)
         : isImageWrite && !isExport ? g.antialiasImages : false);
-    imageFontScaling = (isReset || width <= 0 ? 1
-        : (antialiased ? 2f : 1f) * (g.zoomLarge == (height > width) ? height : width) / getScreenDim());
+    imageFontScaling = (antialiased ? 2f : 1f) * (isReset || width <= 0 ? 1
+        : (g.zoomLarge == (height > width) ? height : width) / getScreenDim());
     if (width > 0) {
       dimScreen.width = width;
       dimScreen.height = height;
