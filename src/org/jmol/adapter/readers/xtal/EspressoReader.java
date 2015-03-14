@@ -37,7 +37,7 @@ public class EspressoReader extends AtomSetCollectionReader {
       readAparam();
     } else if (line.contains("crystal axes:")) {
       readCellParam(false);
-    } else if (line.contains("CELL_PARAMETERS")) {
+    } else if (line.contains("CELL_PARAMETERS (")) {
       readCellParam(true);
     } else if (line.contains("Cartesian axes")) {
       discardLinesUntilContains("positions (");
