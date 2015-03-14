@@ -22,6 +22,7 @@ public class EspressoReader extends AtomSetCollectionReader {
   private float[] cellParams;
   private Double totEnergy;
   private boolean endFlag;
+ 
 
   @Override
   protected void initializeReader() {
@@ -84,6 +85,16 @@ public class EspressoReader extends AtomSetCollectionReader {
 
   private void readCellParam(boolean andAPar) throws Exception {
     int i0 = (andAPar ? 0 : 3);
+    
+    /*   in the old version of Espresso optimized cell parameters
+    are expressed in Bohr unit
+    CELL_PARAMETERS (bohr)                                                                                                                                                                                                                   
+    -4.979256769   4.979256769   9.998215946
+     4.979256769  -4.979256769   9.998215946
+     4.979256769   4.979256769  -9.998215946
+    */
+    if (line.contains("bohr"))
+      aPar = ANGSTROMS_PER_BOHR;
 
     /*    in the old version of Espresso optimized cell parameters
     are expressed in function of the original aPar stored at the beginning
