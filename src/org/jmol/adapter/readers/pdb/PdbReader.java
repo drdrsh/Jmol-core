@@ -649,8 +649,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
 
   */
 
-  @SuppressWarnings("unchecked")
-  private void remark350() throws Exception {
+ private void remark350() throws Exception {
     Lst<M4> biomts = null;
     Lst<String> biomtchains = null;
     vBiomolecules = new Lst<Map<String, Object>>();

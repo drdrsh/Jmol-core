@@ -78,7 +78,7 @@ public class Text extends Object2d {
     t.bgcolix = bgcolix;
     return t;
   }
-
+  
   public static Text newEcho(Viewer vwr, Font font, String target,
                       short colix, int valign, int align,
                       float scalePixelsPerMicron) {
@@ -379,20 +379,28 @@ public class Text extends Object2d {
     int subscale = 1; //could be something less than that
     if (str == null)
       return 0;
-    if (str.indexOf("<su") < 0)
+    if (str.indexOf("<su") < 0 && str.indexOf("<color") < 0)
       return font.stringWidth(str);
     int len = str.length();
     String s;
     for (int i = 0; i < len; i++) {
       if (str.charAt(i) == '<') {
-        if (i + 4 < len
+        if (i + 8 <= len && 
+            (str.substring(i, i + 7).equals("<color ") || str.substring(i, i + 8).equals("</color>"))) {
+          int i1 = str.indexOf(">", i);
+          if (i1 >= 0) {
+            i = i1;
+            continue;
+          }
+        }
+        if (i + 5 <= len
             && ((s = str.substring(i, i + 5)).equals("<sub>") || s
                 .equals("<sup>"))) {
           i += 4;
           f = subscale;
           continue;
         }
-        if (i + 5 < len
+        if (i + 6 <= len
             && ((s = str.substring(i, i + 6)).equals("</sub>") || s
                 .equals("</sup>"))) {
           i += 5;
