@@ -504,15 +504,28 @@ public final class URL implements java.io.Serializable {
         throws MalformedURLException
     {
       /**
+       * key is that we want to have only one constructor 
+       *
        * @j2sNative
        * 
-       * if (arguments.length == 1) {
+       * switch (arguments.length) {
+       * case 1:
        *   spec = context;context = handler = null;
+       *   break;
+       * case 2:
+       *   handler = null;
+       *   break;
+       * case 3:
+       *   break;
+       * default:
+       *   alert("java.net.URL constructor format not supported");
+       *   break;
        * }
        * if (context && context.getValue() == null)
        *   context = null;
        * 
        */
+      {}
         String original = spec;
         int i, limit, c;
         int start = 0;
