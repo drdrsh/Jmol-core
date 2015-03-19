@@ -503,6 +503,14 @@ public final class URL implements java.io.Serializable {
     public URL(URL context, String spec, URLStreamHandler handler)
         throws MalformedURLException
     {
+//    public URL(String spec) 
+//    public URL(URL context, String spec) 
+//    public URL(URL context, String spec, URLStreamHandler handler)
+// 
+//    public URL(String protocol, String host, String file)
+//    public URL(String protocol, String host, int port, String file)
+//    public URL(String protocol, String host, int port, String file, URLStreamHandler handler)
+
       /**
        * key is that we want to have only one constructor 
        *
@@ -516,6 +524,7 @@ public final class URL implements java.io.Serializable {
        *   handler = null;
        *   break;
        * case 3:
+       * if (context == null || context && context.getValue() == null || Clazz.instanceOf(context, java.net.URL))
        *   break;
        * default:
        *   alert("java.net.URL constructor format not supported");
@@ -533,13 +542,13 @@ public final class URL implements java.io.Serializable {
         boolean aRef=false;
         boolean isRelative = false;
 
-        // Check for permission to specify a handler
-        if (handler != null) {
-            SecurityManager sm = System.getSecurityManager();
-            if (sm != null) {
-                checkSpecifyHandler(sm);
-            }
-        }
+//        // Check for permission to specify a handler
+//        if (handler != null) {
+//            SecurityManager sm = System.getSecurityManager();
+//            if (sm != null) {
+//                checkSpecifyHandler(sm);
+//            }
+//        }
 
         try {
             limit = spec.length();
