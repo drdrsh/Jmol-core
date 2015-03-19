@@ -317,9 +317,9 @@ abstract class ScriptExpr extends ScriptParam {
         int p = 0;
         int jlast = 0;
         int j = bsAtoms.nextSetBit(0);
-        if (j < 0) {
+        if (j < 0 || chk) {
           iToken = pt2 - 1;
-        } else if (!chk) {
+        } else {
           for (; j >= 0; j = bsAtoms.nextSetBit(j + 1)) {
             if (jlast >= 0)
               bsX.clear(jlast);
@@ -2109,10 +2109,16 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.bitset:
         propertyName = sel.asString();
+        boolean isprop = propertyName.startsWith("property_");
+        int tok = (isprop ? -1 : T.getTokFromName(propertyName));
+        if (tok == 0) {
+          iToken = pt;
+          error(ERROR_cannotSet);
+        }
         bs = SV.getBitSet(t, true);
         int nAtoms = vwr.ms.ac;
         int nbs = bs.cardinality();
-        if (propertyName.startsWith("property_")) {
+        if (isprop) {
           Object obj = (tv.tok == T.varray ? SV.flistValue(tv, tv.getList()
               .size() == nbs ? nbs : nAtoms) : tv.asString());
           vwr.setData(
@@ -2123,7 +2129,7 @@ abstract class ScriptExpr extends ScriptParam {
               0);
           break;
         }
-        setBitsetProperty(bs, T.getTokFromName(propertyName), tv.asInt(),
+        setBitsetProperty(bs, tok, tv.asInt(),
             tv.asFloat(), tv);
       }
       if (selectOne)

@@ -507,9 +507,7 @@ public class ScriptManager implements JmolScriptManager {
       // disabled
       strScript = strScript.substring(1);
     ScriptContext sc = newScriptEvaluator().checkScriptSilent(strScript);
-    if (returnContext || sc.errorMessage == null)
-      return sc;
-    return sc.errorMessage;
+    return (returnContext || sc.errorMessage == null ? sc : sc.errorMessage);
   }
 
   //////////////////////// open file async ///////////////////////

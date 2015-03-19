@@ -672,7 +672,7 @@ abstract public class AtomCollection {
         break;
       default:
         Logger.error("unsettable atom property: " + T.nameOf(tok));
-        break;
+        return;
       }
     }
     switch (tok) {

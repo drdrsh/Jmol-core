@@ -371,9 +371,8 @@ public class ScriptMathProcessor {
   }
 
   private static boolean isOpFunc(T op) {
-    return (T.tokAttr(op.tok, T.mathfunc) && op != T.tokenArraySquare 
-        || op.tok == T.propselector
-        && T.tokAttr(op.intValue, T.mathfunc));
+    return (op != null && (T.tokAttr(op.tok, T.mathfunc) && op != T.tokenArraySquare 
+        || op.tok == T.propselector && T.tokAttr(op.intValue, T.mathfunc)));
   }
 
   private boolean skipping;

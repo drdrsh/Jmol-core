@@ -3742,16 +3742,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   private Object scriptCheckRet(String strScript, boolean returnContext) {
-    if (getScriptManager() == null)
-      return null;
-    return scm.scriptCheckRet(strScript, returnContext);
+    return (getScriptManager() == null ? null : scm.scriptCheckRet(strScript, returnContext));
   }
 
   @Override
   public synchronized Object scriptCheck(String strScript) {
-    if (getScriptManager() == null)
-      return null;
-    return scriptCheckRet(strScript, false);
+    return (getScriptManager() == null ? null : scriptCheckRet(strScript, false));
   }
 
   @Override
