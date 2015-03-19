@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 
+import javajs.util.PT;
 import javajs.util.SB;
 
 class VaspChgcarReader extends PeriodicVolumeFileReader {
@@ -101,11 +102,11 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     }
   }
   
-  private int pt;
+  private int pt, nPerLine;
   
   @Override
   protected float nextVoxel() throws Exception {
-    if ((pt++)%5 == 0) {
+    if (pt++ % nPerLine == 0 && nData > 0) {
       rd();
       next[0] = 0;
     }
@@ -119,6 +120,7 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     int nj = voxelCounts[1] - 1;
     int nk = voxelCounts[2] - 1;
     boolean downSampling = (nSkipX > 0);
+    nPerLine = PT.countTokens(rd(), 0);
     for (int i = 0; i < ni; i++) {
       for (int j = 0; j < nj; j++) {
         for (int k = 0; k < nk; k++) {

@@ -296,9 +296,7 @@ public class PT {
 
   public static float parseFloatNext(String str, int[] next) {
     int cch = (str == null ? -1 : str.length());
-    if (next[0] < 0 || next[0] >= cch)
-      return Float.NaN;
-    return parseFloatChecked(str, cch, next, false);
+    return (next[0] < 0 || next[0] >= cch ? Float.NaN : parseFloatChecked(str, cch, next, false));
   }
 
   public static float parseFloatStrict(String str) {

@@ -73,7 +73,4 @@ public abstract class PeriodicVolumeFileReader extends VolumeFileReader {
 
   protected abstract void getPeriodicVoxels() throws Exception;
 
-  static {
-    System.out.println(-5 % 10);
-  }
 }
