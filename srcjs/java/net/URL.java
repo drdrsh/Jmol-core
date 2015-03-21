@@ -512,7 +512,9 @@ public final class URL implements java.io.Serializable {
 //    public URL(String protocol, String host, int port, String file, URLStreamHandler handler)
 
       /**
-       * key is that we want to have only one constructor 
+       * key is that we want to have only one constructor
+       * 
+       * subtle J2S bug here in that passing (URL)null does not actually pass a value that == null 
        *
        * @j2sNative
        * 
@@ -524,13 +526,13 @@ public final class URL implements java.io.Serializable {
        *   handler = null;
        *   break;
        * case 3:
-       * if (context == null || context && context.getValue() == null || Clazz.instanceOf(context, java.net.URL))
+       * if (context == null || Clazz.instanceOf(context, java.net.URL))
        *   break;
        * default:
        *   alert("java.net.URL constructor format not supported");
        *   break;
        * }
-       * if (context && context.getValue() == null)
+       * if (context && context.valueOf() == null)
        *   context = null;
        * 
        */
