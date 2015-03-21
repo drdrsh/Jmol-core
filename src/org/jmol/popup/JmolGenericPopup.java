@@ -746,6 +746,10 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
         htMenus.put(id, subMenu);
         pt = 1;
       }
+      if (i == 0)
+        menuEnable(
+            menuCreateItem(subMenu, GT._("none"), "draw sym_* delete", null),
+            true);        
       String sym = (String) infolist[i][1]; // XYZoriginal
       if (sym.indexOf("x1") < 0)
         sym = (String) infolist[i][0]; // normalized XYZ

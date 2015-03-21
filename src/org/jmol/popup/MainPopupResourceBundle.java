@@ -231,7 +231,7 @@ public class MainPopupResourceBundle extends PopupResource {
           "surfDots surfVDW surfSolventAccessible14 surfSolvent14 surfMolecular CHARGEsurf2MEP CHARGEsurfMEP surfMoComputedMenuText - surfOpaque surfTranslucent surfOff" },
 
       {   "FILEUNITMenu",
-          "SYMMETRYShowComputedMenu SYMMETRYhide FILEMOLload FILEUNITone FILEUNITnine FILEUNITnineRestricted FILEUNITninePoly" },
+          "SYMMETRYShowComputedMenu FILEMOLload FILEUNITone FILEUNITnine FILEUNITnineRestricted FILEUNITninePoly" },
 
       {   "[set_axes]Menu", 
           "off#axes dotted - byPixelMenu byAngstromMenu" },
@@ -285,7 +285,6 @@ public class MainPopupResourceBundle extends PopupResource {
         "surfMoComputedMenuText", GT._("Molecular Orbitals ({0})"),
         "SYMMETRYSelectComputedMenu", GT._("Symmetry"),
         "SYMMETRYShowComputedMenu", GT._("Space Group"),
-        "SYMMETRYhide", GT._("Hide Symmetry"),
         "hiddenModelSetText", GT._("Model information"),
         "selectMenuText", GT._("Select ({0})"),
         "allModelsText", GT._("All {0} models"),
@@ -1008,7 +1007,6 @@ public class MainPopupResourceBundle extends PopupResource {
       { "surfOpaque", "mo opaque;isosurface opaque" },
       { "surfTranslucent", "mo translucent;isosurface translucent" },
       { "surfOff", "mo delete;isosurface delete;select *;dots off" },
-      { "SYMMETRYhide", "draw sym_* delete" },
       { "FILEMOLload",
       "save orientation;load \"\";restore orientation;center" },
       { "FILEUNITone",
