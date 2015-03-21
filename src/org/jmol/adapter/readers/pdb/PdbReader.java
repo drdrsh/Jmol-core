@@ -422,6 +422,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
   
   protected void finalizeReaderPDB() throws Exception {
     checkNotPDB();
+    checkUnitCellParams();
     if (!isCourseGrained)
       connectAll(maxSerial, isConnectStateBug);
     SymmetryInterface symmetry;
@@ -471,6 +472,14 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
     if (configurationPtr > 0) {
       Logger.info(sbSelected.toString());
       Logger.info(sbIgnored.toString());
+    }
+  }
+
+  private void checkUnitCellParams() {
+    if (iHaveUnitCell) {
+      asc.setCurrentModelInfo("unitCellParams", unitCellParams);
+      if (sgName != null)
+        asc.setCurrentModelInfo("spaceGroup", sgName);
     }
   }
 
@@ -1317,6 +1326,7 @@ REMARK 290 REMARK: NULL
     haveMappedSerials = false;
     sbConect = null;
     asc.newAtomSet();
+    checkUnitCellParams();
     if (!isCourseGrained)
       setModelPDB(true);
     asc.setCurrentAtomSetNumber(modelNumber);
@@ -1343,7 +1353,7 @@ REMARK 290 REMARK: NULL
       a = Float.NaN; // 1 for a means no unit cell
     setUnitCell(a, getFloat(15, 9), getFloat(24, 9), getFloat(33,
         7), getFloat(40, 7), getFloat(47, 7));
-    if (sgName == null)
+    if (sgName == null || sgName.equals("unspecified!"))
       setSpaceGroupName(PT.parseTrimmedRange(line, 55, 66));
   }
 

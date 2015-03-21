@@ -904,11 +904,23 @@ import java.util.Properties;
   }
 
   public SymmetryInterface getUnitCell(int modelIndex) {
-    return (!haveUnitCells || modelIndex < 0 || modelIndex >= mc ? null
-        : am[modelIndex].simpleCage != null ? am[modelIndex].simpleCage
-            : unitCells == null || modelIndex >= unitCells.length
-                || !unitCells[modelIndex].haveUnitCell() ? null
-                : unitCells[modelIndex]);
+    if (modelIndex < 0 || modelIndex >= mc)
+      return null;
+    if (am[modelIndex].simpleCage != null)
+      return am[modelIndex].simpleCage;
+    if (unitCells != null && modelIndex < unitCells.length
+                && unitCells[modelIndex].haveUnitCell())
+      return unitCells[modelIndex];
+    if (getInfo(modelIndex, "unitCellParams") != null) {
+      if (unitCells == null)
+        unitCells = new SymmetryInterface[mc];
+      getSymTemp(true).setSymmetryInfo(modelIndex, am[modelIndex].auxiliaryInfo, null);
+      SymmetryInterface unitCell = symTemp;
+      symTemp = null;
+      haveUnitCells = true;
+      return unitCells[modelIndex] = unitCell;              
+    }
+    return null;
   }
 
   public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {

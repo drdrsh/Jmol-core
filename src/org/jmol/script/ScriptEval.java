@@ -5381,7 +5381,7 @@ public class ScriptEval extends ScriptExpr {
         q = Quat.new4(0, 0, 0, 1);
         break;
       default:
-         // a b c x y z
+         // a b c
         SymmetryInterface uc;
         uc = vwr.getCurrentUnitCell();
         if (uc == null) {

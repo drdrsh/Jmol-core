@@ -1122,8 +1122,6 @@ public final class ModelLoader {
         if (modelBondCount < 0) {
           modelBondCount = ms.bondCount;
         }
-        boolean modelHasSymmetry = ms.getInfoB(i,
-            "hasSymmetry");
         // check for PDB file with fewer than one bond per every two atoms
         // this is in case the PDB format is being usurped for non-RCSB uses
         // In other words, say someone uses the PDB format to indicate atoms and
@@ -1135,12 +1133,8 @@ public final class ModelLoader {
         // automatic bonding, and additional bonds might be made.
         boolean doBond = (forceAutoBond || doAutoBond
             && (modelBondCount == 0
-                || modelIsPDB
-                && jmolData == null
-                && (ms
-                    .getMSInfoB("havePDBHeaderName") || modelBondCount < modelAtomCount / 2) || modelHasSymmetry
-                && !symmetryAlreadyAppliedToBonds
-                && !ms.getInfoB(i, "hasBonds")));
+                || modelIsPDB && jmolData == null && (ms.getMSInfoB("havePDBHeaderName") || modelBondCount < modelAtomCount / 2) 
+                || ms.getInfoB(i, "hasSymmetry") && !symmetryAlreadyAppliedToBonds && !ms.getInfoB(i, "hasBonds")));
         if (!doBond)
           continue;
         autoBonding = true;

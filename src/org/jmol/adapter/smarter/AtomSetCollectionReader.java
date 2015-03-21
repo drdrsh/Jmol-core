@@ -1112,12 +1112,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     v.set(x3, y3, z3);
     v.normalize();
     matRot.setColumnV(2, v);
-    asc.setInfo(
-        "defaultOrientationMatrix", M3.newM3(matRot));
+    asc.setInfo("defaultOrientationMatrix", M3.newM3(matRot));
     // first two matrix column vectors define quaternion X and XY plane
     Quat q = Quat.newM(matRot);
-    asc.setInfo(
-        "defaultOrientationQuaternion", q);
+    asc.setInfo("defaultOrientationQuaternion", q);
     Logger.info("defaultOrientationMatrix = " + matRot);
 
   }
@@ -1182,12 +1180,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       for (int i = name.length(); --i >= 0;)
         if (!PT.isLetterOrDigit(ch = name.charAt(i)) && ch != '\'')
           name = name.substring(0, i) + "_" + name.substring(i + 1);
-      //String seqNum = (String) htSite.get("seqNum");
       String groups = (String) htSite.get("groups");
       if (groups.length() == 0)
         continue;
       addSiteScript("@site_" + name + " " + groups);
-      //addJmolScript("@" + seqNum + " " + groups);
       addSiteScript("site_" + name + " = [\"" + PT.rep(groups, ",", "\",\"") + "\"]");
       sites += ",\"site_" + name + "\"";
     }
@@ -1216,9 +1212,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       moreUnitCellInfo = null;
     }
     finalizeSubclassSymmetry(sym != null);
-    if (sym != null && ptSupercell != null) {
+    if (sym != null && ptSupercell != null)
       asc.getXSymmetry().finalizeUnitCell(ptSupercell);
-    }
     initializeSymmetry();
     return sym;
   }

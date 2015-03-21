@@ -105,7 +105,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
   private boolean isMultiConfiguration;
   private boolean isMultiFrame;
   private boolean isPDB;
-  private boolean isSymmetry;
+  private boolean hasSymmetry;
   private boolean isUnitCell;
   private boolean isVibration;
   private boolean isZapped;
@@ -377,7 +377,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       modelInfo = new Hashtable<String, Object>();
     isPDB = checkBoolean("isPDB");
     isMultiFrame = (modelCount > 1);
-    isSymmetry = checkBoolean("hasSymmetry");
+    hasSymmetry = modelInfo.containsKey("hasSymmetry");
     isUnitCell = modelInfo.containsKey("unitCellParams");
     fileHasUnitCell = (isPDB && isUnitCell || checkBoolean("fileHasUnitCell"));
     isLastFrame = (modelIndex == modelCount - 1);
@@ -604,7 +604,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     for (int i = VibrationOnly.size(); --i >= 0;)
       menuEnable(VibrationOnly.get(i), isVibration);
     for (int i = SymmetryOnly.size(); --i >= 0;)
-      menuEnable(SymmetryOnly.get(i), isSymmetry && isUnitCell);
+      menuEnable(SymmetryOnly.get(i), hasSymmetry && isUnitCell);
     for (int i = ChargesOnly.size(); --i >= 0;)
       menuEnable(ChargesOnly.get(i), haveCharges);
     for (int i = TemperatureOnly.size(); --i >= 0;)
@@ -722,7 +722,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       return;
     menuRemoveAll(menu, 0);
     menuEnable(menu, false);
-    if (!isSymmetry || modelIndex < 0)
+    if (!hasSymmetry || modelIndex < 0)
       return;
     Map<String, Object> info = (Map<String, Object>) vwr.getProperty(
         "DATA_API", "spaceGroupInfo", null);
@@ -763,7 +763,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
       return;
     menuRemoveAll(menu, 0);
     menuEnable(menu, false);
-    if (!isSymmetry || modelIndex < 0)
+    if (!hasSymmetry || modelIndex < 0)
       return;
     String[] list = (String[]) modelInfo.get("symmetryOperations");
     if (list == null)
