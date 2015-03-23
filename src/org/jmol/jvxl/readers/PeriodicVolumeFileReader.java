@@ -5,7 +5,7 @@ public abstract class PeriodicVolumeFileReader extends VolumeFileReader {
   @Override
   protected void readSurfaceData(boolean isMapData) throws Exception {
     initializeSurfaceData();
-    voxelData = new float[nPointsX][nPointsY][nPointsZ];
+    newVoxelDataCube();
     getPeriodicVoxels();
     if (params.extendGrid != 0) {
       int[] n = new int[3];

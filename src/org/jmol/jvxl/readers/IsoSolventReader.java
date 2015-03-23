@@ -472,19 +472,19 @@ class IsoSolventReader extends AtomDataReader {
       BS bsAll = new BS();
       BS[] bsSurfaces = meshData.getSurfaceSet();
       BS[] bsSources = null;
-      double[] volumes = (double[]) (isPocket ? null : 
-          MeshData.calculateVolumeOrArea(meshData, Integer.MIN_VALUE, false, false));
-      float minVolume = (float)(1.5 * Math.PI * Math.pow(sr, 3));
+      double[] volumes = (double[]) (isPocket ? null : MeshData
+          .calculateVolumeOrArea(meshData, Integer.MIN_VALUE, false, false));
+      float minVolume = (isCavity ? (float) (1.5 * Math.PI * Math.pow(sr, 3)) : 0);
       double maxVolume = 0;
       boolean maxIsNegative = false;
       if (volumes != null && !isCavity)
-      for (int i = 0; i < meshData.nSets; i++) {
-        double v = volumes[i];
-        if (Math.abs(v) > maxVolume) {
-          maxVolume = Math.abs(v);
-          maxIsNegative = (v < 0);
+        for (int i = 0; i < meshData.nSets; i++) {
+          double v = volumes[i];
+          if (Math.abs(v) > maxVolume) {
+            maxVolume = Math.abs(v);
+            maxIsNegative = (v < 0);
+          }
         }
-      }
       double factor = (maxIsNegative ? -1 : 1);
       // added this factor business to account for situations where
       // the first volume recorded is negative, but later, larger volumes,
@@ -776,19 +776,25 @@ class IsoSolventReader extends AtomDataReader {
       this.pS = P3.newP(pS);
     }
 
-//    protected void dump() {
-//      P3 ptA = atomXyz[ia];
-//      P3 ptB = atomXyz[ib];
-//      P3 ptC = atomXyz[ic];
-//      String color = "red";
-//      String label = "f"+ ia + "_" + ib + "_" + ic + "_";
-//      dumpLine(ptA, ptB, label, color);
-//      dumpLine(ptB, ptC, label, color);
-//      dumpLine(ptC, ptA, label, color);
-//      dumpLine2(pS, ptA, label, solventRadius, color, "white");
-//      dumpLine2(pS, ptB, label, solventRadius, color, "white");
-//      dumpLine2(pS, ptC, label, solventRadius, color, "white");
-//    }
+    protected void dump() {
+      P3 ptA = atomXyz[ia];
+      P3 ptB = atomXyz[ib];
+      P3 ptC = atomXyz[ic];
+      String color = "red";
+      String label = "f"+ ia + "_" + ib + "_" + ic + "_";
+      sg.log("draw ID \"x" + label + (nTest++) + "\" "
+          + P3.newP(ptA)
+          + " " + P3.newP(ptB) 
+          + " " + P3.newP(ptC)
+          + " color " + color);
+
+      //dumpLine(ptA, ptB, label, color);
+      //dumpLine(ptB, ptC, label, color);
+      //dumpLine(ptC, ptA, label, color);
+      //dumpLine2(pS, ptA, label, sr, color, "white");
+      //dumpLine2(pS, ptB, label, sr, color, "white");
+      //dumpLine2(pS, ptC, label, sr, color, "white");
+    }
 
     @Override
     public String toString() {
@@ -827,9 +833,12 @@ class IsoSolventReader extends AtomDataReader {
           if ((f = validateFace(ia, ib, ic, edge, ptS1)) != null) {
             vFaces.addLast(f);
             isOK = true;
+            f.dump();
           }
           if ((f = validateFace(ia, ib, ic, edge, ptS2)) != null) {
             vFaces.addLast(f);
+            if (!isOK)
+              f.dump();
             isOK = true;
           }
           if (isOK) {
