@@ -7720,9 +7720,7 @@ public class ScriptEval extends ScriptExpr {
   private void cmdTranslate(boolean isSelected) throws ScriptException {
     // translate [selected] X|Y|Z x.x [NM|ANGSTROMS]
     // translate [selected] X|Y x.x%
-    // translate [selected] X|Y|Z x.x [NM|ANGSTROMS]
-    // translate [selected] X|Y x.x%
-    // translate {x y z} [{atomExpression}]
+    // translate [selected] {x y z} [{atomExpression}]
     BS bs = null;
     int i = 1;
     int i0 = 0;
@@ -7733,7 +7731,7 @@ public class ScriptEval extends ScriptExpr {
     }
     if (isPoint3f(i)) {
       P3 pt = getPoint3f(i, true);
-      bs = (!isSelected && iToken + 1 < slen ? atomExpressionAt(++iToken)
+      bs = (iToken + 1 < slen ? atomExpressionAt(++iToken)
           : null);
       checkLast(iToken);
       if (!chk)
