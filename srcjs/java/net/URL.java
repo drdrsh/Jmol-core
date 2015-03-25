@@ -532,8 +532,8 @@ public final class URL implements java.io.Serializable {
        *   alert("java.net.URL constructor format not supported");
        *   break;
        * }
-       * if (context && context.valueOf() == null)
-       *   context = null;
+       * 
+       * context && context.valueOf && context.valueOf() == null && (context = null);
        * 
        */
       {}
