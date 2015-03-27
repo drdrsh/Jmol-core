@@ -191,6 +191,12 @@ class Image {
     }
   }
 
+  /**
+   * @param vwr 
+   * @param title 
+   * @param imageMap  
+   * @return imageDialog
+   */
   public static GenericImageDialog getImageDialog(Viewer vwr,
                                                String title,
                                                Map<String, GenericImageDialog> imageMap) {
