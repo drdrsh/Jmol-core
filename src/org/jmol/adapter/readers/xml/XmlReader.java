@@ -218,7 +218,6 @@ public class XmlReader extends AtomSetCollectionReader {
    * @param data 
    */
   void createDomNodeJS(String id, Object data) {
-    // JavaScript only; untested
     // no doubt there is a more efficient way to do this.
     // Firefox, at least, does not recognize "/>" in HTML blocks
     // that are added this way.
