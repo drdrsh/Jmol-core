@@ -192,16 +192,17 @@ public class XmlReader extends AtomSetCollectionReader {
       }
       if (o instanceof BufferedInputStream)
         o = Rdr.StreamToUTF8String(Rdr.getBIS(data));
+      // untested in j2s
       /**
        * 
        * @j2sNative
        * 
        *            this.domObj[0] =
-       *            parent.vwr.html5Applet._createDomNode("xmlReader",o);
+       *            this.createDomNodeJS("xmlReader",o);
        *            this.walkDOMTree();
-       *            parent.vwr.html5Applet._createDomNode("xmlReader",null);
+       *            this.createDomNodeJS("xmlReader",null);
        * 
-       */
+       */ 
       {
         walkDOMTree();
       }
@@ -211,6 +212,59 @@ public class XmlReader extends AtomSetCollectionReader {
       saxHandler.parseXML(this, saxReader, reader);
     }
   }
+  
+  @SuppressWarnings("unused")
+  private void createDomNodeJS(String id, Object data) {
+    // JavaScript only; untested
+    // no doubt there is a more efficient way to do this.
+    // Firefox, at least, does not recognize "/>" in HTML blocks
+    // that are added this way.
+    /**
+     * 
+     * @j2sNative
+     * 
+    proto._createDomNode = function(id, data) {
+      id = this._id + "_" + id;
+      var d = document.getElementById(id);
+      if (d)
+        document.body.removeChild(d);
+      if (!data)
+        return;
+      if (data.indexOf("<?") == 0)
+        data = data.substring(data.indexOf("<", 1));
+      if (data.indexOf("/>") >= 0) {
+        var D = data.split("/>");
+        for (var i = D.length - 1; --i >= 0;) {
+          var s = D[i];
+          var pt = s.lastIndexOf("<") + 1;
+          var pt2 = pt;
+          var len = s.length;
+          var name = "";
+          while (++pt2 < len) {
+            if (" \t\n\r".indexOf(s.charAt(pt2))>= 0) {
+              var name = s.substring(pt, pt2);
+              D[i] = s + "></"+name+">";
+              break;
+            }     
+          }
+        }
+        data = D.join('');
+      }
+      d = document.createElement("_xml");
+      d.id = id;
+      d.innerHTML = data;
+      d.style.display = "none";
+      document.body.appendChild(d);
+      return d;
+    }   
+     * 
+     */
+    {
+      // only called by j2s
+    }
+      
+  }
+  
   @Override
   public void applySymmetryAndSetTrajectory() {
     try {
