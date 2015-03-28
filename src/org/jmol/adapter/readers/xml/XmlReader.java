@@ -213,18 +213,23 @@ public class XmlReader extends AtomSetCollectionReader {
     }
   }
   
-  @SuppressWarnings("unused")
-  private void createDomNodeJS(String id, Object data) {
+  /**
+   * @param id  
+   * @param data 
+   */
+  void createDomNodeJS(String id, Object data) {
     // JavaScript only; untested
     // no doubt there is a more efficient way to do this.
     // Firefox, at least, does not recognize "/>" in HTML blocks
     // that are added this way.
+    
+    @SuppressWarnings("unused")
+    Object applet = parent.vwr.html5Applet;
     /**
      * 
      * @j2sNative
      * 
-    proto._createDomNode = function(id, data) {
-      id = this._id + "_" + id;
+      id = applet._id + "_" + id;
       var d = document.getElementById(id);
       if (d)
         document.body.removeChild(d);
@@ -256,7 +261,6 @@ public class XmlReader extends AtomSetCollectionReader {
       d.style.display = "none";
       document.body.appendChild(d);
       return d;
-    }   
      * 
      */
     {
