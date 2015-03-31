@@ -265,6 +265,27 @@ public class Jmol extends GenericApplet implements JSInterface {
     }
   }
 
+  /**
+   * This method is only called by JmolGLmol applet._refresh();
+   * 
+   * @return enough data to update a WebGL view
+   * 
+   */
+  public Object getGLmolView() {
+    return viewer.getGLmolView();
+  }
+
+  /**
+   * possibly called from JSmolApplet.js upon start up
+   *  
+   * @param fileName
+   * @return error or null
+   */
+  
+  public String openFile(String fileName) {
+    return viewer.openFile(fileName);
+  }
+
   // JSInterface -- methods called from JSmol JavaScript library
   
   @Override
@@ -275,11 +296,6 @@ public class Jmol extends GenericApplet implements JSInterface {
   @Override
   public void cachePut(String key, Object data) {
     viewer.cachePut(key, data);
-  }
-
-  @Override
-  public Object getGLmolView() {
-    return viewer.getGLmolView();
   }
 
   @Override
@@ -311,11 +327,6 @@ public class Jmol extends GenericApplet implements JSInterface {
   @Override
   public void update() {
     viewer.updateJS();
-  }
-
-  @Override
-  public String openFile(String fileName) {
-    return viewer.openFile(fileName);
   }
 
   @Override
