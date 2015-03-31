@@ -187,7 +187,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (isImplicitAtomProperty && tokAt(i + 1) != T.per) {
         // local variable definition
         SV token = (localVars != null && localVars.containsKey(theToken.value) ? null
-            : getBitsetPropertySelector(i, false, false));
+            : getBitsetPropertySelector(i));
         if (token != null) {
           rpn.addX(localVars.get(localVar));
           if (!rpn.addOpAllowMath(token, (tokAt(i + 1) == T.leftparen)))
@@ -477,7 +477,7 @@ abstract class ScriptExpr extends ScriptParam {
             continue;
           }
         }
-        SV var = getBitsetPropertySelector(i + 1, false, false);
+        SV var = getBitsetPropertySelector(i + 1);
         if (var == null)
           invArg();
         // check for added min/max modifier
@@ -1461,9 +1461,7 @@ abstract class ScriptExpr extends ScriptParam {
     return bs;
   }
 
-  private SV getBitsetPropertySelector(int i, boolean mustBeSettable,
-                                       boolean isExpression)
-      throws ScriptException {
+  private SV getBitsetPropertySelector(int i) throws ScriptException {
     int tok = getToken(i).tok;
     switch (tok) {
     case T.min:
@@ -1480,17 +1478,11 @@ abstract class ScriptExpr extends ScriptParam {
       if (tok != T.opIf && !T.tokAttr(tok, T.identifier))
         return null;
       String name = paramAsStr(i);
-      if (!mustBeSettable && vwr.isFunction(name)) {
+      if (vwr.isFunction(name.toLowerCase())) {
         tok = T.function;
         break;
       }
-      if (isExpression && !name.endsWith("?"))
-        return null;
-      if (isExpression)
-        tok = T.identifier;
     }
-    if (mustBeSettable && isExpression && !T.tokAttr(tok, T.settable))
-      return null;
     return SV.newSV(T.propselector, tok, paramAsStr(i));
   }
 

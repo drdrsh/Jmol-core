@@ -908,12 +908,13 @@ public class ScriptCompiler extends ScriptTokenParser {
     ident = script.substring(ichToken, ichToken + cchToken);
     identLC = ident.toLowerCase();
     boolean isUserVar = (isContextVariable(identLC));
+    String preserveCase = null;
     if (nTokens == 0)
       isUserToken = isUserVar;
     if (nTokens == 1
         && (tokCommand == T.function || tokCommand == T.parallel || tokCommand == T.var)
-        || nTokens != 0 && isUserVar && lastToken.tok != T.per
-        || isUserFunction(identLC)
+        || nTokens != 0 && isUserVar && lastToken.tok != T.per || !isDotDot
+        && isUserFunction(identLC) && ((preserveCase = ident) != null)
         && (thisFunction == null || !thisFunction.name.equals(identLC))) {
       // we need to allow:
 
@@ -926,7 +927,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       // color += ...
       // color[ ...
 
-      ident = identLC;
+      ident = (preserveCase == null ? identLC : preserveCase);
       theToken = null;
     } else if (ident.length() == 1 || lastToken.tok == T.colon) {
       // hack to support case sensitive alternate locations and chains
@@ -945,10 +946,11 @@ public class ScriptCompiler extends ScriptTokenParser {
     }
 
     if (theToken == null) {
-      if (identLC.indexOf("property_") == 0)
+      if (identLC.indexOf("property_") == 0) {
         theToken = T.o(T.property, identLC);
-      else
+      } else {
         theToken = T.o(T.identifier, ident);
+      }
     }
     theTok = theToken.tok;
   }

@@ -2464,9 +2464,20 @@ public class MathExt {
     SV x1 = null;
     if (isSelector) {
       x1 = mp.getX();
-      if (x1.tok != T.bitset)
+      switch (x1.tok) {
+      case T.bitset:
+        break;
+      case T.hash:
+        // really xx.yyy where yyy is a function;
+        if (args.length > 0)
+          return false;
+        x1 = x1.getMap().get(name);
+        return (x1 == null ? mp.addXStr("") : mp.addX(x1));
+      default:
         return false;
+      }
     }
+    name = name.toLowerCase();
     mp.wasX = false;
     Lst<SV> params = new Lst<SV>();
     for (int i = 0; i < args.length; i++) {
