@@ -141,8 +141,8 @@ abstract class ScriptExpr extends ScriptParam {
    *        variables
    * @param localVar
    *        x or y in above for(), select() examples
-   * @param isSpecialAssignment 
-   *        x[n] = .... 
+   * @param isSpecialAssignment
+   *        x[n] = ....
    * @return either a vector or a value, caller's choice.
    * @throws ScriptException
    *         errors are thrown directly to the Eval error system.
@@ -150,7 +150,9 @@ abstract class ScriptExpr extends ScriptParam {
   private Object parameterExpression(int pt, int ptMax, String key,
                                      boolean ignoreComma, boolean asVector,
                                      int ptAtom, boolean isArrayItem,
-                                     Map<String, SV> localVars, String localVar, boolean isSpecialAssignment)
+                                     Map<String, SV> localVars,
+                                     String localVar,
+                                     boolean isSpecialAssignment)
       throws ScriptException {
 
     /*
@@ -175,8 +177,8 @@ abstract class ScriptExpr extends ScriptParam {
     if (ptMax < pt)
       ptMax = slen;
     int ptEq = (isSpecialAssignment ? 0 : 1);
-    ScriptMathProcessor rpn = new ScriptMathProcessor(this, isSpecialAssignment, isArrayItem, asVector,
-        false, false, key);
+    ScriptMathProcessor rpn = new ScriptMathProcessor(this,
+        isSpecialAssignment, isArrayItem, asVector, false, false, key);
     Object v, res;
     int nSquare = 0;
     int nParen = 0;
@@ -190,7 +192,7 @@ abstract class ScriptExpr extends ScriptParam {
             : getBitsetPropertySelector(i));
         if (token != null) {
           rpn.addX(localVars.get(localVar));
-          if (!rpn.addOpAllowMath(token, (tokAt(i + 1) == T.leftparen)))
+          if (!rpn.addOpAllowMath(token, (tokAt(i + 1) == T.leftparen), T.nada))
             invArg();
           if ((token.intValue == T.function || token.intValue == T.parallel)
               && tokAt(iToken + 1) != T.leftparen) {
@@ -357,7 +359,7 @@ abstract class ScriptExpr extends ScriptParam {
       // these next are for the within() command
       case T.plane:
         if (tokAt(iToken + 1) == T.leftparen) {
-          if (!rpn.addOpAllowMath(theToken, true))
+          if (!rpn.addOpAllowMath(theToken, true, T.nada))
             invArg();
           break;
         }
@@ -438,7 +440,7 @@ abstract class ScriptExpr extends ScriptParam {
         i = iToken;
         if (nParen == 0 && isOneExpressionOnly) {
           iToken++;
-          return listBS((BS)v);
+          return listBS((BS) v);
         }
         break;
       case T.spacebeforesquare:
@@ -503,11 +505,13 @@ abstract class ScriptExpr extends ScriptParam {
             getToken(iToken + 2);
           }
         }
-        allowMathFunc &= (tokAt(iToken + 1) == T.leftparen || isUserFunction);
-        if (!rpn.addOpAllowMath(var, allowMathFunc))
+        int tokNext = tokAt(iToken + 1);
+        allowMathFunc &= (tokNext == T.leftparen || isUserFunction);
+        if (!rpn.addOpAllowMath(var, allowMathFunc, isUserFunction ? tokNext
+            : T.nada))
           invArg();
         i = iToken;
-        if (var.intValue == T.function && tokAt(i + 1) != T.leftparen) {
+        if (var.intValue == T.function && tokNext != T.leftparen) {
           rpn.addOp(T.tokenLeftParen);
           rpn.addOp(T.tokenRightParen);
         }
@@ -564,12 +568,14 @@ abstract class ScriptExpr extends ScriptParam {
           // first check to see if the variable has been defined already
           String name = paramAsStr(i).toLowerCase();
           boolean haveParens = (tokAt(i + 1) == T.leftparen);
-          if (chk) {
-            v = name;
-          } else if (!haveParens
-              && (localVars == null || (v = PT.getMapValueNoCase(localVars, name)) == null && allContext)) {
-            v = getContextVariableAsVariable(name);
-          }
+          if (!haveParens)
+            if (chk) {
+              v = name;
+            } else if (localVars == null
+                || (v = PT.getMapValueNoCase(localVars, name)) == null
+                && allContext) {
+              v = getContextVariableAsVariable(name);
+            }
           if (v == null) {
             if (T.tokAttr(theTok, T.identifier) && vwr.isFunction(name)) {
               if (!rpn.addOp(SV.newV(T.function, theToken.value)))

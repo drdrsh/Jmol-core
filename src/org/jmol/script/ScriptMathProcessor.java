@@ -409,10 +409,10 @@ public class ScriptMathProcessor {
    * @throws ScriptException
    */
   public boolean addOp(T op) throws ScriptException {
-    return addOpAllowMath(op, true);
+    return addOpAllowMath(op, true, T.nada);
   }
 
-  boolean addOpAllowMath(T op, boolean allowMathFunc) throws ScriptException {
+  boolean addOpAllowMath(T op, boolean allowMathFunc, int tokNext) throws ScriptException {
 
     if (debugHigh) {
       dumpStacks("adding " + op + " wasx=" + wasX);
@@ -495,8 +495,16 @@ public class ScriptMathProcessor {
     default:
       if (isMathFunc) {
         boolean isArgument = (oPt >= 1 && tok0 == T.leftparen);
-        if (!isDotSelector && wasX && !isArgument)
+        if (isDotSelector) {
+          if (tokNext == T.leftparen) {
+          // check for {hash}.x(), which is not allowed
+          // if this is desired, one needs to use {hash}..x()
+            if (xStack[xPt].tok == T.hash)
+              return false;
+          }
+        } else if (wasX && !isArgument) {
           return false;
+        }
         newOp = op;
         isLeftOp = true;
         break;
