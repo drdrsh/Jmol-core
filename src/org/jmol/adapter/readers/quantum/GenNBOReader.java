@@ -193,6 +193,10 @@ public class GenNBOReader extends MOReader {
     // for .nbo only
     if (line.indexOf("SECOND ORDER PERTURBATION THEORY ANALYSIS") >= 0
         && !orbitalsRead) {
+      // Frank Weinhold suggests that NBO/.37 is not the best choice for a default.
+      // PNBOs (pre-NBOs) are not orthogonalized and so "look better." But we are already
+      // reading NBOs, and they are fine as well. I'd rather not change this
+      // default and risk changes in PNGJ files already saved. 
       nboType = "NBO";
       String data = getFileData(".37");
       if (data == null)
