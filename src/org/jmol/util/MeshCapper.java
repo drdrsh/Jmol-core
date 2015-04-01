@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -123,7 +124,7 @@ public class MeshCapper {
     vertices.get(0).link(v0);
     lstTriangles = new Lst<int[]>();
     createCap(null);
-    int[][] a = new int[lstTriangles.size()][];
+    int[][] a = AU.newInt2(lstTriangles.size());
     for (int i = lstTriangles.size(); --i >= 0;)
       a[i] = lstTriangles.get(i);
     return a;
