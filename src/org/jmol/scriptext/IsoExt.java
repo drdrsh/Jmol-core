@@ -47,6 +47,7 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
+import org.jmol.util.MeshCapper;
 import org.jmol.util.Parser;
 
 import javajs.J2SIgnoreImport;
@@ -263,7 +264,8 @@ public class IsoExt extends ScriptExt {
       if (tokAt(pt) == T.scale)
         scale = floatParameter(++pt);
       if (!chk)
-        eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), true, type, index, scale));
+        eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), true, type,
+            index, scale));
       return false;
     case T.helix:
     case T.quaternion:
@@ -374,29 +376,36 @@ public class IsoExt extends ScriptExt {
           for (int j = 0; j < nVertices; j++)
             points[j] = centerParameter(++eval.iToken);
         }
-        switch (getToken(++eval.iToken).tok) {
-        case T.matrix3f:
-        case T.matrix4f:
-          SV sv = SV.newT(eval.theToken);
-          sv.toArray();
-          vpolygons = sv.getList();
-          nTriangles = vpolygons.size();
-          break;
-        case T.varray:
-          vpolygons = ((SV) eval.theToken).getList();
-          nTriangles = vpolygons.size();
-          break;
-        default:
-          nTriangles = Math.max(0, intParameter(eval.iToken));
-        }
-        int[][] polygons = AU.newInt2(nTriangles);
-        for (int j = 0; j < nTriangles; j++) {
-          float[] f = (vpolygons == null ? eval.floatParameterSet(
-              ++eval.iToken, 3, 4) : SV.flistValue(vpolygons.get(j), 0));
-          if (f.length < 3 || f.length > 4)
-            invArg();
-          polygons[j] = new int[] { (int) f[0], (int) f[1], (int) f[2],
-              (f.length == 3 ? 7 : (int) f[3]) };
+        int[][] polygons;
+        if (slen == ++eval.iToken) {
+          if (chk)
+            return false;
+          polygons = ((MeshCapper) Interface.getInterface("org.jmol.util.MeshCapper", vwr, "script")).set(null).triangulatePolygon(points);
+        } else {
+          switch (getToken(eval.iToken).tok) {
+          case T.matrix3f:
+          case T.matrix4f:
+            SV sv = SV.newT(eval.theToken);
+            sv.toArray();
+            vpolygons = sv.getList();
+            nTriangles = vpolygons.size();
+            break;
+          case T.varray:
+            vpolygons = ((SV) eval.theToken).getList();
+            nTriangles = vpolygons.size();
+            break;
+          default:
+            nTriangles = Math.max(0, intParameter(eval.iToken));
+          }
+          polygons = AU.newInt2(nTriangles);
+          for (int j = 0; j < nTriangles; j++) {
+            float[] f = (vpolygons == null ? eval.floatParameterSet(
+                ++eval.iToken, 3, 4) : SV.flistValue(vpolygons.get(j), 0));
+            if (f.length < 3 || f.length > 4)
+              invArg();
+            polygons[j] = new int[] { (int) f[0], (int) f[1], (int) f[2],
+                (f.length == 3 ? 7 : (int) f[3]) };
+          }
         }
         if (nVertices > 0) {
           v.addLast(points);
@@ -442,10 +451,11 @@ public class IsoExt extends ScriptExt {
         }
         eval.checkLast(eval.iToken);
         if (!chk) {
-          String s = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bsAtoms, xyz, iSym,
-              center, target, thisId, T.draw);
+          String s = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(
+              vwr.ms, bsAtoms, xyz, iSym, center, target, thisId, T.draw);
           showString(s.substring(0, s.indexOf('\n') + 1));
-          eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId + "*\" delete");
+          eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId
+              + "*\" delete");
         }
         return false;
       case T.frame:

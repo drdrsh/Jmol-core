@@ -1302,8 +1302,12 @@ public class ScriptCompiler extends ScriptTokenParser {
     T token;
 
     if (isDotDot) {
-      addTokenToPrefix(T.o(T.string, ident));
-      addTokenToPrefix(T.tokenArrayClose);
+      if (theTok == T.leftsquare) {
+        bracketCount++;
+      } else {
+        addTokenToPrefix(T.o(T.string, ident));
+        addTokenToPrefix(T.tokenArrayClose);
+      }
       isDotDot = false;
       return CONTINUE;
     }

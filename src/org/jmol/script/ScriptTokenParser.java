@@ -359,7 +359,7 @@ abstract class ScriptTokenParser {
       return false;
     if (logMessages)
         Logger.debug("addTokenToPostfix" + token);
-    if (token.tok == T.leftsquare && lastToken.tok == T.per) {
+    if (token.tok == T.leftsquare && (lastToken.tok == T.per || lastToken.tok == T.perper)) {
       // new notation
       int ipt = ltokenPostfix.size() - 1;
       ltokenPostfix.remove(ipt);
@@ -382,6 +382,11 @@ abstract class ScriptTokenParser {
           }
           break;
         default:
+          tok2 = (i == 0 ? T.nada : ltokenPostfix.get(i - 1).tok);
+          if (tok2 == T.per || tok2 == T.perper) {
+            ipt = i - 1;
+            break;
+          }
           if (i == ipt - 1) {
             ipt = i;
             pcount = -10;
