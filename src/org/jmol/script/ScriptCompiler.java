@@ -907,13 +907,13 @@ public class ScriptCompiler extends ScriptTokenParser {
   private void getPrefixToken() {
     ident = script.substring(ichToken, ichToken + cchToken);
     identLC = ident.toLowerCase();
-    boolean isUserVar = (!isDotDot && isContextVariable(identLC));
+    boolean isUserVar = (lastToken.tok != T.per && !isDotDot && isContextVariable(identLC));
     String preserveCase = null;
     if (nTokens == 0)
       isUserToken = isUserVar;
     if (nTokens == 1
         && (tokCommand == T.function || tokCommand == T.parallel || tokCommand == T.var)
-        || nTokens != 0 && isUserVar && lastToken.tok != T.per || !isDotDot
+        || nTokens != 0 && isUserVar || !isDotDot
         && isUserFunction(identLC) && ((preserveCase = ident) != null)
         && (thisFunction == null || !thisFunction.name.equals(identLC))) {
       // we need to allow:
