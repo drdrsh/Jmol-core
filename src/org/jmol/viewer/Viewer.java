@@ -5201,7 +5201,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public void setStringProperty(String key, String value) {
-    if (value == null)
+    if (value == null || key == null || key.length() == 0)
       return;
     if (key.charAt(0) == '_') {
       g.setO(key, value);
@@ -5430,7 +5430,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public void setFloatProperty(String key, float value) {
-    if (Float.isNaN(value))
+    if (Float.isNaN(value) || key == null || key.length() == 0)
       return;
     if (key.charAt(0) == '_') {
       g.setF(key, value);
@@ -5640,7 +5640,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public void setIntProperty(String key, int value) {
-    if (value == Integer.MIN_VALUE)
+    if (value == Integer.MIN_VALUE || key == null || key.length() == 0)
       return;
     if (key.charAt(0) == '_') {
       g.setI(key, value);
@@ -5848,6 +5848,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public void setBooleanProperty(String key, boolean value) {
+    if (key == null || key.length() == 0)
+      return;
     if (key.charAt(0) == '_') {
       g.setB(key, value);
       return;

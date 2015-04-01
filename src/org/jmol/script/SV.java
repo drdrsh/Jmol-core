@@ -714,8 +714,8 @@ public class SV extends T implements JSONEncodable {
       for (int i = 0; i < keys.length; i++) {
         String key = keys[i];
         SV val = ht.get(key);
-        if (skipEmpty && val.tok == T.varray && val.getList().size() == 0
-            || val.tok == T.hash && val.getMap().isEmpty())
+        if (skipEmpty && (val.tok == T.varray && val.getList().size() == 0
+            || val.tok == T.hash && val.getMap().isEmpty()))
           continue;
         if (addValues)
           sb.append(sep).append(PT.esc(key)).append(":");
@@ -860,7 +860,8 @@ public class SV extends T implements JSONEncodable {
     case string:
       break;
     default:
-      return tokenIn;
+      return ((tokenIn instanceof SV) && ((SV) tokenIn).myName != null ? newI(0)
+          .setv((SV) tokenIn) : tokenIn);
     }
 
     // negative number is a count from the end
@@ -893,7 +894,7 @@ public class SV extends T implements JSONEncodable {
       }
       break;
     case barray:
-      len = ((BArray)(((SV) tokenIn).value)).data.length;
+      len = ((BArray) (((SV) tokenIn).value)).data.length;
       break;
     case varray:
       len = ((SV) tokenIn).getList().size();
@@ -982,12 +983,12 @@ public class SV extends T implements JSONEncodable {
         } else if (i1 == 1) {
           // {xxx}[1]
           i2 = bs.nextSetBit(0);
-        } 
+        }
         if (i2 >= -1) {
           bs.clearAll();
           if (i2 >= 0)
             bs.set(i2);
-          break;          
+          break;
         }
         i2 = i1;
       }
@@ -1007,7 +1008,7 @@ public class SV extends T implements JSONEncodable {
         return ((SV) tokenIn).getList().get(i1);
       Lst<SV> o2 = new Lst<SV>();
       Lst<SV> o1 = ((SV) tokenIn).getList();
-      
+
       int nn = Math.min(i2, len) - i1;
       for (int i = 0; i < nn; i++)
         o2.addLast(newT(o1.get(i + i1)));
@@ -1016,7 +1017,7 @@ public class SV extends T implements JSONEncodable {
     case barray:
       if (--i1 < 0 || i1 >= len)
         return newV(string, "");
-      byte[] data = ((BArray)(((SV) tokenIn).value)).data;
+      byte[] data = ((BArray) (((SV) tokenIn).value)).data;
       if (isOne)
         return newI(data[i1]);
       byte[] b = new byte[Math.min(i2, len) - i1];
@@ -1432,7 +1433,7 @@ public class SV extends T implements JSONEncodable {
    * @return array
    */
   public SV pushPop(SV value, SV mapKey) {
-    if (mapKey != null) {
+    if (mapKey != null  ) {
       Map<String, SV> m = getMap();
       if (value == null) {
         SV v;

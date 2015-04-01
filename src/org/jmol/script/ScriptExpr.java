@@ -463,11 +463,11 @@ abstract class ScriptExpr extends ScriptParam {
           switch (tokAt(i + 1)) {
           case T.nada:
             break; //?? or invArg??
+          case T.push:
+          case T.pop:
           case T.size:
           case T.keys:
           case T.type:
-          case T.push:
-          case T.pop:
             if (tok == T.per)
               break;
             //$FALL-THROUGH$
@@ -614,8 +614,15 @@ abstract class ScriptExpr extends ScriptParam {
         rpn.dumpStacks("null result");
       error(ERROR_endOfStatementUnexpected);
     }
-    if (result.tok == T.vector)
+    if (result.tok == T.vector) {
+      if (isSpecialAssignment && ptEq == 0) {
+        // no equal sign found! xxxxx.pop() for example
+        Lst<SV> rv = new Lst<SV>();
+        rv.addLast(new SV());
+        return rv;
+      }
       return result.value;
+    }
     if (chk) {
       if (returnBoolean)
         return Boolean.TRUE;
@@ -2044,7 +2051,7 @@ abstract class ScriptExpr extends ScriptParam {
     nv = v.size();
     if (nv == 0)
       invArg();
-    if (chk)
+    if (chk || v.get(0).tok == T.nada)
       return null;
     SV tv = SV.selectItemVar(SV.newS("").setv(v.get(nv - 1)));
     if (nv > 1) {
