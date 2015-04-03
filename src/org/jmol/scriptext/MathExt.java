@@ -2742,20 +2742,27 @@ public class MathExt {
         break;
       }
       double sum;
+      int minMax;
+      boolean isMin = false;
       switch (tok) {
       case T.min:
+        isMin = true;
         sum = Float.MAX_VALUE;
+        minMax = Integer.MAX_VALUE;
         break;
       case T.max:
         sum = -Float.MAX_VALUE;
+        minMax = -Integer.MAX_VALUE;
         break;
       default:
-        sum = 0;
+        sum = minMax = 0;
       }
       double sum2 = 0;
       int n = 0;
+      boolean isInt = true;
       for (int i = ndata; --i >= 0;) {
-        float v = (data == null ? SV.fValue(sv.get(i)) : data[i]);
+        SV svi = sv.get(i);
+        float v = (data == null ? SV.fValue(svi) : data[i]);
         if (Float.isNaN(v))
           continue;
         n++;
@@ -2769,12 +2776,13 @@ public class MathExt {
           sum += v;
           break;
         case T.min:
-          if (v < sum)
-            sum = v;
-          break;
         case T.max:
-          if (v > sum)
+          isInt &= (svi.tok == T.integer); 
+          if (isMin == (v < sum)) {
             sum = v;
+            if (isInt)
+              minMax = svi.intValue;
+          }
           break;
         }
       }
@@ -2791,6 +2799,9 @@ public class MathExt {
         break;
       case T.min:
       case T.max:
+        if (isInt)
+          return Integer.valueOf(minMax);
+        break;
       case T.sum:
         break;
       case T.sum2:
@@ -2847,8 +2858,8 @@ public class MathExt {
         if (!ok)
           break;
         Object f = getMinMax(fdata, tok);
-        if (f instanceof Float) {
-          float value = ((Float) f).floatValue();
+        if (f instanceof Number) {
+          float value = ((Number) f).floatValue();
           switch (xyz) {
           case 0:
             result.x = value;
