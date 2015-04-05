@@ -2088,7 +2088,14 @@ public class ScriptEval extends ScriptExpr {
       lineEnd = Integer.MAX_VALUE;
     if (aatoken == null)
       return true;
-    boolean allowJSInterrupt = (isJS && !fromFunc && useThreads());
+    if (!tQuiet) {
+      tQuiet = (vwr.getInt(T.showscript) < 0);
+    }
+    boolean allowJSInterrupt = (
+        isJS 
+        && !fromFunc 
+        && useThreads() 
+        && vwr.getInt(T.showscript) >= 0);
     commandLoop(allowJSInterrupt);
     if (chk)
       return true;
@@ -2108,7 +2115,7 @@ public class ScriptEval extends ScriptExpr {
     return true;
   }
 
-  private void commandLoop(boolean allowInterrupt) throws ScriptException {
+  private void commandLoop(boolean allowJSInterrupt) throws ScriptException {
     String lastCommand = "";
     boolean isForCheck = false; // indicates the stage of the for command loop
     Lst<T[]> vProcess = null;
@@ -2124,7 +2131,7 @@ public class ScriptEval extends ScriptExpr {
     }
 
     for (; pc < aatoken.length && pc < pcEnd; pc++) {
-      if (allowInterrupt) {
+      if (allowJSInterrupt) {
         // every 1 s check for interruptions
         if (!executionPaused && System.currentTimeMillis() - lastTime > 1000) {
           pc--;
@@ -2144,7 +2151,8 @@ public class ScriptEval extends ScriptExpr {
       }
 
       if (debugScript && !chk)
-        Logger.info("Command " + pc + (thisContext == null ? "" : " path=" + thisContext.contextPath));
+        Logger.info("Command " + pc
+            + (thisContext == null ? "" : " path=" + thisContext.contextPath));
       theToken = (aatoken[pc].length == 0 ? null : aatoken[pc][0]);
       // when checking scripts, we can't check statments
       // containing @{...}
@@ -2158,7 +2166,7 @@ public class ScriptEval extends ScriptExpr {
                 .tokAttr(theToken.tok, T.flowCommand)))
           vwr.addCommand(lastCommand = cmdLine);
       }
-      if (!chk) {
+      if (!chk && allowJSInterrupt) {
         String script = vwr.getInsertedCommand();
         if (!"".equals(script))
           runScript(script);
@@ -2206,28 +2214,38 @@ public class ScriptEval extends ScriptExpr {
       if (theToken == null)
         continue;
       int tok = theToken.tok;
-      if (T.tokAttr(tok, T.flowCommand)) {
-        isForCheck = cmdFlow(tok, isForCheck, vProcess);
-        if (theTok == T.process)
-          vProcess = null; // "end process"        
-      } else if (tok == T.process){
+      switch (tok) {
+      case T.set:
+        cmdSet();
+        continue;
+      case T.forcmd:
+        isForCheck = cmdFor(tok, isForCheck);
+        continue;
+      case T.process:
         pushContext((ContextToken) theToken, "PROCESS");
         if (parallelProcessor != null)
           vProcess = new Lst<T[]>();
-      } else {
+        continue;
+      default:
+        if (T.tokAttr(tok, T.flowCommand)) {
+          isForCheck = cmdFlow(tok, isForCheck, vProcess);
+          if (theTok == T.process)
+            vProcess = null; // "end process"
+          continue;
+        }
         processCommand(tok);
-      }
-      setCursorWait(false);
-      // at end because we could use continue to avoid it
-      if (executionStepping) {
-        executionPaused = (isCommandDisplayable(pc + 1));
+        setCursorWait(false);
+        if (executionStepping) {
+          executionPaused = (isCommandDisplayable(pc + 1));
+        }
       }
     }
   }
 
-  public void terminateAfterStep() {
-    pc = pcEnd;
-  }
+//  public void terminateAfterStep() {
+//    pc = pcEnd;
+//  }
+  
   private void processCommand(int tok) throws ScriptException {
     if (T.tokAttr(theToken.tok, T.shapeCommand)) {
       processShapeCommand(tok);
@@ -2407,9 +2425,6 @@ public class ScriptEval extends ScriptExpr {
       break;
     case T.save:
       cmdSave();
-      break;
-    case T.set:
-      cmdSet();
       break;
     case T.script:
       cmdScript(T.script, null, null);
@@ -3387,13 +3402,199 @@ public class ScriptEval extends ScriptExpr {
     vwr.setMotionFixedAtoms(bs);
   }
 
+  @SuppressWarnings("unchecked")
+  private boolean cmdFor(int tok, boolean isForCheck) throws ScriptException {
+    ContextToken cmdToken = (ContextToken) theToken;
+    int pt = st[0].intValue;
+    SV[] loopVars = cmdToken.loopVars;
+    pt = st[0].intValue;
+    int[] pts = new int[2];
+    Object bsOrList = null;
+    SV forVal = null;
+    SV forVar = null;
+    int inTok = 0;
+    boolean isOK = true;
+    boolean isMinusMinus = false;
+    int j = 0;
+    String key = null;
+    if (isForCheck && loopVars != null) {
+      tok = T.in;
+      // i in x, already initialized
+      forVar = loopVars[0];
+      forVal = loopVars[1];
+      bsOrList = loopVars[1].value;
+      // nth time through
+      j = ++forVal.intValue;
+      if (forVar.isModified()) {
+        isOK = false;
+      } else if (forVal.tok == T.integer) {
+        // values are stored in value as [i1 i2]
+        isMinusMinus = (j < 0);
+        int i1 = ((int[]) bsOrList)[0];
+        int i2 = ((int[]) bsOrList)[1];
+        isOK = (i1 != i2 && (i2 < i1) == isMinusMinus);
+        if (isOK)
+          forVar.intValue = ((int[]) bsOrList)[0] = i1 + (isMinusMinus ? -1 : 1); 
+        j = -1;
+      } else if (forVal.tok == T.varray) {
+        isOK = (j <= ((Lst<SV>) bsOrList).size());
+        if (isOK)
+          forVar.setv(SV.selectItemVar(forVal));
+        j = -1;
+      } else {
+        isBondSet = bsOrList instanceof BondSet;
+        j = ((BS) bsOrList).nextSetBit(j);
+        isOK = (j >= 0);
+      }
+    } else {
+
+      // for (i = 1; i < 3; i = i + 1);
+      // for (var i = 1; i < 3; i = i + 1);
+      // for (;;;);
+      // for (var x in {...}) { xxxxx }
+      // for (var x in y) { xxxx }
+      for (int i = 1, nSkip = 0; i < slen && j < 2; i++) {
+        switch (tok = tokAt(i)) {
+        case T.semicolon:
+          if (nSkip > 0)
+            nSkip--;
+          else
+            pts[j++] = i;
+          break;
+        case T.in:
+        case T.from:
+          key = paramAsStr(i - 1);
+          nSkip -= 2;
+          if (tokAt(++i) == T.expressionBegin || tokAt(i) == T.bitset) {
+            inTok = T.bitset;
+            bsOrList = atomExpressionAt(i);
+            if (isBondSet)
+              bsOrList = BondSet.newBS((BS) bsOrList, null);
+            isOK = (((BS) bsOrList).nextSetBit(0) >= 0);
+          } else {
+            Lst<SV> what = parameterExpressionList(-i, 1, false);
+            if (what == null || what.size() < 1)
+              invArg();
+            SV vl = what.get(0);
+            switch (inTok = vl.tok) {
+            case T.bitset:
+              bsOrList = SV.getBitSet(vl, false);
+              isOK = (((BS) bsOrList).nextSetBit(0) >= 0);
+              break;
+            case T.varray:
+              Lst<SV> v = vl.getList();
+              j = v.size();
+              isOK = (j > 0);
+              if (isOK && tok == T.from) {
+                int[] i12 = new int[] {SV.iValue(v.get(0)), SV.iValue(v.get(j - 1)) };
+                isMinusMinus = (i12[1] < i12[0]);
+                bsOrList = i12;
+                tok = T.in;
+                inTok = T.integer;
+              } else {
+                bsOrList = v;
+              }
+              break;
+            case T.hash:
+              Map<String, SV> m = vl.getMap();
+              int n = m.keySet().size();
+              isOK = (n > 0);
+              if (isOK) {
+                String[] keys = new String[n];
+                m.keySet().toArray(keys);
+                Arrays.sort(keys);
+                bsOrList = keys;
+              }
+              break;
+            default:
+              invArg();
+            }
+          }
+          i = iToken;
+          break;
+        case T.select:
+          nSkip += 2;
+          break;
+        }
+      }
+      if (key == null) {
+        if (isForCheck) {
+          j = (bsOrList == null ? pts[1] + 1 : 2);
+        } else {
+          pushContext(cmdToken, "FOR");
+          j = 2;
+        }
+        if (tokAt(j) == T.var)
+          j++;
+        key = paramAsStr(j);
+        isMinusMinus = key.equals("--") || key.equals("++");
+        if (isMinusMinus)
+          key = paramAsStr(++j);
+      }
+      if (isOK)
+        if (tok == T.in) {
+          // start of FOR (i in x) block
+          pushContext(cmdToken, "FOR");
+          forVar = getForVar(key);
+          forVar.setModified(false);
+          if (inTok == T.integer) {
+            // for (i from [0 31])
+            forVar.tok = T.integer;
+            forVar.intValue = ((int[]) bsOrList)[0];
+            forVal = SV.newV(T.integer, bsOrList);
+            forVal.intValue = (isMinusMinus ? Integer.MIN_VALUE : 0);
+            j = -1;
+          } else {
+            forVal = SV.getVariable(bsOrList);
+            if (inTok == T.bitset) {
+              j = ((BS) bsOrList).nextSetBit(0);
+            } else {
+              forVal.intValue = 1;
+              forVar.setv(SV.selectItemVar(forVal));
+              j = -1;
+            }
+          }
+          if (loopVars == null)
+            loopVars = cmdToken.loopVars = new SV[2];
+          loopVars[0] = forVar;
+          loopVars[1] = forVal;
+        } else {
+          if (T.tokAttr(tokAt(j), T.misc)
+              || (forVal = getContextVariableAsVariable(key)) != null) {
+            if (!isMinusMinus && getToken(++j).tok != T.opEQ)
+              invArg();
+            if (isMinusMinus)
+              j -= 2;
+            setVariable(++j, slen - 1, key, false);
+          }
+          isOK = parameterExpressionBoolean(pts[0] + 1, pts[1]);
+        }
+    }
+    if (isOK && tok == T.in && j >= 0) {
+      forVal.intValue = j;
+      forVar.tok = T.bitset;
+      if (isBondSet) {
+        forVar.value = new BondSet();
+        ((BondSet) forVar.value).set(j);
+      } else {
+        forVar.value = BSUtil.newAndSetBit(j);
+      }
+    }
+    pt++;
+    if (!isOK)
+      popContext(true, false);
+    isForCheck = false;
+    if (!isOK && !chk)
+      pc = Math.abs(pt) - 1;
+    return isForCheck;
+  }
+
   private boolean cmdFlow(int tok, boolean isForCheck, Lst<T[]> vProcess)
       throws ScriptException {
     ContextToken ct;
-    int pt;
-    pt = st[0].intValue;
+    int pt = st[0].intValue;
     boolean isDone = (pt < 0 && !chk);
-    boolean isOK = true;
+    boolean continuing = true;
     int ptNext = 0;
     switch (tok) {
     case T.function:
@@ -3407,7 +3608,7 @@ public class ScriptEval extends ScriptExpr {
       pushContext(ct, "CATCH");
       if (!isDone && ct.name0 != null)
         contextVariables.put(ct.name0, ct.contextVariables.get(ct.name0));
-      isOK = !isDone;
+      continuing = !isDone;
       st[0].intValue = -Math.abs(pt);
       break;
     case T.switchcmd:
@@ -3418,11 +3619,11 @@ public class ScriptEval extends ScriptExpr {
       case 0:
         // done
         ptNext = -ptNext;
-        isOK = false;
+        continuing = false;
         break;
       case -1:
         // skip this case
-        isOK = false;
+        continuing = false;
         break;
       case 1:
         // do this one
@@ -3434,11 +3635,11 @@ public class ScriptEval extends ScriptExpr {
       break;
     case T.ifcmd:
     case T.elseif:
-      isOK = (!isDone && parameterExpressionBoolean(1, 0));
+      continuing = (!isDone && parameterExpressionBoolean(1, 0));
       if (chk)
         break;
       ptNext = Math.abs(aatoken[Math.abs(pt)][0].intValue);
-      ptNext = (isDone || isOK ? -ptNext : ptNext);
+      ptNext = (isDone || continuing ? -ptNext : ptNext);
       aatoken[Math.abs(pt)][0].intValue = ptNext;
       if (tok == T.catchcmd)
         aatoken[pc][0].intValue = -pt; // reset to "done" state
@@ -3480,122 +3681,6 @@ public class ScriptEval extends ScriptExpr {
       if (slen > 1)
         intParameter(checkLast(1));
       break;
-    case T.forcmd:
-      // for (i = 1; i < 3; i = i + 1);
-      // for (var i = 1; i < 3; i = i + 1);
-      // for (;;;);
-      // for (var x in {...}) { xxxxx }
-      // for (var x in y) { xxxx }
-      T cmdToken = theToken;
-      int[] pts = new int[2];
-      int j = 0;
-      Object bsOrList = null;
-      String key = null;
-      for (int i = 1, nSkip = 0; i < slen && j < 2; i++) {
-        switch (tok = tokAt(i)) {
-        case T.semicolon:
-          if (nSkip > 0)
-            nSkip--;
-          else
-            pts[j++] = i;
-          break;
-        case T.in:
-          key = paramAsStr(i - 1);
-          if (isForCheck) {
-            i = slen;
-            continue;
-          }
-          nSkip -= 2;
-          if (tokAt(++i) == T.expressionBegin || tokAt(i) == T.bitset) {
-            bsOrList = atomExpressionAt(i);
-            if (isBondSet)
-              bsOrList = BondSet.newBS((BS) bsOrList, null);
-          } else {
-            Lst<SV> what = parameterExpressionList(-i, 1, false);
-            if (what == null || what.size() < 1)
-              invArg();
-            SV vl = what.get(0);
-            switch (vl.tok) {
-            case T.bitset:
-              bsOrList = SV.getBitSet(vl, false);
-              break;
-            case T.varray:
-              bsOrList = vl.getList();
-              break;
-            case T.hash:
-              Map<String, SV> m = vl.getMap();
-              String[] keys = new String[m.keySet().size()];
-              Arrays.sort(keys);
-              bsOrList = m.keySet().toArray(keys);
-              break;
-            default:
-              invArg();
-            }
-          }
-          i = iToken;
-          break;
-        case T.select:
-          nSkip += 2;
-          break;
-        }
-      }
-      boolean isMinusMinus = false;
-      if (key == null) {
-        if (isForCheck) {
-          j = (bsOrList == null ? pts[1] + 1 : 2);
-        } else {
-          pushContext((ContextToken) cmdToken, "FOR");
-          j = 2;
-        }
-        if (tokAt(j) == T.var)
-          j++;
-        key = paramAsStr(j);
-        isMinusMinus = key.equals("--") || key.equals("++");
-        if (isMinusMinus)
-          key = paramAsStr(++j);
-      }
-      SV v = null;
-      if (tok == T.in || T.tokAttr(tokAt(j), T.misc)
-          || (v = getContextVariableAsVariable(key)) != null) {
-        if (tok != T.in && !isMinusMinus && getToken(++j).tok != T.opEQ)
-          invArg();
-        if (tok == T.in) {
-          isOK = true;
-          if (!isForCheck)
-            pushContext((ContextToken) cmdToken, "FOR");
-          SV t = getForVar(key);
-          v = getForVar(key + "/value");
-          if (isForCheck) {
-            if (t.isModified())
-              isOK = false;
-            else if (v.tok == T.varray)
-              isOK = (++v.intValue <= v.getList().size());
-            else if (((BS) v.value).nextSetBit((j = ((BS) v.value)
-                .nextSetBit(0)) + 1) < 0)
-              isOK = false;
-            else
-              ((BS) v.value).clear(j);
-          } else {
-            v.setv(SV.getVariable(bsOrList instanceof BS ? BSUtil
-                .copy((BS) bsOrList) : bsOrList));
-            v.intValue = 1;
-            t.setModified(false);
-          }
-          if (isOK)
-            t.setv(SV.selectItemVar(v));
-        } else {
-          if (isMinusMinus)
-            j -= 2;
-          setVariable(++j, slen - 1, key, false);
-        }
-      }
-      if (tok != T.in)
-        isOK = parameterExpressionBoolean(pts[0] + 1, pts[1]);
-      pt++;
-      if (!isOK)
-        popContext(true, false);
-      isForCheck = false;
-      break;
     case T.end: // function, if, for, while, catch, switch
       switch (getToken(checkLast(1)).tok) {
       case T.trycmd:
@@ -3604,13 +3689,13 @@ public class ScriptEval extends ScriptExpr {
           return false;
         runFunctionAndRet(trycmd, "try", null, null, true, true, true);
         return false;
-      case T.catchcmd:
-        popContext(true, false);
-        break;
       case T.function:
       case T.parallel:
         vwr.addFunction((ScriptFunction) theToken.value);
         return isForCheck;
+      case T.catchcmd:
+        popContext(true, false);
+        break;
       case T.process:
         addProcess(vProcess, pt, pc);
         popContext(true, false);
@@ -3621,17 +3706,20 @@ public class ScriptEval extends ScriptExpr {
           for (; pt < pc; pt++)
             if ((tok = aatoken[pt][0].tok) != T.defaultcmd && tok != T.casecmd)
               break;
-          isOK = (pc == pt);
+          continuing = (pc == pt);
         }
         break;
+      case T.ifcmd:
+        break;
+      case T.forcmd:
+      case T.whilecmd:
+        continuing = false;
+        isForCheck = true;
+        break;
       }
-      if (isOK)
-        isOK = (theTok == T.catchcmd || theTok == T.process
-            || theTok == T.ifcmd || theTok == T.switchcmd);
-      isForCheck = (theTok == T.forcmd || theTok == T.whilecmd);
       break;
     }
-    if (!isOK && !chk)
+    if (!continuing && !chk)
       pc = Math.abs(pt) - 1;
     return isForCheck;
   }
