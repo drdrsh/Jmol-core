@@ -161,8 +161,14 @@ public class GT implements Translator {
           + " using files for language:" + la + " country:" + la_co
           + " variant:" + la_co_va);
     if (!ignoreApplicationBundle)
-      addBundles(vwr, "Jmol", la_co_va, la_co, la);
-    addBundles(vwr, "JmolApplet", la_co_va, la_co, la);
+      addBundles(vwr, "Jmol", la_co_va, null, null);
+    addBundles(vwr, "JmolApplet", la_co_va, null, null);
+    if (!ignoreApplicationBundle)
+      addBundles(vwr, "Jmol", null, la_co, null);
+    addBundles(vwr, "JmolApplet", null, la_co, null);
+    if (!ignoreApplicationBundle)
+      addBundles(vwr, "Jmol", null, null, la);
+    addBundles(vwr, "JmolApplet", null, null, la);
   }
 
   public static Language[] getLanguageList(GT gt) {
@@ -283,7 +289,9 @@ public class GT implements Translator {
   private String getString(String s) {
     String trans = null;
     if (doTranslate) {
-      for (int bundle = resourceCount; --bundle >= 0;) {
+      // order was incorrect -- should be:
+      // la_co_va(app)  la_co_va(applet)  la_co(app)  la_co(applet) la(app)  la(applet)
+      for (int bundle = 0; bundle < resourceCount; bundle++) {
         trans = resources[bundle].getString(s);
         if (trans != null) {
           s = trans;

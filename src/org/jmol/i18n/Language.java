@@ -25,6 +25,8 @@
 
 package org.jmol.i18n;
 
+import javajs.util.PT;
+
 public class Language {
 
   /**
@@ -148,10 +150,10 @@ public class Language {
     for (int i = list.length; --i >= 0;)
       if (list[i].code.equalsIgnoreCase(code))
         return list[i].code;
-    for (int i = list.length; --i >= 0;)
-      if (list[i].code.startsWith(code))
-        return list[i].code;
+      for (int i = list.length; --i >= 0;)
+        if (list[i].code.startsWith(code))
+          return list[i].code;
     return null;
   }
-  
+
 }

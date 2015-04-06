@@ -87,6 +87,7 @@ public abstract class JmolConsole extends GenericConsole implements ActionListen
   protected void updateLabels() {
     labels = null;
     boolean doTranslate = GT.setDoTranslate(true);
+    setViewer(vwr);
     defaultMessage = getLabel("default");
     setAbstractButtonLabels(menuMap, labels);
     setTitle();
