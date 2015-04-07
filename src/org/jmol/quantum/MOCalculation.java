@@ -285,6 +285,8 @@ public class MOCalculation extends QuantumCalculation implements
 
   private int nGaussians;
   private boolean doShowShellType;
+
+  private String warned;
   
   private void processShell(int iShell) {
     int lastAtom = atomIndex;
@@ -323,7 +325,13 @@ public class MOCalculation extends QuantumCalculation implements
         addData10F();
       break;
     default:
-      Logger.warn(" Unsupported basis type for atomno=" + (atomIndex + 1) + ": " + QS.getQuantumShellTag(basisType));
+      if (warned == null)
+        warned = "";
+      String key = "=" + (atomIndex + 1) + ": ";
+      if (warned.indexOf(key) < 0) {
+        warned += key;
+        Logger.warn(" Unsupported basis type for atomno" + key + QS.getQuantumShellTag(basisType));
+      }
       break;
     }
   }

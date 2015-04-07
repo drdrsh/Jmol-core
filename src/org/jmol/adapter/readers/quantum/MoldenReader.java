@@ -419,6 +419,8 @@ public class MoldenReader extends MopacSlaterReader {
     if (line.length() > 3 && "5D 6D 7F 10 9G 15 11 21".indexOf(line.substring(1,3)) >= 0) {
       if (orbitalType.indexOf(line) >= 0)
         return true;
+      if (line.indexOf("G") >= 0 || line.indexOf("H") >= 0 || line.indexOf("I") >= 0)
+        appendLoadNote("Unsupported orbital type ignored: " + line);
       orbitalType += line;
       Logger.info("Orbital type set to " + orbitalType);
       fixOrbitalType();
