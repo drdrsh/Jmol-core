@@ -349,20 +349,27 @@ public class MoldenReader extends MopacSlaterReader {
         }
         tokens = getMoTokens(null);
       }
+      int pt = 0;
       while (tokens != null && tokens.length > 0
           && parseIntStr(tokens[0]) != Integer.MIN_VALUE) {
         if (tokens.length != 2)
           throw new Exception("invalid MO coefficient specification");
         // tokens[0] is the function number, and tokens[1] is the coefficient
+        int i = parseIntStr(tokens[0]);
+        while (i > ++pt)
+          data.addLast("0");
         data.addLast(tokens[1]);
         tokens = getMoTokens(null);
       }
-
-      float[] coefs = new float[data.size()];
-      if (orbitalType.equals("") && coefs.length < nCoef) {
+      if (orbitalType.equals("") && data.size() < nCoef) {
         Logger.info("too few orbital coefficients for 6D");
         checkOrbitalType("[5D]");
       }
+      while (++pt <= nCoef) {
+        data.addLast("0");
+      }
+      
+      float[] coefs = new float[nCoef];
       for (int i = data.size(); --i >= 0;)
         coefs[i] = parseFloatStr(data.get(i));
       String l = line;
