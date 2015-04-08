@@ -7299,7 +7299,7 @@ public class ScriptEval extends ScriptExpr {
             vwr.fm.loadImage(getToken(pt).value, id);
           return;
         }
-        cmdEcho(pt - 1);
+        cmdEcho(pt);
         return;
       case T.point:
         propertyName = "point";
