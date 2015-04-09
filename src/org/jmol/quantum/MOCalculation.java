@@ -112,8 +112,10 @@ public class MOCalculation extends QuantumCalculation implements
   //private float coefMax = Integer.MAX_VALUE;
   private boolean doNormalize = true;
   private boolean nwChemMode = false;
-  //                                              S           P           SP          DS         DC          FS          FC
-  private int[][] dfCoefMaps = new int[][] {new int[1], new int[3], new int[4], new int[5], new int[6], new int[7], new int[10]};
+  //                                           0  S       1   P        2  SP   
+  private int[][] dfCoefMaps = new int[][] {new int[1], new int[3], new int[4], 
+        //    3   DS     4   DC      5   FS      6   FC
+          new int[5], new int[6], new int[7], new int[10]};
 
   private float[] linearCombination;
 
@@ -144,6 +146,7 @@ public class MOCalculation extends QuantumCalculation implements
     this.gaussians = gaussians;
     if (dfCoefMaps != null)
       this.dfCoefMaps = dfCoefMaps;
+    coeffs = new double[this.dfCoefMaps[this.dfCoefMaps.length - 1].length];
     this.slaters = (SlaterData[]) slaters;
     this.moCoefficients = moCoefficients;
     this.linearCombination = linearCombination;
@@ -276,6 +279,7 @@ public class MOCalculation extends QuantumCalculation implements
     gaussianPtr = shell[2];
     nGaussians = shell[3];
     doShowShellType = doDebug;
+    //System.out.println(iShell + " basistype is " + basisType);
     if (!setCoeffs(basisType, false))
       return 0;
     for (int i = map.length; --i >= 0;)
@@ -296,6 +300,7 @@ public class MOCalculation extends QuantumCalculation implements
     gaussianPtr = shell[2];
     nGaussians = shell[3];
     doShowShellType = doDebug;
+    //System.out.println("shell " + iShell + " type " + basisType);
     if (atomIndex != lastAtom && (thisAtom = qmAtoms[atomIndex]) != null)
       thisAtom.setXYZ(this, true);
     if (!setCoeffs(shell[1], true))
@@ -327,10 +332,10 @@ public class MOCalculation extends QuantumCalculation implements
     default:
       if (warned == null)
         warned = "";
-      String key = "=" + (atomIndex + 1) + ": ";
+      String key = "=" + (atomIndex + 1) + ": " + QS.getQuantumShellTag(basisType);
       if (warned.indexOf(key) < 0) {
         warned += key;
-        Logger.warn(" Unsupported basis type for atomno" + key + QS.getQuantumShellTag(basisType));
+        Logger.warn(" Unsupported basis type for atomno" + key);
       }
       break;
     }
@@ -378,7 +383,7 @@ public class MOCalculation extends QuantumCalculation implements
     return sum;
   }
 
-  private final double[] coeffs = new double[10];
+  private double[] coeffs;
   private int[] map;
   
   private boolean setCoeffs(int type, boolean isProcess) {
@@ -1175,9 +1180,10 @@ public class MOCalculation extends QuantumCalculation implements
       }
     String[] so = getShellOrder(shell);
       for (int i = 0; i < map.length; i++) {
+        int n = map[i] + moCoeff - map.length + i + 1;
         double c = coeffs[i];
           Logger.debug("MO coeff " + (so == null ? "?" : so[i]) + " "
-              + (map[i] + moCoeff - map.length + i + 1) + "\t" + c + "\t" + thisAtom.atom);
+              + n + "\t" + c + "\t" + thisAtom.atom);
       
     }
   }

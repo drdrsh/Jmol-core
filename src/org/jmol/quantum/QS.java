@@ -79,16 +79,16 @@ public class QS {
 
   public static int[][] getNewDfCoefMap() {
     return new int[][] { 
-        new int[1],  //S 
+        new int[1],  //S 0
         new int[3],  //P
         new int[4],  //SP
-        new int[5],  //D5
-        new int[6],  //D6
-        new int[7],  //F7 
+        new int[5],  //D5 3
+        new int[6],  //D6 
+        new int[7],  //F7 5
         new int[10], //F10
-        new int[9],  //G9
+        new int[9],  //G9 7
         new int[15], //G15
-        new int[11], //H11 == 2*5 + 1
+        new int[11], //H11 9 == 2*5 + 1
         new int[21], //H21 == (5+1)(5+2)/2
         new int[13], //I13 == 2*6 + 1
         new int[28]  //I28 == (6+1)(6+2)/2
