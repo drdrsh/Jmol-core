@@ -61,7 +61,7 @@ public final class JC {
     "pdb", "http://www.rcsb.org/pdb/files/%FILE.pdb.gz",
     "pdbe", "http://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
     "pubchem", "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
-    "map", "http://wwwdev.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
+    "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE" 
   };
 
