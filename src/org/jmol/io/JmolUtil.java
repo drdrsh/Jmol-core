@@ -33,6 +33,7 @@ import java.net.URL;
 import javajs.api.GenericPlatform;
 import javajs.api.GenericZipTools;
 import javajs.api.GenericBinaryDocument;
+import javajs.util.AU;
 import javajs.util.LimitedLineReader;
 import javajs.util.OC;
 import javajs.util.Rdr;
@@ -696,7 +697,7 @@ public class JmolUtil implements JmolZipUtilities {
       boolean isBMP = fullPathName.toUpperCase().endsWith("BMP");
       if (fullPathName.indexOf("|") > 0 || isBMP) {
         Object ret = vwr.fm.getFileAsBytes(fullPathName, null);
-        if (!PT.isAB(ret))
+        if (!AU.isAB(ret))
           return "" + ret;
         image = (vwr.isJS ? ret : apiPlatform.createImage(ret));
       } else if (vwr.isJS) {

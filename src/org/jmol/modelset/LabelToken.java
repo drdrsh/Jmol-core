@@ -30,6 +30,7 @@ import java.util.Map;
 
 
 
+import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -434,7 +435,7 @@ public class LabelToken {
             lt.data = ((Object[]) lt.data)[1];
             if (lt.data instanceof String)
               lt.data = PT.split((String) lt.data, "\n");
-            if (!(PT.isAS(lt.data)))
+            if (!(AU.isAS(lt.data)))
               lt.data = null;
           }
           if (lt.data == null) {

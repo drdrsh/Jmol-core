@@ -34,6 +34,7 @@ import java.util.Map;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.api.ZInputStream;
+import javajs.util.AU;
 import javajs.util.PT;
 
 import org.jmol.api.Interface;
@@ -67,7 +68,7 @@ public class FileReader {
     nameAsGivenIn = nameAsGiven;
     fileTypeIn = type;
     this.reader = (reader instanceof BufferedReader ? reader : reader instanceof Reader ? new BufferedReader((Reader) reader) : null);
-    this.bytes = (PT.isAB(reader) ? (byte[]) reader : null);
+    this.bytes = (AU.isAB(reader) ? (byte[]) reader : null);
     this.htParams = htParams;
     this.isAppend = isAppend;
   }

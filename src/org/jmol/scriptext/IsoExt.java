@@ -3161,7 +3161,7 @@ public class IsoExt extends ScriptExt {
       Object volume = getShapeProperty(JC.SHAPE_CONTACT, "volume");
       double v;
       boolean isFull = (displayType == T.full);
-      if (PT.isAD(volume)) {
+      if (AU.isAD(volume)) {
         double[] vs = (double[]) volume;
         v = 0;
         for (int i = 0; i < vs.length; i++)

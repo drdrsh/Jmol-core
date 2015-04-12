@@ -27,6 +27,7 @@ import javajs.J2SRequireImport;
 import javajs.api.GenericPlatform;
 import javajs.api.EventManager;
 import javajs.awt.event.Event;
+import javajs.util.AU;
 import javajs.util.PT;
 import java.util.Map;
 
@@ -1411,7 +1412,7 @@ public class ActionManager implements EventManager {
     Map<String, Object> ht = b.getBindings();
     String mkey = mouseAction + "\t";
     for (String key : ht.keySet()) {
-      if (key.indexOf(mkey) != 0 || !PT.isAS(obj = ht.get(key)))
+      if (key.indexOf(mkey) != 0 || !AU.isAS(obj = ht.get(key)))
         continue;
       String script = ((String[]) obj)[1];
       P3 nearestPoint = null;

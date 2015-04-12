@@ -27,6 +27,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 
 import javajs.api.ZInputStream;
+import javajs.util.AU;
 import javajs.util.Rdr;
 import javajs.util.Lst;
 import javajs.util.P3;
@@ -601,7 +602,7 @@ public class ScriptManager implements JmolScriptManager {
       return vwr.getModelAdapter().getFileTypeName(
           Rdr.getBR(zipDirectory));
     }
-    if (PT.isAS(br)) {
+    if (AU.isAS(br)) {
       return ((String[]) br)[0];
     }
     return null;

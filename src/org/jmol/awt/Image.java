@@ -48,7 +48,6 @@ import javajs.api.GenericImageDialog;
 import javajs.api.PlatformViewer;
 import javajs.img.BMPDecoder;
 import javajs.util.AU;
-import javajs.util.PT;
 
 import javax.swing.JPanel;
 
@@ -69,7 +68,7 @@ class Image {
       return Toolkit.getDefaultToolkit().createImage((URL) data);
     if (data instanceof String)
       return Toolkit.getDefaultToolkit().createImage((String) data);
-    if (PT.isAB(data)) {
+    if (AU.isAB(data)) {
       // for the SUN processor, we need to fix the CRC
       byte[] b = (byte[]) data;
       if (b.length < 3)

@@ -122,8 +122,8 @@ public class DataManager implements JmolDataManager {
     if (depth == JmolDataManager.DATA_TYPE_UNKNOWN)
       data[DATA_TYPE] = Integer
           .valueOf(depth = (val instanceof String ? JmolDataManager.DATA_TYPE_STRING
-              : PT.isAF(val) ? JmolDataManager.DATA_TYPE_AF
-                  : PT.isAFF(val) ? JmolDataManager.DATA_TYPE_AFF : PT
+              : AU.isAF(val) ? JmolDataManager.DATA_TYPE_AF
+                  : AU.isAFF(val) ? JmolDataManager.DATA_TYPE_AFF : AU
                       .isAFFF(val) ? JmolDataManager.DATA_TYPE_AFFF
                       : JmolDataManager.DATA_TYPE_UNKNOWN));
     if (data[DATA_SELECTION_MAP] != null && arrayCount > 0) {

@@ -311,7 +311,7 @@ public class SurfaceGenerator {
       if (value == null) {
         params.title = null;
         return true;
-      } else if (PT.isAS(value)) {
+      } else if (AU.isAS(value)) {
         params.title = (String[]) value;
         for (int i = 0; i < params.title.length; i++)
           if (params.title[i].length() > 0)
@@ -612,7 +612,7 @@ public class SurfaceGenerator {
     if ("contour" == propertyName) {
       params.isContoured = true;
       int n;
-      if (PT.isAF(value)) {
+      if (AU.isAF(value)) {
         // discrete values
         params.contoursDiscrete = (float[]) value;
         params.nContours = params.contoursDiscrete.length;
@@ -710,7 +710,7 @@ public class SurfaceGenerator {
     if ("ellipsoid" == propertyName) {
       if (value instanceof P4)
         params.setEllipsoidP4((P4) value);
-      else if (PT.isAF(value))
+      else if (AU.isAF(value))
         params.setEllipsoidAF((float[]) value);
       else
         return true;

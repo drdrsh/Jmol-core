@@ -316,7 +316,7 @@ public class FileManager implements BytePoster {
 
   static DataReader newDataReader(Viewer vwr, Object data) {
     String reader = (data instanceof String ? "String"
-        : PT.isAS(data) ? "Array" 
+        : AU.isAS(data) ? "Array" 
         : data instanceof Lst<?> ? "List" : null);
     if (reader == null)
       return null;
@@ -450,7 +450,7 @@ public class FileManager implements BytePoster {
             if (allowReader && !Rdr.isBase64(sb))
               return Rdr.getBR(sb.toString());
             bytes = Rdr.getBytesFromSB(sb);
-          } else if (PT.isAB(ret)) {
+          } else if (AU.isAB(ret)) {
             bytes = (byte[]) ret;
           }
           if (bytes != null)
@@ -534,7 +534,7 @@ public class FileManager implements BytePoster {
                                                  boolean isBinary,
                                                  boolean doSpecialLoad) {
     Object data = cacheGet(name, false);
-    boolean isBytes = PT.isAB(data);
+    boolean isBytes = AU.isAB(data);
     byte[] bytes = (isBytes ? (byte[]) data : null);
     if (name.startsWith("cache://")) {
       if (data == null)
@@ -1307,7 +1307,7 @@ public class FileManager implements BytePoster {
     Map<String, Integer> map = new Hashtable<String, Integer>();
     for (Map.Entry<String, Object> entry : cache.entrySet())
       map.put(entry.getKey(), Integer
-          .valueOf(PT.isAB(entry.getValue()) ? ((byte[]) entry
+          .valueOf(AU.isAB(entry.getValue()) ? ((byte[]) entry
               .getValue()).length : entry.getValue().toString().length()));
     return map;
   }

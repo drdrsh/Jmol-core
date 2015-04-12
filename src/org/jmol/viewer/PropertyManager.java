@@ -331,7 +331,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           return extractProperty(f, args, --ptr, null, true);
         return "";
       }
-      if (PT.isAI(property)) {
+      if (AU.isAI(property)) {
         int[] ilist = (int[]) property;
         if (pt < 0)
           pt += ilist.length;
@@ -339,7 +339,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           return Integer.valueOf(ilist[pt]);
         return "";
       }
-      if (PT.isAD(property)) {
+      if (AU.isAD(property)) {
         double[] dlist = (double[]) property;
         if (pt < 0)
           pt += dlist.length;
@@ -347,7 +347,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           return Double.valueOf(dlist[pt]);
         return "";
       }
-      if (PT.isAF(property)) {
+      if (AU.isAF(property)) {
         float[] flist = (float[]) property;
         if (pt < 0)
           pt += flist.length;
@@ -355,7 +355,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           return Float.valueOf(flist[pt]);
         return "";
       }
-      if (PT.isAII(property)) {
+      if (AU.isAII(property)) {
         int[][] iilist = (int[][]) property;
         if (pt < 0)
           pt += iilist.length;
@@ -363,7 +363,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           return extractProperty(iilist[pt], args, ptr, null, true);
         return "";
       }
-      if (PT.isAFF(property)) {
+      if (AU.isAFF(property)) {
         float[][] fflist = (float[][]) property;
         if (pt < 0)
           pt += fflist.length;
@@ -371,7 +371,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           return extractProperty(fflist[pt], args, ptr, null, true);
         return "";
       }
-      if (PT.isAS(property)) {
+      if (AU.isAS(property)) {
         String[] slist = (String[]) property;
         if (pt < 0)
           pt += slist.length;
@@ -1680,7 +1680,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     for (Object obj : am.b.getBindings().values()) {
       if (obj instanceof Boolean)
         continue;
-      if (PT.isAI(obj)) {
+      if (AU.isAI(obj)) {
         int[] binding = (int[]) obj;
         obj = new String[] { Binding.getMouseActionName(binding[0], false),
             ActionManager.getActionName(binding[1]) };

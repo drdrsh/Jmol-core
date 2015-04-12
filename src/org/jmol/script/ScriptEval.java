@@ -62,6 +62,7 @@ import javajs.util.PT;
 import org.jmol.util.Parser;
 
 import javajs.util.A4;
+import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.Base64;
 import javajs.util.Measure;
@@ -4966,7 +4967,7 @@ public class ScriptEval extends ScriptExpr {
     if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2))
       vwr.showString((String) vwr.ms.getInfoM("modelLoadNote"), false);
     Object centroid = vwr.ms.getInfoM("centroidMinMax");
-    if (PT.isAI(centroid) && vwr.ms.ac > 0) {
+    if (AU.isAI(centroid) && vwr.ms.ac > 0) {
       BS bs = BSUtil.newBitSet2(isAppend ? ac0 : 0, vwr.ms.ac);
       vwr.ms.setCentroid(bs, (int[]) centroid);
     }

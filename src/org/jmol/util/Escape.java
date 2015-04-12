@@ -28,6 +28,7 @@ package org.jmol.util;
 import java.util.Iterator;
 import java.util.Map;
 
+import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M34;
 import javajs.util.PT;
@@ -116,7 +117,7 @@ public class Escape {
       return eP((T3) x);
     if (x instanceof P4)
       return eP4((P4) x);
-    if (PT.isAS(x))
+    if (AU.isAS(x))
       return eAS((String[]) x, true);
     if (x instanceof M34) 
       return PT.rep(x.toString(), "\t", ",\t");
@@ -400,7 +401,7 @@ public class Escape {
       return packageReadable(name, null, PT.esc((String) info));
     if (info instanceof SV)
       return packageReadable(name, null, ((SV) info).escape());
-    if (PT.isAS(info)) {
+    if (AU.isAS(info)) {
       sb.append("[");
       int imax = ((String[]) info).length;
       for (int i = 0; i < imax; i++) {
@@ -410,7 +411,7 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "String[" + imax + "]", sb);
     }
-    if (PT.isAI(info)) {
+    if (AU.isAI(info)) {
       sb.append("[");
       int imax = ((int[]) info).length;
       for (int i = 0; i < imax; i++) {
@@ -420,7 +421,7 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "int[" + imax + "]", sb);
     }
-    if (PT.isAF(info)) {
+    if (AU.isAF(info)) {
       sb.append("[");
       int imax = ((float[]) info).length;
       for (int i = 0; i < imax; i++) {
@@ -430,7 +431,7 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "float[" + imax + "]", sb);
     }
-    if (PT.isAD(info)) {
+    if (AU.isAD(info)) {
       sb.append("[");
       int imax = ((double[]) info).length;
       for (int i = 0; i < imax; i++) {
@@ -440,7 +441,7 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "double[" + imax + "]", sb);
     }
-    if (PT.isAP(info)) {
+    if (AU.isAP(info)) {
       sb.append("[");
       int imax = ((T3[]) info).length;
       for (int i = 0; i < imax; i++) {
@@ -450,7 +451,7 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "point3f[" + imax + "]", sb);
     }
-    if (PT.isASS(info)) {
+    if (AU.isASS(info)) {
       sb.append("[");
       int imax = ((String[][]) info).length;
       for (int i = 0; i < imax; i++) {
@@ -460,7 +461,7 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "String[" + imax + "][]", sb);
     }
-    if (PT.isAII(info)) {
+    if (AU.isAII(info)) {
       sb.append("[");
       int imax = ((int[][]) info).length;
       for (int i = 0; i < imax; i++) {
@@ -470,7 +471,7 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "int[" + imax + "][]", sb);
     }
-    if (PT.isAFF(info)) {
+    if (AU.isAFF(info)) {
       sb.append("[\n");
       int imax = ((float[][]) info).length;
       for (int i = 0; i < imax; i++) {
@@ -480,7 +481,7 @@ public class Escape {
       sb.append("]");
       return packageReadableSb(name, "float[][]", sb);
     }
-    if (PT.isADD(info)) {
+    if (AU.isADD(info)) {
       sb.append("[\n");
       int imax = ((double[][]) info).length;
       for (int i = 0; i < imax; i++) {

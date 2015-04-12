@@ -2719,7 +2719,7 @@ public class MathExt {
     Lst<SV> sv = null;
     int ndata = 0;
     while (true) {
-      if (PT.isAF(floatOrSVArray)) {
+      if (AU.isAF(floatOrSVArray)) {
         data = (float[]) floatOrSVArray;
         ndata = data.length;
         if (ndata == 0)

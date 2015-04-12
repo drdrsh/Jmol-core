@@ -40,6 +40,7 @@ import org.jmol.viewer.JC;
 import org.jmol.script.T;
 
 import javajs.awt.Font;
+import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
 
@@ -443,7 +444,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       deleteI(((Integer)value).intValue());
     } else if (value instanceof String) {
       doAction(null, (String) value, T.delete);
-    } else if (PT.isAI(value)) {
+    } else if (AU.isAI(value)) {
       defineAll(Integer.MIN_VALUE, new Measurement().setPoints(ms, (int[])value, null, null), true, false, false);
     }
   }

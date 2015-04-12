@@ -273,27 +273,27 @@ public class SV extends T implements JSONEncodable {
     // rest are specific array types supported
     if (Escape.isAV(x))
       return getVariableAV((SV[]) x);
-    if (PT.isAI(x))
+    if (AU.isAI(x))
       return getVariableAI((int[]) x);
-    if (PT.isAB(x))
+    if (AU.isAB(x))
       return getVariableAB((byte[]) x);
-    if (PT.isAF(x))
+    if (AU.isAF(x))
       return getVariableAF((float[]) x);
-    if (PT.isAD(x))
+    if (AU.isAD(x))
       return getVariableAD((double[]) x);
-    if (PT.isAS(x))
+    if (AU.isAS(x))
       return getVariableAS((String[]) x);
-    if (PT.isAP(x))
+    if (AU.isAP(x))
       return getVariableAP((T3[]) x);
-    if (PT.isAII(x))
+    if (AU.isAII(x))
       return getVariableAII((int[][]) x);
-    if (PT.isAFF(x))
+    if (AU.isAFF(x))
       return getVariableAFF((float[][]) x);
-    if (PT.isASS(x))
+    if (AU.isASS(x))
       return getVariableASS((String[][]) x);
-    if (PT.isADD(x))
+    if (AU.isADD(x))
       return getVariableADD((double[][]) x);
-    if (PT.isAFloat(x))
+    if (AU.isAFloat(x))
       return newV(listf, x);
     return newS(x.toString());
   }
@@ -1283,7 +1283,7 @@ public class SV extends T implements JSONEncodable {
     for (int i = 1; i < format.length; i++) {
       Object ret = sprintf(PT.formatCheck("%" + format[i]),
           (i < args.length ? args[i] : null));
-      if (PT.isAS(ret)) {
+      if (AU.isAS(ret)) {
         String[] list = (String[]) ret;
         for (int j = 0; j < list.length; j++)
           sb.append(list[j]).append("\n");

@@ -14,6 +14,7 @@ import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 
 import javajs.api.GenericImageEncoder;
+import javajs.util.AU;
 import javajs.util.Rdr;
 import javajs.util.OC;
 import javajs.util.Lst;
@@ -308,10 +309,10 @@ abstract class OutputManager {
     try {
       if (type.equals("Gif") && vwr.getTestFlag(2))
         params.put("reducedColors", Boolean.TRUE);
-      int w = objImage == null ? -1 : PT.isAI(objImage) ? ((Integer) params
+      int w = objImage == null ? -1 : AU.isAI(objImage) ? ((Integer) params
           .get("width")).intValue() : vwr.apiPlatform
           .getImageWidth(objImage);
-      int h = objImage == null ? -1 : PT.isAI(objImage) ? ((Integer) params
+      int h = objImage == null ? -1 : AU.isAI(objImage) ? ((Integer) params
           .get("height")).intValue() : vwr.apiPlatform
           .getImageHeight(objImage);
       params.put("imageWidth", Integer.valueOf(w));
@@ -347,7 +348,7 @@ abstract class OutputManager {
     if (width < 0)
       return null;
     int[] pixels;
-    if (PT.isAI(objImage)) {
+    if (AU.isAI(objImage)) {
       pixels = (int[]) objImage;
     } else {
       /**
@@ -948,7 +949,7 @@ abstract class OutputManager {
           // all remote files, and any file that was opened from a ZIP collection
           Object ret = (isSparDir ? spardirCache.get(name) : fm.getFileAsBytes(
               name, null));
-          if (!PT.isAB(ret))
+          if (!AU.isAB(ret))
             return (String) ret;
           newName = addPngFileBytes(name, (byte[]) ret, iFile, crcMap,
               isSparDir, newName, ptSlash, v);
@@ -1084,7 +1085,7 @@ abstract class OutputManager {
         if (fnameShort == null)
           fnameShort = fname;
         if (data != null)
-          bytes = (PT.isAB(data) ? (byte[]) data : ((String) data).getBytes());
+          bytes = (AU.isAB(data) ? (byte[]) data : ((String) data).getBytes());
         if (bytes == null)
           bytes = (byte[]) fileNamesAndByteArrays.get(i + 2);
         String key = ";" + fnameShort + ";";

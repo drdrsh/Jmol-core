@@ -462,7 +462,7 @@ abstract public class AtomCollection {
       if ((nValues = v.size()) == 0)
         return;
       type = 1;
-    } else if (PT.isAP(xyzValues)) {
+    } else if (AU.isAP(xyzValues)) {
       values = (P3[]) xyzValues;
       if ((nValues = values.length) == 0)
         return;
