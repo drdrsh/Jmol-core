@@ -3406,7 +3406,7 @@ public class ScriptEval extends ScriptExpr {
   @SuppressWarnings("unchecked")
   private boolean cmdFor(int tok, boolean isForCheck) throws ScriptException {
     ContextToken cmdToken = (ContextToken) theToken;
-    int pt = st[0].intValue;
+    int pt = st[0].intValue;  
     SV[] loopVars = cmdToken.loopVars;
     pt = st[0].intValue;
     int[] pts = new int[2];
@@ -3419,6 +3419,9 @@ public class ScriptEval extends ScriptExpr {
     int j = 0;
     String key = null;
     if (isForCheck && loopVars != null) {
+      
+      // for xx IN [...] or for xx FROM [...]
+      
       tok = T.in;
       // i in x, already initialized
       forVar = loopVars[0];
@@ -3531,11 +3534,13 @@ public class ScriptEval extends ScriptExpr {
         isMinusMinus = key.equals("--") || key.equals("++");
         if (isMinusMinus)
           key = paramAsStr(++j);
+      } else {
+        if (!isForCheck)
+          pushContext(cmdToken, "FOR");        
       }
       if (isOK)
         if (tok == T.in) {
-          // start of FOR (i in x) block
-          pushContext(cmdToken, "FOR");
+          // start of FOR (i in x) block or FOR (i from x)
           forVar = getForVar(key);
           forVar.setModified(false);
           if (inTok == T.integer) {
