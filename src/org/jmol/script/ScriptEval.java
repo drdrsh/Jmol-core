@@ -3521,11 +3521,12 @@ public class ScriptEval extends ScriptExpr {
           break;
         }
       }
+      if (!isForCheck)
+        pushContext(cmdToken, "FOR");        
       if (key == null) {
         if (isForCheck) {
           j = (bsOrList == null ? pts[1] + 1 : 2);
         } else {
-          pushContext(cmdToken, "FOR");
           j = 2;
         }
         if (tokAt(j) == T.var)
@@ -3534,9 +3535,6 @@ public class ScriptEval extends ScriptExpr {
         isMinusMinus = key.equals("--") || key.equals("++");
         if (isMinusMinus)
           key = paramAsStr(++j);
-      } else {
-        if (!isForCheck)
-          pushContext(cmdToken, "FOR");        
       }
       if (isOK)
         if (tok == T.in) {
