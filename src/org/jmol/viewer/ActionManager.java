@@ -113,8 +113,11 @@ public class ActionManager implements EventManager {
                            P3 pt, long time) {
   }
 
-  boolean bnd(int mouseAction, int jmolAction) {
-    return b.isBound(mouseAction, jmolAction);
+  boolean bnd(int mouseAction, int... jmolActions) {
+    for (int i = jmolActions.length; --i >= 0;)
+      if (b.isBound(mouseAction, jmolActions[i]))
+        return true;
+    return false;
   }
 
   /**
@@ -952,11 +955,11 @@ public class ActionManager implements EventManager {
 
   private void checkPressedAction(int x, int y, long time) {
     int buttonMods = Binding.getButtonMods(pressAction);
-    boolean isSelectAndDrag = bnd(Binding.getMouseAction(1, buttonMods,
-        Event.PRESSED), ACTION_selectAndDrag);
+    boolean isDragSelectedAction = bnd(
+        Binding.getMouseAction(1, buttonMods, Event.PRESSED),
+        ACTION_selectAndDrag);
     if (buttonMods != 0) {
-      pressAction = vwr.notifyMouseClicked(x, y, pressAction,
-          Event.PRESSED);
+      pressAction = vwr.notifyMouseClicked(x, y, pressAction, Event.PRESSED);
       if (pressAction == 0)
         return;
       buttonMods = Binding.getButtonMods(pressAction);
@@ -966,9 +969,8 @@ public class ActionManager implements EventManager {
       Logger.debug(Binding.getMouseActionName(pressAction, false));
 
     if (drawMode
-        && (bnd(dragAction, ACTION_dragDrawObject) || bnd(dragAction,
-            ACTION_dragDrawPoint)) || labelMode
-        && bnd(dragAction, ACTION_dragLabel)) {
+        && bnd(dragAction, ACTION_dragDrawObject, ACTION_dragDrawPoint)
+        || labelMode && bnd(dragAction, ACTION_dragLabel)) {
       vwr.checkObjectDragged(Integer.MIN_VALUE, 0, x, y, dragAction);
       return;
     }
@@ -979,24 +981,18 @@ public class ActionManager implements EventManager {
       isBound = bnd(clickAction, ACTION_assignNew);
       break;
     case PICKING_DRAG_ATOM:
-      isBound = bnd(dragAction, ACTION_dragAtom)
-          || bnd(dragAction, ACTION_dragZ);
+      isBound = bnd(dragAction, ACTION_dragAtom, ACTION_dragZ);
       break;
     case PICKING_DRAG_SELECTED:
     case PICKING_DRAG_LIGAND:
     case PICKING_DRAG_MOLECULE:
-      isBound = bnd(dragAction, ACTION_dragAtom)
-          || bnd(dragAction, ACTION_rotateSelected)
-          || bnd(dragAction, ACTION_dragZ);
+      isBound = bnd(dragAction, ACTION_dragAtom, ACTION_dragZ, ACTION_rotateSelected);
       break;
     case PICKING_DRAG_MINIMIZE:
-      isBound = bnd(dragAction, ACTION_dragMinimize)
-          || bnd(dragAction, ACTION_dragZ);
+      isBound = bnd(dragAction, ACTION_dragMinimize, ACTION_dragZ);
       break;
     case PICKING_DRAG_MINIMIZE_MOLECULE:
-      isBound = bnd(dragAction, ACTION_dragMinimizeMolecule)
-          || bnd(dragAction, ACTION_rotateSelected)
-          || bnd(dragAction, ACTION_dragZ);
+      isBound = bnd(dragAction, ACTION_dragMinimize, ACTION_dragZ, ACTION_rotateSelected);
       break;
     }
     if (isBound) {
@@ -1020,21 +1016,15 @@ public class ActionManager implements EventManager {
       return;
     }
     if (dragSelectedMode) {
-      haveSelection = true;
-      if (isSelectAndDrag) {
-        haveSelection = (vwr.findNearestAtomIndexMovable(x, y, true) >= 0);
-        // checkPointOrAtomClicked(x, y, mods, pressedCount, true);
-      }
-      if (!haveSelection)
-        return;
-      if (bnd(dragAction, ACTION_dragSelected)
-          || bnd(dragAction, ACTION_dragZ))
+      haveSelection = (!isDragSelectedAction || vwr
+          .findNearestAtomIndexMovable(x, y, true) >= 0);
+      if (haveSelection && bnd(dragAction, ACTION_dragSelected, ACTION_dragZ))
         vwr.moveSelected(Integer.MIN_VALUE, 0, Integer.MIN_VALUE,
             Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false);
       return;
     }
- //   if (vwr.g.useArcBall)
-//      vwr.rotateArcBall(x, y, 0);
+    //   if (vwr.g.useArcBall)
+    //      vwr.rotateArcBall(x, y, 0);
     checkMotionRotateZoom(dragAction, x, 0, 0, true);
   }
 
@@ -1147,8 +1137,7 @@ public class ActionManager implements EventManager {
     }
     if (dragSelectedMode
         && haveSelection
-        && (bnd(dragWheelAction, ACTION_dragSelected) || bnd(
-            dragWheelAction, ACTION_rotateSelected))) {
+        && bnd(dragWheelAction, ACTION_dragSelected, ACTION_rotateSelected)) {
       int iatom = vwr.bsA().nextSetBit(0);
       if (iatom < 0)
         return;
@@ -1169,9 +1158,8 @@ public class ActionManager implements EventManager {
     }
 
     if (drawMode
-        && (bnd(dragWheelAction, ACTION_dragDrawObject) || bnd(
-            dragWheelAction, ACTION_dragDrawPoint)) || labelMode
-        && bnd(dragWheelAction, ACTION_dragLabel)) {
+        && bnd(dragWheelAction, ACTION_dragDrawObject, ACTION_dragDrawPoint) 
+            || labelMode && bnd(dragWheelAction, ACTION_dragLabel)) {
       setMotion(GenericPlatform.CURSOR_MOVE, true);
       vwr.checkObjectDragged(dragged.x, dragged.y, x, y, dragWheelAction);
       return;
@@ -1258,9 +1246,8 @@ public class ActionManager implements EventManager {
           Event.RELEASED), Event.RELEASED);
     }
     if (drawMode
-        && (bnd(dragAction, ACTION_dragDrawObject) || bnd(dragAction,
-            ACTION_dragDrawPoint)) || labelMode
-        && bnd(dragAction, ACTION_dragLabel)) {
+        && bnd(dragAction, ACTION_dragDrawObject, ACTION_dragDrawPoint) 
+            || labelMode && bnd(dragAction, ACTION_dragLabel)) {
       vwr.checkObjectDragged(Integer.MAX_VALUE, 0, x, y, dragAction);
       return;
     }
@@ -1478,9 +1465,10 @@ public class ActionManager implements EventManager {
     boolean isZoom = (isRotateZorZoom && (deltaX == 0 || Math.abs(deltaY) > 5 * Math
         .abs(deltaX)));
     int cursor = (isZoom || isZoomArea(moved.x)
-        || bnd(mouseAction, ACTION_wheelZoom) ? GenericPlatform.CURSOR_ZOOM : isRotateXY
-        || isRotateZorZoom ? GenericPlatform.CURSOR_MOVE : bnd(mouseAction,
-        ACTION_center) ? GenericPlatform.CURSOR_HAND : GenericPlatform.CURSOR_DEFAULT);
+        || bnd(mouseAction, ACTION_wheelZoom) ? GenericPlatform.CURSOR_ZOOM
+        : isRotateXY || isRotateZorZoom ? GenericPlatform.CURSOR_MOVE : bnd(
+            mouseAction, ACTION_center) ? GenericPlatform.CURSOR_HAND
+            : GenericPlatform.CURSOR_DEFAULT);
     setMotion(cursor, isDrag);
     return (isZoom || isSlideZoom);
   }
@@ -1496,10 +1484,8 @@ public class ActionManager implements EventManager {
   private boolean isRubberBandSelect(int action) {
     // drag and wheel and release
     action = action & ~Binding.DRAG | Binding.CLICK;
-    return rubberbandSelectionMode
-        && (bnd(action, ACTION_selectToggle)
-            || bnd(action, ACTION_selectOr) || bnd(action,
-            ACTION_selectAndNot));
+    return (rubberbandSelectionMode
+        && bnd(action, ACTION_selectToggle, ACTION_selectOr, ACTION_selectAndNot));
   }
 
   Rectangle getRubberBand() {
@@ -1570,13 +1556,9 @@ public class ActionManager implements EventManager {
         && apm == PICKING_IDENTIFY
         && bnd(action, ACTION_center)
         || dragSelectedMode
-        && (bnd(dragAction, ACTION_rotateSelected) || bnd(dragAction,
-            ACTION_dragSelected)) || bnd(action, ACTION_pickPoint)
-        || bnd(action, ACTION_selectToggle)
-        || bnd(action, ACTION_selectAndNot)
-        || bnd(action, ACTION_selectOr)
-        || bnd(action, ACTION_selectToggleExtended) || bnd(action,
-        ACTION_select));
+        && bnd(dragAction, ACTION_rotateSelected, ACTION_dragSelected) 
+        || bnd(action, ACTION_pickPoint, ACTION_selectToggle, ACTION_selectAndNot,
+            ACTION_selectOr, ACTION_selectToggleExtended, ACTION_select));
   }
 
   //////////// specific actions ////////////////
