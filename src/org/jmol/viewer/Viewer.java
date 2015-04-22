@@ -983,10 +983,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   void rotateSelected(float deltaX, float deltaY, BS bsSelected) {
+    // bsSelected null comes from sync. 
     if (isJmolDataFrame())
       return;
     //if (mouseEnabled) {
-    tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, false));
+    // "true" in setMovableBitSet call is necessary to implement set allowMoveAtoms
+    tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, true));
     refreshMeasures(true);
     //}
     //TODO: note that sync may not work with set allowRotateSelectedAtoms

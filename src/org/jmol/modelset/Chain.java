@@ -78,7 +78,7 @@ public final class Chain {
    * @return actual string form of the chain identifier
    */
   public String getIDStr() {
-    return (chainID == 0 ? "" : chainID < 256 ? "" + (char) chainID : (String) model.ms.vwr.chainMap.get(Integer.valueOf(chainID)));
+    return (chainID == 0 ? "" : chainID < 256 ? "" + (char) chainID : (String) model.ms.vwr.getChainIDStr(chainID));
   }
 
   /**

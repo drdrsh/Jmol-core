@@ -257,7 +257,9 @@ public class FileManager implements BytePoster {
     if (fnames != null)
       setFileInfo(fnames);
     if (!isAppend && !(fileReader.getAtomSetCollection() instanceof String)) {
-      vwr.zap(false, true, false);
+// zap is unnecessary  - it was done already in FileReader, and it 
+// inappropriately clears the PDB chain name map
+//      vwr.zap(false, true, false);
       setFileInfo(new String[] { strModel == JC.MODELKIT_ZAP_STRING ? JC.MODELKIT_ZAP_TITLE
           : "string"});
     }

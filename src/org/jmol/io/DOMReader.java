@@ -52,11 +52,12 @@ public class DOMReader {
     // and we cannot pass [HTMLUnknownObject]
     if (info != null)
       htParams.put("nameSpaceInfo", info);
+    // no append option here
+    vwr.zap(false, true, false);
     atomSetCollection = vwr.getModelAdapter().getAtomSetCollectionFromDOM(
         aDOMNode, htParams);
     if (atomSetCollection instanceof String)
       return;
-    vwr.zap(false, true, false);
     fm.setFileInfo(new String[] { "JSNode" });
   }
 }
