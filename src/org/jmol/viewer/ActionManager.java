@@ -1232,7 +1232,7 @@ public class ActionManager implements EventManager {
     // # all actions involve whole molecules unless   set allowMoveAtoms TRUE
     // ^ set picking dragSelected overrules set dragSelected
     // * rotate requires   set allowRotateSelected TRUE
-    // $ set dragSelected allows quick setting of a new molecule using double-click
+    // $ set dragSelected allows setting of a new molecule with double-click when    set picking SELECT
     // $ set picking dragSelected allows measurements with double-click, as usual
 
     setMotion(GenericPlatform.CURSOR_MOVE, true);
