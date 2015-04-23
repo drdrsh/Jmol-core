@@ -1062,16 +1062,7 @@ public class ActionManager implements EventManager {
     if (dragAtomIndex >= 0) {
       switch (apm) {
       case PICKING_DRAG_SELECTED:
-        setMotion(GenericPlatform.CURSOR_MOVE, true);
-        if (bnd(dragWheelAction, ACTION_rotateSelected)
-            && vwr.getBoolean(T.allowrotateselected)) {
-          vwr.rotateSelected(getDegrees(deltaX, true), getDegrees(deltaY, false),
-              null);
-        } else {
-          vwr.moveSelected(deltaX, deltaY, (bnd(dragWheelAction,
-              ACTION_dragZ) ? -deltaY : Integer.MIN_VALUE), Integer.MIN_VALUE,
-              Integer.MIN_VALUE, null, true, false);
-        }
+        dragSelected(dragWheelAction, deltaX, deltaY, true);
         return;
       case PICKING_DRAG_LIGAND:
       case PICKING_DRAG_MOLECULE:
@@ -1138,6 +1129,8 @@ public class ActionManager implements EventManager {
     if (dragSelectedMode
         && haveSelection
         && bnd(dragWheelAction, ACTION_dragSelected, ACTION_rotateSelected)) {
+      // we will drag atoms and either rotate or translate them
+      // possibly just the atoms or possibly their molecule (decided in Viewer)
       int iatom = vwr.bsA().nextSetBit(0);
       if (iatom < 0)
         return;
@@ -1146,14 +1139,7 @@ public class ActionManager implements EventManager {
       else
         vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
             Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false);
-      setMotion(GenericPlatform.CURSOR_MOVE, true);
-      if (bnd(dragWheelAction, ACTION_rotateSelected)
-          && vwr.getBoolean(T.allowrotateselected))
-        vwr.rotateSelected(getDegrees(deltaX, true), getDegrees(deltaY, false),
-            null);
-      else
-        vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, true, false);
+      dragSelected(dragWheelAction, deltaX, deltaY, false);
       return;
     }
 
@@ -1214,6 +1200,53 @@ public class ActionManager implements EventManager {
     }
   }
 
+  /**
+   * change actual coordinates of selected atoms from set dragSeleted TRUE or
+   * set PICKING DRAGSELECTED
+   * 
+   * Basically, set dragSelected adds new functionality to Jmol with alt-drag
+   * and alt-shift drag, and set picking dragSelected replaces the standard
+   * mouse drag with a move action and also adds rotate and z-shift options.
+   * 
+   * set dragSelected also allows other picking types, such as set picking SELECT,
+   * which uses double-click to start rotating/moving another molecule. 
+   * 
+   * @param a
+   * @param deltaX
+   * @param deltaY
+   * @param isPickingDrag
+   */
+  private void dragSelected(int a, int deltaX, int deltaY, boolean isPickingDrag) {
+
+    // see footnotes below for ^, $, #, and *
+    //
+    // settings:^    set picking dragSelected             set dragSelected 
+    //
+    // move:#                 drag                          alt-shift-drag
+    // rotate:#*          alt-drag                                alt-drag
+    // z-shift:#        shift-drag                                  (n/a)
+    // 
+    // double-click:$  (starts measurement)       (sets selected if set picking SELECT)
+    //
+    // # all actions involve whole molecules unless   set allowMoveAtoms TRUE
+    // ^ set picking dragSelected overrules set dragSelected
+    // * rotate requires   set allowRotateSelected TRUE
+    // $ set dragSelected allows quick setting of a new molecule using double-click
+    // $ set picking dragSelected allows measurements with double-click, as usual
+
+    setMotion(GenericPlatform.CURSOR_MOVE, true);
+    if (bnd(a, ACTION_rotateSelected) && vwr.getBoolean(T.allowrotateselected))
+      vwr.rotateSelected(getDegrees(deltaX, true), getDegrees(deltaY, false),
+          null);
+    else
+      vwr.moveSelected(
+          deltaX,
+          deltaY,
+          (isPickingDrag && bnd(a, ACTION_dragZ) ? -deltaY : Integer.MIN_VALUE),
+          Integer.MIN_VALUE, Integer.MIN_VALUE, null, true, false);
+  }
+
+
   private void checkReleaseAction(int x, int y, long time, boolean dragRelease) {
     if (Logger.debugging)
       Logger.debug(Binding.getMouseActionName(pressAction, false));
@@ -1251,8 +1284,7 @@ public class ActionManager implements EventManager {
       vwr.checkObjectDragged(Integer.MAX_VALUE, 0, x, y, dragAction);
       return;
     }
-    if (dragSelectedMode && bnd(dragAction, ACTION_dragSelected)
-        && haveSelection)
+    if (haveSelection && dragSelectedMode && bnd(dragAction, ACTION_dragSelected))
       vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
           Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false);
 
