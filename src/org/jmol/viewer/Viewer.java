@@ -1416,8 +1416,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return (haveDisplay ? acm.getRubberBand() : null);
   }
 
-  public boolean isBound(int action, int gesture) {
-    return (haveDisplay && acm.bnd(action, gesture));
+  public boolean isBound(int mouseAction, int jmolAction) {
+    return (haveDisplay && acm.bnd(mouseAction, jmolAction));
 
   }
 

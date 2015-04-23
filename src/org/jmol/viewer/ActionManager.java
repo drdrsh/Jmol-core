@@ -97,7 +97,6 @@ public class ActionManager implements EventManager {
     }
   }
 
-
   /**
    * 
    * Specific to ActionManagerMT -- for processing SparshUI gestures
@@ -111,13 +110,7 @@ public class ActionManager implements EventManager {
    */
   public void processMultitouchEvent(int groupID, int eventType, int touchID, int iData,
                            P3 pt, long time) {
-  }
-
-  boolean bnd(int mouseAction, int... jmolActions) {
-    for (int i = jmolActions.length; --i >= 0;)
-      if (b.isBound(mouseAction, jmolActions[i]))
-        return true;
-    return false;
+    // see subclass
   }
 
   /**
@@ -371,6 +364,18 @@ public class ActionManager implements EventManager {
   protected void setBinding(Binding newBinding) {
     // overridden in ActionManagerMT
     b = newBinding;
+  }
+
+  boolean bnd(int mouseAction, int... jmolActions) {
+    for (int i = jmolActions.length; --i >= 0;)
+      if (b.isBound(mouseAction, jmolActions[i]))
+        return true;
+    return false;
+  }
+
+  private boolean isDrawOrLabelAction(int a) {
+    return (drawMode && bnd(a, ACTION_dragDrawObject, ACTION_dragDrawPoint) 
+        || labelMode && bnd(a, ACTION_dragLabel));
   }
 
   /**
@@ -968,9 +973,7 @@ public class ActionManager implements EventManager {
     if (Logger.debugging)
       Logger.debug(Binding.getMouseActionName(pressAction, false));
 
-    if (drawMode
-        && bnd(dragAction, ACTION_dragDrawObject, ACTION_dragDrawPoint)
-        || labelMode && bnd(dragAction, ACTION_dragLabel)) {
+    if (isDrawOrLabelAction(dragAction)) {
       vwr.checkObjectDragged(Integer.MIN_VALUE, 0, x, y, dragAction);
       return;
     }
@@ -1143,9 +1146,7 @@ public class ActionManager implements EventManager {
       return;
     }
 
-    if (drawMode
-        && bnd(dragWheelAction, ACTION_dragDrawObject, ACTION_dragDrawPoint) 
-            || labelMode && bnd(dragWheelAction, ACTION_dragLabel)) {
+    if (isDrawOrLabelAction(dragWheelAction)) {
       setMotion(GenericPlatform.CURSOR_MOVE, true);
       vwr.checkObjectDragged(dragged.x, dragged.y, x, y, dragWheelAction);
       return;
@@ -1278,9 +1279,7 @@ public class ActionManager implements EventManager {
       vwr.notifyMouseClicked(x, y, Binding.getMouseAction(pressedCount, 0,
           Event.RELEASED), Event.RELEASED);
     }
-    if (drawMode
-        && bnd(dragAction, ACTION_dragDrawObject, ACTION_dragDrawPoint) 
-            || labelMode && bnd(dragAction, ACTION_dragLabel)) {
+    if (isDrawOrLabelAction(dragAction)) {
       vwr.checkObjectDragged(Integer.MAX_VALUE, 0, x, y, dragAction);
       return;
     }
