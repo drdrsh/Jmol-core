@@ -3899,7 +3899,7 @@ public class CmdExt extends ScriptExt {
     case T.display:// deprecated
     case T.selectionhalos:
       msg = "selectionHalos "
-          + (vwr.getSelectionHaloEnabled(false) ? "ON" : "OFF");
+          + (vwr.getSelectionHalosEnabled() ? "ON" : "OFF");
       break;
     case T.hetero:
       msg = "set selectHetero " + vwr.getBoolean(T.hetero);

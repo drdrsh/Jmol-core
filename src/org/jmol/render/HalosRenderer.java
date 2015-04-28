@@ -39,13 +39,16 @@ public class HalosRenderer extends ShapeRenderer {
   @Override
   protected boolean render() {
     Halos halos = (Halos) shape;
-    boolean selectDisplayTrue = vwr.getSelectionHaloEnabled(true);
+    boolean showOnce = vwr.getShowSelectedOnce();
+    boolean selectDisplayTrue = vwr.getSelectionHalosEnabled() || showOnce;
+    System.out.println(showOnce + " testhalos");
     boolean showHiddenSelections = (selectDisplayTrue && vwr.getBoolean(T.showhiddenselectionhalos));
     if (halos.mads == null && halos.bsHighlight == null && !selectDisplayTrue)
       return false;
     isAntialiased = g3d.isAntialiased();
     Atom[] atoms = ms.at;
-    BS bsSelected = (selectDisplayTrue ? vwr.bsA() : null);
+    BS bsSelected = (showOnce && vwr.movableBitSet != null ? vwr.movableBitSet 
+        : selectDisplayTrue ? vwr.bsA() : null);
     boolean needTranslucent = false;
     g3d.addRenderer(T.circle);
     for (int i = ms.ac; --i >= 0;) {

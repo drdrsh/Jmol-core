@@ -744,7 +744,7 @@ public class StateCreator extends JmolStateCreator {
     app(commands, "set hideNotSelected " + sm.hideNotSelected);
     commands.append((String) vwr.getShapeProperty(JC.SHAPE_STICKS,
         "selectionState"));
-    if (vwr.getSelectionHaloEnabled(false))
+    if (vwr.getSelectionHalosEnabled())
       app(commands, "SelectionHalos ON");
     if (sfunc != null)
       commands.append("}\n\n");

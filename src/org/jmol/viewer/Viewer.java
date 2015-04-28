@@ -693,7 +693,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    */
 
   public boolean headless;
-
+  
   private void setStartupBooleans() {
     setBooleanProperty("_applet", isApplet);
     setBooleanProperty("_JSpecView".toLowerCase(), false);
@@ -996,6 +996,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         + deltaY : "");
   }
 
+  public BS movableBitSet;
+
   private BS setMovableBitSet(BS bsSelected, boolean checkMolecule) {
     if (bsSelected == null)
       bsSelected = bsA();
@@ -1003,7 +1005,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     BSUtil.andNot(bsSelected, getMotionFixedAtoms());
     if (checkMolecule && !g.allowMoveAtoms)
       bsSelected = ms.getMoleculeBitSet(bsSelected);
-    return bsSelected;
+    return movableBitSet = bsSelected;
   }
 
   public void translateXYBy(int xDelta, int yDelta) {
@@ -1341,7 +1343,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   void reportSelection(String msg) {
-    if (ms.getSelectionHaloEnabled())
+    if (selectionHalosEnabled)
       setTainted(true);
     if (isScriptQueued() || g.debugScript)
       scriptStatus(msg);
@@ -2533,6 +2535,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     movingSelected = false;
     slm.noneSelected = Boolean.FALSE;
     hoverEnabled = true;
+    setSelectionHalosEnabled(false);
     tm.setCenter();
     am.initializePointers(1);
     if (!ms.getMSInfoB("isPyMOL")) {
@@ -4900,7 +4903,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (key.equalsIgnoreCase("isNavigating"))
       return tm.isNavigating();
     if (key.equalsIgnoreCase("showSelections"))
-      return ms.getSelectionHaloEnabled();
+      return selectionHalosEnabled;
     if (g.htUserVariables.containsKey(key)) {
       SV t = g.getUserVariable(key);
       if (t.tok == T.on)
@@ -6188,9 +6191,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       break;
     case T.allowmoveatoms:
       // 12.1.21
+      //setBooleanProperty("allowRotateSelected", value);
+      //setBooleanProperty("dragSelected", value);
       g.allowMoveAtoms = value;
-      g.allowRotateSelected = value;
-      g.dragSelected = value;
       showSelected = false;
       break;
     case T.showscript:
@@ -6280,7 +6283,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       g.dotsSelectedOnly = value;
       break;
     case T.selectionhalos:
-      setSelectionHalos(value);
+      setSelectionHalosEnabled(value);
       break;
     case T.selecthydrogen:
       g.rasmolHydrogenSetting = value;
@@ -6637,20 +6640,23 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     g.setI("axesMode", mode);
   }
 
-  public void setSelectionHalos(boolean TF) {
-    // display panel can hit this without a frame, apparently
-    if (TF == ms.getSelectionHaloEnabled())
+  private boolean selectionHalosEnabled = false;
+
+  public boolean getSelectionHalosEnabled() {
+    return selectionHalosEnabled;
+  }
+
+  public void setSelectionHalosEnabled(boolean TF) {
+    if (selectionHalosEnabled == TF)
       return;
     g.setB("selectionHalos", TF);
     shm.loadShape(JC.SHAPE_HALOS);
-    // a frame property, so it is automatically reset
-    ms.setSelectionHaloEnabled(TF);
+    selectionHalosEnabled = TF;
   }
 
-  public boolean getSelectionHaloEnabled(boolean isRenderer) {
-    boolean flag = ms.getSelectionHaloEnabled() || isRenderer && showSelected;
-    if (isRenderer)
-      showSelected = false;
+  public boolean getShowSelectedOnce() {
+    boolean flag = showSelected;
+    showSelected = false;
     return flag;
   }
 
@@ -7334,6 +7340,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return;
     if (deltaX == Integer.MIN_VALUE) {
       showSelected = true;
+      movableBitSet = setMovableBitSet(null, !asAtoms);
       shm.loadShape(JC.SHAPE_HALOS);
       refresh(6, "moveSelected");
       return;
@@ -7342,6 +7349,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       if (!showSelected)
         return;
       showSelected = false;
+      movableBitSet = null;
       refresh(6, "moveSelected");
       return;
     }

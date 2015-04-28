@@ -117,14 +117,14 @@ public class DisplayPanel extends JPanel
   void setRotateMode() {
     if (buttonRotate != null && !isRotateMode()) {
       buttonRotate.setSelected(true);
-      vwr.setSelectionHalos(false);
+      vwr.setSelectionHalosEnabled(false);
     }
   }
     
   void setModelkitMode() {
     if (buttonModelkit != null)
       buttonModelkit.setSelected(true);
-    vwr.setSelectionHalos(false);
+    vwr.setSelectionHalosEnabled(false);
   }
 
   @Override
@@ -257,7 +257,7 @@ public class DisplayPanel extends JPanel
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      vwr.setSelectionHalos(false);
+      vwr.setSelectionHalosEnabled(false);
       if (statusText != null) {
         status.setStatus(1, statusText);
       } else {

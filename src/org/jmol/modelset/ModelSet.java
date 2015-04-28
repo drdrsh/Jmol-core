@@ -245,16 +245,7 @@ import java.util.Properties;
 
   //variables that will be reset when a new frame is instantiated
 
-  private boolean selectionHaloEnabled = false;
   private boolean echoShapeActive = false;
-
-  public void setSelectionHaloEnabled(boolean selectionHaloEnabled) {
-    this.selectionHaloEnabled = selectionHaloEnabled;
-  }
-
-  public boolean getSelectionHaloEnabled() {
-    return selectionHaloEnabled;
-  }
 
   public boolean getEchoStateActive() {
     return echoShapeActive;

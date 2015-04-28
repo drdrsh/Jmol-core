@@ -6606,7 +6606,7 @@ public class ScriptEval extends ScriptExpr {
       case T.on:
       case T.off:
         if (!chk)
-          vwr.setSelectionHalos(tok == T.on);
+          vwr.setSelectionHalosEnabled(tok == T.on);
         tok = tokAt(++i);
         if (tok == T.nada)
           return;
