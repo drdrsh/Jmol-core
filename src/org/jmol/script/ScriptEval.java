@@ -2002,7 +2002,7 @@ public class ScriptEval extends ScriptExpr {
     for (int i = 0; i < modelCount; i++) {
       Map<String, Object> moData = (Map<String, Object>) vwr
           .ms.getInfo(i, "moData");
-      if (moData == null)
+      if (moData == null || !moData.containsKey("mos"))
         continue;
       sb.appendI(((Lst<Map<String, Object>>) moData.get("mos")).size())
           .append(" molecular orbitals in model ")
