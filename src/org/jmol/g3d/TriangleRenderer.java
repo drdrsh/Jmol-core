@@ -387,8 +387,6 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
             pixelCount = 1;
             xW--;
           }
-          if (nLines == pass2Row + 1)
-            System.out.println("testing TR");
           if (pixelCount > 0)
             g3d.plotPixelsUnclippedRasterBits(pixelCount, xW, yMin, azW[i], azE[i], null, null, aa[i], bb[i]);
         }

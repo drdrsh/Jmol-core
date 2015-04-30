@@ -104,7 +104,8 @@ public class _PovrayExporter extends __RayTracerExporter {
       offsetX = vwr.tm.getTranslationXPercent() / 100 * screenWidth;
       offsetY = vwr.tm.getTranslationYPercent() / 100 * screenHeight;
       // factor for 50% depth -- not quite right around the edges, perhaps
-      f = 1f/vwr.tm.getPerspectiveFactor((vwr.tm.getCameraDepth() + 0.5f) * vwr.getScreenDim());
+      f = 1f/vwr.tm.getPerspectiveFactor((vwr.tm.getCameraDepth() - 0.5f) * vwr.getScreenDim());
+//      f = 1f/vwr.tm.getPerspectiveFactor(2500);
       output("  perspective\n");
       output("  angle " + aperatureAngle + "\n");
       output("  right < " + screenWidth + ", 0, 0>\n");
