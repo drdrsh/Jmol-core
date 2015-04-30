@@ -27,7 +27,6 @@ package org.jmol.render;
 import org.jmol.modelset.TickInfo;
 import org.jmol.script.T;
 import org.jmol.util.GData;
-import org.jmol.util.Point3fi;
 
 import javajs.awt.Font;
 import javajs.util.P3;
@@ -42,7 +41,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   // Axes, Bbcage, Measures, Uccage, also Sticks
 
   protected float imageFontScaling;
-  protected Point3fi atomA, atomB;
+  protected P3 tickA, tickB, tickAs, tickBs;
   protected Font font3d;
 
   final protected P3i pt0i = new P3i();
@@ -65,6 +64,8 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   protected boolean draw000 = true;
   protected int width;
   protected byte endcap = GData.ENDCAPS_SPHERICAL;
+  protected P3 pt0 = new P3();
+  protected P3 pt1 = new P3();
 
   //protected void clearBox() {
   //  box.setBounds(0, 0, 0, 0);
@@ -92,37 +93,41 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
     return diameter;
   }  
 
-  protected void renderLine(P3 p0, P3 p1, int diameter,
-                            P3i pt0, P3i pt1, boolean drawTicks) {
+  protected void renderLine(P3 p0, P3 p1, int diameter, 
+                            boolean drawTicks) {
     // used by Bbcage, Uccage, and axes
-    pt0.set((int) Math.floor(p0.x), (int) Math.floor(p0.y), (int) Math.floor(p0.z));
-    pt1.set((int) Math.floor(p1.x), (int) Math.floor(p1.y), (int) Math.floor(p1.z));
     if (diameter < 0)
-      g3d.drawDottedLine(pt0, pt1);
+      g3d.drawDottedLineBits(p0, p1);
     else
-      g3d.fillCylinder(endcap, diameter, pt0, pt1);
+      g3d.fillCylinderBits(endcap, diameter, p0, p1);
     if (!drawTicks || tickInfo == null)
       return;
     // AtomA and AtomB molecular coordinates must be set previously
-    atomA.sX = pt0.x;
-    atomA.sY = pt0.y;
-    atomA.sZ = pt0.z;
-    atomB.sX = pt1.x;
-    atomB.sY = pt1.y;
-    atomB.sZ = pt1.z;
-    drawTicks(atomA, atomB, diameter, true);
+    checkTickTemps();
+    tickAs.setT(p0);
+    tickBs.setT(p1);
+    drawTicks(diameter, true);
   }
 
-  protected void drawTicks(Point3fi pt1, Point3fi pt2, int diameter, boolean withLabels) {
+  protected void checkTickTemps() {
+    if (tickA == null) {
+      tickA = new P3();
+      tickB = new P3();
+      tickAs = new P3();
+      tickBs = new P3();
+    }
+  }
+
+  protected void drawTicks(int diameter, boolean withLabels) {
     if (Float.isNaN(tickInfo.first))
       tickInfo.first = 0;
-    drawTicks2(pt1, pt2, tickInfo.ticks.x, 8, diameter, (!withLabels ? null : tickInfo.tickLabelFormats == null ? 
+    drawTicks2(tickInfo.ticks.x, 8, diameter, (!withLabels ? null : tickInfo.tickLabelFormats == null ? 
             new String[] { "%0.2f" } : tickInfo.tickLabelFormats));
-    drawTicks2(pt1, pt2, tickInfo.ticks.y, 4, diameter, null);
-    drawTicks2(pt1, pt2, tickInfo.ticks.z, 2, diameter, null);
+    drawTicks2(tickInfo.ticks.y, 4, diameter, null);
+    drawTicks2(tickInfo.ticks.z, 2, diameter, null);
   }
 
-  private void drawTicks2(Point3fi ptA, Point3fi ptB, float dx, int length,
+  private void drawTicks2(float dx, int length,
                          int diameter, String[] formats) {
 
     if (dx == 0)
@@ -137,14 +142,14 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
     if (g3d.isAntialiased())
       length *= 2;
     // perpendicular to line on screen:
-    vectorT2.set(ptB.sX, ptB.sY, 0);
-    vectorT.set(ptA.sX, ptA.sY, 0);
+    vectorT2.set(tickBs.x, tickBs.y, 0);
+    vectorT.set(tickAs.x, tickAs.y, 0);
     vectorT2.sub(vectorT);
     if (vectorT2.length() < 50)
       return;
 
     float signFactor = tickInfo.signFactor;
-    vectorT.sub2(ptB, ptA);
+    vectorT.sub2(tickB, tickA);
     float d0 = vectorT.length();
     if (tickInfo.scale != null) {
       if (Float.isNaN(tickInfo.scale.x)) { // unitcell
@@ -164,14 +169,15 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
       return;
     float f = dx / d * d0 / d;
     vectorT.scale(f);
-    float dz = (ptB.sZ - ptA.sZ) / (d / dx);
+    float dz = (tickBs.z - tickAs.z) / (d / dx);
+    // TODO: z-value error: ONLY APPROXIMATE
     // vectorT is now the length of the spacing between ticks
     // but we may have an offset.
     d += tickInfo.first;
     float p = ((int) Math.floor(tickInfo.first / dx)) * dx - tickInfo.first;
-    pointT.scaleAdd2(p / dx, vectorT, ptA);
+    pointT.scaleAdd2(p / dx, vectorT, tickA);
     p += tickInfo.first;
-    float z = ptA.sZ;
+    float z = tickAs.z;
     if (diameter < 0)
       diameter = 1;
     vectorT2.set(-vectorT2.y, vectorT2.x, 0);
@@ -227,17 +233,17 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   }
 
   protected int drawLine2(int x1, int y1, int z1, int x2, int y2, int z2, int diameter) {
-    pt0i.set(x1, y1, z1);
-    pt1i.set(x2, y2, z2);
+    pt0.set(x1, y1, z1);
+    pt1.set(x2, y2, z2);
     if (dotsOrDashes) {
       if (dashDots != null)
         drawDashed(x1, y1, z1, x2, y2, z2, dashDots);
     } else {
       if (diameter < 0) {
-        g3d.drawDashedLine(4, 2, pt0i, pt1i);
+        g3d.drawDashedLineBits(4, 2, pt0 , pt1);
         return 1;
       }    
-      g3d.fillCylinder(GData.ENDCAPS_FLAT, diameter, pt0i, pt1i);
+      g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, pt0, pt1);
     }
     return (diameter + 1) / 2;
   }

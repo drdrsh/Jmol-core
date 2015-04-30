@@ -69,6 +69,7 @@ public class DrawRenderer extends MeshRenderer {
     needTranslucent = false;
     imageFontScaling = vwr.imageFontScaling;
     Draw draw = (Draw) shape;
+    isPrecision = true;
     for (int i = draw.meshCount; --i >= 0;)
       if (renderMesh(dmesh = (DrawMesh) draw.meshes[i]))
         renderInfo();
@@ -350,12 +351,10 @@ public class DrawRenderer extends MeshRenderer {
     pt1.scaleAdd2(dmesh.scale * scaleFactor, pt1, pt0);
     if (diameter == 0)
       diameter = 1;
-    pt1i.set(Math.round(pt0.x), Math.round(pt0.y),Math.round(pt0.z));
-    pt2i.set(Math.round(pt1.x), Math.round(pt1.y), Math.round(pt1.z));
     if (diameter < 0)
-      g3d.drawDottedLine(pt1i, pt2i);
+      g3d.drawDottedLineBits(pt0, pt1);
     else
-      g3d.fillCylinder(GData.ENDCAPS_FLAT, diameter, pt1i, pt2i);
+      g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, pt0, pt1);
     renderArrowHead(pt0, pt1, 0, true, false, false);
   }
 

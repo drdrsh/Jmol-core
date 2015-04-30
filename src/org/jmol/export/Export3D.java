@@ -259,8 +259,6 @@ public class Export3D implements JmolRendererInterface {
    * private Point3f ptE = new Point3f(); private Point3f ptF = new Point3f();
    * private Point3f ptG = new Point3f(); private Point3f ptH = new Point3f();
    */
-  private P3i ptAi = new P3i();
-  private P3i ptBi = new P3i();
 
   /**
    * fills a solid sphere
@@ -456,19 +454,21 @@ public class Export3D implements JmolRendererInterface {
    */
 
   @Override
-  public void drawDashedLine(int run, int rise, P3i pointA, P3i pointB) {
+  public void drawDashedLineBits(int run, int rise, P3 pointA, P3 pointB) {
     // axes and such -- ignored dashed for exporters
-    drawLineAB(pointA, pointB);
+    exporter.fillCylinderScreenMad(colix, GData.ENDCAPS_FLAT,
+        exporter.lineWidthMad, pointA, pointB);
     // ptA.set(pointA.x, pointA.y, pointA.z);
     // ptB.set(pointB.x, pointB.y, pointB.z);
     // exporter.drawDashedLine(colix, run, rise, ptA, ptB);
   }
 
   @Override
-  public void drawDottedLine(P3i pointA, P3i pointB) {
+  public void drawDottedLineBits(P3 pointA, P3 pointB) {
     // TODO
     // axes, bbcage only
-    drawLineAB(pointA, pointB); // Temporary only
+    exporter.fillCylinderScreenMad(colix, GData.ENDCAPS_FLAT,
+        exporter.lineWidthMad, pointA, pointB);
     // ptA.set(pointA.x, pointA.y, pointA.z);
     // ptB.set(pointB.x, pointB.y, pointB.z);
     // exporter.drawDashedLine(colix, 2, 1, ptA, ptB);
@@ -477,9 +477,10 @@ public class Export3D implements JmolRendererInterface {
   @Override
   public void drawLineXYZ(int x1, int y1, int z1, int x2, int y2, int z2) {
     // stars
-    ptAi.set(x1, y1, z1);
-    ptBi.set(x2, y2, z2);
-    drawLineAB(ptAi, ptBi);
+    ptA.set(x1, y1, z1);
+    ptB.set(x2, y2, z2);
+    exporter.fillCylinderScreenMad(colix, GData.ENDCAPS_FLAT,
+        exporter.lineWidthMad, ptA, ptB);
   }
 
   @Override
@@ -488,6 +489,12 @@ public class Export3D implements JmolRendererInterface {
     // line bonds, line backbone, drawTriangle
     fillCylinderXYZ(colixA, colixB, GData.ENDCAPS_FLAT, exporter.lineWidthMad,
         xA, yA, zA, xB, yB, zB);
+  }
+
+  @Override
+  public void drawLineBits(short colixA, short colixB, P3 pointA, P3 pointB) {
+    fillCylinderBits2(colixA, colixB, GData.ENDCAPS_FLAT,
+        exporter.lineWidthMad, pointA, pointB);
   }
 
   @Override
@@ -616,6 +623,38 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
+  public void drawTriangleBits(P3 screenA, short colixA, P3 screenB,
+                               short colixB, P3 screenC, short colixC, int check) {
+    // primary method for mapped Mesh
+    int mad = exporter.lineWidthMad;
+    byte endcaps = GData.ENDCAPS_FLAT;
+    if ((check & 1) == 1)
+      exporter.drawCylinder(screenA, screenB, colixA, colixB, endcaps, mad, 1);
+    if ((check & 2) == 2)
+      exporter.drawCylinder(screenB, screenC, colixB, colixC, endcaps, mad, 1);
+    if ((check & 4) == 4)
+      exporter.drawCylinder(screenA, screenC, colixA, colixC, endcaps, mad, 1);
+  }
+
+  @Override
+  public void fillCylinderBits2(short colixA, short colixB, byte endcaps,
+                                int mad, P3 screenA, P3 screenB) {
+    exporter.drawCylinder(screenA, screenB, colixA, colixB, endcaps, mad, 1);
+  }
+
+  @Override
+  public void fillTriangle3CNBits(P3 pA, short colixA, short nA, P3 pB,
+                                  short colixB, short nB, P3 pC, short colixC,
+                                  short nC) {
+    // mesh, isosurface
+    if (colixA != colixB || colixB != colixC) {
+      // shouldn't be here, because that uses renderIsosurface
+      return;
+    }
+    exporter.fillTriangle(colixA, pA, pB, pC, false, false);
+  }
+
+  @Override
   public void fillTriangle3CN(P3i pointA, short colixA, short normixA,
                               P3i pointB, short colixB, short normixB,
                               P3i pointC, short colixC, short normixC) {
@@ -677,6 +716,13 @@ public class Export3D implements JmolRendererInterface {
     drawLineAB(pointB, pointC);
     drawLineAB(pointC, screenD);
     drawLineAB(screenD, pointA);
+  }
+
+  @Override
+  public void drawQuadrilateralBits(short colix, P3 screenA, P3 screenB,
+                                    P3 screenC, P3 screenD) {
+    setC(colix);
+    fillQuadrilateral(screenA, screenB, screenC, screenD);
   }
 
   @Override
@@ -842,5 +888,6 @@ public class Export3D implements JmolRendererInterface {
     }
     gdata.renderAllStrings(this);
   }
+
 
 }

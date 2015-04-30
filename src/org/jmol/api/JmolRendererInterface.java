@@ -29,10 +29,10 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void drawBond(P3 atomA, P3 atomB, short colixA,
                                 short colixB, byte endcaps, short mad, int bondOrder);
 
-  public abstract void drawDashedLine(int run, int rise, P3i pointA,
-                                      P3i pointB);
+  public abstract void drawDashedLineBits(int run, int rise, P3 screenA,
+                                      P3 screenB);
 
-  public abstract void drawDottedLine(P3i pointA, P3i pointB);
+  public abstract void drawDottedLineBits(P3 screenA, P3 screenB);
 
   public abstract boolean drawEllipse(P3 ptAtom, P3 ptX, P3 ptY,
                                       boolean fillArc, boolean wireframeOnly);
@@ -78,6 +78,10 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void drawQuadrilateral(short colix, P3i screenA,
                                          P3i screenB, P3i screenC,
                                          P3i screenD);
+
+  public abstract void drawQuadrilateralBits(short colix, P3 screenA,
+                                         P3 screenB, P3 screenC,
+                                         P3 screenD);
 
   /**
    * draws a rectangle
@@ -146,6 +150,10 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                     P3i screenB, short colixB,
                                     P3i screenC, short colixC, int check);
 
+ public abstract void drawTriangleBits(P3 screenA, short colixA,
+                                     P3 screenB, short colixB,
+                                     P3 screenC, short colixC, int check);
+
   public abstract void fillConeSceen3f(byte endcap, int screenDiameter,
                                      P3 screenBase, P3 screenTip);
 
@@ -164,6 +172,9 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
 
   public abstract void fillCylinderScreen3I(byte endcapsOpenend, int diameter,
                                           P3i pt0i, P3i pt1i, P3 pt0f, P3 pt1f, float radius);
+
+  public abstract void fillCylinderBits2(short colixA, short colixB, byte endcaps,
+                                       int diameter, P3 screenA, P3 screenB);
 
   public abstract void fillCylinderXYZ(short colixA, short colixB, byte endcaps,
                                     int diameter, int xA, int yA, int zA,
@@ -294,6 +305,12 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void volumeRender(boolean TF);
 
   public abstract void volumeRender4(int diam, int x, int y, int z);
+
+  public abstract void fillTriangle3CNBits(P3 pA, short colixA, short nA,
+                                           P3 pB, short colixB, short nB,
+                                           P3 pC, short colixC, short nC);
+
+  public abstract void drawLineBits(short colixA, short colixB, P3 pointA, P3 pointB);
 
 
 }

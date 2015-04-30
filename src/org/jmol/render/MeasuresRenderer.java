@@ -193,7 +193,16 @@ public class MeasuresRenderer extends LabelsRenderer {
    if ((tickInfo = m.tickInfo) != null) {
       drawLine(a.sX, a.sY, a.sZ, b.sX,
           b.sY, b.sZ, mad);
-      drawTicks(a, b, mad, s != null);
+      tickA = a;
+      tickB = b;
+      if (tickAs == null) {
+        tickAs = new P3();
+        tickBs = new P3();
+      }
+      tickAs.set(a.sX, a.sY, a.sZ);
+      tickBs.set(b.sX, b.sY, b.sZ);
+      // TODO: z-value error: ONLY APPROXIMATE
+      drawTicks(mad, s != null);
       return;
     }
     int zA = a.sZ - a.sD - 10;

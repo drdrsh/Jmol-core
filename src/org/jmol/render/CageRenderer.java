@@ -35,10 +35,10 @@ abstract class CageRenderer extends FontLineShapeRenderer {
 
   // Bbcage and Uccage
 
-  protected final P3[] screens = new P3[8];
+  protected final P3[] p3Screens = new P3[8];
   {
     for (int i = 8; --i >= 0; )
-      screens[i] = new P3();
+      p3Screens[i] = new P3();
   }
 
   protected char[] tickEdges;
@@ -47,6 +47,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
   protected boolean isPolymer;
   
   private P3 pt = new P3();
+  
   protected void renderCage(int mad, P3[] vertices, P3[] axisPoints,
                         int firstLine, int allowedEdges0, int allowedEdges1,
                         float scale) {
@@ -63,8 +64,8 @@ abstract class CageRenderer extends FontLineShapeRenderer {
         pt.sub(vertices[0]);
         pt.scaleAdd2(scale, pt, vertices[0]);
       }
-      tm.transformPtNoClip(pt, screens[i]);
-      zSum += screens[i].z;
+      tm.transformPtScrP3(pt, p3Screens[i]);
+      zSum += p3Screens[i].z;
     }
     
     int diameter = getDiameter((int) Math.floor(zSum / 8), mad);
@@ -76,29 +77,26 @@ abstract class CageRenderer extends FontLineShapeRenderer {
       int edge0 = BoxInfo.edges[i];
       int edge1 = BoxInfo.edges[i + 1];
       if (axisPoints != null && edge0 == 0)
-        tm.transformPtNoClip(axisPoints[axisPt--], screens[0]);
+        tm.transformPtScrP3(axisPoints[axisPt--], p3Screens[0]);
       if ((allowedEdges0 & (1 << edge0)) == 0 
         || (allowedEdges1 & (1 << edge1)) == 0)
         continue;
       boolean drawTicks = (fls.tickInfos != null && (edge = tickEdges[i >> 1]) != 0);
       if (drawTicks) {
-        if (atomA == null) {
-          atomA = new Point3fi();
-          atomB = new Point3fi();
-        }
-        atomA.setT(vertices[edge0]);
-        atomB.setT(vertices[edge1]);
+        checkTickTemps();
+        tickA.setT(vertices[edge0]);
+        tickB.setT(vertices[edge1]);
         float start = 0;
         if (shape instanceof Bbcage)
           switch (edge) {
           case 'x':
-            start = atomA.x;
+            start = tickA.x;
             break;
           case 'y':
-            start = atomA.y;
+            start = tickA.y;
             break;
           case 'z':
-            start = atomA.z;
+            start = tickA.z;
             break;
           }
         tickInfo = fls.tickInfos["xyz".indexOf(edge) + 1];
@@ -109,7 +107,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
         else
           tickInfo.first = start;
       }
-      renderLine(screens[edge0], screens[edge1], diameter, pt0i, pt1i,
+      renderLine(p3Screens[edge0], p3Screens[edge1], diameter,
           drawTicks);
     }
   }

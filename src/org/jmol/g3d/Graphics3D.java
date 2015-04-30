@@ -60,6 +60,56 @@ import org.jmol.viewer.Viewer;
  * 
  * Bob Hanson 9/2/2012
  * 
+ * Note added 4/2015 BH:
+ * 
+ * Well, it turns out that the calculation of the intermediate pixel z value
+ * in all methods involving rasterization of lines is incorrect and has been
+ * incorrect since Jmol's inception. I noticed long ago that large triangles such as
+ * produced in DRAW could incorrectly overlay/underlay other objects, but I could
+ * never determine why. It turns out that that assumption that z-value is linear
+ * across a line when perspectiveDepth is TRUE is simply incorrect. 
+ * 
+ * Basically, the function z(x) is non-linear. Treating it as simply a 
+ * linear function results in oddities where lines and planes
+ *  -- particularly created using DRAW and large distances -- appear
+ * to be where they are not. 
+ *  
+ * Through Jmol 13.3.13 we had the standard linear relationship:
+ * 
+ *   z = (x - xa) / (xb - xa) * (zb - za) + za
+ * 
+ * I worked it out, and, amazingly, it should be
+ * 
+ *   z = (xb - xa) * za * zb / ((xb - x) * zb + (x - xa) * za)
+ * 
+ * Note that it is still true that when x = xb, z = zb 
+ * and when x = xa, z = za, as required.
+ * 
+ * This equation can be rearranged to 
+ * 
+ *   z = a / (b - x)
+ *   
+ * where 
+ * 
+ *  a = (xb - xa) * za * (zb / (zb - za))
+ *  
+ * and
+ * 
+ *  b = (xb * zb - xa * za) / (zb - za)
+ * 
+ * These values must be floats, not integers, to work properly, because
+ * these are extrapolations from long distances in some cases. So there is
+ * considerable overhead there. It will take some experimentation to figure this
+ * out.
+ * 
+ * The practical implications are for line, cylinder, and triangle drawing.
+ * First-pass corrections are for axes and DRAW objects. They tend to be the
+ * larger objects that result in the issue. 
+ * 
+ * Also affected is POV-Ray output, because right now POV-Ray is created using
+ * perspective on and plotted as though it were orthographic, but although that
+ * works in x and y, it does not work in z!
+ * 
  * 
  * <p>
  * A pure software implementation of a 3D graphics engine. No hardware required.
@@ -212,6 +262,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   protected int zMargin;
   private int[] aobuf;
+  private boolean isOrthographic;
 
   void setZMargin(int dz) {
     zMargin = dz;
@@ -253,8 +304,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         hermite3d = getRenderer("Hermite");
       //$FALL-THROUGH$
     case T.triangles:
-      if (triangle3d == null)
+      if (triangle3d == null) {
         triangle3d = getRenderer("Triangle");
+        ((PrecisionRenderer) triangle3d).isOrthographic = isOrthographic = !vwr.tm.perspectiveDepth;
+      }      
       break;
     }
   }
@@ -296,6 +349,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       releaseBuffers();
     }
     setRotationMatrix(rotationMatrix);
+    ((PrecisionRenderer) line3d).isOrthographic = !vwr.tm.perspectiveDepth; 
+    if (triangle3d != null)
+      ((PrecisionRenderer) triangle3d).isOrthographic = !vwr.tm.perspectiveDepth;
     antialiasEnabled = antialiasThisFrame = newAntialiasing;
     currentlyRendering = true;
     if (strings != null)
@@ -1175,17 +1231,15 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
    * ***************************************************************/
 
   @Override
-  public void drawDashedLine(int run, int rise, P3i pointA, P3i pointB) {
+  public void drawDashedLineBits(int run, int rise, P3 pointA, P3 pointB) {
     // measures only
-    line3d.plotDashedLine(argbCurrent, run, rise, pointA.x, pointA.y, pointA.z,
-        pointB.x, pointB.y, pointB.z, true);
+    line3d.plotDashedLineBits(argbCurrent, run, rise, pointA, pointB);
   }
 
   @Override
-  public void drawDottedLine(P3i pointA, P3i pointB) {
+  public void drawDottedLineBits(P3 pointA, P3 pointB) {
     //axes, bbcage only
-    line3d.plotDashedLine(argbCurrent, 2, 1, pointA.x, pointA.y, pointA.z,
-        pointB.x, pointB.y, pointB.z, true);
+    line3d.plotDashedLineBits(argbCurrent, 2, 1, pointA, pointB);
   }
 
   @Override
@@ -1205,6 +1259,17 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       colixB = 0;
     if (colixA != 0 || colixB != 0)
       line3d.plotLine(argbA, argbCurrent, x1, y1, z1, x2, y2, z2, true);
+  }
+
+  @Override
+  public void drawLineBits(short colixA, short colixB, P3 pointA, P3 pointB) {
+    if (!setC(colixA))
+      colixA = 0;
+    int argbA = argbCurrent;
+    if (!setC(colixB))
+      colixB = 0;
+    if (colixA != 0 || colixB != 0)
+      line3d.plotLineClippedBits(argbA, argbCurrent, pointA, pointB, true, 0, 0);
   }
 
   @Override
@@ -1267,9 +1332,30 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void fillCylinderBits(byte endcaps, int diameter, P3 screenA,
                                P3 screenB) {
     // dipole cross, cartoonRockets, draw line
-    if (diameter <= ht3)
-      cylinder3d.renderBits(colixCurrent, endcaps, diameter,
-          screenA.x, screenA.y, screenA.z, screenB.x, screenB.y, screenB.z);
+    if (diameter <= ht3 && screenA.z != 1 && screenB.z != 1) {
+      cylinder3d.renderBits(colixCurrent, colixCurrent, 0, endcaps, diameter, screenA, screenB);
+    }
+  }
+
+  @Override
+  public void fillCylinderBits2(short colixA, short colixB, byte endcaps,
+                                int diameter, P3 screenA, P3 screenB) {
+    //Backbone, Mps, Sticks
+    if (diameter > ht3)
+      return;
+    int screen = 0;
+    currentShadeIndex = 0;
+    if (!setC(colixB))
+      colixB = 0;
+    if (wasScreened)
+      screen = 2;
+    if (!setC(colixA))
+      colixA = 0;
+    if (wasScreened)
+      screen += 1;
+    if (colixA == 0 && colixB == 0)
+      return;
+    cylinder3d.renderBits(colixA, colixB, screen, endcaps, diameter, screenA, screenB);
   }
 
   @Override
@@ -1393,8 +1479,22 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void fillTriangle3CN(P3i screenA, short colixA, short normixA,
                               P3i screenB, short colixB, short normixB,
                               P3i screenC, short colixC, short normixC) {
+    ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC,
+        checkGouraud(colixA, colixB, colixC, normixA, normixB, normixC));
+  }
+
+  @Override
+  public void fillTriangle3CNBits(P3 screenA, short colixA, short normixA, P3 screenB,
+                                  short colixB, short normixB, P3 screenC, short colixC,
+                                  short normixC) {
     // mesh, isosurface
-    boolean useGouraud;
+    System.out.println("G3D fillT " + screenA + " " + screenB + " " + screenC);
+    ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
+        checkGouraud(colixA, colixB, colixC, normixA, normixB, normixC));
+  }
+
+  private boolean checkGouraud(short colixA, short colixB, short colixC,
+                               short normixA, short normixB, short normixC) {
     if (!isPass2 && normixA == normixB && normixA == normixC
         && colixA == colixB && colixA == colixC) {
       int shadeIndex = getShadeIndex(normixA);
@@ -1403,17 +1503,15 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         setC(colixA);
         setColorNoisy(shadeIndex);
       }
-      useGouraud = false;
-    } else {
+      return false;
+    } 
       setTriangleTranslucency(colixA, colixB, colixC);
       ((TriangleRenderer) triangle3d).setGouraud(
           getShades(colixA)[getShadeIndex(normixA)],
           getShades(colixB)[getShadeIndex(normixB)],
           getShades(colixC)[getShadeIndex(normixC)]);
-      useGouraud = true;
-    }
-    ((TriangleRenderer) triangle3d).fillTriangleP3i(screenA, screenB, screenC,
-        useGouraud);
+      return true;
+    
   }
 
   private static byte nullShadeIndex = 50;
@@ -1598,7 +1696,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
   }
 
-  ///////////////////////////////////
   void plotPixelsUnclippedRaster(int count, int x, int y, int zAtLeft,
                                  int zPastRight, Rgb16 rgb16Left,
                                  Rgb16 rgb16Right) {
@@ -1650,6 +1747,108 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
   }
 
+  
+  void plotPixelsClippedRasterBits(int count, int x, int y, int zAtLeft,
+                               int zPastRight, Rgb16 rgb16Left, Rgb16 rgb16Right, float a, float b) {
+    // cylinder3d.renderFlatEndcap, triangle3d.fillRaster
+    int depth, slab;
+    if (count <= 0 || y < 0 || y >= height || x >= width
+        || (zAtLeft < (slab = this.slab) && zPastRight < slab)
+        || (zAtLeft > (depth = this.depth) && zPastRight > depth))
+      return;
+    int[] zb = zbuf;
+    int seed = (x << 16) + (y << 1) ^ 0x33333333;
+    if (x < 0) {
+      x = -x;
+      count -= x;
+      if (count <= 0)
+        return;
+      x = 0;
+    }
+    if (count + x > width)
+      count = width - x;
+    int offsetPbuf = y * width + x;
+    Pixelator p = pixel;
+    if (rgb16Left == null) {
+      int adn = argbNoisyDn;
+      int aup = argbNoisyUp;
+      int ac = argbCurrent;
+      while (--count >= 0) {
+        int zCurrent = line3d.getZCurrent(a, b, x++);
+        if (zCurrent >= slab && zCurrent <= depth && zCurrent < zb[offsetPbuf]) {
+          seed = ((seed << 16) + (seed << 1) + seed) & 0x7FFFFFFF;
+          int bits = (seed >> 16) & 0x07;
+          p.addPixel(offsetPbuf, zCurrent, bits == 0 ? adn : (bits == 1 ? aup : ac));
+        }
+        ++offsetPbuf;
+      }
+    } else {
+      int rScaled = rgb16Left.r << 8;
+      int rIncrement = ((rgb16Right.r - rgb16Left.r) << 8) / count;
+      int gScaled = rgb16Left.g;
+      int gIncrement = (rgb16Right.g - gScaled) / count;
+      int bScaled = rgb16Left.b;
+      int bIncrement = (rgb16Right.b - bScaled) / count;
+      while (--count >= 0) {
+        int zCurrent = line3d.getZCurrent(a, b, x++);
+        if (zCurrent >= slab && zCurrent <= depth && zCurrent < zb[offsetPbuf])
+          p.addPixel(offsetPbuf, zCurrent, 0xFF000000 | (rScaled & 0xFF0000)
+              | (gScaled & 0xFF00) | ((bScaled >> 8) & 0xFF));
+        ++offsetPbuf;
+        rScaled += rIncrement;
+        gScaled += gIncrement;
+        bScaled += bIncrement;
+      }
+    }
+  }
+
+  void plotPixelsUnclippedRasterBits(int count, int x, int y, int zAtLeft,
+                                 int zPastRight, Rgb16 rgb16Left,
+                                 Rgb16 rgb16Right, float a, float b) {
+    // for isosurface Triangle3D.fillRaster
+    
+    if (count <= 0)
+      return;
+    int seed = ((x << 16) + (y << 1) ^ 0x33333333) & 0x7FFFFFFF;
+    // scale the z coordinates;
+    int offsetPbuf = y * width + x;
+    int[] zb = zbuf;
+    Pixelator p = pixel;
+    if (rgb16Left == null) {
+      int adn = argbNoisyDn;
+      int aup = argbNoisyUp;
+      int ac = argbCurrent;
+      while (--count >= 0) {
+        int zCurrent = line3d.getZCurrent(a, b, x++);
+        if (zCurrent < zb[offsetPbuf]) {
+          seed = ((seed << 16) + (seed << 1) + seed) & 0x7FFFFFFF;
+          int bits = (seed >> 16) & 0x07;
+          p.addPixel(offsetPbuf, zCurrent, bits == 0 ? adn : (bits == 1 ? aup : ac));
+        }
+        ++offsetPbuf;
+      }
+    } else {
+      int rScaled = rgb16Left.r << 8;
+      int rIncrement = roundInt(((rgb16Right.r - rgb16Left.r) << 8) / count);
+      int gScaled = rgb16Left.g;
+      int gIncrement = roundInt((rgb16Right.g - gScaled) / count);
+      int bScaled = rgb16Left.b;
+      int bIncrement = roundInt((rgb16Right.b - bScaled) / count);
+      while (--count >= 0) {
+        int zCurrent = line3d.getZCurrent(a, b, x++);
+        if (zCurrent < zb[offsetPbuf])
+          p.addPixel(offsetPbuf, zCurrent, 0xFF000000 | (rScaled & 0xFF0000)
+              | (gScaled & 0xFF00) | ((bScaled >> 8) & 0xFF));
+        ++offsetPbuf;
+        rScaled += rIncrement;
+        gScaled += gIncrement;
+        bScaled += bIncrement;
+      }
+    }
+  }
+
+  
+  
   void plotPixelsUnclippedCount(int c, int count, int x, int y, int z,
                                 int width, int[] zbuf, Pixelator p) {
 
@@ -1853,6 +2052,28 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       mergeBufferPixel(pbuf, offset, bgargb, bgcolor);
     mergeBufferPixel(pbuf, offset, (argb & 0xFFFFFF) | shade << 24, bgcolor);
     zbuf[offset] = z;
+  }
+
+  @Override
+  public void drawQuadrilateralBits(short colix, P3 screenA, P3 screenB,
+                                    P3 screenC, P3 screenD) {
+    //mesh only -- translucency has been checked
+    drawLineBits(colix, colix, screenA, screenB);
+    drawLineBits(colix, colix, screenB, screenC);
+    drawLineBits(colix, colix, screenC, screenD);
+    drawLineBits(colix, colix, screenD, screenA);
+  }
+
+  @Override
+  public void drawTriangleBits(P3 screenA, short colixA, P3 screenB,
+                               short colixB, P3 screenC, short colixC, int check) {
+    // primary method for mapped Mesh
+    if ((check & 1) == 1)
+      drawLineBits(colixA, colixB, screenA, screenB);
+    if ((check & 2) == 2)
+      drawLineBits(colixB, colixC, screenB, screenC);
+    if ((check & 4) == 4)
+      drawLineBits(colixA, colixC, screenA, screenC);
   }
 
 }

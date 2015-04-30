@@ -85,6 +85,7 @@ public class SphereRenderer {
   void render(int[] shades, int diameter, int x, int y,
               int z, M3 mat, double[] coef, M4 mDeriv,
               int selectedOctant, P3i[] octantPoints) {
+    //System.out.println("sphere " + x  + " " + y  + " " + z + " " + diameter);
     if (z == 1)
       return;
     if (diameter > maxOddSizeSphere)

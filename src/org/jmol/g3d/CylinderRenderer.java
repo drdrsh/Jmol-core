@@ -25,6 +25,7 @@
 package org.jmol.g3d;
 
 import javajs.util.AU;
+import javajs.util.P3;
 
 import org.jmol.util.GData;
 import org.jmol.util.Shader;
@@ -82,15 +83,17 @@ class CylinderRenderer {
               int za, int xb, int yb, int zb) {
     //0 for colixA or colixB means ignore for this pass
     int r = diameter / 2 + 1;
+    //System.out.println("Cyl " + xa + " "  + ya + " "  + za + " "  + xb + " "  + yb + " "  + zb + " " );
     Graphics3D g = this.g3d;
     int codeMinA = g.clipCode3(xa - r, ya - r, za - r);
     int codeMaxA = g.clipCode3(xa + r, ya + r, za + r);
     int codeMinB = g.clipCode3(xb - r, yb - r, zb - r);
     int codeMaxB = g.clipCode3(xb + r, yb + r, zb + r);
     //all bits 0 --> no clipping
-    clipped = ((codeMinA | codeMaxA | codeMinB | codeMaxB) != 0);
+    int c = (codeMinA | codeMaxA | codeMinB | codeMaxB);
+    clipped = (c != 0);
     //any two bits same in all cases --> fully clipped
-    if ((codeMinA & codeMaxB & codeMaxA & codeMinB) != 0)
+    if (c == -1 || (codeMinA & codeMaxB & codeMaxA & codeMinB) != 0)
       return; // fully clipped;
     dxB = xb - xa;
     dyB = yb - ya;
@@ -163,43 +166,50 @@ class CylinderRenderer {
       renderSphericalEndcaps();
   }
 
-  void renderBits(short colix, byte endcaps, int diameter,
-                  float xa, float ya, float za, float xb, float yb, float zb) {
+  private P3 ptA0, ptB0;
+  
+  void renderBits(short colixA, short colixB, int screen, byte endcaps, int diameter, P3 ptA, P3 ptB) {
+    if (ptA0 == null) {
+      ptA0 = new P3();
+      ptB0 = new P3();
+    }
+    ptA0.setT(ptA);
     // dipole cross, cartoonRockets, draw mesh nofill or width = -1
     // oops -- problem here if diameter < 0 is that we may have already clipped it!
     int r = diameter / 2 + 1;
-    int ixA = Math.round(xa);
-    int iyA = Math.round(ya);
-    int izA = Math.round(za);
-    int ixB = Math.round(xb);
-    int iyB = Math.round(yb);
-    int izB = Math.round(zb);
+    int ixA = Math.round(ptA.x);
+    int iyA = Math.round(ptA.y);
+    int izA = Math.round(ptA.z);
+    int ixB = Math.round(ptB.x);
+    int iyB = Math.round(ptB.y);
+    int izB = Math.round(ptB.z);
     Graphics3D g = this.g3d;
     int codeMinA = g.clipCode3(ixA - r, iyA - r, izA - r);
     int codeMaxA = g.clipCode3(ixA + r, iyA + r, izA + r);
     int codeMinB = g.clipCode3(ixB - r, iyB - r, izB - r);
     int codeMaxB = g.clipCode3(ixB + r, iyB + r, izB + r);
     //all bits 0 --> no clipping
-    clipped = ((codeMinA | codeMaxA | codeMinB | codeMaxB) != 0);
+    int c = (codeMinA | codeMaxA | codeMinB | codeMaxB);
     //any two bits same in all cases --> fully clipped
-    if ((codeMinA & codeMaxB & codeMaxA & codeMinB) != 0)
-      return; // fully clipped;
-    dxBf = xb - xa;
-    dyBf = yb - ya;
-    dzBf = zb - za;
+    clipped = (c != 0);
+    //any two bits same in all cases --> fully clipped
+    if (c == -1 || (codeMinA & codeMaxB & codeMaxA & codeMinB) != 0)
+      return;
+    dxBf = ptB.x - ptA.x;
+    dyBf = ptB.y - ptA.y;
+    dzBf = ptB.z - ptA.z;
     if (diameter == 0 || diameter == 1) {
-      int c = g.getColorArgbOrGray(colix);
-      line3d.plotLineDelta(c, c, (int) xa, (int) ya, (int) za, (int) dxBf,
-          (int) dyBf, (int) dzBf, clipped);
+      line3d.plotLineClippedBits(g.getColorArgbOrGray(colixA), g.getColorArgbOrGray(colixB), ptA, ptB, clipped, 0, 0);
       return;
     }
     if (diameter > 0) {
       this.diameter = diameter;
-      this.xAf = xa;
-      this.yAf = ya;
-      this.zAf = za;
+      this.xAf = ptA.x;
+      this.yAf = ptA.y;
+      this.zAf = ptA.z;
     }
-    boolean drawBackside = (clipped || endcaps == GData.ENDCAPS_FLAT || endcaps == GData.ENDCAPS_NONE);
+    boolean drawBackside = (screen == 0 && (clipped 
+        || endcaps == GData.ENDCAPS_FLAT || endcaps == GData.ENDCAPS_NONE));
     this.xA = (int) xAf;
     this.yA = (int) yAf;
     this.zA = (int) zAf;
@@ -207,7 +217,8 @@ class CylinderRenderer {
     this.dyB = (int) dyBf;
     this.dzB = (int) dzBf;
 
-    this.shadesA = this.shadesB = g.getShades(colixA = colixB = colix);
+    this.shadesA = g.getShades(colixA);
+    this.shadesB = g.getShades(colixB);
     this.endcaps = endcaps;
     calcArgbEndcap(true, true);
     int[][] xyzf = xyzfRaster;
@@ -243,8 +254,12 @@ class CylinderRenderer {
               + z - 1, width, zbuf, p);
         }
       }
-      line3d.plotLineDeltaBits(shadesA, shadesB, fpz, xA + x, yA + y, zA - z,
-          dxB, dyB, dzB, clipped);
+      ptA0.set(xA + x, yA + y, zA - z);
+      ptB0.setT(ptA0);
+      ptB0.x += dxB;
+      ptB0.y += dyB;
+      ptB0.z += dzB;
+      line3d.plotLineDeltaBits(shadesA, shadesB, fpz, ptA0, ptB0, screen, clipped); 
       if (drawBackside) {
         line3d.plotLineDelta(shadesA[fpzBack], shadesB[fpzBack], xA - x,
             yA - y, zA + z, dxB, dyB, dzB, clipped);

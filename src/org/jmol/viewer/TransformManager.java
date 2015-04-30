@@ -1482,6 +1482,7 @@ public class TransformManager {
     }
     // note that the image is still centered at 0, 0 in the xy plane
 
+    //System.out.println("TM matrixTransform " + matrixTransform);
   }
 
   public void rotatePoint(T3 pt, T3 ptRot) {
@@ -1502,7 +1503,7 @@ public class TransformManager {
     pointScreen.setT(transformPt(ptXYZ));
   }
 
-  public void transformPtNoClip(P3 ptXYZ, P3 pointScreen) {
+  public void transformPtScrP3(T3 ptXYZ, T3 pointScreen) {
     applyPerspective(ptXYZ, null);
     pointScreen.setT(point3fScreenTemp);
   }
@@ -1569,6 +1570,7 @@ public class TransformManager {
   private P3i applyPerspective(T3 ptXYZ, T3 ptRef) {
 
     getScreenTemp(ptXYZ);
+    //System.out.println(point3fScreenTemp);
 
     // fixedRotation point is at the origin initially
 

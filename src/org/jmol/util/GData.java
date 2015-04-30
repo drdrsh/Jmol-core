@@ -24,6 +24,7 @@ public class GData implements JmolGraphicsInterface {
   
   protected int windowWidth, windowHeight;
   protected int displayMinX, displayMaxX, displayMinY, displayMaxY;
+  protected int displayMinX2, displayMaxX2, displayMinY2, displayMaxY2;
   protected boolean antialiasThisFrame;
 
   protected boolean inGreyscaleMode;
@@ -363,17 +364,18 @@ public class GData implements JmolGraphicsInterface {
   final public static int xLT = 8;
   final public static int zGT = 16;
   final public static int zLT = 32;
+  final public static int HUGE = -1;
 
   public int clipCode3(int x, int y, int z) {
     int code = 0;
     if (x < 0)
-      code |= xLT;
+      code |= (x < displayMinX2 ? HUGE : xLT);
     else if (x >= width)
-      code |= xGT;
+      code |=  (x > displayMaxX2 ? HUGE : xGT);
     if (y < 0)
-      code |= yLT;
+      code |=  (y < displayMinY2 ? HUGE : yLT);
     else if (y >= height)
-      code |= yGT;
+      code |=  (y > displayMaxY2 ? HUGE : yGT);
     if (z < slab)
       code |= zLT;
     else if (z > depth) // note that this is .GT., not .GE.
@@ -480,6 +482,10 @@ public class GData implements JmolGraphicsInterface {
     displayMaxX = width - displayMinX;
     displayMinY = -(height >> 1);
     displayMaxY = height - displayMinY;
+    displayMinX2 = displayMinX<<2;
+    displayMaxX2 = displayMaxX<<2;
+    displayMinY2 = displayMinY<<2;
+    displayMaxY2 = displayMaxY<<2;
     ht3 = height * 3;
     bufferSize = width * height;
   }
