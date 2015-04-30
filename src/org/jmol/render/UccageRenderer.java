@@ -97,15 +97,15 @@ public class UccageRenderer extends CageRenderer {
 
     P3 fset = unitcell.getUnitCellMultiplier();
     boolean haveMultiple = (fset != null && fset.distanceSquared(fset0) != 0);
-    if (!haveMultiple) 
+    if (!haveMultiple)
       fset = fset0;
 
     SimpleUnitCell.ijkToPoint3f((int) fset.x, cell0, 0);
     SimpleUnitCell.ijkToPoint3f((int) fset.y, cell1, 1);
     int firstLine, allow0, allow1;
     if (fset.z < 0) {
-      cell0.scale (-1/fset.z);
-      cell1.scale (-1/fset.z);
+      cell0.scale(-1 / fset.z);
+      cell1.scale(-1 / fset.z);
     }
     float scale = Math.abs(fset.z);
     P3[] axisPoints = vwr.getAxisPoints();
@@ -116,40 +116,43 @@ public class UccageRenderer extends CageRenderer {
       offsetT.setT(cell0);
       unitcell.toCartesian(offsetT, true);
       offsetT.add(offset);
-      aPoints = (cell0.x == 0 && cell0.y == 0 && cell0.z == 0 ? axisPoints : null);
+      aPoints = (cell0.x == 0 && cell0.y == 0 && cell0.z == 0 ? axisPoints
+          : null);
       firstLine = 0;
       allow0 = 0xFF;
       allow1 = 0xFF;
       P3[] pts = BoxInfo.unitCubePoints;
       for (int i = 8; --i >= 0;) {
-        P3 v = P3.new3(pts[i].x * (cell1.x - cell0.x), pts[i].y * (cell1.y - cell0.y), pts[i].z * (cell1.z - cell0.z));
+        P3 v = P3.new3(pts[i].x * (cell1.x - cell0.x), pts[i].y
+            * (cell1.y - cell0.y), pts[i].z * (cell1.z - cell0.z));
         unitcell.toCartesian(v, true);
         verticesT[i].add2(v, offsetT);
       }
       renderCage(mad, verticesT, aPoints, firstLine, allow0, allow1, 1);
     } else
-    for (int x = (int) cell0.x; x < cell1.x; x++) {
-      for (int y = (int) cell0.y; y < cell1.y; y++) {
-        for (int z = (int) cell0.z; z < cell1.z; z++) {
-          if (haveMultiple) {
-            offsetT.set(x, y, z);
-            offsetT.scale(scale);
-            unitcell.toCartesian(offsetT, true);
-            offsetT.add(offset);
-            aPoints = (x == 0 && y == 0 && z == 0 ? axisPoints : null);
-            firstLine = (drawAllLines || aPoints == null ? 0 : 3);
-          } else {
-            offsetT.setT(offset);
-            firstLine = (drawAllLines ? 0 : 3);
+      for (int x = (int) cell0.x; x < cell1.x; x++) {
+        for (int y = (int) cell0.y; y < cell1.y; y++) {
+          for (int z = (int) cell0.z; z < cell1.z; z++) {
+            if (haveMultiple) {
+              offsetT.set(x, y, z);
+              offsetT.scale(scale);
+              unitcell.toCartesian(offsetT, true);
+              offsetT.add(offset);
+              aPoints = (x == 0 && y == 0 && z == 0 ? axisPoints : null);
+              firstLine = (drawAllLines || aPoints == null ? 0 : 3);
+            } else {
+              offsetT.setT(offset);
+              firstLine = (drawAllLines ? 0 : 3);
+            }
+            allow0 = 0xFF;
+            allow1 = 0xFF;
+            for (int i = 8; --i >= 0;)
+              verticesT[i].add2(vertices[i], offsetT);
+            renderCage(mad, verticesT, aPoints, firstLine, allow0, allow1,
+                scale);
           }
-          allow0 = 0xFF;
-          allow1 = 0xFF;            
-          for (int i = 8; --i >= 0;)
-            verticesT[i].add2(vertices[i], offsetT);
-          renderCage(mad, verticesT, aPoints, firstLine, allow0, allow1, scale);
         }
       }
-    }
     renderInfo();
   }
   
