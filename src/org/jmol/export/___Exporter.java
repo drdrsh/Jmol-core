@@ -144,8 +144,6 @@ public abstract class ___Exporter {
   protected String fileName;
   protected String commandLineOptions;
   
-  public boolean isCartesian;
-  
   protected GData gdata;
 
   protected short backgroundColix;
@@ -205,7 +203,7 @@ public abstract class ___Exporter {
     this.vwr = vwr;
     tm = vwr.tm;
     isWebGL = params.get("type").equals("JS");
-    this.gdata = g3d;
+    gdata = g3d;
     this.privateKey = privateKey;
     backgroundColix = vwr.getObjectColix(StateManager.OBJ_BACKGROUND);
     center.setT(tm.fixedRotationCenter);
@@ -324,6 +322,10 @@ public abstract class ___Exporter {
     return rgbFractionalFromArgb(gdata.getColorArgbOrGray(colix));
   }
 
+  protected String getTriadC(T3 t) {
+    return  getTriad(t);
+  }
+  
   protected String getTriad(T3 t) {
     return round(t.x) + " " + round(t.y) + " " + round(t.z); 
   }
@@ -337,7 +339,7 @@ public abstract class ___Exporter {
     tempC.set(red == 0 ? 0 : (red + 1)/ 256f, 
         green == 0 ? 0 : (green + 1) / 256f, 
         blue == 0 ? 0 : (blue + 1) / 256f);
-    return getTriad(tempC);
+    return getTriadC(tempC);
   }
 
   protected static String translucencyFractionalFromColix(short colix) {
@@ -563,7 +565,7 @@ public abstract class ___Exporter {
   abstract void fillSphere(short colix, int diameter, P3 pt);
   
   //cartoons, rockets, polyhedra:
-  protected abstract void fillTriangle(short colix, T3 ptA0, T3 ptB0, T3 ptC0, boolean twoSided, boolean isCartesian);
+  protected abstract void fillTriangle(short colix, T3 ptA0, T3 ptB0, T3 ptC0, boolean twoSided);
   
   
   private int nText;

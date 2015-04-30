@@ -548,10 +548,8 @@ public class Export3D implements JmolRendererInterface {
     // from Draw arrow and NucleicMonomer
     if (diameter <= 0)
       return;
-    if (!exporter.isCartesian) {
-      ptA.set(pointA.x, pointA.y, pointA.z);
-      ptB.set(pointB.x, pointB.y, pointB.z);
-    }
+    ptA.set(pointA.x, pointA.y, pointA.z);
+    ptB.set(pointB.x, pointB.y, pointB.z);
     exporter.fillCylinderScreen(colix, endcaps, diameter, ptA, ptB, pt0f, pt1f,
         radius);
   }
@@ -651,7 +649,7 @@ public class Export3D implements JmolRendererInterface {
       // shouldn't be here, because that uses renderIsosurface
       return;
     }
-    exporter.fillTriangle(colixA, pA, pB, pC, false, false);
+    exporter.fillTriangle(colixA, pA, pB, pC, false);
   }
 
   @Override
@@ -666,7 +664,7 @@ public class Export3D implements JmolRendererInterface {
     ptA.set(pointA.x, pointA.y, pointA.z);
     ptB.set(pointB.x, pointB.y, pointB.z);
     ptC.set(pointC.x, pointC.y, pointC.z);
-    exporter.fillTriangle(colixA, ptA, ptB, ptC, false, false);
+    exporter.fillTriangle(colixA, ptA, ptB, ptC, false);
   }
 
   @Override
@@ -678,27 +676,23 @@ public class Export3D implements JmolRendererInterface {
     ptA.set(xpointA, ypointA, zpointA);
     ptB.set(xpointB, ypointB, zpointB);
     ptC.set(xpointC, ypointC, zpointC);
-    exporter.fillTriangle(colix, ptA, ptB, ptC, true, false);
+    exporter.fillTriangle(colix, ptA, ptB, ptC, true);
   }
 
   @Override
   public void fillTriangle3f(P3 pointA, P3 pointB, P3 pointC, boolean setNoisy) {
     // rockets
-    exporter.fillTriangle(colix, pointA, pointB, pointC, false, false);
+    exporter.fillTriangle(colix, pointA, pointB, pointC, false);
   }
 
   @Override
   public void fillTriangle3i(P3i screenA, P3i screenB, P3i screenC, T3 ptA0,
                              T3 ptB0, T3 ptC0, boolean doShade) {
     // cartoon only, for nucleic acid bases
-    if (exporter.isCartesian) {
-      exporter.fillTriangle(colix, ptA0, ptB0, ptC0, true, true);
-    } else {
       ptA.set(screenA.x, screenA.y, screenA.z);
       ptB.set(screenB.x, screenB.y, screenB.z);
       ptC.set(screenC.x, screenC.y, screenC.z);
-      exporter.fillTriangle(colix, ptA, ptB, ptC, true, false);
-    }
+      exporter.fillTriangle(colix, ptA, ptB, ptC, true);
   }
 
   /*
@@ -728,20 +722,14 @@ public class Export3D implements JmolRendererInterface {
   @Override
   public void fillQuadrilateral(P3 pointA, P3 pointB, P3 pointC, P3 pointD) {
     // hermite, rockets, cartoons
-    exporter.fillTriangle(colix, pointA, pointB, pointC, false, false);
-    exporter.fillTriangle(colix, pointA, pointC, pointD, false, false);
+    exporter.fillTriangle(colix, pointA, pointB, pointC, false);
+    exporter.fillTriangle(colix, pointA, pointC, pointD, false);
   }
 
   @Override
   public void drawSurface(MeshSurface meshSurface, short colix) {
     exporter.drawSurface(meshSurface, colix);
   }
-
-//  @Override
-//  public short[] getBgColixes(short[] bgcolixes) {
-//    // 3D exporters cannot do background labels
-//    return exporter.exportType == GData.EXPORT_CARTESIAN ? null : bgcolixes;
-//  }
 
   @Override
   public void fillEllipsoid(P3 center, P3[] points, int x, int y, int z,

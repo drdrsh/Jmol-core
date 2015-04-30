@@ -1149,7 +1149,6 @@ public class TransformManager {
    * This method returns data needed by the VRML, X3D, and IDTF/U3D exporters.
    * It also should serve as a valuable resource for anyone adapting Jmol and
    * wanting to know how the Jmol 11+ camera business works.
-   * 
    * @return a set of camera data
    */
   public P3[] getCameraFactors() {

@@ -1610,29 +1610,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
   }
 
-  void plotPixelsClipped(int argb, int count, int x, int y, int z, int width,
-                         int height, int[] zbuf, Pixelator p) {
-    // for circle only; i.e. halo 
-    // simple Z/window clip
-    if (y < 0 || y >= height || x >= width)
-      return;
-    if (x < 0) {
-      count += x; // x is negative, so this is subtracting -x
-      x = 0;
-    }
-    if (count + x > width)
-      count = width - x;
-    if (count <= 0)
-      return;
-    int offsetPbuf = y * width + x;
-    int offsetMax = offsetPbuf + count;
-    while (offsetPbuf < offsetMax) {
-      if (z < zbuf[offsetPbuf])
-        p.addPixel(offsetPbuf, z, argb);
-      offsetPbuf++;// += step;
-    }
-  }
-
   void plotPixelsClippedRaster(int count, int x, int y, int zAtLeft,
                                int zPastRight, Rgb16 rgb16Left, Rgb16 rgb16Right) {
     // cylinder3d.renderFlatEndcap, triangle3d.fillRaster

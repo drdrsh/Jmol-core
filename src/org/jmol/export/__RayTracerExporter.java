@@ -26,8 +26,11 @@
 package org.jmol.export;
 
 
+import java.util.Map;
+
 import org.jmol.modelset.Atom;
 import org.jmol.util.GData;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.M3;
 import javajs.util.M4;
@@ -45,12 +48,32 @@ abstract class __RayTracerExporter extends ___Exporter {
 
   protected boolean isSlabEnabled;
   protected int minScreenDimension;
+  protected boolean wasPerspective;
   
   public __RayTracerExporter() {
     exportType = GData.EXPORT_RAYTRACER;
     lineWidthMad = 2;
   }
 
+  @Override
+  protected boolean initOutput(Viewer vwr, double privateKey, GData g3d,
+                               Map<String, Object> params) {
+    wasPerspective = vwr.tm.perspectiveDepth;
+    if (super.initOutput(vwr, privateKey, g3d, params)) {
+      vwr.tm.perspectiveDepth = false;
+      if (wasPerspective)
+        vwr.shm.finalizeAtoms(null, null);
+      return true;
+    }
+    return false; 
+  }
+    
+  @Override
+  protected String finalizeOutput2() {
+    vwr.tm.perspectiveDepth = wasPerspective;
+    return super.finalizeOutput2();    
+  }
+  
   @Override
   protected void outputVertex(T3 pt, T3 offset) {
     setTempVertex(pt, offset, tempP1);
@@ -196,11 +219,11 @@ abstract class __RayTracerExporter extends ___Exporter {
   @Override
   void fillCylinderScreenMad(short colix, byte endcaps, int diameter, 
                                P3 screenA, P3 screenB) {
-    float radius = diameter / 2f;
-    if (radius == 0)
+    if (diameter == 0)
       return;
-    if (radius < 1)
-      radius = 1;
+    if (diameter < 1)
+      diameter = 1;
+    float radius = diameter / 2f;
     if (screenA.distance(screenB) == 0) {
       outputSphere(screenA.x, screenA.y, screenA.z, radius, colix);
       return;
@@ -226,7 +249,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   }
   
   @Override
-  protected void fillTriangle(short colix, T3 ptA, T3 ptB, T3 ptC, boolean twoSided, boolean isCartesian) {
+  protected void fillTriangle(short colix, T3 ptA, T3 ptB, T3 ptC, boolean twoSided) {
     outputTriangle(ptA, ptB, ptC, colix);
   }
 

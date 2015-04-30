@@ -48,7 +48,6 @@ import org.jmol.viewer.Viewer;
 
 public class _TachyonExporter extends __RayTracerExporter {
 
-  boolean wasPerspectiveDepth;
   String lighting;
   String phong;
   
@@ -60,8 +59,6 @@ public class _TachyonExporter extends __RayTracerExporter {
  
   @Override
   boolean initializeOutput(Viewer vwr, double privateKey, GData gdata, Map<String, Object> params) {
-    //wasPerspectiveDepth = vwr.getPerspectiveDepth();
-    //vwr.setPerspectiveDepth(false);
     getLightingInfo();
     return initOutput(vwr, privateKey, gdata, params);    
   }

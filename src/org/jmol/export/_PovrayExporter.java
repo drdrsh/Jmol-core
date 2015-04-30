@@ -44,10 +44,23 @@ import org.jmol.viewer.Viewer;
  * Jmol 11.3.30
  * Oct 2008
  * 
+ * Note added by Bob Hanson 4/30/2015
+ * 
+ * Previously we were just writing the exact perspective scene from Jmol
+ * using an orthographic camera. However, the problem with z not being linear
+ * in this mode caused both Jmol and POV-Ray to incorrectly place the z value
+ * of pixels, which was particularly noticeable for large triangles.
+ * (See org.jmol.g3d/PrecisionRenderer.java) 
+ * 
+ *  The solution is to temporarily set the Jmol renderer to orthographic mode after
+ *  getting the needed constants.
+ * 
  */
 
 public class _PovrayExporter extends __RayTracerExporter {
   
+  private String perspective;
+
   public _PovrayExporter() {
     commentChar = "// ";
   }
@@ -60,6 +73,7 @@ public class _PovrayExporter extends __RayTracerExporter {
 
   @Override
   protected void outputHeader() {
+    perspective = getJmolPerspective();
     initVars();
     output("// ******************************************************\n");
     output("// Created by Jmol " + Viewer.getJmolVersion() + "\n");
@@ -67,10 +81,12 @@ public class _PovrayExporter extends __RayTracerExporter {
     output("// This script was generated on " + getExportDate() + "\n");
     output("// ******************************************************\n");
     try {
-    output(vwr.getWrappedStateScript());
+      output(vwr.getWrappedStateScript());
     } catch (Exception e) {
       // tough luck
     }
+    output("\n");
+     output(perspective);
     output("\n");
     output("// ******************************************************\n");
     output("// Declare the resolution, camera, and light sources.\n");
@@ -86,29 +102,39 @@ public class _PovrayExporter extends __RayTracerExporter {
     output("#declare showBonds = true;\n");
     output("#declare noShadows = true;\n");
     output("camera{\n");
-    output("  orthographic\n");
-    output("  location < " + screenWidth / 2f + ", " + screenHeight / 2f
-        + ", 0>\n" + "\n");
-    output("  // Negative right for a right hand coordinate system.\n");
-    output("\n");
+    float offsetX, offsetY, f;
+    if (wasPerspective) {
+      offsetX = vwr.tm.getTranslationXPercent() / 100 * screenWidth;
+      offsetY = vwr.tm.getTranslationYPercent() / 100 * screenHeight;
+      f = 1f/vwr.tm.getPerspectiveFactor(2500);
+      output("  perspective\n");
+      output("  angle " + aperatureAngle + "\n");
+      output("  right < " + screenWidth + ", 0, 0>\n");
+      output("  up < 0, " + -screenHeight + ", 0 >\n");
+    } else {
+      offsetX = offsetY = f = 0;
+      output("  orthographic\n");
+      output("  right < " + -screenWidth + ", 0, 0>\n");
+      output("  up < 0, " + screenHeight + ", 0 >\n");
+    }
     output("  sky < 0, -1, 0 >\n");
-    output("  right < -" + screenWidth + ", 0, 0>\n");
-    output("  up < 0, " + screenHeight + ", 0 >\n");
-    output("  look_at < " + screenWidth / 2f + ", " + screenHeight / 2f
+    output("  location < " + (screenWidth / 2f + offsetX) + ", " + (screenHeight / 2f + offsetY)
+        + ", 0>\n");
+    output("  look_at < " + (screenWidth / 2f + f * offsetX) + ", " + (screenHeight / 2f + f * offsetY)
         + ", 1000 >\n");
     output("}\n");
     output("\n");
 
-    output("background { color rgb <" + 
-        rgbFractionalFromColix(backgroundColix)
+    output("background { color rgb <" + rgbFractionalFromColix(backgroundColix)
         + "> }\n");
     output("\n");
 
     // light source
 
     float distance = Math.max(screenWidth, screenHeight);
-    output("light_source { <" + lightSource.x * distance + "," + lightSource.y * distance
-        + ", " + (-1 * lightSource.z * distance) + "> " + " rgb <0.6,0.6,0.6> }\n");
+    output("light_source { <" + lightSource.x * distance + "," + lightSource.y
+        * distance + ", " + (-1 * lightSource.z * distance) + "> "
+        + " rgb <0.6,0.6,0.6> }\n");
     output("\n");
     output("\n");
 

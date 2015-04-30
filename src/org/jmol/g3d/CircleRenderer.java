@@ -155,13 +155,13 @@ public final class CircleRenderer implements G3DRenderer {
     Pixelator p = g.pixel;
 
     while (x >= y) {
-      g.plotPixelsClipped(c, 2 * x + 1 - sizeCorrection, xCenter - x, yCenter
+      plotPixelsClipped(c, 2 * x + 1 - sizeCorrection, xCenter - x, yCenter
           + y - sizeCorrection, zCenter, width, height, zbuf, p);
-      g.plotPixelsClipped(c, 2 * x + 1 - sizeCorrection, xCenter - x, yCenter
+      plotPixelsClipped(c, 2 * x + 1 - sizeCorrection, xCenter - x, yCenter
           - y, zCenter, width, height, zbuf, p);
-      g.plotPixelsClipped(c, 2 * y + 1 - sizeCorrection, xCenter - y, yCenter
+      plotPixelsClipped(c, 2 * y + 1 - sizeCorrection, xCenter - y, yCenter
           + x - sizeCorrection, zCenter, width, height, zbuf, p);
-      g.plotPixelsClipped(c, 2 * y + 1 - sizeCorrection, xCenter - y, yCenter
+      plotPixelsClipped(c, 2 * y + 1 - sizeCorrection, xCenter - y, yCenter
           - x, zCenter, width, height, zbuf, p);
       ++y;
       radiusError += yChange;
@@ -171,6 +171,29 @@ public final class CircleRenderer implements G3DRenderer {
         radiusError += xChange;
         xChange += 2;
       }
+    }
+  }
+
+  private void plotPixelsClipped(int argb, int count, int x, int y, int z, int width,
+                         int height, int[] zbuf, Pixelator p) {
+    // for circle only; i.e. halo 
+    // simple Z/window clip
+    if (y < 0 || y >= height || x >= width)
+      return;
+    if (x < 0) {
+      count += x; // x is negative, so this is subtracting -x
+      x = 0;
+    }
+    if (count + x > width)
+      count = width - x;
+    if (count <= 0)
+      return;
+    int offsetPbuf = y * width + x;
+    int offsetMax = offsetPbuf + count;
+    while (offsetPbuf < offsetMax) {
+      if (z < zbuf[offsetPbuf])
+        p.addPixel(offsetPbuf, z, argb);
+      offsetPbuf++;// += step;
     }
   }
 
