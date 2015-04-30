@@ -59,8 +59,6 @@ import org.jmol.viewer.Viewer;
 
 public class _PovrayExporter extends __RayTracerExporter {
   
-  private String perspective;
-
   public _PovrayExporter() {
     commentChar = "// ";
   }
@@ -73,7 +71,6 @@ public class _PovrayExporter extends __RayTracerExporter {
 
   @Override
   protected void outputHeader() {
-    perspective = getJmolPerspective();
     initVars();
     output("// ******************************************************\n");
     output("// Created by Jmol " + Viewer.getJmolVersion() + "\n");
@@ -86,7 +83,7 @@ public class _PovrayExporter extends __RayTracerExporter {
       // tough luck
     }
     output("\n");
-     output(perspective);
+     output(getJmolPerspective());
     output("\n");
     output("// ******************************************************\n");
     output("// Declare the resolution, camera, and light sources.\n");
@@ -106,7 +103,8 @@ public class _PovrayExporter extends __RayTracerExporter {
     if (wasPerspective) {
       offsetX = vwr.tm.getTranslationXPercent() / 100 * screenWidth;
       offsetY = vwr.tm.getTranslationYPercent() / 100 * screenHeight;
-      f = 1f/vwr.tm.getPerspectiveFactor(2500);
+      // factor for 50% depth -- not quite right around the edges, perhaps
+      f = 1f/vwr.tm.getPerspectiveFactor((vwr.tm.getCameraDepth() + 0.5f) * vwr.getScreenDim());
       output("  perspective\n");
       output("  angle " + aperatureAngle + "\n");
       output("  right < " + screenWidth + ", 0, 0>\n");
