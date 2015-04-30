@@ -8359,9 +8359,9 @@ public class ScriptEval extends ScriptExpr {
           getToken(index);
           isTranslucent = (theTok == T.translucent);
           if (isTranslucent || theTok == T.opaque) {
-            translucency = paramAsStr(index);
-            if (isTranslucent && isFloatParameter(index + 1))
-              translucentLevel = getTranslucentLevel(++index);
+            translucency = paramAsStr(index++);
+            if (isTranslucent && isFloatParameter(index))
+              translucentLevel = getTranslucentLevel(index++);
           }
         }
         if (isColorParam(index)) {

@@ -104,6 +104,7 @@ public class DrawRenderer extends MeshRenderer {
 
   @Override
   protected void render2(boolean isExport) {
+    isPrecision = vwr.tm.perspectiveDepth;
     drawType = dmesh.drawType;
     diameter = dmesh.diameter;
     width = dmesh.width;
