@@ -1488,7 +1488,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
                                   short colixB, short normixB, P3 screenC, short colixC,
                                   short normixC) {
     // mesh, isosurface
-    System.out.println("G3D fillT " + screenA + " " + screenB + " " + screenC);
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
         checkGouraud(colixA, colixB, colixC, normixA, normixB, normixC));
   }
