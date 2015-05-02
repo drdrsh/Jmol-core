@@ -1263,13 +1263,14 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   @Override
   public void drawLineBits(short colixA, short colixB, P3 pointA, P3 pointB) {
+    // drawQuadBits, drawTriangleBits
     if (!setC(colixA))
       colixA = 0;
     int argbA = argbCurrent;
     if (!setC(colixB))
       colixB = 0;
     if (colixA != 0 || colixB != 0)
-      line3d.plotLineClippedBits(argbA, argbCurrent, pointA, pointB, true, 0, 0);
+      line3d.plotLineBits(argbA, argbCurrent, pointA, pointB);
   }
 
   @Override

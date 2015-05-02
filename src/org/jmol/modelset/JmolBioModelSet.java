@@ -54,9 +54,6 @@ public interface JmolBioModelSet {
 
   int getBioPolymerCountInModel(int modelIndex);
 
-  void getConformations(int modelIndex, int conformationIndex,
-                               boolean doSet, BS bsAtoms, BS bsRet);
-
   String getFullProteinStructureState(BS bsAtoms, int mode);
 
   BS getIdentifierOrNull(String identifier);

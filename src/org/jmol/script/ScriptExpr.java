@@ -1771,7 +1771,7 @@ abstract class ScriptExpr extends ScriptParam {
           T3 t = atom.atomPropertyTuple(vwr, tok, ptTemp);
           switch (minmaxtype) {
           case T.allfloat:
-            fout[i] = (pt == null ? -1 : t.length());
+            fout[i] = (pt == null ? -1 : t == null ? 0 : t.length());
             break;
           case T.all:
             vout.addLast(t == null ? Integer.valueOf(-1) : P3.newP(t));

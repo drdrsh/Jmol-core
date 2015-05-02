@@ -2170,7 +2170,7 @@ abstract public class AtomCollection {
       }
       return bs;
     case T.spec_alternate:
-      // could be PDB type file with UNK
+      // could be PDB type file with UNK or a modulated CIF file subsystem
       String spec = (String) specInfo;
       for (int i = ac; --i >= 0;)
         if (isAltLoc(at[i].altloc, spec))

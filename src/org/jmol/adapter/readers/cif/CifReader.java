@@ -193,7 +193,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (key.startsWith("loop_")) {
       if (skipping) {
         parser.getTokenPeeked();
-        parser.skipLoop();
+        parser.skipLoop(false);
       } else {
         processLoopBlock();
       }
@@ -680,7 +680,7 @@ public class CifReader extends AtomSetCollectionReader {
       case 0:
         break;
       case -1:
-        parser.skipLoop();
+        parser.skipLoop(false);
         //$FALL-THROUGH$
       case 1:
         return;
@@ -700,7 +700,7 @@ public class CifReader extends AtomSetCollectionReader {
         || key.startsWith("_symmetry_ssg_equiv")) {
       if (ignoreFileSymmetryOperators) {
         Logger.warn("ignoring file-based symmetry operators");
-        parser.skipLoop();
+        parser.skipLoop(false);
       } else {
         processSymmetryOperationsLoopBlock();
       }
@@ -724,7 +724,7 @@ public class CifReader extends AtomSetCollectionReader {
       addMore();
       return;
     }
-    parser.skipLoop();
+    parser.skipLoop(false);
   }
 
   protected boolean processSubclassLoopBlock() throws Exception {
@@ -827,7 +827,7 @@ public class CifReader extends AtomSetCollectionReader {
     parseLoopParameters(atomTypeFields);
     for (int i = propertyCount; --i >= 0;)
       if (fieldOf[i] == NONE) {
-        parser.skipLoop();
+        parser.skipLoop(false);
         return;
       }
 
@@ -1014,7 +1014,7 @@ public class CifReader extends AtomSetCollectionReader {
       // no coordinates, but valuable information
     } else {
       // it is a different kind of _atom_site loop block
-      parser.skipLoop();
+      parser.skipLoop(false);
       return false;
     }
     int modelField = fieldOf[MODEL_NO];
@@ -1025,7 +1025,7 @@ public class CifReader extends AtomSetCollectionReader {
           int modelNo = parseIntStr(field);
           if (modelNo != currentModelNo) {
             if (iHaveDesiredModel && asc.atomSetCount > 0) {
-              parser.skipLoop();
+              parser.skipLoop(false);
               // but only this atom loop
               skipping = false;
               continuing = true;
@@ -1451,7 +1451,7 @@ public class CifReader extends AtomSetCollectionReader {
         break;
     if (n < 0) {
       Logger.warn("required " + FAMILY_SGOP + " key not found");
-      parser.skipLoop();
+      parser.skipLoop(false);
       return;
     }
     n = 0;
@@ -1556,7 +1556,7 @@ public class CifReader extends AtomSetCollectionReader {
     for (int i = propertyCount; --i >= 0;)
       if (propertyOf[i] != CCDC_GEOM_BOND_TYPE && fieldOf[i] == NONE) {
         Logger.warn("?que? missing property: " + geomBondFields[i]);
-        parser.skipLoop();
+        parser.skipLoop(false);
         return;
       }
 

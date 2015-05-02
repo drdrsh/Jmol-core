@@ -38,7 +38,7 @@ public interface GenericCifDataParser {
 
   String toUnicode(String data);
 
-  void skipLoop() throws Exception;
+  String skipLoop(boolean doReport) throws Exception;
 
   String fixKey(String key);
 

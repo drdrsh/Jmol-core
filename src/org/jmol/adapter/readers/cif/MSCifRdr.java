@@ -165,15 +165,15 @@ public class MSCifRdr extends MSRdr {
     "*_displace_fourier_param_sin", // 15
     "*_displace_fourier_param_modulus", 
     "*_displace_fourier_param_phase", 
-    "*_displace_special_func_atom_site_label", 
-    "*_displace_special_func_sawtooth_ax", // 25 
+    "*_displace_special_func_atom_site_label", // 18 
+    "*_displace_special_func_sawtooth_ax", 
     "*_displace_special_func_sawtooth_ay", 
     "*_displace_special_func_sawtooth_az", 
     "*_displace_special_func_sawtooth_c", 
     "*_displace_special_func_sawtooth_w", 
     "*_occ_fourier_atom_site_label", 
     "*_occ_fourier_wave_vector_seq_id", 
-    "*_occ_fourier_param_cos", // 20
+    "*_occ_fourier_param_cos", // 26
     "*_occ_fourier_param_sin",
     "*_occ_fourier_param_modulus", 
     "*_occ_fourier_param_phase", 
@@ -271,11 +271,17 @@ public class MSCifRdr extends MSRdr {
    */
   public int processLoopBlock() throws Exception {
     CifReader cr = (CifReader) this.cr;
-    if (cr.key.equals("_cell_subsystem_code"))
+    String key = cr.key;
+    if (key.equals("_cell_subsystem_code"))
       return processSubsystemLoopBlock();
-    if (!cr.key.startsWith("_cell_wave") && !cr.key.contains("fourier")
-        && !cr.key.contains("legendre") && !cr.key.contains("_special_func"))
+    
+    if (!key.startsWith("_cell_wave") && !key.contains("fourier")
+        && !key.contains("legendre") && !key.contains("_special_func")) {
+      if (key.contains("crenel_ortho"))
+        cr.appendLoadNote("WARNING: Orthogonalized non-Legendre functions not supported.\nThe following block has been ignored. Use Legendre functions instead.\n\n" 
+            + cr.parser.skipLoop(true) + "=================================\n");
       return 0;
+    }
     if (cr.asc.iSet < 0)
       cr.asc.newAtomSet();
     cr.parseLoopParametersFor(CifReader.FAMILY_ATOM, modulationFields);
@@ -341,35 +347,38 @@ public class MSCifRdr extends MSRdr {
           type_id += field;
           break;
         case JANA_OCC_ABS_LABEL:
-          if (type_id == null)
-            type_id = "J_O";
+          type_id = "J_O";
           pt[0] = pt[2] = 1;
-          //$FALL-THROUGH$
-        case OCC_SPECIAL_LABEL:
-          if (type_id == null)
-            type_id = "O_0";
           axis = "0";
-          //$FALL-THROUGH$
+          atomLabel = field;
+          break;
+        case OCC_SPECIAL_LABEL:
+          type_id = "O_0";
+          axis = "0";
+          atomLabel = field;
+          break;
         case DISP_SPEC_LABEL:
-          if (type_id == null)
-            type_id = "D_S";
-          //$FALL-THROUGH$
-        case LEG_DISP_LABEL:
-          if (type_id == null)
-            type_id = "D_L";
-          //$FALL-THROUGH$
-        case LEG_U_LABEL:
-          if (type_id == null)
-            type_id = "U_L";
-          //$FALL-THROUGH$
-        case LEG_OCC_LABEL:
-          if (type_id == null)
-            type_id = "O_L";
-          //$FALL-THROUGH$
+          type_id = "D_S";
+          axis = "0";
+          atomLabel = field;
+          break;
         case SPIN_SPEC_LABEL:
-          if (type_id == null)
-            type_id = "M_T";
-          //$FALL-THROUGH$
+          type_id = "M_T";
+          axis = "0";
+          atomLabel = field;
+          break;
+        case LEG_DISP_LABEL:
+          type_id = "D_L";
+          atomLabel = field;
+          break;
+        case LEG_U_LABEL:
+          type_id = "U_L";
+          atomLabel = field;
+          break;
+        case LEG_OCC_LABEL:
+          type_id = "O_L";
+          atomLabel = field;
+          break;
         case FWV_DISP_LABEL:
         case FWV_OCC_LABEL:
         case FWV_SPIN_LABEL:
@@ -481,6 +490,7 @@ public class MSCifRdr extends MSRdr {
       if (!ok)
         continue;
       switch (type_id.charAt(0)) {
+      case 'C':
       case 'D':
       case 'O':
       case 'M':

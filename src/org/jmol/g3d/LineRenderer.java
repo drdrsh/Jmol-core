@@ -419,28 +419,41 @@ final class LineRenderer extends PrecisionRenderer {
     }
   }
 
-  void plotDashedLineBits(int argb, int run, int rise, P3 ptA, P3 ptB) {
-    // measures, axes, bbcage only    
-    boolean clipped = true;
+  void plotLineBits(int argbA, int argbB, P3 ptA, P3 ptB) {
     if (ptA.z <= 1 || ptB.z <= 1)
       return;
-    if (clipped)
-      switch (getTrimmedLineBits(ptA, ptB)) {
-      case VISIBILITY_OFFSCREEN:
-        return;
-      case VISIBILITY_UNCLIPPED:
-        clipped = false;
-        break;
-      default:
-        if (ptAtrimmed == null) {
-          ptAtrimmed = new P3();
-          ptBtrimmed = new P3();
-        }
-        ptAtrimmed.set(x1t, y1t, z1t);
-        ptBtrimmed.set(x2t, y2t, z2t);
-        ptA = ptAtrimmed;
-        ptB = ptBtrimmed;
+    boolean clipped = true;
+    switch (getTrimmedLineBits(ptA, ptB)) {
+    case VISIBILITY_OFFSCREEN:
+      return;
+    case VISIBILITY_UNCLIPPED:
+      clipped = false;
+      break;
+    }
+    plotLineClippedBits(argbA, argbB, ptA, ptB, clipped, 0, 0);
+  }
+
+  void plotDashedLineBits(int argb, int run, int rise, P3 ptA, P3 ptB) {
+    // measures, axes, bbcage only    
+    if (ptA.z <= 1 || ptB.z <= 1)
+      return;
+    boolean clipped = true;
+    switch (getTrimmedLineBits(ptA, ptB)) {
+    case VISIBILITY_OFFSCREEN:
+      return;
+    case VISIBILITY_UNCLIPPED:
+      clipped = false;
+      break;
+    default:
+      if (ptAtrimmed == null) {
+        ptAtrimmed = new P3();
+        ptBtrimmed = new P3();
       }
+      ptAtrimmed.set(x1t, y1t, z1t);
+      ptBtrimmed.set(x2t, y2t, z2t);
+      ptA = ptAtrimmed;
+      ptB = ptBtrimmed;
+    }
     plotLineClippedBits(argb, argb, ptA, ptB, clipped, run, rise);
   }
 
@@ -669,7 +682,7 @@ final class LineRenderer extends PrecisionRenderer {
     }
   }
 
-  void plotLineClippedBits(int argb1, int argb2, P3 ptA, P3 ptB, boolean clipped, int run,
+  private void plotLineClippedBits(int argb1, int argb2, P3 ptA, P3 ptB, boolean clipped, int run,
                                int rise) {
     // standard, dashed or not dashed -- isosurface mesh
     int[] zbuf = g3d.zbuf;
@@ -683,7 +696,9 @@ final class LineRenderer extends PrecisionRenderer {
     int y = (int) ptA.y;
     int z = (int) ptA.z;
     int dx = (int) ptB.x - x;
+    int x2 = x + dx;
     int dy = (int) ptB.y - y;
+    int y2 = y + dy;
     int offset = y * width + x;
     int offsetMax = g3d.bufferSize;
     //boolean flipflop = (((x ^ y) & 1) != 0);
@@ -716,8 +731,8 @@ final class LineRenderer extends PrecisionRenderer {
       // using x
       setRastAB(ptA.x, ptA.z, ptB.x, ptB.z);
       int twoDxAccumulatedYError = 0;
-      int n1 = Math.abs(x + dx - x2t) - 1;
-      int n2 = Math.abs(x + dx - x1t) - 1;
+      int n1 = Math.abs(x2 - x2t) - 1;
+      int n2 = Math.abs(x2 - x1t) - 1;
       for (int n = dx - 1, nMid = n / 2; --n >= n1;) {
         if (n == nMid) {
           argb = argb2;
@@ -743,8 +758,8 @@ final class LineRenderer extends PrecisionRenderer {
       // using y
       setRastAB(ptA.y, ptA.z, ptB.y, ptB.z);
       int twoDyAccumulatedXError = 0;
-      int n1 = Math.abs(y + dy - y2t) - 1;
-      int n2 = Math.abs(y + dy - y1t) - 1;
+      int n1 = Math.abs(y2 - y2t) - 1;
+      int n2 = Math.abs(y2 - y1t) - 1;
       for (int n = dy - 1, nMid = n / 2; --n >= n1;) {
         if (n == nMid) {
           argb = argb2;

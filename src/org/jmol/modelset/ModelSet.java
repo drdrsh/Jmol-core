@@ -1446,10 +1446,6 @@ import java.util.Properties;
     return file * 1000000 + model;
   }
 
-  public int getAltLocCountInModel(int modelIndex) {
-    return am[modelIndex].altLocCount;
-  }
-
   public int getChainCountInModelWater(int modelIndex, boolean countWater) {
     if (modelIndex < 0) {
       int chainCount = 0;
@@ -1572,6 +1568,10 @@ import java.util.Properties;
 
   //////////////  individual models ////////////////
 
+  public int getAltLocCountInModel(int modelIndex) {
+    return am[modelIndex].altLocCount;
+  }
+
   public int getAltLocIndexInModel(int modelIndex, char alternateLocationID) {
     if (alternateLocationID == '\0') {
       return 0;
@@ -1616,7 +1616,7 @@ import java.util.Properties;
   public int getLastVibrationVector(int modelIndex, int tok) {
     if (vibrations != null) {
       Vibration v;
-      int a1 = (modelIndex < 0 || modelIndex >= mc - 1 ? ac : am[modelIndex + 1].firstAtomIndex);
+      int a1 = (modelIndex < 0 || isTrajectory(modelIndex) || modelIndex >= mc - 1 ? ac : am[modelIndex + 1].firstAtomIndex);
       int a0 = (modelIndex <= 0 ? 0 : am[modelIndex].firstAtomIndex);
       for (int i = a1; --i >= a0;) {
         if ((modelIndex < 0 || at[i].mi == modelIndex)
@@ -3759,6 +3759,39 @@ import java.util.Properties;
     return v.toArray(new Quat[v.size()]);
   }
 
+  public BS getConformation(int modelIndex, int conformationIndex,
+                            boolean doSet, BS bsAtoms) {
+    BS bs = new BS();
+    for (int i = mc; --i >= 0;)
+      if (i == modelIndex || modelIndex < 0) {
+        if (am[i].isBioModel)
+          ((BioModel) am[i]).getConformation(conformationIndex, doSet, bsAtoms,
+              bs);
+        else if (!doSet)
+          getSubsystem(i, conformationIndex, bsAtoms, bs);
+      }
+    return bs;
+  }
+
+  private void getSubsystem(int modelIndex, int conformationIndex, BS bsAtoms,
+                           BS bs) {
+    BS bsConformation = am[modelIndex].getConformationBS(conformationIndex,
+        bsAtoms);
+    if (bsConformation == null)
+      return;
+    if (conformationIndex >= 0) {
+      int nAltLocs = getAltLocCountInModel(modelIndex);
+      String altLocs = getAltLocListInModel(modelIndex);
+      BS bsTemp = new BS();
+      for (int c = nAltLocs; --c >= 0;)
+        if (c != conformationIndex)
+          bsConformation.andNot(getAtomBitsMDa(T.spec_alternate,
+              altLocs.substring(c, c + 1), bsTemp));
+    }
+    if (bsConformation.nextSetBit(0) >= 0)
+      bs.or(bsConformation);
+  }
+
   ///// bio-only methods /////
   
   public BS getSequenceBits(String specInfo, BS bs) {
@@ -3781,13 +3814,6 @@ import java.util.Properties;
   public void recalculateLeadMidpointsAndWingVectors(int modelIndex) {
     if (haveBioModels)
       bioModelset.recalculatePoints(modelIndex); 
-  }
-
-  public BS getConformation(int modelIndex, int conformationIndex, boolean doSet, BS bsAtoms) {
-    BS bs = new BS();
-    if (haveBioModels)
-      bioModelset.getConformations(modelIndex, conformationIndex, doSet, bsAtoms, bs); 
-    return bs;
   }
 
   /**

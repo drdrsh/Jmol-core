@@ -273,12 +273,24 @@ public class CifDataParser implements GenericCifDataParser {
    * @throws Exception
    */
   @Override
-  public void skipLoop() throws Exception {
+  public String skipLoop(boolean doReport) throws Exception {
     String str;
-    while ((str = peekToken()) != null && str.charAt(0) == '_')
-      getTokenPeeked();
-    while (getNextDataToken() != null) {
+    SB ret = (doReport ? new SB() : null);
+    int n = 0;
+    while ((str = peekToken()) != null && str.charAt(0) == '_') {
+      if (ret != null)
+        ret.append(str).append("\n");
+        getTokenPeeked();
+        n++;
     }
+    int m = 0;
+    while ((str = getNextDataToken()) != null) {
+      if (ret != null)
+        ret.append(str).append(" ");
+      if ((++m % n) == 0)
+        ret.append("\n");
+    }
+    return (ret == null ? null : ret.toString());
   }
 
   /**

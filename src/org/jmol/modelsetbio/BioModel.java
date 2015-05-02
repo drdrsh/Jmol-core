@@ -786,15 +786,6 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     return s;
   }
 
-  @Override
-  public void getConformations(int modelIndex, int conformationIndex,
-                              boolean doSet, BS bsAtoms, BS bsRet) {
-    for (int i = ms.mc; --i >= 0;)
-      if (i == modelIndex || modelIndex < 0)
-        if (ms.am[i].isBioModel)
-        ((BioModel) ms.am[i]).getConformation(conformationIndex, doSet, bsAtoms, bsRet);
-  }
-
   /**
    * @param conformationIndex
    * @param doSet 
@@ -802,21 +793,17 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
    * @param bsSelected
    */
   public void getConformation(int conformationIndex, boolean doSet, BS bsSelected, BS bsRet) {
-    String altLocs = ms.getAltLocListInModel(modelIndex);
-    int nAltLocs = ms.getAltLocCountInModel(modelIndex);
-    if (conformationIndex > 0 && conformationIndex >= nAltLocs)
-      return;
-    BS bsConformation = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-    if (bsSelected != null)
-      bsConformation.and(bsSelected);
-    if (bsConformation.nextSetBit(0) < 0)
+    int nAltLocs = altLocCount;
+    BS bsConformation = getConformationBS(conformationIndex, bsSelected);
+    if (bsConformation == null)
       return;
     if (conformationIndex >= 0) {
       if (nAltLocs > 0)
         for (int i = bioPolymerCount; --i >= 0;)
           bioPolymers[i].getConformation(bsConformation, conformationIndex);
       BS bs = new BS();
-      for (int c = nAltLocs; --c >= 0;)
+      String altLocs = ms.getAltLocListInModel(modelIndex);
+      for (int c = altLocCount; --c >= 0;)
         if (c != conformationIndex)
           bsConformation.andNot(ms.getAtomBitsMDa(T.spec_alternate,
               altLocs.substring(c, c + 1), bs));

@@ -169,6 +169,11 @@ class CylinderRenderer {
   private P3 ptA0, ptB0;
   
   void renderBits(short colixA, short colixB, int screen, byte endcaps, int diameter, P3 ptA, P3 ptB) {
+    Graphics3D g = this.g3d;
+    if (diameter == 0 || diameter == 1) {
+      line3d.plotLineBits(g.getColorArgbOrGray(colixA), g.getColorArgbOrGray(colixB), ptA, ptB);
+      return;
+    }
     if (ptA0 == null) {
       ptA0 = new P3();
       ptB0 = new P3();
@@ -183,7 +188,6 @@ class CylinderRenderer {
     int ixB = Math.round(ptB.x);
     int iyB = Math.round(ptB.y);
     int izB = Math.round(ptB.z);
-    Graphics3D g = this.g3d;
     int codeMinA = g.clipCode3(ixA - r, iyA - r, izA - r);
     int codeMaxA = g.clipCode3(ixA + r, iyA + r, izA + r);
     int codeMinB = g.clipCode3(ixB - r, iyB - r, izB - r);
@@ -198,10 +202,6 @@ class CylinderRenderer {
     dxBf = ptB.x - ptA.x;
     dyBf = ptB.y - ptA.y;
     dzBf = ptB.z - ptA.z;
-    if (diameter == 0 || diameter == 1) {
-      line3d.plotLineClippedBits(g.getColorArgbOrGray(colixA), g.getColorArgbOrGray(colixB), ptA, ptB, clipped, 0, 0);
-      return;
-    }
     if (diameter > 0) {
       this.diameter = diameter;
       this.xAf = ptA.x;
