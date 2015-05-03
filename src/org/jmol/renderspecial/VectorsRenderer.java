@@ -33,6 +33,7 @@ import org.jmol.script.T;
 import org.jmol.shape.Shape;
 import org.jmol.shapespecial.Vectors;
 import org.jmol.util.GData;
+import org.jmol.util.Point3fi;
 
 import javajs.util.P3;
 import javajs.util.P3i;
@@ -43,8 +44,8 @@ public class VectorsRenderer extends ShapeRenderer {
 
   private final static float arrowHeadOffset = -0.2f;
   private final P3 pointVectorStart = new P3();
-  private final P3 ptTemp = new P3();
-  private final P3 pointVectorEnd = new P3();
+  private final Point3fi ptTemp = new Point3fi();
+  private final Point3fi pointVectorEnd = new Point3fi();
   private final P3 pointArrowHead = new P3();
   private final P3i screenVectorStart = new P3i();
   private final P3i screenVectorEnd = new P3i();

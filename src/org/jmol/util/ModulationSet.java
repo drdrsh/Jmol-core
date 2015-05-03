@@ -24,54 +24,164 @@ import javajs.util.V3;
 
 public class ModulationSet extends Vibration implements JmolModulationSet {
 
-  public float vOcc = Float.NaN;
-  public Map<String, Float> htUij;
-  public float vOcc0;
-
+  /**
+   * an identifier for this modulation
+   * 
+   */
   String id;
-
-  private Lst<Modulation> mods;
-  private int iop;
+  
+  /**
+   * the unmodulated original position of this atom;
+   * note that x,y,z extended from Vibration(V3) is the current displacement modulation itself 
+   *
+   */
   private P3 r0;
+
+  
+  /**
+   * the space group appropriate to this atom
+   * 
+   */
+  private SymmetryInterface symmetry;
+
+  /**
+   * unit cell axes -- used in Modulation for calculating magnetic modulations
+   */
+  float[] axesLengths;
+
+  /**
+   * the number of operators in this space group -- needed for occupancy calculation
+   */
+  private int nOps;
+
+  /**
+   * the symmetry operation used to generate this atom
+   */
+  private int iop;
+
+  /**
+   * a string description of the atom's symmetry operator
+   */
+  private String strop;
+
+  /**
+   * the spin operation for this atom: +1/0/-1 
+   */
+  private float spinOp;
+
+  /**
+   * the matrix representation for this atom's symmetry operation
+   * 
+   */
+  private Matrix rsvs;
+
   /**
    * vib is a spin vector when the model has modulation; otherwise an
    * unmodulated vibration.
    * 
    */
   public Vibration vib;
+  
+  /**
+   * the list of all modulations associated with this atom
+   */
+  private Lst<Modulation> mods;
+    
+  /**
+   * subsystems can deliver their own unique unit cell;
+   * they are commensurate
+   * 
+   */
+  private boolean isSubsystem;
+  
+  @Override
+  public SymmetryInterface getSubSystemUnitCell() {
+    return (isSubsystem ? symmetry : null);
+  }
+
+  /**
+   * commensurate modulations cannot be "undone" 
+   * and they cannot be turned off
+   * 
+   */
+  private boolean isCommensurate;
+
+  // parameters necessary for calculating occValue
+  
+  private double fileOcc;
+  private double[] occParams;
+  private double occSiteMultiplicity;
+
+  /**
+   * for Crenels (simple occupational modulation or Legendre displacement modulation, 
+   * the value determined here is absolute (0 or 1), not an adjustment;
+   * set in calculate() by one of the modulations
+   * 
+   */
+  boolean occAbsolute;
+
+  /**
+   * modCalc is used for calculations independent of 
+   * what the current setting is
+   * 
+   */
+  private ModulationSet modCalc;
+
+  /**
+   * the modulated magnetic spin
+   */
   public V3 mxyz;
 
-  private SymmetryInterface symmetry;
-  private M3 gammaE;
-  private Matrix gammaIinv;
-  private Matrix sigma;
-  private Matrix tau;
-
-  private boolean enabled;
-  private float scale = 1;
-
+  /**
+   * current value of anisotropic parameter modulation
+   *  
+   */
+  public Map<String, Float> htUij;
+  
+  /**
+   * the current value of the occupancy modulation
+   */
+  public float vOcc = Float.NaN;
+  
+  /**
+   * final occupancy value -- absolute; in range [0,1]
+   */
+  private float occValue = Float.NaN;
+  
+  // values set in setModTQ
+  
   private P3 qtOffset = new P3();
   private boolean isQ;
 
-  private Matrix rI;
+  /**
+   * indicates state of modulated or unmodulated
+   */
+  private boolean enabled;
 
-  private ModulationSet modTemp;
-  private String strop;
-  private boolean isSubsystem;
+  @Override
+  public boolean isEnabled() {
+    return enabled;
+  }
 
-  private Matrix tFactorInv;
-  private Matrix rsvs;
-  private float spinOp;
+  /**
+   * an adjustable scaling factor, as for vibrations
+   * 
+   */
+  private float scale = 1;
 
   @Override
   public float getScale() {
     return scale;
   }
 
-  @Override
-  public boolean isEnabled() {
-    return enabled;
-  }
+  // generator parameters 
+
+  private M3 gammaE;
+  private Matrix gammaIinv;
+  private Matrix sigma;
+  private Matrix tau;
+  private Matrix rI;
+  private Matrix tFactorInv; // for subsystems
 
   public ModulationSet() {
 
@@ -91,10 +201,12 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    * @param gammaE
    * @param factors
    *        including sigma and tFactor
-   * @param iop
    * @param symmetry
+   * @param iop
+   * @param nOps
    * @param v
    *        TODO
+   * @param isCommensurate TODO
    * @return this
    * 
    * 
@@ -102,8 +214,9 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   public ModulationSet setMod(String id, P3 r00, P3 r0, int d,
                               Lst<Modulation> mods, M3 gammaE,
-                              Matrix[] factors, int iop,
-                              SymmetryInterface symmetry, Vibration v) {
+                              Matrix[] factors, 
+                              SymmetryInterface symmetry, int nOps, int iop, 
+                              Vibration v, boolean isCommensurate) {
 
     // The superspace operation matrix is (3+d+1)x(3+d+1) rotation/translation matrix
     // that can be blocked as follows:
@@ -221,14 +334,16 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     //// need to bring in, sigma and tFactor, and two we need to compute,
     //// GammaIinv and tau.
 
-    this.id = id + "_" + symmetry.getSpaceGroupName();
+    this.id = id;// + "_" + symmetry.getSpaceGroupName();
+    this.symmetry = symmetry;
     strop = symmetry.getSpaceGroupXyz(iop, false);
+    this.iop = iop;
+    this.nOps = nOps;
+    
     this.r0 = r0;
     modDim = d;
     rI = new Matrix(null, d, 1);
     this.mods = mods;
-    this.iop = iop;
-    this.symmetry = symmetry;
     this.gammaE = gammaE; // gammaE_nu, R, the real 3x3 rotation matrix, as M3
     sigma = factors[0];
     if (factors[1] != null) {
@@ -243,6 +358,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       vib = v;
       vib.modScale = 1;
       mxyz = new V3(); // modulations of spin
+      axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz
     }
     Matrix vR00 = Matrix.newT(r00, true);
     Matrix vR0 = Matrix.newT(r0, true);
@@ -261,11 +377,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
           + tau);
 
     return this;
-  }
-
-  @Override
-  public SymmetryInterface getSubSystemUnitCell() {
-    return (isSubsystem ? symmetry : null);
   }
 
   /**
@@ -367,6 +478,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       if (isQ)
         qtOffset = null;
       calculate(qtOffset, isQ);
+      if (!Float.isNaN(vOcc))
+        occValue = getOccupancy();
     }
     if (isOn) {
       addTo(a, 1);
@@ -420,22 +533,24 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public Object getModulation(char type, T3 tuv) {
-    getModTemp();
+    getModCalc();
     switch (type) {
     case 'D':
       // return r0 if t456 is null, otherwise calculate dx,dy,dz for a given t4,5,6
-      return P3.newP(tuv == null ? r0 : modTemp.calculate(tuv, false));
+      return P3.newP(tuv == null ? r0 : modCalc.calculate(tuv, false));
     case 'M':
-      // return r0 if t456 is null, otherwise calculate dx,dy,dz for a given t4,5,6
-      return P3.newP(tuv == null ? v0 : modTemp.calculate(tuv, false).mxyz);
+      // return v0 if t456 is null, otherwise calculate vx,vy,vz for a given t4,5,6
+      return P3.newP(tuv == null ? v0 : modCalc.calculate(tuv, false).mxyz);
     case 'T':
-      modTemp.calculate(tuv, false);
-      double[][] ta = modTemp.rI.getArray();
+      // do a calculation and return the t-value for the first three dimensions of modulation
+      modCalc.calculate(tuv, false);
+      double[][] ta = modCalc.rI.getArray();
       return P3.new3((float) ta[0][0], (modDim > 1 ? (float) ta[1][0] : 0),
           (modDim > 2 ? (float) ta[2][0] : 0));
     case 'O':
-      // return vOcc current or calculated
-      return Float.valueOf((tuv == null ? vOcc : modTemp.calculate(tuv, false).vOcc) * 100);
+      // return the currently modulated or calculated occupation on [0,100]
+      return Float.valueOf(Math.abs(tuv == null ? getOccupancy100(false)
+          : modCalc.calculate(tuv, false).getOccupancy100(false)));
     }
     return null;
   }
@@ -443,35 +558,45 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   P3 ptTemp = new P3();
   private V3 v0;
 
+  /**
+   * get updated value for offset vector and for occupancy
+   */
   @Override
-  public void setTempPoint(T3 a, T3 t456, float vibScale, float scale) {
-    if (!enabled)
-      return;
-    getModTemp();
-    addTo(a, Float.NaN);
-    modTemp.calculate(t456, false).addTo(a, scale);
+  public T3 setCalcPoint(T3 pt, T3 t456, float vibScale, float scale) {
+    if (enabled) {
+      addTo(pt, Float.NaN);
+      getModCalc().calculate(t456, false).addTo(pt, scale);
+      //System.out.println("MS setTempPoint " + id + " v=" + vOcc);
+      // note: this does not include setting occValue
+    }
+    return pt;
   }
 
-  private void getModTemp() {
-    if (modTemp == null) {
-      modTemp = new ModulationSet();
-      modTemp.id = id;
-      modTemp.tau = tau;
-      modTemp.spinOp = spinOp;
-      modTemp.mods = mods;
-      modTemp.gammaE = gammaE;
-      modTemp.modDim = modDim;
-      modTemp.gammaIinv = gammaIinv;
-      modTemp.sigma = sigma;
-      modTemp.r0 = r0;
-      modTemp.v0 = v0;
-      modTemp.vib = vib;
-      modTemp.symmetry = symmetry;
-      modTemp.rI = rI;
-      if (mxyz != null) {
-        modTemp.mxyz = new V3();
-      }
+  private ModulationSet getModCalc() {
+    if (modCalc == null) {
+      modCalc = new ModulationSet();
+      modCalc.id = id;
+      modCalc.tau = tau;
+      modCalc.spinOp = spinOp;
+      modCalc.mods = mods;
+      modCalc.gammaE = gammaE;
+      modCalc.modDim = modDim;
+      modCalc.gammaIinv = gammaIinv;
+      modCalc.sigma = sigma;
+      modCalc.r0 = r0;
+      modCalc.v0 = v0;
+      modCalc.vib = vib;
+      modCalc.symmetry = symmetry;
+      modCalc.rI = rI;
+      modCalc.fileOcc = fileOcc;
+      modCalc.occParams = occParams;
+      modCalc.occSiteMultiplicity = occSiteMultiplicity;
+      modCalc.nOps = nOps;
+      modCalc.enabled = true;
+      if (mxyz != null)
+        modCalc.mxyz = new V3();
     }
+    return modCalc;
   }
 
   @Override
@@ -548,11 +673,60 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
         && (mxyz.x != 0 || mxyz.y != 0 || mxyz.z != 0);
   }
 
-  private float[] axesLengths;
-
-  float[] getAxesLengths() {
-    return (axesLengths == null ? (axesLengths = symmetry.getUnitCellParams())
-        : axesLengths);
+  /**
+   * 
+   * get the occupancy, first from the reader, then from renderer
+   * 
+   * @param pt
+   * @param foccupancy
+   * @param siteMult or 0 is this is not relevant
+   * 
+   * @return occupancy on [0,1]
+   */
+  public float setOccupancy(double[] pt, double foccupancy,
+                            double siteMult) {
+    occParams = pt;
+    fileOcc = foccupancy;
+    occSiteMultiplicity = siteMult;
+    return getOccupancy();
   }
+  
+  @Override
+  public int getOccupancy100(boolean isTemp) {
+    if (isCommensurate || Float.isNaN(vOcc))
+      return Integer.MIN_VALUE;
+    if (!isTemp && !enabled)
+      return (int) (-fileOcc * 100);
+    if (isTemp && modCalc != null) {
+      modCalc.getOccupancy();
+      return modCalc.getOccupancy100(false);
+    }
+    return (int) (occValue * 100);
+  }
+
+  private float getOccupancy() {
+    double occ;
+    if (occAbsolute) {
+      // Crenel
+      occ = vOcc;
+    } else if (occParams == null) {
+      // cif Fourier
+      // _atom_site_occupancy + SUM
+      occ = fileOcc + vOcc;
+    } else if (occSiteMultiplicity > 0) {
+      // cif with m40 Fourier
+      // occ_site * (occ_0 + SUM)
+      double o_site = fileOcc * occSiteMultiplicity / nOps / occParams[1];
+      occ = o_site * (occParams[1] + vOcc);
+    } else {
+      // m40 Fourier
+      // occ_site * (occ_0 + SUM)
+      occ = occParams[0] * (occParams[1] + vOcc);
+    }
+    // 49/50 is an important range for cutoffs -- we never return a value in this range
+    occ = (occ > 0.49 && occ < 0.50 ? 0.489 : Math.min(1, Math.max(0, occ)));
+    return occValue = (float) occ;
+  }
+
 
 }

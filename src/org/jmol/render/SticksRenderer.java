@@ -154,8 +154,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
       }
     }
     if (!isPass2
-        && (!a.isVisible(JC.ATOM_INFRAME_NOTHIDDEN)
-            || !b.isVisible(JC.ATOM_INFRAME_NOTHIDDEN)
+        && (!a.isVisible(Atom.ATOM_INFRAME_NOTHIDDEN)
+            || !b.isVisible(Atom.ATOM_INFRAME_NOTHIDDEN)
             || !g3d.isInDisplayRange(a.sX, a.sY) || !g3d.isInDisplayRange(b.sX,
             b.sY)))
       return false;

@@ -1069,7 +1069,7 @@ public final class ModelLoader {
       int modelIndex = -1;
       SymmetryInterface c = null;
       boolean isFractional = false;
-      boolean roundCoords = !vwr.getBoolean(T.legacyjavafloat);
+      boolean roundCoords = !vwr.g.legacyJavaFloat;
       for (int i = baseAtomIndex; i < ms.ac; i++) {
         if (atoms[i].mi != modelIndex) {
           modelIndex = atoms[i].mi;

@@ -684,7 +684,7 @@ public class Labels extends AtomShape {
     int imin = -1;
     float zmin = Float.MAX_VALUE;
     for (Map.Entry<Integer, float[]> entry : labelBoxes.entrySet()) {
-      if (!atoms[entry.getKey().intValue()].isVisible(vf | JC.ATOM_INFRAME_NOTHIDDEN))
+      if (!atoms[entry.getKey().intValue()].isVisible(vf | Atom.ATOM_INFRAME_NOTHIDDEN))
         continue;
       float[] boxXY = entry.getValue();
       float dx = x - boxXY[0];

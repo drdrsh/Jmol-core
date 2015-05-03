@@ -454,9 +454,11 @@ public class GlobalSettings {
     int smallMoleculeMaxAtoms = 40000;
     boolean smartAromatic = true;
     boolean zeroBasedXyzRasmol = false;
-    public boolean legacyAutoBonding = false;
+    boolean legacyAutoBonding = false;
     public boolean legacyHAddition = false;
-    public boolean legacyJavaFloat = false;
+    public boolean legacyJavaFloat = false; // float/double issue with crystallographic symmetry before Jmol 14.2.5
+
+    boolean modulateOccupancy = true;
 
     //centering and perspective
 

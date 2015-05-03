@@ -355,8 +355,8 @@ public class ShapeManager {
   }
   
   /**
-   * Sets shape visibility flags, including ATOM_VIS_INFRAME
-   * and ATOM_VIS_NOTHIDDEN.
+   * Sets shape visibility flags, including ATOM_VIS_INFRAME and
+   * ATOM_VIS_NOTHIDDEN.
    * 
    */
   void setModelVisibility() {
@@ -372,7 +372,7 @@ public class ShapeManager {
     // so isTranslucent = isTranslucent || f() would NOT work.
 
     BS bs = vwr.getVisibleFramesBitSet();
-    
+
     // i=2 skips balls and sticks
     // as these are handled differently.
 
@@ -381,32 +381,36 @@ public class ShapeManager {
     for (int i = JC.SHAPE_MIN_HAS_SETVIS; i < JC.SHAPE_MAX_HAS_SETVIS; i++)
       if (shapes[i] != null)
         shapes[i].setModelVisibilityFlags(bs);
-    
+
     // now check ATOM_IN_FRAME, and ATOM_NOTHIDDEN, VIS_BALLS_FLAG 
-    
-//    todo: deleted atoms not showing up in state
+
+    //    todo: deleted atoms not showing up in state
     boolean showHydrogens = vwr.getBoolean(T.showhydrogens);
     BS bsDeleted = vwr.slm.bsDeleted;
     Atom[] atoms = ms.at;
-    for (int i = ms.ac; --i >= 0;) {
-      Atom atom = atoms[i];
-      atom.shapeVisibilityFlags &= JC.ATOM_NOFLAGS;
-      if (bsDeleted != null && bsDeleted.get(i) || !showHydrogens
-          && atom.getElementNumber() == 1)
-        continue;
-      if (bs.get(atom.mi)) {
-        int f = JC.ATOM_INFRAME;
-        if (!ms.isAtomHidden(i)) {
-          f |= JC.ATOM_NOTHIDDEN;
-        if (atom.madAtom != 0)
-          f |= JC.VIS_BALLS_FLAG;
-        atom.setShapeVisibility(f, true);
+    ms.clearVisibleSets();
+    if (atoms.length > 0) {
+      for (int i = ms.ac; --i >= 0;) {
+        Atom atom = atoms[i];
+        atom.shapeVisibilityFlags &= Atom.ATOM_NOFLAGS;
+        if (bsDeleted != null && bsDeleted.get(i))
+          continue;
+        if (bs.get(atom.mi)) {
+          int f = Atom.ATOM_INFRAME;
+          if (!ms.isAtomHidden(i)
+              && (showHydrogens || atom.getElementNumber() != 1)) {
+            f |= Atom.ATOM_NOTHIDDEN;
+            if (atom.madAtom != 0)
+              f |= JC.VIS_BALLS_FLAG;
+            atom.setShapeVisibility(f, true);
+          }
         }
       }
     }
+    setShapeVis();
+  }
 
-    ms.clearVisibleSets();
-
+  private void setShapeVis() {
     //set clickability -- this enables measures and such
     for (int i = 0; i < JC.SHAPE_MAX; ++i) {
       Shape shape = shapes[i];
@@ -432,17 +436,19 @@ public class ShapeManager {
       vwr.setAtomCoordsRelative(pt, bsAtoms);
       ptOffset.set(0, 0, 0);
     }
-    ms.getRenderable(bs);
-    Object[] vibrationVectors = ms.vibrations;
+    ms.getAtomsInFrame(bs);
+    Vibration[] vibrationVectors = ms.vibrations;
     boolean vibs = (vibrationVectors != null && tm.vibrationOn);
+    boolean checkOccupancy = (ms.bsModulated != null);
     Atom[] atoms = ms.at;
+    boolean haveMods = false;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       // note that this vibration business is not compatible with
       // PDB objects such as cartoons and traces, which 
       // use Cartesian coordinates, not screen coordinates
       Atom atom = atoms[i];
       P3i screen = (vibs && atom.hasVibration() ? tm.transformPtVib(atom,
-          (Vibration) vibrationVectors[i]) : tm.transformPt(atom));
+          vibrationVectors[i]) : tm.transformPt(atom));
       atom.sX = screen.x;
       atom.sY = screen.y;
       atom.sZ = screen.z;
@@ -450,7 +456,24 @@ public class ShapeManager {
       if (d == Atom.MAD_GLOBAL)
         d = (int) (vwr.getFloat(T.atoms) * 2000);
       atom.sD = (short) vwr.tm.scaleToScreen(screen.z, d);
+      if (checkOccupancy) {
+        int occ = vibrationVectors[i].getOccupancy100(vibs);
+        if (occ != Integer.MIN_VALUE) {
+          //System.out.println(atom + " " + occ);
+          haveMods = true;
+          atom.setShapeVisibility(Atom.ATOM_VISSET, false);
+          if (occ >= 0 && occ < 50)
+            atom.setShapeVisibility(Atom.ATOM_NOTHIDDEN | JC.VIS_BALLS_FLAG,
+                false);
+          else
+            atom.setShapeVisibility(Atom.ATOM_NOTHIDDEN
+                | (atom.madAtom > 0 ? JC.VIS_BALLS_FLAG : 0), true);
+          ms.occupancies[atom.i] = Math.abs(occ);
+        }
+      }
     }
+    if (haveMods)
+      setShapeVis();
     GData gdata = vwr.gdata;
     if (tm.slabEnabled) {
       boolean slabByMolecule = vwr.getBoolean(T.slabbymolecule);

@@ -147,10 +147,12 @@ public class Modulation {
     case TYPE_U_LEGENDRE:
       // not implemented in reader, but all set here
     case TYPE_DISP_LEGENDRE:
-      ms.vOcc0 = Float.NaN; // absolute
+      ms.occAbsolute = true;
       nt -= Math.floor(nt);
-      if (!range(nt))
+      if (!range(nt)) {
+        ms.vOcc = 0;
         return;
+      }
       ms.vOcc = 1;
       // normalize to [-1,1]
       double x = (nt - center) / delta2;
@@ -175,15 +177,15 @@ public class Modulation {
       //           p(x4)=1   if x4 belongs to the interval [c-w/2,c+w/2]
       //           p(x4)=0   if x4 is outside the interval [c-w/2,c+w/2],
 
+      ms.occAbsolute = true;      
       ms.vOcc = (range(nt - Math.floor(nt)) ? 1 : 0);
-      ms.vOcc0 = Float.NaN; // absolute
-      //System.out.println("MOD " + ms.r + " " +  ms.delta + " " + ms.epsilon + " " + ms.id + " " + ms.v + " l=" + left + " x=" + x4 + " r=" + right);
+      //System.out.println("MOD " + ms.id + " v=" + ms.vOcc + " l=" + left + " x=" + nt + " r=" + right);
       return;
     case TYPE_SPIN_SAWTOOTH:
       isSpin = true;
       //$FALL-THROUGH$
     case TYPE_DISP_SAWTOOTH:
-
+      ms.occAbsolute = true;
       //  _atom_site_displace_special_func_sawtooth_ items are the
       //  adjustable parameters of a sawtooth function. A displacive sawtooth
       //  function along the internal space is defined as follows:
@@ -199,8 +201,11 @@ public class Modulation {
       // here we have set a1 = 2a_xyz/w 
 
       nt -= Math.floor(nt);
-      if (!range(nt))
+      if (!range(nt)) {
+        ms.vOcc = 0;
         return;
+      }
+      ms.vOcc = 1;
 
       // x < L < c
       //
@@ -261,7 +266,7 @@ public class Modulation {
     }
 
     if (isSpin) {
-      float[] f = ms.getAxesLengths();
+      float[] f = ms.axesLengths;
       switch (axis) {
       case 'x':
         ms.mxyz.x += v / f[0];

@@ -131,7 +131,7 @@ public class Dots extends AtomShape {
         ec.setMads(null);
         mads = new short[ac];
         for (int i = 0; i < ac; i++)          
-          if (atoms[i].isVisible(JC.ATOM_INFRAME | vf)) 
+          if (atoms[i].isVisible(Atom.ATOM_INFRAME | vf)) 
             // was there a reason we were not checking for hidden?
             try {
               mads[i] = (short) (ec.getAppropriateRadius(i) * 1000);

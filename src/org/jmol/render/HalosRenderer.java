@@ -40,8 +40,7 @@ public class HalosRenderer extends ShapeRenderer {
   protected boolean render() {
     Halos halos = (Halos) shape;
     boolean showOnce = vwr.getShowSelectedOnce();
-    boolean selectDisplayTrue = vwr.getSelectionHalosEnabled() || showOnce;
-    System.out.println(showOnce + " testhalos");
+    boolean selectDisplayTrue = (vwr.getSelectionHalosEnabled() || showOnce);
     boolean showHiddenSelections = (selectDisplayTrue && vwr.getBoolean(T.showhiddenselectionhalos));
     if (halos.mads == null && halos.bsHighlight == null && !selectDisplayTrue)
       return false;
@@ -53,7 +52,7 @@ public class HalosRenderer extends ShapeRenderer {
     g3d.addRenderer(T.circle);
     for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
-      if ((atom.shapeVisibilityFlags & JC.ATOM_INFRAME) == 0)
+      if ((atom.shapeVisibilityFlags & Atom.ATOM_INFRAME) == 0)
         continue;
       boolean isHidden = ms.isAtomHidden(i);
       mad = (halos.mads == null ? 0 : halos.mads[i]);

@@ -56,6 +56,18 @@ import org.jmol.viewer.Viewer;
 
 public class Atom extends Point3fi implements BNode {
 
+  // ATOM_IN_FRAME simply associates an atom with the current model
+  // but doesn't necessarily mean it is visible
+  // ATOM_VIS_SET and ATOM_VISIBLE are checked once only for each atom per rendering
+
+  public final static int ATOM_INFRAME     = 1;
+  public final static int ATOM_VISSET      = 2;  // have carried out checkVisible()
+  public final static int ATOM_VISIBLE     = 4;  // set from checkVisible()
+  public final static int ATOM_NOTHIDDEN   = 8;
+  public final static int ATOM_NOFLAGS     = ~63; // all of the above, plus balls and sticks
+  public final static int ATOM_INFRAME_NOTHIDDEN = ATOM_INFRAME | ATOM_NOTHIDDEN;
+  public final static int ATOM_SHAPE_VIS_MASK = ~ATOM_INFRAME_NOTHIDDEN;
+
   private final static byte VIBRATION_VECTOR_FLAG = 1;
   private final static byte IS_HETERO_FLAG = 2;
   private final static byte FLAG_MASK = 3;
@@ -376,7 +388,13 @@ public class Atom extends Point3fi implements BNode {
   // a percentage value in the range 0-100
   public int getOccupancy100() {
     float[] occupancies = group.chain.model.ms.occupancies;
-    return occupancies == null ? 100 : Math.round(occupancies[i]);
+    return (occupancies == null ? 100 : Math.round(occupancies[i]));
+  }
+
+  // a percentage value in the range 0-100
+  public boolean isOccupied() {
+    float[] occupancies = group.chain.model.ms.occupancies;
+    return (occupancies == null || occupancies[i] >= 50);
   }
 
   // This is called bfactor100 because it is stored as an integer
@@ -947,9 +965,9 @@ public class Atom extends Point3fi implements BNode {
   }
   
   public boolean checkVisible() {
-    if (isVisible(JC.ATOM_VISSET))
-      return isVisible(JC.ATOM_VISIBLE);
-    boolean isVis = isVisible(JC.ATOM_INFRAME_NOTHIDDEN);
+    if (isVisible(ATOM_VISSET))
+      return isVisible(ATOM_VISIBLE);
+    boolean isVis = isVisible(ATOM_INFRAME_NOTHIDDEN);
     if (isVis) {
       int flags = shapeVisibilityFlags;
       // Is its PDB group visible in any way (cartoon, e.g.)?
@@ -963,16 +981,16 @@ public class Atom extends Point3fi implements BNode {
       // We know that (flags & AIM), so now we must remove that flag
       // and check to see if any others are remaining.
       // Only then is the atom considered visible.
-      flags &= JC.ATOM_SHAPE_VIS_MASK;
+      flags &= ATOM_SHAPE_VIS_MASK;
       // problem with display of bond-only when not clickable. 
       // bit of a kludge here.
       if (flags == JC.VIS_BOND_FLAG && clickabilityFlags == 0)
         flags = 0;
       isVis = (flags != 0);
       if (isVis)
-        shapeVisibilityFlags |= JC.ATOM_VISIBLE;
+        shapeVisibilityFlags |= ATOM_VISIBLE;
     }
-    shapeVisibilityFlags |= JC.ATOM_VISSET;
+    shapeVisibilityFlags |= ATOM_VISSET;
     return isVis;
 
   }

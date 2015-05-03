@@ -5052,9 +5052,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     case T.legacyhaddition:
       // aargh -- Some atoms missed before Jmol 13.1.17
       return g.legacyHAddition;
-    case T.legacyjavafloat:
-      // float/double issue with crystallographic symmetry before Jmol 14.2.5
-      return g.legacyJavaFloat;
     case T.loggestures:
       return g.logGestures;
     case T.measureallmodels:
@@ -5878,6 +5875,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   private void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.modulateoccupancy:
+      // 12.0.RC6
+      g.modulateOccupancy = value;
+      break;
     case T.legacyjavafloat:
       // 14.3.5
       g.legacyJavaFloat = value;

@@ -96,7 +96,7 @@ abstract public class AtomCollection {
   int[] atomResnos;
   int[] atomSeqIDs;
   public Vibration[] vibrations;
-  float[] occupancies;
+  public float[] occupancies;
   short[] bfactor100s;
   float[] partialCharges;
   float[] bondingRadii;
@@ -2443,11 +2443,11 @@ abstract public class AtomCollection {
     haveBSClickable = false;
   }
 
-  public void getRenderable(BS bsAtoms) {
+  public void getAtomsInFrame(BS bsAtoms) {
     clearVisibleSets();
     bsAtoms.clearAll();
     for (int i = ac; --i >= 0;)
-      if (at[i].isVisible(JC.ATOM_INFRAME))
+      if (at[i].isVisible(Atom.ATOM_INFRAME))
         bsAtoms.set(i);
   }
 

@@ -696,18 +696,6 @@ public final class JC {
   public final static int SHAPE_HOVER      = 35;
   public final static int SHAPE_FRANK      = 36;
   public final static int SHAPE_MAX        = SHAPE_FRANK + 1;
-
-  // ATOM_IN_FRAME simply associates an atom with the current model
-  // but doesn't necessarily mean it is visible
-  // ATOM_VIS_SET and ATOM_VISIBLE are checked once only for each atom per rendering
-
-  public final static int ATOM_INFRAME     = 1;
-  public final static int ATOM_VISSET      = 2;
-  public final static int ATOM_VISIBLE     = 4;
-  public final static int ATOM_NOTHIDDEN   = 8;
-  public final static int ATOM_NOFLAGS     = ~63; // all of the above, plus balls and sticks
-  public final static int ATOM_INFRAME_NOTHIDDEN = ATOM_INFRAME | ATOM_NOTHIDDEN;
-  public final static int ATOM_SHAPE_VIS_MASK = ~ATOM_INFRAME_NOTHIDDEN;
     
   public final static int getShapeVisibilityFlag(int shapeID) {
     return 16 << Math.min(shapeID, SHAPE_LAST_ATOM_VIS_FLAG);

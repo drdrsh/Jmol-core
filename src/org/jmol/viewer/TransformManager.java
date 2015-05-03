@@ -1365,7 +1365,7 @@ public class TransformManager {
    protected final P3 point3fScreenTemp = new P3();
   protected final P3i point3iScreenTemp = new P3i();
 
-  private final Point3fi ptVibTemp = new Point3fi();
+  final Point3fi ptVibTemp = new Point3fi();
 
   public boolean navigating = false;
   public int mode = MODE_STANDARD;
@@ -1526,11 +1526,17 @@ public class TransformManager {
     ptVibTemp.setT(ptXYZ);
     return applyPerspective(getVibrationPoint(v, ptVibTemp, Float.NaN), ptXYZ);
   }
-
+  
+  /**
+   * return 
+   * @param v
+   * @param pt temporary value; also returned
+   * @param scale
+   * @return pt
+   */
   public T3 getVibrationPoint(Vibration v, T3 pt, float scale) {
-    v.setTempPoint(pt, vibrationT,
+    return v.setCalcPoint(pt, vibrationT,
         (Float.isNaN(scale) ? vibrationScale : scale), vwr.g.modulationScale);
-    return pt;
   }
 
   public void transformPt3f(T3 ptXYZ, P3 screen) {

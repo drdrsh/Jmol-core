@@ -280,13 +280,14 @@ public class CifDataParser implements GenericCifDataParser {
     while ((str = peekToken()) != null && str.charAt(0) == '_') {
       if (ret != null)
         ret.append(str).append("\n");
-        getTokenPeeked();
-        n++;
+      getTokenPeeked();
+      n++;
     }
     int m = 0;
     while ((str = getNextDataToken()) != null) {
-      if (ret != null)
-        ret.append(str).append(" ");
+      if (ret == null)
+        continue; 
+      ret.append(str).append(" ");
       if ((++m % n) == 0)
         ret.append("\n");
     }

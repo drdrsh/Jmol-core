@@ -350,8 +350,7 @@ public class MSRdr implements MSInterface {
       if (modTUV != null)
         cr.appendLoadNote("modTUV=" + modTUV);
       cr.asc.setInfo("modulationOn", modTUV == null ? Boolean.TRUE : modTUV);
-      cr.addJmolScript((haveOccupancy && !isCommensurate ? ";display occupancy >= 0.5"
-          : ""));
+      cr.addJmolScript("set modulateOccupancy " + (haveOccupancy && !isCommensurate ? true: false));
     }
     finalized = true;
   }
@@ -857,8 +856,8 @@ public class MSRdr implements MSInterface {
     // because we are going to repurpose that.
     ModulationSet ms = new ModulationSet().setMod(a.index + " " + a.atomName,
         getAtomR0(cr.asc.atoms[a.atomSite]), getAtomR0(a), 
-        modDim, list, gammaE, getMatrices(a), iop, getSymmetry(a), 
-        a.vib instanceof Vibration ? (Vibration) a.vib : null);
+        modDim, list, gammaE, getMatrices(a), getSymmetry(a), nOps, iop, 
+        a.vib instanceof Vibration ? (Vibration) a.vib : null, isCommensurate);
 
     ms.calculate(modTUV, false);
 
@@ -866,30 +865,8 @@ public class MSRdr implements MSInterface {
     // vibrations, and anisotropy tensors.
 
     if (!Float.isNaN(ms.vOcc)) {
-      double[] pt = getMod("J_O#0;" + a.atomName);
-      float occ0 = ms.vOcc0;
-      double occ;
-      if (Float.isNaN(occ0)) {
-        // Crenel
-        occ = ms.vOcc;
-      } else if (pt == null) {
-        // cif Fourier
-        // _atom_site_occupancy + SUM
-        occ = a.foccupancy + ms.vOcc;
-      } else if (a.vib != null) {
-        // cif with m40 Fourier
-        // occ_site * (occ_0 + SUM)
-        double site_mult = a.vib.x;
-        double o_site = a.foccupancy * site_mult / nOps / pt[1];
-        occ = o_site * (pt[1] + ms.vOcc);
-      } else {
-        // m40 Fourier
-        // occ_site * (occ_0 + SUM)
-        occ = pt[0] * (pt[1] + ms.vOcc);
-      }
-      // 49/50 is an important range for cutoffs -- we let this range be void
-      a.foccupancy = (occ > 0.49 && occ < 0.50 ? 0.489f : (float) Math.min(1,
-          Math.max(0, occ)));
+      // a.vib may be used to temporarily store an M40 site multiplicity
+      a.foccupancy = ms.setOccupancy(getMod("J_O#0;" + a.atomName), a.foccupancy, (a.vib == null ? 0 : a.vib.x));
       //Logger.info("atom " + a.atomName + " occupancy = " + a.foccupancy);
     }
     if (ms.htUij != null) {
