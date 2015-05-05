@@ -637,9 +637,10 @@ public class StatusManager {
   }
  
   public void modifySend(int atomIndex, int modelIndex, int mode, String msg) {
+    String sJmol = jmolScriptCallback(CBK.STRUCTUREMODIFIED);
     if (notifyEnabled(CBK.STRUCTUREMODIFIED))
       cbl.notifyCallback(CBK.STRUCTUREMODIFIED,
-          new Object[] { null, Integer.valueOf(mode), Integer.valueOf(atomIndex), Integer.valueOf(modelIndex), msg });
+          new Object[] { sJmol, Integer.valueOf(mode), Integer.valueOf(atomIndex), Integer.valueOf(modelIndex), msg });
   }
   
   /**
