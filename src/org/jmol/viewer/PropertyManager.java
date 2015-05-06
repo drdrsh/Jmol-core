@@ -46,6 +46,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.jmol.api.Interface;
@@ -393,9 +394,25 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       if (property instanceof Map<?, ?>) {
         Map<String, ?> h = (Map<String, ?>) property;
         String key;
+        boolean asMap = false;
         if (arg.tok == T.select) {
           key = arg.myName;
-          if (!vwr.checkSelect((Map<String, SV>) property, (T[]) arg.value))
+          if (key.equals("**")) {
+            // find associated keys whose associated arrays fulfill the requirements
+            key = "";
+            for (Entry<String, ?>e : h.entrySet()) {
+              String k = e.getKey();
+              SV v = (SV) e.getValue();
+              if (v.tok == T.hash) {
+                if (vwr.checkSelect((Map<String, SV>) v.value, (T[]) arg.value))
+                  key += "," + k;
+              }
+            }
+            if (key.length() == 0)
+              return "";
+            key = key.substring(1);
+            asMap = true;
+          } else if (!vwr.checkSelect((Map<String, SV>) property, (T[]) arg.value))
             return "";
         } else {
           key = arg.asString();
@@ -406,7 +423,6 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
             return extractProperty(keys, args, ptr, null, true);
           }
         }
-
         boolean isWild = (key.startsWith("*") || key.endsWith("*") || key.indexOf(",") >= 0);
         if (isWild && v2 == null)
           v2 = new Lst<Object>();
@@ -414,15 +430,16 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           if (ptr == ((SV[]) args).length) {
             v2.addLast(property);
             return v2;
-          }
+          } 
           return extractProperty(property, args, ptr, v2, true);
         }
         if (key.contains(",")) {
-          Map<String, Object> mapNew = null;
-          mapNew = new Hashtable<String, Object>();
+          Map<String, Object> mapNew = new Hashtable<String, Object>();
           String[] tokens = PT.split(key, ",");
           for (int i = tokens.length; --i >= 0;)
             PT.getMapSubset(h, tokens[i], mapNew);
+          if (asMap)
+            return mapNew;
           if (ptr == ((SV[]) args).length) {
             v2.addLast(mapNew);
             return v2;
