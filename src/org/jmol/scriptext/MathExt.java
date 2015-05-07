@@ -1816,8 +1816,6 @@ public class MathExt {
         // plane(<point1>,<point2>,<point3>,<pointref>)
         V3 vAB = new V3();
         P3 ptref = (args.length == 4 ? mp.ptValue(args[3]) : null);
-        if (ptref == null)
-          return false;
         float nd = Measure.getDirectedNormalThroughPoints(pt1, pt2, pt3,
             ptref, norm, vAB);
         return mp.addXPt4(P4.new4(norm.x, norm.y, norm.z, nd));

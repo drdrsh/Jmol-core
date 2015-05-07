@@ -410,7 +410,6 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
             }
             if (key.length() == 0)
               return "";
-            key = key.substring(1);
             asMap = true;
           } else if (!vwr.checkSelect((Map<String, SV>) property, (T[]) arg.value))
             return "";
@@ -434,6 +433,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           return extractProperty(property, args, ptr, v2, true);
         }
         if (key.contains(",")) {
+          if (asMap)
+            key = key.substring(1);
           Map<String, Object> mapNew = new Hashtable<String, Object>();
           String[] tokens = PT.split(key, ",");
           for (int i = tokens.length; --i >= 0;)
