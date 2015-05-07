@@ -1035,8 +1035,8 @@ public class ActionManager implements EventManager {
                                     int deltaX, int deltaY, long time, int mode) {
     int buttonmods = Binding.getButtonMods(dragWheelAction);
     if (buttonmods != 0) {
-      int newAction = vwr.notifyMouseClicked(x, y, Binding.getMouseAction(
-          pressedCount, buttonmods, mode), mode); // why was this "-pressedCount"? passing to user?
+      int newAction = vwr.notifyMouseClicked(x, y,
+          Binding.getMouseAction(pressedCount, buttonmods, mode), mode); // why was this "-pressedCount"? passing to user?
       if (newAction == 0)
         return;
       if (newAction > 0)
@@ -1054,8 +1054,8 @@ public class ActionManager implements EventManager {
 
     if (vwr.getRotateBondIndex() >= 0) {
       if (bnd(dragWheelAction, ACTION_rotateBranch)) {
-        vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null,
-            false, false);
+        vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, false,
+            false);
         return;
       }
       if (!bnd(dragWheelAction, ACTION_rotate))
@@ -1070,7 +1070,7 @@ public class ActionManager implements EventManager {
       case PICKING_DRAG_LIGAND:
       case PICKING_DRAG_MOLECULE:
       case PICKING_DRAG_MINIMIZE_MOLECULE:
-        bs = vwr.ms.getAtoms(T.sidechain, BSUtil.newAndSetBit(dragAtomIndex));
+        bs = vwr.ms.getAtoms(T.molecule, BSUtil.newAndSetBit(dragAtomIndex));
         if (apm == PICKING_DRAG_LIGAND)
           bs.and(vwr.getAtomBitSet("ligand"));
         //$FALL-THROUGH$
@@ -1081,8 +1081,8 @@ public class ActionManager implements EventManager {
               true);
         setMotion(GenericPlatform.CURSOR_MOVE, true);
         if (bnd(dragWheelAction, ACTION_rotateSelected)) {
-          vwr.rotateSelected(getDegrees(deltaX, true), getDegrees(deltaY, false),
-              bs);
+          vwr.rotateSelected(getDegrees(deltaX, true),
+              getDegrees(deltaY, false), bs);
         } else {
           switch (apm) {
           case PICKING_DRAG_LIGAND:
@@ -1091,10 +1091,12 @@ public class ActionManager implements EventManager {
             vwr.select(bs, false, 0, true);
             break;
           }
-          vwr
-              .moveAtomWithHydrogens(dragAtomIndex, deltaX, deltaY,
-                  (bnd(dragWheelAction, ACTION_dragZ) ? -deltaY
-                      : Integer.MIN_VALUE), bs);
+          vwr.moveAtomWithHydrogens(
+              dragAtomIndex,
+              deltaX,
+              deltaY,
+              (bnd(dragWheelAction, ACTION_dragZ) ? -deltaY : Integer.MIN_VALUE),
+              bs);
         }
         // NAH! if (atomPickingMode == PICKING_DRAG_MINIMIZE_MOLECULE && (dragGesture.getPointCount() % 5 == 0))
         //  minimize(false);
@@ -1102,8 +1104,8 @@ public class ActionManager implements EventManager {
       }
     }
 
-    if (dragAtomIndex >= 0 && mode == Event.DRAGGED && bnd(clickAction, ACTION_assignNew)
-        && apm == PICKING_ASSIGN_ATOM) {
+    if (dragAtomIndex >= 0 && mode == Event.DRAGGED
+        && bnd(clickAction, ACTION_assignNew) && apm == PICKING_ASSIGN_ATOM) {
       int nearestAtomIndex = vwr.findNearestAtomIndexMovable(x, y, false);
       if (nearestAtomIndex >= 0) {
         if (mp != null) {
@@ -1129,8 +1131,7 @@ public class ActionManager implements EventManager {
       vwr.translateXYBy(deltaX, deltaY);
       return;
     }
-    if (dragSelectedMode
-        && haveSelection
+    if (dragSelectedMode && haveSelection
         && bnd(dragWheelAction, ACTION_dragSelected, ACTION_rotateSelected)) {
       // we will drag atoms and either rotate or translate them
       // possibly just the atoms or possibly their molecule (decided in Viewer)
@@ -1159,10 +1160,10 @@ public class ActionManager implements EventManager {
       return;
     }
     if (bnd(dragWheelAction, ACTION_rotate)) {
-//      if (vwr.g.useArcBall)
-//        vwr.rotateArcBall(x, y, mouseDragFactor);
-//      else
-        vwr.rotateXYBy(getDegrees(deltaX, true), getDegrees(deltaY, false));
+      //      if (vwr.g.useArcBall)
+      //        vwr.rotateArcBall(x, y, mouseDragFactor);
+      //      else
+      vwr.rotateXYBy(getDegrees(deltaX, true), getDegrees(deltaY, false));
       return;
     }
     if (bnd(dragWheelAction, ACTION_rotateZorZoom)) {

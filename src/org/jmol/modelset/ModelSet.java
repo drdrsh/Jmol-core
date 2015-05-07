@@ -2028,14 +2028,6 @@ import java.util.Properties;
         bs.andNot(uc.notInCentroid(this, am[i].bsAtoms, minmax));
       }
       return bs;
-      //    case T.sidechain:  -- can't reach this code -- sidechain is hardwired
-      //      int ia = ((BS) specInfo).nextSetBit(0);
-      //      if (ia < 0)
-      //        return new BS();
-      //      if (at[ia].group.isStandardProtein)
-      //        return at[ia].group.getBSSideChain();
-      //      // treat as molecule if not PDB protein;
-      //      //$FALL-THROUGH$
     case T.molecule:
       return getMoleculeBitSet((BS) specInfo);
     case T.spec_seqcode_range:
