@@ -208,7 +208,7 @@ public class AminoMonomer extends AlphaMonomer {
 
   public boolean getNHPoint(P3 aminoHydrogenPoint, V3 vNH,
                             boolean jmolHPoint, boolean dsspIgnoreHydrogens) {
-    if (monomerIndex == 0 || groupID == JC.GROUPID_PROLINE)
+    if (monomerIndex <= 0 || groupID == JC.GROUPID_PROLINE)
       return false;
     Atom nitrogenPoint = getNitrogenAtom();
     P3 nhPoint = getNitrogenHydrogenPoint();
@@ -252,6 +252,8 @@ public class AminoMonomer extends AlphaMonomer {
   
   @Override
   P3 getQuaternionFrameCenter(char qType) {
+    if (monomerIndex < 0)
+      return null;
     switch (qType) {
     default:
     case 'a':
@@ -278,6 +280,8 @@ public class AminoMonomer extends AlphaMonomer {
 
   @Override
   public Quat getQuaternion(char qType) {
+    if (monomerIndex < 0)
+      return null;
     /*
      * also NucleicMonomer
      *  

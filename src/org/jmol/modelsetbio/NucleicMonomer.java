@@ -385,6 +385,8 @@ public class NucleicMonomer extends PhosphorusMonomer {
 
   @Override
   public Quat getQuaternion(char qType) {
+    if (bioPolymer == null)
+      return null;
     // quaternionFrame 'c' from  
     // Sarver M, Zirbel CL, Stombaugh J, Mokdad A, Leontis NB. 
     // FR3D: finding local and composite recurrent structural motifs in RNA 3D structures. 
@@ -547,6 +549,7 @@ public boolean isCrossLinked(Group g) {
   }
 
   private Lst<BasePair> bps;
+  
   public void addBasePair(BasePair bp) {
     if (bps == null)
       bps = new Lst<BasePair>();
@@ -559,8 +562,12 @@ public boolean isCrossLinked(Group g) {
       group1 = g;
   }
   
+  /**
+   * 
+   * @return list of base pairs associated with this monomer, possibly more than one if noncanonical
+   */
   public Lst<BasePair> getBasePairs() {
-    if (!((NucleicPolymer) bioPolymer).isDssrSet)
+    if (bioPolymer != null && !((NucleicPolymer) bioPolymer).isDssrSet)
       bioPolymer.model.ms.vwr.getAnnotationParser().setAllDSSRParametersForModel(bioPolymer.model.ms.vwr, bioPolymer.model.modelIndex);    
     return bps;
   }

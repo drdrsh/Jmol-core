@@ -131,7 +131,7 @@ public class PhosphorusMonomer extends Monomer {
     //vA = ptP(i+1) - ptP
     //vB = ptP(i-1) - ptP
     int i = monomerIndex;
-    if (i == 0 || i >= bioPolymer.monomerCount - 1)
+    if (i <= 0 || i >= bioPolymer.monomerCount - 1)
       return null;
     P3 ptP = bioPolymer.monomers[i].getAtomFromOffsetIndex(P);
     P3 ptA, ptB;

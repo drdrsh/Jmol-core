@@ -226,6 +226,8 @@ public class AlphaMonomer extends Monomer {
   }
 
   protected Quat getQuaternionAlpha(char qType) {
+    if (monomerIndex < 0)
+      return null;
     /*
      * also NucleicMonomer, AminoMonomer
      * 

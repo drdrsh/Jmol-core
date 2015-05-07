@@ -44,6 +44,13 @@ import org.jmol.script.T;
 
 import java.util.Map;
 
+/**
+ * A class to maintain information about biomolecule groups that are (potentially)
+ * part of biopolymers -- peptides, nucleic acid strands, or complex carbohydrates.
+ * Note that it is possible that a monomer is created but is not part of a BioPolymer.
+ *  
+ * 
+ */
 
 public abstract class Monomer extends Group {
 
@@ -57,6 +64,8 @@ public abstract class Monomer extends Group {
   public BioPolymer bioPolymer;
 
   protected byte[] offsets;
+
+  int monomerIndex = -1;
 
   protected static boolean have(byte[] offsets, byte n) {
     return (offsets[n] & 0xFF) != 0xFF;
@@ -76,26 +85,24 @@ public abstract class Monomer extends Group {
       leadAtomIndex = firstAtomIndex + offset;
   }
 
-  int monomerIndex;
-
   void setBioPolymer(BioPolymer polymer, int index) {
-    this.bioPolymer = polymer;
+    bioPolymer = polymer;
     monomerIndex = index;
   }
 
   @Override
   public int getSelectedMonomerCount() {
-    return bioPolymer.getSelectedMonomerCount();
+    return (bioPolymer == null  ? 0 : bioPolymer.getSelectedMonomerCount());
   }
   
   @Override
   public int getSelectedMonomerIndex() {
-    return (monomerIndex >= 0 && bioPolymer.isMonomerSelected(monomerIndex) ? monomerIndex : -1);
+    return (bioPolymer == null || !bioPolymer.isMonomerSelected(monomerIndex) ? -1 : monomerIndex);
   }
   
   @Override
   public int getBioPolymerLength() {
-    return bioPolymer == null ? 0 : bioPolymer.monomerCount;
+    return (bioPolymer == null ? 0 : bioPolymer.monomerCount);
   }
 
   @Override
@@ -105,19 +112,21 @@ public abstract class Monomer extends Group {
 
   @Override
   public int getAtomIndex(String name, int offset) {
-    Group[] groups = bioPolymer.monomers;
-    int ipt = monomerIndex + offset;
-    if (ipt >= 0 && ipt < groups.length) {
-      Group m = groups[ipt];
-      if (offset == 1 && !m.isConnectedPrevious())
-        return -1;
-      if ("0".equals(name))
-        return m.leadAtomIndex;
-      Atom[] atoms = chain.model.ms.at;
-      // this is OK -- only used for finding special atom by name
-      for (int i = m.firstAtomIndex; i <= m.lastAtomIndex; i++)
-        if (name == null || name.equalsIgnoreCase(atoms[i].getAtomName()))
-          return i;
+    if (bioPolymer != null) {
+      Group[] groups = bioPolymer.monomers;
+      int ipt = monomerIndex + offset;
+      if (ipt >= 0 && ipt < groups.length) {
+        Group m = groups[ipt];
+        if (offset == 1 && !m.isConnectedPrevious())
+          return -1;
+        if ("0".equals(name))
+          return m.leadAtomIndex;
+        Atom[] atoms = chain.model.ms.at;
+        // this is OK -- only used for finding special atom by name
+        for (int i = m.firstAtomIndex; i <= m.lastAtomIndex; i++)
+          if (name == null || name.equalsIgnoreCase(atoms[i].getAtomName()))
+            return i;
+      }
     }
     return -1;
   }
@@ -360,6 +369,8 @@ public abstract class Monomer extends Group {
   }
 
   protected Object getHelixData2(int tokType, char qType, int mStep) {
+    if (monomerIndex < 0)
+      return null;
     int iPrev = monomerIndex - mStep;
     Monomer prev = (mStep < 1 || monomerIndex <= 0 ? null
         : bioPolymer.monomers[iPrev]);
@@ -478,6 +489,8 @@ public abstract class Monomer extends Group {
 
   @Override
   public float getGroupParameter(int tok) {
+    if (bioPolymer == null)
+      return 0;
     if (!bioPolymer.haveParameters)
       bioPolymer.calcParameters();
     switch (tok) {
