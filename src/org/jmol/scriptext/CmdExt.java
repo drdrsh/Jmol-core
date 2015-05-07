@@ -579,6 +579,8 @@ public class CmdExt extends ScriptExt {
     params.put("captureMode", T.nameOf(mode).toLowerCase());
     params.put("captureLooping", looping ? Boolean.TRUE : Boolean.FALSE);
     String msg = vwr.processWriteOrCapture(params);
+    if (msg == null)
+      msg = "canceled";
     Logger.info(msg);
   }
 
@@ -3597,6 +3599,8 @@ public class CmdExt extends ScriptExt {
     params.put("height", Integer.valueOf(height));
     params.put("nVibes", Integer.valueOf(nVibes));
     msg = vwr.processWriteOrCapture(params);
+    if (msg == null)
+      msg = "canceled";
     if (isImage && msg.startsWith("OK"))
       msg += "; width=" + width + "; height=" + height;
     if (timeMsg)
