@@ -324,4 +324,19 @@ public class SB {
     return b;
   }
 
+	public void replace(int start, int end, String str) {
+		/**
+		 * @j2sNative
+		 * 
+		 * this.s = this.s.substring(0, start) + str + this.s.substring(end);
+		 */
+		{
+			sb.replace(start, end, str);
+		}
+	}
+
+	public void insert(int offset, String str) {
+		replace(offset, offset, str);
+	}
+
 }
