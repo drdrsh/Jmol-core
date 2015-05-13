@@ -156,8 +156,8 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
     fillTriangleB(useGouraud);
   }
 
-  void fillTriangleP3f(P3 screenA, P3 screenB, P3 screenC,
-                    boolean useGouraud) {
+  void fillTriangleP3f(P3 screenA, P3 screenB, P3 screenC, boolean useGouraud,
+                       boolean isPrecise) {
     ax[0] = Math.round(screenA.x);
     ax[1] = Math.round(screenB.x);
     ax[2] = Math.round(screenC.x);
@@ -167,9 +167,13 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
     az[0] = Math.round(screenA.z);
     az[1] = Math.round(screenB.z);
     az[2] = Math.round(screenC.z);
-    abc[0] = screenA;
-    abc[1] = screenB;
-    abc[2] = screenC;
+    if (isPrecise) {
+      abc[0] = screenA;
+      abc[1] = screenB;
+      abc[2] = screenC;
+    } else {
+      abc[0] = null;
+    }
     fillTriangleB(useGouraud);
   }
 

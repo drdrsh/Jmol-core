@@ -1315,9 +1315,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void fillCylinderScreen3I(byte endcaps, int diameter, P3 screenA,
                                    P3 screenB, P3 pt0f, P3 pt1f, float radius) {
     //nucleic cartoon, draw arrowhead
+    // this needs to be old style, not exact for performance in JavaScript.  
     if (diameter <= ht3)
-      cylinder3d.renderBits(colixCurrent, colixCurrent, 0, endcaps, diameter,
-          screenA, screenB);
+      cylinder3d.renderOld(colixCurrent, colixCurrent, 0, endcaps, diameter,
+          (int) screenA.x, (int) screenA.y, (int) screenA.z, (int) screenB.x, (int) screenB.y, (int) screenB.z);
   }
 
   @Override
@@ -1421,7 +1422,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     // polyhedra
     setColorNoisy(getShadeIndex(normix));
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
-        false);
+        false, true);
   }
 
   @Override
@@ -1434,7 +1435,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     else
       setColor(shadesCurrent[i]);
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
-        false);
+        false, true);
   }
 
   @Override
@@ -1459,7 +1460,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       setColorNoisy(shadeIndex);
     }
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
-        false);
+        false, false);
   }
 
   @Override
@@ -1476,7 +1477,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
                                   short normixC) {
     // mesh, isosurface
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
-        checkGouraud(colixA, colixB, colixC, normixA, normixB, normixC));
+        checkGouraud(colixA, colixB, colixC, normixA, normixB, normixC), true);
   }
 
   private boolean checkGouraud(short colixA, short colixB, short colixC,
@@ -1530,12 +1531,12 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     int i = getShadeIndexP3(screenA, screenB, screenC);
     setColorNoisy(i);
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenB, screenC,
-        false);    
+        false, true);    
     // don't do the following; it creates a moire pattern in cartoons
     // i = getShadeIndexP3(screenA, screenC, screenD);
     // setColorNoisy(i);
     ((TriangleRenderer) triangle3d).fillTriangleP3f(screenA, screenC, screenD,
-        false);
+        false, true);
   }
 
   @Override
