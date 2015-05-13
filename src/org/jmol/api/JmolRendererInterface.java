@@ -53,13 +53,13 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void drawFilledCircle(short colixRing, short colixFill,
                                         int diameter, int x, int y, int z);
 
-  public abstract void drawHermite4(int tension, P3i s0, P3i s1,
-                                   P3i s2, P3i s3);
+  public abstract void drawHermite4(int tension, P3 s0, P3 s1,
+                                   P3 s2, P3 s3);
 
   public abstract void drawHermite7(boolean fill, boolean border, int tension,
-                                   P3i s0, P3i s1, P3i s2,
-                                   P3i s3, P3i s4, P3i s5,
-                                   P3i s6, P3i s7, int aspectRatio, short colixBack);
+                                   P3 s0, P3 s1, P3 s2,
+                                   P3 s3, P3 s4, P3 s5,
+                                   P3 s6, P3 s7, int aspectRatio, short colixBack);
 
   public abstract void drawImage(Object image, int x, int y, int z, int zslab,
                                  short bgcolix, int width, int height);
@@ -67,17 +67,13 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void drawLine(short colixA, short colixB, int x1, int y1,
                                 int z1, int x2, int y2, int z2);
 
-  public abstract void drawLineAB(P3i pointA, P3i pointB);
+  public abstract void drawLineAB(P3 pointA, P3 pointB);
 
   public abstract void drawLineXYZ(int x1, int y1, int z1, int x2, int y2, int z2);
 
   public abstract void drawPixel(int x, int y, int z);
 
   public abstract void drawPoints(int count, int[] coordinates, int scale);
-
-  public abstract void drawQuadrilateral(short colix, P3i screenA,
-                                         P3i screenB, P3i screenC,
-                                         P3i screenD);
 
   public abstract void drawQuadrilateralBits(short colix, P3 screenA,
                                          P3 screenB, P3 screenC,
@@ -154,12 +150,8 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                      P3 screenB, short colixB,
                                      P3 screenC, short colixC, int check);
 
-  public abstract void fillConeSceen3f(byte endcap, int screenDiameter,
-                                     P3 screenBase, P3 screenTip);
-
-  public abstract void fillConeScreen(byte endcap, int screenDiameter,
-                                      P3i screenBase, P3i screenTip,
-                                      boolean isBarb);
+  public abstract void fillConeScreen3f(byte endcap, int screenDiameter,
+                                     P3 screenBase, P3 screenTip, boolean isBarb);
 
   public abstract void fillCylinder(byte endcaps, int diameter,
                                     P3i screenA, P3i screenB);
@@ -167,11 +159,9 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void fillCylinderBits(byte endcaps, int diameter,
                                         P3 screenA, P3 screenB);
 
-  public abstract void fillCylinderScreen(byte endcaps, int diameter, int xA,
-                                          int yA, int zA, int xB, int yB, int zB);
-
-  public abstract void fillCylinderScreen3I(byte endcapsOpenend, int diameter,
-                                          P3i pt0i, P3i pt1i, P3 pt0f, P3 pt1f, float radius);
+  public abstract void fillCylinderScreen3I(byte endcaps, 
+                                            int diameter, P3 s0f, P3 s1f, 
+                                          P3 pt0f, P3 pt1f, float radius);
 
   public abstract void fillCylinderBits2(short colixA, short colixB, byte endcaps,
                                        int diameter, P3 screenA, P3 screenB);
@@ -184,12 +174,12 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                      int y, int z, int diameter,
                                      M3 mToEllipsoidal, double[] coef,
                                      M4 mDeriv, int selectedOctant,
-                                     P3i[] octantPoints);
+                                     P3[] octantPoints);
 
   public abstract void fillHermite(int tension, int diameterBeg,
                                    int diameterMid, int diameterEnd,
-                                   P3i s0, P3i s1, P3i s2,
-                                   P3i s3);
+                                   P3 s0, P3 s1, P3 s2,
+                                   P3 s3);
 
   public abstract void fillQuadrilateral(P3 screenA, P3 screenB,
                                          P3 screenC, P3 screenD);
@@ -222,7 +212,7 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
    * @param center
    *        a javax.vecmath.Point3f ... floats are casted to ints
    */
-  public abstract void fillSphere(int diameter, P3 center);
+  public abstract void fillSphereBits(int diameter, P3 center);
 
   /**
    * fills a solid sphere
@@ -257,14 +247,10 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void fillTriangle3f(P3 screenA, P3 screenB,
                                     P3 screenC, boolean setNoisy);
 
-  public abstract void fillTriangle3i(P3i screenA, P3i screenB,
-                                    P3i screenC, T3 ptA, T3 ptB, T3 ptC, boolean doShade);
+  public abstract void fillTriangle3i(P3 screenA, P3 screenB,
+                                    P3 screenC, T3 ptA, T3 ptB, T3 ptC, boolean doShade);
 
-  public abstract void fillTriangleTwoSided(short normix, int xScreenA,
-                                            int yScreenA, int zScreenA,
-                                            int xScreenB, int yScreenB,
-                                            int zScreenB, int xScreenC,
-                                            int yScreenC, int zScreenC);
+  public abstract void fillTriangleTwoSided(short normix, P3 a, P3 b, P3 c);
 
   public abstract String finalizeOutput();
 

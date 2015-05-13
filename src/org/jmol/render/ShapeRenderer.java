@@ -78,6 +78,7 @@ public abstract class ShapeRenderer {
     this.shape = shape;
     exportType = g3d.getExportType();
     isExport = (exportType != GData.EXPORT_NOT);
+    
     boolean needsTranslucent = render();
     exportType = GData.EXPORT_NOT;
     isExport = false;

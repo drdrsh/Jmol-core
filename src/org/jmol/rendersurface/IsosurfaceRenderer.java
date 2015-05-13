@@ -38,7 +38,6 @@ import org.jmol.util.Normix;
 import org.jmol.viewer.JC;
 
 import javajs.util.P3;
-import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
@@ -188,10 +187,10 @@ public class IsosurfaceRenderer extends MeshRenderer {
     boolean isOK;
     if (thisSlabValue != Integer.MAX_VALUE && imesh.jvxlData.isSlabbable) {
       g3d.setSlab(thisSlabValue);
-      isOK = renderMesh(mesh);
+      isOK = renderMesh2(mesh);
       g3d.setSlab(globalSlabValue);
     } else {
-      isOK = renderMesh(mesh);
+      isOK = renderMesh2(mesh);
     }
     vwr.gdata.translucentCoverOnly = tCover;
     return isOK;
@@ -267,25 +266,22 @@ public class IsosurfaceRenderer extends MeshRenderer {
       for (int j = JvxlCoder.CONTOUR_POINTS; j < n; j++) {
         T3 pt1 = (T3) v.get(j);
         T3 pt2 = (T3) v.get(++j);
-        tm.transformPtScr(pt1, pt1i);
-        tm.transformPtScr(pt2, pt2i);
         if (Float.isNaN(pt1.x) || Float.isNaN(pt2.x))
           break;
-        pt1i.z -= 2;
-        pt2i.z -= 2;
+        tm.transformPtScrT3(pt1, pt1f);
+        tm.transformPtScrT3(pt2, pt2f);
+        pt1f.z -= 2;
+        pt2f.z -= 2;
         if (!antialias && diam == 1) {
-          g3d.drawLineAB(pt1i, pt2i);
+          g3d.drawLineAB(pt1f, pt2f);
         } else {
-          g3d.fillCylinderXYZ(colix, colix, GData.ENDCAPS_OPEN, diam, pt1i.x,
-              pt1i.y, pt1i.z, pt2i.x, pt2i.y, pt2i.z);
+          g3d.fillCylinderBits(GData.ENDCAPS_OPEN, diam, pt1f,
+              pt2f);
         }
       }
     }
   }
   
-  private final P3 ptTemp = new P3();
-  private final P3i ptTempi = new P3i();
-
   @Override
   protected void renderPoints() {
     try {
@@ -535,15 +531,15 @@ public class IsosurfaceRenderer extends MeshRenderer {
         continue;
       if (i > 100)
         continue;
-      ptTemp.setT(vertices[i]);
+      pt1f.setT(vertices[i]);
       short n = mesh.normixes[i];
       // -n is an intensity2sided and does not correspond to a true normal
       // index
       if (n >= 0) {
-        ptTemp.scaleAdd2(3, vertexVectors[n], ptTemp);
-        tm.transformPtScr(ptTemp, ptTempi);
-        g3d.drawLineAB(screens[i], ptTempi);
-        //g3d.drawStringNoSlab("" + n, null, ptTempi.x, ptTempi.y, ptTempi.z);
+        pt1f.scaleAdd2(3, vertexVectors[n], pt1f);
+        tm.transformPtScrT3(pt1f, pt1f);
+        pt1f.set(screens[i].x, screens[i].y, screens[i].z);
+        g3d.drawLineAB(pt1f, pt1f);
       }
     }
   }

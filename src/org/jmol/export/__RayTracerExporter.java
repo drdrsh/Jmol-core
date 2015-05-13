@@ -256,7 +256,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   @Override
   void fillEllipsoid(P3 center, P3[] points, short colix, int x,
                        int y, int z, int diameter, M3 toEllipsoidal,
-                       double[] coef, M4 deriv, P3i[] octantPoints) {
+                       double[] coef, M4 deriv, P3[] octantPoints) {
     float radius = diameter / 2f;
     if (radius == 0)
       return;

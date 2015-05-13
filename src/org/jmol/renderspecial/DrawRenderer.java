@@ -70,9 +70,26 @@ public class DrawRenderer extends MeshRenderer {
     imageFontScaling = vwr.imageFontScaling;
     Draw draw = (Draw) shape;
     isPrecision = true;
-    for (int i = draw.meshCount; --i >= 0;)
-      if (renderMesh(dmesh = (DrawMesh) draw.meshes[i]))
+    for (int i = draw.meshCount; --i >= 0;) {
+      Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
+      if (mesh.connections != null) {
+        if (mesh.connections[0] < 0)
+          continue;
+        // bond-bond [ a b   c d  ]
+        // bond-atom [ a b   c -1 ]
+        // atom-bond [ a -1  c d  ]
+        // atom-atom [ a -1  c -1 ]
+
+        mesh.vs = new P3[4];
+        mesh.vc = 4;
+        int[] c = mesh.connections;
+        for (int j = 0; j < 4; j++)
+          mesh.vs[j] = (c[j] < 0 ? mesh.vs[j - 1] : vwr.ms.at[c[j]]);
+        mesh.recalcAltVertices = true;
+      }
+      if (renderMesh2(mesh))
         renderInfo();
+    }
     return needTranslucent;
   }
 
@@ -82,27 +99,7 @@ public class DrawRenderer extends MeshRenderer {
         && (dmesh.modelFlags == null || dmesh.bsMeshesVisible.get(i));
   }
 
-  @Override
-  public boolean renderMesh(Mesh mesh) {
-    if (mesh.connections != null) {
-      if (mesh.connections[0] < 0)
-        return false;
-      // bond-bond [ a b   c d  ]
-      // bond-atom [ a b   c -1 ]
-      // atom-bond [ a -1  c d  ]
-      // atom-atom [ a -1  c -1 ]
-
-      mesh.vs = new P3[4];
-      mesh.vc = 4;
-      int[] c = mesh.connections;
-      for (int i = 0; i < 4; i++)
-        mesh.vs[i] = (c[i] < 0 ? mesh.vs[i - 1] : vwr.ms.at[c[i]]);
-      mesh.recalcAltVertices = true;
-    }
-    return renderMesh2(mesh);
-  }
-
-  @Override
+   @Override
   protected void render2(boolean isExport) {
     isPrecision = vwr.tm.perspectiveDepth;
     drawType = dmesh.drawType;
@@ -244,9 +241,8 @@ public class DrawRenderer extends MeshRenderer {
     if (isCurved) {
       g3d.addRenderer(T.hermitelevel);
       for (int i = 0, i0 = 0; i < nPoints - 1; i++) {
-        g3d
-            .fillHermite(tension, diameter, diameter, diameter, screens[i0],
-                screens[i], screens[i + 1], screens[i
+        g3d.fillHermite(tension, diameter, diameter, diameter, p3Screens[i0],
+                p3Screens[i], p3Screens[i + 1], p3Screens[i
                     + (i == nPoints - 2 ? 1 : 2)]);
         i0 = i;
       }
@@ -361,12 +357,20 @@ public class DrawRenderer extends MeshRenderer {
 
   private final P3 pt0f = new P3();
   protected P3i pt0i = new P3i();
+  private P3 s0f;
+  private P3 s1f;
+  private P3 s2f;
 
   private void renderArrowHead(T3 pt1, T3 pt2, float factor2,
                                boolean isTransformed, boolean withShaft,
                                boolean isBarb) {
     if (dmesh.noHead)
       return;
+    if (s0f == null) {
+      s0f = new P3();
+      s1f = new P3();
+      s2f = new P3();
+    }
     float fScale = getArrowScale();
     if (isTransformed)
       fScale *= 40;
@@ -386,30 +390,30 @@ public class DrawRenderer extends MeshRenderer {
     vTemp.scale(5);
     pt1f.sub2(pt2f, vTemp);
     if (isTransformed) {
-      pt1i.set(Math.round(pt1f.x),Math.round(pt1f.y),Math.round(pt1f.z));
-      pt2i.set(Math.round(pt2f.x), Math.round(pt2f.y), Math.round(pt2f.z));
+      s1f.setT(pt1f);
+      s2f.setT(pt2f);
     } else {
-      tm.transformPtScr(pt2f, pt2i);
-      tm.transformPtScr(pt1f, pt1i);
-      tm.transformPtScr(pt0f, pt0i);
+      tm.transformPtScrT3(pt2f, s2f);
+      tm.transformPtScrT3(pt1f, s1f);
+      tm.transformPtScrT3(pt0f, s0f);
     }
-    if (pt2i.z == 1 || pt1i.z == 1) //slabbed
+    if (s2f.z == 1 || s1f.z == 1) //slabbed
       return;
     int headDiameter;
     if (diameter > 0) {
       headDiameter = diameter * 3;
     } else {
-      vTemp.set(pt2i.x - pt1i.x, pt2i.y - pt1i.y, pt2i.z - pt1i.z);
+      vTemp.set(s2f.x - s1f.x, s2f.y - s1f.y, s2f.z - s1f.z);
       headDiameter = Math.round(vTemp.length() * .5f);
       diameter = headDiameter / 5;
     }
     if (diameter < 1)
       diameter = 1;
     if (headDiameter > 2)
-      g3d.fillConeScreen(GData.ENDCAPS_FLAT, headDiameter, pt1i, pt2i,
+      g3d.fillConeScreen3f(GData.ENDCAPS_FLAT, headDiameter, s1f, s2f,
           isBarb);
     if (withShaft)
-      g3d.fillCylinderScreen3I(GData.ENDCAPS_OPENEND, diameter, pt0i, pt1i, null, null, 0);
+      g3d.fillCylinderScreen3I(GData.ENDCAPS_OPENEND, diameter, s0f, s1f, null, null, 0);
   }
 
   private float getArrowScale() {

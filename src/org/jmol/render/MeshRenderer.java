@@ -29,7 +29,6 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
-import org.jmol.shape.MeshCollection;
 import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
@@ -42,6 +41,9 @@ import javajs.util.P4;
 import javajs.util.T3;
 import javajs.util.V3;
 
+/**
+ * an abstract class subclasssed by BioShapeRenderer, DrawRenderer, and IsosurfaceRenderer
+ */
 public abstract class MeshRenderer extends ShapeRenderer {
 
   protected Mesh mesh;
@@ -78,21 +80,26 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected int exportPass;
   protected boolean needTranslucent;
 
-  @Override
-  protected boolean render() {
-    needTranslucent = false;
-    antialias = g3d.isAntialiased(); 
-    MeshCollection mc = (MeshCollection) shape;
-    for (int i = mc.meshCount; --i >= 0;)
-      renderMesh(mc.meshes[i]);
-    return needTranslucent;
-  }
-  
-  // draw, isosurface, molecular orbitals
-  public boolean renderMesh(Mesh mesh) { // used by mps renderer
-    return renderMesh2(mesh);
-  }
+//  @Override
+//  protected boolean render() {
+//    needTranslucent = false;
+//    antialias = g3d.isAntialiased(); 
+//    MeshCollection mc = (MeshCollection) shape;
+//    for (int i = mc.meshCount; --i >= 0;)
+//      renderMesh(mc.meshes[i]);
+//    return needTranslucent;
+//  }
+//  
+//  // draw, isosurface, molecular orbitals, bioshapes use this basic form
+//  public boolean renderMesh(Mesh mesh) { 
+//    return renderMesh2(mesh);
+//  }
 
+  /**
+   * overridden in BioShapeRenderer, DrawRenderer, and IsosurfaceRenderer
+   * @param mesh
+   * @return whether we need to show info
+   */
   protected boolean renderMesh2(Mesh mesh) {
     this.mesh = mesh;
     if (!setVariables())
@@ -108,7 +115,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       if (isPrecision) 
         for (int i = vertexCount; --i >= 0;)
           if (vertices[i] != null)
-            tm.transformPtScrP3(vertices[i], p3Screens[i]);
+            tm.transformPtScrT3(vertices[i], p3Screens[i]);
 
       render2(isExport);
     } else {
@@ -260,7 +267,10 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return true;
   }
 
-  //isosurface,meshRenderer::render1 (just about everything)
+  /**
+   * Overridden in DrawRenderer and IsosurfaceRenderer
+   * @param generateSet
+   */
   protected void render2(boolean generateSet) {
     render2b(generateSet);
   }
@@ -352,8 +362,12 @@ public abstract class MeshRenderer extends ShapeRenderer {
         if (!vwr.gdata.isDirectedTowardsCamera(normix))
           continue;
         if (fill) {
-          g3d.fillTriangle3CN(screens[iA], colix, normix, screens[iB], colix,
-              normix, screens[iC], colix, normix);
+          if (isPrecision)
+            g3d.fillTriangle3CNBits(p3Screens[iA], colix, normix,
+                p3Screens[iB], colix, normix, p3Screens[iC], colix, normix);
+          else
+            g3d.fillTriangle3CN(screens[iA], colix, normix, screens[iB], colix,
+                normix, screens[iC], colix, normix);
           continue;
         }
         check = polygon[MeshSurface.P_CHECK];
@@ -401,7 +415,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
               colix, check, 1);
         continue;
       case 4:
-        // simple quad -- DRAW only
+        // simple quad -- DRAW only (isPrecision)
         int iD = polygon[3];
         short nD = normixes[iD];
         if (frontOnly && (check != 7 || transformedVectors[nD].z < 0))
@@ -411,25 +425,14 @@ public abstract class MeshRenderer extends ShapeRenderer {
             bsPolygonsToExport.set(i);
             continue;
           }
-          if (isPrecision) {
-            g3d.fillTriangle3CNBits(p3Screens[iA], colix, nA, p3Screens[iB],
-                colix, nB, p3Screens[iC], colix, nC);
-            g3d.fillTriangle3CNBits(p3Screens[iA], colix, nA, p3Screens[iC], colix,
-                nC, p3Screens[iD], colix, nD);
-          } else {
-            g3d.fillTriangle3CN(screens[iA], colix, nA, screens[iB], colix, nB,
-                screens[iC], colix, nC);
-            g3d.fillTriangle3CN(screens[iA], colix, nA, screens[iC], colix, nC,
-                screens[iD], colix, nD);
-          }
+          g3d.fillTriangle3CNBits(p3Screens[iA], colix, nA, p3Screens[iB],
+              colix, nB, p3Screens[iC], colix, nC);
+          g3d.fillTriangle3CNBits(p3Screens[iA], colix, nA, p3Screens[iC],
+              colix, nC, p3Screens[iD], colix, nD);
           continue;
         }
-        if (isPrecision)
-          g3d.drawQuadrilateralBits(colix, p3Screens[iA], p3Screens[iB], p3Screens[iC],
-              p3Screens[iD]);
-        else
-          g3d.drawQuadrilateral(colix, screens[iA], screens[iB], screens[iC],
-              screens[iD]);
+        g3d.drawQuadrilateralBits(colix, p3Screens[iA], p3Screens[iB],
+            p3Screens[iC], p3Screens[iD]);
       }
     }
     if (generateSet)
@@ -487,11 +490,10 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return check;
   }
 
-  protected void drawLine(int iA, int iB, boolean fill, 
-                          T3 vA, T3 vB, 
-                          P3i sA, P3i sB) {
-    byte endCap = (iA != iB  && !fill ? GData.ENDCAPS_NONE 
-        : width < 0 || width == -0.0 || iA != iB && isTranslucent ? GData.ENDCAPS_FLAT
+  protected void drawLine(int iA, int iB, boolean fill, T3 vA, T3 vB, P3i sA,
+                          P3i sB) {
+    byte endCap = (iA != iB && !fill ? GData.ENDCAPS_NONE : width < 0
+        || width == -0.0 || iA != iB && isTranslucent ? GData.ENDCAPS_FLAT
         : GData.ENDCAPS_SPHERICAL);
     if (width == 0) {
       if (diameter == 0)
@@ -499,25 +501,34 @@ public abstract class MeshRenderer extends ShapeRenderer {
       if (exportType == GData.EXPORT_CARTESIAN) {
         pt1f.ave(vA, vB);
         tm.transformPtScr(pt1f, pt1i);
-        diameter = (int) Math.floor(vwr.tm.unscaleToScreen(pt1i.z, diameter) * 1000);
+        diameter = (int) Math
+            .floor(vwr.tm.unscaleToScreen(pt1i.z, diameter) * 1000);
       }
       if (iA == iB) {
-        g3d.fillSphereI(diameter, sA);
-      } else {
+        if (isPrecision) {
+          pt1f.set(sA.x,  sA.y,  sA.z);
+          g3d.fillSphereBits(diameter, pt1f);
+        } else {
+          g3d.fillSphereI(diameter, pt1i);
+        }
+        return;
+      }
+      if (!isPrecision) {
         g3d.fillCylinder(endCap, diameter, sA, sB);
+        return;
       }
     } else {
       pt1f.ave(vA, vB);
       tm.transformPtScr(pt1f, pt1i);
-      int mad = (int) Math.floor(Math.abs(width) * 1000); 
-      diameter = (int) (exportType == GData.EXPORT_CARTESIAN ? mad 
-          : vwr.tm.scaleToScreen(pt1i.z, mad));
-      if (diameter == 0)
-        diameter = 1;
-      tm.transformPt3f(vA, pt1f);
-      tm.transformPt3f(vB, pt2f);
-      g3d.fillCylinderBits(endCap, diameter, pt1f, pt2f);
+      int mad = (int) Math.floor(Math.abs(width) * 1000);
+      diameter = (int) (exportType == GData.EXPORT_CARTESIAN ? mad : vwr.tm
+          .scaleToScreen(pt1i.z, mad));
     }
+    if (diameter == 0)
+      diameter = 1;
+    tm.transformPt3f(vA, pt1f);
+    tm.transformPt3f(vB, pt2f);
+    g3d.fillCylinderBits(endCap, diameter, pt1f, pt2f);
   }
 
   protected void exportSurface(short colix) {

@@ -1362,8 +1362,8 @@ public class TransformManager {
   public final M4 matrixTransform = new M4();
   public final M4 matrixTransformInv = new M4();
 
-   protected final P3 point3fScreenTemp = new P3();
-  protected final P3i point3iScreenTemp = new P3i();
+   protected final P3 fScrPt = new P3();
+  protected final P3i iScrPt = new P3i();
 
   final Point3fi ptVibTemp = new Point3fi();
 
@@ -1490,21 +1490,21 @@ public class TransformManager {
   }
 
   protected void getScreenTemp(T3 ptXYZ) {
-    matrixTransform.rotTrans2(ptXYZ, point3fScreenTemp);
-  }
-
-  public void transformPoints(int count, T3[] angstroms, P3i[] screens) {
-    for (int i = count; --i >= 0;)
-      screens[i].setT(transformPt(angstroms[i]));
+    matrixTransform.rotTrans2(ptXYZ, fScrPt);
   }
 
   public void transformPtScr(T3 ptXYZ, P3i pointScreen) {
     pointScreen.setT(transformPt(ptXYZ));
   }
 
-  public void transformPtScrP3(T3 ptXYZ, T3 pointScreen) {
+  public void transformPtScrT3(T3 ptXYZ, T3 pointScreen) {
+    transformPt(ptXYZ);
+    pointScreen.setT(fScrPt);
+  }
+
+  public void transformPtNoClip(T3 ptXYZ, T3 pointScreen) {
     applyPerspective(ptXYZ, null);
-    pointScreen.setT(point3fScreenTemp);
+    pointScreen.setT(fScrPt);
   }
 
   /**
@@ -1541,27 +1541,27 @@ public class TransformManager {
 
   public void transformPt3f(T3 ptXYZ, P3 screen) {
     applyPerspective(ptXYZ, ptXYZ);
-    screen.setT(point3fScreenTemp);
+    screen.setT(fScrPt);
   }
 
   public synchronized P3i transformPt2D(T3 ptXyp) {
     // axes position [50 50]
     // just does the processing for [x y] and [x y %]
     if (ptXyp.z == -Float.MAX_VALUE) {
-      point3iScreenTemp.x = (int) Math.floor(ptXyp.x / 100 * screenWidth);
-      point3iScreenTemp.y = (int) Math
+      iScrPt.x = (int) Math.floor(ptXyp.x / 100 * screenWidth);
+      iScrPt.y = (int) Math
           .floor((1 - ptXyp.y / 100) * screenHeight);
     } else {
-      point3iScreenTemp.x = (int) ptXyp.x;
-      point3iScreenTemp.y = (screenHeight - (int) ptXyp.y);
+      iScrPt.x = (int) ptXyp.x;
+      iScrPt.y = (screenHeight - (int) ptXyp.y);
     }
     if (antialias) {
-      point3iScreenTemp.x <<= 1;
-      point3iScreenTemp.y <<= 1;
+      iScrPt.x <<= 1;
+      iScrPt.y <<= 1;
     }
-    matrixTransform.rotTrans2(fixedRotationCenter, point3fScreenTemp);
-    point3iScreenTemp.z = (int) point3fScreenTemp.z;
-    return point3iScreenTemp;
+    matrixTransform.rotTrans2(fixedRotationCenter, fScrPt);
+    iScrPt.z = (int) fScrPt.z;
+    return iScrPt;
   }
 
   /**
@@ -1579,7 +1579,7 @@ public class TransformManager {
 
     // fixedRotation point is at the origin initially
 
-    float z = point3fScreenTemp.z;
+    float z = fScrPt.z;
 
     // this could easily go negative -- behind the screen --
     // but we don't care. In fact, that just makes it easier,
@@ -1590,10 +1590,10 @@ public class TransformManager {
       if (!haveNotifiedNaN && Logger.debugging)
         Logger.debug("NaN seen in TransformPoint");
       haveNotifiedNaN = true;
-      z = point3fScreenTemp.z = 1;
+      z = fScrPt.z = 1;
     } else if (z <= 0) {
       // just don't let z go past 1 BH 11/15/06
-      z = point3fScreenTemp.z = 1;
+      z = fScrPt.z = 1;
     }
 
     // x and y are moved inward (generally) relative to 0, which
@@ -1604,42 +1604,42 @@ public class TransformManager {
     switch (mode) {
     case MODE_NAVIGATION:
       // move nav center to 0; refOffset = Nav - Rot
-      point3fScreenTemp.x -= navigationShiftXY.x;
-      point3fScreenTemp.y -= navigationShiftXY.y;
+      fScrPt.x -= navigationShiftXY.x;
+      fScrPt.y -= navigationShiftXY.y;
       break;
     case MODE_PERSPECTIVE_PYMOL:
-      point3fScreenTemp.x += perspectiveShiftXY.x;
-      point3fScreenTemp.y += perspectiveShiftXY.y;
+      fScrPt.x += perspectiveShiftXY.x;
+      fScrPt.y += perspectiveShiftXY.y;
       break;
     }
     if (perspectiveDepth) {
       // apply perspective factor
       float factor = getPerspectiveFactor(z);
-      point3fScreenTemp.x *= factor;
-      point3fScreenTemp.y *= factor;
+      fScrPt.x *= factor;
+      fScrPt.y *= factor;
     }
     switch (mode) {
     case MODE_NAVIGATION:
-      point3fScreenTemp.x += navigationOffset.x;
-      point3fScreenTemp.y += navigationOffset.y;
+      fScrPt.x += navigationOffset.x;
+      fScrPt.y += navigationOffset.y;
       break;
     case MODE_PERSPECTIVE_PYMOL:
-      point3fScreenTemp.x -= perspectiveShiftXY.x;
-      point3fScreenTemp.y -= perspectiveShiftXY.y;
+      fScrPt.x -= perspectiveShiftXY.x;
+      fScrPt.y -= perspectiveShiftXY.y;
       //$FALL-THROUGH$
     case MODE_STANDARD:
-      point3fScreenTemp.x += fixedRotationOffset.x;
-      point3fScreenTemp.y += fixedRotationOffset.y;
+      fScrPt.x += fixedRotationOffset.x;
+      fScrPt.y += fixedRotationOffset.y;
       break;
     }
-    if (Float.isNaN(point3fScreenTemp.x) && !haveNotifiedNaN) {
+    if (Float.isNaN(fScrPt.x) && !haveNotifiedNaN) {
       if (Logger.debugging)
         Logger.debug("NaN found in transformPoint ");
       haveNotifiedNaN = true;
     }
 
-    point3iScreenTemp.set((int) point3fScreenTemp.x, (int) point3fScreenTemp.y,
-        (int) point3fScreenTemp.z);
+    iScrPt.set((int) fScrPt.x, (int) fScrPt.y,
+        (int) fScrPt.z);
 
     if (ptRef != null
         && (slabPlane != null
@@ -1647,13 +1647,8 @@ public class TransformManager {
                 * slabPlane.z + slabPlane.w > 0 || depthPlane != null
             && ptRef.x * depthPlane.x + ptRef.y * depthPlane.y + ptRef.z
                 * depthPlane.z + depthPlane.w < 0))
-      point3iScreenTemp.z = 1;
-    return point3iScreenTemp;
-  }
-
-  public void transformVector(V3 vectorAngstroms, V3 vectorTransformed) {
-    //dots renderer, geodesic only
-    matrixTransform.rotate2(vectorAngstroms, vectorTransformed);
+      fScrPt.z = iScrPt.z = 1;
+    return iScrPt;
   }
 
   final protected P3 untransformedPoint = new P3();
@@ -2528,8 +2523,8 @@ public class TransformManager {
       untransformedPoint.y -= navigationOffset.y;
       break;
     case MODE_PERSPECTIVE_PYMOL:
-      point3fScreenTemp.x += perspectiveShiftXY.x;
-      point3fScreenTemp.y += perspectiveShiftXY.y;
+      fScrPt.x += perspectiveShiftXY.x;
+      fScrPt.y += perspectiveShiftXY.y;
       //$FALL-THROUGH$
     case MODE_STANDARD:
       untransformedPoint.x -= fixedRotationOffset.x;

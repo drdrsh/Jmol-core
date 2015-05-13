@@ -166,7 +166,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       sc.iCommandError = iCommand;
       setAaTokenCompiled();
     }
-    sc.aatoken = aatokenCompiled;
+    sc.saveTokens(aatokenCompiled);
     sc.errorMessage = errorMessage;
     sc.errorMessageUntranslated = (errorMessageUntranslated == null ? errorMessage
         : errorMessageUntranslated);

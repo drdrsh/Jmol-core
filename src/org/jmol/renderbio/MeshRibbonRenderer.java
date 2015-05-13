@@ -50,7 +50,7 @@ public class MeshRibbonRenderer extends StrandsRenderer {
     ribbonBottomScreens = calcScreens(-offsetBottom, mads);
     for (int i = bsVisible.nextSetBit(0); i >= 0; i = bsVisible.nextSetBit(i + 1))
       renderHermiteRibbon(doFill, i, false);
-    vwr.freeTempScreens(ribbonTopScreens);
-    vwr.freeTempScreens(ribbonBottomScreens);
+    vwr.freeTempPoints(ribbonTopScreens);
+    vwr.freeTempPoints(ribbonBottomScreens);
   }
 }

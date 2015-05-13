@@ -127,8 +127,8 @@ public class RocketRenderer {
         int coneDiameter = (mad << 1) - (mad >> 1);
         coneDiameter = (int) vwr.tm.scaleToScreen(
             (int) Math.floor(screenB.z), coneDiameter);
-        g3d.fillConeSceen3f(GData.ENDCAPS_FLAT, coneDiameter, screenB,
-            screenC);
+        g3d.fillConeScreen3f(GData.ENDCAPS_FLAT, coneDiameter, screenB,
+            screenC, false);
       } else {
         
       }

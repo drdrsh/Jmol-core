@@ -31,6 +31,8 @@ import org.jmol.script.T;
 import org.jmol.shapespecial.Dots;
 import org.jmol.util.C;
 import org.jmol.util.Geodesic;
+
+import javajs.util.P3i;
 import javajs.util.V3;
 
 
@@ -39,11 +41,13 @@ public class DotsRenderer extends ShapeRenderer {
 
   public boolean iShowSolid;
   
-  V3[] verticesTransformed;
   public int screenLevel;
   public int screenDotCount;
-  public int[] screenCoordinates;
+  public int[] scrCoords;
   public int[] faceMap = null; // used only by GeoSurface, but set here
+  
+  private V3 v3temp = new V3();
+  private P3i scrTemp = new P3i();
 
   private int dotScale;
   
@@ -51,10 +55,7 @@ public class DotsRenderer extends ShapeRenderer {
   protected void initRenderer() {
     screenLevel = Dots.MAX_LEVEL;
     screenDotCount = Geodesic.getVertexCount(Dots.MAX_LEVEL);
-    verticesTransformed = new V3[screenDotCount];
-    for (int i = screenDotCount; --i >= 0; )
-      verticesTransformed[i] = new V3();
-    screenCoordinates = new int[3 * screenDotCount];
+    scrCoords = new int[3 * screenDotCount];
   }
 
   @Override
@@ -77,9 +78,6 @@ public class DotsRenderer extends ShapeRenderer {
     screenLevel = Math.max(Math.min(screenLevel, Dots.MAX_LEVEL), 0);
     screenDotCount = Geodesic.getVertexCount(screenLevel);
     dotScale = vwr.getInt(T.dotscale);
-    for (int i = screenDotCount; --i >= 0;)
-      tm.transformVector(Geodesic.getVertexVector(i),
-          verticesTransformed[i]);
     BS[] maps = dots.ec.getDotsConvexMaps();
     for (int i = dots.ec.getDotsConvexMax(); --i >= 0;) {
       Atom atom = ms.at[i];
@@ -88,11 +86,27 @@ public class DotsRenderer extends ShapeRenderer {
           || !g3d.isInDisplayRange(atom.sX, atom.sY))
         continue;
       try {
-        int nPoints = calcScreenPoints(map, dots.ec.getAppropriateRadius(i) + testRadiusAdjust,
-            atom.sX, atom.sY, atom.sZ);
+        float radius = dots.ec.getAppropriateRadius(i)
+            + testRadiusAdjust;
+        int nPoints = 0;
+        int j = 0;
+        int iDot = Math.min(map.size(), screenDotCount); 
+        while (--iDot >= 0) {
+          if (!map.get(iDot))
+            continue;
+          v3temp.scaleAdd2(radius, Geodesic.getVertexVector(iDot), atom);
+          tm.transformPtScr(v3temp, scrTemp);
+          if (faceMap != null)
+            faceMap[iDot] = j;
+          scrCoords[j++] = scrTemp.x;
+          scrCoords[j++] = scrTemp.y;
+          scrCoords[j++] = scrTemp.z;
+          ++nPoints;
+        }
+
         if (nPoints != 0)
-          renderConvex(C.getColixInherited(dots.colixes[i],
-              atom.colixAtom), map, nPoints);
+          renderConvex(C.getColixInherited(dots.colixes[i], atom.colixAtom),
+              map, nPoints);
       } catch (Exception e) {
         System.out.println("Dots rendering error");
         System.out.println(e.toString());
@@ -103,37 +117,6 @@ public class DotsRenderer extends ShapeRenderer {
     //Logger.debug("dots rendering time = "+ gs.getExecutionWalltime());
   }
   
-  /**
-   * calculates the screen xy coordinates for the dots or faces
-   * 
-   * @param visibilityMap
-   * @param radius
-   * @param x
-   * @param y
-   * @param z
-   * @return number of points
-   */
-  private int calcScreenPoints(BS visibilityMap, float radius, int x, int y, int z) {
-    int nPoints = 0;
-    int i = 0;
-    float scaledRadius = vwr.tm.scaleToPerspective(z, radius);
-    int iDot = Math.min(visibilityMap.size(), screenDotCount); 
-    while (--iDot >= 0) {
-      if (!visibilityMap.get(iDot))
-        continue;
-      V3 vertex = verticesTransformed[iDot];
-      if (faceMap != null)
-        faceMap[iDot] = i;
-      screenCoordinates[i++] = x
-          + Math.round (scaledRadius * vertex.x);
-      screenCoordinates[i++] = y
-          + Math.round(scaledRadius * vertex.y);
-      screenCoordinates[i++] = z
-          + Math.round(scaledRadius * vertex.z);
-      ++nPoints;
-    }
-    return nPoints;
-  }
 
   /**
    * generic renderer -- dots and geosurface
@@ -154,7 +137,7 @@ public class DotsRenderer extends ShapeRenderer {
    */
   protected void renderDots(int nPoints) {
     g3d.setC(colix);
-    g3d.drawPoints(nPoints, screenCoordinates, dotScale);
+    g3d.drawPoints(nPoints, scrCoords, dotScale);
   }
 }
 

@@ -276,9 +276,9 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
         if (pt < 0) {
           pt1 = 0;
           pt2 = editor.getDocument().getLength();
-        } else if (context == null || context.aatoken == null) {
+        } else if (context == null || context.getTokenCount() < 0) {
           pt1 = pt2 = 0;
-        } else if (pt < context.aatoken.length) {
+        } else if (pt < context.getTokenCount()) {
           pt1 = context.lineIndices[pt][0];
           pt2 = context.lineIndices[pt][1];
           //System.out.println ("cursor set to " + pt + " ispaused " + isPaused + " " + context.pc + " " + context.lineIndices.length);
@@ -398,7 +398,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   private void gotoParsedLine() {
     setTitle(title + " " + parsedContext.contextPath 
-        + " -- " + (parsedContext.aatoken == null ? "" : parsedContext.aatoken.length + " commands ") 
+        + " -- " + (parsedContext.getTokenCount() < 0 ? "" : parsedContext.getTokenCount() + " commands ") 
         + (parsedContext.iCommandError < 0 ? "" : " ERROR: " + parsedContext.errorType));
     boolean isError = (parsedContext.iCommandError >= 0);
     gotoCommand(isError ? parsedContext.iCommandError : 0, true, isError ? attError : attHighlight);

@@ -36,8 +36,8 @@ public class ScriptContext {
   
   private static int contextCount = 0;
 
-  public T[][] aatoken;
-  public boolean allowJSThreads;
+  private T[][] aatoken;
+  boolean allowJSThreads;
   boolean chk;
   public String contextPath = " >> ";
   public Map<String, SV> vars;
@@ -77,6 +77,8 @@ public class ScriptContext {
   int tryPt;
   T theToken;
   int theTok;
+
+  private int[] pointers;
   
   ScriptContext() {
     id = ++contextCount;
@@ -127,7 +129,31 @@ public class ScriptContext {
     }
     return ht;
   }
+
+  /**
+   * save pointers indicating state of if/then
+   * 
+   */
+  void saveTokens(T[][] aa) {
+    aatoken = aa;
+    pointers = new int[aa.length];
+    for (int i = pointers.length; --i >= 0;)
+      pointers[i] = aa[i][0].intValue;
+  }
   
-  
+  T[][] restoreTokens() {
+    if (pointers != null)
+      for (int i = pointers.length; --i >= 0;)
+        aatoken[i][0].intValue = pointers[i];
+    return aatoken;
+  }
+
+  public int getTokenCount() {
+    return (aatoken == null ? -1 : aatoken.length);
+  }
+
+  public T[] getToken(int i) {
+    return aatoken[i];
+  }
 
 }

@@ -165,11 +165,11 @@ public class TransformManager4D extends TransformManager {
     if (doTransform4D && ptXYZ instanceof T4) {
       p4.add2(ptXYZ, v1);                      // 3D centering
       m2_rotate.rotate(p4);                    // 4D rotation
-      point3fScreenTemp.setT(p4);              // 3D truncation
-      m3_toScreen.rotTrans(point3fScreenTemp); // 3D scaling
-      point3fScreenTemp.z += zOffset;          // 3D offset
+      fScrPt.setT(p4);              // 3D truncation
+      m3_toScreen.rotTrans(fScrPt); // 3D scaling
+      fScrPt.z += zOffset;          // 3D offset
     } else {
-      matrixTransform.rotTrans2(ptXYZ, point3fScreenTemp);
+      matrixTransform.rotTrans2(ptXYZ, fScrPt);
     }
   }
 

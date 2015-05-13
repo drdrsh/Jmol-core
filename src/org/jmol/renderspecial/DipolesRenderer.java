@@ -41,11 +41,11 @@ public class DipolesRenderer extends ShapeRenderer {
 
   private float dipoleVectorScale;
   private final V3 offset = new V3();
-  private final P3i[] screens = new P3i[6];
+  private final P3[] screens3f = new P3[6];
   private final P3[] points = new P3[6];
   {
     for (int i = 0; i < 6; i++) {
-      screens[i] = new P3i();
+      screens3f[i] = new P3();
       points[i] = new P3();
     }
   }
@@ -169,10 +169,10 @@ public class DipolesRenderer extends ShapeRenderer {
     for (int i = 0; i < 6; i++)
       points[i].add(offset);
     for (int i = 0; i < 6; i++)
-      tm.transformPtScr(points[i], screens[i]);
+      tm.transformPtScrT3(points[i], screens3f[i]);
     tm.transformPt3f(points[cross], cross0);
     tm.transformPt3f(points[crossEnd], cross1);
-    float d = vwr.tm.scaleToScreen(screens[center].z, mad);
+    float d = vwr.tm.scaleToScreen((int) screens3f[center].z, mad);
     diameter = (int) d;
     headWidthPixels = (int) Math.floor(d * arrowHeadWidthFactor);
     if (headWidthPixels < diameter + 5)
@@ -182,19 +182,19 @@ public class DipolesRenderer extends ShapeRenderer {
     if (colix == colixB) {
       if (!g3d.setC(colix))
         return true;
-      g3d.fillCylinder(GData.ENDCAPS_OPEN, diameter,
-          screens[cylinderBase], screens[arrowHeadBase]);
+      g3d.fillCylinderBits(GData.ENDCAPS_OPEN, diameter,
+          screens3f[cylinderBase], screens3f[arrowHeadBase]);
       if (!noCross)
         g3d.fillCylinderBits(GData.ENDCAPS_FLAT, crossWidthPixels, cross0,
             cross1);
-      g3d.fillConeScreen(GData.ENDCAPS_FLAT, headWidthPixels,
-          screens[arrowHeadBase], screens[arrowHeadTip], false);
+      g3d.fillConeScreen3f(GData.ENDCAPS_FLAT, headWidthPixels,
+          screens3f[arrowHeadBase], screens3f[arrowHeadTip], false);
       return false;
     }
     boolean needTranslucent = false;
     if (g3d.setC(colix)) {
-      g3d.fillCylinder(GData.ENDCAPS_OPEN, diameter,
-          screens[cylinderBase], screens[center]);
+      g3d.fillCylinderBits(GData.ENDCAPS_OPEN, diameter,
+          screens3f[cylinderBase], screens3f[center]);
       if (!noCross)
         g3d.fillCylinderBits(GData.ENDCAPS_FLAT, crossWidthPixels, cross0,
             cross1);
@@ -203,10 +203,10 @@ public class DipolesRenderer extends ShapeRenderer {
     }
     colix = colixB;
     if (g3d.setC(colix)) {
-      g3d.fillCylinder(GData.ENDCAPS_OPENEND, diameter, screens[center],
-          screens[arrowHeadBase]);
-      g3d.fillConeScreen(GData.ENDCAPS_FLAT, headWidthPixels,
-          screens[arrowHeadBase], screens[arrowHeadTip], false);
+      g3d.fillCylinderBits(GData.ENDCAPS_OPENEND, diameter, screens3f[center],
+          screens3f[arrowHeadBase]);
+      g3d.fillConeScreen3f(GData.ENDCAPS_FLAT, headWidthPixels,
+          screens3f[arrowHeadBase], screens3f[arrowHeadTip], false);
     } else {
       needTranslucent = true;
     }

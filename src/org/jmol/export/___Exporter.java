@@ -37,7 +37,6 @@ import javajs.util.P3;
 import javajs.util.OC;
 import javajs.util.M3;
 import javajs.util.M4;
-import javajs.util.P3i;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -552,7 +551,7 @@ public abstract class ___Exporter {
   abstract void fillEllipsoid(P3 center, P3[] points, short colix, 
                               int x, int y, int z, int diameter,
                               M3 toEllipsoidal, double[] coef,
-                              M4 deriv, P3i[] octantPoints);
+                              M4 deriv, P3[] octantPoints);
 
   void drawFilledCircle(short colixRing, short colixFill, int diameter, int x, int y, int z) {
     if (colixRing != 0)

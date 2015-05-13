@@ -68,12 +68,6 @@ public class Point3fi extends P3 implements Cloneable {
    */
   public short sD = -1;
 
-  public static void set2(P3 p3f, P3i p3i) {
-    p3f.x = p3i.x;
-    p3f.y = p3i.y;
-    p3f.z = p3i.z;
-  }
-  
  public Point3fi copy() {
     try {
       return (Point3fi) clone();

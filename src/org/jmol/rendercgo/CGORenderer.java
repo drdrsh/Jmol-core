@@ -65,24 +65,25 @@ public class CGORenderer extends DrawRenderer {
   
   @Override
   protected boolean render() {
+    isPrecision = true;
     needTranslucent = false;
     imageFontScaling = vwr.imageFontScaling;
     CGO cgo = (CGO) shape;
     for (int i = cgo.meshCount; --i >= 0;)
-      renderMesh(cgoMesh = (CGOMesh) cgo.meshes[i]);
+      render2(mesh = cgoMesh = (CGOMesh) cgo.meshes[i]);
     return needTranslucent;
   }
   
-  @Override
-  public boolean renderMesh(Mesh mesh) {
-    this.mesh = mesh;
+  private void render2(Mesh mesh) {
     diameter = cgoMesh.diameter;
     width = cgoMesh.width;
     cmds = cgoMesh.cmds;
     if (cmds == null || !cgoMesh.visible)
-      return false;
-    if (!g3d.setC(cgoMesh.colix))
-      return needTranslucent = true;
+      return;
+    if (!g3d.setC(cgoMesh.colix)) {
+      needTranslucent = true;
+      return;
+    }
     int n = cmds.size();
     int glMode = -1;
     int nPts = 0;
@@ -97,14 +98,14 @@ public class CGORenderer extends DrawRenderer {
     is2D = isMapped = false;
     scaleX = scaleY = 1;
 
-    for (int i = 0; i < n; i++) {
-      int type = cgoMesh.getInt(i);
+    for (int j = 0; j < n; j++) {
+      int type = cgoMesh.getInt(j);
       if (type == CGOMesh.STOP)
         break;
       int len = CGOMesh.getSize(type, is2D);
       if (len < 0) {
         Logger.error("CGO unknown type: " + type);
-        return false;
+        return;
       }
       switch (type) {
       default:
@@ -114,14 +115,14 @@ public class CGORenderer extends DrawRenderer {
         // no fill, either
         break;
       case CGOMesh.PS_SETLINEWIDTH:
-        diameter = cgoMesh.getInt(i + 1);
+        diameter = cgoMesh.getInt(j + 1);
         break;
       case CGOMesh.JMOL_DIAMETER:
-        width = cgoMesh.getFloat(i + 1);
+        width = cgoMesh.getFloat(j + 1);
         break;
       case CGOMesh.JMOL_SCREEN:
         isMapped = false;
-        float f = cgoMesh.getFloat(i + 1);
+        float f = cgoMesh.getFloat(j + 1);
         if (f == 0) {
           is2D = false;
         } else {
@@ -138,33 +139,33 @@ public class CGORenderer extends DrawRenderer {
         map0 = new P3();
         vX = new P3();
         vY = new P3();
-        cgoMesh.getPoint(i + 1, map0);
-        cgoMesh.getPoint(i + 4, vX);
+        cgoMesh.getPoint(j + 1, map0);
+        cgoMesh.getPoint(j + 4, vX);
         vX.sub(map0);
-        cgoMesh.getPoint(i + 7, vY);
+        cgoMesh.getPoint(j + 7, vY);
         vY.sub(map0);
-        x0 = cgoMesh.getFloat(i + 10);
-        y0 = cgoMesh.getFloat(i + 11);
-        dx = cgoMesh.getFloat(i + 12) - x0;
-        dy = cgoMesh.getFloat(i + 13) - y0;
+        x0 = cgoMesh.getFloat(j + 10);
+        y0 = cgoMesh.getFloat(j + 11);
+        dx = cgoMesh.getFloat(j + 12) - x0;
+        dy = cgoMesh.getFloat(j + 13) - y0;
         if (isPS)
           break;
         //$FALL-THROUGH$
       case CGOMesh.PS_SCALE:
-          scaleX = cgoMesh.getFloat(isPS ? i + 1 : i + 14);
-          scaleY = cgoMesh.getFloat(isPS ? i + 2 : i + 15);
+        scaleX = cgoMesh.getFloat(isPS ? j + 1 : j + 14);
+        scaleY = cgoMesh.getFloat(isPS ? j + 2 : j + 15);
         break;
       case CGOMesh.RESET_NORMAL: // use?
         break;
       case CGOMesh.SIMPLE_LINE:
         // what are the first two parameters? 
         // width and number of points?
-        getPoint(i + 2, pt0, pt0i);
-        getPoint(i + (is2D ? 4 : 5), pt1, pt1i);
+        getPoint(j + 2, pt0, pt0i);
+        getPoint(j + (is2D ? 4 : 5), pt1, pt1i);
         drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
         break;
       case CGOMesh.BEGIN:
-        glMode = cgoMesh.getInt(i + 1);
+        glMode = cgoMesh.getInt(j + 1);
         //$FALL-THROUGH$
       case CGOMesh.PS_NEWPATH:
         nPts = 0;
@@ -196,7 +197,7 @@ public class CGORenderer extends DrawRenderer {
         //$FALL-THROUGH$
       case CGOMesh.VERTEX:
         if (nPts++ == 0)
-          getPoint(i, pt0, pt0i);
+          getPoint(j, pt0, pt0i);
         switch (glMode) {
         case -1:
           break;
@@ -205,7 +206,7 @@ public class CGORenderer extends DrawRenderer {
           break;
         case CGOMesh.GL_LINES:
           if (nPts == 2) {
-            getPoint(i, pt1, pt1i);
+            getPoint(j, pt1, pt1i);
             drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
             nPts = 0;
           }
@@ -219,7 +220,7 @@ public class CGORenderer extends DrawRenderer {
             }
             break;
           }
-          getPoint(i, pt1, pt1i);
+          getPoint(j, pt1, pt1i);
           pt = pt0;
           pt0 = pt1;
           pt1 = pt;
@@ -235,10 +236,10 @@ public class CGORenderer extends DrawRenderer {
             colix1 = colix2 = colix0 = colix;
             break;
           case 2:
-            getPoint(i, pt1, pt1i);
+            getPoint(j, pt1, pt1i);
             break;
           case 3:
-            getPoint(i, pt2, pt2i);
+            getPoint(j, pt2, pt2i);
             fillTriangle();
             nPts = 0;
             break;
@@ -252,7 +253,7 @@ public class CGORenderer extends DrawRenderer {
             colix1 = colix2 = colix0 = colix;
             break;
           case 2:
-            getPoint(i, pt2, pt2i);
+            getPoint(j, pt2, pt2i);
             break;
           default:
             if (nPts % 2 == 0) {
@@ -268,7 +269,7 @@ public class CGORenderer extends DrawRenderer {
             }
             pt2 = pt;
             pt2i = spt;
-            getPoint(i, pt2, pt2i);
+            getPoint(j, pt2, pt2i);
             fillTriangle();
             break;
           }
@@ -283,12 +284,12 @@ public class CGORenderer extends DrawRenderer {
             pt1i.setT(pt0i);
             break;
           case 2:
-            getPoint(i, pt0, pt0i);
+            getPoint(j, pt0, pt0i);
             break;
           default:
             pt2.setT(pt0);
             pt2i.setT(pt0i);
-            getPoint(i, pt0, pt0i);
+            getPoint(j, pt0, pt0i);
             fillTriangle();
             break;
           }
@@ -296,18 +297,18 @@ public class CGORenderer extends DrawRenderer {
         }
         break;
       case CGOMesh.SAUSAGE:
-        getPoint(i, pt0, pt0i);
-        getPoint(i + (is2D ? 2 : 3), pt1, pt1i);
-        width = cgoMesh.getFloat(i + 7);
+        getPoint(j, pt0, pt0i);
+        getPoint(j + (is2D ? 2 : 3), pt1, pt1i);
+        width = cgoMesh.getFloat(j + 7);
         getColix(true);
         getColix(false); // for now -- ignore second color
         drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
         width = 0;
         break;
       case CGOMesh.TRICOLOR_TRIANGLE:
-        getPoint(i, pt0, pt0i);
-        getPoint(i + (is2D ? 2 : 3), pt1, pt1i);
-        getPoint(i + (is2D ? 4 : 6), pt2, pt2i);
+        getPoint(j, pt0, pt0i);
+        getPoint(j + (is2D ? 2 : 3), pt1, pt1i);
+        getPoint(j + (is2D ? 4 : 6), pt2, pt2i);
         normix0 = getNormix();
         normix1 = getNormix();
         normix2 = getNormix();
@@ -317,9 +318,8 @@ public class CGORenderer extends DrawRenderer {
         fillTriangle();
         break;
       }
-      i += len;
+      j += len;
     }
-    return true;
   }
 
   private short getNormix() {
@@ -357,7 +357,7 @@ public class CGORenderer extends DrawRenderer {
   }
 
   private void fillTriangle() {
-    g3d.fillTriangle3CN(pt0i, colix0, normix0, pt1i, colix1, normix1, pt2i,
+    g3d.fillTriangle3CNBits(pt0, colix0, normix0, pt1, colix1, normix1, pt2,
         colix2, normix2);
   }
 

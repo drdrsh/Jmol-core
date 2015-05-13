@@ -24,7 +24,7 @@
 
 package org.jmol.renderspecial;
 
-import javajs.util.P3i;
+import javajs.util.P3;
 
 import org.jmol.java.BS;
 import org.jmol.script.T;
@@ -77,15 +77,15 @@ protected void renderConvex(short colix, BS visibilityMap, int nPoints) {
     renderDots(nPoints);
   }
   
-  private P3i facePt1 = new P3i();
-  private P3i facePt2 = new P3i();
-  private P3i facePt3 = new P3i();
+  private P3 facePt1 = new P3();
+  private P3 facePt2 = new P3();
+  private P3 facePt3 = new P3();
   
   private void renderSurface(BS points) {
     if (faceMap == null)
       return;
     short[] faces = Geodesic.getFaceVertexes(screenLevel);
-    int[] coords = screenCoordinates;
+    int[] coords = scrCoords;
     short p1, p2, p3;
     int mapMax = points.size();
     //Logger.debug("geod frag "+mapMax+" "+dotCount);
@@ -95,17 +95,17 @@ protected void renderConvex(short colix, BS visibilityMap, int nPoints) {
       p1 = faces[f++];
       p2 = faces[f++];
       p3 = faces[f++];
-      if (p1 >= mapMax || p2 >= mapMax || p3 >= mapMax)
+      if (p1 >= mapMax || p2 >= mapMax || p3 >= mapMax || !points.get(p1)
+          || !points.get(p2) || !points.get(p3))
         continue;
-      //Logger.debug("geod frag "+p1+" "+p2+" "+p3+" "+dotCount);
-      if (!points.get(p1) || !points.get(p2)
-          || !points.get(p3))
-        continue;
-      facePt1.set(coords[faceMap[p1]], coords[faceMap[p1] + 1], coords[faceMap[p1] + 2]);
-      facePt2.set(coords[faceMap[p2]], coords[faceMap[p2] + 1], coords[faceMap[p2] + 2]);
-      facePt3.set(coords[faceMap[p3]], coords[faceMap[p3] + 1], coords[faceMap[p3] + 2]);
-//      g3d.setNoisySurfaceShade(facePt1, facePt2, facePt3);
-      g3d.fillTriangle3CN(facePt1, colix, p1, facePt2, colix, p2, facePt3, colix, p3);
+      facePt1.set(coords[faceMap[p1]], coords[faceMap[p1] + 1],
+          coords[faceMap[p1] + 2]);
+      facePt2.set(coords[faceMap[p2]], coords[faceMap[p2] + 1],
+          coords[faceMap[p2] + 2]);
+      facePt3.set(coords[faceMap[p3]], coords[faceMap[p3] + 1],
+          coords[faceMap[p3] + 2]);
+      g3d.fillTriangle3CNBits(facePt1, colix, p1, facePt2, colix, p2, facePt3,
+          colix, p3);
     }
   }  
 }

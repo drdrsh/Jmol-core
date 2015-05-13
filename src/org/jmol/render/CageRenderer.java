@@ -64,7 +64,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
         pt.sub(vertices[0]);
         pt.scaleAdd2(scale, pt, vertices[0]);
       }
-      tm.transformPtScrP3(pt, p3Screens[i]);
+      tm.transformPtNoClip(pt, p3Screens[i]);
       zSum += p3Screens[i].z;
     }
     
@@ -77,7 +77,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
       int edge0 = BoxInfo.edges[i];
       int edge1 = BoxInfo.edges[i + 1];
       if (axisPoints != null && edge0 == 0)
-        tm.transformPtScrP3(axisPoints[axisPt--], p3Screens[0]);
+        tm.transformPtNoClip(axisPoints[axisPt--], p3Screens[0]);
       if ((allowedEdges0 & (1 << edge0)) == 0 
         || (allowedEdges1 & (1 << edge1)) == 0)
         continue;

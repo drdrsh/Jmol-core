@@ -43,7 +43,6 @@ import org.jmol.util.Normix;
 import javajs.util.A4;
 import javajs.util.M3;
 import javajs.util.P3;
-import javajs.util.P3i;
 import javajs.util.V3;
 
 /**
@@ -76,10 +75,10 @@ abstract class BioShapeRenderer extends MeshRenderer {
   protected boolean isNucleic;
   protected boolean isCarbohydrate;
   protected BS bsVisible = new BS();
-  protected P3i[] ribbonTopScreens;
-  protected P3i[] ribbonBottomScreens;
+  protected P3[] ribbonTopScreens;
+  protected P3[] ribbonBottomScreens;
   protected P3[] controlPoints;
-  protected P3i[] controlPointScreens;
+  protected P3[] controlPointScreens;
 
   protected int[] leadAtomIndices;
   protected V3[] wingVectors;
@@ -104,6 +103,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
   private void setGlobals() {
     invalidateMesh = false;
     needTranslucent = false;
+    isPrecision = true;
     g3d.addRenderer(T.hermitelevel);
     boolean TF = (!isExport && !vwr.checkMotionRendering(T.cartoon));
     
@@ -181,7 +181,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
 
   private void freeTempArrays() {
     if (haveControlPointScreens)
-      vwr.freeTempScreens(controlPointScreens);
+      vwr.freeTempPoints(controlPointScreens);
     vwr.freeTempEnum(structureTypes);
   }
 
@@ -246,10 +246,10 @@ abstract class BioShapeRenderer extends MeshRenderer {
 
   protected void calcScreenControlPoints() {
     int count = monomerCount + 1;
-    P3i[] scr = controlPointScreens = vwr.allocTempScreens(count);
+    P3[] scr = controlPointScreens = vwr.allocTempPoints(count);
     P3[] points = controlPoints;
     for (int i = count; --i >= 0;)
-      tm.transformPtScr(points[i], scr[i]);
+      tm.transformPtScrT3(points[i], scr[i]);
     haveControlPointScreens = true;
   }
 
@@ -261,12 +261,12 @@ abstract class BioShapeRenderer extends MeshRenderer {
    * @param mads 
    * @return Point3i array THAT MUST BE LATER FREED
    */
-  protected P3i[] calcScreens(float offsetFraction, short[] mads) {
+  protected P3[] calcScreens(float offsetFraction, short[] mads) {
     int count = controlPoints.length;
-    P3i[] screens = vwr.allocTempScreens(count);
+    P3[] screens = vwr.allocTempPoints(count);
     if (offsetFraction == 0) {
       for (int i = count; --i >= 0;)
-        tm.transformPtScr(controlPoints[i], screens[i]);
+        tm.transformPtScrT3(controlPoints[i], screens[i]);
     } else {
       float offset_1000 = offsetFraction / 1000f;
       for (int i = count; --i >= 0;)
@@ -280,9 +280,9 @@ abstract class BioShapeRenderer extends MeshRenderer {
   private final P3 pointT = new P3();
 
   private void calc1Screen(P3 center, V3 vector, short mad,
-                           float offset_1000, P3i screen) {
+                           float offset_1000, P3 screen) {
     pointT.scaleAdd2(mad * offset_1000, vector, center);
-    tm.transformPtScr(pointT, screen);
+    tm.transformPtScrT3(pointT, screen);
   }
 
   protected short getLeadColix(int i) {
@@ -336,10 +336,10 @@ abstract class BioShapeRenderer extends MeshRenderer {
       if (!thisTypeOnly || structureTypes[i] == structureTypes[iNext])
         madEnd = (short) (((mads[iNext] == 0 ? madMid : mads[iNext]) + madMid) >> 1);
     }
-    diameterBeg = (int) vwr.tm.scaleToScreen(controlPointScreens[i].z, madBeg);
+    diameterBeg = (int) vwr.tm.scaleToScreen((int) controlPointScreens[i].z, madBeg);
     diameterMid = (int) vwr.tm.scaleToScreen(monomers[i].getLeadAtom().sZ,
         madMid);
-    diameterEnd = (int) vwr.tm.scaleToScreen(controlPointScreens[iNext].z, madEnd);
+    diameterEnd = (int) vwr.tm.scaleToScreen((int) controlPointScreens[iNext].z, madEnd);
     doCap0 = (i == iPrev || thisTypeOnly
         && structureTypes[i] != structureTypes[iPrev]);
     doCap1 = (iNext == iNext2 || thisTypeOnly
@@ -354,7 +354,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
     return (isHighRes & d > ABSOLUTE_MIN_MESH_SIZE || d >= MIN_MESH_RENDER_SIZE);
   }
 
-  protected void renderHermiteCylinder(P3i[] screens, int i) {
+  protected void renderHermiteCylinder(P3[] screens, int i) {
     //strands
     colix = getLeadColix(i);
     if (!setBioColix(colix))
@@ -402,6 +402,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
    */
   protected void renderHermiteRibbon(boolean doFill, int i, boolean thisTypeOnly) {
     // cartoons and meshRibbon
+
     setNeighbors(i);
     colix = getLeadColix(i);
     if (!setBioColix(colix))
@@ -434,10 +435,10 @@ abstract class BioShapeRenderer extends MeshRenderer {
 
   //// cardinal hermite (box or flat) arrow head (cartoon)
 
-  private final P3i screenArrowTop = new P3i();
-  private final P3i screenArrowTopPrev = new P3i();
-  private final P3i screenArrowBot = new P3i();
-  private final P3i screenArrowBotPrev = new P3i();
+  private final P3 screenArrowTop = new P3();
+  private final P3 screenArrowTopPrev = new P3();
+  private final P3 screenArrowBot = new P3();
+  private final P3 screenArrowBotPrev = new P3();
 
   protected void renderHermiteArrowHead(int i) {
     // cartoons only
@@ -477,12 +478,11 @@ abstract class BioShapeRenderer extends MeshRenderer {
         controlPointScreens[iNext2], screenArrowBotPrev, screenArrowBot,
         controlPointScreens[iNext], controlPointScreens[iNext2],
         (int) aspectRatio, colixBack);
+    g3d.setC(colix);
     if (ribbonBorder && aspectRatio == 0) {
-      g3d.fillCylinderXYZ(colix, colix,
-          GData.ENDCAPS_SPHERICAL,
+      g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL,
           (exportType == GData.EXPORT_CARTESIAN ? 50 : 3), //may not be right 0.05 
-          screenArrowTop.x, screenArrowTop.y, screenArrowTop.z,
-          screenArrowBot.x, screenArrowBot.y, screenArrowBot.z);
+          screenArrowTop, screenArrowBot);
     }
   }
 
@@ -745,7 +745,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
       } else if (meshes[i].normixes == null) {
         meshes[i].initialize(T.frontlit, null, null);
       }
-      renderMesh(meshes[i]);
+      renderMesh2(meshes[i]);
     }
   }
 

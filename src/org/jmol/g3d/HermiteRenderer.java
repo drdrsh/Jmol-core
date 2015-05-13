@@ -104,23 +104,25 @@ public class HermiteRenderer implements G3DRenderer {
 
   public void renderHermiteRope(boolean fill, int tension,
                      int diameterBeg, int diameterMid, int diameterEnd,
-                     P3i p0, P3i p1, P3i p2, P3i p3) {
-    if (p0.z == 1 ||p1.z == 1 ||p2.z == 1 ||p3.z == 1)
+                     P3 p0, P3 p1, P3 p2, P3 p3) {
+    int z1 = (int) p1.z;
+    int z2 = (int) p2.z;
+    if (p0.z == 1 ||z1 == 1 ||z2 == 1 ||p3.z == 1)
       return;
-    if (gdata.isClippedZ(p1.z) || gdata.isClippedZ(p2.z))
+    if (gdata.isClippedZ(z1) || gdata.isClippedZ(z2))
       return;
-    int x1 = p1.x, y1 = p1.y, z1 = p1.z;
-    int x2 = p2.x, y2 = p2.y, z2 = p2.z;
-    int xT1 = ((x2 - p0.x) * tension) / 8;
-    int yT1 = ((y2 - p0.y) * tension) / 8;
-    int zT1 = ((z2 - p0.z) * tension) / 8;
-    int xT2 = ((p3.x - x1) * tension) / 8;
-    int yT2 = ((p3.y - y1) * tension) / 8;
-    int zT2 = ((p3.z - z1) * tension) / 8;
+    int x1 = (int) p1.x, y1 = (int) p1.y;
+    int x2 = (int) p2.x, y2 = (int) p2.y;
+    int xT1 = ((x2 - (int) p0.x) * tension) / 8;
+    int yT1 = ((y2 - (int) p0.y) * tension) / 8;
+    int zT1 = ((z2 - (int) p0.z) * tension) / 8;
+    int xT2 = (((int) p3.x - x1) * tension) / 8;
+    int yT2 = (((int) p3.y - y1) * tension) / 8;
+    int zT2 = (((int) p3.z - z1) * tension) / 8;
     sLeft[0] = 0;
-    pLeft[0].setT(p1);
+    pLeft[0].set(x1, y1, z1);
     sRight[0] = 1;
-    pRight[0].setT(p2);
+    pRight[0].set(x2, y2, z2);
     int sp = 0;
     int dDiameterFirstHalf = 0;
     int dDiameterSecondHalf = 0;
@@ -206,11 +208,11 @@ public class HermiteRenderer implements G3DRenderer {
   public void renderHermiteRibbon(boolean fill, boolean border,
                                   int tension,
                                   //top strand segment
-                                  P3i p0, P3i p1, P3i p2,
-                                  P3i p3,
+                                  P3 p0, P3 p1, P3 p2,
+                                  P3 p3,
                                   //bottom strand segment
-                                  P3i p4, P3i p5, P3i p6,
-                                  P3i p7, int aspectRatio, int fillType) {
+                                  P3 p4, P3 p5, P3 p6,
+                                  P3 p7, int aspectRatio, int fillType) {
     if (p0.z == 1 || p1.z == 1 || p2.z == 1 || p3.z == 1 || p4.z == 1
         || p5.z == 1 || p6.z == 1 || p7.z == 1)
       return;
@@ -223,27 +225,27 @@ public class HermiteRenderer implements G3DRenderer {
     if (isRev)
       tension = -tension;
     float ratio = 1f / aspectRatio;
-    int x1 = p1.x, y1 = p1.y, z1 = p1.z;
-    int x2 = p2.x, y2 = p2.y, z2 = p2.z;
-    int xT1 = ((x2 - p0.x) * tension) / 8;
-    int yT1 = ((y2 - p0.y) * tension) / 8;
-    int zT1 = ((z2 - p0.z) * tension) / 8;
-    int xT2 = ((p3.x - x1) * tension) / 8;
-    int yT2 = ((p3.y - y1) * tension) / 8;
-    int zT2 = ((p3.z - z1) * tension) / 8;
-    Point3fi.set2(pTopLeft[0], p1);
-    Point3fi.set2(pTopRight[0], p2);
+    int x1 = (int) p1.x, y1 = (int) p1.y, z1 = (int) p1.z;
+    int x2 = (int) p2.x, y2 = (int) p2.y, z2 = (int) p2.z;
+    int xT1 = ((x2 - (int) p0.x) * tension) / 8;
+    int yT1 = ((y2 - (int) p0.y) * tension) / 8;
+    int zT1 = ((z2 - (int) p0.z) * tension) / 8;
+    int xT2 = (((int) p3.x - x1) * tension) / 8;
+    int yT2 = (((int) p3.y - y1) * tension) / 8;
+    int zT2 = (((int) p3.z - z1) * tension) / 8;
+    pTopLeft[0].set(x1,  y1, z1);
+    pTopRight[0].set(x2, y2, z2);
 
-    int x5 = p5.x, y5 = p5.y, z5 = p5.z;
-    int x6 = p6.x, y6 = p6.y, z6 = p6.z;
-    int xT5 = ((x6 - p4.x) * tension) / 8;
-    int yT5 = ((y6 - p4.y) * tension) / 8;
-    int zT5 = ((z6 - p4.z) * tension) / 8;
-    int xT6 = ((p7.x - x5) * tension) / 8;
-    int yT6 = ((p7.y - y5) * tension) / 8;
-    int zT6 = ((p7.z - z5) * tension) / 8;
-    Point3fi.set2(pBotLeft[0], p5);
-    Point3fi.set2(pBotRight[0], p6);
+    int x5 = (int) p5.x, y5 = (int) p5.y, z5 = (int) p5.z;
+    int x6 = (int) p6.x, y6 = (int) p6.y, z6 = (int) p6.z;
+    int xT5 = ((x6 - (int) p4.x) * tension) / 8;
+    int yT5 = ((y6 - (int) p4.y) * tension) / 8;
+    int zT5 = ((z6 - (int) p4.z) * tension) / 8;
+    int xT6 = (((int) p7.x - x5) * tension) / 8;
+    int yT6 = (((int) p7.y - y5) * tension) / 8;
+    int zT6 = (((int) p7.z - z5) * tension) / 8;
+    pBotLeft[0].set(x5, y5, z5);
+    pBotRight[0].set(x6, y6, z6);
 
     sLeft[0] = 0;
     sRight[0] = 1;
@@ -268,8 +270,8 @@ public class HermiteRenderer implements G3DRenderer {
             double dyBot2 = dyBot * dyBot;
             if (dyBot2 < 8) {
               if (border) {
-                g3d.fillSphere(3, a);
-                g3d.fillSphere(3, c);
+                g3d.fillSphereBits(3, a);
+                g3d.fillSphereBits(3, c);
               }
 
               if (needToFill[sp]) {
@@ -387,14 +389,14 @@ public class HermiteRenderer implements G3DRenderer {
    */
   private void renderParallelPair(boolean fill, int tension,
                 //top strand segment
-                P3i p0, P3i p1, P3i p2, P3i p3,
+                P3 p0, P3 p1, P3 p2, P3 p3,
                 //bottom strand segment
-                P3i p4, P3i p5, P3i p6, P3i p7) {
+                P3 p4, P3 p5, P3 p6, P3 p7) {
     
     // only used for meshRibbon, so fill = false 
-    P3i[] endPoints = {p2, p1, p6, p5};
+    P3[] endPoints = {p2, p1, p6, p5};
     // stores all points for top+bottom strands of 1 segment
-    Lst<P3i> points = new Lst<P3i>();
+    Lst<P3> points = new Lst<P3>();
     int whichPoint = 0;
 
     int numTopStrandPoints = 2; //first and last points automatically included
@@ -406,34 +408,34 @@ public class HermiteRenderer implements G3DRenderer {
     float interval = (1.0f / numPointsPerSegment);
     float currentInt = 0.0f;
 
-    int x1 = p1.x, y1 = p1.y, z1 = p1.z;
-    int x2 = p2.x, y2 = p2.y, z2 = p2.z;
-    int xT1 = ( (x2 - p0.x) * tension) / 8;
-    int yT1 = ( (y2 - p0.y) * tension) / 8;
-    int zT1 = ( (z2 - p0.z) * tension) / 8;
-    int xT2 = ( (p3.x - x1) * tension) / 8;
-    int yT2 = ( (p3.y - y1) * tension) / 8;
-    int zT2 = ( (p3.z - z1) * tension) / 8;
+    int x1 = (int) p1.x, y1 = (int) p1.y, z1 = (int) p1.z;
+    int x2 = (int) p2.x, y2 = (int) p2.y, z2 = (int) p2.z;
+    int xT1 = ((x2 - (int) p0.x) * tension) / 8;
+    int yT1 = ((y2 - (int) p0.y) * tension) / 8;
+    int zT1 = ((z2 - (int) p0.z) * tension) / 8;
+    int xT2 = (((int) p3.x - x1) * tension) / 8;
+    int yT2 = (((int) p3.y - y1) * tension) / 8;
+    int zT2 = (((int) p3.z - z1) * tension) / 8;
     sLeft[0] = 0;
-    pLeft[0].setT(p1);
+    pLeft[0].set(x1, y1, z1);
     sRight[0] = 1;
-    pRight[0].setT(p2);
+    pRight[0].set(x2, y2, z2);
     int sp = 0;
 
     for (int strands = 2; strands > 0; strands--) {
        if (strands == 1) {
-         x1 = p5.x; y1 = p5.y; z1 = p5.z;
-         x2 = p6.x; y2 = p6.y; z2 = p6.z;
-         xT1 = ( (x2 - p4.x) * tension) / 8;
-         yT1 = ( (y2 - p4.y) * tension) / 8;
-         zT1 = ( (z2 - p4.z) * tension) / 8;
-         xT2 = ( (p7.x - x1) * tension) / 8;
-         yT2 = ( (p7.y - y1) * tension) / 8;
-         zT2 = ( (p7.z - z1) * tension) / 8;
+         x1 = (int) p5.x; y1 = (int) p5.y; z1 = (int) p5.z;
+         x2 = (int) p6.x; y2 = (int) p6.y; z2 = (int) p6.z;
+         xT1 = ( (x2 - (int) p4.x) * tension) / 8;
+         yT1 = ( (y2 - (int) p4.y) * tension) / 8;
+         zT1 = ( (z2 - (int) p4.z) * tension) / 8;
+         xT2 = ( ((int) p7.x - x1) * tension) / 8;
+         yT2 = ( ((int) p7.y - y1) * tension) / 8;
+         zT2 = ( ((int) p7.z - z1) * tension) / 8;
          sLeft[0] = 0;
-         pLeft[0].setT(p5);
+         pLeft[0].set(x1, y1, z1);
          sRight[0] = 1;
-         pRight[0].setT(p6);
+         pRight[0].set(x2, y2, z2);
          sp = 0;
        }
 
@@ -455,8 +457,8 @@ public class HermiteRenderer implements G3DRenderer {
            //draw outside edges of mesh
 
            if (s < 1.0f - currentInt) { //if first point over the interval
-             P3i temp = new P3i();
-             temp.setT(a);
+             P3 temp = new P3();
+             temp.set(a.x, a.y, a.z);
              points.addLast(temp); //store it
              currentInt += interval; // increase to next interval
              if (strands == 2) {

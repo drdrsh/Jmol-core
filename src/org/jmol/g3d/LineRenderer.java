@@ -36,11 +36,11 @@ package org.jmol.g3d;
  * @author Miguel, miguel@jmol.org and Bob Hanson, hansonr@stolaf.edu
  */
 
- /* rewritten by Bob 7/2006 to fully implement the capabilities of the
-  * Cohen-Sutherland algorithm.
-  * 
-  * added line bitset option for rockets. Rendering times for bonds done this way are a bit slower.
-  */
+/* rewritten by Bob 7/2006 to fully implement the capabilities of the
+ * Cohen-Sutherland algorithm.
+ * 
+ * added line bitset option for rockets. Rendering times for bonds done this way are a bit slower.
+ */
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -65,14 +65,14 @@ final class LineRenderer extends PrecisionRenderer {
   private float slope;
   private boolean lineTypeX;
   private int nBits;
-//  private int nCached = 0;
-//  private int nFound = 0;
+  //  private int nCached = 0;
+  //  private int nFound = 0;
   //int test = 5;
   private Map<Float, BS> lineCache = new Hashtable<Float, BS>();
   private Float slopeKey;
   private P3 ptAtrimmed;
   private P3 ptBtrimmed;
-  
+
   void setLineBits(float dx, float dy) {
     // from cylinder
     slope = (dx != 0 ? dy / dx : dy >= 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
@@ -110,15 +110,14 @@ final class LineRenderer extends PrecisionRenderer {
     }
     lineCache.put(slopeKey, lineBits);
   }
-  
+
   void clearLineCache() {
     lineCache.clear();
     //nCached = 0;
   }
-  
-  void plotLine(int argbA, int argbB, 
-                int xA, int yA, int zA, int xB, int yB, int zB,
-                boolean clipped) {
+
+  void plotLineOld(int argbA, int argbB, int xA, int yA, int zA, int xB,
+                   int yB, int zB, boolean clipped) {
     // primary method for mesh triangle, quadrilateral, hermite, backbone,
     // sticks, and stars
     x1t = xA;
@@ -128,21 +127,34 @@ final class LineRenderer extends PrecisionRenderer {
     z1t = zA;
     z2t = zB;
     if (clipped)
-      switch (getTrimmedLine()) {
+      switch (getTrimmedLineImpl()) {
       case VISIBILITY_UNCLIPPED:
         clipped = false;
         break;
       case VISIBILITY_OFFSCREEN:
         return;
       }
-    plotLineClipped(argbA, argbB, xA, yA, zA, xB - xA,
-        yB - yA, zB - zA, clipped, 0, 0);
+    plotLineClippedOld(argbA, argbB, xA, yA, zA, xB - xA, yB - yA, zB - zA,
+        clipped, 0, 0);
   }
 
-  void plotLineDelta(int argbA, int argbB, int xA, int yA, int zA, int dxBA,
-                     int dyBA, int dzBA, boolean clipped) {
+  /**
+   * low-resolution linear z
+   * 
+   * @param argbA
+   * @param argbB
+   * @param xA
+   * @param yA
+   * @param zA
+   * @param dxBA
+   * @param dyBA
+   * @param dzBA
+   * @param clipped
+   */
+  void plotLineDeltaOld(int argbA, int argbB, int xA, int yA, int zA, int dxBA,
+                        int dyBA, int dzBA, boolean clipped) {
     // from cylinder -- endcaps open or flat, diameter 1, cone
-    // cartoon rockets, draw line
+    // cartoon rockets, low-precision z-buffer
     x1t = xA;
     x2t = xA + dxBA;
     y1t = yA;
@@ -150,20 +162,35 @@ final class LineRenderer extends PrecisionRenderer {
     z1t = zA;
     z2t = zA + dzBA;
     if (clipped)
-      switch (getTrimmedLine()) {
+      switch (getTrimmedLineImpl()) {
       case VISIBILITY_OFFSCREEN:
         return;
       case VISIBILITY_UNCLIPPED:
         clipped = false;
         break;
       }
-    plotLineClipped(argbA, argbB, xA, yA, zA, dxBA,
-        dyBA, dzBA, clipped, 0, 0);
+    plotLineClippedOld(argbA, argbB, xA, yA, zA, dxBA, dyBA, dzBA, clipped, 0,
+        0);
   }
 
-  void plotLineDeltaA(int[] shades1, int[] shades2, int screenMask, int shadeIndex,
-                      int x, int y, int z, int dx, int dy, int dz,
-                      boolean clipped) {
+  /**
+   * low-precision old-style linear z, even in perspective mode
+   * 
+   * @param shades1
+   * @param shades2
+   * @param screenMask
+   * @param shadeIndex
+   * @param x
+   * @param y
+   * @param z
+   * @param dx
+   * @param dy
+   * @param dz
+   * @param clipped
+   */
+  void plotLineDeltaAOld(int[] shades1, int[] shades2, int screenMask,
+                         int shadeIndex, int x, int y, int z, int dx, int dy,
+                         int dz, boolean clipped) {
     // from cylinder -- standard bond with two colors or cone with one color
     x1t = x;
     x2t = x + dx;
@@ -172,7 +199,7 @@ final class LineRenderer extends PrecisionRenderer {
     z1t = z;
     z2t = z + dz;
     if (clipped)
-      switch (getTrimmedLine()) {
+      switch (getTrimmedLineImpl()) {
       case VISIBILITY_OFFSCREEN:
         return;
       case VISIBILITY_UNCLIPPED:
@@ -305,8 +332,8 @@ final class LineRenderer extends PrecisionRenderer {
     }
   }
 
-  void plotLineDeltaBits(int[] shades1, int[] shades2, int shadeIndex, 
-                         P3 ptA, P3 ptB, int screenMask, boolean clipped) {
+  void plotLineDeltaABits(int[] shades1, int[] shades2, int shadeIndex, P3 ptA,
+                          P3 ptB, int screenMask, boolean clipped) {
     // from cylinder -- cartoonRockets
     int x = Math.round(ptA.x);
     int y = Math.round(ptA.y);
@@ -323,7 +350,7 @@ final class LineRenderer extends PrecisionRenderer {
     y2t = by;
     z1t = z;
     z2t = bz;
-    if (clipped && getTrimmedLine() == VISIBILITY_OFFSCREEN)
+    if (clipped && getTrimmedLineImpl() == VISIBILITY_OFFSCREEN)
       return;
     // special shading for rockets; somewhat slower than above;
     int[] zbuf = g3d.zbuf;
@@ -423,7 +450,7 @@ final class LineRenderer extends PrecisionRenderer {
     if (ptA.z <= 1 || ptB.z <= 1)
       return;
     boolean clipped = true;
-    switch (getTrimmedLineBits(ptA, ptB)) {
+    switch (getTrimmedLineP3(ptA, ptB)) {
     case VISIBILITY_OFFSCREEN:
       return;
     case VISIBILITY_UNCLIPPED:
@@ -438,7 +465,7 @@ final class LineRenderer extends PrecisionRenderer {
     if (ptA.z <= 1 || ptB.z <= 1)
       return;
     boolean clipped = true;
-    switch (getTrimmedLineBits(ptA, ptB)) {
+    switch (getTrimmedLineP3(ptA, ptB)) {
     case VISIBILITY_OFFSCREEN:
       return;
     case VISIBILITY_UNCLIPPED:
@@ -457,14 +484,14 @@ final class LineRenderer extends PrecisionRenderer {
     plotLineClippedBits(argb, argb, ptA, ptB, clipped, run, rise);
   }
 
-  private int getTrimmedLineBits(P3 ptA, P3 ptB) {
+  private int getTrimmedLineP3(P3 ptA, P3 ptB) {
     x1t = (int) ptA.x;
     y1t = (int) ptA.y;
     z1t = (int) ptA.z;
     x2t = (int) ptB.x;
     y2t = (int) ptB.y;
     z2t = (int) ptB.z;
-    return getTrimmedLine();
+    return getTrimmedLineImpl();
   }
 
   private final static int VISIBILITY_UNCLIPPED = 0;
@@ -474,24 +501,24 @@ final class LineRenderer extends PrecisionRenderer {
   private int x1t, y1t, z1t, x2t, y2t, z2t; // trimmed
 
   /**
-   *<p>
+   * <p>
    * Cohen-Sutherland line clipping used to check visibility.
-   *</p>
-   *<p>
+   * </p>
+   * <p>
    * Note that this routine is only used for visibility checking. To avoid
-   * integer rounding errors which cause cracking to occur in 'solid'
-   * surfaces, the lines are actually drawn from their original end-points.
+   * integer rounding errors which cause cracking to occur in 'solid' surfaces,
+   * the lines are actually drawn from their original end-points.
    * 
    * The nuance is that this algorithm doesn't just deliver a boolean. It
-   * delivers the trimmed line. Although we need to start the raster loop
-   * at the origin for good surfaces, we can save lots of time by saving the
-   * known endpoints as globals variables. -- Bob Hanson 7/06
-   *</p>
-   *
+   * delivers the trimmed line. Although we need to start the raster loop at the
+   * origin for good surfaces, we can save lots of time by saving the known
+   * endpoints as globals variables. -- Bob Hanson 7/06
+   * </p>
+   * 
    * @return Visibility (see VISIBILITY_... constants);
    */
 
-  private int getTrimmedLine() {   // formerly "visibilityCheck()"
+  private int getTrimmedLineImpl() { // formerly "visibilityCheck()"
 
     int cc1 = g3d.clipCode3(x1t, y1t, z1t);
     int cc2 = g3d.clipCode3(x2t, y2t, z2t);
@@ -573,9 +600,24 @@ final class LineRenderer extends PrecisionRenderer {
     return VISIBILITY_CLIPPED;
   }
 
-  private void plotLineClipped(int argb1, int argb2, int x, int y, int z, int dx,
-                               int dy, int dz, boolean clipped, int run,
-                               int rise) {
+  /**
+   * low-resolution linear z-buffer (old style)
+   * 
+   * @param argb1
+   * @param argb2
+   * @param x
+   * @param y
+   * @param z
+   * @param dx
+   * @param dy
+   * @param dz
+   * @param clipped
+   * @param run
+   * @param rise
+   */
+  private void plotLineClippedOld(int argb1, int argb2, int x, int y, int z,
+                                  int dx, int dy, int dz, boolean clipped,
+                                  int run, int rise) {
     // standard, dashed or not dashed -- isosurface mesh
     int[] zbuf = g3d.zbuf;
     int width = g3d.width;
@@ -590,7 +632,7 @@ final class LineRenderer extends PrecisionRenderer {
     //boolean tScreened = tScreened1;
     int argb = argb1;
     Pixelator p = g3d.pixel;
-    if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax 
+    if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax
         && z < zbuf[offset])
       p.addPixel(offset, z, argb);
     if (dx == 0 && dy == 0)
@@ -624,11 +666,9 @@ final class LineRenderer extends PrecisionRenderer {
       int n2 = Math.abs(x2 - x1t) - 1;
       for (int n = dx - 1, nMid = n / 2; --n >= n1;) {
         if (n == nMid) {
-          
-          
-//          tScreened = tScreened2;
-          
-          
+
+          //          tScreened = tScreened2;
+
           argb = argb2;
           if (argb == 0)
             return;
@@ -639,9 +679,9 @@ final class LineRenderer extends PrecisionRenderer {
         if (twoDxAccumulatedYError > dx) {
           offset += yOffsetIncrement;
           twoDxAccumulatedYError -= twoDx;
-//          flipflop = !flipflop;
+          //          flipflop = !flipflop;
         }
-        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax 
+        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax
             && runIndex < rise) {
           int zCurrent = zCurrentScaled >> 10;
           if (zCurrent < zbuf[offset])
@@ -659,7 +699,7 @@ final class LineRenderer extends PrecisionRenderer {
       int n2 = Math.abs(y2 - y1t) - 1;
       for (int n = dy - 1, nMid = n / 2; --n >= n1;) {
         if (n == nMid) {
-//          tScreened = tScreened2;
+          //          tScreened = tScreened2;
           argb = argb2;
           if (argb == 0)
             return;
@@ -671,7 +711,7 @@ final class LineRenderer extends PrecisionRenderer {
           offset += xIncrement;
           twoDyAccumulatedXError -= twoDy;
         }
-        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax 
+        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax
             && runIndex < rise) {
           int zCurrent = zCurrentScaled >> 10;
           if (zCurrent < zbuf[offset])
@@ -682,8 +722,8 @@ final class LineRenderer extends PrecisionRenderer {
     }
   }
 
-  private void plotLineClippedBits(int argb1, int argb2, P3 ptA, P3 ptB, boolean clipped, int run,
-                               int rise) {
+  private void plotLineClippedBits(int argb1, int argb2, P3 ptA, P3 ptB,
+                                   boolean clipped, int run, int rise) {
     // standard, dashed or not dashed -- isosurface mesh
     int[] zbuf = g3d.zbuf;
     int width = g3d.width;
@@ -705,10 +745,10 @@ final class LineRenderer extends PrecisionRenderer {
     //boolean tScreened = tScreened1;
     int argb = argb1;
     Pixelator p = g3d.pixel;
-    if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax 
+    if (argb != 0 && !clipped && offset >= 0 && offset < offsetMax
         && z < zbuf[offset])
       p.addPixel(offset, z, argb);
-    
+
     if (dx == 0 && dy == 0)
       return;
     int xIncrement = 1, yIncrement = 1;
@@ -724,7 +764,7 @@ final class LineRenderer extends PrecisionRenderer {
       yIncrement = -1;
     }
     int twoDx = dx + dx, twoDy = dy + dy;
-    
+
     // the z dimension and the z increment are stored with a fractional
     // component in the bottom 10 bits.
     if (dy <= dx) {
@@ -746,7 +786,7 @@ final class LineRenderer extends PrecisionRenderer {
           offset += yOffsetIncrement;
           twoDxAccumulatedYError -= twoDx;
         }
-        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax 
+        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax
             && runIndex < rise) {
           int zCurrent = getZCurrent(a, b, x);
           if (zCurrent < zbuf[offset])
@@ -773,7 +813,7 @@ final class LineRenderer extends PrecisionRenderer {
           offset += xIncrement;
           twoDyAccumulatedXError -= twoDy;
         }
-        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax 
+        if (argb != 0 && n < n2 && offset >= 0 && offset < offsetMax
             && runIndex < rise) {
           int zCurrent = getZCurrent(a, b, y);
           if (zCurrent < zbuf[offset])

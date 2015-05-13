@@ -134,10 +134,10 @@ public class AxesRenderer extends CageRenderer {
         checkTickTemps();
         tickA.setT(axes.getOriginPoint(isDataFrame));
       }
-      tm.transformPtScrP3(axes.getOriginPoint(isDataFrame), originScreen);
+      tm.transformPtNoClip(axes.getOriginPoint(isDataFrame), originScreen);
       diameter = getDiameter((int) originScreen.z, mad);
       for (int i = nPoints; --i >= 0;)
-        tm.transformPtScrP3(axes.getAxisPoint(i, isDataFrame), p3Screens[i]);
+        tm.transformPtNoClip(axes.getAxisPoint(i, isDataFrame), p3Screens[i]);
     }
     float xCenter = originScreen.x;
     float yCenter = originScreen.y;

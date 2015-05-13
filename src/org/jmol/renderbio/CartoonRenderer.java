@@ -55,8 +55,8 @@ public class CartoonRenderer extends RocketsRenderer {
     calcRopeMidPoints();
     renderProtein();
     vwr.freeTempPoints(cordMidPoints);
-    vwr.freeTempScreens(ribbonTopScreens);
-    vwr.freeTempScreens(ribbonBottomScreens);
+    vwr.freeTempPoints(ribbonTopScreens);
+    vwr.freeTempPoints(ribbonBottomScreens);
   }
 
   private void renderProtein() {

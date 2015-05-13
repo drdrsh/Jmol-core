@@ -78,7 +78,7 @@ class CylinderRenderer {
   private int[][] xyzfRaster = new int[][] {new int[32], new int[32], new int[32], new int[32]};
 
 
-  void render(short colixA, short colixB, int screen, 
+  void renderOld(short colixA, short colixB, int screen, 
               byte endcaps, int diameter, int xa, int ya,
               int za, int xb, int yb, int zb) {
     //0 for colixA or colixB means ignore for this pass
@@ -99,7 +99,7 @@ class CylinderRenderer {
     dyB = yb - ya;
     dzB = zb - za;
     if (diameter <= 1) {
-      line3d.plotLineDelta(g.getColorArgbOrGray(colixA), g
+      line3d.plotLineDeltaOld(g.getColorArgbOrGray(colixA), g
           .getColorArgbOrGray(colixB), xa, ya, za, dxB, dyB, dzB,
           clipped);
       return;
@@ -154,10 +154,10 @@ class CylinderRenderer {
         }
       }
       
-      line3d.plotLineDeltaA(shadesA, shadesB, screen,
+      line3d.plotLineDeltaAOld(shadesA, shadesB, screen,
           fpz, xA + x, yA + y, zA - z, dxB, dyB, dzB, clipped);
       if (drawBackside) {
-        line3d.plotLineDelta(shadesA[fpzBack], shadesB[fpzBack], xA
+        line3d.plotLineDeltaOld(shadesA[fpzBack], shadesB[fpzBack], xA
             - x, yA - y, zA + z, dxB, dyB, dzB,clipped);
       }
     }
@@ -217,8 +217,8 @@ class CylinderRenderer {
     this.dyB = (int) dyBf;
     this.dzB = (int) dzBf;
 
-    this.shadesA = g.getShades(colixA);
-    this.shadesB = g.getShades(colixB);
+    this.shadesA = g.getShades(this.colixA = colixA);
+    this.shadesB = g.getShades(this.colixB = colixB);
     this.endcaps = endcaps;
     calcArgbEndcap(true, true);
     int[][] xyzf = xyzfRaster;
@@ -259,10 +259,14 @@ class CylinderRenderer {
       ptB0.x += dxB;
       ptB0.y += dyB;
       ptB0.z += dzB;
-      line3d.plotLineDeltaBits(shadesA, shadesB, fpz, ptA0, ptB0, screen, clipped); 
+      line3d.plotLineDeltaABits(shadesA, shadesB, fpz, ptA0, ptB0, screen, clipped); 
       if (drawBackside) {
-        line3d.plotLineDelta(shadesA[fpzBack], shadesB[fpzBack], xA - x,
-            yA - y, zA + z, dxB, dyB, dzB, clipped);
+        ptA0.set(xA - x, yA - y, zA + z);
+        ptB0.setT(ptA0);
+        ptB0.x += dxB;
+        ptB0.y += dyB;
+        ptB0.z += dzB;
+        line3d.plotLineDeltaABits(shadesA, shadesB, fpzBack, ptA0, ptB0, screen, clipped); 
       }
     }
     g.setZMargin(0);
@@ -275,7 +279,7 @@ class CylinderRenderer {
 
   private float xTip, yTip, zTip;
   
-  void renderCone(short colix, byte endcap, int diameter, float xa, float ya,
+  void renderConeOld(short colix, byte endcap, int diameter, float xa, float ya,
                   float za, float xtip, float ytip, float ztip, boolean doFill, boolean isBarb) {
     dxBf = (xtip) - (xAf = xa);
     dyBf = (ytip) - (yAf = ya);
@@ -289,8 +293,7 @@ class CylinderRenderer {
     this.xTip = xtip;
     this.yTip = ytip;
     this.zTip = ztip;
-    colixA = colix;
-    shadesA = g3d.getShades(colix);
+    shadesA = g3d.getShades(colixA = colix);
     int shadeIndexTip = shader.getShadeIndex(dxB, dyB, -dzB);
     Graphics3D g3d = this.g3d;
     Pixelator p = g3d.pixel;
@@ -302,7 +305,7 @@ class CylinderRenderer {
     this.diameter = diameter;
     if (diameter <= 1) {
       if (diameter == 1)
-        line3d.plotLineDelta(colixA, colixA, this.xA,
+        line3d.plotLineDeltaOld(colixA, colixA, this.xA,
             this.yA, this.zA, dxB, dyB, dzB, clipped);
       return;
     }
@@ -333,21 +336,21 @@ class CylinderRenderer {
             (int) zDn, width, zbuf, p);
       }
       if (argb != 0) {
-        line3d.plotLineDeltaA(sA, sA, 0, fpz,
+        line3d.plotLineDeltaAOld(sA, sA, 0, fpz,
             (int) xUp, (int) yUp, (int) zUp, (int) Math.ceil(xTip - xUp),
             (int) Math.ceil(yTip - yUp), (int) Math.ceil(zTip - zUp), true);
         
         if (doFill) { //rockets, not arrows
-          line3d.plotLineDeltaA(sA, sA, 0, fpz,
+          line3d.plotLineDeltaAOld(sA, sA, 0, fpz,
             (int) xUp, (int) yUp + 1, (int) zUp, (int) Math.ceil(xTip - xUp),
             (int) Math.ceil(yTip - yUp) + 1, (int) Math.ceil(zTip - zUp), true);
-          line3d.plotLineDeltaA(sA, sA, 0, fpz,
+          line3d.plotLineDeltaAOld(sA, sA, 0, fpz,
             (int) xUp + 1, (int) yUp, (int) zUp, (int) Math.ceil(xTip - xUp) + 1,
             (int) Math.ceil(yTip - yUp), (int) Math.ceil(zTip - zUp), true);
         }    
     
         if (!isBarb && !(endcaps != GData.ENDCAPS_FLAT && dzB > 0)) {
-          line3d.plotLineDelta(argb, argb, (int) xDn,
+          line3d.plotLineDeltaOld(argb, argb, (int) xDn,
               (int) yDn, (int) zDn, (int) Math.ceil(xTip - xDn), (int) Math
                   .ceil(yTip - yDn), (int) Math.ceil(zTip - zDn), true);
         }

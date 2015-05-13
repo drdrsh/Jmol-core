@@ -1249,13 +1249,13 @@ public class ScriptEval extends ScriptExpr {
       return;
     }
 
-    if (sc.aatoken.length != 1) {
+    if (sc.getTokenCount() != 1) {
       vwr
           .scriptStatus("JmolConstants.java ERROR: predefinition does not have exactly 1 command:"
               + script);
       return;
     }
-    T[] statement = sc.aatoken[0];
+    T[] statement = sc.getToken(0);
     if (statement.length <= 2) {
       vwr.scriptStatus("JmolConstants.java ERROR: bad predefinition length:"
           + script);
@@ -1419,9 +1419,8 @@ public class ScriptEval extends ScriptExpr {
     context.functionName = functionName;
     context.script = script;
     context.lineNumbers = lineNumbers;
-    context.lineIndices = lineIndices;
-    context.aatoken = aatoken;
-
+    context.lineIndices = lineIndices;    
+    context.saveTokens(aatoken);
     context.statement = st;
     context.statementLength = slen;
     context.pc = context.pc0 = pc;
@@ -1490,7 +1489,7 @@ public class ScriptEval extends ScriptExpr {
     script = context.script;
     lineNumbers = context.lineNumbers;
     lineIndices = context.lineIndices;
-    aatoken = context.aatoken;
+    aatoken = context.restoreTokens();
     contextVariables = context.vars;
     scriptExtensions = context.scriptExtensions;
 
@@ -1811,7 +1810,7 @@ public class ScriptEval extends ScriptExpr {
     for (int i = 0; i < vProcess.size(); i++)
       statements[i + 1 - pc] = vProcess.get(i);
     ScriptContext context = getScriptContext("addProcess");
-    context.aatoken = statements;
+    context.saveTokens(statements);
     context.pc = 1 - pc;
     context.pcEnd = pt;
     parallelProcessor.addProcess("p" + (++iProcess), context);

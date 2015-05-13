@@ -25,6 +25,7 @@
 package org.jmol.renderbio;
 
 
+import javajs.util.P3;
 import javajs.util.P3i;
 
 import org.jmol.shapebio.BioShape;
@@ -58,24 +59,24 @@ public class StrandsRenderer extends BioShapeRenderer {
   }
 
   protected void renderStrands() {
-    P3i[] screens;
+    P3[] screens;
     for (int i = strandCount >> 1; --i >= 0;) {
       float f = (i * strandSeparation) + baseStrandOffset;
       screens = calcScreens(f, mads);
       renderStrand(screens);
-      vwr.freeTempScreens(screens);
+      vwr.freeTempPoints(screens);
       screens = calcScreens(-f, mads);
       renderStrand(screens);
-      vwr.freeTempScreens(screens);
+      vwr.freeTempPoints(screens);
     }
     if (strandCount % 2 == 1) {
       screens = calcScreens(0f, mads);
       renderStrand(screens);
-      vwr.freeTempScreens(screens);
+      vwr.freeTempPoints(screens);
     }
   }
 
-  private void renderStrand(P3i[] screens) {
+  private void renderStrand(P3[] screens) {
     for (int i = bsVisible.nextSetBit(0); i >= 0; i = bsVisible.nextSetBit(i + 1))
       renderHermiteCylinder(screens, i);
   }

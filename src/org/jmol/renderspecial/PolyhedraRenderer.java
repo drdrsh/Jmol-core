@@ -40,7 +40,8 @@ public class PolyhedraRenderer extends ShapeRenderer {
   private int drawEdges;
   private boolean isAll;
   private boolean frontOnly;
-  private P3i[] screens;
+  private P3[] screens3f;
+  private P3i scrVib;
   private boolean vibs;
 
   @Override
@@ -73,21 +74,23 @@ public class PolyhedraRenderer extends ShapeRenderer {
     }
     P3[] vertices = p.vertices;
     byte[] planes;
-    if (screens == null || screens.length < vertices.length) {
-      screens = new P3i[vertices.length];
+    if (screens3f == null || screens3f.length < vertices.length) {
+      screens3f = new P3[vertices.length];
       for (int i = vertices.length; --i >= 0;)
-        screens[i] = new P3i();
+        screens3f[i] = new P3();
     }
     planes = p.planes;
     for (int i = vertices.length; --i >= 0;) {
       Atom atom = (vertices[i] instanceof Atom ? (Atom) vertices[i] : null);
       if (atom == null) {
-        tm.transformPtScr(vertices[i], screens[i]);
-      } else if (!atom.isVisible(myVisibilityFlag)) {
-        screens[i].setT(vibs && atom.hasVibration() ? tm.transformPtVib(atom,
-            ms.vibrations[atom.i]) : tm.transformPt(atom));
+        tm.transformPtScrT3(vertices[i], screens3f[i]);
+      } else if (atom.isVisible(myVisibilityFlag)) {
+        screens3f[i].set(atom.sX, atom.sY, atom.sZ);
+      } else if (vibs && atom.hasVibration()) {
+        scrVib = tm.transformPtVib(atom, ms.vibrations[atom.i]);
+        screens3f[i].set(scrVib.x, scrVib.y, scrVib.z);
       } else {
-        screens[i].set(atom.sX, atom.sY, atom.sZ);
+        tm.transformPt3f(atom, screens3f[i]);
       }
     }
 
@@ -97,33 +100,32 @@ public class PolyhedraRenderer extends ShapeRenderer {
     // no edges to new points when not collapsed
     if (!needTranslucent || g3d.setC(colix))
       for (int i = 0, j = 0; j < planes.length;)
-        fillFace(p.normixes[i++], screens[planes[j++]], screens[planes[j++]],
-            screens[planes[j++]]);
+        fillFace(p.normixes[i++], screens3f[planes[j++]],
+            screens3f[planes[j++]], screens3f[planes[j++]]);
     // edges are not drawn translucently ever
     if (p.colixEdge != C.INHERIT_ALL)
       colix = p.colixEdge;
     if (g3d.setC(C.getColixTranslucent3(colix, false, 0)))
       for (int i = 0, j = 0; j < planes.length;)
-        drawFace(p.normixes[i++], screens[planes[j++]], screens[planes[j++]],
-            screens[planes[j++]]);
+        drawFace(p.normixes[i++], screens3f[planes[j++]],
+            screens3f[planes[j++]], screens3f[planes[j++]]);
     return needTranslucent;
   }
 
-  private void drawFace(short normix, P3i A, P3i B, P3i C) {
+  private void drawFace(short normix, P3 a, P3 b, P3 c) {
     if (isAll || frontOnly && vwr.gdata.isDirectedTowardsCamera(normix)) {
-      drawCylinderTriangle(A.x, A.y, A.z, B.x, B.y, B.z, C.x, C.y, C.z);
+      drawCylinderTriangle(a, b, c);
     }
   }
 
-  private void drawCylinderTriangle(int xA, int yA, int zA, int xB, int yB,
-                                   int zB, int xC, int yC, int zC) {    
+  private void drawCylinderTriangle(P3 a, P3 b, P3 c) {    
     int d = (g3d.isAntialiased() ? 6 : 3);
-    g3d.fillCylinderScreen(GData.ENDCAPS_SPHERICAL, d, xA, yA, zA, xB, yB, zB);
-    g3d.fillCylinderScreen(GData.ENDCAPS_SPHERICAL, d, xB, yB, zB, xC, yC, zC);
-    g3d.fillCylinderScreen(GData.ENDCAPS_SPHERICAL, d, xA, yA, zA, xC, yC, zC);
+    g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, a, b);
+    g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, b, c);
+    g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, a, c);
   }
 
-  private void fillFace(short normix, P3i A, P3i B, P3i C) {
-    g3d.fillTriangleTwoSided(normix, A.x, A.y, A.z, B.x, B.y, B.z, C.x, C.y, C.z);
+  private void fillFace(short normix, P3 a, P3 b, P3 c) {
+    g3d.fillTriangleTwoSided(normix, a, b, c);
   }
 }

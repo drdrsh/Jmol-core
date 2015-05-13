@@ -420,8 +420,8 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
   }
  
   private void generateRaster(int dy, int iN, int iS, int[] axRaster,
-                              int[] azRaster, float[] ab,
-                              boolean isPrecise, int iRaster, Rgb16[] gouraud, boolean isEast) {
+                              int[] azRaster, float[] ab, boolean isPrecise,
+                              int iRaster, Rgb16[] gouraud, boolean isEast) {
     int xN = ax[iN], zN = az[iN];
     int xS = ax[iS], zS = az[iS];
     int dx = xS - xN, dz = zS - zN;
@@ -436,7 +436,7 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
       width = -dx;
       errorTerm = 1 - dy;
     }
-    if (isPrecise) 
+    if (isPrecise)
       setRastAB(abc[iN].y, abc[iN].z, abc[iS].y, abc[iS].z);
     int xMajorIncrement;
     int xMajorError;
@@ -455,12 +455,16 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
       int zy = ay[iN];
       for (int y = 0, i = iRaster; y < dy; ++i, ++y) {
         axRaster[i] = xCurrent;
-        azRaster[i] = (int) (ab[i] = getZCurrent(a0, b0, zy++));
-        if (isEast) {
-          //aa[i] and bb[i] are derived z values now
-          setRastAB(axW[i], aa[i], xCurrent, ab[i]);
-          aa[i] = a;
-          bb[i] = b;
+        if (i == 0 || i > iRaster) { // must always skip first on second time around
+          azRaster[i] = (int) (ab[i] = getZCurrent(a0, b0, zy++));
+          if (isEast) {
+            //aa[i] and bb[i] are derived z values now
+            //System.out.println(i + " axw " + axW[i] + " aa " + aa[i] + " x "
+              //  + xCurrent + " ab " + ab[i]);
+            setRastAB(axW[i], aa[i], xCurrent, ab[i]);
+            aa[i] = a;
+            bb[i] = b;
+          }
         }
         xCurrent += xMajorIncrement;
         errorTerm += xMajorError;
@@ -474,7 +478,7 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
       int roundingFactor = GData.roundInt(dy / 2);
       if (dz < 0)
         roundingFactor = -roundingFactor;
-      int zIncrementScaled = ((dz  << 10) + roundingFactor) / dy;
+      int zIncrementScaled = ((dz << 10) + roundingFactor) / dy;
 
       for (int y = 0, i = iRaster; y < dy; zCurrentScaled += zIncrementScaled, ++i, ++y) {
         axRaster[i] = xCurrent;

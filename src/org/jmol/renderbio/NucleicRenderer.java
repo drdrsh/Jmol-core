@@ -34,9 +34,7 @@ import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.P3;
-import javajs.util.P3i;
 import javajs.util.T3;
-import javajs.util.T3i;
 
 
 /**
@@ -56,9 +54,9 @@ public class NucleicRenderer {
   //// nucleic acid base rendering
   
   private P3[] rPt, rPt5;
-  private P3i[] rScr, rScr5;
+  private P3[] rScr, rScr5;
   private P3 basePt, backbonePt;
-  private P3i baseScreen, backboneScreen;
+  private P3 baseScreen, backboneScreen;
   private Viewer vwr;
   private TransformManager tm;
   private JmolRendererInterface g3d;
@@ -68,17 +66,17 @@ public class NucleicRenderer {
   void renderNucleic(BioShapeRenderer renderer) {
     if (this.vwr == null) {
       rPt = new P3[10];
-      rScr = new P3i[10];
+      rScr = new P3[10];
       rPt5 = new P3[5];
-      rScr5 = new P3i[5];
-      backboneScreen = new P3i();
+      rScr5 = new P3[5];
+      backboneScreen = new P3();
       backbonePt = new P3();
       bsr = renderer;
       tm = renderer.vwr.tm;
       vwr = renderer.vwr;
     }
     this.g3d = renderer.g3d;
-    T3i[] screens = renderer.controlPointScreens;
+    T3[] screens = renderer.controlPointScreens;
     T3[] pts = renderer.controlPoints;
     renderEdges = vwr.getBoolean(T.cartoonbaseedges);
     ladderOnly = vwr.getBoolean(T.cartoonladders);
@@ -87,14 +85,12 @@ public class NucleicRenderer {
     BS bsVisible = bsr.bsVisible;
     for (int i = bsVisible.nextSetBit(0); i >= 0; i = bsVisible
         .nextSetBit(i + 1)) {
+      T3 scr = screens[i + 1];
       if (isTraceAlpha) {
-        backboneScreen.set(
-            (screens[i].x + screens[i + 1].x) / 2,
-            (screens[i].y + screens[i + 1].y) / 2,
-            (screens[i].z + screens[i + 1].z) / 2);
+        backboneScreen.ave(screens[i], scr);
         backbonePt.ave(pts[i], pts[i + 1]);
       } else {
-        backboneScreen.setT(screens[i + 1]);
+        backboneScreen.setT(scr);
         backbonePt.setT(pts[i + 1]);
       }
       bsr.renderHermiteConic(i, false, 4);
@@ -110,10 +106,10 @@ public class NucleicRenderer {
     short thisMad= bsr.mads[im];
     if (rScr[0] == null)    {
       for (int i = 10; --i >= 0; )
-        rScr[i] = new P3i();
+        rScr[i] = new P3();
       for (int i = 5; --i >= 0; )
-          rScr5[i] = new P3i();
-      baseScreen = new P3i();
+          rScr5[i] = new P3();
+      baseScreen = new P3();
       basePt = new P3();
       rPt[9] = new P3(); // ribose center
     }
@@ -122,10 +118,10 @@ public class NucleicRenderer {
       return;
     }
     nucleotide.getBaseRing6Points(rPt);
-    vwr.tm.transformPoints(6, rPt, rScr);
+    transformPoints(6, rPt, rScr);
     if (!ladderOnly)
       renderRing6();
-    P3i stepScreen;
+    P3 stepScreen;
     P3 stepPt;
     int pt;
 
@@ -139,7 +135,7 @@ public class NucleicRenderer {
         stepScreen = rScr[2]; // N1
         stepPt = rPt[2];
       } else {
-        tm.transformPoints(5, rPt5, rScr5);
+        transformPoints(5, rPt5, rScr5);
         renderRing5();
         stepScreen = rScr5[3]; // N9
         stepPt = rPt5[3];
@@ -151,7 +147,7 @@ public class NucleicRenderer {
     }
     short mad = (short) (thisMad > 1 ? thisMad / 2 : thisMad);
     float r = mad / 2000f;
-    int w = (int) vwr.tm.scaleToScreen(backboneScreen.z, mad);
+    int w = (int) vwr.tm.scaleToScreen((int) backboneScreen.z, mad);
     if (ladderOnly || !renderRibose)
       g3d.fillCylinderScreen3I(GData.ENDCAPS_SPHERICAL, w, backboneScreen,
           stepScreen, backbonePt, stepPt, r);
@@ -171,7 +167,7 @@ public class NucleicRenderer {
       for (int i = 0; i < 5; i++) 
         c.add(rPt[i]);
       c.scale(0.2f);
-      tm.transformPoints(10, rPt, rScr);
+      transformPoints(10, rPt, rScr);
       renderRibose();
       renderEdge(rScr, rPt, 2, 5); // C3' - O3'
       renderEdge(rScr, rPt, 3, 6); // C4' - C5' 
@@ -182,7 +178,12 @@ public class NucleicRenderer {
     }
   }
 
-  private void drawEdges(P3i[] scr, P3[] pt, int n) {
+  private void transformPoints(int count, T3[] angstroms, P3[] screens) {
+    for (int i = count; --i >= 0;)
+      tm.transformPtScrT3(angstroms[i], screens[i]);
+  }
+
+  private void drawEdges(P3[] scr, P3[] pt, int n) {
     for (int i = n; --i >= 0; )
       scr[i].z--;
     for (int i = n; --i > 0; )
@@ -198,7 +199,7 @@ public class NucleicRenderer {
 
     if (!nucleotide.getEdgePoints(rPt))
       return;
-    tm.transformPoints(6, rPt, rScr);
+    transformPoints(6, rPt, rScr);
     renderTriangle(rScr, rPt, 2, 3, 4, true);
     renderEdge(rScr, rPt, 0, 1);
     renderEdge(rScr, rPt, 1, 2);
@@ -218,11 +219,11 @@ public class NucleicRenderer {
     renderEdge(rScr, rPt, 4, 5);
   }
 
-  private void renderEdge(P3i[] scr, P3[] pt, int i, int j) {
+  private void renderEdge(P3[] scr, P3[] pt, int i, int j) {
     renderCyl(scr[i], scr[j], pt[i], pt[j]);
   }
 
-  private void renderCyl(P3i s1, P3i s2, P3 p1, P3 p2) {
+  private void renderCyl(P3 s1, P3 s2, P3 p1, P3 p2) {
     g3d.fillCylinderScreen3I(GData.ENDCAPS_SPHERICAL, 3, s1, s2, p1, p2, 0.005f);
   }
 
@@ -235,7 +236,7 @@ public class NucleicRenderer {
    * @param k 
    * @param doShade    if shade was not calculated previously;
    */
-  private void renderTriangle(P3i[] scr, P3[] pt, int i, int j, int k, boolean doShade) {
+  private void renderTriangle(P3[] scr, P3[] pt, int i, int j, int k, boolean doShade) {
     g3d.fillTriangle3i(scr[i], scr[j], scr[k], pt[i], pt[j], pt[k], doShade);
   }
 
