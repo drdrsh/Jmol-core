@@ -88,8 +88,6 @@ public class GlobalSettings {
       for (CBK item : CBK.values())
         resetValue(item.name() + "Callback", g);
 
-      setI("historyLevel", 0); //deprecated ? doesn't do anything
-
       // These next are just placeholders so that the math processor
       // knows they are Jmol variables. They are held by other managers.
       // This is NOT recommended, because it is easy to forget they are 
@@ -102,9 +100,11 @@ public class GlobalSettings {
       // also initialized within the managers. 
 
       setF("cameraDepth", TransformManager.DEFAULT_CAMERA_DEPTH);
+      setI("contextDepthMax", 100); // maintained by ScriptEval
       setI("depth", 0); // maintained by TransformManager
       setF("gestureSwipeFactor", ActionManager.DEFAULT_GESTURE_SWIPE_FACTOR);
       setB("hideNotSelected", false); //maintained by the selectionManager
+      setI("historyLevel", 0); // maintained by ScriptEval
       setO("hoverLabel", ""); // maintained by the Hover shape
       setB("isKiosk", vwr.isKiosk()); // maintained by Viewer
       setO("logFile", vwr.getLogFileName()); // maintained by Viewer
@@ -125,7 +125,7 @@ public class GlobalSettings {
       setB("refreshing", true); // maintained by Viewer
       setI("rotationRadius", 0); // maintained by TransformManager
       setI("scaleAngstromsPerInch", 0); // maintained by TransformManager
-      setI("scriptReportingLevel", 0); // maintained by ScriptEvaluator
+      setI("scriptReportingLevel", 0); // maintained by ScriptEval
       setB("selectionHalos", false); // maintained by ModelSet
       setB("showaxes", false); // maintained by Axes
       setB("showboundbox", false); // maintained by Bbcage
@@ -936,7 +936,7 @@ public class GlobalSettings {
           + ";antialiasdisplay;antialiasimages;antialiastranslucent;appendnew;axescolor"
           + ";axesposition;axesmolecular;axesorientationrasmol;axesunitcell;axeswindow;axis1color;axis2color"
           + ";axis3color;backgroundcolor;backgroundmodel;bondsymmetryatoms;boundboxcolor;cameradepth"
-          + ";bondingversion;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;"
+          + ";bondingversion;contextdepthmax;debug;debugscript;defaultlatttice;defaults;defaultdropscript;diffusepercent;"
           + ";exportdrivers;exportscale"
           + ";_filecaching;_filecache;fontcaching;fontscaling;forcefield;language"
           + ";legacyautobonding;legacyhaddition;legacyjavafloat"
@@ -950,7 +950,7 @@ public class GlobalSettings {
           + ";statusreporting;stereo;stereostate;vibrationperiod"
           + ";unitcellcolor;visualrange;windowcentered;zerobasedxyzrasmol;zoomenabled;mousedragfactor;mousewheelfactor"
           //    saved in the hash table but not considered part of the state:
-          + ";scriptqueue;scriptreportinglevel;syncscript;syncmouse;syncstereo;" 
+          + ";scriptqueue;scriptreportinglevel;syncscript;syncmouse;syncstereo" 
           + ";defaultdirectory;currentlocalpath;defaultdirectorylocal"
           //    more settable Jmol variables    
           + ";ambient;bonds;colorrasmol;diffuse;fractionalrelative;frank;hetero;hidenotselected"
@@ -960,8 +960,9 @@ public class GlobalSettings {
           + ";spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;" + CBK.getNameList()
           + ";undo;atompicking;drawpicking;bondpicking;pickspinrate;picklabel"
           + ";modelkitmode;allowgestures;allowkeystrokes;allowmultitouch;allowmodelkit"
-          //  oops these were 
-          + ";dodrop;hovered"
+          //  oops these were in some state scripts but should not have been
+          + ";dodrop;hovered;historylevel;imagestate;iskiosk;useminimizationthread"
+          + ";showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4"
           + ";").toLowerCase();
 
     Object getAllVariables() {

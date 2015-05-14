@@ -224,8 +224,6 @@ public class ScriptEval extends ScriptExpr {
   
   /////////////////// global fields ///////////////////
   
-  private final static int scriptLevelMax = 100;
-
   private final static String saveList = 
       "bonds? context? coordinates? orientation? rotation? selection? state? structure?";
   
@@ -289,8 +287,31 @@ public class ScriptEval extends ScriptExpr {
 
   public int scriptLevel;
 
-  private int scriptReportingLevel = 0;
-  public int commandHistoryLevelMax = 0;
+  public static int commandHistoryLevelMax = 0;
+  private static int contextDepthMax = 100; // mutable using set scriptLevelMax
+  private static int scriptReportingLevel = 0;
+
+  /**
+   * set a static variable, with checking for range
+   */
+  @Override
+  public int setStatic(int tok, int ival) {
+    switch (tok) {
+    case T.contextdepthmax:
+      if (ival >= 10)
+        contextDepthMax = ival;
+      return contextDepthMax;
+    case T.historylevel:
+      if (ival >= 0)
+        commandHistoryLevelMax = ival;
+      return commandHistoryLevelMax;  
+    case T.scriptreportinglevel:
+      if (ival >= 0)
+      scriptReportingLevel = ival;
+      return scriptReportingLevel;
+    }
+    return 0;
+  }
 
   // created by Compiler:
   
@@ -1377,7 +1398,7 @@ public class ScriptEval extends ScriptExpr {
 
   private void pushContext(ContextToken token, String why)
       throws ScriptException {
-    if (scriptLevel == scriptLevelMax)
+    if (scriptLevel == contextDepthMax)
       error(ERROR_tooManyScriptLevels);
     pushContext2(token, why);
   }
@@ -6694,10 +6715,24 @@ public class ScriptEval extends ScriptExpr {
     boolean showing = (!chk && doReport() && !((String) st[0].value)
         .equals("var"));
 
+    
     // THESE FIRST ARE DEPRECATED AND HAVE THEIR OWN COMMAND
     // anything in this block MUST RETURN
 
     switch (tok) {
+    case T.historylevel:
+    case T.iskiosk:
+    case T.saveproteinstructurestate:
+    case T.showkeystrokes:
+    case T.testflag1:
+    case T.testflag2:
+    case T.testflag3:
+    case T.testflag4:
+    case T.useminimizationthread:
+      // these might be set in older state scripts, but they should not have been there 
+      if (isStateScript)
+        return;
+      break;
     case T.axes:
       cmdAxes(2);
       return;
@@ -6731,15 +6766,11 @@ public class ScriptEval extends ScriptExpr {
     case T.timeout:
       cmdTimeout(2);
       return;
-    }
 
     // THESE HAVE MULTIPLE CONTEXTS AND
     // SO DO NOT ALLOW CALCULATIONS xxx = a + b...
     // and are thus "setparam" only
-
     // anything in this block MUST RETURN
-
-    switch (tok) {
     case T.structure:
       STR type = STR.getProteinStructureType(paramAsStr(2));
       if (type == STR.NOT)
@@ -6964,15 +6995,6 @@ public class ScriptEval extends ScriptExpr {
       if (!chk)
         vwr.ms.setFormalCharges(vwr.bsA(), ival);
       return;
-    case T.historylevel:
-      // save value locally as well
-      ival = getSettingInt(2);
-      if (!chk) {
-        if (ival != Integer.MIN_VALUE)
-          commandHistoryLevelMax = ival;
-        setIntProperty(key, ival);
-      }
-      break;
     case T.language:
       // language can be used without quotes in a SET context
       // set language en
@@ -7000,12 +7022,6 @@ public class ScriptEval extends ScriptExpr {
       break;
     case T.property: // compiler may give different values to this token
       // set property_xxxx will be handled in setVariable
-      break;
-    case T.scriptreportinglevel:
-      // save value locally as well
-      ival = getSettingInt(2);
-      if (!chk && ival != Integer.MIN_VALUE)
-        setIntProperty(key, scriptReportingLevel = ival);
       break;
     case T.specular:
       ival = getSettingInt(2);

@@ -99,4 +99,6 @@ public interface JmolScriptEvaluator {
 
   void loadFileResourceAsync(String fileName) throws Exception;
 
+  int setStatic(int tok, int value);
+
 }

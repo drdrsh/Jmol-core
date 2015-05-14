@@ -136,6 +136,8 @@ public class ScriptContext {
    */
   void saveTokens(T[][] aa) {
     aatoken = aa;
+    if (aa == null)
+      return;
     pointers = new int[aa.length];
     for (int i = pointers.length; --i >= 0;)
       pointers[i] = aa[i][0].intValue;

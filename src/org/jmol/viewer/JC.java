@@ -939,7 +939,5 @@ public final class JC {
   }
 
   public static String READER_NOT_FOUND = "File reader was not found:";
-  
-
 
 }

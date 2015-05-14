@@ -948,6 +948,7 @@ public class T {
   public final static int propertydatafield              = intparam | 36;
   public final static int repaintwaitms                  = intparam | 37;
   public final static int ribbonaspectratio              = intparam | 38;
+  public final static int contextdepthmax                = intparam | 39;
   public final static int scriptreportinglevel           = intparam | 40;
   public final static int smallmoleculemaxatoms          = intparam | 42;
   public final static int specularexponent               = intparam | 44;
@@ -2456,6 +2457,7 @@ public class T {
        "propertyDataField",
        "repaintWaitMs",
        "ribbonAspectRatio",
+       "contextDepthMax",
        "scriptReportingLevel",
        "showScript",
        "smallMoleculeMaxAtoms",
@@ -3481,6 +3483,7 @@ public class T {
         propertydatafield,                  //        "propertyDataField"
         repaintwaitms,                      //        "repaintWaitMs"
         ribbonaspectratio,                  //        "ribbonAspectRatio"
+        contextdepthmax,                     //        "scriptLevelMax"
         scriptreportinglevel,               //        "scriptReportingLevel"
         showscript,                         //        "showScript"
         smallmoleculemaxatoms,              //        "smallMoleculeMaxAtoms"

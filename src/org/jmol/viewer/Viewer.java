@@ -5666,6 +5666,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   private void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
+    case T.contextdepthmax:
+    case T.historylevel:
+    case T.scriptreportinglevel:
+      value = eval.setStatic(tok, value);
+      break;
     case T.bondingversion:
       // 14.1.11
       value = (value == 0 ? Elements.RAD_COV_IONIC_OB1_100_1
@@ -5823,7 +5828,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       g.hermiteLevel = value;
       break;
     case T.ellipsoiddotcount: // 11.5.30
-    case T.historylevel:
     case T.propertyatomnumbercolumncount:
     case T.propertyatomnumberfield: // 11.6.RC16
     case T.propertydatacolumncount:
