@@ -132,12 +132,15 @@ public class ScriptContext {
 
   /**
    * save pointers indicating state of if/then
+   * @param aa the command array token list
    * 
    */
   void saveTokens(T[][] aa) {
     aatoken = aa;
-    if (aa == null)
+    if (aa == null) {
+      pointers = null;
       return;
+    }
     pointers = new int[aa.length];
     for (int i = pointers.length; --i >= 0;)
       pointers[i] = aa[i][0].intValue;
