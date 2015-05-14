@@ -347,8 +347,8 @@ public class XmlReader extends AtomSetCollectionReader {
      * @j2sNative
      * 
      * 
-     *            localName = this.jsObjectGetMember(this.domObj,
-     *            "nodeName").toLowerCase();
+     *            localName = this.jsObjectGetMember(this.domObj, "nodeName").toLowerCase();
+     *            localName = localName.substring(localName.lastIndexOf(":") + 1);
      */
     {
       localName = ((String) jsObjectGetMember(domObj, "localName"))
