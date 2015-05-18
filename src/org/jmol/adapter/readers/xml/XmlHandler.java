@@ -33,13 +33,12 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.SAXException;
 
 /**
  * a SAX handler
  */
 
-public class XmlHandler extends DefaultHandler implements JmolXmlHandler {
+public class XmlHandler extends DefaultHandler {
 
   private XmlReader xmlReader;
 
@@ -47,8 +46,7 @@ public class XmlHandler extends DefaultHandler implements JmolXmlHandler {
     // for reflection
   }
   
-  @Override
-  public void parseXML(XmlReader xmlReader, Object saxReaderObj, BufferedReader reader) throws Exception {
+  void parseXML(XmlReader xmlReader, Object saxReaderObj, BufferedReader reader) throws Exception {
     this.xmlReader = xmlReader;
     XMLReader saxReader = (XMLReader) saxReaderObj;
     saxReader.setFeature("http://xml.org/sax/features/validation", false);
@@ -77,8 +75,33 @@ public class XmlHandler extends DefaultHandler implements JmolXmlHandler {
   private String debugContext = "";
 
   @Override
-  public void startElement(String namespaceURI, String localName, String qName,
+  public void startElement(String namespaceURI, String localName, String nodeName,
                            Attributes attributes) {
+    // Note added 5/2015 BH 
+    //
+    // There seems to be an issue with what is the localName and what is the qName.
+    // For example, for
+    //
+    //    <cml:molecule xmlns:cml="http://www.xml-cml.org/schema/cml2/core">
+    //
+    // Both HTML5 xmlDocument and JAXPSAXParser report:
+    //
+    //  namespaceURI = "http://www.xml-cml.org/schema/cml2/core"
+    //  localName = "molecule"
+    //  nodeName = "cml:molecule
+    //
+    //  But com.sun.apache.xerces.internal.jaxp.SAXParserImpl$JAXPSAXParser reports:
+    //
+    //  namespaceURI = ""
+    //  localName = ""
+    //  nodeName = "cml:molecule"
+    //
+    // You would think that is a bug...
+    //
+    // I only realized this recently when I wrote the JavaScript swingjs.JSSAXParser
+    // code and tested it against javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser().
+    //
+    
     xmlReader.atts.clear();
     for (int i = attributes.getLength(); --i >= 0;)
       xmlReader.atts.put(attributes.getLocalName(i), attributes.getValue(i));
@@ -117,16 +140,6 @@ public class XmlHandler extends DefaultHandler implements JmolXmlHandler {
       Logger.debug("Not resolving this:" + "\n      name: " + name
           + "\n  systemID: " + systemId + "\n  publicID: " + publicId
           + "\n   baseURI: " + baseURI);
-    }
-    return null;
-  }
-
-  @Override
-  public InputSource resolveEntity(String publicID, String systemID)
-      throws SAXException {
-    if (Logger.debugging) {
-      Logger.debug("Jmol SAX EntityResolver not resolving:" + "\n  publicID: "
-          + publicID + "\n  systemID: " + systemID);
     }
     return null;
   }

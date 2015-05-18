@@ -192,24 +192,20 @@ public class XmlReader extends AtomSetCollectionReader {
       }
       if (o instanceof BufferedInputStream)
         o = Rdr.StreamToUTF8String(Rdr.getBIS(data));
-      // untested in j2s
       /**
        * 
        * @j2sNative
        * 
-       *            this.domObj[0] =
-       *            this.createDomNodeJS("xmlReader",o);
-       *            this.walkDOMTree();
-       *            this.createDomNodeJS("xmlReader",null);
+       *            this.domObj[0] = this.createDomNodeJS("xmlReader",o);
+       *            this.walkDOMTree(); this.createDomNodeJS("xmlReader",null);
        * 
-       */ 
+       */
       {
         walkDOMTree();
       }
     } else {
-      JmolXmlHandler saxHandler = (JmolXmlHandler) Interface
-          .getOption("adapter.readers.xml.XmlHandler", vwr, "file");
-      saxHandler.parseXML(this, saxReader, reader);
+      ((XmlHandler) Interface.getOption("adapter.readers.xml.XmlHandler", vwr,
+          "file")).parseXML(this, saxReader, reader);
     }
   }
   
