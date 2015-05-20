@@ -27,6 +27,8 @@ package org.jmol.adapter.readers.xml;
 
 import java.io.BufferedReader;
 
+import org.jmol.java.BS;
+import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -65,6 +67,7 @@ public class XmlHandler extends DefaultHandler {
 
   @Override
   public void endDocument() {
+    xmlReader.endDocument();
   }
 
   /*
@@ -148,7 +151,6 @@ public class XmlHandler extends DefaultHandler {
   public void error(SAXParseException exception) {
     Logger.error("SAX ERROR:" + exception.getMessage());
   }
-
   @Override
   public void fatalError(SAXParseException exception) {
     Logger.error("SAX FATAL:" + exception.getMessage());

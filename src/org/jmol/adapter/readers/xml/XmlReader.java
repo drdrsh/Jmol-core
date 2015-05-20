@@ -33,8 +33,10 @@ import java.io.BufferedInputStream;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.java.BS;
 import javajs.util.Rdr;
 
+import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 
 /**
@@ -425,6 +427,10 @@ public class XmlReader extends AtomSetCollectionReader {
 
   private Object jsObjectGetMember(Object[] jsObject, String name) {
     return parent.vwr.apiPlatform.getJsObjectInfo(jsObject, name, null);
+  }
+
+  public void endDocument() {
+    // CML reader uses this
   }
 
 }

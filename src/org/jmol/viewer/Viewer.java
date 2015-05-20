@@ -1435,7 +1435,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   // delegated to FileManager
   // ///////////////////////////////////////////////////////////////
 
-  String getDefaultDirectory() {
+  public String getDefaultDirectory() {
     return g.defaultDirectory;
   }
 

@@ -26,13 +26,18 @@ package org.jmol.adapter.readers.xml;
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.Atom;
 
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import javajs.util.Lst;
 import javajs.util.PT;
 
+import org.jmol.java.BS;
 import org.jmol.api.JmolAdapter;
+import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 
 /**
@@ -112,6 +117,12 @@ public class XmlCmlReader extends XmlReader {
   private boolean haveMolecule = false;
   private String localSpaceGroupName;
   protected boolean processing = true;
+  protected int state = START;
+  private int atomIndex0;
+  private Lst<String[]> joinList;
+  private Map<Atom, String> mapRtoA;
+  private BS deleteAtoms;
+
   /**
    * state constants
    */
@@ -137,9 +148,6 @@ public class XmlCmlReader extends XmlReader {
   /**
    * the current state
    */
-  protected int state = START;
-  private int atomIndex0;
-
   /*
    * added 2/2007  Bob Hanson:
    * 
@@ -176,6 +184,7 @@ public class XmlCmlReader extends XmlReader {
   }
 
   protected void processStart2(String name) {
+    name = name.toLowerCase();
     switch (state) {
     case START:
       if (name.equals("molecule")) {
@@ -198,7 +207,7 @@ public class XmlCmlReader extends XmlReader {
       } else if (name.equals("module")) {
         moduleNestingLevel++;
         //nModules++;
-      } else if (name.equalsIgnoreCase("latticeVector")) {
+      } else if (name.equals("latticevector")) {
         state = LATTICE_VECTOR;
         setKeepChars(true);
       }
@@ -222,7 +231,7 @@ public class XmlCmlReader extends XmlReader {
               localSpaceGroupName = localSpaceGroupName.substring(0, i)
                   + localSpaceGroupName.substring((i--) + 1);
         }
-      } else if (name.equalsIgnoreCase("cellParameter")) {
+      } else if (name.equals("cellparameter")) {
         if (atts.containsKey("parameterType")) {
           cellParameterType = atts.get("parameterType");
           setKeepChars(true);
@@ -251,15 +260,28 @@ public class XmlCmlReader extends XmlReader {
       break;
     case CRYSTAL_SYMMETRY_TRANSFORM3:
     case MOLECULE:
-      if (name.equals("crystal")) {
+      if (name.equals("fragmentlist")) {
+        joinList = new Lst<String[]>();
+        mapRtoA = new Hashtable<Atom, String>();
+        if (deleteAtoms == null)
+          deleteAtoms = new BS();
+      } else if (name.equals("crystal")) {
         state = CRYSTAL;
         embeddedCrystal = true;
-      }
-      if (name.equals("molecule")) {
+      } else if (name.equals("molecule")) {
         state = MOLECULE;
         moleculeNesting++;
-      }
-      if (name.equalsIgnoreCase("bondArray")) {
+      } else if (name.equalsIgnoreCase("join")) {
+        int order = -1;
+        tokenCount = 0;
+        if (atts.containsKey("atomRefs2")) {
+          breakOutTokens(atts.get("atomRefs2"));
+          if (atts.containsKey("order"))
+            order = parseBondToken(atts.get("order"));
+          if (tokenCount == 2 && order > 0)
+            joinList.addLast(new String[] { tokens[0], tokens[1], "" + order });
+        }
+      } else if (name.equals("bondarray")) {
         state = MOLECULE_BOND_ARRAY;
         bondCount = 0;
         if (atts.containsKey("order")) {
@@ -277,8 +299,7 @@ public class XmlCmlReader extends XmlReader {
           for (int i = tokenCount; --i >= 0;)
             bondArray[i].atomIndex2 = asc.getAtomIndex(tokens[i]);
         }
-      }
-      if (name.equalsIgnoreCase("atomArray")) {
+      } else if (name.equals("atomarray")) {
         state = MOLECULE_ATOM_ARRAY;
         aaLen = 0;
         boolean coords3D = false;
@@ -324,8 +345,7 @@ public class XmlCmlReader extends XmlReader {
             atom.z = 0;
           addAtom(atom);
         }
-      }
-      if (name.equals("formula")) {
+      } else if (name.equals("formula")) {
         state = MOLECULE_FORMULA;
       }
       break;
@@ -436,6 +456,7 @@ public class XmlCmlReader extends XmlReader {
   }
   
   public void processEnd2(String name) {
+    name = name.toLowerCase();
     switch (state) {
     case START:
       if (name.equals("module")) {
@@ -454,7 +475,7 @@ public class XmlCmlReader extends XmlReader {
         } else {
           state = START;
         }
-      } else if (name.equalsIgnoreCase("cellParameter") && keepChars) {
+      } else if (name.equals("cellparameter") && keepChars) {
         String[] tokens = PT.getTokens(chars);
         setKeepChars(false);
         if (tokens.length != 3 || cellParameterType == null) {
@@ -510,6 +531,20 @@ public class XmlCmlReader extends XmlReader {
         applySymmetryAndSetTrajectory();
       break;
     case MOLECULE:
+      if (name.equals("fragmentlist")) {
+        for (int i = joinList.size(); --i >= 0;) {
+          String[] join = joinList.get(i);
+          Atom r1 = asc.getAtomFromName(fixSerialName(join[0]));
+          Atom r2 = asc.getAtomFromName(fixSerialName(join[1]));
+          if (r1 != null && r2 != null) {
+            deleteAtoms.set(r1.index);
+            deleteAtoms.set(r2.index);
+            addNewBond(mapRtoA.get(r1), mapRtoA.get(r2), parseIntStr(join[2]));
+          }
+        }
+        joinList = null;
+        mapRtoA = null;
+      }
       if (name.equals("molecule")) {
         if (--moleculeNesting == 0) {
           // if <molecule> is within <molecule>, then
@@ -524,15 +559,15 @@ public class XmlCmlReader extends XmlReader {
       }
       break;
     case MOLECULE_BOND_ARRAY:
-      if (name.equalsIgnoreCase("bondArray")) {
+      if (name.equals("bondarray")) {
         state = MOLECULE;
         for (int i = 0; i < bondCount; ++i)
-          asc.addBond(bondArray[i]);
+          addBond(bondArray[i]);
         parent.applySymmetryToBonds = true;
       }
       break;
     case MOLECULE_ATOM_ARRAY:
-      if (name.equalsIgnoreCase("atomArray")) {
+      if (name.equals("atomarray")) {
         state = MOLECULE;
         for (int i = 0; i < aaLen; ++i)
           addAtom(atomArray[i]);
@@ -598,6 +633,35 @@ public class XmlCmlReader extends XmlReader {
     }
   }
 
+  private void addBond(Bond bond) {
+    Atom a1 = asc.atoms[bond.atomIndex1];
+    Atom a2 = asc.atoms[bond.atomIndex2];
+    if (joinList != null && !checkBondToR(a1.atomName, a2.atomName))
+      asc.addBond(bond);
+  }
+
+  /**
+   * Checks to see if we have a bond to R and, if so, adds this R atom
+   * as a key to its attached atom
+   * @param a1name
+   * @param a2name
+   * @return true if handled so no need to add a bond
+   */
+  private boolean checkBondToR(String a1name, String a2name) {
+    Atom a1 = asc.getAtomFromName(a1name);
+    Atom a2 = asc.getAtomFromName(a2name);
+    if (a1 == null || a2 == null)
+      return true;
+    if ("R".equals(a1.elementSymbol)) {
+      mapRtoA.put(a1, a2.atomName);
+      return true;
+    } else if ("R".equals(a2.elementSymbol)) {
+      mapRtoA.put(a2, a1.atomName);
+      return true;
+    }
+    return false;
+  }
+
   private void setAtomNames() {
       // for CML reader "a3" --> "N3"
       if (atomIdNames == null)
@@ -612,11 +676,17 @@ public class XmlCmlReader extends XmlReader {
     }
 
   private void addNewBond(String a1, String a2, int order) {
+    if (a1 == null || a2 == null)
+      return;
     parent.applySymmetryToBonds = true;
-    if (isSerial)
-      asc.addNewBondFromNames(a1.substring(1), a2.substring(1), order);
-    else
+    a1 = fixSerialName(a1);
+    a2 = fixSerialName(a2);
+    if (joinList == null || !checkBondToR(a1, a2))
       asc.addNewBondFromNames(a1, a2, order);
+  }
+
+  private String fixSerialName(String a) {
+    return (isSerial ? a.substring(1) : a);
   }
 
   private void getDictRefValue() {
@@ -744,5 +814,16 @@ public class XmlCmlReader extends XmlReader {
     parent.iHaveSymmetryOperators = iHaveSymmetryOperators;
     parent.applySymmetryAndSetTrajectory();
   }
+
+  @Override
+  public void endDocument() {
+    // CML reader uses this
+    if (deleteAtoms != null) {
+      BS bs = (asc.bsAtoms == null ? asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac) : asc.bsAtoms);
+      bs.andNot(deleteAtoms);
+    }
+  }
+
+
 
 }
