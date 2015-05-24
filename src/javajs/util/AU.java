@@ -628,6 +628,28 @@ final public class AU {
 	  return x instanceof float[][][];
 	  }
 	}
+	
+	/**
+	 * Ensure that we have signed and not unsigned bytes
+	 * coming out of any process, but particularly out of 
+	 * file reading. 
+	 * 
+	 * @param b
+	 */
+	public static void ensureSignedBytes(byte[] b) {
+	  /**
+	   * @j2sNative
+	   * 
+	   * for (var i = b.length; --i >= 0;) {
+	   *   var j = b[i] & 0xFF;
+	   *   if (j >= 0x80) j -= 0x100;
+	   *   b[i] = j;
+	   * }
+	   * 
+	   */
+	  {
+	  }
+	}
 
 
 }

@@ -949,12 +949,12 @@ public class CmdExt extends ScriptExt {
     BS bsAtoms = null;
     BS bsSelected = vwr.bsA();
     if (slen == 1) {
+      if (chk)
+        return;
       // configuration
       bsAtoms = vwr.ms.setConformation(bsSelected);
       vwr.ms.addStateScript("select", null, bsSelected, null, "configuration",
           true, false);
-      if (chk)
-        return;
     } else {
       int n;
       if (isFloatParameter(1)) {

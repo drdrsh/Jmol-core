@@ -1,6 +1,7 @@
 package javajs.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -11,12 +12,12 @@ import java.net.URLConnection;
  */
 public class AjaxURLConnection extends URLConnection {
 
-	protected AjaxURLConnection(URL url) {
-		super(url);
-	}
+  protected AjaxURLConnection(URL url) {
+    super(url);
+  }
 
-	byte[] bytesOut;
-	String postOut = "";
+  byte[] bytesOut;
+  String postOut = "";
 
   /**
    * 
@@ -47,25 +48,37 @@ public class AjaxURLConnection extends URLConnection {
   }
 
   @Override
-	public void connect() throws IOException {
-		// not expected to be used. 
-	}
+  public void connect() throws IOException {
+    // not expected to be used. 
+  }
 
-	public void outputBytes(byte[] bytes) {
-  	//      type = "application/octet-stream;";
-		bytesOut = bytes;
+  public void outputBytes(byte[] bytes) {
+    //      type = "application/octet-stream;";
+    bytesOut = bytes;
   }
 
   public void outputString(String post) {
-  	postOut = post;
-  	//     type = "application/x-www-form-urlencoded";
+    postOut = post;
+    //     type = "application/x-www-form-urlencoded";
   }
 
+  @Override
+  public InputStream getInputStream() {
+    InputStream is = null;
+    Object o = doAjax();
+    if (AU.isAB(o))
+      is = Rdr.getBIS((byte[]) o);
+    else if (o instanceof SB) 
+      is = Rdr.getBIS(Rdr.getBytesFromSB((SB)o));
+    else if (o instanceof String)
+      is = Rdr.getBIS(((String) o).getBytes());
+    return is;
+  }
   /**
    * @return javajs.util.SB or byte[], depending upon the file type
    */
-	public Object getContents() {
-		return doAjax();
-	}
+  public Object getContents() {
+    return doAjax();
+  }
 
 }

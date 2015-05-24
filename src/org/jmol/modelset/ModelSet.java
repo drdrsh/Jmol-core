@@ -3756,33 +3756,29 @@ import java.util.Properties;
     BS bs = new BS();
     for (int i = mc; --i >= 0;)
       if (i == modelIndex || modelIndex < 0) {
-        if (am[i].isBioModel)
+        if (am[i].isBioModel) {
           ((BioModel) am[i]).getConformation(conformationIndex, doSet, bsAtoms,
               bs);
-        else if (!doSet)
-          getSubsystem(i, conformationIndex, bsAtoms, bs);
+          continue;
+        }
+        BS bsConformation = am[i].getConformationBS(conformationIndex, bsAtoms);
+        if (bsConformation == null)
+          continue;
+        if (conformationIndex >= 0) {
+          int nAltLocs = getAltLocCountInModel(i);
+          String altLocs = getAltLocListInModel(i);
+          BS bsTemp = new BS();
+          for (int c = nAltLocs; --c >= 0;)
+            if (c != conformationIndex)
+              bsConformation.andNot(getAtomBitsMDa(T.spec_alternate,
+                  altLocs.substring(c, c + 1), bsTemp));
+        }
+        if (bsConformation.nextSetBit(0) >= 0)
+          bs.or(bsConformation);
       }
     return bs;
   }
 
-  private void getSubsystem(int modelIndex, int conformationIndex, BS bsAtoms,
-                           BS bs) {
-    BS bsConformation = am[modelIndex].getConformationBS(conformationIndex,
-        bsAtoms);
-    if (bsConformation == null)
-      return;
-    if (conformationIndex >= 0) {
-      int nAltLocs = getAltLocCountInModel(modelIndex);
-      String altLocs = getAltLocListInModel(modelIndex);
-      BS bsTemp = new BS();
-      for (int c = nAltLocs; --c >= 0;)
-        if (c != conformationIndex)
-          bsConformation.andNot(getAtomBitsMDa(T.spec_alternate,
-              altLocs.substring(c, c + 1), bsTemp));
-    }
-    if (bsConformation.nextSetBit(0) >= 0)
-      bs.or(bsConformation);
-  }
 
   ///// bio-only methods /////
   
