@@ -352,7 +352,7 @@ public class MeasuresRenderer extends LabelsRenderer {
       x <<= 1;
       y <<= 1;
     }
-    drawLine(atomLast.sX, atomLast.sY, lastZ, x, y, 0, mad);
+    drawLine(atomLast.sX, atomLast.sY, lastZ, x, y, lastZ, mad);
   }  
  
   //TODO: I think the 20 here is the cutoff for pixels -- check this
