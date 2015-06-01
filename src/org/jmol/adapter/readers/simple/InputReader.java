@@ -354,7 +354,7 @@ public class InputReader extends AtomSetCollectionReader {
     Map<String, Atom> map = new Hashtable<String, Atom>();
     for (int i = 0; i < nAtoms; i++) {
       tokens = PT.getTokens(rd());
-      if (tokens[1].equals("0"))
+      if (tokens[1].equals("0") || tokens[1].equals("2"))
         continue;
       Atom a = addAtomXYZSymName(tokens, 2, null, null);
       a.elementNumber = (short) getValue(1);

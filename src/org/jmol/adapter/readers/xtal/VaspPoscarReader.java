@@ -1,6 +1,9 @@
 package org.jmol.adapter.readers.xtal;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.api.JmolAdapter;
+import org.jmol.util.Parser;
+
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -16,30 +19,44 @@ import javajs.util.SB;
 
 public class VaspPoscarReader extends AtomSetCollectionReader {
 
-  private Lst<String> atomLabels;
-  private int ac;
-  private String title;
+  protected Lst<String> atomLabels;
+  private boolean haveAtomLabels = true;
+  private boolean atomsLabeledInline;
+  protected int ac;
+  protected int atomPt = Integer.MIN_VALUE;
+  protected String title;
 
   @Override
   protected void initializeReader() throws Exception {
+    readStructure();
+    continuing = false;
+  }
+  
+  protected void readStructure() throws Exception {
     readJobTitle();
     readUnitCellVectors();
     readMolecularFormula();
     readCoordinates();
-    continuing = false;
+  }
+
+  @Override
+  protected void finalizeSubclassReader() {
+    if (!haveAtomLabels && !atomsLabeledInline)     
+      appendLoadNote("VASP POSCAR reader using pseudo atoms Al B C Db...");
   }
 
   private void readJobTitle() throws Exception {
     asc.setAtomSetName(title = rd().trim());
   }
 
-  private void readUnitCellVectors() throws Exception {
+  protected void readUnitCellVectors() throws Exception {
     // Read Unit Cell
     setSpaceGroupName("P1");
     setFractionalCoordinates(true);
-    float scaleFac = parseFloatStr(rd().trim());
+    float scaleFac = parseFloatStr(rdline().trim());
     float[] unitCellData = new float[9];
-    fillFloatArray(null, 0, unitCellData);
+    String s = rdline() + " " + rdline() + " " + rdline();
+    Parser.parseStringInfestedFloatArray(s, null, unitCellData);
     if (scaleFac != 1)
       for (int i = 0; i < unitCellData.length; i++)
         unitCellData[i] *= scaleFac;
@@ -48,27 +65,43 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     addPrimitiveLatticeVector(2, unitCellData, 6);
   }
 
-  private void readMolecularFormula() throws Exception {
+  protected String[] elementLabel;
+  
+  /**
+   * try various ways to read the optional atom labels. There is no convention
+   * here.
+   * 
+   * @throws Exception
+   */
+  protected void readMolecularFormula() throws Exception {
     //   H    C    O    Be   C    H
-    String[] elementLabel = PT.getTokens(discardLinesUntilNonBlank());
+    if (elementLabel == null)
+      elementLabel = PT.getTokens(discardLinesUntilNonBlank());
     String[] elementCounts;
     if (PT.parseInt(elementLabel[0]) == Integer.MIN_VALUE) {
-      elementCounts = PT.getTokens(rd());
-    //   6    24    18     6     6    24
+      elementCounts = PT.getTokens(rdline());
+      //   6    24    18     6     6    24
     } else {
       elementCounts = elementLabel;
       elementLabel = PT.split(title, " ");
-      if (elementLabel.length != elementCounts.length) {
-        elementLabel = PT.split("Al B C Db Eu F Ga Hf I K Li Mn N O P Ru S Te U V W Xe Yb Zn", " ");
-        appendLoadNote("using pseudo atoms Al B C Db...");
+      if (elementLabel.length != elementCounts.length
+          || elementLabel[0].length() > 2) {
+        elementLabel = PT.split(
+            "Al B C Db Eu F Ga Hf I K Li Mn N O P Ru S Te U V W Xe Yb Zn", " ");
+        haveAtomLabels = false;
       }
+    }
+    String[] labels = elementLabel;
+    if (elementCounts.length == 1 && atomPt >= 0 && atomPt < 2) {
+      labels = new String[] { elementLabel[atomPt] };
     }
     SB mf = new SB();
     atomLabels = new Lst<String>();
-    for (int i = 0; i < elementCounts.length; i++) { 
+    ac = 0;
+    for (int i = 0; i < elementCounts.length; i++) {
       int n = Integer.parseInt(elementCounts[i]);
       ac += n;
-      String label = elementLabel[i];
+      String label = labels[i];
       mf.append(" ").append(label).appendI(n);
       for (int j = n; --j >= 0;)
         atomLabels.addLast(label);
@@ -80,14 +113,25 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     asc.setAtomSetName(s);
   }
 
-  private void readCoordinates() throws Exception {
+  protected void readCoordinates() throws Exception {
     // If Selective is there, then skip a line 
     if (discardLinesUntilNonBlank().toLowerCase().contains("selective"))
       rd();
     if (line.toLowerCase().contains("cartesian"))
       setFractionalCoordinates(false);
-    for (int i = 0; i < ac; i++)
-      addAtomXYZSymName(PT.getTokens(rd()), 0, null, atomLabels.get(i));
+    for (int i = 0; i < ac; i++) {
+      String[] tokens = PT.getTokens(rdline());
+      if (i == 0 && !atomsLabeledInline && tokens.length > 3 && JmolAdapter.getElementNumber(tokens[3]) > 0)
+        atomsLabeledInline = true;
+      String label = (atomsLabeledInline ? tokens[3] : atomLabels.get(i));
+      addAtomXYZSymName(tokens, 0, null, label);
+    }
   }
 
+  protected String rdline() throws Exception  {
+    rd();
+    if (line != null && line.startsWith("["))
+      line = line.substring(line.indexOf("]") + 1).trim();
+    return line;
+  }
 }

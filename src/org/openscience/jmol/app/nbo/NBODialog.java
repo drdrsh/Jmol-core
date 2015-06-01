@@ -452,11 +452,11 @@ public class NBODialog extends JDialog implements ChangeListener {
   
   protected void rawCmd() {
     //nboReport(null);
+    String cmd = nboInput.getText();
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("mode", Integer.valueOf(NBOService.RAW));
     info.put("sync", Boolean.FALSE);
     info.put("action", "cmd");
-    String cmd = nboInput.getText();
     nboInput.setText("");
     info.put("value", cmd);
     nboReport(">> " + cmd);

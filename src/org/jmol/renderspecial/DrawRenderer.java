@@ -203,6 +203,7 @@ public class DrawRenderer extends MeshRenderer {
       }
       mat.setAA(A4.newVA(vTemp, (float) (degrees * Math.PI / 180)));
       screens = vwr.allocTempScreens(nPoints);
+      p3Screens = vwr.allocTempPoints(nPoints);
       int iBase = nPoints - (dmesh.scale < 2 ? 3 : 3);
       for (int i = 0; i < nPoints; i++) {
         if (i == iBase)
@@ -211,11 +212,13 @@ public class DrawRenderer extends MeshRenderer {
         if (i == 0)
           pt2.setT(pt1);
         tm.transformPtScr(pt1, screens[i]);
+        tm.transformPtScrT3(pt1, p3Screens[i]);
         mat.rotate(vTemp2);
       }
       if (dmesh.isVector && !dmesh.noHead) {
         renderArrowHead(pt0, pt1, 0.3f, false, false, dmesh.isBarb);
         tm.transformPtScr(pt1f, screens[nPoints - 1]);
+        tm.transformPtScrT3(pt1f, p3Screens[nPoints - 1]);
       }
       pt1f.setT(pt2);
       break;

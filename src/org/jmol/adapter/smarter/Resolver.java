@@ -43,6 +43,7 @@ public class Resolver {
 
   private final static String classBase = "org.jmol.adapter.readers.";
   private final static String[] readerSets = new String[] {
+    "aflow.", ";AFLOW;",
     "cif.", ";Cif;MMCif;",
     "molxyz.", ";Mol3D;Mol;Xyz;",
     "more.", ";BinaryDcd;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
@@ -661,10 +662,13 @@ public class Resolver {
         if (header.indexOf(recordTag) < 0)
           continue;
         String type = recordTags[0];
+        if (!type.equals("Xml"))
+          return type;
+        if (header.indexOf("/AFLOWDATA/") >= 0)
+          return "AFLOW";
         // for XML check for an error message from a server -- certainly not XML
         // but new CML format includes xmlns:xhtml="http://www.w3.org/1999/xhtml" in <cml> tag.
-        return (!type.equals("Xml") ? type 
-            : header.indexOf("<!DOCTYPE HTML PUBLIC") < 0
+        return (header.indexOf("<!DOCTYPE HTML PUBLIC") < 0
               && header.indexOf("XHTML") < 0 
               && (header.indexOf("xhtml") < 0 || header.indexOf("<cml") >= 0) 
               ? getXmlType(header) 
@@ -790,6 +794,9 @@ public class Resolver {
   private final static String[] inputContainsRecords =
   { "Input", " ATOMS cartesian", "$molecule", "&zmat", "geometry={", "$DATA", "%coords", "GEOM=PQS", "geometry units angstroms" };
     
+  private final static String[] aflowContainsRecords =
+  { "AFLOW", "/AFLOWDATA/"};
+
   private final static String[][] headerContainsRecords =
   { sptRecords, bilbaoContainsRecords, xmlContainsRecords, gaussianContainsRecords, 
     ampacContainsRecords, mopacContainsRecords, qchemContainsRecords, 
@@ -801,7 +808,7 @@ public class Resolver {
     dmolContainsRecords, gulpContainsRecords, 
     espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
-    inputContainsRecords
+    inputContainsRecords, aflowContainsRecords
     
   };
   

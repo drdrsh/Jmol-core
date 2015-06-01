@@ -457,6 +457,8 @@ public class AtomSetCollection {
    * @param imodel
    */
   public void removeAtomSet(int imodel) {
+    if (imodel < 0)
+      imodel = atomSetCount - 1;
     if (bsAtoms == null) {
       bsAtoms = new BS();
       bsAtoms.setBits(0, ac);

@@ -434,6 +434,7 @@ public class GenNBOReader extends MOReader {
     rd(); // ----------
     asc.newAtomSet();
     asc.setAtomSetName(nboType + "s: " + line1.trim());
+    asc.setCurrentModelInfo("nboType", nboType);
     for (int i = 0; i < ac; i++) {
       tokens = PT.getTokens(rd());
       int z = parseIntStr(tokens[0]);

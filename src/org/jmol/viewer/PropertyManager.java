@@ -922,10 +922,13 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
                     : type.equals("pdb") ? "{selected and not hetero}.label(\"ATOM  %5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
                         + "+{selected and hetero}.label(\"HETATM%5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
                         : type.equals("xyz") ? "%-2e %10.5x %10.5y %10.5z"
+                            : type.equals("cfi") ? "print 'from Jmol" + Viewer.getJmolVersion() + "\n'+{selected}.count + ' ' + {selected}.bonds.count + '\n'   + {selected}.format('%10.0[atomno] %10.0[elemno] %10.4[xyz]')  + {selected}.bonds.format('%i1 %i2') + '\n' + {selected}.bonds.format('%ORDER')"
                             : null);
     if (exp == null)
       return getModelExtract(vwr.getAtomBitSet(atomExpression), false, false,
           type.toUpperCase(), allTrajectories);
+    if (exp.startsWith("print"))
+      return vwr.runScript(exp);
     if (exp.indexOf("label") < 0)
       exp = atomExpression + ".label(\"" + exp + "\").lines";
     else if (!atomExpression.equals("selected"))

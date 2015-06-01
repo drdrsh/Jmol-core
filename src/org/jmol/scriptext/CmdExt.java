@@ -3037,7 +3037,7 @@ public class CmdExt extends ScriptExt {
     } else {
       // write() function or image
       pt = pt0 = 0;
-      isCommand = (args == st);
+      isCommand = false;//(args == st);
       showOnly = !isCommand;
     }
 
@@ -3844,7 +3844,7 @@ public class CmdExt extends ScriptExt {
         msg = vwr.getTrajectoryState();
       break;
     case T.historylevel:
-      value = "" + eval.commandHistoryLevelMax;
+      value = "" + ScriptEval.commandHistoryLevelMax;
       break;
     case T.loglevel:
       value = "" + Logger.getLogLevel();
