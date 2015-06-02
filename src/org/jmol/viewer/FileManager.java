@@ -966,7 +966,7 @@ public class FileManager implements BytePoster {
       return new String[] { null };
     boolean doSetPathForAllFiles = (pathForAllFiles.length() > 0);
     if (name.startsWith("?") || name.startsWith("http://?")) {
-      if ((name = vwr.dialogAsk("Load", name, null)) == null)
+      if (!vwr.isJS && (name = vwr.dialogAsk("Load", name, null)) == null)
         return new String[] { isFullLoad ? "#CANCELED#" : null };
       doSetPathForAllFiles = false;
     }
