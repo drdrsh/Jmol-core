@@ -959,6 +959,9 @@ public class XtalSymmetry {
         Integer.valueOf(operationCount));
   }
 
+  public T3 getOverallSpan() {
+    return  V3.newVsub(maxXYZ0, minXYZ0);
+  }
   private int dtype = 3;
   private V3[] unitCellTranslations;
   private int latticeOp;
@@ -1240,6 +1243,7 @@ public class XtalSymmetry {
       baseUnitCell[24] = Math.max(1, (int) ptSupercell.z);
     }
   }
+
   
 //  static {
 //    System.out.println(.01999998f);

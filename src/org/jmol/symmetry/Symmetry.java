@@ -339,7 +339,7 @@ public class Symmetry implements SymmetryInterface {
     setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"));
     unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo.get("moreUnitCellInfo");
     modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
-    setOffsetPt((P3) modelAuxiliaryInfo.get("unitCellOffset"));
+    setOffsetPt((T3) modelAuxiliaryInfo.get("unitCellOffset"));
     M3 matUnitCellOrientation = (M3) modelAuxiliaryInfo
         .get("matUnitCellOrientation");
     if (matUnitCellOrientation != null)

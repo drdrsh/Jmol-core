@@ -38,13 +38,15 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
  * 
  */
 
-public class VaspChgcarReader extends AtomSetCollectionReader {
+public class VaspChgcarReader extends VaspPoscarReader {
 
-  @Override
-  protected void initializeReader() {
-    setSpaceGroupName("P1");
-    setFractionalCoordinates(true);
-  }
+// subsumed by POSCAR ? 
+  
+//  @Override
+//  protected void initializeReader() {
+//    setSpaceGroupName("P1");
+//    setFractionalCoordinates(true);
+//  }
 
 //  Na Cl                                   
 //  5.68452685100000     
@@ -63,36 +65,31 @@ public class VaspChgcarReader extends AtomSetCollectionReader {
 // 0.250000  0.750000  0.750000
 //
 
-  @Override
-  protected boolean checkLine() throws Exception {
-    String[] atomSym = getTokens();
-    float scale = parseFloatStr(rd());
-    float[] unitCellData = new float[9];
-    fillFloatArray(null, 0, unitCellData);
-    for (int i = 0; i < 9; i++)
-      unitCellData[i] *= scale;
-    addPrimitiveLatticeVector(0, unitCellData, 0);
-    addPrimitiveLatticeVector(1, unitCellData, 3);
-    addPrimitiveLatticeVector(2, unitCellData, 6);
-    String[] tokens = PT.getTokens(rd());
-    int[] atomCounts = new int[tokens.length];
-    for (int i = tokens.length; --i >= 0;)
-      atomCounts[i] = parseIntStr(tokens[i]);
-    if (atomSym.length != atomCounts.length)
-      atomSym = null;
-    /*String type = */ rd();
-    // type should be "direct"
-    for (int i = 0; i < atomCounts.length; i++)
-      for (int j = atomCounts[i]; --j >= 0;)
-        addAtomXYZSymName(PT.getTokens(rd()), 0, (atomSym == null ? "Xx" : atomSym[i]), null);
-    continuing = false;
-    return false;
-  }
-
-  @Override
-  protected void finalizeSubclassReader() throws Exception {
-    applySymmetryAndSetTrajectory();
-  }
-
+//  @Override
+//  protected boolean checkLine() throws Exception {
+//    String[] atomSym = getTokens();
+//    float scale = parseFloatStr(rd());
+//    float[] unitCellData = new float[9];
+//    fillFloatArray(null, 0, unitCellData);
+//    for (int i = 0; i < 9; i++)
+//      unitCellData[i] *= scale;
+//    addPrimitiveLatticeVector(0, unitCellData, 0);
+//    addPrimitiveLatticeVector(1, unitCellData, 3);
+//    addPrimitiveLatticeVector(2, unitCellData, 6);
+//    String[] tokens = PT.getTokens(rd());
+//    int[] atomCounts = new int[tokens.length];
+//    for (int i = tokens.length; --i >= 0;)
+//      atomCounts[i] = parseIntStr(tokens[i]);
+//    if (atomSym.length != atomCounts.length)
+//      atomSym = null;
+//    /*String type = */ rd();
+//    // type should be "direct"
+//    for (int i = 0; i < atomCounts.length; i++)
+//      for (int j = atomCounts[i]; --j >= 0;)
+//        addAtomXYZSymName(PT.getTokens(rd()), 0, (atomSym == null ? "Xx" : atomSym[i]), null);
+//    applySymmetryAndSetTrajectory();
+//    continuing = false;
+//    return false;
+//  }
 
 }

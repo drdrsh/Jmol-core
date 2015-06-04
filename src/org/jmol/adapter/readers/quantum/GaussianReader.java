@@ -216,25 +216,36 @@ public class GaussianReader extends MOReader {
     asc.setAtomSetEnergy(tokens[2], parseFloatStr(tokens[2]));
     energyString = tokens[2] + " " + tokens[3];
     // now set the names for the last equivalentAtomSets
-    asc.setAtomSetNames(energyKey + " = " + energyString,
-        equivalentAtomSets, namedSets);
+    setNames(energyKey + " = " + energyString,
+        namedSets, equivalentAtomSets);
     // also set the properties for them
-    asc.setAtomSetPropertyForSets(energyKey, energyString,
+    setProps(energyKey, energyString,
         equivalentAtomSets);
     tokens = PT.getTokens(rd());
     if (tokens.length > 2) {
-      asc.setAtomSetPropertyForSets(tokens[0], tokens[2],
+      setProps(tokens[0], tokens[2],
           equivalentAtomSets);
       if (tokens.length > 5)
-        asc.setAtomSetPropertyForSets(tokens[3], tokens[5],
+        setProps(tokens[3], tokens[5],
             equivalentAtomSets);
       tokens = PT.getTokens(rd());
     }
     if (tokens.length > 2)
-      asc.setAtomSetPropertyForSets(tokens[0], tokens[2],
+      setProps(tokens[0], tokens[2],
           equivalentAtomSets);
   }
   
+  private void setProps(String key, String value, int n) {
+    for (int i = asc.iSet; --n >= 0 && i >= 0; --i)
+      asc.setAtomSetModelPropertyForSet(key, value, i);
+  }
+
+  private void setNames(String atomSetName, BS namedSets, int n) {
+    for (int i = asc.iSet; --n >= 0 && i >= 0; --i)
+      if (namedSets == null || !namedSets.get(i))
+        asc.setModelInfoForSet("name", atomSetName, i);
+  }
+
   /**
    * Interpret the Energy= line for non SCF type energy output
    *
@@ -243,7 +254,7 @@ public class GaussianReader extends MOReader {
     String tokens[] = getTokens();
     energyKey = "Energy";
     energyString = tokens[1];
-    asc.setAtomSetNames("Energy = "+tokens[1], equivalentAtomSets, namedSets);
+    setNames("Energy = "+tokens[1], namedSets, equivalentAtomSets);
     asc.setAtomSetEnergy(energyString, parseFloatStr(energyString));
   }
   

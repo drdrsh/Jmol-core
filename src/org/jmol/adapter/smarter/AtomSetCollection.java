@@ -24,24 +24,20 @@
 
 package org.jmol.adapter.smarter;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-
 import java.util.Collections;
 import java.util.Hashtable;
-
 import java.util.Map;
 import java.util.Properties;
+
+import javajs.util.AU;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.V3;
 
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
-
-import javajs.util.P3;
-
 import org.jmol.util.Logger;
-
-import javajs.util.V3;
 
 @SuppressWarnings("unchecked")
 public class AtomSetCollection {
@@ -97,11 +93,11 @@ public class AtomSetCollection {
   public int atomSetCount;
   public int iSet = -1;
 
-  private int[] atomSetNumbers = new int[16];
+  public int[] atomSetNumbers = new int[16];
   public int[] atomSetAtomIndexes = new int[16];
   public int[] atomSetAtomCounts = new int[16];
-  private int[] atomSetBondCounts = new int[16];
-  private Map<String, Object>[] atomSetAuxiliaryInfo = new Hashtable[16];
+  public int[] atomSetBondCounts = new int[16];
+  public Map<String, Object>[] atomSetAuxiliaryInfo = new Hashtable[16];
 
   public String errorMessage;
 
@@ -451,56 +447,11 @@ public class AtomSetCollection {
     }
   }
 
-  /**
-   * note that sets must be iterated from LAST to FIRST
-   * 
-   * @param imodel
-   */
-  public void removeAtomSet(int imodel) {
-    if (imodel < 0)
-      imodel = atomSetCount - 1;
-    if (bsAtoms == null) {
-      bsAtoms = new BS();
-      bsAtoms.setBits(0, ac);
-    }
-    int i0 = atomSetAtomIndexes[imodel];
-    int nAtoms = atomSetAtomCounts[imodel];
-    int i1 = i0 + nAtoms;
-    bsAtoms.clearBits(i0, i1);
-    for (int i = i1; i < ac; i++)
-      atoms[i].atomSetIndex--;
-    for (int i = imodel + 1; i < atomSetCount; i++) {
-      atomSetAuxiliaryInfo[i - 1] = atomSetAuxiliaryInfo[i];
-      atomSetAtomIndexes[i - 1] = atomSetAtomIndexes[i];
-      atomSetBondCounts[i - 1] = atomSetBondCounts[i];
-      atomSetAtomCounts[i - 1] = atomSetAtomCounts[i];
-      atomSetNumbers[i - 1] = atomSetNumbers[i];
-    }
-    int n = 0;
-    // following would be used in the case of a JCAMP-DX file with PDB data, perhaps
-    for (int i = 0; i < structureCount; i++) {
-      Structure s = structures[i];
-      if (s.modelStartEnd[0] == imodel && s.modelStartEnd[1] == imodel) {
-        structures[i] = null;
-        n++;
-      }
-    }
-    if (n > 0) {
-      Structure[] ss = new Structure[structureCount - n];
-      for (int i = 0, pt = 0; i < structureCount; i++)
-        if (structures[i] != null)
-          ss[pt++] = structures[i];
-      structures = ss;
-    }
-
-    for (int i = 0; i < bondCount; i++)
-      bonds[i].atomSetIndex = atoms[bonds[i].atomIndex1].atomSetIndex;
-    atomSetAuxiliaryInfo[--atomSetCount] = null;
-  }
-
   public void removeCurrentAtomSet() {
     if (iSet < 0)
       return;
+    ac = atomSetAtomIndexes[iSet];
+    atomSetAtomCounts[iSet] = 0;
     iSet--;
     atomSetCount--;
   }
@@ -927,21 +878,6 @@ public class AtomSetCollection {
   }
 
   /**
-   * Sets the atom set names of the last n atomSets
-   * 
-   * @param atomSetName
-   *        The name
-   * @param n
-   *        The number of last AtomSets that needs these set
-   * @param namedSets
-   */
-  public void setAtomSetNames(String atomSetName, int n, BS namedSets) {
-    for (int i = iSet; --n >= 0 && i >= 0; --i)
-      if (namedSets == null || !namedSets.get(i))
-        setModelInfoForSet("name", atomSetName, i);
-  }
-
-  /**
    * Sets the number for the current AtomSet
    * 
    * @param atomSetNumber
@@ -1067,21 +1003,6 @@ public class AtomSetCollection {
       atomSetAuxiliaryInfo[atomSetIndex].remove(key);
     else
       atomSetAuxiliaryInfo[atomSetIndex].put(key, value);
-  }
-
-  /**
-   * Sets the same properties for the last n atomSets.
-   * 
-   * @param key
-   *        The key for the property
-   * @param value
-   *        The value of the property
-   * @param n
-   *        The number of last AtomSets that needs these set
-   */
-  public void setAtomSetPropertyForSets(String key, String value, int n) {
-    for (int idx = iSet; --n >= 0 && idx >= 0; --idx)
-      setAtomSetModelPropertyForSet(key, value, idx);
   }
 
   int getAtomSetNumber(int atomSetIndex) {

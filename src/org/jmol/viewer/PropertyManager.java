@@ -261,17 +261,19 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
   private SV[] getArguments(String propertyName) {
     String lc = propertyName.toLowerCase();
     int pt = -1;
+    if (propertyName.indexOf('"') >= 0 || propertyName.indexOf('\'') >= 0)
+      propertyName = fixSelectQuotes(propertyName);
     while ((pt = lc.indexOf("[select ", ++pt)) >= 0) {
       int pt2 = lc.indexOf(" where ", pt);
-      int pt3 = lc.indexOf("]", pt);
+      int pt3 = lc.indexOf("]", pt2 + 1);
       if (pt2 < 0 || pt2 > pt3)
         continue;
-      propertyName = propertyName.substring(0, pt2)
-          + propertyName.substring(pt2, pt3).replace('.', '\1')
+      propertyName = propertyName.substring(0, pt + 1) 
+          + propertyName.substring(pt + 1, pt3).replace('.', '\1').replace('[', '\2').replace(']', '\3')
           + propertyName.substring(pt3);
     }
     propertyName = propertyName.replace(']', '\0').replace('[', '\0')
-        .replace('.', '\0').replace('\1', '.');
+        .replace('.', '\0').replace('\1', '.').replace('\2', '[').replace('\3', ']');
     propertyName = PT.rep(propertyName, "\0\0", "\0");
     String[] names = PT.split(PT.trim(propertyName, "\0"), "\0");
     SV[] args = new SV[names.length];
@@ -281,6 +283,40 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
               : (n = PT.parseInt(names[i])) == Integer.MIN_VALUE ? 
                   SV.newS(names[i]) : SV.newI(n));
     return args;
+  }
+
+  private String fixSelectQuotes(String propertyName) {
+    char[] a = propertyName.toCharArray();
+    boolean inQuotes = false;
+    boolean inQuotes1 = false;
+    boolean inQuotes2 = false;
+    for (int i = a.length; --i >= 0;) {
+      switch (a[i]) {
+      case '\'':
+        if (!inQuotes2)
+          inQuotes = inQuotes1 = !inQuotes;
+        break;
+      case '"':
+        if (!inQuotes1)
+          inQuotes = inQuotes2 = !inQuotes;
+        break;
+      case '.':
+        if (inQuotes)
+          a[i] = '\1';
+        break;
+      case '[':
+        if (inQuotes)
+          a[i] = '\2';
+        break;
+      case ']':
+        if (inQuotes)
+          a[i] = '\3';
+        break;
+        
+      }
+    }
+    propertyName = new String(a);
+    return propertyName;
   }
 
   @SuppressWarnings("unchecked")
@@ -438,7 +474,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
           Map<String, Object> mapNew = new Hashtable<String, Object>();
           String[] tokens = PT.split(key, ",");
           for (int i = tokens.length; --i >= 0;)
-            PT.getMapSubset(h, tokens[i], mapNew);
+            getMapSubset(h, tokens[i], mapNew);
           if (asMap)
             return mapNew;
           if (ptr == ((SV[]) args).length) {
@@ -469,6 +505,22 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       break;
     }
     return prop;
+  }
+
+  private static void getMapSubset(Map<String, ?> h, String key,
+                                   Map<String, Object> h2) {
+    if (key.startsWith("\"") || key.startsWith("'"))
+      key = PT.trim(key,  "\"'");
+    Object val = h.get(key);
+    if (val != null) {
+      h2.put(key, val);
+      return;
+    }
+    for (Entry<String, ?> e : h.entrySet()) {
+      String k = e.getKey();
+      if (PT.isLike(k, key))
+        h2.put(k, e.getValue());
+    }
   }
 
   private Object compileSelect(SV[] args) {

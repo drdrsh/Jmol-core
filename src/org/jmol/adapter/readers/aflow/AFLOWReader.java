@@ -1,17 +1,32 @@
 package org.jmol.adapter.readers.aflow;
 
-import org.jmol.adapter.readers.xtal.VaspPoscarReader;
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.api.JmolAdapter;
-import org.jmol.java.BS;
-import org.jmol.util.Logger;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
+import javajs.util.T3;
+
+import org.jmol.adapter.readers.xtal.VaspPoscarReader;
+import org.jmol.adapter.smarter.XtalSymmetry;
 
 /**
- * a reader for various AFLOW file types.
+ * A reader for various AFLOW file types.
+ * 
+ * For starters, we have output from the binaries page.
+ * 
+ * see http://www.aflowlib.org/binary_alloys.php
+ * 
+ * or, in Jmol, from:
+ * 
+ *  print load("http://aflowlib.mems.duke.edu/php/apool.php?POST?job=awrapper_apool&lattice=all&alloy=AgAu")
+ * 
+ * Unit cells are centered.
+ * 
+ * Selected compositions can be obtained using the filter "Ca=0.5" for example. 
  * 
  * @author Bob Hanson
  * 
@@ -20,10 +35,13 @@ import javajs.util.SB;
 
 public class AFLOWReader extends VaspPoscarReader {
 
-  private String aabb;
+  private String aabb;  
   private boolean readPRE;
-  private boolean readPOST;
+//  private boolean readPOST;
   private float fracA = Float.NaN;
+  private Map<String, float[]> compositions;
+  private boolean getComposition;
+  private String listKey, listKeyCase;
 
   //Looking for:
   //  
@@ -90,10 +108,14 @@ public class AFLOWReader extends VaspPoscarReader {
   @Override
   protected void initializeReader() throws Exception {
     readPRE = checkFilterKey("PRE");
-    readPOST = !checkFilterKey("NOPOST");
-    String s = getFilter("CA");
+//    readPOST = !checkFilterKey("NOPOST");
+    String s = getFilter("CA=");
     if (s != null)
       fracA = parseFloatStr(s.substring(1));
+    s = getFilter("LIST=");
+    listKey = (s == null ? "HF" : s);
+    listKeyCase = listKey;
+    getComposition = !Float.isNaN(fracA);
     discardLinesUntilStartsWith("[");
     //asc.setAtomSetName(title = line.trim());
     aabb = line.substring(1, line.indexOf("]"));
@@ -101,7 +123,8 @@ public class AFLOWReader extends VaspPoscarReader {
     elementLabel = new String[] { aabb.substring(0, pt), aabb.substring(pt) };
     while (rd().indexOf("] REFERENCE:") >= 0)
       appendLoadNote(line);
-    asc.bsAtoms = new BS();
+    compositions = new Hashtable<String, float[]>();
+    quiet = true;
   }
 
   @Override
@@ -109,29 +132,108 @@ public class AFLOWReader extends VaspPoscarReader {
     discardLinesUntilContains("Structure PRE");
     if (line == null)
       return false;
-    readPrePost();
-    return true;
-  }
-  private void readPrePost() throws Exception {
-    if (!doGetModel(++modelNumber, null))
-      return;
-    if (readPRE) {
-      readStructure();
-    }
-    if (readPOST) {
-      discardLinesUntilContains("Structure POST");
-      int  a0 = asc.ac;
-      readStructure();
-      discardLinesUntilContains("# Ca");
-      Logger.info(line);
-      if (!Float.isNaN(fracA) && Math.abs(PT.parseFloat(getTokens()[1]) - fracA) > 0.01f) {
-        asc.removeAtomSet(-1);
-        return;
-      }
-      asc.bsAtoms.setBits(a0, asc.ac);
-      applySymmetryAndSetTrajectory();
-    }
+    continuing &= readPrePost();
+    return continuing;
   }
 
+  private int fileModelNumber;
+
+  private boolean readPrePost() throws Exception {
+    fileModelNumber++;
+    String titleMsg = "" + (modelNumber+1)
+        + (getComposition ? "," + fileModelNumber + "," + fracA : "");
+    if (readPRE) {
+      elementLabel = null;
+      readStructure(titleMsg);
+    } else {
+      discardLinesUntilContains("Structure POST");
+      readStructure(titleMsg);
+    }
+    if (getData()) {
+      applySymmetryAndSetTrajectory();
+      XtalSymmetry sym = asc.getXSymmetry();
+      T3 offset = sym.getOverallSpan();
+      offset.scale(-0.5f);
+      asc.setModelInfoForSet("unitCellOffset", offset, asc.iSet);
+    } else {
+      asc.removeCurrentAtomSet();
+    }
+    return !haveModel || modelNumber != desiredModelNumber;
+  }
+
+  private boolean getData() throws Exception {
+    discardLinesUntilContains("- DATA -");
+    Map<String, Object> htAFLOW = new Hashtable<String, Object>();
+    htAFLOW.put("fileModelNumber", Integer.valueOf(fileModelNumber));
+    htAFLOW.put("modelNumber", Integer.valueOf(modelNumber));
+    int pt = 0;
+    SB sb = new SB();
+    float listVal = Float.MAX_VALUE;
+    String strcb = "?";
+    while (rdline() != null && (pt = line.indexOf(" # ")) >= 0) {
+      String key = line.substring(pt + 3).trim();
+      String val = line.substring(0, pt).trim();
+      sb.append(key).append("=").append(val).append(" | ");
+      if (key.toUpperCase().startsWith(listKey)) {
+        listKey = key.toUpperCase();
+        listKeyCase = key;
+        listVal = parseFloatStr(val);
+      }
+      if (key.equals("Cb")) {
+        float cb = parseFloatStr(strcb = val);
+        if (getComposition)
+          return (Math.abs(cb - fracA) <= 0.01f);
+      }
+    }
+    float[] count_min = compositions.get(strcb);
+    if (count_min == null)
+      compositions.put(strcb, count_min = new float[] {0, Float.MAX_VALUE } );
+    count_min[0]++;
+    if (listVal < count_min[1])
+      count_min[1] = listVal;
+    if (!doGetModel(++modelNumber, null))
+      return false;
+    sb.append(discardLinesUntilContains("aurl="));
+    String[] pairs = PT.split(sb.toString(), " | ");
+    for (int i = pairs.length; --i >= 0;) {
+      String[] kv = pairs[i].split("=");
+      if (kv.length < 2)
+        continue;
+      float f = parseFloatStr(kv[1]);
+      htAFLOW.put(kv[0], Float.isNaN(f) ? kv[1] : Float.valueOf(f));
+    }
+    asc.setCurrentModelInfo("aflowInfo", htAFLOW);
+    return true;
+  }
+
+  @Override
+  protected void finalizeSubclassReader() throws Exception {
+    alignUnitCells();
+    listCompositions();
+    finalizeReaderASCR();
+  }
+
+  @SuppressWarnings("cast")
+  private void listCompositions() {
+    Lst<String> list = new Lst<String>();
+    for (Entry<String, float[]> e : compositions.entrySet()) {
+      float[] count_min = (float[]) e.getValue();
+      list.addLast(e.getKey() + "\t" + ((int) count_min[0]) + "\t" + listKeyCase + "\t" + count_min[1]);
+    }
+    String[] a = new String[list.size()];
+    list.toArray(a);
+    Arrays.sort(a);
+    for (int i = 0, n = a.length; i < n; i++)
+      appendLoadNote(aabb + "\t" + a[i]);
+  }
+
+  private void alignUnitCells() {
+//    for (int i = asc.atomSetCount; --i >= 0;) {
+//      
+////      M3 matUnitCellOrientation = (M3) modelAuxiliaryInfo.get("matUnitCellOrientation");
+//
+//      
+//    }
+  }
   
 }

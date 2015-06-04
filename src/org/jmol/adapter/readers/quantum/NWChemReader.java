@@ -37,6 +37,7 @@ import java.util.Map.Entry;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
+import org.jmol.java.BS;
 import org.jmol.quantum.QS;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
@@ -214,10 +215,10 @@ public class NWChemReader extends MOReader {
   private void setEnergies(String key, String value, int nAtomSets) {
     energyKey = key;
     energyValue = value;
-    asc.setAtomSetPropertyForSets(energyKey, energyValue,
+    setProps(energyKey, energyValue,
         equivalentAtomSets);
-    asc.setAtomSetNames(energyKey + " = " + energyValue,
-        equivalentAtomSets, null);
+    setNames(energyKey + " = " + energyValue,
+        null, equivalentAtomSets);
     asc.setAtomSetEnergy(value, parseFloatStr(value));
     haveEnergy = true;
   }
@@ -236,7 +237,7 @@ public class NWChemReader extends MOReader {
    */
   private void readSymmetry() throws Exception {
     String tokens[] = PT.getTokens(readLines(3));
-    asc.setAtomSetPropertyForSets("Symmetry group name",
+    setProps("Symmetry group name",
         tokens[tokens.length - 1], equivalentAtomSets);
   }
 
@@ -273,9 +274,20 @@ public class NWChemReader extends MOReader {
       // atom sets that may be been parsed.
       setEnergies(energyKey, energyValue, equivalentAtomSets);
     }
-    asc.setAtomSetPropertyForSets("Step", tokens[1],
+    setProps("Step", tokens[1],
         equivalentAtomSets);
     haveAt = true;
+  }
+
+  private void setProps(String key, String value, int n) {
+    for (int i = asc.iSet; --n >= 0 && i >= 0; --i)
+      asc.setAtomSetModelPropertyForSet(key, value, i);
+  }
+
+  private void setNames(String atomSetName, BS namedSets, int n) {
+    for (int i = asc.iSet; --n >= 0 && i >= 0; --i)
+      if (namedSets == null || !namedSets.get(i))
+        asc.setModelInfoForSet("name", atomSetName, i);
   }
 
   // NWChem Output coordinates

@@ -370,7 +370,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // can be customized
   }
 
-  private boolean isFinalized;
+  protected boolean isFinalized;
 
   protected void finalizeReaderASCR() throws Exception {
     isFinalized = true;
@@ -661,7 +661,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       latticeCells = new int[3];
   }
 
-  public boolean haveModel;
+  protected boolean haveModel;
 
   public boolean doGetModel(int modelNumber, String title) {
     if (title != null && nameRequired != null && nameRequired.length() > 0 
@@ -732,8 +732,12 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public void setSpaceGroupName(String name) {
     if (ignoreFileSpaceGroupName)
       return;
-    sgName = name.trim();
-    Logger.info("Setting space group name to " + sgName);
+    String s = name.trim();
+    if (s.equals(sgName))
+      return;
+    if (!s.equals("P1"))
+      Logger.info("Setting space group name to " + s);
+    sgName = s;
   }
 
   public int setSymmetryOperator(String xyz) {

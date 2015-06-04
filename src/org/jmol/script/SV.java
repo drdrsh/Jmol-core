@@ -647,7 +647,7 @@ public class SV extends T implements JSONEncodable {
         return "";
       return "" + s.charAt(i - 1);
     case point3f:
-      return Escape.eP((P3) x.value);
+      return Escape.eP((T3) x.value);
     case point4f:
       return Escape.eP4((P4) x.value);
     case matrix3f:

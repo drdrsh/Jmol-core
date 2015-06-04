@@ -1,10 +1,12 @@
 package org.jmol.adapter.readers.xtal;
 
+import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.api.JmolAdapter;
 import org.jmol.util.Parser;
 
 import javajs.util.Lst;
+import javajs.util.M3;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -22,41 +24,50 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
   protected Lst<String> atomLabels;
   private boolean haveAtomLabels = true;
   private boolean atomsLabeledInline;
+  private float scaleFac;
   protected int ac;
   protected int atomPt = Integer.MIN_VALUE;
   protected String title;
+  protected boolean quiet;
+  
 
   @Override
   protected void initializeReader() throws Exception {
-    readStructure();
+    readStructure(null);
     continuing = false;
   }
   
-  protected void readStructure() throws Exception {
-    readJobTitle();
+  protected void readStructure(String titleMsg) throws Exception {
+    title = rd().trim();
     readUnitCellVectors();
     readMolecularFormula();
     readCoordinates();
+    asc.setAtomSetName(title + (titleMsg == null ? "" : "[" + titleMsg + "]"));
   }
 
   @Override
-  protected void finalizeSubclassReader() {
+  protected void finalizeSubclassReader() throws Exception {
     if (!haveAtomLabels && !atomsLabeledInline)     
       appendLoadNote("VASP POSCAR reader using pseudo atoms Al B C Db...");
-  }
-
-  private void readJobTitle() throws Exception {
-    asc.setAtomSetName(title = rd().trim());
+    finalizeReaderASCR();
   }
 
   protected void readUnitCellVectors() throws Exception {
     // Read Unit Cell
     setSpaceGroupName("P1");
     setFractionalCoordinates(true);
-    float scaleFac = parseFloatStr(rdline().trim());
+    scaleFac = parseFloatStr(rdline().trim());
+    boolean isVolume = (scaleFac < 0);
+    if (isVolume)
+      scaleFac = (float) Math.pow(-scaleFac, 1./3.);      
     float[] unitCellData = new float[9];
     String s = rdline() + " " + rdline() + " " + rdline();
     Parser.parseStringInfestedFloatArray(s, null, unitCellData);
+    if (isVolume) {
+      M3 m = M3.newA9(unitCellData);
+      m.determinant3();
+      System.out.println("scalecheck: " + scaleFac + " " + Math.pow(m.determinant3(), 1/3.));
+    }
     if (scaleFac != 1)
       for (int i = 0; i < unitCellData.length; i++)
         unitCellData[i] *= scaleFac;
@@ -107,24 +118,34 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
         atomLabels.addLast(label);
     }
     String s = mf.toString();
-    appendLoadNote(ac + " atoms identified for" + s);
-    appendLoadNote(s);
+    if (!quiet)
+      appendLoadNote(ac + " atoms identified for" + s);
     asc.newAtomSet();
     asc.setAtomSetName(s);
   }
 
   protected void readCoordinates() throws Exception {
     // If Selective is there, then skip a line 
-    if (discardLinesUntilNonBlank().toLowerCase().contains("selective"))
+    boolean isSelective = discardLinesUntilNonBlank().toLowerCase().contains("selective");
+    if (isSelective)    
       rd();
-    if (line.toLowerCase().contains("cartesian"))
+    boolean isCartesian = (line.toLowerCase().contains("cartesian")); 
+    if (isCartesian)
       setFractionalCoordinates(false);
     for (int i = 0; i < ac; i++) {
+      float radius = Float.NaN;
       String[] tokens = PT.getTokens(rdline());
-      if (i == 0 && !atomsLabeledInline && tokens.length > 3 && JmolAdapter.getElementNumber(tokens[3]) > 0)
+      if (tokens.length == 4 && tokens[3].indexOf(".") >= 0)
+        radius = parseFloatStr(tokens[3]);
+      if (!isSelective && i == 0 && !atomsLabeledInline && tokens.length > 3 && JmolAdapter.getElementNumber(tokens[3]) > 0)
         atomsLabeledInline = true;
       String label = (atomsLabeledInline ? tokens[3] : atomLabels.get(i));
-      addAtomXYZSymName(tokens, 0, null, label);
+      if (isCartesian)
+        for (int j = 0; j < 3; j++)
+          tokens[j] = "" + parseFloatStr(tokens[j]) * scaleFac;
+      Atom atom = addAtomXYZSymName(tokens, 0, null, label);
+      if (!Float.isNaN(radius))
+        atom.radius = radius * scaleFac;
     }
   }
 
