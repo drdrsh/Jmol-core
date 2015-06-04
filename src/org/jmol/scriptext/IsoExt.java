@@ -3380,7 +3380,7 @@ public class IsoExt extends ScriptExt {
       break;
     case T.boundbox:
       eval.iToken = i + 1;
-      data = BoxInfo.getCriticalPoints(vwr.ms.getBBoxVertices(), null);
+      data = BoxInfo.getUnitCellPoints(vwr.ms.getBBoxVertices(), null);
       break;
     //case Token.slicebox:
     // data = BoxInfo.getCriticalPoints(((JmolViewer)(vwr)).slicer.getSliceVert(), null);
@@ -3394,7 +3394,7 @@ public class IsoExt extends ScriptExt {
         if (tok == T.unitcell)
           invArg();
       } else {
-        pts = BoxInfo.getCriticalPoints(unitCell.getUnitCellVertices(),
+        pts = BoxInfo.getUnitCellPoints(unitCell.getUnitCellVertices(),
             unitCell.getCartesianOffset());
         int iType = (int) unitCell
             .getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);

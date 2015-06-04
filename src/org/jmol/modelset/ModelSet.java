@@ -489,6 +489,9 @@ import java.util.Properties;
   }
 
   private SymmetryInterface pointGroup;
+
+  private BoxInfo defaultBBox;
+  
   private Object calculatePointGroupForFirstModel(BS bsAtoms,
                                                   boolean doAll,
                                                   boolean asDraw,
@@ -1028,9 +1031,7 @@ import java.util.Properties;
   }
 
   public P3 getBoundBoxCenter(int modelIndex) {
-    if (isJmolDataFrameForModel(modelIndex))
-      return new P3();
-    return boxInfo.getBoundBoxCenter();
+    return (isJmolDataFrameForModel(modelIndex) ? new P3() : boxInfo.getBoundBoxCenter());
   }
 
   public V3 getBoundBoxCornerVector() {
@@ -1041,7 +1042,7 @@ import java.util.Properties;
     return boxInfo.getBoundBoxVertices();
   }
 
-  public void setBoundBox(P3 pt1, P3 pt2, boolean byCorner, float scale) {
+  public void setBoundBox(T3 pt1, T3 pt2, boolean byCorner, float scale) {
     isBbcageDefault = false;
     bboxModels = null;
     bboxAtoms = null;
@@ -1090,11 +1091,13 @@ import java.util.Properties;
     return true;
   }
 
-  public float calcRotationRadius(int modelIndex, P3 center) {
+  public float calcRotationRadius(int modelIndex, P3 center, boolean useBoundBox) {
     if (isJmolDataFrameForModel(modelIndex)) {
       float r = am[modelIndex].defaultRotationRadius;
       return (r == 0 ? 10 : r);
     }
+    if (useBoundBox && getDefaultBoundBox() != null)
+      return defaultBBox.getMaxDim() / 2 * 1.2f;
     float maxRadius = 0;
     for (int i = ac; --i >= 0;) {
       if (isJmolDataFrameForAtom(at[i])) {
@@ -1117,14 +1120,33 @@ import java.util.Properties;
       bs = null;
     if (bs == null && isBbcageDefault || ac == 0)
       return;
-    bboxModels = getModelBS(bboxAtoms = BSUtil.copy(bs), false);
-    if (calcAtomsMinMax(bs, boxInfo) == ac)
-      isBbcageDefault = true;
-    if (bs == null) { // from modelLoader or reset
-      if (unitCells != null)
-        calcUnitCellMinMax();
+    if (getDefaultBoundBox() == null) {
+      bboxModels = getModelBS(bboxAtoms = BSUtil.copy(bs), false);
+      if (calcAtomsMinMax(bs, boxInfo) == ac)
+        isBbcageDefault = true;
+      if (bs == null) { // from modelLoader or reset
+        if (unitCells != null)
+          calcUnitCellMinMax();
+      }
+    } else {
+      P3[] vertices = defaultBBox.getBoundBoxVertices();
+      boxInfo.reset();
+      for (int j = 0; j < 8; j++)
+        boxInfo.addBoundBoxPoint(vertices[j]);      
     }
     boxInfo.setBbcage(scale);
+  }
+
+  private BoxInfo getDefaultBoundBox() {
+    T3[] bbox = (T3[]) getInfoM("boundbox");
+    if (bbox == null)
+      defaultBBox = null;
+    else {
+      if (defaultBBox == null)
+        defaultBBox = new BoxInfo();
+      defaultBBox.setBoundBoxFromCriticalPoints(bbox);
+    }
+    return defaultBBox;
   }
 
   public BoxInfo getBoxInfo(BS bs, float scale) {

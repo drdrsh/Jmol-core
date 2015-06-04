@@ -223,7 +223,7 @@ public class XtalSymmetry {
         if (readerSymmetry != null)
           symmetry.setSpaceGroupFrom(readerSymmetry);
         //parameters are counts of unit cells as [a b c]
-        applySymmetryLattice(acr.ms, acr.strSupercell);
+        applySymmetryLattice();
         if (readerSymmetry != null && filterSymop == null)
           setAtomSetSpaceGroupName(readerSymmetry.getSpaceGroupName());
       }
@@ -247,12 +247,11 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("spaceGroup", spaceGroupName + "");
   }
 
-  private void applySymmetryLattice(MSInterface ms, String supercell)
+  private void applySymmetryLattice()
       throws Exception {
-
     if (!asc.coordinatesAreFractional || symmetry.getSpaceGroup() == null)
       return;
-
+    
     int maxX = latticeCells[0];
     int maxY = latticeCells[1];
     int maxZ = Math.abs(latticeCells[2]);
@@ -260,16 +259,18 @@ public class XtalSymmetry {
     BS bsAtoms = null;
     rminx = rminy = rminz = Float.MAX_VALUE;
     rmaxx = rmaxy = rmaxz = -Float.MAX_VALUE;
-    T3[] oabc = null;
+    T3[] oabc = acr.fillRange;
     P3 offset = null;
     P3 pt0 = null;
     nVib = 0;
     T3 va = null, vb = null, vc = null;
     baseSymmetry = symmetry;
-    if (supercell != null && supercell.indexOf(",") >= 0) {
+    String supercell = acr.strSupercell;
+    if (oabc != null || supercell != null && supercell.indexOf(",") >= 0) {
       // expand range to accommodate this alternative cell
       // oabc will be cartesian
-      oabc = symmetry.getV0abc(supercell);
+      if (oabc == null)
+        oabc = symmetry.getV0abc(supercell);
       if (oabc != null) {
         // set the bounds for atoms in the new unit cell
         // in terms of the old unit cell
@@ -376,7 +377,7 @@ public class XtalSymmetry {
       if (asc.bsAtoms == null)
         asc.bsAtoms = BSUtil.setAll(asc.ac);
       bsAtoms = asc.bsAtoms;
-      applyAllSymmetry(ms, null);
+      applyAllSymmetry(acr.ms, null);
       doPackUnitCell = doPack0;
 
       
@@ -394,7 +395,7 @@ public class XtalSymmetry {
       symmetry = getSymmetry();
       setUnitCell(new float[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z,
           vb.x, vb.y, vb.z, vc.x, vc.y, vc.z }, null, offset);
-      setAtomSetSpaceGroupName(oabc == null ? "P1" : "cell=" + supercell);
+      setAtomSetSpaceGroupName(oabc == null || supercell == null ? "P1" : "cell=" + supercell);
       symmetry.setSpaceGroup(doNormalize);
       symmetry.addSpaceGroupOperation("x,y,z", 0);
 
@@ -421,7 +422,7 @@ public class XtalSymmetry {
     if (oabc == null) {
       minXYZ = new P3i();
       maxXYZ = P3i.new3(maxX, maxY, maxZ);
-      applyAllSymmetry(ms, bsAtoms);      
+      applyAllSymmetry(acr.ms, bsAtoms);      
     } else if (acr.forcePacked || doPackUnitCell) {
       // trim atom set based on original unit cell
       symmetry.setMinMaxLatticeParameters(minXYZ, maxXYZ);
@@ -439,6 +440,10 @@ public class XtalSymmetry {
     // but we leave matSupercell, because we might need it for vibrations in CASTEP
   }
 
+  /**
+   * range minima and maxima -- cartesians?
+   * 
+   */
   private float rminx, rminy, rminz, rmaxx, rmaxy, rmaxz;
 
   private void setSymmetryMinMax(P3 c) {
@@ -454,11 +459,6 @@ public class XtalSymmetry {
       rmaxy = c.y;
     if (rmaxz < c.z)
       rmaxz = c.z;
-  }
-
-  private boolean isInSymmetryRange(P3 c) {
-    return (c.x >= rminx && c.y >= rminy && c.z >= rminz && c.x <= rmaxx
-        && c.y <= rmaxy && c.z <= rmaxz);
   }
 
   private final P3 ptOffset = new P3();
@@ -806,13 +806,13 @@ public class XtalSymmetry {
         }
         if (acr.fixJavaFloat)
           PT.fixPtFloats(ptAtom, PT.FRACTIONAL_PRECISION);
-        P3 cartesian = P3.newP(ptAtom);
-        symmetry.toCartesian(cartesian, false);
+        P3 c = P3.newP(ptAtom); // cartesian position
+        symmetry.toCartesian(c, false);
         if (doPackUnitCell) {
           // note that COmmensurate structures may need 
           // modulation at this point.
-          symmetry.toUnitCell(cartesian, ptOffset);
-          ptAtom.setT(cartesian);
+          symmetry.toUnitCell(c, ptOffset);
+          ptAtom.setT(c);
           symmetry.toFractional(ptAtom, false);
           if (acr.fixJavaFloat)
             PT.fixPtFloats(ptAtom, PT.FRACTIONAL_PRECISION);
@@ -821,7 +821,7 @@ public class XtalSymmetry {
             continue;
         }
         if (checkSymmetryMinMax)
-          setSymmetryMinMax(cartesian);
+          setSymmetryMinMax(c);
         Atom special = null;
         if (checkDistances) {
 
@@ -829,7 +829,8 @@ public class XtalSymmetry {
            * same cartesian position.  
            */
           float minDist2 = Float.MAX_VALUE;
-          if (checkSymmetryRange && !isInSymmetryRange(cartesian))
+          if (checkSymmetryRange && (c.x < rminx || c.y < rminy || c.z < rminz 
+              || c.x > rmaxx || c.y > rmaxy || c.z > rmaxz))
             continue;
           int j0 = (checkAll ? asc.ac : pt0);
           String name = a.atomName;
@@ -838,7 +839,7 @@ public class XtalSymmetry {
             P3 pc = cartesians[j];
             if (pc == null)
               continue;
-            float d2 = cartesian.distanceSquared(pc);
+            float d2 = c.distanceSquared(pc);
             if (checkSpecial && d2 < 0.0001) {
               special = asc.atoms[firstSymmetryAtom + j];
               if ((special.atomName == null || special.atomName.equals(name))
@@ -878,7 +879,7 @@ public class XtalSymmetry {
           atom1.bsSymmetry = BSUtil.newAndSetBit(iCellOpPt + iSym);
           atom1.bsSymmetry.set(iSym);
           if (addCartesian)
-            cartesians[pt++] = cartesian;
+            cartesians[pt++] = c;
           Lst<Object> tensors = a.tensors;
           if (tensors != null) {
             atom1.tensors = null;
@@ -960,8 +961,10 @@ public class XtalSymmetry {
   }
 
   public T3 getOverallSpan() {
-    return  V3.newVsub(maxXYZ0, minXYZ0);
+    return (maxXYZ0 == null ? V3.new3(maxXYZ.x - minXYZ.x, maxXYZ.y - minXYZ.y,
+        maxXYZ.z - minXYZ.z) : V3.newVsub(maxXYZ0, minXYZ0));
   }
+  
   private int dtype = 3;
   private V3[] unitCellTranslations;
   private int latticeOp;

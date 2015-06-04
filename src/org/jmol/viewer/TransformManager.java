@@ -129,6 +129,7 @@ public class TransformManager {
     rotationCenterDefault.setT(vwr.getBoundBoxCenter());
     setFixedRotationCenter(rotationCenterDefault);
     rotationRadiusDefault = setRotationRadius(0, true);
+    System.out.println("TM rotraddef=" +rotationRadiusDefault);
     windowCentered = true;
     setRotationCenterAndRadiusXYZ(null, true);
     resetRotation();
@@ -2284,7 +2285,7 @@ public class TransformManager {
 
   public float setRotationRadius(float angstroms, boolean doAll) {
     angstroms = (modelRadius = (angstroms <= 0 ? vwr.ms.calcRotationRadius(
-        vwr.am.cmi, fixedRotationCenter) : angstroms));
+        vwr.am.cmi, fixedRotationCenter, true) : angstroms));
     if (doAll)
       vwr.setRotationRadius(angstroms, false);
     return angstroms;
@@ -2300,7 +2301,7 @@ public class TransformManager {
     }
     setFixedRotationCenter(newCenterOfRotation);
     if (andRadius && windowCentered)
-      modelRadius = vwr.ms.calcRotationRadius(vwr.am.cmi, fixedRotationCenter);
+      modelRadius = vwr.ms.calcRotationRadius(vwr.am.cmi, fixedRotationCenter, true);
   }
 
   void setNewRotationCenter(P3 center, boolean doScale) {

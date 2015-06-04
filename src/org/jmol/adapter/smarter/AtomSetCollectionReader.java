@@ -46,6 +46,7 @@ import javajs.util.P3;
 import javajs.util.OC;
 import javajs.util.PT;
 import javajs.util.Quat;
+import javajs.util.T3;
 import javajs.util.V3;
 import javajs.util.Lst;
 import javajs.util.SB;
@@ -159,6 +160,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   // protected/public state variables
   public int[] latticeCells;
+  public T3[] fillRange;
   public boolean doProcessLines;
   public boolean iHaveUnitCell;
   public boolean iHaveSymmetryOperators;
@@ -375,36 +377,40 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected void finalizeReaderASCR() throws Exception {
     isFinalized = true;
     if (asc.atomSetCount > 0) {
-      if (asc.atomSetCount == 1) 
+      if (asc.atomSetCount == 1)
         asc.setCurrentModelInfo("dbName", htParams.get("dbName"));
       applySymmetryAndSetTrajectory();
       asc.finalizeStructures();
       if (doCentralize)
         asc.centralize();
+      if (fillRange != null)
+        asc.setInfo("boundbox", fillRange);
       Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
-      if (domains != null && info != null) {
-        asc.setGlobalBoolean(AtomSetCollection.GLOBAL_DOMAINS);
-        String s = ((SV) domains).getMapKeys(2, true);
-        int pt = s.indexOf("{ ", 2);
-        if (pt >= 0)
-          s = s.substring(pt + 2);
-        pt = s.indexOf("_metadata");
-        if (pt < 0)
-          pt = s.indexOf("metadata");
-        if (pt >= 0)
-          s = s.substring(0, pt);
-        s = PT.rep(PT.replaceAllCharacters(s, "{}", "").trim(), "\n", "\n  ")
-            + "\n\nUse SHOW DOMAINS for details.";
-        appendLoadNote("\nDomains loaded:\n   " + s);
-        for (int i = asc.atomSetCount; --i >= 0;) {
-          info = asc.getAtomSetAuxiliaryInfo(i);
-          info.put("domains", domains);
+      if (info != null) {
+        if (domains != null) {
+          asc.setGlobalBoolean(AtomSetCollection.GLOBAL_DOMAINS);
+          String s = ((SV) domains).getMapKeys(2, true);
+          int pt = s.indexOf("{ ", 2);
+          if (pt >= 0)
+            s = s.substring(pt + 2);
+          pt = s.indexOf("_metadata");
+          if (pt < 0)
+            pt = s.indexOf("metadata");
+          if (pt >= 0)
+            s = s.substring(0, pt);
+          s = PT.rep(PT.replaceAllCharacters(s, "{}", "").trim(), "\n", "\n  ")
+              + "\n\nUse SHOW DOMAINS for details.";
+          appendLoadNote("\nDomains loaded:\n   " + s);
+          for (int i = asc.atomSetCount; --i >= 0;) {
+            info = asc.getAtomSetAuxiliaryInfo(i);
+            info.put("domains", domains);
+          }
         }
-      }
-      if (validation != null && info != null) {
-        for (int i = asc.atomSetCount; --i >= 0;) {
-          info = asc.getAtomSetAuxiliaryInfo(i);
-          info.put("validation", validation);
+        if (validation != null) {
+          for (int i = asc.atomSetCount; --i >= 0;) {
+            info = asc.getAtomSetAuxiliaryInfo(i);
+            info.put("validation", validation);
+          }
         }
       }
     }
@@ -543,7 +549,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       strSupercell = (String) o;
     else
       ptSupercell = (P3) o;
-
+    fillRange = (T3[]) htParams.get("fillRange");
     // ptFile < 0 indicates just one file being read
     // ptFile >= 0 indicates multiple files are being loaded
     // if the file is not the first read in the LOAD command, then

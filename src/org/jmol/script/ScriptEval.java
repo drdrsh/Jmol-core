@@ -23,16 +23,30 @@
  */
 package org.jmol.script;
 
-import javajs.awt.Font;
-import javajs.util.Lst;
-import javajs.util.SB;
-
 import java.util.Arrays;
 import java.util.Hashtable;
-
 import java.util.Map;
 
+import javajs.awt.Font;
+import javajs.util.A4;
+import javajs.util.AU;
+import javajs.util.BArray;
+import javajs.util.Base64;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
+
 import org.jmol.api.Interface;
+import org.jmol.api.JmolParallelProcessor;
 import org.jmol.api.JmolScriptFunction;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
@@ -46,37 +60,19 @@ import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
+import org.jmol.modelset.TickInfo;
 import org.jmol.shape.MeshCollection;
 import org.jmol.shape.Shape;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.BSUtil;
 import org.jmol.util.ColorEncoder;
-import org.jmol.util.Escape;
-import org.jmol.util.Elements;
 import org.jmol.util.Edge;
+import org.jmol.util.Elements;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.util.Parser;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Txt;
-
-import javajs.util.PT;
-import org.jmol.util.Parser;
-
-import javajs.util.A4;
-import javajs.util.AU;
-import javajs.util.BArray;
-import javajs.util.Base64;
-import javajs.util.Measure;
-import javajs.util.OC;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.Quat;
-import javajs.util.T3;
-
-import javajs.util.V3;
-import org.jmol.modelset.TickInfo;
-import org.jmol.api.JmolParallelProcessor;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
@@ -4442,7 +4438,7 @@ public class ScriptEval extends ScriptExpr {
         tok = tokAt(i = ++iToken);
         break;
       }
-      i = getLoadSymmetryParams(i, sOptions, htParams);
+      i = getCmdExt().getLoadSymmetryParams(i, sOptions, htParams);
 
       // .... APPEND DATA "appendedData" .... end "appendedData"
       // option here to designate other than "appendedData"
@@ -4740,6 +4736,9 @@ public class ScriptEval extends ScriptExpr {
     // SUPERCELL {i j k}
     case T.supercell:
     // RANGE x.x or RANGE -x.x
+    case T.fill:  // new in Jmol 14.3.14
+    // FILL BOUNDBOX
+    // FILL UNITCELL
     case T.range:
     // SPACEGROUP "nameOrNumber" 
     // or SPACEGROUP "IGNOREOPERATORS" 
@@ -4791,193 +4790,6 @@ public class ScriptEval extends ScriptExpr {
       sOptions.append(" " + Escape.eAI(iArray));
       break;
     }
-  }
-
-  private int getLoadSymmetryParams(int i, SB sOptions,
-                                    Map<String, Object> htParams) throws ScriptException {
-    // {i j k}
-
-    P3 lattice = null;
-    int tok = tokAt(i);
-    if (tok == T.leftbrace || tok == T.point3f) {
-      lattice = getPoint3f(i, false);
-      i = iToken + 1;
-      tok = tokAt(i);
-    }
-
-    // default lattice {555 555 -1} (packed) 
-    // for PACKED, CENTROID, SUPERCELL, RANGE, SPACEGROUP, UNITCELL
-
-    switch (tok) {
-    case T.packed:
-    case T.centroid:
-    case T.supercell:
-    case T.range:
-    case T.spacegroup:
-    case T.unitcell:
-      if (lattice == null)
-        lattice = P3.new3(555, 555, -1);
-      iToken = i - 1;
-    }
-    P3 offset = null;
-    if (lattice != null) {
-      htParams.put("lattice", lattice);
-      i = iToken + 1;
-      sOptions.append( " {" + (int) lattice.x + " " + (int) lattice.y + " "
-          + (int) lattice.z + "}");
-
-      // {i j k} PACKED, CENTROID -- either or both; either order
-
-      i = checkPacked(i, htParams, sOptions);
-      if (tokAt(i) == T.centroid) {
-        htParams.put("centroid", Boolean.TRUE);
-        sOptions.append(" CENTROID");
-        i = checkPacked(++i, htParams, sOptions);
-      }
-
-      // {i j k} ... SUPERCELL {i' j' k'}
-
-      if (tokAt(i) == T.supercell) {
-        Object supercell;
-        sOptions.append(" SUPERCELL ");
-        if (isPoint3f(++i)) {
-          P3 pt = getPoint3f(i, false);
-          if (pt.x != (int) pt.x || pt.y != (int) pt.y || pt.z != (int) pt.z
-              || pt.x < 1 || pt.y < 1 || pt.z < 1) {
-            iToken = i;
-            invArg();
-          }
-          supercell = pt;
-          i = iToken;
-        } else {
-          supercell = stringParameter(i);
-        }
-        sOptions.append(Escape.e(supercell));
-        htParams.put("supercell", supercell);
-        i = checkPacked(++i, htParams, sOptions);
-      }
-
-      // {i j k} ... RANGE x.y  (from full unit cell set)
-      // {i j k} ... RANGE -x.y (from non-symmetry set)
-
-      float distance = 0;
-      if (tokAt(i) == T.range) {
-        /*
-         * # Jmol 11.3.9 introduces the capability of visualizing the close
-         * contacts around a crystalline protein (or any other cyrstal
-         * structure) that are to atoms that are in proteins in adjacent unit
-         * cells or adjacent to the protein itself. The option RANGE x, where x
-         * is a distance in angstroms, placed right after the braces containing
-         * the set of unit cells to load does this. The distance, if a positive
-         * number, is the maximum distance away from the closest atom in the {1
-         * 1 1} set. If the distance x is a negative number, then -x is the
-         * maximum distance from the {not symmetry} set. The difference is that
-         * in the first case the primary unit cell (555) is first filled as
-         * usual, using symmetry operators, and close contacts to this set are
-         * found. In the second case, only the file-based atoms ( Jones-Faithful
-         * operator x,y,z) are initially included, then close contacts to that
-         * set are found. Depending upon the application, one or the other of
-         * these options may be desirable.
-         */
-        i++;
-        distance = floatParameter(i++);
-        sOptions.append( " range " + distance);
-      }
-      htParams.put("symmetryRange", Float.valueOf(distance));
-
-      // {i j k} ... SPACEGROUP "nameOrNumber"
-      // {i j k} ... SPACEGROUP "IGNOREOPERATORS"
-      // {i j k} ... SPACEGROUP ""
-
-      String spacegroup = null;
-      SymmetryInterface sg;
-      int iGroup = Integer.MIN_VALUE;
-      if (tokAt(i) == T.spacegroup) {
-        ++i;
-        spacegroup = PT.rep(paramAsStr(i++), "''", "\"");
-        sOptions.append( " spacegroup " + PT.esc(spacegroup));
-        if (spacegroup.equalsIgnoreCase("ignoreOperators")) {
-          iGroup = -999;
-        } else {
-          if (spacegroup.length() == 0) {
-            sg = vwr.getCurrentUnitCell();
-            if (sg != null)
-              spacegroup = sg.getSpaceGroupName();
-          } else {
-            if (spacegroup.indexOf(",") >= 0) // Jones Faithful
-              if ((lattice.x < 9 && lattice.y < 9 && lattice.z == 0))
-                spacegroup += "#doNormalize=0";
-          }
-          htParams.put("spaceGroupName", spacegroup);
-          iGroup = -2;
-        }
-      }
-
-      // {i j k} ... UNITCELL [a b c alpha beta gamma]
-      // {i j k} ... UNITCELL [ax ay az bx by bz cx cy cz] 
-      // {i j k} ... UNITCELL ""  // same as current
-
-      float[] fparams = null;
-      if (tokAt(i) == T.unitcell) {
-        ++i;
-        if (optParameterAsString(i).length() == 0) {
-          // unitcell "" -- use current unit cell
-          sg = vwr.getCurrentUnitCell();
-          if (sg != null) {
-            fparams = sg.getUnitCellAsArray(true);
-            offset = sg.getCartesianOffset();
-          }
-        } else {
-          fparams = floatParameterSet(i, 6, 9);
-        }
-        if (fparams == null || fparams.length != 6 && fparams.length != 9)
-          invArg();
-        sOptions.append( " unitcell {");
-        for (int j = 0; j < fparams.length; j++)
-          sOptions.append( (j == 0 ? "" : " ") + fparams[j]);
-        sOptions.append( "}");
-        htParams.put("unitcell", fparams);
-        if (iGroup == Integer.MIN_VALUE)
-          iGroup = -1;
-        i = iToken + 1;
-      }
-      if (iGroup != Integer.MIN_VALUE)
-        htParams.put("spaceGroupIndex", Integer.valueOf(iGroup));
-    }
-
-    // OFFSET {x y z} (fractional or not) (Jmol 12.1.17)
-
-    if (offset != null)
-      coordinatesAreFractional = false;
-    else if (tokAt(i) == T.offset)
-      offset = getPoint3f(++i, true);
-    if (offset != null) {
-      if (coordinatesAreFractional) {
-        offset.setT(fractionalPoint);
-        htParams.put("unitCellOffsetFractional",
-            (coordinatesAreFractional ? Boolean.TRUE : Boolean.FALSE));
-        sOptions.append( " offset {" + offset.x + " " + offset.y + " " + offset.z
-            + "/1}");
-      } else {
-        sOptions.append( " offset " + Escape.eP(offset));
-      }
-      htParams.put("unitCellOffset", offset);
-      i = iToken + 1;
-    }
-    return i;
-  }
-
-  private int checkPacked(int i, Map<String, Object> htParams, SB sOptions) throws ScriptException {
-    if (tokAt(i) == T.packed) {
-      htParams.put("packed", Boolean.TRUE);
-      sOptions.append(" PACKED");
-      if (isFloatParameter(++i)) {
-        float f = floatParameter(i++);
-        htParams.put("packingError", Float.valueOf(f));
-        sOptions.append(" " + f);
-      }
-    }
-    return i;
   }
 
   private void finalizeLoad(boolean isAppend, boolean appendNew,
@@ -7912,142 +7724,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.undoMoveAction(tokAt(0), n);
   }
 
-  private void cmdUnitcell(int i) throws ScriptException {
-    int icell = Integer.MAX_VALUE;
-    int mad = Integer.MAX_VALUE;
-    T3 pt = null;
-    TickInfo tickInfo = tickParamAsStr(i, true, false, false);
-    i = iToken;
-    String id = null;
-    T3[] oabc = null;
-    Object newUC = null;
-    String ucname = null;
-    boolean isOffset = false;
-    boolean isReset = false;
-    int tok = tokAt(++i);
-    switch (tok) {
-    case T.restore:
-    case T.reset:
-      isReset = true;
-      pt = P4.new4(0, 0, 0, -1); // reset offset and range
-      iToken++;
-      break;
-    case T.string:
-    case T.identifier:
-      String s = paramAsStr(i).toLowerCase();
-      ucname = s;
-      if (s.indexOf(",") < 0 && !chk) {
-        // parent, standard, conventional
-        setCurrentCagePts(null, null);
-        if (PT.isOneOf(s, ";parent;standard;primitive;")) {
-          newUC = vwr.ms.getInfo(vwr.am.cmi, "unitcell_conventional");
-          if (newUC != null)
-            setCurrentCagePts(vwr.getV0abc(newUC), "" + newUC);
-        }
-        s = (String) vwr.ms.getInfo(vwr.am.cmi, "unitcell_" + s);
-        showString(s);
-      }
-      newUC = s;
-      break;
-    case T.isosurface:
-    case T.dollarsign:
-      id = objectNameParameter(++i);
-      break;
-    case T.boundbox:
-      P3 o = P3.newP(vwr.getBoundBoxCenter());
-      pt = vwr.getBoundBoxCornerVector();
-      o.sub(pt);
-      oabc = new P3[] {o, P3.new3(pt.x * 2, 0, 0), P3.new3(0, pt.y * 2, 0), P3.new3(0, 0, pt.z * 2) };
-      pt = null;
-      iToken = i;
-      break;
-    case T.matrix3f:
-    case T.matrix4f:
-      newUC = getToken(i).value;
-      break;
-    case T.center:
-      switch (tokAt(++i)) {
-      case T.bitset:
-      case T.expressionBegin:
-        pt = P3.newP(vwr.ms.getAtomSetCenter(atomExpressionAt(i)));
-        vwr.toFractional(pt, true);
-        i = iToken;
-        break;
-      default:
-        if (isCenterParameter(i)) {
-          pt = centerParameter(i);
-          i = iToken;
-          break;
-        }
-        invArg();
-      }
-      pt.x -= 0.5f;
-      pt.y -= 0.5f;
-      pt.z -= 0.5f;
-      break;
-    case T.bitset:
-    case T.expressionBegin:
-      int iAtom = atomExpressionAt(i).nextSetBit(0);
-      if (!chk)
-        vwr.am.cai = iAtom;
-      if (iAtom < 0)
-        return;
-      i = iToken;
-      break;
-    case T.offset:
-      isOffset = true;
-      //$FALL-THROUGH$
-    case T.range:
-      pt = (P3) getPointOrPlane(++i, false, true, false, true, 3, 3);
-      pt = P4.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
-      i = iToken;
-      break;
-    case T.decimal:
-    case T.integer:
-      float f = floatParameter(i);
-      if (f < 111) {
-        // diameter
-        i--;
-        break;
-      }
-      icell = intParameter(i);
-      break;
-    default:
-      if (isArrayParameter(i)) {
-        // Origin vA vB vC
-        // these are VECTORS, though
-        oabc = getPointArray(i, 4, false);
-        i = iToken;
-      } else if (slen > i + 1) {
-        pt = (P3) getPointOrPlane(i, false, true, false, true, 3, 3);
-        i = iToken;
-      } else {
-        // backup for diameter
-        i--;
-      }
-    }
-    mad = getSetAxesTypeMad(++i);
-    checkLast(iToken);
-    if (chk || mad == Integer.MAX_VALUE)
-      return;
-    if (mad == Integer.MAX_VALUE)
-      vwr.am.cai = -1;
-    if (newUC != null)
-      oabc = vwr.getV0abc(newUC);
-    if (icell != Integer.MAX_VALUE)
-      vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), null, icell);
-    else if (id != null)
-      vwr.setCurrentCage(id);
-    else if (isReset || oabc != null)
-      setCurrentCagePts(oabc, ucname);
-    setObjectMad(JC.SHAPE_UCCAGE, "unitCell", mad);
-    if (pt != null)
-      vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);
-    if (tickInfo != null)
-      setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
-  }
-
-  private void setCurrentCagePts(T3[] originABC, String name) {
+  public void setCurrentCagePts(T3[] originABC, String name) {
     SymmetryInterface sym = Interface.getSymmetry(vwr, "eval");
     if (sym == null && vwr.async)
       throw new NullPointerException();
@@ -8059,6 +7736,9 @@ public class ScriptEval extends ScriptExpr {
     }
   }
 
+  private void cmdUnitcell(int i) throws ScriptException {
+    getCmdExt().dispatch(T.unitcell, i == 2, null);
+  }
 
   private void cmdVector() throws ScriptException {
     EnumType type = EnumType.SCREEN;
@@ -8870,7 +8550,7 @@ public class ScriptEval extends ScriptExpr {
     return data;
   }
 
-  private int getSetAxesTypeMad(int index) throws ScriptException {
+  public int getSetAxesTypeMad(int index) throws ScriptException {
     if (index == slen)
       return 1;
     switch (getToken(checkLast(index)).tok) {

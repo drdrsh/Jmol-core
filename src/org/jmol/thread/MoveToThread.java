@@ -207,7 +207,7 @@ public class MoveToThread extends JmolThread {
     yTrans = newSlider(transformManager.getTranslationYPercent(), f[3]);
     rotationRadius = newSlider(transformManager.modelRadius,
         (center == null || Float.isNaN(f[4]) ? transformManager.modelRadius
-            : f[4] <= 0 ? vwr.ms.calcRotationRadius(vwr.am.cmi, center) : f[4]));
+            : f[4] <= 0 ? vwr.ms.calcRotationRadius(vwr.am.cmi, center, false) : f[4]));
     pixelScale = newSlider(transformManager.scaleDefaultPixelsPerAngstrom, f[5]);
     if (f[6] != 0) {
       navCenter = (P3) options[2];

@@ -36,6 +36,11 @@ import javajs.util.P4;
 import javajs.util.V3;
 import javajs.util.T3;
 
+/**
+ * The BoxInfo class holds critical information about boundboxes. 
+ * These are simple tetragonal spaces lined up with x,y,z.
+ * 
+ */
 public class BoxInfo {
 
  
@@ -43,6 +48,11 @@ public class BoxInfo {
   public final P3 bbCorner1 = new P3();
   private final P3 bbCenter = new P3();
   private final V3 bbVector = new V3();
+  
+  /**
+   * The ordering of these vertices is given below. Do not mess with that.
+   * 
+   */
   private final Point3fi[] bbVertices = new Point3fi[8];
   private boolean isScaleSet;
   private float margin;
@@ -125,17 +135,7 @@ public class BoxInfo {
     P3 vb = new P3();
     P3 vc = new P3();
     
-    P3[] vertices = new P3[8];
-    for (int i = 0; i < 8; i++) {
-      vertices[i] = P3.newP(points[0]);
-      if ((i & 1) == 1)
-        vertices[i].add(points[1]);
-      if ((i & 2) == 2)
-        vertices[i].add(points[2]);
-      if ((i & 4) == 4)
-        vertices[i].add(points[3]);
-    }
-
+    P3[] vertices = getVerticesFromCriticalPoints(points);
     for (int i = 0; i < 6; i++) {
       va.setT(vertices[facePoints[i].x]);
       vb.setT(vertices[facePoints[i].y]);
@@ -198,7 +198,28 @@ public class BoxInfo {
     P3i.new3(0, 1, 1)  //7 pt + z + 1 
   };
 
-  public final static P3[] getCriticalPoints(P3[] bbVertices, T3 offset) {
+  public static P3[] getVerticesFromCriticalPoints(P3[] points) {
+    P3[] vertices = new P3[8];
+    for (int i = 0; i < 8; i++) {
+      vertices[i] = P3.newP(points[0]);
+      if ((i & 1) == 1)
+        vertices[i].add(points[1]);
+      if ((i & 2) == 2)
+        vertices[i].add(points[2]);
+      if ((i & 4) == 4)
+        vertices[i].add(points[3]);
+    }
+    return vertices;
+  }
+
+  /**
+   * Delivers [center a b c] for generation of unit cells from a boundbox
+   * 
+   * @param bbVertices
+   * @param offset
+   * @return [center a b c]
+   */
+  public final static P3[] getUnitCellPoints(P3[] bbVertices, T3 offset) {
     P3 center = P3.newP(bbVertices[0]);
     P3 a = P3.newP(bbVertices[1]);
     P3 b = P3.newP(bbVertices[2]);
@@ -231,6 +252,13 @@ public class BoxInfo {
     return bbVector;
   }
 
+  /**
+   * Return basic info on boundbox in the form of an array.
+   *  
+   * @param isAll to include center and diagonal
+   * @return isAll: [(0.5 0.5 0.5), diagonal, (0 0 0), (1 1 1)], otherwise just [(0 0 0), (1 1 1)]
+   * 
+   */
   public P3[] getBoundBoxPoints(boolean isAll) {
     if (!isScaleSet)
       setBbcage(1);
@@ -244,7 +272,15 @@ public class BoxInfo {
     return bbVertices;
   }
   
-  public void setBoundBox(P3 pt1, P3 pt2, boolean byCorner, float scale) {
+  public void setBoundBoxFromCriticalPoints(T3[] points) {
+    P3 origin = P3.newP(points[0]);
+    P3 pt111 = new P3();
+    for (int i = 0; i < 4; i++)
+      pt111.add(points[i]);
+    setBoundBox(origin, pt111, true, 1);
+  }
+  
+  public void setBoundBox(T3 pt1, T3 pt2, boolean byCorner, float scale) {
     if (pt1 != null) {
       if (scale == 0)
         return;
@@ -340,6 +376,10 @@ public class BoxInfo {
    return (pt.x >= bbCorner0.x && pt.x <= bbCorner1.x 
        && pt.y >= bbCorner0.y && pt.y <= bbCorner1.y
        && pt.z >= bbCorner0.z && pt.z <= bbCorner1.z); 
+  }
+
+  public float getMaxDim() {
+    return bbVector.length() * 2;
   }
 
 }

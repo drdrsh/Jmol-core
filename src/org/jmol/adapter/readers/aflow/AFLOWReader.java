@@ -113,6 +113,7 @@ public class AFLOWReader extends VaspPoscarReader {
     readPRE = checkFilterKey("PRE");
 //    readPOST = !checkFilterKey("NOPOST");
     String s = getFilter("CA=");
+    forcePacked = !checkFilterKey("NOPACK");
     if (s != null)
       fracA = parseFloatStr(s.substring(1));
     s = getFilter("LIST=");

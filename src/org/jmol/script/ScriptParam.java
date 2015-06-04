@@ -52,8 +52,8 @@ abstract public class ScriptParam extends ScriptError {
 
   // passed back as globals
   
-  protected P3 fractionalPoint;
-  protected boolean coordinatesAreFractional;
+  public P3 fractionalPoint;
+  public boolean coordinatesAreFractional;
   public boolean isBondSet;
   public Object expressionResult;
 
@@ -385,7 +385,7 @@ abstract public class ScriptParam extends ScriptError {
     return Measure.getPlaneThroughPoints(pt1,  pt2, pt3, new V3(), new V3(), new P4());
   }
 
-  protected Object getPointOrPlane(int index, boolean integerOnly,
+  public Object getPointOrPlane(int index, boolean integerOnly,
                                  boolean allowFractional, boolean doConvert,
                                  boolean implicitFractional, int minDim,
                                  int maxDim) throws ScriptException {
@@ -585,7 +585,7 @@ abstract public class ScriptParam extends ScriptError {
   /**
    * may return null values in some cases
    * @param i
-   * @param nPoints
+   * @param nPoints -1 for unspecified number of points
    * @param allowNull if allowing null values (as in setting atom properties such as vxyz or xyz)
    * @return array of P3, with possible null values
    * @throws ScriptException
