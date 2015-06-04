@@ -26,10 +26,9 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
   private boolean atomsLabeledInline;
   private float scaleFac;
   protected int ac;
-  protected int atomPt = Integer.MIN_VALUE;
   protected String title;
   protected boolean quiet;
-  
+  protected String[] defaultLabels;  
 
   @Override
   protected void initializeReader() throws Exception {
@@ -43,6 +42,34 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     readMolecularFormula();
     readCoordinates();
     asc.setAtomSetName(title + (titleMsg == null ? "" : "[" + titleMsg + "]"));
+  }
+
+  /**
+   * scan the AFLOWReader PRE structure for elements in coord section 
+   * @throws Exception
+   */
+  protected void readElementLabelsOnly() throws Exception {
+    readLines(5);
+    rdline();
+    int n = getTokens().length;
+    elementLabel = new String[n];
+    rdline(); // DIRECT
+    line = "";
+    String s = null, last = null;
+    for (int i = 0; i < n; i++) {
+      while (s == null || s.equals(last)) {
+        rdline();
+        String[] tokens = getTokens();
+        if (tokens.length != 4
+            || (s = elementLabel[i] = getElement(tokens[3])) == null) {
+          i = n + 1;
+          break;
+        }
+      }
+      last = s;
+    }
+    if (s == null)
+      elementLabel = defaultLabels;
   }
 
   @Override
@@ -65,8 +92,8 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     Parser.parseStringInfestedFloatArray(s, null, unitCellData);
     if (isVolume) {
       M3 m = M3.newA9(unitCellData);
-      m.determinant3();
-      System.out.println("scalecheck: " + scaleFac + " " + Math.pow(m.determinant3(), 1/3.));
+      scaleFac /= m.determinant3();
+ //     System.out.println("scalecheck: " + scaleFac + " " + Math.pow(m.determinant3(), 1/3.));
     }
     if (scaleFac != 1)
       for (int i = 0; i < unitCellData.length; i++)
@@ -103,9 +130,6 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
       }
     }
     String[] labels = elementLabel;
-    if (elementCounts.length == 1 && atomPt >= 0 && atomPt < 2) {
-      labels = new String[] { elementLabel[atomPt] };
-    }
     SB mf = new SB();
     atomLabels = new Lst<String>();
     ac = 0;
@@ -137,7 +161,8 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
       String[] tokens = PT.getTokens(rdline());
       if (tokens.length == 4 && tokens[3].indexOf(".") >= 0)
         radius = parseFloatStr(tokens[3]);
-      if (!isSelective && i == 0 && !atomsLabeledInline && tokens.length > 3 && JmolAdapter.getElementNumber(tokens[3]) > 0)
+      if (!isSelective && i == 0 && !atomsLabeledInline && tokens.length > 3 
+          && (tokens[3] = getElement(tokens[3])) != null)
         atomsLabeledInline = true;
       String label = (atomsLabeledInline ? tokens[3] : atomLabels.get(i));
       if (isCartesian)
@@ -146,6 +171,30 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
       Atom atom = addAtomXYZSymName(tokens, 0, null, label);
       if (!Float.isNaN(radius))
         atom.radius = radius * scaleFac;
+    }
+  }
+
+  /**
+   * allow for any number of characters, for which the first
+   * one or two are an element symbol.
+   * 
+   * @param token
+   * @return
+   */
+  private String getElement(String token) {
+    String s = null;
+    switch (token.length()) {
+    default:
+      s = (token.length() > 2 ? token.substring(0, 2) : null);
+      if (s != null && JmolAdapter.getElementNumber(s) >= 0)
+        return s;
+      //$FALL-THROUGH$
+    case 1:
+      if (JmolAdapter.getElementNumber(s = token.substring(0)) >= 0)
+        return s;
+      //$FALL-THROUGH$
+    case 0:
+      return null;
     }
   }
 

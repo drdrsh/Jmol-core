@@ -1007,20 +1007,6 @@ public class PT {
     return val;
   }
 
-  public static void getMapSubset(Map<String, ?> h, String key,
-                                      Map<String, Object> h2) {
-    Object val = h.get(key);
-    if (val != null) {
-      h2.put(key, val);
-      return;
-    }
-    for (Entry<String, ?> e : h.entrySet()) {
-      String k = e.getKey();
-      if (isLike(k, key))
-        h2.put(k, e.getValue());
-    }
-  }
-
   public static String clean(String s) {
     return rep(replaceAllCharacters(s, " \t\n\r", " "), "  ", " ").trim();
   }

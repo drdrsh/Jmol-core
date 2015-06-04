@@ -42,6 +42,9 @@ public class AFLOWReader extends VaspPoscarReader {
   private Map<String, float[]> compositions;
   private boolean getComposition;
   private String listKey, listKeyCase;
+  private int fileModelNumber;
+  
+
 
   //Looking for:
   //  
@@ -120,7 +123,7 @@ public class AFLOWReader extends VaspPoscarReader {
     //asc.setAtomSetName(title = line.trim());
     aabb = line.substring(1, line.indexOf("]"));
     int pt = (PT.isUpperCase(aabb.charAt(1)) ? 1 : 2);
-    elementLabel = new String[] { aabb.substring(0, pt), aabb.substring(pt) };
+    defaultLabels = new String[] { aabb.substring(0, pt), aabb.substring(pt) };
     while (rd().indexOf("] REFERENCE:") >= 0)
       appendLoadNote(line);
     compositions = new Hashtable<String, float[]>();
@@ -136,16 +139,15 @@ public class AFLOWReader extends VaspPoscarReader {
     return continuing;
   }
 
-  private int fileModelNumber;
-
   private boolean readPrePost() throws Exception {
     fileModelNumber++;
     String titleMsg = "" + (modelNumber+1)
         + (getComposition ? "," + fileModelNumber + "," + fracA : "");
+    elementLabel = null;
     if (readPRE) {
-      elementLabel = null;
       readStructure(titleMsg);
     } else {
+      readElementLabelsOnly();
       discardLinesUntilContains("Structure POST");
       readStructure(titleMsg);
     }
