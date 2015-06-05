@@ -37,7 +37,7 @@ public class AFLOWReader extends VaspPoscarReader {
   private String aabb;  
   private boolean readPRE;
 //  private boolean readPOST;
-  private float fracA = Float.NaN;
+  private float fracB = Float.NaN;
   private Map<String, float[]> compositions;
   private boolean getComposition;
   private String listKey, listKeyCase;
@@ -111,14 +111,22 @@ public class AFLOWReader extends VaspPoscarReader {
   protected void initializeReader() throws Exception {
     readPRE = checkFilterKey("PRE");
 //    readPOST = !checkFilterKey("NOPOST");
-    String s = getFilter("CA=");
     forcePacked = !checkFilterKey("NOPACK");
+
+    String s;
+    
+    s = getFilter("CA=");
     if (s != null)
-      fracA = parseFloatStr(s.substring(1));
+      fracB = (1 - parseFloatStr(s.substring(1)));
+    
+    s = getFilter("CB=");
+    if (s != null)
+      fracB = parseFloatStr(s.substring(1));
+    
     s = getFilter("LIST=");
     listKey = (s == null ? "HF" : s);
     listKeyCase = listKey;
-    getComposition = !Float.isNaN(fracA);
+    getComposition = !Float.isNaN(fracB);
     discardLinesUntilStartsWith("[");
     //asc.setAtomSetName(title = line.trim());
     aabb = line.substring(1, line.indexOf("]"));
@@ -143,7 +151,7 @@ public class AFLOWReader extends VaspPoscarReader {
   private boolean readPrePost() throws Exception {
     fileModelNumber++;
     String titleMsg = "" + (modelNumber+1)
-        + (getComposition ? "," + fileModelNumber + "," + fracA : "");
+        + (getComposition ? "," + fileModelNumber + ", Cb=" + fracB : "");
     elementLabel = null;
     if (readPRE) {
       readStructure(titleMsg);
@@ -180,12 +188,17 @@ public class AFLOWReader extends VaspPoscarReader {
       if (key.toUpperCase().startsWith(listKey)) {
         listKey = key.toUpperCase();
         listKeyCase = key;
-        asc.setAtomSetName(aabb + " " + (getComposition ? fracA + " " : " ") + key + "=" + val);
+        asc.setAtomSetName(aabb + " " + (getComposition ? fracB + " " : " ") + key + "=" + val);
         listVal = parseFloatStr(val);
       }
+      if (key.equals("Ca")) {
+        float ca = parseFloatStr(val);
+        if (getComposition && Math.abs((1 - ca) - fracB) > 0.01f)
+          return false;
+      } else
       if (key.equals("Cb")) {
         float cb = parseFloatStr(strcb = val);
-        if (getComposition && Math.abs(cb - fracA) > 0.01f)
+        if (getComposition && Math.abs(cb - fracB) > 0.01f)
           return false;
       }
     }

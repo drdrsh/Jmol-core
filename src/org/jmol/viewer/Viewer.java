@@ -8956,10 +8956,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         atomExpression));
   }
 
-  public Map<String, SV> getContextVariables() {
-    return (getScriptManager() == null ? null : eval.getContextVariables());
-  }
-
   public ScriptContext getScriptContext(String why) {
     return (getScriptManager() == null ? null : eval.getScriptContext(why));
   }

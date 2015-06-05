@@ -802,6 +802,8 @@ public class ScriptEval extends ScriptExpr {
     ScriptEval e = (new ScriptEval()).setViewer(vwr);
     try {
       // disallow end-of-script message and JavaScript script queuing
+      e.thisContext = thisContext;
+      e.contextVariables = contextVariables;
       e.pushContext(null, "evalExp");
       e.allowJSThreads = false;
     } catch (ScriptException e1) {
@@ -819,13 +821,11 @@ public class ScriptEval extends ScriptExpr {
         if (compileScript(null, "e_x_p_r_e_s_s_i_o_n = " + expr, false)) {
           if (compileOnly)
             return aatoken[0];
-          contextVariables = vwr.getContextVariables();
           setStatement(aatoken[0]);
           return (asVariable ? parameterExpressionList(2, -1, false).get(0)
               : parameterExpressionString(2, 0));
         }
       } else if (expr instanceof T[]) {
-        contextVariables = vwr.getContextVariables();
         BS bs = atomExpression((T[]) expr, 0, 0, true, false, true, false);
         return (asVariable ? SV.newV(T.bitset, bs) : bs);
 
@@ -1368,12 +1368,7 @@ public class ScriptEval extends ScriptExpr {
   
   // ///////////////// Script context support //////////////////////
 
-  @Override
-  public Map<String, SV> getContextVariables() {
-    return contextVariables;
-  }
-
-  @Override
+ @Override
   public ScriptContext getThisContext() {
     return thisContext;
   }

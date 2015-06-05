@@ -450,7 +450,10 @@ public class AtomSetCollection {
   public void removeCurrentAtomSet() {
     if (iSet < 0)
       return;
-    ac = atomSetAtomIndexes[iSet];
+    int ai = atomSetAtomIndexes[iSet];
+    if (bsAtoms != null)
+      bsAtoms.clearBits(ai, ac);
+    ac = ai;
     atomSetAtomCounts[iSet] = 0;
     iSet--;
     atomSetCount--;

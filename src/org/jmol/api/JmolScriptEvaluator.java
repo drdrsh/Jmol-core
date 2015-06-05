@@ -74,8 +74,6 @@ public interface JmolScriptEvaluator {
 
   void deleteAtomsInVariables(BS bsDeleted);
 
-  Map<String, SV> getContextVariables();
-
   boolean evalParallel(ScriptContext context, ShapeManager shapeManager);
 
   void runScript(String script) throws ScriptException;
