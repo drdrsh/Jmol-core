@@ -6347,6 +6347,7 @@ public class ScriptEval extends ScriptExpr {
           "_arguments",
           (params == null ? SV.getVariableAI(new int[] {}) : SV
               .getVariableList(params)));
+      contextVariables.put("_argcount", SV.newI(params == null ? 0 : params.size()));
 
       if (isCheck)
         listCommands = true;

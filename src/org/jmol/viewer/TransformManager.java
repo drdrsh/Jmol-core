@@ -129,7 +129,6 @@ public class TransformManager {
     rotationCenterDefault.setT(vwr.getBoundBoxCenter());
     setFixedRotationCenter(rotationCenterDefault);
     rotationRadiusDefault = setRotationRadius(0, true);
-    System.out.println("TM rotraddef=" +rotationRadiusDefault);
     windowCentered = true;
     setRotationCenterAndRadiusXYZ(null, true);
     resetRotation();

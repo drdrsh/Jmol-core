@@ -171,6 +171,8 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
       Atom atom = addAtomXYZSymName(tokens, 0, null, label);
       if (!Float.isNaN(radius))
         atom.radius = radius * scaleFac;
+      if (asc.bsAtoms != null)
+        asc.bsAtoms.set(atom.index);
     }
   }
 
@@ -179,7 +181,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
    * one or two are an element symbol.
    * 
    * @param token
-   * @return
+   * @return element symbol
    */
   private String getElement(String token) {
     String s = null;

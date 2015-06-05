@@ -1031,7 +1031,9 @@ import java.util.Properties;
   }
 
   public P3 getBoundBoxCenter(int modelIndex) {
-    return (isJmolDataFrameForModel(modelIndex) ? new P3() : boxInfo.getBoundBoxCenter());
+    return (isJmolDataFrameForModel(modelIndex) ? new P3()
+        : (getDefaultBoundBox() == null ? boxInfo : defaultBBox)
+            .getBoundBoxCenter());
   }
 
   public V3 getBoundBoxCornerVector() {
@@ -1137,6 +1139,12 @@ import java.util.Properties;
     boxInfo.setBbcage(scale);
   }
 
+  /**
+   * The default bounding box is created 
+   * when the LOAD .... FILL BOUNDBOX or FILL UNITCELL
+   * is use. 
+   * @return
+   */
   private BoxInfo getDefaultBoundBox() {
     T3[] bbox = (T3[]) getInfoM("boundbox");
     if (bbox == null)
@@ -1172,12 +1180,16 @@ import java.util.Properties;
   }
 
   private void calcUnitCellMinMax() {
+    P3 pt = new P3();
     for (int i = 0; i < mc; i++) {
       if (!unitCells[i].getCoordinatesAreFractional())
         continue;
-      P3[] vertices = unitCells[i].getUnitCellVertices();
-      for (int j = 0; j < 8; j++)
-        boxInfo.addBoundBoxPoint(vertices[j]);
+      P3[] vertices = unitCells[i].getUnitCellVerticesNoOffset();
+      P3 offset = unitCells[i].getCartesianOffset();
+      for (int j = 0; j < 8; j++) {
+        pt.add2(offset, vertices[j]);
+        boxInfo.addBoundBoxPoint(pt);
+      }
     }
   }
 

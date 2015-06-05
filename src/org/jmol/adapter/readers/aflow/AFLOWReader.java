@@ -8,10 +8,9 @@ import java.util.Map.Entry;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
 
 import org.jmol.adapter.readers.xtal.VaspPoscarReader;
-import org.jmol.adapter.smarter.XtalSymmetry;
+import org.jmol.java.BS;
 
 /**
  * A reader for various AFLOW file types.
@@ -129,6 +128,7 @@ public class AFLOWReader extends VaspPoscarReader {
       appendLoadNote(line);
     compositions = new Hashtable<String, float[]>();
     quiet = true;
+    asc.bsAtoms = new BS();
   }
 
   @Override
@@ -154,10 +154,10 @@ public class AFLOWReader extends VaspPoscarReader {
     }
     if (getData()) {
       applySymmetryAndSetTrajectory();
-      XtalSymmetry sym = asc.getXSymmetry();
-      T3 offset = sym.getOverallSpan();
-      offset.scale(-0.5f);
-      asc.setModelInfoForSet("unitCellOffset", offset, asc.iSet);
+//      XtalSymmetry sym = asc.getXSymmetry();
+  //    T3 offset = sym.getOverallSpan();
+    //  offset.scale(-0.5f);
+      //asc.setModelInfoForSet("unitCellOffset", offset, asc.iSet);
     } else {
       asc.removeCurrentAtomSet();
     }
@@ -180,12 +180,13 @@ public class AFLOWReader extends VaspPoscarReader {
       if (key.toUpperCase().startsWith(listKey)) {
         listKey = key.toUpperCase();
         listKeyCase = key;
+        asc.setAtomSetName(aabb + " " + (getComposition ? fracA + " " : " ") + key + "=" + val);
         listVal = parseFloatStr(val);
       }
       if (key.equals("Cb")) {
         float cb = parseFloatStr(strcb = val);
-        if (getComposition)
-          return (Math.abs(cb - fracA) <= 0.01f);
+        if (getComposition && Math.abs(cb - fracA) > 0.01f)
+          return false;
       }
     }
     float[] count_min = compositions.get(strcb);

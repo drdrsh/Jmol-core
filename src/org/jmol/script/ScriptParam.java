@@ -1,5 +1,6 @@
 package org.jmol.script;
 
+import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.CU;
@@ -110,6 +111,15 @@ abstract public class ScriptParam extends ScriptError {
   public SV getContextVariableAsVariable(String var) {
     if (var.equals("expressionBegin"))
       return null;
+    if (var.equalsIgnoreCase("_caller")) {
+      ScriptContext sc = thisContext;
+      while (sc != null) {
+        if (sc.isFunction)
+          return SV.newV(T.hash, sc.vars);
+        sc = sc.parentContext;
+      }
+      return SV.newV(T.hash, new Hashtable<String, Object>());
+    }
     var = var.toLowerCase();
     return (contextVariables != null && contextVariables.containsKey(var) ? contextVariables
         .get(var) : thisContext == null ? null : thisContext.getVariable(var));

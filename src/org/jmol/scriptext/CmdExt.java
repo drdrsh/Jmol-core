@@ -474,31 +474,39 @@ public class CmdExt extends ScriptExt {
    */
   private int checkPacked(int i, Map<String, Object> htParams, SB sOptions)
       throws ScriptException {
-    switch (tokAt(i)) {
-    case T.fill:
+    if (tokAt(i) == T.fill) {
       int tok = tokAt(++i);
       e.iToken = i;
       SymmetryInterface unitCell = null;
       boolean isArray = e.isArrayParameter(i + 1);
       T3[] pts = (isArray ? e.getPointArray(++i, 4, false) : null);
-      if (!isArray && tok == T.unitcell) {
-        unitCell = vwr.getCurrentUnitCell();
-        if (unitCell != null)
-          pts = BoxInfo.getUnitCellPoints(unitCell.getUnitCellVertices(),
-              unitCell.getCartesianOffset());
+      if (!e.chk) {
+        if (!isArray && tok == T.unitcell) {
+          unitCell = vwr.getCurrentUnitCell();
+          if (unitCell != null)
+            pts = BoxInfo.getUnitCellPoints(
+                unitCell.getUnitCellVerticesNoOffset(),
+                unitCell.getCartesianOffset());
+        }
+        if (pts == null)
+          pts = BoxInfo.getUnitCellPoints(vwr.ms.getBBoxVertices(), null);
+        System.out.println("CmdExt load center at " + pts[0]);
+        htParams.put("fillRange", pts);
       }
-      if (pts == null)
-        pts = BoxInfo.getUnitCellPoints(vwr.ms.getBBoxVertices(), null);
-      return ++e.iToken;
-    case T.packed:
-      htParams.put("packed", Boolean.TRUE);
-      sOptions.append(" PACKED");
-      if (isFloatParameter(++i)) {
-        float f = floatParameter(i++);
-        htParams.put("packingError", Float.valueOf(f));
-        sOptions.append(" " + f);
+      i = ++e.iToken;
+    }
+    if (tokAt(i) == T.packed) {
+      float f = Float.NaN;
+      if (isFloatParameter(++i))
+        f = floatParameter(i++);
+      if (!e.chk) {
+        htParams.put("packed", Boolean.TRUE);
+        sOptions.append(" PACKED");
+        if (!Float.isNaN(f)) {
+          htParams.put("packingError", Float.valueOf(f));
+          sOptions.append(" " + f);
+        }
       }
-      break;
     }
     return i;
   }

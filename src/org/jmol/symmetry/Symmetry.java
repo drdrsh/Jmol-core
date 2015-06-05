@@ -443,7 +443,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public P3[] getUnitCellVertices() {
+  public P3[] getUnitCellVerticesNoOffset() {
     return unitCell.getVertices();
   }
 
@@ -702,7 +702,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setAxes(float scale, P3[] axisPoints, P3 fixedOrigin, P3 originPoint) {
-    P3[] vertices = getUnitCellVertices();
+    P3[] vertices = getUnitCellVerticesNoOffset();
     P3 offset = getCartesianOffset();
     if (fixedOrigin == null)
       originPoint.add2(offset, vertices[0]);

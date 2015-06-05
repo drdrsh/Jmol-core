@@ -114,7 +114,7 @@ public interface SymmetryInterface {
   
   public V3[] getUnitCellVectors();
 
-  public P3[] getUnitCellVertices();
+  public P3[] getUnitCellVerticesNoOffset();
 
   public boolean haveUnitCell();
 

@@ -383,7 +383,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       asc.finalizeStructures();
       if (doCentralize)
         asc.centralize();
-      if (fillRange != null)
+      if (fillRange != null)// && previousUnitCell == null)
         asc.setInfo("boundbox", fillRange);
       Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
       if (info != null) {
@@ -540,6 +540,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     applySymmetryToBonds = htParams.containsKey("applySymmetryToBonds");
     bsFilter = (BS) htParams.get("bsFilter");
     setFilter(null);
+    fillRange = (T3[]) htParams.get("fillRange");
     if (strSupercell != null) {
       if (!checkFilterKey("NOPACK"))
         forcePacked = true;
@@ -549,7 +550,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       strSupercell = (String) o;
     else
       ptSupercell = (P3) o;
-    fillRange = (T3[]) htParams.get("fillRange");
     // ptFile < 0 indicates just one file being read
     // ptFile >= 0 indicates multiple files are being loaded
     // if the file is not the first read in the LOAD command, then

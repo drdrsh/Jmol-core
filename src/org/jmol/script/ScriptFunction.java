@@ -95,6 +95,15 @@ public class ScriptFunction implements JmolScriptFunction {
       contextVariables.put(name, (var == null ? 
           SV.newS("").setName(name) : var));
     }
+    if (tok != T.trycmd) {
+      contextVariables.put("_argcount", SV.newI(params == null ? 0 : params.size()));
+      contextVariables.put(
+          "_arguments",
+          (params == null ? SV.getVariableAI(new int[] {}) : SV
+              .getVariableList(params)));
+
+    }
+      
     contextVariables.put("_retval", SV.newI(tok == T.trycmd ? Integer.MAX_VALUE : 0));
   }
 

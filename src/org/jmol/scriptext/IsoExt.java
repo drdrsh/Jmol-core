@@ -3394,7 +3394,7 @@ public class IsoExt extends ScriptExt {
         if (tok == T.unitcell)
           invArg();
       } else {
-        pts = BoxInfo.getUnitCellPoints(unitCell.getUnitCellVertices(),
+        pts = BoxInfo.getUnitCellPoints(unitCell.getUnitCellVerticesNoOffset(),
             unitCell.getCartesianOffset());
         int iType = (int) unitCell
             .getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
