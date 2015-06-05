@@ -214,10 +214,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private Lst<String> moreUnitCellInfo;
 
 
-//    public void finalize() {
-//      System.out.println(this + " finalized");
-//    }
-
   protected String filePath;
   protected String fileName;
 

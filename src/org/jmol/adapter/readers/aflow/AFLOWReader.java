@@ -11,6 +11,7 @@ import javajs.util.SB;
 
 import org.jmol.adapter.readers.xtal.VaspPoscarReader;
 import org.jmol.java.BS;
+import org.jmol.util.Logger;
 
 /**
  * A reader for various AFLOW file types.
@@ -42,6 +43,7 @@ public class AFLOWReader extends VaspPoscarReader {
   private boolean getComposition;
   private String listKey, listKeyCase;
   private int fileModelNumber;
+  private boolean havePRE;
   
 
 
@@ -137,11 +139,15 @@ public class AFLOWReader extends VaspPoscarReader {
     compositions = new Hashtable<String, float[]>();
     quiet = true;
     asc.bsAtoms = new BS();
+    addJmolScript("unitcell off;axes off;");
+    havePRE = (line.indexOf("Structure PRE") >= 0);
   }
 
   @Override
   protected boolean checkLine() throws Exception {
-    discardLinesUntilContains("Structure PRE");
+    if (!havePRE)
+      discardLinesUntilContains("Structure PRE");
+    havePRE = false;
     if (line == null)
       return false;
     continuing &= readPrePost();
@@ -153,6 +159,7 @@ public class AFLOWReader extends VaspPoscarReader {
     String titleMsg = "" + (modelNumber+1)
         + (getComposition ? "," + fileModelNumber + ", Cb=" + fracB : "");
     elementLabel = null;
+    int n0 = asc.bsAtoms.cardinality();
     if (readPRE) {
       readStructure(titleMsg);
     } else {
@@ -167,9 +174,68 @@ public class AFLOWReader extends VaspPoscarReader {
     //  offset.scale(-0.5f);
       //asc.setModelInfoForSet("unitCellOffset", offset, asc.iSet);
     } else {
-      asc.removeCurrentAtomSet();
+      asc.bsAtoms.clearBits(asc.getLastAtomSetAtomIndex(), asc.ac);
+      doCheckUnitCell = false;
     }
+    finalizeModel();
+    if (n0 != asc.bsAtoms.cardinality())
+      Logger.info("AFLOW: file#, saved#, atoms: " + fileModelNumber + " " + modelNumber + " " + (asc.bsAtoms.cardinality() - n0));
     return !haveModel || modelNumber != desiredModelNumber;
+  }
+
+  private void finalizeModel() throws Exception {
+    int n = asc.ac;
+    int nremoved = 0;
+    int i0 = asc.getLastAtomSetAtomIndex();
+    int nnow = 0;
+    for (int i = i0; i < n; i++) { 
+      if (!asc.bsAtoms.get(i)) {
+        nremoved++;
+        asc.ac--;
+        asc.atoms[i] = null;
+        continue;
+      } 
+      if (nremoved > 0) {
+        asc.atoms[asc.atoms[i].index = i - nremoved] = asc.atoms[i];
+        asc.atoms[i] = null;
+      }
+      nnow++;
+    }
+    asc.atomSetAtomCounts[asc.iSet] = nnow;
+    if (nnow == 0) {
+      asc.iSet--;
+      asc.atomSetCount--;
+    } else {
+      asc.bsAtoms.setBits(i0, i0 + nnow);
+    }
+  }
+
+  /**
+   * scan the AFLOWReader PRE structure for elements in coord section 
+   * @throws Exception
+   */
+  private void readElementLabelsOnly() throws Exception {
+    readLines(5);
+    rdline();
+    int n = getTokens().length;
+    elementLabel = new String[n];
+    rdline(); // DIRECT
+    line = "";
+    String s = null, last = null;
+    for (int i = 0; i < n; i++) {
+      while (s == null || s.equals(last)) {
+        rdline();
+        String[] tokens = getTokens();
+        if (tokens.length != 4  
+            || (s = elementLabel[i] = getElement(tokens[3])) == null) {
+          i = n + 1;
+          break;
+        }
+      }
+      last = s;
+    }
+    if (s == null)
+      elementLabel = defaultLabels;
   }
 
   private boolean getData() throws Exception {
@@ -181,6 +247,8 @@ public class AFLOWReader extends VaspPoscarReader {
     SB sb = new SB();
     float listVal = Float.MAX_VALUE;
     String strcb = "?";
+    String listValStr = null;
+    float cb = 0;
     while (rdline() != null && (pt = line.indexOf(" # ")) >= 0) {
       String key = line.substring(pt + 3).trim();
       String val = line.substring(0, pt).trim();
@@ -188,7 +256,7 @@ public class AFLOWReader extends VaspPoscarReader {
       if (key.toUpperCase().startsWith(listKey)) {
         listKey = key.toUpperCase();
         listKeyCase = key;
-        asc.setAtomSetName(aabb + " " + (getComposition ? fracB + " " : " ") + key + "=" + val);
+        listValStr = val;
         listVal = parseFloatStr(val);
       }
       if (key.equals("Ca")) {
@@ -197,11 +265,12 @@ public class AFLOWReader extends VaspPoscarReader {
           return false;
       } else
       if (key.equals("Cb")) {
-        float cb = parseFloatStr(strcb = val);
+        cb = parseFloatStr(strcb = val);
         if (getComposition && Math.abs(cb - fracB) > 0.01f)
           return false;
       }
     }
+    asc.setAtomSetName(aabb + " " + cb + " " + listKey + "=" + listValStr);
     float[] count_min = compositions.get(strcb);
     if (count_min == null)
       compositions.put(strcb, count_min = new float[] {0, Float.MAX_VALUE } );

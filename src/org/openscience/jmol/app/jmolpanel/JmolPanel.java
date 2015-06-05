@@ -1734,11 +1734,15 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       addMouseListener(this);
     }
 
+    private long lastPressTime;
+    
     @Override
     public void mousePressed(MouseEvent e) {
       vwr.evalStringQuiet(script);
-      if (jmolApp.autoAnimationDelay > 0)
-        vwr.evalStringQuiet("animation_running = true; delay " + jmolApp.autoAnimationDelay + "; if(animation_running){timeout '__animBtn' -200 \"" + script + "\"}");
+      long t = System.currentTimeMillis();
+      if (t - lastPressTime > jmolApp.autoAnimationDelay * 2000 && jmolApp.autoAnimationDelay > 0) // 0.2 s
+        vwr.evalStringQuiet("timeout '__animBtn' OFF;animation_running = true; delay " + jmolApp.autoAnimationDelay + "; if(animation_running){timeout '__animBtn' -200 \"" + script + "\"}");
+      lastPressTime = t;
     }
 
     @Override

@@ -2257,7 +2257,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
           runScript(script);
         break;
       case T.vibration:
-        setStatusFrameChanged(true, true);
+        setStatusFrameChanged(true, false);
         break;
       case T.vanderwaals:
         shm.deleteVdwDependentShapes(null);
@@ -4313,8 +4313,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   /**
    * @param isVib
-   * @param doNotify
-   *        ignored; not implemented
+   * @param doNotify -- force even if same frame (file loading)
    */
   void setStatusFrameChanged(boolean isVib, boolean doNotify) {
     if (isVib) {
@@ -4369,7 +4368,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     g.setO("_modelType",
         (modelIndex < 0 ? "" : ms.getModelFileType(modelIndex)));
 
-    if (currentFrame == prevFrame && currentMorphModel == prevMorphModel)
+    if (!doNotify && currentFrame == prevFrame && currentMorphModel == prevMorphModel)
       return;
     prevFrame = currentFrame;
     prevMorphModel = currentMorphModel;
@@ -4555,6 +4554,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     sm.setFileLoadStatus(fullPathName, fileName, modelName, strError,
         ptLoad.getCode(), doCallback, isAsync);
     if (doCallback) {
+//       setStatusFrameChanged(false, true); // ensures proper title in JmolFrame but then we miss the file name
       if (doHaveJDX())
         getJSV().setModel(am.cmi);
       if (isJS)

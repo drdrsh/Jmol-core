@@ -474,28 +474,63 @@ public class CmdExt extends ScriptExt {
    */
   private int checkPacked(int i, Map<String, Object> htParams, SB sOptions)
       throws ScriptException {
-    if (tokAt(i) == T.fill) {
+    switch (tokAt(i)) {
+    case T.fill:
+      T3[] pts = null;
       int tok = tokAt(++i);
-      e.iToken = i;
-      SymmetryInterface unitCell = null;
-      boolean isArray = e.isArrayParameter(i + 1);
-      T3[] pts = (isArray ? e.getPointArray(++i, 4, false) : null);
-      if (!e.chk) {
-        if (!isArray && tok == T.unitcell) {
-          unitCell = vwr.getCurrentUnitCell();
-          if (unitCell != null)
-            pts = BoxInfo.getUnitCellPoints(
-                unitCell.getUnitCellVerticesNoOffset(),
-                unitCell.getCartesianOffset());
+      switch (tok) {
+      case T.unitcell:
+      case T.boundbox:
+        break;
+      default:
+        if (e.isArrayParameter(i)) {
+          pts = e.getPointArray(i, -1, false);
+          i = e.iToken;
+        } else {
+          pts = new P3[0];
+          --i;
         }
-        if (pts == null)
-          pts = BoxInfo.getUnitCellPoints(vwr.ms.getBBoxVertices(), null);
-        System.out.println("CmdExt load center at " + pts[0]);
-        htParams.put("fillRange", pts);
       }
-      i = ++e.iToken;
-    }
-    if (tokAt(i) == T.packed) {
+      i++;
+      if (e.chk)
+        return i;
+      switch (tok) {
+      case T.unitcell:
+        SymmetryInterface unitCell = vwr.getCurrentUnitCell();
+        if (unitCell != null) {
+          pts = BoxInfo.getUnitCellPoints(
+              unitCell.getUnitCellVerticesNoOffset(),
+              unitCell.getCartesianOffset());
+          break;
+        }
+        //$FALL-THROUGH$
+      case T.boundbox:
+        pts = BoxInfo.getUnitCellPoints(vwr.ms.getBBoxVertices(), null);
+        break;
+      }
+      switch (pts.length) {
+      case 2:
+        // origin and diagonal vector
+        T3 a = pts[1];
+        pts = new T3[] { pts[0], P3.newP(pts[0]), new P3(), new P3(), new P3() };
+        pts[1].x = a.x;
+        pts[2].y = a.y;
+        pts[3].z = a.z;
+        break;
+      case 3:
+        // implicit origin {0 0 0} with three vectors
+        pts = new T3[] { new P3(), pts[0], pts[1], pts[2] };
+        break;
+      case 4:
+        break;
+      default:
+        // {0 0 0} with 10x10x10 cell
+        pts = new T3[] { new P3(), P3.new3(10, 0, 0), P3.new3(0, 10, 0), P3.new3(0, 0, 10) };
+      }
+      htParams.put("fillRange", pts);
+      sOptions.append(" FILL [" + pts[0] + pts[1] + pts[2] + pts[3] + "]");
+      break;
+    case T.packed:
       float f = Float.NaN;
       if (isFloatParameter(++i))
         f = floatParameter(i++);
@@ -507,6 +542,7 @@ public class CmdExt extends ScriptExt {
           sOptions.append(" " + f);
         }
       }
+      break;
     }
     return i;
   }

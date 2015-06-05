@@ -457,6 +457,7 @@ public class AtomSetCollection {
     atomSetAtomCounts[iSet] = 0;
     iSet--;
     atomSetCount--;
+    reader.doCheckUnitCell = false;
   }
 
   public int getHydrogenAtomCount() {

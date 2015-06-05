@@ -78,7 +78,7 @@ public class AnimationManager {
       vwr.refresh(3, "Viewer:setAnimationOff");
     animation(false);
     //stopModulationThread();
-    vwr.setStatusFrameChanged(false, true);
+    vwr.setStatusFrameChanged(false, false);
     
   }
 
@@ -432,7 +432,7 @@ public class AnimationManager {
       setBackgroundModelIndex(-1);  
     vwr.setTainted(true);
     setFrameRangeVisible();
-    vwr.setStatusFrameChanged(false, true);
+    vwr.setStatusFrameChanged(false, false);
     if (vwr.ms != null && !vwr.g.selectAllModels)
         vwr.slm.setSelectionSubset(vwr.getModelUndeletedAtomsBitSet(cmi));
   }

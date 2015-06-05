@@ -139,6 +139,8 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       //int model = iData[2];
       if (display.haveDisplay) {
         String menuName = (String) data[2];
+        if (menuName.equals("0.0: "))
+          menuName = "";
         display.status.setStatus(1, menuName);
         if (jmol.frame != null)
           jmol.frame.setTitle(menuName);

@@ -54,7 +54,7 @@ public class Resolver {
     "pymol.", ";PyMOL;",
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;", 
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
-             "VaspPoscar;VaspChgcar;Wien2k;Xcrysden;",
+             "VaspPoscar;Wien2k;Xcrysden;",
     "xml.",  ";XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
@@ -664,7 +664,7 @@ public class Resolver {
         String type = recordTags[0];
         if (!type.equals("Xml"))
           return type;
-        if (header.indexOf("/AFLOWDATA/") >= 0)
+        if (header.indexOf("/AFLOWDATA/") >= 0 || header.indexOf("-- Structure PRE --") >= 0)
           return "AFLOW";
         // for XML check for an error message from a server -- certainly not XML
         // but new CML format includes xmlns:xhtml="http://www.w3.org/1999/xhtml" in <cml> tag.
@@ -822,12 +822,9 @@ public class Resolver {
       return "Gromacs";
     if (checkCrystal(lines))
       return "Crystal";
-    if (checkCastep(lines))
-      return "Castep";
-    if (checkVasp(lines, true))
-      return "VaspPoscar";
-    if (checkVasp(lines, false))
-      return "VaspChgcar";
+    String s = checkCastepVasp(lines);
+    if (s != null)
+      return s;
     return null;
   }
   
@@ -862,27 +859,21 @@ public class Resolver {
     return true;
   }
 
-  private static boolean checkCastep(String[] lines) {
+  private static String checkCastepVasp(String[] lines) {
     for ( int i = 0; i<lines.length; i++ ) {
-      if (lines[i].indexOf("Frequencies in         cm-1") == 1
-          || lines[i].contains("CASTEP")
-          || lines[i].toUpperCase().startsWith("%BLOCK LATTICE_ABC")
-          || lines[i].toUpperCase().startsWith("%BLOCK LATTICE_CART")
-          || lines[i].toUpperCase().startsWith("%BLOCK POSITIONS_FRAC")
-          || lines[i].toUpperCase().startsWith("%BLOCK POSITIONS_ABS") 
-          || lines[i].contains("<-- E")) return true;
+      String line = lines[i].toUpperCase();
+      if (line.indexOf("FREQUENCIES IN         CM-1") == 1
+          || line.contains("CASTEP")
+          || line.startsWith("%BLOCK LATTICE_ABC")
+          || line.startsWith("%BLOCK LATTICE_CART")
+          || line.startsWith("%BLOCK POSITIONS_FRAC")
+          || line.startsWith("%BLOCK POSITIONS_ABS") 
+          || line.contains("<-- E")) return "Castep";
+      if (i > 6 && i < 10 && (line.startsWith("DIRECT") || line.startsWith("CARTESIAN")))
+        return "VaspPoscar";        
     }
-    return false;
+    return null;
   }
-
-  private static boolean checkVasp(String[] lines, boolean isPoscar) {
-    int i = (isPoscar ? (lines[5].length() < 2 ? 8 : 7) : 6);
-    String line = lines[i].toLowerCase();
-    if (isPoscar && line.contains("selective"))
-      line = lines[++i].toLowerCase();
-    return (line.contains("direct") || line.contains("cartesian"));
-  }
-
 
 }
 

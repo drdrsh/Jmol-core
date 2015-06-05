@@ -11,10 +11,15 @@ import javajs.util.PT;
 import javajs.util.SB;
 
 /**
+ * 
+ * adjusted for AFLOW options -  adding element names, environment radius on atom line 
+ * 
  * http://cms.mpi.univie.ac.at/vasp/
  * 
  * @author Pieremanuele Canepa, Wake Forest University, Department of Physics
  *         Winston Salem, NC 27106, canepap@wfu.edu (pcanepa@mit.edu)
+ * 
+ * @author Bob Hanson
  * 
  * @version 1.0
  */
@@ -42,34 +47,6 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     readMolecularFormula();
     readCoordinates();
     asc.setAtomSetName(title + (titleMsg == null ? "" : "[" + titleMsg + "]"));
-  }
-
-  /**
-   * scan the AFLOWReader PRE structure for elements in coord section 
-   * @throws Exception
-   */
-  protected void readElementLabelsOnly() throws Exception {
-    readLines(5);
-    rdline();
-    int n = getTokens().length;
-    elementLabel = new String[n];
-    rdline(); // DIRECT
-    line = "";
-    String s = null, last = null;
-    for (int i = 0; i < n; i++) {
-      while (s == null || s.equals(last)) {
-        rdline();
-        String[] tokens = getTokens();
-        if (tokens.length != 4
-            || (s = elementLabel[i] = getElement(tokens[3])) == null) {
-          i = n + 1;
-          break;
-        }
-      }
-      last = s;
-    }
-    if (s == null)
-      elementLabel = defaultLabels;
   }
 
   @Override
@@ -148,6 +125,9 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     asc.setAtomSetName(s);
   }
 
+  int radiusPt = Integer.MIN_VALUE;
+  int elementPt = Integer.MIN_VALUE;
+  
   protected void readCoordinates() throws Exception {
     // If Selective is there, then skip a line 
     boolean isSelective = discardLinesUntilNonBlank().toLowerCase().contains("selective");
@@ -159,12 +139,18 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     for (int i = 0; i < ac; i++) {
       float radius = Float.NaN;
       String[] tokens = PT.getTokens(rdline());
-      if (tokens.length == 4 && tokens[3].indexOf(".") >= 0)
-        radius = parseFloatStr(tokens[3]);
-      if (!isSelective && i == 0 && !atomsLabeledInline && tokens.length > 3 
-          && (tokens[3] = getElement(tokens[3])) != null)
-        atomsLabeledInline = true;
-      String label = (atomsLabeledInline ? tokens[3] : atomLabels.get(i));
+      if (radiusPt == Integer.MIN_VALUE) {
+        for (int j = tokens.length - 1; --j > 2;)
+          if (tokens[j].equals("radius")) {
+            radiusPt = j + 1;
+          } else if (getElement(tokens[j]) != null) {
+            elementPt = j;            
+            atomsLabeledInline = true;
+          }
+      }
+      if (radiusPt >= 0)
+        radius = parseFloatStr(tokens[radiusPt]);
+      String label = (atomsLabeledInline ? tokens[elementPt] : atomLabels.get(i));
       if (isCartesian)
         for (int j = 0; j < 3; j++)
           tokens[j] = "" + parseFloatStr(tokens[j]) * scaleFac;
@@ -183,7 +169,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
    * @param token
    * @return element symbol
    */
-  private String getElement(String token) {
+  protected String getElement(String token) {
     String s = null;
     switch (token.length()) {
     default:
