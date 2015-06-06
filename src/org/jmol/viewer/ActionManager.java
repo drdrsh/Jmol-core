@@ -89,7 +89,7 @@ public class ActionManager implements EventManager {
       int atomIndex = vwr.findNearestAtomIndex(current.x, current.y);
       if (atomIndex < 0)
         return;
-      boolean isLabel = (getAtomPickingMode() == PICKING_LABEL && bnd(
+      boolean isLabel = (apm == PICKING_LABEL && bnd(
           Binding
               .getMouseAction(clickedCount, moved.modifiers, Event.DRAGGED),
           ACTION_dragLabel));
@@ -685,6 +685,11 @@ public class ActionManager implements EventManager {
 
   private MeasurementPending mp;
   private int dragAtomIndex = -1;
+  
+  public void setDragAtomIndex(int iatom) {
+    dragAtomIndex = iatom;
+  }
+  
 
   private boolean rubberbandSelectionMode = false;
   private final Rectangle rectRubber = new Rectangle();
@@ -1061,8 +1066,10 @@ public class ActionManager implements EventManager {
       if (!bnd(dragWheelAction, ACTION_rotate))
         vwr.setRotateBondIndex(-1);
     }
+    
     BS bs = null;
-    if (dragAtomIndex >= 0) {
+    if (dragAtomIndex >= 0 && apm != PICKING_LABEL) {
+      
       switch (apm) {
       case PICKING_DRAG_SELECTED:
         dragSelected(dragWheelAction, deltaX, deltaY, true);

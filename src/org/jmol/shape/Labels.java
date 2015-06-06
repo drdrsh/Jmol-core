@@ -71,9 +71,6 @@ public class Labels extends AtomShape {
   public short defaultBgcolix;
   public byte defaultPaletteID;
   public int defaultPointer;
-  public static int zeroOffset = (JC.LABEL_DEFAULT_X_OFFSET << 8)
-      | JC.LABEL_DEFAULT_Y_OFFSET;
-
   public byte zeroFontId;
 
   private boolean defaultsOnlyForNone = true;
@@ -88,7 +85,7 @@ public class Labels extends AtomShape {
         JC.DEFAULT_FONTSTYLE, JC.LABEL_DEFAULT_FONTSIZE).fid;
     defaultColix = 0; //"none" -- inherit from atom
     defaultBgcolix = 0; //"none" -- off
-    defaultOffset = zeroOffset;
+    defaultOffset = JC.LABEL_DEFAULT_OFFSET;
     defaultZPos = 0;
     translucentAllowed = false;
   }
@@ -130,8 +127,8 @@ public class Labels extends AtomShape {
           continue;
         text = getLabel(i);
         if (text == null) {
-          text = Text.newLabel(vwr, null, strings[i], C.INHERIT_ALL,
-              (short) 0, 0, scalePixelsPerMicron, null);
+          text = Text.newLabel(vwr, null, strings[i], C.INHERIT_ALL, (short) 0,
+              0, scalePixelsPerMicron, null);
           putLabel(i, text);
         } else {
           text.setScalePixelsPerMicron(scalePixelsPerMicron);
@@ -245,7 +242,7 @@ public class Labels extends AtomShape {
       return;
     }
 
-    if ("offset" == propertyName || "offsetexact" == propertyName) {
+    if ("offset" == propertyName) {
       if (!(value instanceof Integer)) {
         if (!setDefaults)
           for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
@@ -255,19 +252,10 @@ public class Labels extends AtomShape {
       }
 
       int offset = ((Integer) value).intValue();
-      // 0 must be the default, because we initialize the array
-      // in segments and so there will be extra 0s.
-      // but this "0" only means that "zero" offset; you 
-      // can change the default to anything you want.
-      boolean isExact = (propertyName == "offsetexact");
-      if (offset == 0)
-        offset = Short.MAX_VALUE;
-      else if (offset == zeroOffset)
-        offset = 0;
       if (!setDefaults)
         for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
             .nextSetBit(i + 1))
-          setOffsets(i, offset, isExact);
+          setOffsets(i, offset);
       if (setDefaults || !defaultsOnlyForNone)
         defaultOffset = offset;
       return;
@@ -359,8 +347,8 @@ public class Labels extends AtomShape {
             strLabel = strLabelPDB;
             tokens = tokensPDB;
           }
-          strings[i] = LabelToken.formatLabelAtomArray(vwr, atom, tokens,
-              '\0', null, ptTemp);
+          strings[i] = LabelToken.formatLabelAtomArray(vwr, atom, tokens, '\0',
+              null, ptTemp);
           formats[i] = strLabel;
           bsSizeSet.set(i);
           if ((bsBgColixSet == null || !bsBgColixSet.get(i))
@@ -368,8 +356,8 @@ public class Labels extends AtomShape {
             setBgcolix(i, defaultBgcolix);
           mads[i] = (short) (mode >= 0 ? 1 : -1);
         }
-        setShapeVisibility(atom, strings != null
-            && i < strings.length && strings[i] != null && mads[i] >= 0);
+        setShapeVisibility(atom, strings != null && i < strings.length
+            && strings[i] != null && mads[i] >= 0);
         //        } else if (strings != null && atomIndex < strings.length) {
         //        strings[atomIndex] = null;          
       }
@@ -465,8 +453,8 @@ public class Labels extends AtomShape {
     } else if (text != null && label != null) {
       text.setText(label);
     }
-    if (defaultOffset != zeroOffset)
-      setOffsets(i, defaultOffset, false);
+    if (defaultOffset != JC.LABEL_DEFAULT_OFFSET)
+      setOffsets(i, defaultOffset);
     if (defaultAlignment != JC.ALIGN_LEFT)
       setAlignment(i, defaultAlignment);
     if ((defaultZPos & JC.LABEL_FRONT_FLAG) != 0)
@@ -548,15 +536,15 @@ public class Labels extends AtomShape {
       text.bgcolix = bgcolix;
   }
 
-  private void setOffsets(int i, int offset, boolean isExact) {
+  private void setOffsets(int i, int offset) {
+    
     if (offsets == null || i >= offsets.length) {
       if (offset == 0)
         return;
       offsets = AU.ensureLengthI(offsets, i + 1);
     }
-    offsets[i] = (offsets[i] & JC.LABEL_FLAGS) | (offset << JC.LABEL_FLAG_OFFSET);
-    if (isExact)
-      offsets[i] |= JC.LABEL_EXACT_OFFSET_FLAG;
+    offsets[i] = (offsets[i] & JC.LABEL_FLAGS) | offset;
+
     text = getLabel(i);
     if (text != null)
       text.setOffset(offset);
@@ -574,8 +562,8 @@ public class Labels extends AtomShape {
       text.setAlignment(alignment);
   }
 
-  public static int getAlignment(int offsetFull) {
-    return (offsetFull & JC.LABEL_ALIGN_FLAGS) >> 2;
+  public static int getAlignment(int offset) {
+    return (offset & JC.LABEL_ALIGN_FLAGS) >> 2;
   }
   
   private void setPointer(int i, int pointer) {
@@ -650,18 +638,23 @@ public class Labels extends AtomShape {
   public synchronized boolean checkObjectDragged(int prevX, int prevY, int x,
                                                  int y, int dragAction,
                                                  BS bsVisible) {
-    if (vwr.getPickingMode() != ActionManager.PICKING_LABEL || labelBoxes == null)
+
+    if (vwr.getPickingMode() != ActionManager.PICKING_LABEL
+        || labelBoxes == null)
       return false;
     // mouse down ?
     if (prevX == Integer.MIN_VALUE) {
       int iAtom = findNearestLabel(x, y);
       if (iAtom >= 0) {
         pickedAtom = iAtom;
+        vwr.acm.setDragAtomIndex(iAtom);
         pickedX = x;
         pickedY = y;
-        pickedOffset = (offsets == null 
-            || pickedAtom >= offsets.length ? 0 
-                : offsets[pickedAtom]) >> JC.LABEL_FLAG_OFFSET;
+        pickedOffset = (offsets == null || pickedAtom >= offsets.length ? 
+            JC.LABEL_DEFAULT_OFFSET : offsets[pickedAtom]);
+
+        System.out.println("LABEL OFFSET=" + pickedOffset);
+
         return true;
       }
       return false;
@@ -703,15 +696,11 @@ public class Labels extends AtomShape {
 
   private void move2D(int pickedAtom, int x, int y) {
     int xOffset = JC.getXOffset(pickedOffset);
-    int yOffset = -JC.getYOffset(pickedOffset);
+    int yOffset = JC.getYOffset(pickedOffset);        
     xOffset += x - pickedX;
-    yOffset += pickedY - y;
-    int offset = JC.getOffset(xOffset, yOffset);
-    if (offset == 0)
-      offset = Short.MAX_VALUE;
-    else if (offset == zeroOffset)
-      offset = 0;
-    setOffsets(pickedAtom, offset, true);
+    yOffset -= y - pickedY;
+    int offset = JC.getOffset(xOffset, yOffset, true);
+    setOffsets(pickedAtom, offset);
   }
 
   public short getColix2(int i, Atom atom, boolean isBg) {

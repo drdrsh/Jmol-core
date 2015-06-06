@@ -49,11 +49,22 @@ public class Text extends Object2d {
   public int descent;
   private int lineHeight;
 
+  protected int offsetX; // Labels only
+  protected int offsetY; // Labels only
+
   private int textWidth;
   private int textHeight;
   private String text;
   public String getText() {
     return text;
+  }
+
+  public void setOffset(int offset) {
+    //Labels only
+    offsetX = JC.getXOffset(offset);
+    offsetY = JC.getYOffset(offset);
+    pymolOffset = null;
+    valign = JC.VALIGN_XY;
   }
 
   private int[] widths;
@@ -211,7 +222,7 @@ public class Text extends Object2d {
 
 
   public void setPosition(float scalePixelsPerMicron, float imageFontScaling,
-                          boolean isExact, float[] boxXY) {
+                          boolean isAbsolute, float[] boxXY) {
     if (boxXY == null)
       boxXY = this.boxXY;
     else
@@ -265,12 +276,12 @@ public class Text extends Object2d {
         boxXY[0] = movableX - xAdj;
         boxXY[1] = movableY - yAdj;
         y0 = movableY - dy - descent;        
-        isExact = true;
+        isAbsolute = true;
         boxYoff2 = -2; // empirica fudge factor 
       } else {
         boxYoff2 = 0;
       }
-      setBoxXY(boxWidth, boxHeight, dx, dy, boxXY, isExact);
+      setBoxXY(boxWidth, boxHeight, dx, dy, boxXY, isAbsolute);
     } else {
       setPos(fontScale);
     }
@@ -282,7 +293,7 @@ public class Text extends Object2d {
     if (adjustForWindow)
       setBoxOffsetsInWindow(/*image == null ? fontScale * 5 :*/0,
           isLabelOrHover ? 16 * fontScale + lineHeight : 0, boxY - textHeight);
-    if (!isExact)
+    //if (!isAbsolute)
       y0 = boxY + yAdj;
   }
 
@@ -345,11 +356,11 @@ public class Text extends Object2d {
   }
 
   public static void setBoxXY(float boxWidth, float boxHeight, float xOffset,
-                               float yOffset, float[] boxXY, boolean isExact) {
+                               float yOffset, float[] boxXY, boolean isAbsolute) {
     float xBoxOffset, yBoxOffset;
 
     // these are based on a standard |_ grid, so y is reversed.
-    if (xOffset > 0 || isExact) {
+    if (xOffset > 0 || isAbsolute) {
       xBoxOffset = xOffset;
     } else {
       xBoxOffset = -boxWidth;
@@ -358,14 +369,12 @@ public class Text extends Object2d {
       else
         xBoxOffset += xOffset;
     }
-    if (isExact) {
-      yBoxOffset = -yOffset;
-    } else if (yOffset < 0) {
-      yBoxOffset = -boxHeight + yOffset;
+    if (isAbsolute || yOffset > 0) {
+      yBoxOffset = -boxHeight - yOffset;
     } else if (yOffset == 0) {
       yBoxOffset = -boxHeight / 2; // - 2; removed in Jmol 11.7.45 06/24/2009
     } else {
-      yBoxOffset = yOffset;
+      yBoxOffset = -yOffset;
     }
     boxXY[0] += xBoxOffset;
     boxXY[1] += yBoxOffset;

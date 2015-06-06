@@ -35,7 +35,7 @@ class TextRenderer {
   
   static void render(Text text, JmolRendererInterface g3d,
                      float scalePixelsPerMicron, float imageFontScaling,
-                     boolean isExact, float[] boxXY, float[] temp) {
+                     boolean isAbsolute, float[] boxXY, float[] temp) {
     if (text == null || text.image == null && !text.doFormatText && text.lines == null)
       return;
     boolean showText = g3d.setC(text.colix);
@@ -43,7 +43,7 @@ class TextRenderer {
         && (text.image == null && (text.bgcolix == 0 || !g3d
             .setC(text.bgcolix))))
       return;
-    text.setPosition(scalePixelsPerMicron, imageFontScaling, isExact, boxXY);
+    text.setPosition(scalePixelsPerMicron, imageFontScaling, isAbsolute, boxXY);
     // draw the box if necessary; colix has been set
     if (text.image == null && text.bgcolix != 0) {
       if (g3d.setC(text.bgcolix))
@@ -97,7 +97,7 @@ class TextRenderer {
                                  float[] boxXY, int z, int zSlab,
                                  int xOffset, int yOffset, float ascent,
                                  int descent, boolean doPointer,
-                                 short pointerColix, boolean isExact) {
+                                 short pointerColix, boolean isAbsolute) {
 
     // old static style -- quick, simple, no line breaks, odd alignment?
     // LabelsRenderer only
@@ -108,7 +108,7 @@ class TextRenderer {
     int x0 = (int) boxXY[0];
     int y0 = (int) boxXY[1];
     
-    Text.setBoxXY(boxWidth, boxHeight, xOffset, yOffset, boxXY, isExact);
+    Text.setBoxXY(boxWidth, boxHeight, xOffset, yOffset, boxXY, isAbsolute);
 
     float x = boxXY[0];
     float y = boxXY[1];

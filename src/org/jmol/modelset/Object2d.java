@@ -21,13 +21,11 @@ public abstract class Object2d {
   public int align;
   public int valign;
   public int atomX, atomY, atomZ = Integer.MAX_VALUE;
-  public int movableX, movableY, movableZ;
-  public int movableXPercent = Integer.MAX_VALUE;
-  public int movableYPercent = Integer.MAX_VALUE;
-  public int movableZPercent = Integer.MAX_VALUE;
+  public int movableX, movableY, movableZ; // Echo only
+  public int movableXPercent = Integer.MAX_VALUE; // Echo only
+  public int movableYPercent = Integer.MAX_VALUE; // Echo only
+  public int movableZPercent = Integer.MAX_VALUE; // Echo only
 
-  protected int offsetX;
-  protected int offsetY;
   public int z = 1; // front plane
   public int zSlab = Integer.MIN_VALUE; // z for slabbing purposes -- may be near an atom
 
@@ -128,14 +126,6 @@ public abstract class Object2d {
 
   public void setScript(String script) {
     this.script = (script == null || script.length() == 0 ? null : script);
-  }
-
-  public void setOffset(int offset) {
-    //Labels only
-    offsetX = JC.getXOffset(offset);
-    offsetY = JC.getYOffset(offset);
-    pymolOffset = null;
-    valign = JC.VALIGN_XY;
   }
 
   public boolean setAlignmentLCR(String align) {

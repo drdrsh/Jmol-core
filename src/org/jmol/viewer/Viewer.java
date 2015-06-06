@@ -3332,7 +3332,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
                    boolean isExport, boolean isReset) {
     if (!isImageWrite && creatingImage)
       return;
-    if (!isExport && !isImageWrite)
+    if (!isExport && !isImageWrite && width > 0)
       setShapeProperty(JC.SHAPE_LABELS, "clearBoxes", null);
     antialiased = (isReset ? g.antialiasDisplay
         && checkMotionRendering(T.antialiasdisplay)

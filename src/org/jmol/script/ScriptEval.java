@@ -6926,7 +6926,7 @@ public class ScriptEval extends ScriptExpr {
       if (lckey.indexOf("label") == 0
           && PT
               .isOneOf(lckey.substring(5),
-                  ";front;group;atom;offset;offsetexact;pointer;alignment;toggle;scalereference;")) {
+                  ";front;group;atom;offset;offsetexact;offsetabsolute;pointer;alignment;toggle;scalereference;")) {
         if (cmdSetLabel(lckey.substring(5)))
           return;
       }
@@ -7161,7 +7161,9 @@ public class ScriptEval extends ScriptExpr {
         propertyValue = Float.valueOf(scaleAngstromsPerPixel);
         break;
       }
-      if (str.equals("offset") || str.equals("offsetexact")) {
+      boolean isAbsolute = false;
+      if (str.equals("offset") || (isAbsolute = (str.equals("offsetabsolute") || str.equals("offsetexact")))) {
+        str = "offset";
         if (isPoint3f(2)) {
           // PyMOL offsets -- {x, y, z} in angstroms
           P3 pt = getPoint3f(2, false);
@@ -7170,11 +7172,11 @@ public class ScriptEval extends ScriptExpr {
           // PyMOL offsets -- [1, scrx, scry, scrz, molx, moly, molz] in angstroms
           propertyValue = floatParameterSet(2, 7, 7);
         } else {
-          int xOffset = intParameterRange(2, -127, 127);
-          int yOffset = intParameterRange(3, -127, 127);
+          int xOffset = intParameterRange(2, -JC.LABEL_OFFSET_MAX, JC.LABEL_OFFSET_MAX);
+          int yOffset = intParameterRange(3, -JC.LABEL_OFFSET_MAX, JC.LABEL_OFFSET_MAX);
           if (xOffset == Integer.MAX_VALUE || yOffset == Integer.MAX_VALUE)
             return true;
-          propertyValue = Integer.valueOf(JC.getOffset(xOffset, yOffset));
+          propertyValue = Integer.valueOf(JC.getOffset(xOffset, yOffset, isAbsolute));
         }
         break;
       }

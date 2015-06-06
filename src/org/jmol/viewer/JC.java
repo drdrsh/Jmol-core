@@ -219,29 +219,6 @@ public final class JC {
   public final static int ENV_CALC_MAX_LEVEL = 3;//Geodesic.standardLevel;
 
 
-  public final static int LABEL_FRONT_FLAG    = 0x20;
-  public final static int LABEL_GROUP_FLAG    = 0x10;
-  public final static int LABEL_POINTER_FLAGS = 0x03;
-  public final static int LABEL_ALIGN_FLAGS   = 0x0C;
-  public final static int LABEL_ZPOS_FLAGS    = 0x30;
-  public final static int LABEL_SCALE_FLAG    = 0x40;
-  public final static int LABEL_EXACT_OFFSET_FLAG = 0x80;
-  public final static int LABEL_FLAGS         = 0xFF;
-  public final static int LABEL_FLAG_OFFSET   = 8;
-
-  //entry is just xxxxxxxxyyyyyyyy
-  //  3         2         1        
-  // 10987654321098765432109876543210
-  //         xxxxxxxxyyyyyyyytsfgaabp
-  //          x-align y-align||||| ||_pointer on
-  //                         ||||| |_background pointer color
-  //                         |||||_text alignment 0xC 
-  //                         ||||_labels group 0x10
-  //                         |||_labels front  0x20
-  //                         ||_scaled
-  //                         |_exact offset
-
-
   public final static int MOUSE_NONE = -1;
 
   public final static byte MULTIBOND_NEVER =     0;
@@ -602,12 +579,6 @@ public final class JC {
   public final static String DEFAULT_FONTFACE = "SansSerif";
   public final static String DEFAULT_FONTSTYLE = "Plain";
 
-  public final static int LABEL_MINIMUM_FONTSIZE = 6;
-  public final static int LABEL_MAXIMUM_FONTSIZE = 63;
-  public final static int LABEL_DEFAULT_FONTSIZE = 13;
-  public final static int LABEL_DEFAULT_X_OFFSET = 4;
-  public final static int LABEL_DEFAULT_Y_OFFSET = 4;
-
   public final static int MEASURE_DEFAULT_FONTSIZE = 15;
   public final static int AXES_DEFAULT_FONTSIZE = 14;
 
@@ -863,36 +834,107 @@ public final class JC {
     }
   }
 
-  public static int getOffset(int xOffset, int yOffset) {
-    xOffset = Math.min(Math.max(xOffset, -127), 127);
-    yOffset = Math.min(Math.max(yOffset, -127), 127);
-    return ((xOffset & 0xFF) << 8) | (yOffset & 0xFF);
+  public final static int LABEL_MINIMUM_FONTSIZE = 6;
+  public final static int LABEL_MAXIMUM_FONTSIZE = 63;
+  public final static int LABEL_DEFAULT_FONTSIZE = 13;
+  public final static int LABEL_DEFAULT_X_OFFSET = 4;
+  public final static int LABEL_DEFAULT_Y_OFFSET = 4;
+  public final static int LABEL_OFFSET_MAX       = 0x1F4; // 500 
+  private final static int LABEL_OFFSET_MASK     = 0x3FF; 
+  
+  
+  public final static int LABEL_FRONT_FLAG        = 0x020;
+  public final static int LABEL_GROUP_FLAG        = 0x010;
+  public final static int LABEL_POINTER_FLAGS     = 0x003;
+  public final static int LABEL_ALIGN_FLAGS       = 0x00C;
+  public final static int LABEL_ZPOS_FLAGS        = 0x030;
+  public final static int LABEL_SCALE_FLAG        = 0x040;
+  public final static int LABEL_FLAGS             = 0x07F;
+  
+  private final static int LABEL_EXPLICIT_OFFSET_FLAG = 0x080;
+  private final static int LABEL_CENTERED_FLAG     = 0x100;
+  private final static int LABEL_FLAGY_OFFSET = 9;
+  private final static int LABEL_FLAGX_OFFSET = 19;
+  
+  public static int LABEL_DEFAULT_OFFSET = 
+     (LABEL_DEFAULT_X_OFFSET << LABEL_FLAGX_OFFSET)
+   | (LABEL_DEFAULT_Y_OFFSET << LABEL_FLAGY_OFFSET);
+
+  
+  // note that the y offset is positive upward
+  
+  //  3         2         1        
+  // 10987654321098765432109876543210
+  //    -x-offset--y-offset-ntsfgaabp
+  //                        |||||| ||_pointer on
+  //                        |||||| |_background pointer color
+  //                        ||||||_text alignment 0xC 
+  //                        |||||_labels group 0x10
+  //                        ||||_labels front  0x20
+  //                        |||_scaled
+  //                        ||_explicit offset
+  //                        |_no_offset
+
+  public static boolean isOffsetExplicit(int offset) {
+    return ((offset & JC.LABEL_EXPLICIT_OFFSET_FLAG) != 0);
   }
 
+  /**
+   * Construct an 32-bit integer packed with 10-byte x and y offsets (-500 to 500)
+   * along with flags to indicate if exact and, if not, a flag to indicate that
+   * the 0 in x or y indicates "centered". The non-exact default offset of [4,4] is 
+   * represented as 0 so that new array elements do not have to be initialized. 
+   * 
+   * @param xOffset
+   * @param yOffset
+   * @param isAbsolute
+   * @return packed offset x and y with positioning flags
+   */
+  public static int getOffset(int xOffset, int yOffset, boolean isAbsolute) {
+    xOffset = Math.min(Math.max(xOffset, -LABEL_OFFSET_MAX), LABEL_OFFSET_MAX);
+    yOffset = (Math.min(Math.max(yOffset, -LABEL_OFFSET_MAX), LABEL_OFFSET_MAX));
+    int offset = ((xOffset & LABEL_OFFSET_MASK) << LABEL_FLAGX_OFFSET)
+         | ((yOffset & LABEL_OFFSET_MASK) << LABEL_FLAGY_OFFSET)
+         | (isAbsolute ? LABEL_EXPLICIT_OFFSET_FLAG : 0);
+    if (offset == JC.LABEL_DEFAULT_OFFSET)
+      offset = 0;
+    else if (!isAbsolute && (xOffset == 0 || yOffset == 0))
+      offset |= JC.LABEL_CENTERED_FLAG;
+    return offset;
+  }
+
+  /**
+   * X offset in pixels. 
+   * 
+   * negative of this is the actual screen offset
+   * 
+   * @param offset  0 for an offset indicates "not set" and delivers the default offset
+   * @return screen offset from left
+   */
   public static int getXOffset(int offset) {
-    // ----48------FF--
-    switch (offset) {
-    case 0:
+    if (offset == 0)
       return LABEL_DEFAULT_X_OFFSET;
-    case Short.MAX_VALUE:
-      return 0;
-    default:
-      return (int) (((long) offset << 48) >> 56);
-    }
+    int x = (offset >> LABEL_FLAGX_OFFSET) & LABEL_OFFSET_MASK;
+    if (x > LABEL_OFFSET_MAX)
+      x -= LABEL_OFFSET_MASK + 1;
+    return x;
   }
 
+  /**
+   * Y offset in pixels; negative of this is the actual screen offset
+   * 
+   * @param offset  0 for an offset indicates "not set" and delivers the default offset
+   * @return screen offset from bottom
+   */
   public static int getYOffset(int offset) {
-    // ----56--------FF
-    switch (offset) {
-    case 0:
-      return -LABEL_DEFAULT_Y_OFFSET;
-    case Short.MAX_VALUE:
-      return 0;
-    default:
-      return -(int) (((long) offset << 56) >> 56);
-    }
+    if (offset == 0)
+      return LABEL_DEFAULT_Y_OFFSET;
+    int y = (offset >> LABEL_FLAGY_OFFSET) & LABEL_OFFSET_MASK;
+    if (y > LABEL_OFFSET_MAX)
+      y -= LABEL_OFFSET_MASK + 1;
+    return y;
   }
-
+  
   public static String getAlignmentName(int align) {
     return JC.hAlignNames[align & 3];
   }

@@ -706,7 +706,7 @@ public class StateCreator extends JmolStateCreator {
         l.defaultColix, l.translucentAllowed));
     app(s, "background label " + Shape.encodeColor(l.defaultBgcolix));
     app(s, "set labelOffset " + JC.getXOffset(l.defaultOffset)
-        + " " + (-JC.getYOffset(l.defaultOffset)));
+        + " " + (JC.getYOffset(l.defaultOffset)));
     String align = JC.getAlignmentName(l.defaultAlignment);
     app(s, "set labelAlignment " + (align.length() < 5 ? "left" : align));
     String pointer = JC.getPointer(l.defaultPointer);
@@ -1214,11 +1214,11 @@ public class StateCreator extends JmolStateCreator {
                   i,
                   i,
                   "set "
-                      + ((offsetFull & JC.LABEL_EXACT_OFFSET_FLAG) == JC.LABEL_EXACT_OFFSET_FLAG ? "labelOffsetExact "
+                      + (JC.isOffsetExplicit(offsetFull) ? "labelOffsetAbsolute "
                           : "labelOffset ")
-                      + JC.getXOffset(offsetFull >> JC.LABEL_FLAG_OFFSET)
+                      + JC.getXOffset(offsetFull)
                       + " "
-                      + (-JC.getYOffset(offsetFull >> JC.LABEL_FLAG_OFFSET)));
+                      + JC.getYOffset(offsetFull));
           String align = JC.getAlignmentName(offsetFull >> 2);
           String pointer = JC.getPointer(offsetFull);
           if (pointer.length() > 0)

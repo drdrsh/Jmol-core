@@ -59,7 +59,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
   private Atom atom;
   protected Point3fi atomPt;
 
-  private boolean isExact;
+  private boolean isAbsolute;
 
   private int offset;
 
@@ -113,13 +113,13 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         labelColix = backgroundColixContrast;
       fid = ((fids == null || i >= fids.length || fids[i] == 0) ? labels.zeroFontId
           : fids[i]);
-      int offsetFull = (offsets == null || i >= offsets.length ? 0 : offsets[i]);
-      boolean labelsFront = ((offsetFull & JC.LABEL_FRONT_FLAG) != 0);
-      boolean labelsGroup = ((offsetFull & JC.LABEL_GROUP_FLAG) != 0);
-      isExact = ((offsetFull & JC.LABEL_EXACT_OFFSET_FLAG) != 0);
-      offset = offsetFull >> JC.LABEL_FLAG_OFFSET;
-      textAlign = Labels.getAlignment(offsetFull);
-      pointer = offsetFull & JC.LABEL_POINTER_FLAGS;
+      offset = (offsets == null || i >= offsets.length ? 0: offsets[i]);
+      boolean labelsFront = ((offset & JC.LABEL_FRONT_FLAG) != 0);
+      boolean labelsGroup = ((offset & JC.LABEL_GROUP_FLAG) != 0);
+      textAlign = Labels.getAlignment(offset);
+      isAbsolute = JC.isOffsetExplicit(offset);
+      
+      pointer = offset & JC.LABEL_POINTER_FLAGS;
       zSlab = atom.sZ - atom.sD / 2 - 3;
       if (zSlab > zCutoff)
         continue;
@@ -178,7 +178,8 @@ public class LabelsRenderer extends FontLineShapeRenderer {
           pTemp.setT(atomPt);
         else
           pTemp.set(0, 0, 0);
-        pTemp.add3(text.pymolOffset[4], text.pymolOffset[5], text.pymolOffset[6]);
+        pTemp.add3(text.pymolOffset[4], text.pymolOffset[5],
+            text.pymolOffset[6]);
         tm.transformPtScr(pTemp, screen);
         text.setXYZs(screen.x, screen.y, screen.z, zSlab);
         text.setScalePixelsPerMicron(sppm);
@@ -196,7 +197,8 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       }
       boolean isSimple = isLeft
           && (imageFontScaling == 1 && scalePixelsPerMicron == 0
-              && label.indexOf("|") < 0 && label.indexOf("<su") < 0 && label.indexOf("<co") < 0);
+              && label.indexOf("|") < 0 && label.indexOf("<su") < 0 && label
+              .indexOf("<co") < 0);
       if (isSimple) {
         boolean doPointer = ((pointer & JC.POINTER_ON) != 0);
         short pointerColix = ((pointer & JC.POINTER_BACKGROUND) != 0
@@ -204,30 +206,26 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         boxXY[0] = atomPt.sX;
         boxXY[1] = atomPt.sY;
         TextRenderer.renderSimpleLabel(g3d, font3d, label, labelColix, bgcolix,
-            boxXY, zBox, zSlab, JC.getXOffset(offset), JC
-                .getYOffset(offset), ascent, descent, doPointer, pointerColix,
-            isExact);
-        atomPt = null;
-      } else {
-        text = Text.newLabel(vwr, font3d, label, labelColix,
-            bgcolix, textAlign, 0, null);
-        text.atomX = atomPt.sX; // just for pointer
-        text.atomY = atomPt.sY;
-        text.atomZ = zSlab;
-        text.setXYZs(atomPt.sX, atomPt.sY, zBox, zSlab);
-        newText = true;
+            boxXY, zBox, zSlab, JC.getXOffset(offset), JC.getYOffset(offset),
+            ascent, descent, doPointer, pointerColix, isAbsolute);
+        return null;
       }
+      text = Text.newLabel(vwr, font3d, label, labelColix, bgcolix, textAlign,
+          0, null);
+      text.atomX = atomPt.sX; // just for pointer
+      text.atomY = atomPt.sY;
+      text.atomZ = zSlab;
+      text.setXYZs(atomPt.sX, atomPt.sY, zBox, zSlab);
+      newText = true;
     }
-    if (atomPt != null) {
-      if (text.pymolOffset == null) {
-        text.setOffset(offset);
-        if (textAlign != JC.ALIGN_NONE)
-          text.setAlignment(textAlign);
-      }
-      text.pointer = pointer;
-      TextRenderer.render(text, g3d, scalePixelsPerMicron,
-          imageFontScaling, isExact, boxXY, xy);
+    if (text.pymolOffset == null) {
+      text.setOffset(offset);
+      if (textAlign != JC.ALIGN_NONE)
+        text.setAlignment(textAlign);
     }
+    text.pointer = pointer;
+    TextRenderer.render(text, g3d, scalePixelsPerMicron, imageFontScaling,
+        isAbsolute, boxXY, xy);
     return (newText ? text : null);
   }
 }
