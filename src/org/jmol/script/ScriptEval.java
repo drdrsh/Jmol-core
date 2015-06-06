@@ -7194,16 +7194,16 @@ public class ScriptEval extends ScriptExpr {
         break;
       }
       if (str.equals("pointer")) {
-        int flags = JC.POINTER_NONE;
+        int flags = JC.LABEL_POINTER_NONE;
         switch (getToken(2).tok) {
         case T.off:
         case T.none:
           break;
         case T.background:
-          flags |= JC.POINTER_BACKGROUND;
+          flags |= JC.LABEL_POINTER_BACKGROUND;
           //$FALL-THROUGH$
         case T.on:
-          flags |= JC.POINTER_ON;
+          flags |= JC.LABEL_POINTER_ON;
           break;
         default:
           invArg();

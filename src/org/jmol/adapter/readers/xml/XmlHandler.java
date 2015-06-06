@@ -27,8 +27,6 @@ package org.jmol.adapter.readers.xml;
 
 import java.io.BufferedReader;
 
-import org.jmol.java.BS;
-import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;

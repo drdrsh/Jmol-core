@@ -1143,7 +1143,7 @@ import java.util.Properties;
    * The default bounding box is created 
    * when the LOAD .... FILL BOUNDBOX or FILL UNITCELL
    * is use. 
-   * @return
+   * @return default bounding box, possibly null
    */
   private BoxInfo getDefaultBoundBox() {
     T3[] bbox = (T3[]) getInfoM("boundbox");

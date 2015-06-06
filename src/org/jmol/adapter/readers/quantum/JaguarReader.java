@@ -340,7 +340,7 @@ public class JaguarReader extends MOReader {
           occ = 0;
         }
         //TODO: SOMO? 
-        // mo.put("occupancy", Float.valueOf(occ));
+        mo.put("occupancy", Float.valueOf(occ));
         nMo++;
         for (int i = 0, pt =0; i < moCount; i++) {
           //String type = dataBlock[i][2];

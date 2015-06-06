@@ -1761,8 +1761,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
   }
 
-  void plotPixelsUnclippedRasterBits(int count, int x, int y, int zAtLeft,
-                                 int zPastRight, Rgb16 rgb16Left,
+  void plotPixelsUnclippedRasterBits(int count, int x, int y, 
+                                 Rgb16 rgb16Left,
                                  Rgb16 rgb16Right, float a, float b) {
     // for isosurface Triangle3D.fillRaster
     

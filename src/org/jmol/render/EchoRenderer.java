@@ -51,22 +51,22 @@ public class EchoRenderer extends LabelsRenderer {
         if (!((Atom) t.pointerPt).checkVisible())
           continue;
       }
-      if (t.valign == JC.VALIGN_XYZ) {
+      if (t.valign == JC.ECHO_XYZ) {
         tm.transformPtScr(t.xyz, pt0i);
         t.setXYZs(pt0i.x, pt0i.y, pt0i.z, pt0i.z);
       } 
       if (t.movableZPercent != Integer.MAX_VALUE) {
         int z = vwr.tm.zValueFromPercent(t.movableZPercent % 1000);
-        if (t.valign == JC.VALIGN_XYZ && Math.abs(t.movableZPercent)>= 1000)
+        if (t.valign == JC.ECHO_XYZ && Math.abs(t.movableZPercent)>= 1000)
           z = pt0i.z - vwr.tm.zValueFromPercent(0) + z;
         t.setZs(z, z);
       }
       if (t.zSlab >= zCutoff)
         continue;
       if (t.pointerPt == null) {
-        t.pointer = JC.POINTER_NONE;
+        t.pointer = JC.LABEL_POINTER_NONE;
       } else {
-        t.pointer = JC.POINTER_ON;
+        t.pointer = JC.LABEL_POINTER_ON;
         tm.transformPtScr(t.pointerPt, pt0i);
         t.atomX = pt0i.x;
         t.atomY = pt0i.y;

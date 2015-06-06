@@ -23,20 +23,17 @@
  */
 package org.jmol.adapter.readers.xml;
 
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.adapter.smarter.AtomSetCollection;
-import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.Resolver;
-import org.jmol.api.Interface;
-
 import java.io.BufferedInputStream;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.java.BS;
 import javajs.util.Rdr;
 
-import org.jmol.util.BSUtil;
+import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.AtomSetCollection;
+import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.adapter.smarter.Resolver;
+import org.jmol.api.Interface;
 import org.jmol.util.Logger;
 
 /**

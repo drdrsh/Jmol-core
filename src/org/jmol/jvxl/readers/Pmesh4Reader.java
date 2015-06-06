@@ -78,7 +78,7 @@ class Pmesh4Reader extends PolygonFileReader {
   private String pmeshError;
   private String type;
   private int color;
-  private float transparency;
+  float transparency;
   private int nX;
   private int nY;
 

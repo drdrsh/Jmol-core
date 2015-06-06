@@ -392,7 +392,7 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
             xW--;
           }
           if (pixelCount > 0)
-            g3d.plotPixelsUnclippedRasterBits(pixelCount, xW, yMin, azW[i], azE[i], null, null, aa[i], bb[i]);
+            g3d.plotPixelsUnclippedRasterBits(pixelCount, xW, yMin, null, null, aa[i], bb[i]);
         }
       }
     } else {

@@ -263,16 +263,16 @@ public class Labels extends AtomShape {
 
     if ("align" == propertyName) {
       String type = (String) value;
-      int alignment = JC.ALIGN_LEFT;
+      int hAlignment = JC.TEXT_ALIGN_LEFT;
       if (type.equalsIgnoreCase("right"))
-        alignment = JC.ALIGN_RIGHT;
+        hAlignment = JC.TEXT_ALIGN_RIGHT;
       else if (type.equalsIgnoreCase("center"))
-        alignment = JC.ALIGN_CENTER;
+        hAlignment = JC.TEXT_ALIGN_CENTER;
       for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
           .nextSetBit(i + 1))
-        setAlignment(i, alignment);
+        setHorizAlignment(i, hAlignment);
       if (setDefaults || !defaultsOnlyForNone)
-        defaultAlignment = alignment;
+        defaultAlignment = hAlignment;
       return;
     }
 
@@ -292,9 +292,9 @@ public class Labels extends AtomShape {
       if (!setDefaults)
         for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
             .nextSetBit(i + 1))
-          setFront(i, TF);
+          setZPos(i, JC.LABEL_ZPOS_FRONT, TF);
       if (setDefaults || !defaultsOnlyForNone)
-        defaultZPos = (TF ? JC.LABEL_FRONT_FLAG : 0);
+        defaultZPos = (TF ? JC.LABEL_ZPOS_FRONT : 0);
       return;
     }
 
@@ -303,9 +303,9 @@ public class Labels extends AtomShape {
       if (!setDefaults)
         for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
             .nextSetBit(i + 1))
-          setGroup(i, TF);
+          setZPos(i, JC.LABEL_ZPOS_GROUP, TF);
       if (setDefaults || !defaultsOnlyForNone)
-        defaultZPos = (TF ? JC.LABEL_GROUP_FLAG : 0);
+        defaultZPos = (TF ? JC.LABEL_ZPOS_GROUP : 0);
       return;
     }
 
@@ -455,13 +455,13 @@ public class Labels extends AtomShape {
     }
     if (defaultOffset != JC.LABEL_DEFAULT_OFFSET)
       setOffsets(i, defaultOffset);
-    if (defaultAlignment != JC.ALIGN_LEFT)
-      setAlignment(i, defaultAlignment);
-    if ((defaultZPos & JC.LABEL_FRONT_FLAG) != 0)
-      setFront(i, true);
-    else if ((defaultZPos & JC.LABEL_GROUP_FLAG) != 0)
-      setGroup(i, true);
-    if (defaultPointer != JC.POINTER_NONE)
+    if (defaultAlignment != JC.TEXT_ALIGN_LEFT)
+      setHorizAlignment(i, defaultAlignment);
+    if ((defaultZPos & JC.LABEL_ZPOS_FRONT) != 0)
+      setZPos(i, JC.LABEL_ZPOS_FRONT, true);
+    else if ((defaultZPos & JC.LABEL_ZPOS_GROUP) != 0)
+      setZPos(i, JC.LABEL_ZPOS_GROUP, true);
+    if (defaultPointer != JC.LABEL_POINTER_NONE)
       setPointer(i, defaultPointer);
     if (defaultColix != 0 || defaultPaletteID != 0)
       setLabelColix(i, defaultColix, defaultPaletteID);
@@ -550,50 +550,37 @@ public class Labels extends AtomShape {
       text.setOffset(offset);
   }
 
-  private void setAlignment(int i, int alignment) {
+  private void setHorizAlignment(int i, int hAlign) {
     if (offsets == null || i >= offsets.length) {
-      if (alignment == JC.ALIGN_LEFT)
+      if (hAlign == JC.TEXT_ALIGN_LEFT)
         return;
       offsets = AU.ensureLengthI(offsets, i + 1);
     }
-    offsets[i] = (offsets[i] & ~JC.LABEL_ALIGN_FLAGS) | (alignment << 2);
+    offsets[i] = JC.setHorizAlignment(offsets[i], hAlign);
     text = getLabel(i);
     if (text != null)
-      text.setAlignment(alignment);
+      text.setAlignment(hAlign);
   }
 
-  public static int getAlignment(int offset) {
-    return (offset & JC.LABEL_ALIGN_FLAGS) >> 2;
-  }
-  
   private void setPointer(int i, int pointer) {
     if (offsets == null || i >= offsets.length) {
-      if (pointer == JC.POINTER_NONE)
+      if (pointer == JC.LABEL_POINTER_NONE)
         return;
       offsets = AU.ensureLengthI(offsets, i + 1);
     }
-    offsets[i] = (offsets[i] & ~JC.LABEL_POINTER_FLAGS) + pointer;
+    offsets[i] = JC.setPointer(offsets[i], pointer);
     text = getLabel(i);
     if (text != null)
       text.pointer = pointer;
   }
 
-  private void setFront(int i, boolean TF) {
+  private void setZPos(int i, int flag, boolean TF) {
     if (offsets == null || i >= offsets.length) {
       if (!TF)
         return;
       offsets = AU.ensureLengthI(offsets, i + 1);
     }
-    offsets[i] = (offsets[i] & ~JC.LABEL_ZPOS_FLAGS) + (TF ? JC.LABEL_FRONT_FLAG : 0);
-  }
-
-  private void setGroup(int i, boolean TF) {
-    if (offsets == null || i >= offsets.length) {
-      if (!TF)
-        return;
-      offsets = AU.ensureLengthI(offsets, i + 1);
-    }
-    offsets[i] = (offsets[i] & ~JC.LABEL_ZPOS_FLAGS) + (TF ? JC.LABEL_GROUP_FLAG : 0);
+    offsets[i] = JC.setZPosition(offsets[i], TF ? flag : 0);
   }
 
   private void setFont(int i, byte fid) {

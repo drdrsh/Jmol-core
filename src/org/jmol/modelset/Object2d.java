@@ -61,7 +61,7 @@ public abstract class Object2d {
     if (xyz == null)
       this.zSlab = Integer.MIN_VALUE;
     if (doAdjust) {
-      valign = (xyz == null ? JC.VALIGN_XY : JC.VALIGN_XYZ);
+      valign = (xyz == null ? JC.ECHO_XY : JC.ECHO_XYZ);
      adjustForWindow = (xyz == null);
     }
   }
@@ -76,13 +76,13 @@ public abstract class Object2d {
   }
 
   private void setMovableX(int x) {
-    valign = (valign == JC.VALIGN_XYZ ? JC.VALIGN_XYZ : JC.VALIGN_XY);
+    valign = (valign == JC.ECHO_XYZ ? JC.ECHO_XYZ : JC.ECHO_XY);
     movableX = x;
     movableXPercent = Integer.MAX_VALUE;
   }
 
   private void setMovableY(int y) {
-    valign = (valign == JC.VALIGN_XYZ ? JC.VALIGN_XYZ : JC.VALIGN_XY);
+    valign = (valign == JC.ECHO_XYZ ? JC.ECHO_XYZ : JC.ECHO_XY);
     movableY = y;
     movableYPercent = Integer.MAX_VALUE;
   }
@@ -95,20 +95,20 @@ public abstract class Object2d {
   //  }
 
   public void setMovableXPercent(int x) {
-    valign = (valign == JC.VALIGN_XYZ ? JC.VALIGN_XYZ : JC.VALIGN_XY);
+    valign = (valign == JC.ECHO_XYZ ? JC.ECHO_XYZ : JC.ECHO_XY);
     movableX = Integer.MAX_VALUE;
     movableXPercent = x;
   }
 
   public void setMovableYPercent(int y) {
-    valign = (valign == JC.VALIGN_XYZ ? JC.VALIGN_XYZ : JC.VALIGN_XY);
+    valign = (valign == JC.ECHO_XYZ ? JC.ECHO_XYZ : JC.ECHO_XY);
     movableY = Integer.MAX_VALUE;
     movableYPercent = y;
   }
 
   public void setMovableZPercent(int z) {
-    if (valign != JC.VALIGN_XYZ)
-      valign = JC.VALIGN_XY;
+    if (valign != JC.ECHO_XYZ)
+      valign = JC.ECHO_XY;
     movableZ = Integer.MAX_VALUE;
     movableZPercent = z;
   }
@@ -130,11 +130,11 @@ public abstract class Object2d {
 
   public boolean setAlignmentLCR(String align) {
     if ("left".equals(align))
-      return setAlignment(JC.ALIGN_LEFT);
+      return setAlignment(JC.TEXT_ALIGN_LEFT);
     if ("center".equals(align))
-      return setAlignment(JC.ALIGN_CENTER);
+      return setAlignment(JC.TEXT_ALIGN_CENTER);
     if ("right".equals(align))
-      return setAlignment(JC.ALIGN_RIGHT);
+      return setAlignment(JC.TEXT_ALIGN_RIGHT);
     return false;
   }
 

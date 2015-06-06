@@ -28,15 +28,14 @@ package org.jmol.export;
 
 import java.util.Map;
 
-import org.jmol.modelset.Atom;
-import org.jmol.util.GData;
-import org.jmol.viewer.Viewer;
-
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
-import javajs.util.P3i;
 import javajs.util.T3;
+
+import org.jmol.modelset.Atom;
+import org.jmol.util.GData;
+import org.jmol.viewer.Viewer;
 
 /*
  * for PovRay and related ray tracers that use screen coordinates

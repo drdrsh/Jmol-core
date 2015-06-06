@@ -59,7 +59,7 @@ public class MeshCapper {
   /**
    * for debugging
    */
-  private boolean dumping, testing;
+  private boolean dumping;
 
   /**
    * initialization only

@@ -29,7 +29,6 @@ package org.jmol.g3d;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
-import javajs.util.P3i;
 
 import org.jmol.util.Shader;
 

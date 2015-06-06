@@ -26,6 +26,9 @@
 package org.jmol.renderspecial;
 
 
+import javajs.util.P3;
+import javajs.util.V3;
+
 import org.jmol.java.BS;
 import org.jmol.render.ShapeRenderer;
 import org.jmol.script.T;
@@ -33,9 +36,6 @@ import org.jmol.shapespecial.Dipole;
 import org.jmol.shapespecial.Dipoles;
 import org.jmol.util.C;
 import org.jmol.util.GData;
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.V3;
 
 public class DipolesRenderer extends ShapeRenderer {
 

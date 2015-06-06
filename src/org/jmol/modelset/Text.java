@@ -64,7 +64,7 @@ public class Text extends Object2d {
     offsetX = JC.getXOffset(offset);
     offsetY = JC.getYOffset(offset);
     pymolOffset = null;
-    valign = JC.VALIGN_XY;
+    valign = JC.ECHO_XY;
   }
 
   private int[] widths;
@@ -98,7 +98,7 @@ public class Text extends Object2d {
     t.set(font, colix, align, false, scalePixelsPerMicron, null);
     t.target = target;
     if (target.equals("error"))
-      valign = JC.VALIGN_TOP;
+      valign = JC.ECHO_TOP;
     t.valign = valign;
     t.z = 2;
     t.zSlab = Integer.MIN_VALUE;
@@ -306,7 +306,7 @@ public class Text extends Object2d {
   private void setPos(float scale) {
     float xLeft, xCenter, xRight;
     boolean is3dEcho = (xyz != null);
-    if (valign == JC.VALIGN_XY || valign == JC.VALIGN_XYZ) {
+    if (valign == JC.ECHO_XY || valign == JC.ECHO_XYZ) {
       float x = (movableXPercent != Integer.MAX_VALUE ? movableXPercent
           * windowWidth / 100 : is3dEcho ? movableX : movableX * scale);
       float offsetX = this.offsetX * scale;
@@ -321,10 +321,10 @@ public class Text extends Object2d {
 
     boxXY[0] = xLeft;
     switch (align) {
-    case JC.ALIGN_CENTER:
+    case JC.TEXT_ALIGN_CENTER:
       boxXY[0] = xCenter - boxWidth / 2;
       break;
-    case JC.ALIGN_RIGHT:
+    case JC.TEXT_ALIGN_RIGHT:
       boxXY[0] = xRight - boxWidth;
     }
 
@@ -332,12 +332,12 @@ public class Text extends Object2d {
 
     boxXY[1] = 0;
     switch (valign) {
-    case JC.VALIGN_TOP:
+    case JC.ECHO_TOP:
       break;
-    case JC.VALIGN_MIDDLE:
+    case JC.ECHO_MIDDLE:
       boxXY[1] = windowHeight / 2;
       break;
-    case JC.VALIGN_BOTTOM:
+    case JC.ECHO_BOTTOM:
       boxXY[1] = windowHeight;
       break;
     default:
@@ -346,7 +346,7 @@ public class Text extends Object2d {
       boxXY[1] = (is3dEcho ? y : (windowHeight - y)) + offsetY * scale;
     }
 
-    if (align == JC.ALIGN_CENTER)
+    if (align == JC.TEXT_ALIGN_CENTER)
       boxXY[1] -= (image != null ? boxHeight : xyz != null ? boxHeight 
           : ascent - boxHeight) / 2;
     else if (image != null)
@@ -432,10 +432,10 @@ public class Text extends Object2d {
     if (i == 0) {
       xy[2] = boxX;
       switch (align) {
-      case JC.ALIGN_CENTER:
+      case JC.TEXT_ALIGN_CENTER:
         xy[2] += boxWidth / 2;
         break;
-      case JC.ALIGN_RIGHT:
+      case JC.TEXT_ALIGN_RIGHT:
         xy[2] += boxWidth - xAdj;
         break;
       default:
@@ -445,10 +445,10 @@ public class Text extends Object2d {
       xy[1] = y0;
     }
     switch (align) {
-    case JC.ALIGN_CENTER:
+    case JC.TEXT_ALIGN_CENTER:
       xy[0] = xy[2] - widths[i] / 2;
       break;
-    case JC.ALIGN_RIGHT:
+    case JC.TEXT_ALIGN_RIGHT:
       xy[0] = xy[2] - widths[i];
     }
     xy[1] += lineHeight;

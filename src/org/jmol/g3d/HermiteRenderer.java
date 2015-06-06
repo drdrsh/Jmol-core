@@ -31,7 +31,6 @@ import javajs.util.Lst;
 
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.util.GData;
-import org.jmol.util.Point3fi;
 
 import javajs.util.P3;
 import javajs.util.P3i;

@@ -707,14 +707,14 @@ public class StateCreator extends JmolStateCreator {
     app(s, "background label " + Shape.encodeColor(l.defaultBgcolix));
     app(s, "set labelOffset " + JC.getXOffset(l.defaultOffset)
         + " " + (JC.getYOffset(l.defaultOffset)));
-    String align = JC.getAlignmentName(l.defaultAlignment);
+    String align = JC.getHorizAlignmentName(l.defaultAlignment);
     app(s, "set labelAlignment " + (align.length() < 5 ? "left" : align));
-    String pointer = JC.getPointer(l.defaultPointer);
+    String pointer = JC.getPointerName(l.defaultPointer);
     app(s, "set labelPointer "
         + (pointer.length() == 0 ? "off" : pointer));
-    if ((l.defaultZPos & JC.LABEL_FRONT_FLAG) != 0)
+    if ((l.defaultZPos & JC.LABEL_ZPOS_FRONT) != 0)
       app(s, "set labelFront");
-    else if ((l.defaultZPos & JC.LABEL_GROUP_FLAG) != 0)
+    else if ((l.defaultZPos & JC.LABEL_ZPOS_GROUP) != 0)
       app(s, "set labelGroup");
     app(s, Shape.getFontCommand("label", Font
         .getFont3D(l.defaultFontId)));
@@ -1219,13 +1219,13 @@ public class StateCreator extends JmolStateCreator {
                       + JC.getXOffset(offsetFull)
                       + " "
                       + JC.getYOffset(offsetFull));
-          String align = JC.getAlignmentName(offsetFull >> 2);
-          String pointer = JC.getPointer(offsetFull);
+          String align = JC.getHorizAlignmentName(offsetFull >> 2);
+          String pointer = JC.getPointerName(offsetFull);
           if (pointer.length() > 0)
             BSUtil.setMapBitSet(temp2, i, i, "set labelPointer " + pointer);
-          if ((offsetFull & JC.LABEL_FRONT_FLAG) != 0)
+          if ((offsetFull & JC.LABEL_ZPOS_FRONT) != 0)
             BSUtil.setMapBitSet(temp2, i, i, "set labelFront");
-          else if ((offsetFull & JC.LABEL_GROUP_FLAG) != 0)
+          else if ((offsetFull & JC.LABEL_ZPOS_GROUP) != 0)
             BSUtil.setMapBitSet(temp2, i, i, "set labelGroup");
           // labelAlignment must come last, so we put it in a separate hash
           // table
@@ -1291,7 +1291,7 @@ public class StateCreator extends JmolStateCreator {
     String strOff = null;
     String echoCmd = "set echo ID " + PT.esc(t.target);
     switch (t.valign) {
-    case JC.VALIGN_XY:
+    case JC.ECHO_XY:
       if (t.movableXPercent == Integer.MAX_VALUE
           || t.movableYPercent == Integer.MAX_VALUE) {
         strOff = (t.movableXPercent == Integer.MAX_VALUE ? t.movableX + " "
@@ -1302,17 +1302,17 @@ public class StateCreator extends JmolStateCreator {
         strOff = "[" + t.movableXPercent + " " + t.movableYPercent + "%]";
       }
       //$FALL-THROUGH$
-    case JC.VALIGN_XYZ:
+    case JC.ECHO_XYZ:
       if (strOff == null)
         strOff = Escape.eP(t.xyz);
       s.append("  ").append(echoCmd).append(" ").append(strOff);
-      if (t.align != JC.ALIGN_LEFT)
+      if (t.align != JC.TEXT_ALIGN_LEFT)
         s.append(";  ").append(echoCmd).append(" ").append(
-            JC.hAlignNames[t.align]);
+            JC.getHorizAlignmentName(t.align));
       break;
     default:
-      s.append("  set echo ").append(JC.vAlignNames[t.valign]).append(" ")
-          .append(JC.hAlignNames[t.align]);
+      s.append("  set echo ").append(JC.getEchoName(t.valign)).append(" ")
+          .append(JC.getHorizAlignmentName(t.align));
     }
     if (t.movableZPercent != Integer.MAX_VALUE)
       s.append(";  ").append(echoCmd).append(" depth ").appendI(

@@ -26,24 +26,20 @@
 package org.jmol.export;
 
 import java.util.Hashtable;
-
 import java.util.Map;
 
+import javajs.awt.Font;
+import javajs.util.A4;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.P3;
+import javajs.util.T3;
 
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.C;
 import org.jmol.util.GData;
-
-import javajs.awt.Font;
-import javajs.util.Lst;
-
-import javajs.util.A4;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.T3;
 
 /*
  * for programs that use the standard 3D coordinates.

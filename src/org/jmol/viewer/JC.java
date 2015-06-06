@@ -834,49 +834,92 @@ public final class JC {
     }
   }
 
+  ///////////////// LABEL and ECHO ///////////////////////
+  
+
+  // note that the y offset is positive upward
+  
+  //  3         2         1        
+  // 10987654321098765432109876543210
+  //  -x-offset--y-offset-___cafgaabp
+  //                      |||||||| ||_pointer on
+  //                      |||||||| |_background pointer color
+  //                      ||||||||_text alignment 0xC 
+  //                      |||||||_labels group 0x10
+  //                      ||||||_labels front  0x20
+  //                      |||||_absolute
+  //                      ||||_centered
+  //                      |||_reserved
+  //                      ||_reserved
+  //                      |_reserved
+
   public final static int LABEL_MINIMUM_FONTSIZE = 6;
   public final static int LABEL_MAXIMUM_FONTSIZE = 63;
   public final static int LABEL_DEFAULT_FONTSIZE = 13;
   public final static int LABEL_DEFAULT_X_OFFSET = 4;
   public final static int LABEL_DEFAULT_Y_OFFSET = 4;
-  public final static int LABEL_OFFSET_MAX       = 0x1F4; // 500 
-  private final static int LABEL_OFFSET_MASK     = 0x3FF; 
-  
-  
-  public final static int LABEL_FRONT_FLAG        = 0x020;
-  public final static int LABEL_GROUP_FLAG        = 0x010;
-  public final static int LABEL_POINTER_FLAGS     = 0x003;
-  public final static int LABEL_ALIGN_FLAGS       = 0x00C;
-  public final static int LABEL_ZPOS_FLAGS        = 0x030;
-  public final static int LABEL_SCALE_FLAG        = 0x040;
-  public final static int LABEL_FLAGS             = 0x07F;
-  
-  private final static int LABEL_EXPLICIT_OFFSET_FLAG = 0x080;
-  private final static int LABEL_CENTERED_FLAG     = 0x100;
-  private final static int LABEL_FLAGY_OFFSET = 9;
-  private final static int LABEL_FLAGX_OFFSET = 19;
-  
-  public static int LABEL_DEFAULT_OFFSET = 
-     (LABEL_DEFAULT_X_OFFSET << LABEL_FLAGX_OFFSET)
-   | (LABEL_DEFAULT_Y_OFFSET << LABEL_FLAGY_OFFSET);
+  public final static int LABEL_OFFSET_MAX       = 500; // 0x1F4; 
 
+  private final static int LABEL_OFFSET_MASK          = 0x3FF; // 10 bits for each offset (-500 to 500)
+  private final static int LABEL_FLAGY_OFFSET_SHIFT   = 11;    // 11-20 is Y offset
+  private final static int LABEL_FLAGX_OFFSET_SHIFT   = 21;    // 21-30 is X offset
   
-  // note that the y offset is positive upward
+  public final static int LABEL_FLAGS                 = 0x07F;
+  private final static int LABEL_POINTER_FLAGS        = 0x003;
+  public final static int LABEL_POINTER_NONE          = 0x000;
+  public final static int LABEL_POINTER_ON            = 0x001;  // add label pointer
+  public final static int LABEL_POINTER_BACKGROUND    = 0x002;  // add label pointer to background
+
+  private final static int TEXT_ALIGN_SHIFT           = 0x002;
+  private final static int TEXT_ALIGN_FLAGS           = 0x00C;
+  public final static int TEXT_ALIGN_NONE             = 0x000;
+  public final static int TEXT_ALIGN_LEFT             = 0x004;
+  public final static int TEXT_ALIGN_CENTER           = 0x008;
+  public final static int TEXT_ALIGN_RIGHT            = 0x00C;
   
-  //  3         2         1        
-  // 10987654321098765432109876543210
-  //    -x-offset--y-offset-ntsfgaabp
-  //                        |||||| ||_pointer on
-  //                        |||||| |_background pointer color
-  //                        ||||||_text alignment 0xC 
-  //                        |||||_labels group 0x10
-  //                        ||||_labels front  0x20
-  //                        |||_scaled
-  //                        ||_explicit offset
-  //                        |_no_offset
+  private final static int LABEL_ZPOS_FLAGS           = 0x030;
+  public final static int LABEL_ZPOS_GROUP            = 0x010;
+  public final static int LABEL_ZPOS_FRONT            = 0x020;
+  
+  private final static int LABEL_EXPLICIT             = 0x040;
+  
+  private final static int LABEL_CENTERED             = 0x100;
+
+  public static int LABEL_DEFAULT_OFFSET = 
+      (LABEL_DEFAULT_X_OFFSET << LABEL_FLAGX_OFFSET_SHIFT)
+    | (LABEL_DEFAULT_Y_OFFSET << LABEL_FLAGY_OFFSET_SHIFT);
+
+  public final static int ECHO_TOP      = 0;
+  public final static int ECHO_BOTTOM   = 1;
+  public final static int ECHO_MIDDLE   = 2;
+  public final static int ECHO_XY       = 3;
+  public final static int ECHO_XYZ      = 4;
+
+  private final static String[] echoNames = { "top", "bottom", "middle", "xy", "xyz" };
+
+  public static String getEchoName(int type) {
+    return echoNames[type];
+  }
+
+  public static int setZPosition(int offset, int pos) {
+    return (offset & ~LABEL_ZPOS_FLAGS) | pos;
+  }
+
+  public static int setPointer(int offset, int pointer) {
+    return (offset & ~LABEL_POINTER_FLAGS) | pointer;  
+  }
+
+  public static int getPointer(int offset) {
+    return offset & LABEL_POINTER_FLAGS;
+  }
+
+  public static String getPointerName(int pointer) {
+    return ((pointer & LABEL_POINTER_ON) == 0 ? ""
+        : (pointer & LABEL_POINTER_BACKGROUND) > 0 ? "background" : "on");
+  }   
 
   public static boolean isOffsetExplicit(int offset) {
-    return ((offset & JC.LABEL_EXPLICIT_OFFSET_FLAG) != 0);
+    return ((offset & LABEL_EXPLICIT) != 0);
   }
 
   /**
@@ -893,13 +936,13 @@ public final class JC {
   public static int getOffset(int xOffset, int yOffset, boolean isAbsolute) {
     xOffset = Math.min(Math.max(xOffset, -LABEL_OFFSET_MAX), LABEL_OFFSET_MAX);
     yOffset = (Math.min(Math.max(yOffset, -LABEL_OFFSET_MAX), LABEL_OFFSET_MAX));
-    int offset = ((xOffset & LABEL_OFFSET_MASK) << LABEL_FLAGX_OFFSET)
-         | ((yOffset & LABEL_OFFSET_MASK) << LABEL_FLAGY_OFFSET)
-         | (isAbsolute ? LABEL_EXPLICIT_OFFSET_FLAG : 0);
-    if (offset == JC.LABEL_DEFAULT_OFFSET)
+    int offset = ((xOffset & LABEL_OFFSET_MASK) << LABEL_FLAGX_OFFSET_SHIFT)
+         | ((yOffset & LABEL_OFFSET_MASK) << LABEL_FLAGY_OFFSET_SHIFT)
+         | (isAbsolute ? LABEL_EXPLICIT : 0);
+    if (offset == LABEL_DEFAULT_OFFSET)
       offset = 0;
     else if (!isAbsolute && (xOffset == 0 || yOffset == 0))
-      offset |= JC.LABEL_CENTERED_FLAG;
+      offset |= LABEL_CENTERED;
     return offset;
   }
 
@@ -912,11 +955,8 @@ public final class JC {
    * @return screen offset from left
    */
   public static int getXOffset(int offset) {
-    if (offset == 0)
-      return LABEL_DEFAULT_X_OFFSET;
-    int x = (offset >> LABEL_FLAGX_OFFSET) & LABEL_OFFSET_MASK;
-    if (x > LABEL_OFFSET_MAX)
-      x -= LABEL_OFFSET_MASK + 1;
+    int x = (offset >> LABEL_FLAGX_OFFSET_SHIFT) & LABEL_OFFSET_MASK;
+    x = (x > LABEL_OFFSET_MAX ? x - LABEL_OFFSET_MASK - 1 : x);
     return x;
   }
 
@@ -927,41 +967,24 @@ public final class JC {
    * @return screen offset from bottom
    */
   public static int getYOffset(int offset) {
-    if (offset == 0)
-      return LABEL_DEFAULT_Y_OFFSET;
-    int y = (offset >> LABEL_FLAGY_OFFSET) & LABEL_OFFSET_MASK;
-    if (y > LABEL_OFFSET_MAX)
-      y -= LABEL_OFFSET_MASK + 1;
-    return y;
+    int y = (offset >> LABEL_FLAGY_OFFSET_SHIFT) & LABEL_OFFSET_MASK;
+    return (y > LABEL_OFFSET_MAX ? y - LABEL_OFFSET_MASK - 1 : y);
   }
   
-  public static String getAlignmentName(int align) {
-    return JC.hAlignNames[align & 3];
+  public static int getAlignment(int offset) {
+    return (offset & TEXT_ALIGN_FLAGS);
   }
 
-  public final static String[] hAlignNames = { "", "left", "center", "right",
-  "" };
-  public final static String[] vAlignNames = { "xy", "top", "bottom", "middle" };
-
-  public static String getPointer(int pointer) {
-    return ((pointer & JC.POINTER_ON) == 0 ? ""
-        : (pointer & JC.POINTER_BACKGROUND) > 0 ? "background" : "on");
+  public static int setHorizAlignment(int offset, int hAlign) {
+    return (offset & ~TEXT_ALIGN_FLAGS) | hAlign;
   }
 
-  public final static int POINTER_NONE = 0;
-  public final static int POINTER_ON = 1;
-  public final static int POINTER_BACKGROUND = 2;
-  final public static int VALIGN_XY = 0;
-  final public static int VALIGN_TOP = 1;
-  final public static int VALIGN_BOTTOM = 2;
-  final public static int VALIGN_MIDDLE = 3;
-  final public static int VALIGN_XYZ = 4;
-  public final static int ALIGN_NONE = 0;
-  public final static int ALIGN_LEFT = 1;
-  public final static int ALIGN_CENTER = 2;
-  public final static int ALIGN_RIGHT = 3;
+  private final static String[] hAlignNames = { "", "left", "center", "right" };
+
+  public static String getHorizAlignmentName(int align) {
+    return hAlignNames[(align >> TEXT_ALIGN_SHIFT) & 3];
+  }
   
-
   public static final int JSV_NOT = -1;
   public static final int JSV_SEND_JDXMOL = 0;
   public static final int JSV_SETPEAKS = 7;

@@ -34,7 +34,6 @@ import org.jmol.util.Normix;
 import javajs.util.M3;
 import javajs.util.M4;
 import javajs.util.P3;
-import javajs.util.P3i;
 
 import javajs.util.PT;
 import javajs.util.V3;

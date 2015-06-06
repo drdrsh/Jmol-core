@@ -25,7 +25,6 @@
 package org.jmol.util;
 
 import javajs.util.P3;
-import javajs.util.P3i;
 
 
 /**

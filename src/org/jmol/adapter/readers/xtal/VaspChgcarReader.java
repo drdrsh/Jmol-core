@@ -27,10 +27,6 @@
 
 package org.jmol.adapter.readers.xtal;
 
-import javajs.util.PT;
-
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-
 /**
  * http://cms.mpi.univie.ac.at/vasp/vasp/CHGCAR_file.html
  * 

@@ -25,8 +25,6 @@
 
 package org.jmol.i18n;
 
-import javajs.util.PT;
-
 public class Language {
 
   /**

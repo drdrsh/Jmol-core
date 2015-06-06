@@ -72,7 +72,7 @@ public class Echo extends TextShape {
         return;
       Text t = (Text) currentObject;
       t.pointerPt = (value == null ? null : (P3) value); // could be an atom.
-      t.pointer = (value == null ? JC.POINTER_NONE : JC.POINTER_ON);
+      t.pointer = (value == null ? JC.LABEL_POINTER_NONE : JC.LABEL_POINTER_ON);
       return;
     }
     if ("xyz" == propertyName) {
@@ -137,16 +137,16 @@ public class Echo extends TextShape {
         isAll = false;
         Text text = objects.get(target);
         if (text == null) {
-          int valign = JC.VALIGN_XY;
-          int halign = JC.ALIGN_LEFT;
+          int valign = JC.ECHO_XY;
+          int halign = JC.TEXT_ALIGN_LEFT;
           if ("top" == target) {
-            valign = JC.VALIGN_TOP;
-            halign = JC.ALIGN_CENTER;
+            valign = JC.ECHO_TOP;
+            halign = JC.TEXT_ALIGN_CENTER;
           } else if ("middle" == target) {
-            valign = JC.VALIGN_MIDDLE;
-            halign = JC.ALIGN_CENTER;
+            valign = JC.ECHO_MIDDLE;
+            halign = JC.TEXT_ALIGN_CENTER;
           } else if ("bottom" == target) {
-            valign = JC.VALIGN_BOTTOM;
+            valign = JC.ECHO_BOTTOM;
           }
           text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE,
               FONTSIZE), target, COLOR, valign, halign, 0);

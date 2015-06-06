@@ -73,8 +73,8 @@ class TextRenderer {
   static void drawPointer(Text text, JmolRendererInterface g3d) {
     // now draw the pointer, if requested
 
-    if ((text.pointer & JC.POINTER_ON) == 0
-        || !g3d.setC((text.pointer & JC.POINTER_BACKGROUND) != 0
+    if ((text.pointer & JC.LABEL_POINTER_ON) == 0
+        || !g3d.setC((text.pointer & JC.LABEL_POINTER_BACKGROUND) != 0
             && text.bgcolix != 0 ? text.bgcolix : text.colix))
       return;
     float w = text.boxWidth;
