@@ -574,9 +574,13 @@ abstract class ScriptExpr extends ScriptParam {
             } else if (localVars == null
                 || (v = PT.getMapValueNoCase(localVars, name)) == null
                 && allContext) {
-              v = getContextVariableAsVariable(name);
+              if (name.equals("_"))
+                v = (vwr.am.cmi >= 0 ? vwr.ms.getInfo(vwr.am.cmi, "auxiliaryinfo") : null);
+              if (v == null)
+                v = getContextVariableAsVariable(name);
             }
           if (v == null) {
+            
             if (T.tokAttr(theTok, T.identifier) && vwr.isFunction(name)) {
               if (!rpn.addOp(SV.newV(T.function, theToken.value)))
                 invArg();

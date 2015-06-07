@@ -38,6 +38,7 @@ import javajs.awt.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
+import javajs.util.PT;
 
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
@@ -660,12 +661,13 @@ public class Labels extends AtomShape {
     float dmin = Float.MAX_VALUE;
     int imin = -1;
     float zmin = Float.MAX_VALUE;
+    float afactor = (vwr.antialiased ? 2 : 1);
     for (Map.Entry<Integer, float[]> entry : labelBoxes.entrySet()) {
       if (!atoms[entry.getKey().intValue()].isVisible(vf | Atom.ATOM_INFRAME_NOTHIDDEN))
         continue;
       float[] boxXY = entry.getValue();
-      float dx = x - boxXY[0];
-      float dy = y - boxXY[1];
+      float dx = (x - boxXY[0])*afactor;
+      float dy = (y - boxXY[1])*afactor;
       if (dx <= 0 || dy <= 0 || dx >= boxXY[2] || dy >= boxXY[3] || boxXY[4] > zmin)
         continue;
       zmin = boxXY[4];
