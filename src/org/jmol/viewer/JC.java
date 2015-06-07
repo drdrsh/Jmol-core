@@ -955,6 +955,8 @@ public final class JC {
    * @return screen offset from left
    */
   public static int getXOffset(int offset) {
+    if (offset == 0)
+      return LABEL_DEFAULT_X_OFFSET;
     int x = (offset >> LABEL_FLAGX_OFFSET_SHIFT) & LABEL_OFFSET_MASK;
     x = (x > LABEL_OFFSET_MAX ? x - LABEL_OFFSET_MASK - 1 : x);
     return x;
@@ -967,6 +969,8 @@ public final class JC {
    * @return screen offset from bottom
    */
   public static int getYOffset(int offset) {
+    if (offset == 0)
+      return LABEL_DEFAULT_Y_OFFSET;
     int y = (offset >> LABEL_FLAGY_OFFSET_SHIFT) & LABEL_OFFSET_MASK;
     return (y > LABEL_OFFSET_MAX ? y - LABEL_OFFSET_MASK - 1 : y);
   }

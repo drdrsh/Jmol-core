@@ -639,9 +639,6 @@ public class Labels extends AtomShape {
         pickedY = y;
         pickedOffset = (offsets == null || pickedAtom >= offsets.length ? 
             JC.LABEL_DEFAULT_OFFSET : offsets[pickedAtom]);
-
-        System.out.println("LABEL OFFSET=" + pickedOffset);
-
         return true;
       }
       return false;
