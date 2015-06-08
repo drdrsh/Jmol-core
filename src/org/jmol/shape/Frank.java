@@ -30,7 +30,7 @@ import org.jmol.i18n.GT;
 import org.jmol.java.BS;
 
 
-public class Frank extends FontShape {
+public class Frank extends Shape {
 
   // Axes, Bbcage, Frank, Uccage
 
@@ -47,7 +47,9 @@ public class Frank extends FontShape {
   public int frankDescent;
   int x, y, dx, dy;
   private float scaling;
-  
+  public Font font3d;
+
+
 
   @Override
   public void initShape() {
