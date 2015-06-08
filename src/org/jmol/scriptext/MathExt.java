@@ -158,7 +158,7 @@ public class MathExt {
           op.tok == T.propselector);
     case T._:
     case T.getproperty:
-      return evaluateGetProperty(mp, args, op.tok == T.propselector);
+      return evaluateGetProperty(mp, args, tok == T._, op.tok == T.propselector);
     case T.helix:
       return evaluateHelix(mp, args);
     case T.hkl:
@@ -967,20 +967,23 @@ public class MathExt {
     // {*}.find("chemical",type)
 
     SV x1 = mp.getX();
+    boolean isList = (x1.tok == T.varray);
     String sFind = SV.sValue(args[0]);
     String flags = (args.length > 1 && args[1].tok != T.on
         && args[1].tok != T.off ? SV.sValue(args[1]) : "");
-    boolean isSequence = sFind.equalsIgnoreCase("SEQUENCE");
-    boolean isSmiles = sFind.equalsIgnoreCase("SMILES");
-    boolean isSearch = sFind.equalsIgnoreCase("SMARTS");
-    boolean isChemical = sFind.equalsIgnoreCase("CHEMICAL");
-    boolean isMF = sFind.equalsIgnoreCase("MF");
-    boolean isCF = sFind.equalsIgnoreCase("CELLFORMULA");
-    boolean isON = (args[args.length - 1].tok == T.on);
+    boolean isSequence = !isList && sFind.equalsIgnoreCase("SEQUENCE");
+    boolean isSmiles = !isList && sFind.equalsIgnoreCase("SMILES");
+    boolean isSearch = !isList && sFind.equalsIgnoreCase("SMARTS");
+    boolean isChemical = !isList && sFind.equalsIgnoreCase("CHEMICAL");
+    boolean isMF = !isList && sFind.equalsIgnoreCase("MF");
+    boolean isCF = !isList && sFind.equalsIgnoreCase("CELLFORMULA");
+    boolean isON = !isList && (args[args.length - 1].tok == T.on);
     try {
       if (isChemical) {
-        String data = (x1.tok == T.bitset ? vwr.getSmiles(SV.getBitSet(x1, false)) : SV.sValue(x1));
-        data = data.length() == 0 ? "" : vwr.getChemicalInfo(data, args.length > 1 ? T.getTokenFromName(flags.toLowerCase()) : null);
+        String data = (x1.tok == T.bitset ? vwr.getSmiles(SV.getBitSet(x1,
+            false)) : SV.sValue(x1));
+        data = data.length() == 0 ? "" : vwr.getChemicalInfo(data,
+            args.length > 1 ? T.getTokenFromName(flags.toLowerCase()) : null);
         if (data.endsWith("\n"))
           data = data.substring(0, data.length() - 1);
         if (data.startsWith("InChI"))
@@ -1001,18 +1004,20 @@ public class MathExt {
           if (bs2 != null)
             return false;
           if (flags.equalsIgnoreCase("mf")) {
-            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles,
-                isSearch);
+            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSearch);
           } else {
-            ret = e.getSmilesExt().getSmilesMatches(flags, smiles, null, null, isSearch, !isAll);
+            ret = e.getSmilesExt().getSmilesMatches(flags, smiles, null, null,
+                isSearch, !isAll);
           }
           break;
         case T.bitset:
           if (isMF && flags.length() != 0)
-            return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at, (BS) x1.value, flags));
+            return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at,
+                (BS) x1.value, flags));
           if (isMF || isCF)
-            return mp.addXStr(JmolMolecule.getMolecularFormula(
-                vwr.ms.at, (BS) x1.value, false, (isMF ? null : vwr.ms.getCellWeights((BS) x1.value)), isON));
+            return mp.addXStr(JmolMolecule.getMolecularFormula(vwr.ms.at,
+                (BS) x1.value, false,
+                (isMF ? null : vwr.ms.getCellWeights((BS) x1.value)), isON));
           if (isSequence)
             return mp.addXStr(vwr.getSmilesOpt((BS) x1.value, -1, -1, false,
                 true, isAll, isAll, false));
@@ -1022,12 +1027,11 @@ public class MathExt {
           if (asBonds) {
             // this will return a single match
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
-                vwr.ms.at, vwr.ms.ac, (BS) x1.value,
-                !isSmiles, true);
+                vwr.ms.at, vwr.ms.ac, (BS) x1.value, !isSmiles, true);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
-            ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value, bsMatch3D,
-                !isSmiles, !isAll);
+            ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value,
+                bsMatch3D, !isSmiles, !isAll);
           }
           break;
         }
@@ -1041,7 +1045,6 @@ public class MathExt {
     boolean isReverse = (flags.indexOf("v") >= 0);
     boolean isCaseInsensitive = (flags.indexOf("i") >= 0);
     boolean asMatch = (flags.indexOf("m") >= 0);
-    boolean isList = (x1.tok == T.varray);
     boolean isPattern = (args.length == 2);
     if (isList || isPattern) {
       JmolPatternMatcher pm = getPatternMatcher();
@@ -1052,10 +1055,10 @@ public class MathExt {
         e.evalError(ex.toString(), null);
       }
       String[] list = SV.strListValue(x1);
+      Lst<SV> svlist = (isList ? x1.getList() : null);
       if (Logger.debugging)
         Logger.debug("finding " + sFind);
       BS bs = new BS();
-      int ipt = 0;
       int n = 0;
       Matcher matcher = null;
       Lst<String> v = (asMatch ? new Lst<String>() : null);
@@ -1065,7 +1068,6 @@ public class MathExt {
         boolean isMatch = matcher.find();
         if (asMatch && isMatch || !asMatch && isMatch == !isReverse) {
           n++;
-          ipt = i;
           bs.set(i);
           if (asMatch)
             v.addLast(isReverse ? what.substring(0, matcher.start())
@@ -1078,27 +1080,89 @@ public class MathExt {
                 .addXStr(n == 0 ? "" : matcher.group()) : mp.addXInt(n == 0 ? 0
                 : matcher.start() + 1));
       }
-      if (n == 1)
-        return mp.addXStr(asMatch ? (String) v.get(0) : list[ipt]);
-      String[] listNew = new String[n];
-      if (n > 0)
-        for (int i = list.length; --i >= 0;)
-          if (bs.get(i)) {
-            --n;
-            listNew[n] = (asMatch ? (String) v.get(n) : list[i]);
-          }
-      return mp.addXAS(listNew);
+   // removed in 14.2/3.14 -- not documented and not expected      if (n == 1)
+//    return mp.addXStr(asMatch ? (String) v.get(0) : list[ipt]);
+  
+      if (asMatch) {
+        String[] listNew = new String[n];
+        if (n > 0)
+          for (int i = list.length; --i >= 0;)
+            if (bs.get(i)) {
+              --n;
+              listNew[n] = (asMatch ? (String) v.get(n) : list[i]);
+            }
+        return mp.addXAS(listNew);
+      }
+      Lst<SV> l = new Lst<SV>();
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+          l.addLast(svlist.get(i));
+      return mp.addXList(l);      
     }
     if (isSequence) {
-     return mp.addXStr(vwr.getJBR().toStdAmino3(SV.sValue(x1))); 
+      return mp.addXStr(vwr.getJBR().toStdAmino3(SV.sValue(x1)));
     }
     return mp.addXInt(SV.sValue(x1).indexOf(sFind) + 1);
   }
 
+  /**
+   * _ by itself, not as a function, is shorthand for getProperty("auxiliaryInfo")
+   * 
+   * $ print _.keys
+   * 
+   * boundbox
+   * group3Counts
+   * group3Lists
+   * modelLoadNote
+   * models
+   * properties
+   * someModelsHaveFractionalCoordinates
+   * someModelsHaveSymmetry
+   * someModelsHaveUnitcells
+   * symmetryRange
+   * 
+   * 
+   * _m by itself, not as a function, is shorthand for getProperty("auxiliaryInfo.models")[_currentFrame]
+   * 
+   * $ print format("json",_m.unitCellParams)
+   *  
+   *  [ 0.0,0.0,0.0,0.0,0.0,0.0,0.0,-2.1660376,-2.1660376,0.0,-2.1660376,2.1660376,-4.10273,0.0,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN ]
+   *  
+   *  
+   * {atomset}._  by itself delivers a subset array of auxiliaryInfo.models  for all models in {atomset}
+   *  
+   * $ print {*}._..1..aflowInfo
+   * 
+   * (first model's aflowInfo)
+   * 
+   * 
+   * _(key) prepends "auxiliaryInfo.models", delivering a modelCount-length array of information
+   * 
+   * $ print _("aflowInfo[SELECT auid WHERE 'H__eV___VASP_' < 0]")
+   * 
+   * 
+   * {atomset}._(key) selects for model Auxiliary info related to models of the specified atoms
+   * 
+   * {atomset}.getProperty(key) defaults to atomInfo, but also allows key to start with "bondInfo" 
+   * 
+   * Examples:
+   * 
+   * print _("aflowInfo[select sg where volume_cell > 70]")
+   * 
+   * print {model>10}._("aflowInfo[select sg where volume_cell > 70]")
+   * 
+   * @param mp
+   * @param args
+   * @param isAuxiliary
+   * @param isAtomProperty
+   * @return
+   * @throws ScriptException
+   */
   private boolean evaluateGetProperty(ScriptMathProcessor mp, SV[] args,
-                                      boolean isAtomProperty)
+                                      boolean isAuxiliary, boolean isAtomProperty)
       throws ScriptException {
     int pt = 0;
+    if (isAuxiliary && args.length != 1)
+      return false;
     int tok = (args.length == 0 ? T.nada : args[0].tok);
     if (args.length == 2 && (tok == T.varray || tok == T.hash || tok == T.context)) {
       return mp.addXObj(vwr.extractProperty(args[0].value, args[1].value.toString(), -1));
@@ -1112,11 +1176,7 @@ public class MathExt {
       isJSON = true;
       propertyName = SV.sValue(args[pt++]);
     }
-
-    if (propertyName.startsWith("$")) {
-      // TODO
-    }
-    if (isAtomProperty && !lc.startsWith("bondinfo") && !lc.startsWith("atominfo"))
+    if (isAtomProperty && !isAuxiliary && !lc.startsWith("bondinfo") && !lc.startsWith("atominfo"))
       propertyName = "atomInfo." + propertyName;
     Object propertyValue = "";
     if (propertyName.equalsIgnoreCase("fileContents") && args.length > 2) {
@@ -1149,14 +1209,15 @@ public class MathExt {
       int iAtom = bs.nextSetBit(0);
       if (iAtom < 0)
         return mp.addXStr("");
-      propertyValue = bs;//BSUtil.newAndSetBit(iAtom);
+      propertyValue = bs;
     }
+    if (isAuxiliary)
+      propertyName = "auxiliaryInfo.models." + propertyName;
+
+    propertyName = PT.rep(propertyName, ".[", "[");  
     Object property = vwr.getProperty(null, propertyName, propertyValue);
     if (pt < args.length)
       property = vwr.extractProperty(property, args, pt);
-//    if (isAtomProperty && property instanceof Lst)
-//      property = (((Lst<?>) property).size() > 0 ? ((Lst<?>) property).get(0)
-//          : "");
     return mp.addXObj(isJSON ? "{" + PT.toJSON("value", property) + "}" : SV
         .isVariableType(property) ? property : Escape.toReadable(propertyName,
         property));

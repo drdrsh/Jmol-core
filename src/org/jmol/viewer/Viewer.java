@@ -9242,4 +9242,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         "org.jmol.viewer.ChimeMessenger", this, "script")).set(this) : jcm);
   }
 
+  public Object getAuxiliaryInfoForAtoms(Object atomExpression) {
+    return ms.getAuxiliaryInfo(ms.getModelBS(getAtomBitSet(atomExpression),
+        false));
+  }
+
 }

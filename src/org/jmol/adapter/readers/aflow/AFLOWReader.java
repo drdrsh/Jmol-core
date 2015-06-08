@@ -286,10 +286,34 @@ public class AFLOWReader extends VaspPoscarReader {
       if (kv.length < 2)
         continue;
       float f = parseFloatStr(kv[1]);
-      htAFLOW.put(kv[0], Float.isNaN(f) ? kv[1] : Float.valueOf(f));
+      Object o = Float.isNaN(f) ? kv[1] : Float.valueOf(f);
+      htAFLOW.put(kv[0], o);
+      String kvclean = cleanKey(kv[0]);
+      if (kvclean != kv[0])
+        htAFLOW.put(kvclean, o);
     }
     asc.setCurrentModelInfo("aflowInfo", htAFLOW);
     return true;
+  }
+
+  private Map<String, String> keyMap = new Hashtable<String, String>();
+  
+  /**
+   * cleans key to just letters and digits
+   * 
+   * @param key
+   * @return cleaned key
+   */
+  private String cleanKey(String key) {
+    String kclean = keyMap.get(key);
+    if (kclean != null)
+      return kclean;
+    char[] chars = key.toCharArray();
+    for (int i = chars.length; --i >= 0;)
+      if (!PT.isLetterOrDigit(chars[i]))
+        chars[i] = '_';
+    keyMap.put(key, kclean = new String(chars));
+    return kclean;
   }
 
   @Override

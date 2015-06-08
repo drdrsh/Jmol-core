@@ -610,7 +610,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     case PROP_ATOM_INFO:
       return getAllAtomInfo(vwr.getAtomBitSet(myParam));
     case PROP_AUXILIARY_INFO:
-      return getAuxiliaryInfo(myParam);
+      return vwr.getAuxiliaryInfoForAtoms(myParam);
     case PROP_BOND_INFO:
       return getAllBondInfo(myParam);
     case PROP_BOUNDBOX_INFO:
@@ -1717,11 +1717,6 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     if (commands.length() > 0)
       info.put("shapeCommands", commands.toString());
     return info;
-  }
-
-  private Map<String, Object> getAuxiliaryInfo(Object atomExpression) {
-    return vwr.ms.getAuxiliaryInfo(vwr.ms.getModelBS(
-        vwr.getAtomBitSet(atomExpression), false));
   }
 
   private SV getAnnotationInfo(Object atomExpression, int type) {

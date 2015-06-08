@@ -575,7 +575,7 @@ abstract class ScriptExpr extends ScriptParam {
                 || (v = PT.getMapValueNoCase(localVars, name)) == null
                 && allContext) {
               if (name.startsWith("_")) {
-               v = (name.equals("_") ? vwr.ms.msInfo 
+               v = (name.equals("_") ? vwr.ms.getAuxiliaryInfo(null) 
                    : name.equals("_m") && vwr.am.cmi >= 0 ? 
                        vwr.ms.getModelAuxiliaryInfo(vwr.am.cmi)
                    : null);
@@ -1554,6 +1554,8 @@ abstract class ScriptExpr extends ScriptParam {
     boolean isInt = false;
     boolean isString = false;
     switch (tok) {
+    case T._:
+      return ((Map<String, Object>)vwr.getAuxiliaryInfoForAtoms(bs)).get("models");
     case T.xyz:
     case T.vibxyz:
     case T.fracxyz:
