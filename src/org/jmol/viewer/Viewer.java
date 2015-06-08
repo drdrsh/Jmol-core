@@ -2652,7 +2652,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public Map<String, Object> getModelSetAuxiliaryInfo() {
-    return ms.msInfo;
+    return ms.getAuxiliaryInfo(null);
   }
 
   @Override
@@ -4314,7 +4314,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   /**
    * @param isVib
-   * @param doNotify -- force even if same frame (file loading)
+   * @param doNotify
+   *        ignored; not implemented
    */
   void setStatusFrameChanged(boolean isVib, boolean doNotify) {
     if (isVib) {
@@ -4360,6 +4361,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     g.setI("_morphCount", am.morphCount);
     g.setF("_currentMorphFrame", currentMorphModel);
     g.setI("_frameID", frameID);
+    g.setI("_modelIndex", modelIndex);
     g.setO("_modelNumber", strModelNo);
     g.setO("_modelName", (modelIndex < 0 ? "" : getModelName(modelIndex)));
     String title = (modelIndex < 0 ? "" : ms.getModelTitle(modelIndex));
@@ -4369,7 +4371,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     g.setO("_modelType",
         (modelIndex < 0 ? "" : ms.getModelFileType(modelIndex)));
 
-    if (!doNotify && currentFrame == prevFrame && currentMorphModel == prevMorphModel)
+    if (currentFrame == prevFrame && currentMorphModel == prevMorphModel)
       return;
     prevFrame = currentFrame;
     prevMorphModel = currentMorphModel;
@@ -6787,7 +6789,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return getObjectMad(StateManager.OBJ_AXIS1) != 0;
   }
 
-  private boolean frankOn = true;
+  public boolean frankOn = true;
+  public boolean noFrankEcho = true; // set when Echo bottom right renders
 
   @Override
   public void setFrankOn(boolean TF) {
@@ -6935,7 +6938,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public boolean scriptEditorVisible;
 
-  JmolAppConsoleInterface appConsole;
+  public JmolAppConsoleInterface appConsole;
   JmolScriptEditorInterface scriptEditor;
   GenericMenuInterface jmolpopup;
   private GenericMenuInterface modelkitPopup;
@@ -6976,6 +6979,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         + "defaultDirectory...." // 180
         + "getPopupMenu........" // 200
         + "shapeManager........" // 220
+        + "getPreference......." // 240
     ).indexOf(infoType)) {
 
     case 0:
@@ -7055,6 +7059,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return getPopupMenu();
     case 220:
       return shm.getProperty(paramInfo);
+    case 240:
+      return sm.syncSend("getPreference", paramInfo, 1);
     }
     Logger.error("ERROR in getProperty DATA_API: " + infoType);
     return null;

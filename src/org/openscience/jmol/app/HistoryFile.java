@@ -356,7 +356,7 @@ public class HistoryFile {
   /**
    * Saves properties to the history file.
    */
-  private void save() {
+  public void save() {
     if (file == null)
       return;
     try {

@@ -156,6 +156,7 @@ public class MathExt {
     case T.function:
       return evaluateUserFunction(mp, (String) op.value, args, op.intValue,
           op.tok == T.propselector);
+    case T._:
     case T.getproperty:
       return evaluateGetProperty(mp, args, op.tok == T.propselector);
     case T.helix:
@@ -1115,7 +1116,7 @@ public class MathExt {
     if (propertyName.startsWith("$")) {
       // TODO
     }
-    if (isAtomProperty && !propertyName.equalsIgnoreCase("bondInfo"))
+    if (isAtomProperty && !lc.startsWith("bondinfo") && !lc.startsWith("atominfo"))
       propertyName = "atomInfo." + propertyName;
     Object propertyValue = "";
     if (propertyName.equalsIgnoreCase("fileContents") && args.length > 2) {
@@ -1144,17 +1145,18 @@ public class MathExt {
       SV x = mp.getX();
       if (x.tok != T.bitset)
         return false;
-      int iAtom = SV.bsSelectVar(x).nextSetBit(0);
+      BS bs = SV.bsSelectVar(x);
+      int iAtom = bs.nextSetBit(0);
       if (iAtom < 0)
         return mp.addXStr("");
-      propertyValue = BSUtil.newAndSetBit(iAtom);
+      propertyValue = bs;//BSUtil.newAndSetBit(iAtom);
     }
     Object property = vwr.getProperty(null, propertyName, propertyValue);
     if (pt < args.length)
       property = vwr.extractProperty(property, args, pt);
-    if (isAtomProperty && property instanceof Lst)
-      property = (((Lst<?>) property).size() > 0 ? ((Lst<?>) property).get(0)
-          : "");
+//    if (isAtomProperty && property instanceof Lst)
+//      property = (((Lst<?>) property).size() > 0 ? ((Lst<?>) property).get(0)
+//          : "");
     return mp.addXObj(isJSON ? "{" + PT.toJSON("value", property) + "}" : SV
         .isVariableType(property) ? property : Escape.toReadable(propertyName,
         property));

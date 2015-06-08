@@ -38,7 +38,7 @@ import javajs.util.V3;
 
 public abstract class FontLineShapeRenderer extends ShapeRenderer {
 
-  // Axes, Bbcage, Measures, Uccage, also Sticks
+  // Axes, Bbcage, Measures, Uccage, also Sticks, Echo, Measures, Labels
 
   protected float imageFontScaling;
   protected P3 tickA, tickB, tickAs, tickBs;

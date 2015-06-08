@@ -637,12 +637,15 @@ import java.util.Properties;
   
   public BS deleteModels(BS bsModels) {
     // full models are deleted for any model containing the specified atoms
-    moleculeCount = 0;
     includeAllRelatedFrames(bsModels);
 
     int nModelsDeleted = BSUtil.cardinalityOf(bsModels);
     if (nModelsDeleted == 0)
       return null;
+    
+    moleculeCount = 0;
+    if (msInfo != null)
+      msInfo.remove("models");
 
     // clear references to this frame if it is a dataFrame
 
@@ -894,7 +897,9 @@ import java.util.Properties;
     modelNames = mergeModelSet.modelNames;
     modelNumbers = mergeModelSet.modelNumbers;
     frameTitles = mergeModelSet.frameTitles;
-    mergeAtomArrays(mergeModelSet);
+    if (msInfo != null)
+      msInfo.remove("models");
+     mergeAtomArrays(mergeModelSet);
   }
 
   public SymmetryInterface getUnitCell(int modelIndex) {
@@ -3327,15 +3332,27 @@ import java.util.Properties;
     return (fname == null && !haveFile ? -2 : errCode);
   }
 
+  /**
+   * Retrieve the main modelset info Hashtable (or a new non-null Hashtable)
+   * with an up-to-date "models" key.
+   * 
+   * @param bsModels
+   * @return Map
+   */
   public Map<String, Object> getAuxiliaryInfo(BS bsModels) {
     Map<String, Object> info = msInfo;
     if (info == null)
-      return null;
-    Lst<Map<String, Object>> minfo = new Lst<Map<String, Object>>();
-    for (int i = 0; i < mc; ++i)
-      if (bsModels == null || bsModels.get(i))
-        minfo.addLast(getModelAuxiliaryInfo(i));
-    info.put("models", minfo);
+      info = new Hashtable<String, Object>();
+    if (bsModels != null || !info.containsKey("models")) {
+      Lst<Map<String, Object>> minfo = new Lst<Map<String, Object>>();
+      for (int i = 0; i < mc; ++i)
+        if (bsModels == null || bsModels.get(i)) {
+          Map<String, Object> m = getModelAuxiliaryInfo(i);
+          m.put("modelIndex", Integer.valueOf(i));
+          minfo.addLast(m);
+        }
+      info.put("models", minfo);
+    }
     return info;
   }
 

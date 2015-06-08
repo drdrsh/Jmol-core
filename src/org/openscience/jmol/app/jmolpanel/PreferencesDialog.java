@@ -83,11 +83,13 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   boolean axesOrientationRasmol;
   boolean openFilePreview;
   boolean clearHistory;
+  boolean largeFont;
   float minBondDistance;
   float bondTolerance;
   short marBond;
   int percentVdwAtom;
   int bondingVersion;
+  
   JButton bButton, pButton, tButton, eButton, vButton;
   private JRadioButton /*pYes, pNo, */abYes, abNo;
   private JSlider vdwPercentSlider;
@@ -98,6 +100,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   private JCheckBox cbAxesOrientationRasmol;
   private JCheckBox cbOpenFilePreview;
   private JCheckBox cbClearHistory;
+  private JCheckBox cbLargeFont;
   private Properties originalSystemProperties;
   private Properties jmolDefaultProperties;
   Properties currentProperties;
@@ -283,6 +286,11 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     cbClearHistory.addItemListener(checkBoxListener);
     otherPanel.add(cbClearHistory);
     
+    cbLargeFont =
+        guimap.newJCheckBox("Prefs.largeFont", largeFont);
+    cbLargeFont.addItemListener(checkBoxListener);
+    otherPanel.add(cbLargeFont);
+
     constraints = new GridBagConstraints();
     constraints.gridwidth = GridBagConstraints.REMAINDER;
     constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -554,6 +562,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     
     cbOpenFilePreview.setSelected(openFilePreview);
     cbClearHistory.setSelected(clearHistory);
+    cbLargeFont.setSelected(largeFont);
 
     // Atom panel controls: 
     vdwPercentSlider.setValue(vwr.getInt(T.percentvdwatom));
@@ -572,7 +581,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     vwr.refresh(3, "PreferencesDialog:apply()");
   }
 
-  private void save() {
+  void save() {
     try {
       FileOutputStream fileOutputStream =
         new FileOutputStream(jmol.jmolApp.userPropsFile);
@@ -653,6 +662,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
       Integer.parseInt(currentProperties.getProperty("percentVdwAtom"));
     bondingVersion =
         Integer.parseInt(currentProperties.getProperty("bondingVersion"));
+    largeFont  = "true".equals(currentProperties.getProperty("largeConsoleFont"));
 
 
     if (Boolean.getBoolean("jmolDefaults"))
@@ -672,6 +682,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     vwr.setBooleanProperty("showAxes", showAxes);
     vwr.setBooleanProperty("showBoundBox", showBoundingBox);
     vwr.setBooleanProperty("axesOrientationRasmol", axesOrientationRasmol);
+    
+    jmol.updateConsoleFont();
+    
   }
 
   class PrefsAction extends AbstractAction {
@@ -744,6 +757,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         currentProperties.put("clearHistory", strSelected);
         if (JmolPanel.historyFile != null)
           JmolPanel.historyFile.addProperty("clearHistory", strSelected);
+      } else if (key.equals("Prefs.largeFont")) {
+        setLargeFont(strSelected);
       }
     }
   };
@@ -767,6 +782,13 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     } else if (event.getSource() == okButton) {
       ok();
     }
+  }
+
+  public void setLargeFont(String selected) {
+    largeFont = (selected == null ? !largeFont : "true".equals(selected));
+    currentProperties.put("largeConsoleFont", "" + largeFont);
+    save();
+    jmol.updateConsoleFont();
   }
 
 }

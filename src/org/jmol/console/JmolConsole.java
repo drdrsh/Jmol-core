@@ -184,6 +184,7 @@ public abstract class JmolConsole extends GenericConsole implements ActionListen
    */
   @Override
   public void windowActivated(WindowEvent we) {
+    updateFontSize();
   }
 
   @Override
@@ -237,6 +238,11 @@ public abstract class JmolConsole extends GenericConsole implements ActionListen
   @Override
   public Object newJMenuItem(String key) {
     return new KeyJMenuItem(key, getLabel(key), null);
+  }
+
+  public void updateFontSize() {
+    // TODO
+    
   }
 
 

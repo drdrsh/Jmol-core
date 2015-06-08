@@ -56,6 +56,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
@@ -136,7 +137,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   public GuiMap guimap = new GuiMap();
   private ExecuteScriptAction executeScriptAction;
-  private PreferencesDialog preferencesDialog;
+  PreferencesDialog preferencesDialog;
   private StatusListener myStatusListener;
   private SurfaceTool surfaceTool;
 
@@ -218,7 +219,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     try {
       say("history file is " + historyFile.getFile().getAbsolutePath());
-    } catch (Exception e) {
+      say("user properties file is " + jmolApp.userPropsFile.getAbsolutePath());
+         } catch (Exception e) {
     }
 
     frame.setTitle("Jmol");
@@ -462,7 +464,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     jmol.consoleframe.setIconImage(jmol.frame.getIconImage());
     try {
       final ConsoleTextArea consoleTextArea = new ConsoleTextArea(true);
-      consoleTextArea.setFont(java.awt.Font.decode("monospaced"));
+      consoleTextArea.setFont(Font.decode("monospaced"));
       jmol.consoleframe.getContentPane().add(new JScrollPane(consoleTextArea),
           java.awt.BorderLayout.CENTER);
         JButton buttonClear = jmol.guimap.newJButton("JavaConsole.Clear");
@@ -476,7 +478,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
             java.awt.BorderLayout.SOUTH);
     } catch (IOException e) {
       JTextArea errorTextArea = new JTextArea();
-      errorTextArea.setFont(java.awt.Font.decode("monospaced"));
+      errorTextArea.setFont(Font.decode("monospaced"));
       jmol.consoleframe.getContentPane().add(new JScrollPane(errorTextArea),
           java.awt.BorderLayout.CENTER);
       errorTextArea.append(GT._("Could not create ConsoleTextArea: ") + e);
@@ -1370,8 +1372,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     @Override
     public void actionPerformed(ActionEvent e) {
       AppConsole console = (AppConsole) vwr.getProperty("DATA_API","getAppConsole", null);
-      if (console != null)
+      if (console != null) {
         console.setVisible(true);
+      }
     }
   }
 
@@ -1772,6 +1775,17 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   public NBOService getNBOService() {
     return (nboService == null ? (nboService = new NBOService(vwr))
         : nboService);
+  }
+
+  public void updateConsoleFont() {
+    AppConsole console = (AppConsole) vwr.getProperty("DATA_API",
+        "getAppConsole", null);
+    if (console != null)
+      console.updateFontSize();
+  }
+
+  public Object getPreference(String key) {
+    return preferencesDialog.currentProperties.get(key);
   }
 
 }

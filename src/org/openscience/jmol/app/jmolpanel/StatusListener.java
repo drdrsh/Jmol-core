@@ -201,10 +201,16 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         jmol.gaussianDialog.updateModel(-1);
       break;
     case SYNC:
-      if (strInfo != null && strInfo.toLowerCase().startsWith("jspecview")) {
+      String lc = (strInfo == null ? "" : strInfo.toLowerCase());
+      if (lc.startsWith("jspecview")) {
         setJSpecView(strInfo.substring(9).trim(), false, false);
         return;
       }
+      if (lc.equals("getpreference")) {
+        data[0] = (data[2] == null ? jmol.preferencesDialog : jmol.getPreference(data[2].toString()));
+        return;
+      }
+        
       jmol.sendNioMessage(((Integer) data[3]).intValue(), strInfo);
       return;
     case DRAGDROP:

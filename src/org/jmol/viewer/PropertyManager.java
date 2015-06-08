@@ -833,6 +833,7 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
     ModelSet m = vwr.ms;
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("modelSetName", m.modelSetName);
+    info.put("modelIndex", Integer.valueOf(vwr.am.cmi));
     info.put("modelCount", Integer.valueOf(m.mc));
     info.put("isTainted", Boolean.valueOf(m.tainted != null));
     info.put("canSkipLoad", Boolean.valueOf(m.canSkipLoad));

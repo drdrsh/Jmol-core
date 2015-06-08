@@ -116,8 +116,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       boolean labelsFront = ((offset & JC.LABEL_ZPOS_FRONT) != 0);
       boolean labelsGroup = ((offset & JC.LABEL_ZPOS_GROUP) != 0);
       textAlign = JC.getAlignment(offset);
-      isAbsolute = JC.isOffsetExplicit(offset);
-
+      isAbsolute = JC.isOffsetAbsolute(offset);
       pointer = JC.getPointer(offset);
       zSlab = atom.sZ - atom.sD / 2 - 3;
       if (zSlab > zCutoff)

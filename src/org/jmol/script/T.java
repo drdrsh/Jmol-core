@@ -723,6 +723,7 @@ public class T {
   public final static int cache            = 23 | 0 << 9 | mathfunc | scriptCommand; // new in Jmol 13.1.2
   public final static int tensor           = 24 | 0 << 9 | mathfunc | mathproperty;
   public final static int modulation       = 25 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
+  public final static int _                = 26 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
   
   // xxx(a)
   
@@ -1869,6 +1870,7 @@ public class T {
         
         // misc
         
+        "_",
         "abs",
         "absolute",
         "acos",
@@ -2895,6 +2897,7 @@ public class T {
          
          // misc
          
+        _,                                  // "_" (getProperty function)
         abs,                                // "abs"
         absolute,                           // "absolute"
         acos,                               // "acos"

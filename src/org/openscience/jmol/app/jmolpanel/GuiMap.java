@@ -232,6 +232,8 @@ public class GuiMap {
         ._("File Preview (requires restarting Jmol)"));
     labels.put("Prefs.clearHistory", GT
         ._("Clear history (requires restarting Jmol)"));
+    labels.put("Prefs.largeFont", GT
+        ._("Large Console Font"));
     labels.put("Prefs.isLabelAtomColor", GT._("Use Atom Color"));
     labels.put("Prefs.isBondAtomColor", GT._("Use Atom Color"));
     labels.put("rotateScriptTip", GT._("Rotate molecule."));

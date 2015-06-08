@@ -25,14 +25,23 @@
 package org.jmol.shape;
 
 
+import javajs.awt.Font;
+
 import org.jmol.modelset.TickInfo;
 
-public abstract class FontLineShape extends FontShape {
+public abstract class FontLineShape extends Shape {
 
   // Axes, Bbcage, Uccage
   
   public TickInfo[] tickInfos = new TickInfo[4];
   public short mad;
+
+  public Font font3d;
+
+  @Override
+  public void initShape() {
+    translucentAllowed = false;
+  }
 
   protected void setPropFLS(String propertyName, Object value) {
 
@@ -49,7 +58,10 @@ public abstract class FontLineShape extends FontShape {
       tickInfos["xyz".indexOf(t.type) + 1] = t;
       return;
     }
-    setPropFS(propertyName, value);
+    if ("font" == propertyName) {
+      font3d = (Font) value;
+      return;
+    }
   }
 
   @Override

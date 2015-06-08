@@ -46,6 +46,8 @@ public class Frank extends FontShape {
   public int frankAscent;
   public int frankDescent;
   int x, y, dx, dy;
+  private float scaling;
+  
 
   @Override
   public void initShape() {
@@ -57,7 +59,15 @@ public class Frank extends FontShape {
 
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
-    setPropFS(propertyName, value);
+    if ("font" == propertyName) {
+      Font f = (Font) value;
+      if (f.fontSize >= 10) {
+        baseFont3d = f;
+        scaling = 0;
+      }
+    }
+    // no other aspects
+    return;
   }
   
   @Override
@@ -96,13 +106,16 @@ public class Frank extends FontShape {
   }
 
   public void getFont(float imageFontScaling) {
-    font3d = vwr.gdata.getFont3DScaled(baseFont3d, imageFontScaling);
-    calcMetrics();
+    if (imageFontScaling != scaling) {
+      scaling = imageFontScaling;
+      font3d = vwr.gdata.getFont3DScaled(baseFont3d, imageFontScaling);
+      calcMetrics();
+    }
   }
   
   @Override
   public String getShapeState() {
-    return vwr.getFontState(myType, font3d);
+    return vwr.getFontState(myType, baseFont3d);
   }
   
 }

@@ -87,6 +87,8 @@ import java.util.Map;
  */
 public abstract class Shape {
 
+  public String myType;
+
   abstract public String getShapeState();
   abstract public void setProperty(String propertyName, Object value, BS bsSelected);
 

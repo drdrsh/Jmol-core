@@ -38,7 +38,6 @@ import javajs.awt.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
-import javajs.util.PT;
 
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
@@ -95,8 +94,6 @@ public class Labels extends AtomShape {
   @Override
   public void setProperty(String propertyName, Object value, BS bsSelected) {
     isActive = true;
-
-    //System.out.println(propertyName + " Labels " + value);
 
     if ("setDefaults" == propertyName) {
       setDefaults = ((Boolean) value).booleanValue();

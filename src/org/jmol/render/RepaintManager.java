@@ -180,9 +180,10 @@ public class RepaintManager implements JmolRepaintManager {
   }
 
   /////////// actual rendering ///////////
-  
+
   @Override
-  public void render(GData gdata, ModelSet modelSet, boolean isFirstPass, int[] navMinMax) {
+  public void render(GData gdata, ModelSet modelSet, boolean isFirstPass,
+                     int[] navMinMax) {
     JmolRendererInterface g3d = (JmolRendererInterface) gdata;
     if (renderers == null)
       renderers = new ShapeRenderer[JC.SHAPE_MAX];
@@ -190,26 +191,29 @@ public class RepaintManager implements JmolRepaintManager {
     try {
       boolean logTime = vwr.getBoolean(T.showtiming);
       g3d.renderBackground(null);
-      if (isFirstPass)  {
+      if (isFirstPass) {
         bsTranslucent.clearAll();
         if (navMinMax != null)
-          g3d.renderCrossHairs(navMinMax, vwr.getScreenWidth(), vwr.getScreenHeight(), 
-              vwr.tm.getNavigationOffset(), vwr.tm.navigationDepthPercent);
+          g3d.renderCrossHairs(navMinMax, vwr.getScreenWidth(),
+              vwr.getScreenHeight(), vwr.tm.getNavigationOffset(),
+              vwr.tm.navigationDepthPercent);
         Rectangle band = vwr.getRubberBandSelection();
-          if (band != null && g3d.setC(vwr.cm.colixRubberband))
-            g3d.drawRect(band.x, band.y, 0, 0, band.width, band.height);
+        if (band != null && g3d.setC(vwr.cm.colixRubberband))
+          g3d.drawRect(band.x, band.y, 0, 0, band.width, band.height);
+        vwr.noFrankEcho = true;
       }
       String msg = null;
       for (int i = 0; i < JC.SHAPE_MAX && gdata.currentlyRendering; ++i) {
         Shape shape = shapeManager.getShape(i);
         if (shape == null)
           continue;
-        
+
         if (logTime) {
           msg = "rendering " + JC.getShapeClassName(i, false);
           Logger.startTimer(msg);
         }
-        if((isFirstPass || bsTranslucent.get(i)) && getRenderer(i).renderShape(g3d, modelSet, shape))
+        if ((isFirstPass || bsTranslucent.get(i))
+            && getRenderer(i).renderShape(g3d, modelSet, shape))
           bsTranslucent.set(i);
         if (logTime)
           Logger.checkTimer(msg, false);

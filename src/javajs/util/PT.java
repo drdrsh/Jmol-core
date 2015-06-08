@@ -723,6 +723,8 @@ public class PT {
   }
 
   public static String trim(String str, String chars) {
+    if (str == null || str.length() == 0)
+      return str;
     if (chars.length() == 0)
       return str.trim();
     int len = str.length();

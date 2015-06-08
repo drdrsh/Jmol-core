@@ -43,7 +43,7 @@ public class EchoRenderer extends LabelsRenderer {
     imageFontScaling = vwr.imageFontScaling;
     boolean haveTranslucent = false;
     setZcutoff();
-    for (Text t: echo.objects.values()) {
+    for (Text t : echo.objects.values()) {
       if (!t.visible || t.hidden) {
         continue;
       }
@@ -54,10 +54,10 @@ public class EchoRenderer extends LabelsRenderer {
       if (t.valign == JC.ECHO_XYZ) {
         tm.transformPtScr(t.xyz, pt0i);
         t.setXYZs(pt0i.x, pt0i.y, pt0i.z, pt0i.z);
-      } 
+      }
       if (t.movableZPercent != Integer.MAX_VALUE) {
         int z = vwr.tm.zValueFromPercent(t.movableZPercent % 1000);
-        if (t.valign == JC.ECHO_XYZ && Math.abs(t.movableZPercent)>= 1000)
+        if (t.valign == JC.ECHO_XYZ && Math.abs(t.movableZPercent) >= 1000)
           z = pt0i.z - vwr.tm.zValueFromPercent(0) + z;
         t.setZs(z, z);
       }
@@ -74,10 +74,14 @@ public class EchoRenderer extends LabelsRenderer {
         if (t.zSlab == Integer.MIN_VALUE)
           t.zSlab = 1;
       }
-      TextRenderer.render(t, g3d, scalePixelsPerMicron, imageFontScaling,
-          false, null, xy);
-     if (C.renderPass2(t.bgcolix) || C.renderPass2(t.colix))
-       haveTranslucent = true;
+      if (TextRenderer.render(t, g3d, scalePixelsPerMicron, imageFontScaling,
+          false, null, xy)
+          && t.valign == JC.ECHO_BOTTOM
+          && t.align == JC.TEXT_ALIGN_RIGHT)
+        vwr.noFrankEcho = false;
+
+      if (C.renderPass2(t.bgcolix) || C.renderPass2(t.colix))
+        haveTranslucent = true;
     }
     if (!isExport) {
       String frameTitle = vwr.getFrameTitle();
@@ -93,7 +97,7 @@ public class EchoRenderer extends LabelsRenderer {
   }
   
   private void renderFrameTitle(String frameTitle) {
-    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("Serif", 14 * imageFontScaling));
+    vwr.gdata.setFontFid(vwr.gdata.getFontFidFS("arial", (int) (24 * imageFontScaling)));
     int y = (int) Math.floor(vwr.getScreenHeight() * (g3d.isAntialiased() ? 2 : 1) - 10 * imageFontScaling);
     int x = (int) Math.floor(5 * imageFontScaling);
     g3d.drawStringNoSlab(frameTitle, null, x, y, 0, (short) 0);

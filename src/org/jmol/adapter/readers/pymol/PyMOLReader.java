@@ -225,7 +225,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       String[] scenes = new String[sceneOrder.size()];
       for (int i = scenes.length; --i >= 0;)
         scenes[i] = (String) sceneOrder.get(i);
-      vwr.getModelSetAuxiliaryInfo().put("scenes", scenes);
+      vwr.ms.msInfo.put("scenes", scenes);
     }
     
     vwr.ms.setTrajectoryBs(BSUtil.newBitSet2(baseModelIndex,

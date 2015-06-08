@@ -132,7 +132,8 @@ public class Text extends Object2d {
     if (image != null)
       getFontMetrics();
     image = null;
-    text = fixText(text);
+    if (text != null && text.length() == 0)
+      text = null;
     if (this.text != null && this.text.equals(text))
       return;
     this.text = text;
@@ -179,15 +180,6 @@ public class Text extends Object2d {
       setFont(vwr.gdata.getFont3DScaled(font, scale), true);
   }
 
-  String fixText(String text) {
-    if (text == null || text.length() == 0)
-      return null;
-    int pt;
-    while ((pt = text.indexOf("\n")) >= 0)
-      text = text.substring(0, pt) + "|" + text.substring(pt + 1);
-    return text;
-  }
-
   @Override
   protected void recalc() {
     if (image != null) {
@@ -205,7 +197,7 @@ public class Text extends Object2d {
     }
     if (font == null)
       return;
-    lines = PT.split(text, "|");
+    lines = PT.split(text, (text.indexOf("\n") >= 0 ? "\n" : "|"));
     textWidth = 0;
     widths = new int[lines.length];
     for (int i = lines.length; --i >= 0;)
@@ -277,7 +269,7 @@ public class Text extends Object2d {
         boxXY[1] = movableY - yAdj;
         y0 = movableY - dy - descent;        
         isAbsolute = true;
-        boxYoff2 = -2; // empirica fudge factor 
+        boxYoff2 = -2; // empirical fudge factor 
       } else {
         boxYoff2 = 0;
       }

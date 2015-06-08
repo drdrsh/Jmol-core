@@ -729,11 +729,6 @@ public final class ModelLoader {
         sNum = "" + ms.getModelNumber(i);
         filenumber = 1;
       } else {
-        //        //if only one file, just return the integer file number
-        //      if (modelnumber == 1
-        //        && (i + 1 == modelCount || models[i + 1].modelNumber / 1000000 != filenumber))
-        //    sNum = filenumber + "";
-        // else
         sNum = filenumber + "." + modelnumber;
       }
       ms.modelNumbersForAtomLabel[i] = sNum;
@@ -1170,14 +1165,13 @@ public final class ModelLoader {
       distinguishAndPropagateGroup(i, chainOf[i], group3Of[i], seqcodes[i],
           firstAtomIndexes[i], (i == groupCount - 1 ? ms.ac
               : firstAtomIndexes[i + 1]) - 1);
-    if (group3Lists != null)
-      if (ms.msInfo != null) {
-        ms.msInfo.put("group3Lists", group3Lists);
-        ms.msInfo.put("group3Counts", group3Counts);
-        for (int i = 0; i < group3Counts.length; i++)
-          if (group3Counts[i] == null)
-            group3Counts[i] = new int[0];
-      }
+    if (group3Lists != null) {
+      ms.msInfo.put("group3Lists", group3Lists);
+      ms.msInfo.put("group3Counts", group3Counts);
+      for (int i = 0; i < group3Counts.length; i++)
+        if (group3Counts[i] == null)
+          group3Counts[i] = new int[0];
+    }
   }
 
   private void distinguishAndPropagateGroup(int groupIndex, Chain chain,

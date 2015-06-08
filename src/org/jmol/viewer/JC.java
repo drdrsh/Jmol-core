@@ -918,7 +918,7 @@ public final class JC {
         : (pointer & LABEL_POINTER_BACKGROUND) > 0 ? "background" : "on");
   }   
 
-  public static boolean isOffsetExplicit(int offset) {
+  public static boolean isOffsetAbsolute(int offset) {
     return ((offset & LABEL_EXPLICIT) != 0);
   }
 

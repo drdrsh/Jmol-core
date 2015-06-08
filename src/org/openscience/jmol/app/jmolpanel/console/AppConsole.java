@@ -25,33 +25,33 @@ package org.openscience.jmol.app.jmolpanel.console;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Container;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Window;
-import java.awt.event.KeyEvent;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-
 
 import javajs.util.PT;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JPanel;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTextPane; //import javax.swing.SwingUtilities;
-import javax.swing.text.Position;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.BadLocationException;
+import javax.swing.JTextPane;
 import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Position;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
-import javax.swing.JScrollPane;
 
 import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolViewer;
@@ -62,12 +62,15 @@ import org.jmol.util.CommandHistory;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-
 import org.openscience.jmol.app.jmolpanel.HelpDialog;
+import org.openscience.jmol.app.jmolpanel.PreferencesDialog;
+//import javax.swing.SwingUtilities;
 
 public class AppConsole extends JmolConsole implements EnterListener {
 
-  public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Help";
+  public static final String ALL_BUTTONS = "Editor Variables Clear History State UndoRedo Close Font Help";
+
+  private int fontSize;
 
   // note:  "Check" "Top" "Step" not included in 12.1
 
@@ -112,13 +115,22 @@ public class AppConsole extends JmolConsole implements EnterListener {
     }
     addWindowListener();
     layoutWindow(enabledButtons);
+    //setVisible(true);
+  }
+
+  @Override
+  public void updateFontSize() {
+    String prop = (String) vwr.getProperty("DATA_API", "getPreference", "largeConsoleFont");
+    fontSize = ("true".equals(prop) ? 32 : 16);
+    if (console != null)
+      console.setFont(new Font("dialog", Font.PLAIN, fontSize));
   }
 
   public JDialog jcd;
 
   protected ConsoleTextPane console;
   private JmolAbstractButton varButton, haltButton, closeButton, clearButton, stepButton;
-  private JmolAbstractButton helpButton, undoButton, redoButton, checkButton, topButton;
+  private JmolAbstractButton helpButton, undoButton, redoButton, checkButton, topButton, fontButton;
   private JPanel buttonPanel = new JPanel();
 
   protected JScrollBar vBar;
@@ -175,6 +187,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
     labels.put("Top", GT._("Top"));
     labels.put("Undo", GT._("Undo"));
     labels.put("Redo", GT._("Redo"));
+    labels.put("Font", GT._("Font"));
     labels.put("Variables", GT._("Variables"));
   }
 
@@ -234,6 +247,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
     		"Step      " +
     		"Top       " +
     		"UndoRedo  " +
+    		"Font      " +
     		"Variables ").indexOf(name)) {
     case 0:
        checkButton = setButton("Check");
@@ -272,6 +286,9 @@ public class AppConsole extends JmolConsole implements EnterListener {
     case 110:
        varButton = setButton("Variables");
       break;
+    case 120: 
+      fontButton = setButton("Font");
+      fontButton.setToolTipText(GT._("toggle font size"));
     }
   }
   
@@ -338,6 +355,12 @@ public class AppConsole extends JmolConsole implements EnterListener {
       return;
     } else if (strCommand.equalsIgnoreCase("exitJmol")) {
       System.exit(0);
+    } else if (strCommand.startsWith("font console")) {
+      String s = strCommand.substring(12);
+      if (PT.parseInt(s) > 0)
+        s = "sansserif-" + s;
+      console.setFont(Font.decode(s));
+      strCommand = " ";
     } else if (strCommand.length() == 0) {
       strCommand = "!resume";
       undoSetEnabled();
@@ -567,6 +590,12 @@ public class AppConsole extends JmolConsole implements EnterListener {
       undoRedo(true);
       return;
     }
+    if (source == fontButton) {
+      PreferencesDialog d = (PreferencesDialog) vwr.getProperty("DATA_API", "getPreference", null);
+      if (d != null)
+        d.setLargeFont(null);
+      return;
+    }
     if (source == helpButton) {
       URL url = this.getClass().getClassLoader().getResource(
           "org/openscience/jmol/Data/guide/ch04.html");
@@ -585,9 +614,10 @@ public class AppConsole extends JmolConsole implements EnterListener {
 
     boolean checking = false;
     private String pageUpBuffer;
-
+    
     ConsoleTextPane(AppConsole appConsole) {
       super(new ConsoleDocument());
+      updateFontSize();
       consoleDoc = (ConsoleDocument) getDocument();
       consoleDoc.setConsoleTextPane(this);
       this.enterListener = appConsole;
@@ -716,7 +746,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
       } else {
         // Standard processing for other events.
         super.processKeyEvent(ke);
-        // check command for compiler-identifyable syntax issues
+        // check command for compiler-identifiable syntax issues
         // this may have to be taken out if people start complaining
         // that only some of the commands are being checked
         // that is -- that the script itself is not being fully checked
@@ -724,7 +754,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
         // not perfect -- help here?
         if (kid == KeyEvent.KEY_RELEASED
             && ke.getModifiers() < 2
-            && (kcode > KeyEvent.VK_DOWN && kcode < 400 || kcode == KeyEvent.VK_BACK_SPACE))
+            && (kcode == 32 || kcode > KeyEvent.VK_DOWN && kcode < 400 || kcode == KeyEvent.VK_BACK_SPACE))
           checkCommand();
       }
     }

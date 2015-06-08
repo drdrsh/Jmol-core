@@ -58,7 +58,6 @@ public abstract class MeshCollection extends Shape {
   public boolean isFixed;  
   public int nUnnamed;
   public short colix;
-  public String myType;
   public boolean explicitID;
   protected String previousMeshID;
   protected Mesh linkedMesh;

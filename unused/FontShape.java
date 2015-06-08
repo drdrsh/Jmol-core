@@ -27,24 +27,8 @@ package org.jmol.shape;
 import javajs.awt.Font;
 
 
-public abstract class FontShape extends Shape {
+public abstract class FontShape {//extends Shape {
 
-  // Frank, Axes, Bbcage, Uccage
-
-  protected String myType;
-
-  public Font font3d;
-
-  @Override
-  public void initShape() {
-    translucentAllowed = false;
-  }
-
-  public void setPropFS(String propertyName, Object value) {
-    if ("font" == propertyName) {
-      font3d = (Font) value;
-      return;
-    }
-  }
+  // Axes, Bbcage, Uccage
 
 }

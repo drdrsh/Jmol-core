@@ -30,30 +30,34 @@ public class FrankRenderer extends ShapeRenderer {
 
   //we render Frank last just for the touch that if there are translucent
   //objects, then it becomes translucent. Just for fun.
-  
+
   // no Frank export
-    
+
   @Override
   protected boolean render() {
     Frank frank = (Frank) shape;
     boolean allowKeys = vwr.getBooleanProperty("allowKeyStrokes");
     boolean modelKitMode = vwr.getBoolean(T.modelkitmode);
-    colix = (modelKitMode ? C.MAGENTA 
-        : vwr.isSignedApplet ? (allowKeys || vwr.isJS && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE : C.GRAY);
-    if (isExport || !vwr.getShowFrank())
-      return false;
-    if (!g3d.setC(C.getColixTranslucent3(colix,
+    colix = (modelKitMode ? C.MAGENTA : vwr.isSignedApplet ? (allowKeys
+        || vwr.isJS && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE
+        : C.GRAY);
+    if (isExport
+        || !vwr.getShowFrank()
+        || !g3d.setC(C.getColixTranslucent3(colix,
             g3d.haveTranslucentObjects(), 0.5f)))
-      return true;
+      return false;
+    if (vwr.frankOn && !vwr.noFrankEcho)
+      return vwr.noFrankEcho;
+    vwr.noFrankEcho = true;
     float imageFontScaling = vwr.imageFontScaling;
     frank.getFont(imageFontScaling);
     int dx = (int) (frank.frankWidth + Frank.frankMargin * imageFontScaling);
     int dy = frank.frankDescent;
-    g3d.drawStringNoSlab(frank.frankString, frank.font3d,
-        vwr.gdata.width - dx, vwr.gdata.height - dy, 0, (short) 0);
+    g3d.drawStringNoSlab(frank.frankString, frank.font3d, vwr.gdata.width - dx,
+        vwr.gdata.height - dy, 0, (short) 0);
     if (modelKitMode) {
-     //g3d.setColix(GData.GRAY);
-      g3d.fillRect(0, 0, 0, 0, dy * 2, dx * 3 / 2);      
+      //g3d.setColix(GData.GRAY);
+      g3d.fillRect(0, 0, 0, 0, dy * 2, dx * 3 / 2);
     }
     return false;
   }

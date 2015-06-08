@@ -33,16 +33,16 @@ import org.jmol.viewer.JC;
 
 class TextRenderer {
   
-  static void render(Text text, JmolRendererInterface g3d,
+  static boolean render(Text text, JmolRendererInterface g3d,
                      float scalePixelsPerMicron, float imageFontScaling,
                      boolean isAbsolute, float[] boxXY, float[] temp) {
     if (text == null || text.image == null && !text.doFormatText && text.lines == null)
-      return;
+      return false;
     boolean showText = g3d.setC(text.colix);
     if (!showText
         && (text.image == null && (text.bgcolix == 0 || !g3d
             .setC(text.bgcolix))))
-      return;
+      return false;
     text.setPosition(scalePixelsPerMicron, imageFontScaling, isAbsolute, boxXY);
     // draw the box if necessary; colix has been set
     if (text.image == null && text.bgcolix != 0) {
@@ -51,7 +51,7 @@ class TextRenderer {
             + text.boxYoff2 * 2, text.z + 2, text.zSlab, (int) text.boxWidth,
             (int) text.boxHeight, text.fontScale, text.isLabelOrHover);
       if (!showText)
-        return;
+        return false;
     }
     // text colix will be opaque, but we need to render it in translucent pass 
     // now set x and y positions for text from (new?) box position
@@ -67,7 +67,7 @@ class TextRenderer {
           text.zSlab, text.bgcolix, (int) text.boxWidth, (int) text.boxHeight);
     }
     drawPointer(text, g3d);
-    return;
+    return true;
   }
 
   static void drawPointer(Text text, JmolRendererInterface g3d) {

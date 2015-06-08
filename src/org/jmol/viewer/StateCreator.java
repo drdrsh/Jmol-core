@@ -1214,7 +1214,7 @@ public class StateCreator extends JmolStateCreator {
                   i,
                   i,
                   "set "
-                      + (JC.isOffsetExplicit(offsetFull) ? "labelOffsetAbsolute "
+                      + (JC.isOffsetAbsolute(offsetFull) ? "labelOffsetAbsolute "
                           : "labelOffset ")
                       + JC.getXOffset(offsetFull)
                       + " "

@@ -559,7 +559,7 @@ public class ScriptEval extends ScriptExpr {
 
   private void resumeViewer(String why) {
     vwr.setTainted(true);
-    vwr.popHoldRepaint(why);
+    vwr.popHoldRepaint(why + (chk ? JC.REPAINT_IGNORE : ""));
     vwr.queueOnHold = false;
   }
 

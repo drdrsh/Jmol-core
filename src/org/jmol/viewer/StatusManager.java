@@ -629,11 +629,14 @@ public class StatusManager {
     }
   }
 
-  public void syncSend(String script, String appletName, int port) {
+  public Object syncSend(String script, Object appletNameOrProp, int port) {
     // no jmolscript option for syncSend
-    if (port != 0 || notifyEnabled(CBK.SYNC))
-      cbl.notifyCallback(CBK.SYNC,
-          new Object[] { null, script, appletName, Integer.valueOf(port) });
+    if (port != 0 || notifyEnabled(CBK.SYNC)) {
+      Object[] o = new Object[] { null, script, appletNameOrProp, Integer.valueOf(port) };
+      cbl.notifyCallback(CBK.SYNC, o);
+      return o[0];
+    }
+    return null;
   }
  
   public void modifySend(int atomIndex, int modelIndex, int mode, String msg) {
