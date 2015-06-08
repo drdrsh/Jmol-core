@@ -120,8 +120,9 @@ public class AppConsole extends JmolConsole implements EnterListener {
 
   @Override
   public void updateFontSize() {
-    String prop = (String) vwr.getProperty("DATA_API", "getPreference", "largeConsoleFont");
-    fontSize = ("true".equals(prop) ? 32 : 16);
+    int scale = PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference", "consoleFontScale"));
+    scale = (scale < 0 ? 1 : scale) % 5;
+    fontSize = scale * 4 + 12;
     if (console != null)
       console.setFont(new Font("dialog", Font.PLAIN, fontSize));
   }
@@ -593,7 +594,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
     if (source == fontButton) {
       PreferencesDialog d = (PreferencesDialog) vwr.getProperty("DATA_API", "getPreference", null);
       if (d != null)
-        d.setLargeFont(null);
+        d.setFontScale(-1);
       return;
     }
     if (source == helpButton) {

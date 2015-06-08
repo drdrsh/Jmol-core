@@ -243,6 +243,7 @@ public class AFLOWReader extends VaspPoscarReader {
     Map<String, Object> htAFLOW = new Hashtable<String, Object>();
     htAFLOW.put("fileModelNumber", Integer.valueOf(fileModelNumber));
     htAFLOW.put("modelNumber", Integer.valueOf(modelNumber));
+    htAFLOW.put("AaBb", aabb);
     int pt = 0;
     SB sb = new SB();
     float listVal = Float.MAX_VALUE;
@@ -279,7 +280,9 @@ public class AFLOWReader extends VaspPoscarReader {
       count_min[1] = listVal;
     if (!doGetModel(++modelNumber, null))
       return false;
-    sb.append(discardLinesUntilContains("aurl="));
+    while (line.indexOf("aurl=") < 0)
+      rdline();
+    sb.append(line);
     String[] pairs = PT.split(sb.toString(), " | ");
     for (int i = pairs.length; --i >= 0;) {
       String[] kv = pairs[i].split("=");
@@ -312,7 +315,7 @@ public class AFLOWReader extends VaspPoscarReader {
     for (int i = chars.length; --i >= 0;)
       if (!PT.isLetterOrDigit(chars[i]))
         chars[i] = '_';
-    keyMap.put(key, kclean = new String(chars));
+    keyMap.put(key, kclean = PT.trim(PT.rep(new String(chars), "__", "_"), "_"));
     return kclean;
   }
 

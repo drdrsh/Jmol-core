@@ -83,7 +83,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   boolean axesOrientationRasmol;
   boolean openFilePreview;
   boolean clearHistory;
-  boolean largeFont;
+  int fontScale = 1;
   float minBondDistance;
   float bondTolerance;
   short marBond;
@@ -100,7 +100,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   private JCheckBox cbAxesOrientationRasmol;
   private JCheckBox cbOpenFilePreview;
   private JCheckBox cbClearHistory;
-  private JCheckBox cbLargeFont;
+//  private JCheckBox cbLargeFont;
   private Properties originalSystemProperties;
   private Properties jmolDefaultProperties;
   Properties currentProperties;
@@ -286,10 +286,10 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     cbClearHistory.addItemListener(checkBoxListener);
     otherPanel.add(cbClearHistory);
     
-    cbLargeFont =
-        guimap.newJCheckBox("Prefs.largeFont", largeFont);
-    cbLargeFont.addItemListener(checkBoxListener);
-    otherPanel.add(cbLargeFont);
+//    cbLargeFont =
+//        guimap.newJCheckBox("Prefs.largeFont", largeFont);
+//    cbLargeFont.addItemListener(checkBoxListener);
+//    otherPanel.add(cbLargeFont);
 
     constraints = new GridBagConstraints();
     constraints.gridwidth = GridBagConstraints.REMAINDER;
@@ -562,7 +562,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     
     cbOpenFilePreview.setSelected(openFilePreview);
     cbClearHistory.setSelected(clearHistory);
-    cbLargeFont.setSelected(largeFont);
+    //cbLargeFont.setSelected(largeFont);
 
     // Atom panel controls: 
     vdwPercentSlider.setValue(vwr.getInt(T.percentvdwatom));
@@ -662,8 +662,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
       Integer.parseInt(currentProperties.getProperty("percentVdwAtom"));
     bondingVersion =
         Integer.parseInt(currentProperties.getProperty("bondingVersion"));
-    largeFont  = "true".equals(currentProperties.getProperty("largeConsoleFont"));
-
+    fontScale  = Math.max(PT.parseInt("" + currentProperties.getProperty("consoleFontScale")), 0) % 5;
 
     if (Boolean.getBoolean("jmolDefaults"))
       vwr.setStringProperty("defaults", "Jmol");
@@ -757,8 +756,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
         currentProperties.put("clearHistory", strSelected);
         if (JmolPanel.historyFile != null)
           JmolPanel.historyFile.addProperty("clearHistory", strSelected);
-      } else if (key.equals("Prefs.largeFont")) {
-        setLargeFont(strSelected);
+//      } else if (key.equals("Prefs.fontScale")) {
+//        setFontScale(strSelected);
       }
     }
   };
@@ -784,9 +783,9 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     }
   }
 
-  public void setLargeFont(String selected) {
-    largeFont = (selected == null ? !largeFont : "true".equals(selected));
-    currentProperties.put("largeConsoleFont", "" + largeFont);
+  public void setFontScale(int scale) {
+    fontScale = (scale == Integer.MIN_VALUE ? fontScale : scale < 0 ? fontScale + 1 : scale) % 5;
+    currentProperties.put("consoleFontScale", "" + fontScale);
     save();
     jmol.updateConsoleFont();
   }
