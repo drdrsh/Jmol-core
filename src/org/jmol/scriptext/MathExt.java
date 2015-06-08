@@ -1137,7 +1137,7 @@ public class MathExt {
    * 
    * _(key) prepends "auxiliaryInfo.models", delivering a modelCount-length array of information
    * 
-   * $ print _("aflowInfo[SELECT auid WHERE 'H__eV___VASP_' < 0]")
+   * $ print _("aflowInfo[SELECT auid WHERE H__eV___VASP_ < 0]")
    * 
    * 
    * {atomset}._(key) selects for model Auxiliary info related to models of the specified atoms
@@ -1154,7 +1154,7 @@ public class MathExt {
    * @param args
    * @param isAuxiliary
    * @param isAtomProperty
-   * @return
+   * @return true if no syntax problems
    * @throws ScriptException
    */
   private boolean evaluateGetProperty(ScriptMathProcessor mp, SV[] args,
