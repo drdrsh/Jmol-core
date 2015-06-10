@@ -7218,7 +7218,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public String getData(String atomExpression, String type) {
-    return getModelFileData(atomExpression, type.toUpperCase(), true);
+    // from GaussianDialog
+    return getModelFileData(atomExpression, type, true);
   }
 
   /**
