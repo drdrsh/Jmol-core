@@ -264,17 +264,19 @@ public class AFLOWReader extends VaspPoscarReader {
         float ca = parseFloatStr(val);
         if (getComposition && Math.abs((1 - ca) - fracB) > 0.01f)
           return false;
-      } else
-      if (key.equals("Cb")) {
+      } else if (key.equals("Cb")) {
         cb = parseFloatStr(strcb = val);
         if (getComposition && Math.abs(cb - fracB) > 0.01f)
           return false;
+      } else if (key.equals("Hf_atom [eV] (VASP)")) {
+        float e = parseFloatStr(val);
+        asc.setAtomSetEnergy(val, e);
       }
     }
     asc.setAtomSetName(aabb + " " + cb + " " + listKey + "=" + listValStr);
     float[] count_min = compositions.get(strcb);
     if (count_min == null)
-      compositions.put(strcb, count_min = new float[] {0, Float.MAX_VALUE } );
+      compositions.put(strcb, count_min = new float[] { 0, Float.MAX_VALUE });
     count_min[0]++;
     if (listVal < count_min[1])
       count_min[1] = listVal;
