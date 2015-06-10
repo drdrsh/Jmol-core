@@ -4384,8 +4384,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       String script = "" + getModelNumberDotted(currentFrame);
       if (!entryName.equals(script))
         entryName = script + ": " + entryName;
-      if (entryName.length() > 50)
-        entryName = entryName.substring(0, 45) + "...";
     }
     // there was a point where I thought frameNo and currentFrame
     // might be different. 

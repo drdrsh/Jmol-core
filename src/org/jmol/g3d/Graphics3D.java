@@ -1143,22 +1143,76 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   @Override
   public void drawImage(Object objImage, int x, int y, int z, int zSlab,
                         short bgcolix, int width, int height) {
-    if (objImage == null || width == 0 || height == 0 || isClippedZ(zSlab))
-      return;
-    plotImage(x, y, z, objImage, null, bgcolix, width, height);
+    // overridden in Export
+    if (objImage != null && width > 0 && height > 0 && !isClippedZ(zSlab))
+      plotImage(x, y, z, objImage, null, bgcolix, width, height);
   }
 
   @Override
   public void plotImage(int x, int y, int z, Object image,
                         JmolRendererInterface jmolRenderer, short bgcolix,
-                        int width, int height) {
+                        int imageWidth, int imageHeight) {
+    // overridden in __Exporter
     setC(bgcolix);
     if (!isPass2)
       translucencyMask = -1;
     if (bgcolix == 0)
       argbCurrent = 0;
-    ImageRenderer.plotImage(x, y, z, image, this, jmolRenderer,
-        antialiasThisFrame, argbCurrent, width, height);
+    boolean isBackground = (x == Integer.MIN_VALUE);
+    int bg = (isBackground ? bgcolor : argbCurrent);
+    if (isBackground) {
+      x = 0;
+      z = Integer.MAX_VALUE - 1;
+      imageWidth = width;
+      imageHeight = height;
+    }
+    if (x + imageWidth <= 0 || x >= width || y + imageHeight <= 0
+        || y >= height)
+      return;
+    Object g;
+    /**
+     * @j2sNative
+     * 
+     *            g = null;
+     * 
+     */
+    {
+      g = platform.getGraphicsForTextOrImage(imageWidth, imageHeight);
+    }
+    int[] buffer = apiPlatform.drawImageToBuffer(g,
+        platform.offscreenImage, image, imageWidth, imageHeight,
+        isBackground ? bg : 0);
+    if (buffer == null)
+      return;
+    int[] zb = zbuf;
+    int w = width;
+    Pixelator p = pixel;
+    int h = height;
+    int t = translucencyLog;
+    if (jmolRenderer == null
+        && (x >= 0 && x + imageWidth <= w && y >= 0 && y + imageHeight <= h)) {
+      // unclipped 
+      for (int i = 0, offset = 0, pbufOffset = y * w + x; i < imageHeight; i++, pbufOffset += (w - imageWidth)) {
+        for (int j = 0; j < imageWidth; j++) {
+          if (z < zb[pbufOffset++]) {
+            int b = buffer[offset++];
+            if ((b & 0xFF000000) == 0xFF000000)
+              p.addPixel(pbufOffset, z, b);
+          }
+        }
+      }
+    } else {
+      if (jmolRenderer == null)
+        jmolRenderer = this;
+      // clipped in some way -- let G3D or Exporter handle it
+      for (int i = 0, offset = 0; i < imageHeight; i++)
+        for (int j = 0; j < imageWidth; j++) {
+          int b = buffer[offset++];
+          if ((b & 0xFF000000) == 0xFF000000)
+            jmolRenderer.plotImagePixel(b, x + j, y + i, z, 8, bg, w,
+              h, zb, p, t);
+        }
+    }
   }
 
   @Override

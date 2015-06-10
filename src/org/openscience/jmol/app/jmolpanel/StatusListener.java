@@ -39,6 +39,7 @@ import org.openscience.jmol.app.jmolpanel.console.AppConsole;
 import org.openscience.jmol.app.webexport.WebExport;
 
 import java.awt.Component;
+import java.awt.Font;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
@@ -142,8 +143,16 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         if (menuName.equals("0.0: "))
           menuName = "";
         display.status.setStatus(1, menuName);
-        if (jmol.frame != null)
+        if (jmol.frame != null) {
+          Font f = jmol.frame.getFont();
+          if (f != null) {
+            int m = jmol.frame.getFontMetrics(f).stringWidth("M");
+            int n = jmol.frame.getWidth() / m;
+            //if (n < menuName.length())
+              //menuName = menuName.substring(0, n) + "...";
+          }
           jmol.frame.setTitle(menuName);
+        }
         //        if (jSpecViewFrame != null)
         //          setJSpecView("", true);
       }
@@ -175,13 +184,13 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         return;
       info = (Map<String, Object>) data[1];
       try {
-      String service = (String) info.get("service");
-      if ("nbo".equals(service)) {
-        if ("showPanel".equals(info.get("action"))) 
-          jmol.startNBO();
-        else
-          jmol.getNBOService().processRequest(info);
-      }
+        String service = (String) info.get("service");
+        if ("nbo".equals(service)) {
+          if ("showPanel".equals(info.get("action")))
+            jmol.startNBO();
+          else
+            jmol.getNBOService().processRequest(info);
+        }
       } catch (Exception e) {
         // ignore
       }
@@ -207,10 +216,11 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         return;
       }
       if (lc.equals("getpreference")) {
-        data[0] = (data[2] == null ? jmol.preferencesDialog : jmol.getPreference(data[2].toString()));
+        data[0] = (data[2] == null ? jmol.preferencesDialog : jmol
+            .getPreference(data[2].toString()));
         return;
       }
-        
+
       jmol.sendNioMessage(((Integer) data[3]).intValue(), strInfo);
       return;
     case DRAGDROP:
