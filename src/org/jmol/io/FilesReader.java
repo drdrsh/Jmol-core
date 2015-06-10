@@ -103,7 +103,7 @@ public class FilesReader implements JmolFilesReaderInterface {
       String[] zipDirectory = fm.getZipDirectory(name, true, true);
       t = fm.getBufferedInputStreamOrErrorMessageFromName(name,
           fullPathNamesIn[i], false, false, null, false, true);
-      t = fm.jmb.getAtomSetCollectionOrBufferedReaderFromZip(vwr.getModelAdapter(),
+      t = fm.getJmb().getAtomSetCollectionOrBufferedReaderFromZip(vwr.getModelAdapter(),
           (BufferedInputStream) t, name, zipDirectory, htParams, true);
     }
     if (t instanceof BufferedInputStream) {

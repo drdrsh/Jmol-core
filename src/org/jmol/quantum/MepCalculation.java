@@ -27,18 +27,17 @@ import java.io.BufferedReader;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.Rdr;
 
 import org.jmol.api.MepCalculationInterface;
 import org.jmol.api.VolumeDataInterface;
-import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
-
-import javajs.util.Rdr;
-import javajs.util.P3;
-import javajs.util.PT;
 
 /*
  * a simple molecular electrostatic potential cube generator
@@ -218,7 +217,7 @@ public class MepCalculation extends QuantumCalculation implements MepCalculation
     BufferedReader br = null;
     htAtomicPotentials = new Hashtable<String, Object>();
     try {
-      br = (data == null ? JmolBinary.getBufferedReaderForResource(vwr,
+      br = (data == null ? FileManager.getBufferedReaderForResource(vwr,
           this, "org/jmol/quantum/", resourceName) : Rdr
           .getBR(data));
       String line;

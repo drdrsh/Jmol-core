@@ -135,6 +135,7 @@ import javajs.api.GenericBinaryDocument;
 import javajs.util.AU;
 import javajs.util.Lst;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.Measure;
@@ -1148,7 +1149,7 @@ public class SurfaceGenerator {
     }
     BufferedReader br = (BufferedReader) value;
     if (fileType == null)
-      fileType = vwr.fm.jmb.determineSurfaceFileType(br);
+      fileType = FileManager.determineSurfaceFileType(br);
     if (fileType != null && fileType.startsWith("UPPSALA")) {
       //"http://eds.bmc.uu.se/cgi-bin/eds/gen_maps_zip.pl?POST?pdbCode=1blu&mapformat=ccp4&maptype=2fofc&page=generate"
       // -- ah, but this does not work, because it is asynchronous!
@@ -1170,7 +1171,7 @@ public class SurfaceGenerator {
       } catch (Exception e) {
         // TODO
       }
-      fileType = vwr.fm.jmb.determineSurfaceFileType(br);
+      fileType = FileManager.determineSurfaceFileType(br);
     }
     if (fileType == null)
       fileType = "UNKNOWN";

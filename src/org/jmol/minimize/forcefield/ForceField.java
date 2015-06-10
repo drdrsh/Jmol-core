@@ -30,7 +30,6 @@ import java.io.IOException;
 
 import javajs.util.PT;
 
-import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
@@ -40,6 +39,7 @@ import org.jmol.minimize.MinTorsion;
 import org.jmol.minimize.Minimizer;
 import org.jmol.minimize.Util;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.Viewer;
 
@@ -494,7 +494,7 @@ abstract public class ForceField {
   }
 
   protected BufferedReader getBufferedReader(String resourceName) throws IOException {
-    return JmolBinary.getBufferedReaderForResource(minimizer.vwr, this,
+    return FileManager.getBufferedReaderForResource(minimizer.vwr, this,
         "org/jmol/minimize/forcefield/", "data/" + resourceName);
   }
 

@@ -29,24 +29,21 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.net.URL;
-
-import javajs.api.GenericPlatform;
-import javajs.api.GenericZipTools;
-import javajs.api.GenericBinaryDocument;
-import javajs.util.AU;
-import javajs.util.LimitedLineReader;
-import javajs.util.OC;
-import javajs.util.Rdr;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import java.util.Hashtable;
-
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import javajs.api.GenericBinaryDocument;
+import javajs.api.GenericPlatform;
+import javajs.api.GenericZipTools;
+import javajs.util.AU;
+import javajs.util.Lst;
+import javajs.util.OC;
+import javajs.util.PT;
+import javajs.util.Rdr;
+import javajs.util.SB;
 
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.api.Interface;
@@ -62,8 +59,6 @@ public class JmolUtil implements JmolZipUtilities {
   public JmolUtil() {
     // for reflection
   }
-
-  private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0";
 
   /**
    * called by SmarterJmolAdapter to see if we have a Spartan directory and, if
@@ -232,158 +227,6 @@ public class JmolUtil implements JmolZipUtilities {
   }
 
   @Override
-  public boolean cachePngjFile(JmolBinary jmb, String[] data) {
-    data[0] = Rdr.getZipRoot(data[0]);
-    String shortName = shortSceneFilename(data[0]);
-    try {
-      data[1] = jmb.fm.vwr.getJzt().cacheZipContents( 
-          Rdr.getPngZipStream((BufferedInputStream) jmb.fm
-              .getBufferedInputStreamOrErrorMessageFromName(data[0], null,
-                  false, false, null, false, true), true), shortName, jmb.pngjCache, false);
-    } catch (Exception e) {
-      return false;
-    }
-    if (data[1] == null)
-      return false;
-    byte[] bytes = data[1].getBytes();
-    System.out.println("jmolutil caching " + bytes.length + " bytes as " + jmb.fm.getCanonicalName(data[0]));
-    jmb.pngjCache.put(jmb.fm.getCanonicalName(data[0]), bytes); // marker in case the .all. file is changed
-    if (shortName.indexOf("_scene_") >= 0) {
-      jmb.pngjCache.put(shortSceneFilename(data[0]), bytes); // good for all .min. files of this scene set
-      bytes = (byte[]) jmb.pngjCache.remove(shortName + "|state.spt");
-      if (bytes != null)
-        jmb.pngjCache.put(shortSceneFilename(data[0] + "|state.spt"), bytes);
-    }
-    for (String key : jmb.pngjCache.keySet())
-      System.out.println(key);
-    return true;
-  }
-
-  @Override
-  public String determineSurfaceFileType(BufferedReader bufferedReader) {
-    // drag-drop and isosurface command only
-    // JVXL should be on the FIRST line of the file, but it may be 
-    // after comments or missing.
-
-    // Apbs, Jvxl, or Cube, also efvet and DHBD
-
-    String line = null;
-    LimitedLineReader br = null;
-    
-    try {
-      br = new LimitedLineReader(bufferedReader, 16000);
-      line = br.getHeader(0);
-    } catch (Exception e) {
-      //
-    }
-    if (br == null || line == null || line.length() == 0)
-      return null;
-
-    //for (int i = 0; i < 220; i++)
-    //  System.out.print(" " + i + ":" + (0 + line.charAt(i)));
-    //System.out.println("");
-    
-    switch (line.charAt(0)) {
-    case '@':
-      if (line.indexOf("@text") == 0)
-        return "Kinemage";
-      break;
-    case '#':
-      if (line.indexOf(".obj") >= 0)
-        return "Obj"; // #file: pymol.obj
-      if (line.indexOf("MSMS") >= 0)
-        return "Msms";
-      break;
-    case '&':
-      if (line.indexOf("&plot") == 0)
-        return "Jaguar";
-      break;
-    case '\r':
-    case '\n':
-      if (line.indexOf("ZYX") >= 0)
-        return "Xplor";
-      break;
-    }
-    if (line.indexOf("Here is your gzipped map") >= 0)
-      return "UPPSALA" + line;
-    if (line.startsWith("4MESHC"))
-      return "Pmesh4";
-    if (line.indexOf("! nspins") >= 0)
-      return "CastepDensity";
-    if (line.indexOf("<jvxl") >= 0 && line.indexOf("<?xml") >= 0)
-      return "JvxlXml";
-    if (line.indexOf("#JVXL+") >= 0)
-      return "Jvxl+";
-    if (line.indexOf("#JVXL") >= 0)
-      return "Jvxl";
-    if (line.indexOf("<efvet ") >= 0)
-      return "Efvet";
-    if (line.indexOf("usemtl") >= 0)
-      return "Obj";
-    if (line.indexOf("# object with") == 0)
-      return "Nff";
-    if (line.indexOf("BEGIN_DATAGRID_3D") >= 0 || line.indexOf("BEGIN_BANDGRID_3D") >= 0)
-      return "Xsf";
-    // binary formats: problem here is that the buffered reader
-    // may be translating byte sequences into unicode
-    // and thus shifting the offset
-    int pt0 = line.indexOf('\0');
-    if (pt0 >= 0) {
-      if (line.indexOf(JmolBinary.PMESH_BINARY_MAGIC_NUMBER) == 0)
-        return "Pmesh";
-      if (line.indexOf(DELPHI_BINARY_MAGIC_NUMBER) == 0)
-        return "DelPhi";
-      if (line.indexOf("MAP ") == 208)
-        return "Mrc";
-      if (line.length() > 37 && (line.charAt(36) == 0 && line.charAt(37) == 100 
-          || line.charAt(36) == 0 && line.charAt(37) == 100)) { 
-           // header19 (short)100
-          return "Dsn6";
-      }
-    }
-    
-    if (line.indexOf(" 0.00000e+00 0.00000e+00      0      0\n") >= 0)
-      return "Uhbd"; // older APBS http://sourceforge.net/p/apbs/code/ci/9527462a39126fb6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c
-    
-    // Apbs, Jvxl, Obj, or Cube, maybe formatted Plt
-
-    line = br.readLineWithNewline();
-    if (line.indexOf("object 1 class gridpositions counts") == 0)
-      return "Apbs";
-
-    String[] tokens = PT.getTokens(line);
-    String line2 = br.readLineWithNewline();// second line
-    if (tokens.length == 2 && PT.parseInt(tokens[0]) == 3
-        && PT.parseInt(tokens[1]) != Integer.MIN_VALUE) {
-      tokens = PT.getTokens(line2);
-      if (tokens.length == 3 && PT.parseInt(tokens[0]) != Integer.MIN_VALUE
-          && PT.parseInt(tokens[1]) != Integer.MIN_VALUE
-          && PT.parseInt(tokens[2]) != Integer.MIN_VALUE)
-        return "PltFormatted";
-    }
-    String line3 = br.readLineWithNewline(); // third line
-    if (line.startsWith("v ") && line2.startsWith("v ") && line3.startsWith("v "))
-        return "Obj";
-    //next line should be the atom line
-    int nAtoms = PT.parseInt(line3);
-    if (nAtoms == Integer.MIN_VALUE)
-      return (line3.indexOf("+") == 0 ? "Jvxl+" : null);
-    tokens = PT.getTokens(line3);
-    if (tokens[0].indexOf(".") > 0)
-      return (line3.length() >= 60 || tokens.length != 3 ? null : "VaspChgcar"); // M40 files are > 60 char
-    if (nAtoms >= 0)
-      return (tokens.length == 4 ? "Cube" : null); //Can't be a Jvxl file; 
-    nAtoms = -nAtoms;
-    for (int i = 4 + nAtoms; --i >= 0;)
-      if ((line = br.readLineWithNewline()) == null)
-        return null;
-    int nSurfaces = PT.parseInt(line);
-    if (nSurfaces == Integer.MIN_VALUE)
-      return null;
-    return (nSurfaces < 0 ? "Jvxl" : "Cube"); //Final test looks at surface definition line    
-  }
-
-  @Override
   public Object getAtomSetCollectionOrBufferedReaderFromZip(Viewer vwr,
                                                             JmolAdapter adapter,
                                                             InputStream is,
@@ -472,7 +315,7 @@ public class JmolUtil implements JmolZipUtilities {
       }
       if (is instanceof BufferedInputStream)
         is = Rdr.getPngZipStream((BufferedInputStream) is, true);
-      ZipInputStream zis = (ZipInputStream) Rdr.newZipInputStream(zpt, is);
+      ZipInputStream zis = (ZipInputStream) zpt.newZipInputStream(is);
       ZipEntry ze;
       if (haveManifest)
         manifest = '|' + manifest.replace('\r', '|').replace('\n', '|') + '|';
@@ -496,8 +339,7 @@ public class JmolUtil implements JmolZipUtilities {
               zpt.getUnGzippedInputStream(bytes), -1);
         if (Rdr.isZipB(bytes) || Rdr.isPngZipB(bytes)) {
           BufferedInputStream bis = Rdr.getBIS(bytes);
-          String[] zipDir2 = Rdr
-              .getZipDirectoryAndClose(zpt, bis, "JmolManifest");
+          String[] zipDir2 = zpt.getZipDirectoryAndClose(bis, "JmolManifest");
           bis = Rdr.getBIS(bytes);
           Object atomSetCollections = getAtomSetCollectionOrBufferedReaderFromZip(
               vwr, adapter, bis, fileName + "|" + thisEntry, zipDir2,
@@ -615,36 +457,68 @@ public class JmolUtil implements JmolZipUtilities {
     }
   }
 
+  public boolean clearAndCachePngjFile(JmolBinary jmb, String[] data) {
+    jmb.fm.pngjCache = new Hashtable<String, Object>();
+    if (data == null || data[0] == null)
+      return false;
+    data[0] = Rdr.getZipRoot(data[0]);
+    String shortName = shortSceneFilename(data[0]);
+    Map<String, Object> cache = jmb.fm.pngjCache;
+    try {
+      data[1] = jmb.fm.vwr.getJzt().cacheZipContents( 
+          Rdr.getPngZipStream((BufferedInputStream) jmb.fm
+              .getBufferedInputStreamOrErrorMessageFromName(data[0], null,
+                  false, false, null, false, true), true), shortName, cache, false);
+    } catch (Exception e) {
+      return false;
+    }
+    if (data[1] == null)
+      return false;
+    byte[] bytes = data[1].getBytes();
+    System.out.println("jmolutil caching " + bytes.length + " bytes as " + jmb.fm.getCanonicalName(data[0]));
+    cache.put(jmb.fm.getCanonicalName(data[0]), bytes); // marker in case the .all. file is changed
+    if (shortName.indexOf("_scene_") >= 0) {
+      cache.put(shortSceneFilename(data[0]), bytes); // good for all .min. files of this scene set
+      bytes = (byte[]) cache.remove(shortName + "|state.spt");
+      if (bytes != null)
+        cache.put(shortSceneFilename(data[0] + "|state.spt"), bytes);
+    }
+    for (String key : cache.keySet())
+      System.out.println(key);
+    return true;
+}
+
   @Override
   public byte[] getCachedPngjBytes(JmolBinary jmb, String pathName) {
     if (pathName.startsWith("file:///"))
       pathName = "file:" +pathName.substring(7);
     Logger.info("JmolUtil checking PNGJ cache for " + pathName);
     String shortName = shortSceneFilename(pathName);
-    if (jmb.pngjCache == null
-        && !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
+    if (jmb.fm.pngjCache == null
+        && !clearAndCachePngjFile(jmb, new String[] { pathName, null }))
       return null;
+    Map<String, Object> cache = jmb.fm.pngjCache;
     boolean isMin = (pathName.indexOf(".min.") >= 0);
     if (!isMin) {
       String cName = jmb.fm.getCanonicalName(Rdr.getZipRoot(pathName));
-      if (!jmb.pngjCache.containsKey(cName)
-          && !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
+      if (!cache.containsKey(cName)
+          && !clearAndCachePngjFile(jmb, new String[] { pathName, null }))
         return null;
       if (pathName.indexOf("|") < 0)
         shortName = cName;
     }
-    if (jmb.pngjCache.containsKey(shortName)) {
+    if (cache.containsKey(shortName)) {
       Logger.info("FileManager using memory cache " + shortName);
-      return (byte[]) jmb.pngjCache.get(shortName);
+      return (byte[]) jmb.fm.pngjCache.get(shortName);
     }
     //    for (String key : pngjCache.keySet())
     //    System.out.println(" key=" + key);
     //System.out.println("FileManager memory cache size=" + pngjCache.size()
     //  + " did not find " + pathName + " as " + shortName);
-    if (!isMin || !jmb.clearAndCachePngjFile(new String[] { pathName, null }))
+    if (!isMin || !clearAndCachePngjFile(jmb, new String[] { pathName, null }))
       return null;
     Logger.info("FileManager using memory cache " + shortName);
-    return (byte[]) jmb.pngjCache.get(shortName);
+    return (byte[]) cache.get(shortName);
   }
 
   /**

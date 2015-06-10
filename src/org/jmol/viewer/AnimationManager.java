@@ -154,6 +154,8 @@ public class AnimationManager {
   String getModelSpecial(int i) {
     switch (i) {
     case FRAME_FIRST:
+      if (animationFrames != null)
+        return "1";
       i = firstFrameIndex;
       break;
     case MODEL_CURRENT:
@@ -162,6 +164,8 @@ public class AnimationManager {
       i = cmi;
       break;
     case FRAME_LAST:
+      if (animationFrames != null)
+        return "" + animationFrames.length;
       i = lastFrameIndex;
       break;
     }
@@ -394,6 +398,7 @@ public class AnimationManager {
     vwr.setBooleanProperty("_ismovie", isMovie);
     bsDisplay = null;
     currentMorphModel = morphCount = 0;
+    vwr.setFrameVariables();
   }
 
   int modelIndexForFrame(int i) {

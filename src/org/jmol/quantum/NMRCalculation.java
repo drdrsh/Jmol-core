@@ -28,20 +28,20 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javajs.util.Lst;
+import javajs.util.PT;
+import javajs.util.SB;
+import javajs.util.V3;
+
 import org.jmol.api.JmolNMRInterface;
-import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.Model;
 import org.jmol.util.Escape;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.util.Logger;
 import org.jmol.util.Tensor;
-import javajs.util.V3;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
 /*
@@ -296,7 +296,7 @@ public class NMRCalculation implements JmolNMRInterface {
     BufferedReader br = null;
     try {
       boolean debugging = Logger.debugging;
-      br = JmolBinary.getBufferedReaderForResource(vwr, this, "org/jmol/quantum/",
+      br = FileManager.getBufferedReaderForResource(vwr, this, "org/jmol/quantum/",
           resource);
       // #extracted by Simone Sturniolo from ROBIN K. HARRIS, EDWIN D. BECKER, SONIA M. CABRAL DE MENEZES, ROBIN GOODFELLOW, AND PIERRE GRANGER, Pure Appl. Chem., Vol. 73, No. 11, pp. 1795–1818, 2001. NMR NOMENCLATURE. NUCLEAR SPIN PROPERTIES AND CONVENTIONS FOR CHEMICAL SHIFTS (IUPAC Recommendations 2001)
       // #element atomNo  isotopeDef  isotope1  G1  Q1  isotope2  G2  Q2  isotope3  G3  Q3

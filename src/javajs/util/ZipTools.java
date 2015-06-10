@@ -145,8 +145,7 @@ public class ZipTools implements GenericZipTools {
    * @return directory listing or subfile contents
    */
   @Override
-  public Object getZipFileDirectory(GenericZipTools jzt,
-                                    BufferedInputStream bis, String[] list,
+  public Object getZipFileDirectory(BufferedInputStream bis, String[] list,
                                     int listPtr, boolean asBufferedInputStream) {
     SB ret;
     if (list == null || listPtr >= list.length)
@@ -183,7 +182,7 @@ public class ZipTools implements GenericZipTools {
       if (bytes == null)
         return "";
       if (Rdr.isZipB(bytes) || Rdr.isPngZipB(bytes))
-        return getZipFileDirectory(jzt, Rdr.getBIS(bytes), list, ++listPtr,
+        return getZipFileDirectory(Rdr.getBIS(bytes), list, ++listPtr,
             asBufferedInputStream);
       if (asBufferedInputStream)
         return Rdr.getBIS(bytes);

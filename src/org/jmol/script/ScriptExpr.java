@@ -1198,6 +1198,8 @@ abstract class ScriptExpr extends ScriptParam {
       // look to end of array or next comma
       Lst<SV> v = (Lst<SV>) parameterExpression(i, 0, null, false, true, -1,
           false, null, null, false);
+      if (v.size() == 0)
+        invArg();
       ht.put(key, v.get(0));
       i = iToken;
       if (tokAt(i) != T.comma)

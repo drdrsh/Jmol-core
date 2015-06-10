@@ -8,19 +8,17 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.api.GenericImageEncoder;
+import javajs.util.AU;
+import javajs.util.Lst;
+import javajs.util.OC;
+import javajs.util.PT;
+import javajs.util.SB;
+
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
 import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
-
-import javajs.api.GenericImageEncoder;
-import javajs.util.AU;
-import javajs.util.Rdr;
-import javajs.util.OC;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;
 
@@ -43,7 +41,6 @@ abstract class OutputManager {
            
   protected Viewer vwr;
   protected double privateKey;
-
   OutputManager setViewer(Viewer vwr, double privateKey) {
     this.vwr = vwr;
     this.privateKey = privateKey;
@@ -167,7 +164,7 @@ abstract class OutputManager {
           comment = (!asBytes ? (String) getWrappedState(null, null, image,
               null) : "");
         }
-        params.put("jpgAppTag", JmolBinary.JPEG_CONTINUE_STRING);
+        params.put("jpgAppTag", FileManager.JPEG_CONTINUE_STRING);
       } else if (type.equals("PDF")) {
         comment = "";
       } else if (type.startsWith("PNG")) {
@@ -938,8 +935,7 @@ abstract class OutputManager {
             .replaceAllCharacters(name, "/:?\"'=&", "_") : FileManager
             .stripPath(name));
         newName = PT.replaceAllCharacters(newName, "[]", "_");
-        Map<String, byte[]> spardirCache = fm.jmb.spardirCache;
-        boolean isSparDir = (spardirCache != null && spardirCache
+        boolean isSparDir = (fm.spardirCache != null && fm.spardirCache
             .containsKey(name));
         if (isLocal && name.indexOf("|") < 0 && !isSparDir) {
           v.addLast(name);
@@ -947,7 +943,7 @@ abstract class OutputManager {
           v.addLast(null); // data will be gotten from disk
         } else {
           // all remote files, and any file that was opened from a ZIP collection
-          Object ret = (isSparDir ? spardirCache.get(name) : fm.getFileAsBytes(
+          Object ret = (isSparDir ? fm.spardirCache.get(name) : fm.getFileAsBytes(
               name, null));
           if (!AU.isAB(ret))
             return (String) ret;
@@ -1002,7 +998,7 @@ abstract class OutputManager {
                                  Hashtable<Object, String> crcMap,
                                  boolean isSparDir, String newName, int ptSlash,
                                  Lst<Object> v) {
-     Integer crcValue = Integer.valueOf(Rdr.getCrcValue(vwr.getJzt(), ret));
+     Integer crcValue = Integer.valueOf(vwr.getJzt().getCrcValue(ret));
      // only add to the data list v when the data in the file is new
      if (crcMap.containsKey(crcValue)) {
        // let newName point to the already added data
@@ -1067,7 +1063,7 @@ abstract class OutputManager {
         bos = new BufferedOutputStream(out);
       }
       FileManager fm = vwr.fm;
-      OutputStream zos = (OutputStream) Rdr.getZipOutputStream(vwr.getJzt(), bos);
+      OutputStream zos = (OutputStream) vwr.getJzt().getZipOutputStream(bos);
       for (int i = 0; i < fileNamesAndByteArrays.size(); i += 3) {
         String fname = (String) fileNamesAndByteArrays.get(i);
         byte[] bytes = null;
@@ -1094,7 +1090,7 @@ abstract class OutputManager {
           continue;
         }
         fileList += key;
-        Rdr.addZipEntry(vwr.getJzt(), zos, fnameShort);
+        vwr.getJzt().addZipEntry(zos, fnameShort);
         int nOut = 0;
         if (bytes == null) {
           // get data from disk
@@ -1109,11 +1105,11 @@ abstract class OutputManager {
           // data are already in byte form
           zos.write(bytes, 0, bytes.length);
           if (pngjName != null) 
-            vwr.fm.jmb.recachePngjBytes(pngjName + "|" + fnameShort, bytes);
+            vwr.fm.recachePngjBytes(pngjName + "|" + fnameShort, bytes);
           nOut += bytes.length;
         }
         nBytesOut += nOut;
-        Rdr.closeZipEntry(vwr.getJzt(), zos);
+        vwr.getJzt().closeZipEntry(zos);
         Logger.info("...added " + fname + " (" + nOut + " bytes)");
       }
       zos.flush();

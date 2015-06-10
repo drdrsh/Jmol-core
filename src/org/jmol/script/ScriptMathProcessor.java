@@ -1667,6 +1667,7 @@ public class ScriptMathProcessor {
       case T.stddev:
       case T.sum:
       case T.sum2:
+      case T.pivot:
         return addXObj(eval.getMathExt().getMinMax(x2.getList(), op.intValue));
       case T.pop:
         return addX(x2.pushPop(null, null));

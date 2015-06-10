@@ -242,7 +242,7 @@ public class AFLOWReader extends VaspPoscarReader {
     discardLinesUntilContains("- DATA -");
     Map<String, Object> htAFLOW = new Hashtable<String, Object>();
     htAFLOW.put("fileModelNumber", Integer.valueOf(fileModelNumber));
-    htAFLOW.put("modelNumber", Integer.valueOf(modelNumber));
+    htAFLOW.put("modelNumber", Integer.valueOf(modelNumber + 1));
     htAFLOW.put("AaBb", aabb);
     int pt = 0;
     SB sb = new SB();
@@ -280,6 +280,9 @@ public class AFLOWReader extends VaspPoscarReader {
       count_min[1] = listVal;
     if (!doGetModel(++modelNumber, null))
       return false;
+    while (line.indexOf("- URL -") < 0)
+      rdline();
+    sb.append("URL=" + rdline() + "|");
     while (line.indexOf("aurl=") < 0)
       rdline();
     sb.append(line);

@@ -559,8 +559,9 @@ public class T {
   public final static int unitxyz   =14 | mathproperty | atomproperty;
   public final static int vibxyz    =15 | mathproperty | atomproperty | settable;
   public final static int modxyz    =16 | mathproperty | atomproperty;
-  public final static int w                =17 | mathproperty;
-  public final static int keys             =18 | mathproperty; 
+  public final static int w         =17 | mathproperty;
+  public final static int keys      =18 | mathproperty; 
+  public final static int pivot     =19 | mathproperty;
   
   // occupancy, radius, and structure are odd, because they takes different meanings when compared
   
@@ -589,7 +590,7 @@ public class T {
   public final static int atomno        = intproperty | 1 | settable;
   public final static int atomid        = intproperty | 2;
   public final static int atomindex     = intproperty | 3;
-  public final static int bondcount     = intproperty | 4;
+  // bondcount -- see xxx(a) 
   public final static int cell          = intproperty | 5;
   public final static int centroid      = intproperty | 6;
   public final static int chainno       = intproperty | 7;
@@ -727,7 +728,8 @@ public class T {
   
   // xxx(a)
   
-  public final static int acos         = 3 | 1 << 9 | mathfunc;
+  public final static int acos         = 2 | 1 << 9 | mathfunc;
+  public final static int bondcount    = 3 | 1 << 9 | mathfunc | intproperty;
   public final static int sin          = 4 | 1 << 9 | mathfunc;
   public final static int cos          = 5 | 1 << 9 | mathfunc;
   public final static int sqrt         = 6 | 1 << 9 | mathfunc;
@@ -2057,6 +2059,7 @@ public class T {
         "options",
         "partialCharge",
         "phi",
+        "pivot",
         "plane",
         "planar",
         "play",
@@ -3084,6 +3087,7 @@ public class T {
         options,                            // "options"
         partialcharge,                      // "partialCharge"
         phi,                                // "phi"
+        pivot,                              // "pivot"
         plane,                              // "plane"
         -1,                                 // "planar"
         play,                               // "play"

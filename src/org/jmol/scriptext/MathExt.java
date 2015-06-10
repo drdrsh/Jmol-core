@@ -25,6 +25,7 @@
 package org.jmol.scriptext;
 
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -39,6 +40,7 @@ import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
@@ -128,8 +130,9 @@ public class MathExt {
       return evaluateColor(mp, args);
     case T.compare:
       return evaluateCompare(mp, args);
+    case T.bondcount:
     case T.connected:
-      return evaluateConnected(mp, args);
+      return evaluateConnected(mp, args, tok == T.bondcount);
     case T.contact:
       return evaluateContact(mp, args);
     case T.cross:
@@ -531,9 +534,12 @@ public class MathExt {
     }
   }
 
-  private boolean evaluateConnected(ScriptMathProcessor mp, SV[] args) {
+  private boolean evaluateConnected(ScriptMathProcessor mp, SV[] args,
+                                    boolean isBondCount) throws ScriptException {
     /*
      * Several options here:
+     * 
+     * .bondCount({_Au})
      * 
      * connected(1, 3, "single", {carbon})
      * 
@@ -552,7 +558,7 @@ public class MathExt {
      * 
      */
 
-    if (args.length > 5)
+    if (args.length > 5 || isBondCount && args.length != 1)
       return false;
     float min = Integer.MIN_VALUE, max = Integer.MAX_VALUE;
     float fmin = 0, fmax = Float.MAX_VALUE;
@@ -562,6 +568,24 @@ public class MathExt {
     BS atoms2 = null;
     boolean haveDecimal = false;
     boolean isBonds = false;
+    if (isBondCount) {
+      SV x1 = mp.getX();
+      if (x1.tok != T.bitset)
+        return false;
+      atoms1 = SV.bsSelectVar(x1);
+      atoms2 = SV.bsSelectVar(args[0]);
+      Lst<Integer> list = new Lst<Integer>();
+      Atom[] atoms = vwr.ms.at;
+      for (int i = atoms1.nextSetBit(0); i >= 0; i = atoms1.nextSetBit(i + 1)) {
+        int n = 0;
+        Bond[] b = atoms[i].bonds;
+        for (int j = b.length; --j >= 0;)
+          if (atoms2.get(b[j].getOtherAtom(atoms[i]).i))
+            n++;
+        list.addLast(Integer.valueOf(n));
+      }
+      return mp.addXList(list);
+    }
     for (int i = 0; i < args.length; i++) {
       SV var = args[i];
       switch (var.tok) {
@@ -623,8 +647,8 @@ public class MathExt {
           bsBonds, isBonds, false, 0);
       return mp.addX(SV.newV(
           T.bitset,
-          BondSet.newBS(bsBonds, vwr.ms.getAtomIndices(vwr.ms.getAtoms(
-              T.bonds, bsBonds)))));
+          BondSet.newBS(bsBonds,
+              vwr.ms.getAtomIndices(vwr.ms.getAtoms(T.bonds, bsBonds)))));
     }
     return mp.addXBs(vwr.ms.getAtomsConnected(min, max, order, atoms1));
   }
@@ -2779,6 +2803,7 @@ public class MathExt {
     float[] data = null;
     Lst<SV> sv = null;
     int ndata = 0;
+    Map<String, Integer> htPivot = null;
     while (true) {
       if (AU.isAF(floatOrSVArray)) {
         data = (float[]) floatOrSVArray;
@@ -2806,6 +2831,10 @@ public class MathExt {
       int minMax;
       boolean isMin = false;
       switch (tok) {
+      case T.pivot:
+        htPivot = new Hashtable<String,Integer>();
+        sum = minMax = 0;
+        break;
       case T.min:
         isMin = true;
         sum = Float.MAX_VALUE;
@@ -2821,9 +2850,10 @@ public class MathExt {
       double sum2 = 0;
       int n = 0;
       boolean isInt = true;
+      boolean isPivot = (tok == T.pivot);
       for (int i = ndata; --i >= 0;) {
         SV svi = sv.get(i);
-        float v = (data == null ? SV.fValue(svi) : data[i]);
+        float v = (isPivot ? 1 : data == null ? SV.fValue(svi) : data[i]);
         if (Float.isNaN(v))
           continue;
         n++;
@@ -2836,6 +2866,12 @@ public class MathExt {
         case T.average:
           sum += v;
           break;
+        case T.pivot:
+          isInt &= (svi.tok == T.integer); 
+          String key = svi.asString();
+          Integer ii = htPivot.get(key);
+          htPivot.put(key, (ii == null ? new Integer(1) : new Integer(ii.intValue() + 1)));
+          break;
         case T.min:
         case T.max:
           isInt &= (svi.tok == T.integer); 
@@ -2846,6 +2882,9 @@ public class MathExt {
           }
           break;
         }
+      }
+      if (tok == T.pivot) {
+        return htPivot;
       }
       if (n == 0)
         break;

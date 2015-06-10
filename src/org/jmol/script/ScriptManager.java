@@ -43,6 +43,7 @@ import org.jmol.modelset.Atom;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.Viewer;
@@ -549,7 +550,7 @@ public class ScriptManager implements JmolScriptManager {
       if (!fileName.toLowerCase().endsWith(".spt")) {
         String type = getDragDropFileTypeName(fileName);
         if (type == null) {
-          type = vwr.fm.jmb.determineSurfaceTypeIs(vwr
+          type = FileManager.determineSurfaceTypeIs(vwr
               .getBufferedInputStream(fileName));
           if (type != null)
             cmd = "if (_filetype == 'Pdb') { isosurface sigma 1.0 within 2.0 {*} "
@@ -611,7 +612,7 @@ public class ScriptManager implements JmolScriptManager {
   private String getZipDirectoryAsString(String fileName) {
     Object t = vwr.fm.getBufferedInputStreamOrErrorMessageFromName(
         fileName, fileName, false, false, null, false, true);
-    return Rdr.getZipDirectoryAsStringAndClose(vwr.getJzt(), (BufferedInputStream) t);
+    return vwr.getJzt().getZipDirectoryAsStringAndClose((BufferedInputStream) t);
   }
 
   private static int prevCovalentVersion = 1;

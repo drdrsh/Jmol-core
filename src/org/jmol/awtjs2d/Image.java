@@ -97,8 +97,8 @@ class Image {
      */
     int n = imgData.length / 4;
     int[] iData = new int[n];
-    for (int i = 0, j = 0; i < n; j++) {
-      iData[i++] = (imgData[j++] << 16) | (imgData[j++] << 8) | imgData[j++] | 0xFF000000;
+    for (int i = 0, j = 0; i < n;) {
+      iData[i++] = (imgData[j++] << 16) | (imgData[j++] << 8) | imgData[j++] | (imgData[j++] << 24);
     }
     return iData;
   }      

@@ -26,6 +26,7 @@ package org.jmol.viewer;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -40,6 +41,7 @@ import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.Base64;
 import javajs.util.DataReader;
+import javajs.util.LimitedLineReader;
 import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.PT;
@@ -61,25 +63,27 @@ public class FileManager implements BytePoster {
 
   public static String SIMULATION_PROTOCOL = "http://SIMULATION/";
 
+  public Map<String, Object> pngjCache;
+  public Map<String, byte[]> spardirCache;
+
   public Viewer vwr;
 
-  public JmolBinary jmb;
 
   FileManager(Viewer vwr) {
     this.vwr = vwr;
-    jmb = new JmolBinary(this);
     clear();
   }
 
+  private JmolBinary jmb;
+  
+  public JmolBinary getJmb() {
+    return (jmb == null ? jmb = ((JmolBinary) Interface.getInterface("org.jmol.io.JmolBinary", vwr, "fm getJmb()")).set(this) : jmb);  
+  }
+  
   void clear() {
     // from zap
     setFileInfo(new String[] { vwr.getZapName() });
-    jmb.spardirCache = null;
-   
-  }
-
-  public void clearPngjCache(String fileName) {
-    jmb.clearPngjCache(fileName == null ? null : getCanonicalName(Rdr.getZipRoot(fileName)));
+    spardirCache = null;   
   }
 
   private void setLoadState(Map<String, Object> htParams) {
@@ -383,16 +387,11 @@ public class FileManager implements BytePoster {
                                                              byte[] outputBytes,
                                                              boolean allowReader,
                                                              boolean allowCached) {
-    byte[] cacheBytes = null;
-    if (allowCached && outputBytes == null) {
-      cacheBytes = (fullName == null || jmb.pngjCache == null ? null
-          : jmb.getCachedPngjBytes(fullName));
-      if (cacheBytes == null)
-        cacheBytes = (byte[]) cacheGet(name, true);
-    }
     BufferedInputStream bis = null;
     Object ret = null;
     String errorMessage = null;
+    byte[] cacheBytes = (allowCached && outputBytes == null ? cacheBytes = getPngjOrDroppedBytes(
+        fullName, name) : null);
     try {
       if (cacheBytes == null) {
         boolean isPngjBinaryPost = (name.indexOf("?POST?_PNGJBIN_") >= 0);
@@ -419,9 +418,9 @@ public class FileManager implements BytePoster {
           name = name.substring(0, iurl);
         }
         boolean isApplet = (appletDocumentBaseURL != null);
-        if (allowCached && name.indexOf(".png") >= 0 && jmb.pngjCache == null
+        if (allowCached && name.indexOf(".png") >= 0 && pngjCache == null
             && vwr.cachePngFiles())
-          jmb.clearAndCachePngjFile(null);
+          pngjCache = new Hashtable<String, Object>();
         if (isApplet || isURL) {
           if (isApplet && isURL && appletProxy != null)
             name = appletProxy + "?url=" + urlEncode(name);
@@ -434,17 +433,17 @@ public class FileManager implements BytePoster {
             Logger.info("FileManager opening 1 " + name);
           // note that in the case of JS, this is a javajs.util.SB.
           ret = vwr.apiPlatform.getURLContents(url, outputBytes, post, false);
-//          if ((ret instanceof SB && ((SB) ret).length() < 3
-//                || ret instanceof String && ((String) ret).startsWith("java."))
-//              && name.startsWith("http://ves-hx-89.ebi.ac.uk")) {
-//            // temporary bypass for EBI firewalled development server
-//            // defaulting to current directory and JSON file
-//            name = "http://chemapps.stolaf.edu/jmol/jsmol/data/" 
-//            + name.substring(name.lastIndexOf("/") + 1) 
-//            + (name.indexOf("/val") >= 0 ? ".val" : ".ann") + ".json";
-//            ret = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
-//                showMsg, checkOnly, outputBytes, allowReader, allowCached);
-//          }
+          //          if ((ret instanceof SB && ((SB) ret).length() < 3
+          //                || ret instanceof String && ((String) ret).startsWith("java."))
+          //              && name.startsWith("http://ves-hx-89.ebi.ac.uk")) {
+          //            // temporary bypass for EBI firewalled development server
+          //            // defaulting to current directory and JSON file
+          //            name = "http://chemapps.stolaf.edu/jmol/jsmol/data/" 
+          //            + name.substring(name.lastIndexOf("/") + 1) 
+          //            + (name.indexOf("/val") >= 0 ? ".val" : ".ann") + ".json";
+          //            ret = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
+          //                showMsg, checkOnly, outputBytes, allowReader, allowCached);
+          //          }
 
           byte[] bytes = null;
           if (ret instanceof SB) {
@@ -484,6 +483,13 @@ public class FileManager implements BytePoster {
     return errorMessage;
   }
   
+  private byte[] getPngjOrDroppedBytes(String fullName, String name) {
+    byte[] bytes = getCachedPngjBytes(fullName);
+    if (bytes == null)
+      bytes = (byte[]) cacheGet(name, true);
+    return bytes;
+  }
+
   private String urlEncode(String name) {
     try {
       return URLEncoder.encode(name, "utf-8");
@@ -556,63 +562,38 @@ public class FileManager implements BytePoster {
         false, isBinary, false, doSpecialLoad, null);
   }
 
+  /**
+   * 
+   * @param name
+   * @param bytes
+   *        cached bytes
+   * @param allowZipStream
+   *        if the file is a zip file, allow a return that is a ZipInputStream
+   * @param forceInputStream
+   *        always return a raw BufferedInputStream, not a BufferedReader, and
+   *        do not process PNGJ files
+   * @param isTypeCheckOnly
+   *        when possibly reading a spartan file for content (doSpecialLoad ==
+   *        true), just return the compound document's file list
+   * @param doSpecialLoad check for a Spartan file
+   * @param htParams
+   * @return String if error or String[] if a type check or BufferedReader or BufferedInputStream
+   */
   public Object getUnzippedReaderOrStreamFromName(String name, byte[] bytes,
                                                   boolean allowZipStream,
                                                   boolean forceInputStream,
                                                   boolean isTypeCheckOnly,
                                                   boolean doSpecialLoad,
                                                   Map<String, Object> htParams) {
-    String[] subFileList = null;
-    String[] info = (bytes == null && doSpecialLoad ? getSpartanFileList(name)
-        : null);
-    String name00 = name;
-    if (info != null) {
-      if (isTypeCheckOnly)
-        return info;
-      if (info[2] != null) {
-        String header = info[1];
-        Map<String, String> fileData = new Hashtable<String, String>();
-        if (info.length == 3) {
-          // we need information from the output file, info[2]
-          String name0 = getObjectAsSections(info[2], header, fileData);
-          fileData.put("OUTPUT", name0);
-          info = jmb.spartanFileList(name, fileData.get(name0));
-          if (info.length == 3) {
-            // might have a second option
-            name0 = getObjectAsSections(info[2], header, fileData);
-            fileData.put("OUTPUT", name0);
-            info = jmb.spartanFileList(info[1], fileData.get(name0));
-          }
-        }
-        // load each file individually, but return files IN ORDER
-        SB sb = new SB();
-        if (fileData.get("OUTPUT") != null)
-          sb.append(fileData.get(fileData.get("OUTPUT")));
-        String s;
-        for (int i = 2; i < info.length; i++) {
-          name = info[i];
-          name = getObjectAsSections(name, header, fileData);
-          Logger.info("reading " + name);
-          s = fileData.get(name);
-          sb.append(s);
-        }
-        s = sb.toString();
-        jmb.spardirPut(name00.replace('\\', '/'), s.getBytes());
-        return Rdr.getBR(s);
-      }
-      // continuing...
-      // here, for example, for an SPT file load that is not just a type check
-      // (type check is only for application file opening and drag-drop to
-      // determine if
-      // script or load command should be used)
+    if (doSpecialLoad && bytes == null) {
+      Object o = checkOpenSpartanFile(name, isTypeCheckOnly);
+      if (o != null)
+        return o;
     }
-
-    if (bytes == null && jmb.pngjCache != null) {
-      bytes = jmb.getCachedPngjBytes(name);
-      if (bytes != null && htParams != null)
+    if (bytes == null && (bytes = getCachedPngjBytes(name)) != null && htParams != null)
         htParams.put("sourcePNGJ", Boolean.TRUE);
-    }
     String fullName = name;
+    String[] subFileList = null;
     if (name.indexOf("|") >= 0) {
       subFileList = PT.split(name.replace('\\', '/'), "|");
       if (bytes == null)
@@ -620,38 +601,60 @@ public class FileManager implements BytePoster {
       name = subFileList[0];
     }
     Object t = (bytes == null ? getBufferedInputStreamOrErrorMessageFromName(
-        name, fullName, true, false, null, !forceInputStream, true)
-        : Rdr.getBIS(bytes));
+        name, fullName, true, false, null, !forceInputStream, true) : Rdr
+        .getBIS(bytes));
     try {
-      if (t instanceof String)
-        return t;
-      if (t instanceof BufferedReader)
+      if (t instanceof String || t instanceof BufferedReader)
         return t;
       BufferedInputStream bis = (BufferedInputStream) t;
       if (Rdr.isGzipS(bis))
         bis = Rdr.getUnzippedInputStream(vwr.getJzt(), bis);
+      if (forceInputStream)
+        return  bis;
       if (Rdr.isCompoundDocumentS(bis)) {
+        // very specialized reader; assuming we have a Spartan document here
         GenericBinaryDocument doc = (GenericBinaryDocument) Interface
             .getInterface("javajs.util.CompoundDocument", vwr, "file");
         doc.setStream(vwr.getJzt(), bis, true);
-        return Rdr.getBR(doc.getAllDataFiles(
-            "Molecule", "Input").toString());
+        return Rdr.getBR(doc.getAllDataFiles("Molecule", "Input").toString());
       }
       if (Rdr.isPickleS(bis))
         return bis;
       bis = Rdr.getPngZipStream(bis, true);
       if (Rdr.isZipS(bis)) {
         if (allowZipStream)
-          return Rdr.newZipInputStream(vwr.getJzt(), bis);
-        Object o = Rdr.getZipFileDirectory(vwr.getJzt(), bis, subFileList, 1, forceInputStream);
+          return vwr.getJzt().newZipInputStream(bis);
+        Object o = vwr.getJzt().getZipFileDirectory(bis, subFileList, 1,
+            forceInputStream);
         return (o instanceof String ? Rdr.getBR((String) o) : o);
       }
-      return (forceInputStream ? bis : Rdr.getBufferedReader(bis, null));
+      return Rdr.getBufferedReader(bis, null);
     } catch (Exception ioe) {
       return ioe.toString();
     }
   }
 
+  /**
+   * Open a Spartan compound document file as a 
+   * @param name
+   * @param isTypeCheckOnly just return a String[] containing critical information
+   * @return String[] or BufferedReader
+   */
+  private Object checkOpenSpartanFile(String name, boolean isTypeCheckOnly) {
+    String[] info = getSpartanFileList(name);
+    // info[2] == null, for example, for an SPT file load that is not just a type check
+    // (type check is only for application file opening and drag-drop to
+    // determine if
+    // script or load command should be used)
+    return (isTypeCheckOnly || info == null || info[2] == null ? info : getJmb().spartanFileGetRdr(name, info));
+  }
+
+  /**
+   * check for spartan file based on file extension ".spardir.zip" or ".spardir"
+   * and if found, return the list of critical files needed 
+   * @param name
+   * @return compound document critical files list
+   */
   private String[] getSpartanFileList(String name) {
       // check for .spt file type -- Jmol script
       if (name.endsWith(".spt"))
@@ -676,102 +679,6 @@ public class FileManager implements BytePoster {
   }
 
   /**
-   * delivers file contents and directory listing for a ZIP/JAR file into sb
-   * 
-   * @param name
-   * @param header
-   * @param fileData
-   * @return name of entry
-   */
-  private String getObjectAsSections(String name, String header,
-                                     Map<String, String> fileData) {
-    if (name == null)
-      return null;
-    String[] subFileList = null;
-    boolean asBinaryString = false;
-    String name0 = name.replace('\\', '/');
-    if (name.indexOf(":asBinaryString") >= 0) {
-      asBinaryString = true;
-      name = name.substring(0, name.indexOf(":asBinaryString"));
-    }
-    SB sb = null;
-    if (fileData.containsKey(name0))
-      return name0;
-    if (name.indexOf("#JMOL_MODEL ") >= 0) {
-      fileData.put(name0, name0 + "\n");
-      return name0;
-    }
-    String fullName = name;
-    if (name.indexOf("|") >= 0) {
-      subFileList = PT.split(name, "|");
-      name = subFileList[0];
-    }
-    BufferedInputStream bis = null;
-    try {
-      Object t = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
-          false, false, null, false, true);
-      if (t instanceof String) {
-        fileData.put(name0, (String) t + "\n");
-        return name0;
-      }
-      bis = (BufferedInputStream) t;
-      if (Rdr.isCompoundDocumentS(bis)) {
-        GenericBinaryDocument doc = (GenericBinaryDocument) Interface
-            .getInterface("javajs.util.CompoundDocument", vwr, "file");
-        doc.setStream(vwr.getJzt(), bis, true);
-        doc.getAllDataMapped(name.replace('\\', '/'), "Molecule", fileData);
-      } else if (Rdr.isZipS(bis)) {
-        Rdr.getAllZipData(vwr.getJzt(), bis, subFileList, name.replace('\\', '/'), "Molecule",
-            fileData);
-      } else if (asBinaryString) {
-        // used for Spartan binary file reading
-        GenericBinaryDocument bd = (GenericBinaryDocument) Interface
-            .getInterface("javajs.util.BinaryDocument", vwr, "file");
-        bd.setStream(vwr.getJzt(), bis, false);
-        sb = new SB();
-        //note -- these headers must match those in ZipUtil.getAllData and CompoundDocument.getAllData
-        if (header != null)
-          sb.append("BEGIN Directory Entry " + name0 + "\n");
-        try {
-          while (true)
-            sb.append(Integer.toHexString(bd.readByte() & 0xFF)).appendC(' ');
-        } catch (Exception e1) {
-          sb.appendC('\n');
-        }
-        if (header != null)
-          sb.append("\nEND Directory Entry " + name0 + "\n");
-        fileData.put(name0, sb.toString());
-      } else {
-        BufferedReader br = Rdr.getBufferedReader(
-            Rdr.isGzipS(bis) ? new BufferedInputStream(Rdr.newGZIPInputStream(vwr.getJzt(), bis)) : bis, null);
-        String line;
-        sb = new SB();
-        if (header != null)
-          sb.append("BEGIN Directory Entry " + name0 + "\n");
-        while ((line = br.readLine()) != null) {
-          sb.append(line);
-          sb.appendC('\n');
-        }
-        br.close();
-        if (header != null)
-          sb.append("\nEND Directory Entry " + name0 + "\n");
-        fileData.put(name0, sb.toString());
-      }
-    } catch (Exception ioe) {
-      fileData.put(name0, ioe.toString());
-    }
-    if (bis != null)
-      try {
-        bis.close();
-      } catch (Exception e) {
-        //
-      }
-    if (!fileData.containsKey(name0))
-      fileData.put(name0, "FILE NOT FOUND: " + name0 + "\n");
-    return name0;
-  }
-
-  /**
    * 
    * @param fileName
    * @param addManifest
@@ -781,7 +688,7 @@ public class FileManager implements BytePoster {
   public String[] getZipDirectory(String fileName, boolean addManifest, boolean allowCached) {
     Object t = getBufferedInputStreamOrErrorMessageFromName(fileName, fileName,
         false, false, null, false, allowCached);
-    return Rdr.getZipDirectoryAndClose(vwr.getJzt(), (BufferedInputStream) t, addManifest ? "JmolManifest" : null);
+    return vwr.getJzt().getZipDirectoryAndClose((BufferedInputStream) t, addManifest ? "JmolManifest" : null);
   }
 
   public Object getFileAsBytes(String name, OC out) {
@@ -795,18 +702,25 @@ public class FileManager implements BytePoster {
       subFileList = PT.split(name, "|");
       name = subFileList[0];
     }
+    // JavaScript will use this method to load a cached file,
+    // but in that case we can get the bytes directly and not
+    // fool with a BufferedInputStream, and we certainly do not want to 
+    // open it twice in the case of the returned interior file being another PNGJ file
+    Object bytes = (subFileList == null ? null : getPngjOrDroppedBytes(fullName, name));
+    if (bytes != null)
+      return bytes;
     Object t = getBufferedInputStreamOrErrorMessageFromName(name, fullName,
         false, false, null, false, true);
     if (t instanceof String)
       return "Error:" + t;
     try {
       BufferedInputStream bis = (BufferedInputStream) t;
-      Object bytes = (out != null 
+      bytes = (out != null 
           || subFileList == null
           || subFileList.length <= 1 
           || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) 
               ? Rdr.getStreamAsBytes(bis,out) 
-          : Rdr.getZipFileContentsAsBytes(vwr.getJzt(), bis, subFileList, 1));
+          : vwr.getJzt().getZipFileContentsAsBytes(bis, subFileList, 1));
       bis.close();
       return bytes;
     } catch (Exception ioe) {
@@ -840,7 +754,7 @@ public class FileManager implements BytePoster {
       }
     }
     try {
-      Rdr.readFileAsMap(vwr.getJzt(), (BufferedInputStream) t, bdata, name);
+      vwr.getJzt().readFileAsMap((BufferedInputStream) t, bdata, name);
       
     } catch (Exception e) {
       bdata.clear();
@@ -935,12 +849,12 @@ public class FileManager implements BytePoster {
       nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
           : names[0].replace('\\', '/'));
       if (names != null)
-        image = jmb.getImage(vwr, nameOrError, echoName);
+        image = getJmb().getImage(nameOrError, echoName);
     } else {
       image = nameOrBytes;
     }
     if (bytes != null)
-      image = jmb.getImage(vwr, bytes, echoName);
+      image = getJmb().getImage(bytes, echoName);
     if (image instanceof String) {
       nameOrError = (String) image;
       image = null;
@@ -1242,6 +1156,9 @@ public class FileManager implements BytePoster {
 
   private Map<String, Object> cache = new Hashtable<String, Object>();
 
+  public static final String JPEG_CONTINUE_STRING = " #Jmol...\0";
+  
+
   void cachePut(String key, Object data) {
     key = key.replace('\\', '/');
     if (Logger.debugging)
@@ -1251,7 +1168,7 @@ public class FileManager implements BytePoster {
       return;
     }
     cache.put(key, data);
-    jmb.getCachedPngjBytes(key);
+    getCachedPngjBytes(key);
   }
   
   public Object cacheGet(String key, boolean bytesOnly) {
@@ -1272,8 +1189,9 @@ public class FileManager implements BytePoster {
     {
     //if (Logger.debugging)
       //Logger.debug
-      Logger.info("cacheGet " + key + " " + cache.containsKey(key));
        data = cache.get(key);
+       if (data != null)
+         Logger.info("cacheGet " + key);
     }    
     return (bytesOnly && (data instanceof String) ? null : data);
   }
@@ -1281,7 +1199,12 @@ public class FileManager implements BytePoster {
   void cacheClear() {
     Logger.info("cache cleared");
     cache.clear();
-    clearPngjCache(null);
+    String fileName = null;
+    fileName = fileName == null ? null : getCanonicalName(Rdr.getZipRoot(fileName));
+    if (pngjCache == null || fileName != null && !pngjCache.containsKey(fileName))
+      return;
+    pngjCache = null;
+    Logger.info("PNGJ cache cleared");
   }
 
   public int cacheFileByNameAdd(String fileName, boolean isAdd) {
@@ -1338,5 +1261,197 @@ public class FileManager implements BytePoster {
     }
     return (ret == null ? "" : Rdr.fixUTF((byte[]) ret));
   }
+
+  @SuppressWarnings("null")
+  public static BufferedReader getBufferedReaderForResource(Viewer vwr,
+                                                            Object resourceClass,
+                                                            String classPath,
+                                                            String resourceName)
+      throws IOException {
+
+    URL url;
+    /**
+     * @j2sNative
+     * 
+     */
+    {
+      url = resourceClass.getClass().getResource(resourceName);
+      if (url == null) {
+        System.err.println("Couldn't find file: " + classPath + resourceName);
+        throw new IOException();
+      }
+      if (!vwr.async)
+        return Rdr.getBufferedReader(
+            new BufferedInputStream((InputStream) url.getContent()), null);
+    }
+    resourceName = (url == null 
+        ? vwr.vwrOptions.get("codePath") + classPath + resourceName
+            : url.getFile());
+    if (vwr.async) {
+      Object bytes = vwr.fm.cacheGet(resourceName, false);
+      if (bytes == null)
+        throw new JmolAsyncException(resourceName);
+      return Rdr.getBufferedReader(Rdr.getBIS((byte[]) bytes), null);
+    }
+    // JavaScript only; here and not in JavaDoc to preserve Eclipse search reference
+    return (BufferedReader) vwr.fm.getBufferedReaderOrErrorMessageFromName(
+        resourceName, new String[] { null, null }, false, true);
+  }
+
+  public static String determineSurfaceTypeIs(InputStream is) {
+    // drag-drop only
+    BufferedReader br;
+    try {
+      br = Rdr.getBufferedReader(new BufferedInputStream(is), "ISO-8859-1");
+    } catch (IOException e) {
+      return null;
+    }
+    return determineSurfaceFileType(br);
+  }
+  
+  private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0";
+
+  public static String determineSurfaceFileType(BufferedReader bufferedReader) {
+    // drag-drop and isosurface command only
+    // JVXL should be on the FIRST line of the file, but it may be 
+    // after comments or missing.
+
+    // Apbs, Jvxl, or Cube, also efvet and DHBD
+
+    String line = null;
+    LimitedLineReader br = null;
+    
+    try {
+      br = new LimitedLineReader(bufferedReader, 16000);
+      line = br.getHeader(0);
+    } catch (Exception e) {
+      //
+    }
+    if (br == null || line == null || line.length() == 0)
+      return null;
+
+    //for (int i = 0; i < 220; i++)
+    //  System.out.print(" " + i + ":" + (0 + line.charAt(i)));
+    //System.out.println("");
+    
+    switch (line.charAt(0)) {
+    case '@':
+      if (line.indexOf("@text") == 0)
+        return "Kinemage";
+      break;
+    case '#':
+      if (line.indexOf(".obj") >= 0)
+        return "Obj"; // #file: pymol.obj
+      if (line.indexOf("MSMS") >= 0)
+        return "Msms";
+      break;
+    case '&':
+      if (line.indexOf("&plot") == 0)
+        return "Jaguar";
+      break;
+    case '\r':
+    case '\n':
+      if (line.indexOf("ZYX") >= 0)
+        return "Xplor";
+      break;
+    }
+    if (line.indexOf("Here is your gzipped map") >= 0)
+      return "UPPSALA" + line;
+    if (line.startsWith("4MESHC"))
+      return "Pmesh4";
+    if (line.indexOf("! nspins") >= 0)
+      return "CastepDensity";
+    if (line.indexOf("<jvxl") >= 0 && line.indexOf("<?xml") >= 0)
+      return "JvxlXml";
+    if (line.indexOf("#JVXL+") >= 0)
+      return "Jvxl+";
+    if (line.indexOf("#JVXL") >= 0)
+      return "Jvxl";
+    if (line.indexOf("<efvet ") >= 0)
+      return "Efvet";
+    if (line.indexOf("usemtl") >= 0)
+      return "Obj";
+    if (line.indexOf("# object with") == 0)
+      return "Nff";
+    if (line.indexOf("BEGIN_DATAGRID_3D") >= 0 || line.indexOf("BEGIN_BANDGRID_3D") >= 0)
+      return "Xsf";
+    // binary formats: problem here is that the buffered reader
+    // may be translating byte sequences into unicode
+    // and thus shifting the offset
+    int pt0 = line.indexOf('\0');
+    if (pt0 >= 0) {
+      if (line.indexOf(JmolBinary.PMESH_BINARY_MAGIC_NUMBER) == 0)
+        return "Pmesh";
+      if (line.indexOf(DELPHI_BINARY_MAGIC_NUMBER) == 0)
+        return "DelPhi";
+      if (line.indexOf("MAP ") == 208)
+        return "Mrc";
+      if (line.length() > 37 && (line.charAt(36) == 0 && line.charAt(37) == 100 
+          || line.charAt(36) == 0 && line.charAt(37) == 100)) { 
+           // header19 (short)100
+          return "Dsn6";
+      }
+    }
+    
+    if (line.indexOf(" 0.00000e+00 0.00000e+00      0      0\n") >= 0)
+      return "Uhbd"; // older APBS http://sourceforge.net/p/apbs/code/ci/9527462a39126fb6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c
+    
+    // Apbs, Jvxl, Obj, or Cube, maybe formatted Plt
+
+    line = br.readLineWithNewline();
+    if (line.indexOf("object 1 class gridpositions counts") == 0)
+      return "Apbs";
+
+    String[] tokens = PT.getTokens(line);
+    String line2 = br.readLineWithNewline();// second line
+    if (tokens.length == 2 && PT.parseInt(tokens[0]) == 3
+        && PT.parseInt(tokens[1]) != Integer.MIN_VALUE) {
+      tokens = PT.getTokens(line2);
+      if (tokens.length == 3 && PT.parseInt(tokens[0]) != Integer.MIN_VALUE
+          && PT.parseInt(tokens[1]) != Integer.MIN_VALUE
+          && PT.parseInt(tokens[2]) != Integer.MIN_VALUE)
+        return "PltFormatted";
+    }
+    String line3 = br.readLineWithNewline(); // third line
+    if (line.startsWith("v ") && line2.startsWith("v ") && line3.startsWith("v "))
+        return "Obj";
+    //next line should be the atom line
+    int nAtoms = PT.parseInt(line3);
+    if (nAtoms == Integer.MIN_VALUE)
+      return (line3.indexOf("+") == 0 ? "Jvxl+" : null);
+    tokens = PT.getTokens(line3);
+    if (tokens[0].indexOf(".") > 0)
+      return (line3.length() >= 60 || tokens.length != 3 ? null : "VaspChgcar"); // M40 files are > 60 char
+    if (nAtoms >= 0)
+      return (tokens.length == 4 ? "Cube" : null); //Can't be a Jvxl file; 
+    nAtoms = -nAtoms;
+    for (int i = 4 + nAtoms; --i >= 0;)
+      if ((line = br.readLineWithNewline()) == null)
+        return null;
+    int nSurfaces = PT.parseInt(line);
+    if (nSurfaces == Integer.MIN_VALUE)
+      return null;
+    return (nSurfaces < 0 ? "Jvxl" : "Cube"); //Final test looks at surface definition line    
+  }
+
+  public byte[] getCachedPngjBytes(String pathName) {
+    return (
+        pathName == null || pngjCache == null || pathName.indexOf(".png") < 0 ? null 
+            : getJmb().getCachedPngjBytes(pathName));
+  }
+
+  public void spardirPut(String name, byte[] bytes) {
+    if (spardirCache == null)
+      spardirCache = new Hashtable<String, byte[]>();
+    spardirCache.put(name, bytes);
+  }
+  
+  public void recachePngjBytes(String fileName, byte[] bytes) {
+    if (pngjCache == null || !pngjCache.containsKey(fileName))
+      return;
+    pngjCache.put(fileName, bytes);
+    Logger.info("PNGJ recaching " + fileName + " (" + bytes.length + ")");
+  }
+
 
 }
