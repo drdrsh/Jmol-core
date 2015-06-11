@@ -47,14 +47,21 @@ import javajs.util.V3;
 public class Polyhedra extends AtomShape {
 
   private final static float DEFAULT_DISTANCE_FACTOR = 1.85f;
+  private final static float DEFAULT_MANY_VERTEX_DISTANCE_FACTOR = 1.5f;
   private final static float DEFAULT_FACECENTEROFFSET = 0.25f;
   private final static int EDGES_NONE = 0;
   public final static int EDGES_ALL = 1;
   public final static int EDGES_FRONT = 2;
-  private final static int MAX_VERTICES = 150;
+  private final static int MAX_VERTICES = 250;
   private final static int FACE_COUNT_MAX = MAX_VERTICES - 3;
   private P3[] otherAtoms = new P3[MAX_VERTICES + 1];
+  private short[] normixesT = new short[MAX_VERTICES];
+  private P3i[] planesT = new P3i[MAX_VERTICES];
+  private final static P3 randomPoint = P3.new3(3141f, 2718f, 1414f);
 
+  private BS bsTemp;
+
+  
   public int polyhedronCount;
   public Polyhedron[] polyhedrons = new Polyhedron[32];
   public int drawEdges;
@@ -63,8 +70,9 @@ public class Polyhedra extends AtomShape {
   private int nVertices;
 
   float faceCenterOffset;
-  float distanceFactor;
+  float distanceFactor = Float.NaN;
   boolean isCollapsed;
+  
 
   private boolean iHaveCenterBitSet;
   private boolean bondedOnly;
@@ -79,7 +87,7 @@ public class Polyhedra extends AtomShape {
 
     if ("init" == propertyName) {
       faceCenterOffset = DEFAULT_FACECENTEROFFSET;
-      distanceFactor = DEFAULT_DISTANCE_FACTOR;
+      distanceFactor = Float.NaN;
       radius = 0.0f;
       nVertices = 0;
       bsVertices = null;
@@ -299,8 +307,7 @@ public class Polyhedra extends AtomShape {
     int bondCount = 0;
     for (int i = bonds.length; --i >= 0;) {
       Bond bond = bonds[i];
-      Atom otherAtom = bond.atom1 == atom ? bond.atom2 : bond
-          .atom1;
+      Atom otherAtom = bond.atom1 == atom ? bond.atom2 : bond.atom1;
       if (bsVertices != null && !bsVertices.get(otherAtom.i))
         continue;
       if (radius > 0f && bond.atom1.distance(bond.atom2) > radius)
@@ -309,9 +316,8 @@ public class Polyhedra extends AtomShape {
       if (bondCount == MAX_VERTICES)
         break;
     }
-    if (bondCount < 3 || nVertices > 0 && !bsVertexCount.get(bondCount))
-      return null;
-    return validatePolyhedronNew(atom, bondCount, otherAtoms);
+    return (bondCount < 3 || nVertices > 0 && !bsVertexCount.get(bondCount) ? null
+        : validatePolyhedronNew(atom, bondCount, otherAtoms));
   }
 
   private Polyhedron constructBitSetPolyhedron(int atomIndex) {
@@ -322,7 +328,8 @@ public class Polyhedra extends AtomShape {
     return validatePolyhedronNew(atoms[atomIndex], otherAtomCount, otherAtoms);
   }
 
-  private Polyhedron constructRadiusPolyhedron(int atomIndex, AtomIndexIterator iter) {
+  private Polyhedron constructRadiusPolyhedron(int atomIndex,
+                                               AtomIndexIterator iter) {
     Atom atom = atoms[atomIndex];
     int otherAtomCount = 0;
     vwr.setIteratorForAtom(iter, atomIndex, radius);
@@ -331,28 +338,19 @@ public class Polyhedra extends AtomShape {
       if (bsVertices != null && !bsVertices.get(other.i)
           || atom.distance(other) > radius)
         continue;
-      if (other.altloc != atom.altloc
-          && other.altloc != 0
-          && atom.altloc != 0)
+      if (other.altloc != atom.altloc && other.altloc != 0 && atom.altloc != 0)
         continue;
       if (otherAtomCount == MAX_VERTICES)
         break;
       otherAtoms[otherAtomCount++] = other;
     }
-    if (otherAtomCount < 3 || nVertices > 0
-        && !bsVertexCount.get(otherAtomCount))
-      return null;
-    return validatePolyhedronNew(atom, otherAtomCount, otherAtoms);
+    return (otherAtomCount < 3 || nVertices > 0
+        && !bsVertexCount.get(otherAtomCount) ? null : validatePolyhedronNew(
+        atom, otherAtomCount, otherAtoms));
   }
 
-  private short[] normixesT = new short[MAX_VERTICES];
-  private byte[] planesT = new byte[MAX_VERTICES * 3];
-  private final static P3 randomPoint = P3.new3(3141f, 2718f, 1414f);
-
-  private BS bsTemp;
-
   private Polyhedron validatePolyhedronNew(Atom centralAtom, int vertexCount,
-                                   P3[] otherAtoms) {
+                                           P3[] otherAtoms) {
     V3 normal = new V3();
     int planeCount = 0;
     int ipt = 0;
@@ -368,7 +366,13 @@ public class Polyhedra extends AtomShape {
       dAverage += points[ptCenter].distance(points[i]);
     }
     dAverage = dAverage / ptCenter;
-    float factor = distanceFactor;
+
+    int nother1 = ptCenter - 1;
+    int nother2 = ptCenter - 2;
+    // for many-vertex polygons we reduce the  distance allowed to avoid through-polyhedron faces
+    float factor = (!Float.isNaN(distanceFactor) ? distanceFactor
+        : nother1 <= 6 ? DEFAULT_DISTANCE_FACTOR
+            : DEFAULT_MANY_VERTEX_DISTANCE_FACTOR);
     BS bs = BS.newN(ptCenter);
     boolean isOK = (dAverage == 0);
 
@@ -378,8 +382,8 @@ public class Polyhedra extends AtomShape {
     while (!isOK && factor < 10.0f) {
       distMax = dAverage * factor;
       bs.setBits(0, ptCenter);
-      for (int i = 0; i < ptCenter - 2; i++)
-        for (int j = i + 1; j < ptCenter - 1; j++) {
+      for (int i = 0; i < nother2; i++)
+        for (int j = i + 1; j < nother1; j++) {
           if (points[i].distance(points[j]) > distMax)
             continue;
           for (int k = j + 1; k < ptCenter; k++) {
@@ -405,7 +409,6 @@ public class Polyhedra extends AtomShape {
         }
     }
 
-
     /*  Start by defining a face to be when all three distances
      *  are < distanceFactor * (longest central) but if a vertex is missed, 
      *  then expand the range. The collapsed trick is to introduce 
@@ -426,12 +429,12 @@ public class Polyhedra extends AtomShape {
     // produce face-centered catalog and facet-aligned catalog
     String faceCatalog = "";
     String facetCatalog = "";
-    for (int i = 0; i < ptCenter - 2; i++)
-      for (int j = i + 1; j < ptCenter - 1; j++)
+    for (int i = 0; i < nother2; i++)
+      for (int j = i + 1; j < nother1; j++)
         for (int k = j + 1; k < ptCenter; k++)
           if (isPlanar(points[i], points[j], points[k], points[ptCenter]))
             faceCatalog += faceId(i, j, k);
-    for (int j = 0; j < ptCenter - 1; j++)
+    for (int j = 0; j < nother1; j++)
       for (int k = j + 1; k < ptCenter; k++) {
         if (isAligned(points[j], points[k], points[ptCenter]))
           facetCatalog += faceId(j, k, -1);
@@ -440,46 +443,49 @@ public class Polyhedra extends AtomShape {
     // this next check for distance allows for bond AND distance constraints
     if (bsTemp == null)
       bsTemp = Normix.newVertexBitSet();
-
-    for (int i = 0; i < ptCenter - 2; i++)
-      for (int j = i + 1; j < ptCenter - 1; j++) {
+    P3i[] p = planesT;
+    boolean collapsed = isCollapsed;
+    float offset = faceCenterOffset;
+    int fmax = FACE_COUNT_MAX;
+    int vmax = MAX_VERTICES;
+    P3 rpt = randomPoint;
+    BS bsT = bsTemp;
+    short[] n = normixesT;
+    for (int i = 0; i < nother2; i++)
+      for (int j = i + 1; j < nother1; j++) {
         if (points[i].distance(points[j]) > distMax)
           continue;
         for (int k = j + 1; k < ptCenter; k++) {
           //System.out.println("checking poly " + i + " " + j + " " + k);
           //System.out.println("checking poly " + points[i] + " " + points[j] + " " + points[k]);
-          
+
           if (points[i].distance(points[k]) > distMax
               || points[j].distance(points[k]) > distMax)
             continue;
           //System.out.println("checking poly " + i + " " + j + " " + k + " ok ");
 
-          if (planeCount >= FACE_COUNT_MAX) {
-            Logger.error("Polyhedron error: maximum face(" + FACE_COUNT_MAX
+          if (planeCount >= fmax) {
+            Logger.error("Polyhedron error: maximum face(" + fmax
                 + ") -- reduce RADIUS or DISTANCEFACTOR");
             return null;
           }
-          if (nPoints >= MAX_VERTICES) {
+          if (nPoints >= vmax) {
             Logger.error("Polyhedron error: maximum vertex count("
-                + MAX_VERTICES + ") -- reduce RADIUS");
+                + vmax + ") -- reduce RADIUS");
             return null;
           }
           boolean isFlat = (faceCatalog.indexOf(faceId(i, j, k)) >= 0);
           // if center is on the face, then we need a different point to 
           // define the normal
           //System.out.println("# polyhedra\n");
-          boolean isWindingOK = 
-            (isFlat ?
-            Measure.getNormalFromCenter(randomPoint, points[i], points[j],
-                points[k], false, normal) :
-            Measure.getNormalFromCenter(points[ptCenter], points[i],
-                points[j], points[k], true, normal)
-                );
-          normal.scale(isCollapsed && !isFlat ? faceCenterOffset
-              : 0.001f);
+          boolean isWindingOK = (isFlat ? Measure.getNormalFromCenter(
+              rpt, points[i], points[j], points[k], false, normal)
+              : Measure.getNormalFromCenter(points[ptCenter], points[i],
+                  points[j], points[k], true, normal));
+          normal.scale(collapsed && !isFlat ? offset : 0.001f);
           int nRef = nPoints;
           ptRef.setT(points[ptCenter]);
-          if (isCollapsed && !isFlat) {
+          if (collapsed && !isFlat) {
             points[nPoints] = P3.newP(points[ptCenter]);
             points[nPoints].add(normal);
             otherAtoms[nPoints] = points[nPoints];
@@ -489,54 +495,49 @@ public class Polyhedra extends AtomShape {
           }
           String facet;
           facet = faceId(i, j, -1);
-          if (isCollapsed || isFlat && facetCatalog.indexOf(facet) < 0) {
+          if (collapsed || isFlat && facetCatalog.indexOf(facet) < 0) {
             facetCatalog += facet;
-            planesT[ipt++] = (byte) (isWindingOK ? i : j);
-            planesT[ipt++] = (byte) (isWindingOK ? j : i);
-            planesT[ipt++] = (byte) nRef;
-            Measure.getNormalFromCenter(points[k], points[i], points[j],
-                ptRef, false, normal);
-            normixesT[planeCount++] = (isFlat ? Normix
-                .get2SidedNormix(normal, bsTemp) : Normix.getNormixV(normal, bsTemp));
+            p[planeCount] = P3i.new3(isWindingOK ? i : j, isWindingOK ? j : i, nRef);
+            Measure.getNormalFromCenter(points[k], points[i], points[j], ptRef,
+                false, normal);
+            n[planeCount++] = (isFlat ? Normix.get2SidedNormix(normal,
+                bsT) : Normix.getNormixV(normal, bsT));
           }
           facet = faceId(i, k, -1);
-          if (isCollapsed || isFlat && facetCatalog.indexOf(facet) < 0) {
+          if (collapsed || isFlat && facetCatalog.indexOf(facet) < 0) {
             facetCatalog += facet;
-            planesT[ipt++] = (byte) (isWindingOK ? i : k);
-            planesT[ipt++] = (byte) nRef;
-            planesT[ipt++] = (byte) (isWindingOK ? k : i);
-            Measure.getNormalFromCenter(points[j], points[i], ptRef,
-                points[k], false, normal);
-            normixesT[planeCount++] = (isFlat ? Normix
-                .get2SidedNormix(normal, bsTemp) : Normix.getNormixV(normal, bsTemp));
+            p[planeCount] = P3i.new3(isWindingOK ? i : k, nRef,isWindingOK ? k : i);
+            Measure.getNormalFromCenter(points[j], points[i], ptRef, points[k],
+                false, normal);
+            n[planeCount++] = (isFlat ? Normix.get2SidedNormix(normal,
+                bsT) : Normix.getNormixV(normal, bsT));
           }
           facet = faceId(j, k, -1);
-          if (isCollapsed || isFlat && facetCatalog.indexOf(facet) < 0) {
+          if (collapsed || isFlat && facetCatalog.indexOf(facet) < 0) {
             facetCatalog += facet;
-            planesT[ipt++] = (byte) nRef;
-            planesT[ipt++] = (byte) (isWindingOK ? j : k);
-            planesT[ipt++] = (byte) (isWindingOK ? k : j);
-            Measure.getNormalFromCenter(points[i], ptRef, points[j],
-                points[k], false, normal);
-            normixesT[planeCount++] = (isFlat ? Normix
-                .get2SidedNormix(normal, bsTemp) : Normix.getNormixV(normal, bsTemp));
+            p[planeCount] = P3i.new3(nRef, isWindingOK ? j : k, isWindingOK ? k : j);
+            Measure.getNormalFromCenter(points[i], ptRef, points[j], points[k],
+                false, normal);
+            n[planeCount++] = (isFlat ? Normix.get2SidedNormix(normal,
+                bsT) : Normix.getNormixV(normal, bsT));
           }
           if (!isFlat) {
-            if (isCollapsed) {
+            if (collapsed) {
               nPoints++;
             } else {
               // finally, the standard face:
-              planesT[ipt++] = (byte) (isWindingOK ? i : j);
-              planesT[ipt++] = (byte) (isWindingOK ? j : i);
-              planesT[ipt++] = (byte) k;
-              normixesT[planeCount++] = Normix.getNormixV(normal, bsTemp);
+              p[planeCount] = P3i.new3(isWindingOK ? i : j, isWindingOK ? j : i, k);
+              n[planeCount++] = Normix.getNormixV(normal, bsT);
             }
           }
         }
       }
-    //Logger.debug("planeCount="+planeCount + " nPoints="+nPoints);
+    
+    
+    if (Logger.debugging)
+      Logger.info("planeCount=" + planeCount + " nPoints=" + nPoints);
     return new Polyhedron(centralAtom, ptCenter, nPoints, planeCount,
-        otherAtoms, normixesT, planesT, isCollapsed, faceCenterOffset, distanceFactor);
+        otherAtoms, n, p, collapsed, offset, factor);
   }
 
   private String faceId(int i, int j, int k) {

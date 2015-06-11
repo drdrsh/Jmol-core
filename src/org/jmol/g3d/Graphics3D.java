@@ -1193,10 +1193,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         && (x >= 0 && x + imageWidth <= w && y >= 0 && y + imageHeight <= h)) {
       // unclipped 
       for (int i = 0, offset = 0, pbufOffset = y * w + x; i < imageHeight; i++, pbufOffset += (w - imageWidth)) {
-        for (int j = 0; j < imageWidth; j++) {
-          if (z < zb[pbufOffset++]) {
-            int b = buffer[offset++];
-            if ((b & 0xFF000000) == 0xFF000000)
+        for (int j = 0; j < imageWidth; j++,offset++,pbufOffset++) {
+          if (z < zb[pbufOffset]) {
+            int b = buffer[offset];
+            if ((b & 0xFF000000) == (0xFF000000 & 0xFF000000))
               p.addPixel(pbufOffset, z, b);
           }
         }
@@ -1208,7 +1208,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       for (int i = 0, offset = 0; i < imageHeight; i++)
         for (int j = 0; j < imageWidth; j++) {
           int b = buffer[offset++];
-          if ((b & 0xFF000000) == 0xFF000000)
+          if ((b & 0xFF000000) == (0xFF000000 & 0xFF000000))
             jmolRenderer.plotImagePixel(b, x + j, y + i, z, 8, bg, w,
               h, zb, p, t);
         }

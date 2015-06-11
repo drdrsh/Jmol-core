@@ -1,6 +1,7 @@
 package org.jmol.shapespecial;
 
 import javajs.util.P3;
+import javajs.util.P3i;
 
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
@@ -18,7 +19,7 @@ public class Polyhedron {
   int ptCenter;
   boolean visible;
   public final short[] normixes;
-  public byte[] planes;
+  public P3i[] planes;
   //int planeCount;
   public int visibilityFlags = 0;
   boolean collapsed = false;
@@ -28,7 +29,7 @@ public class Polyhedron {
   public short colixEdge = C.INHERIT_ALL;
 
   Polyhedron(Atom centralAtom, int ptCenter, int nPoints, int planeCount,
-      P3[] otherAtoms, short[] normixes, byte[] planes, boolean collapsed, float faceCenterOffset, float distanceFactor) {
+      P3[] otherAtoms, short[] normixes, P3i[] planes, boolean collapsed, float faceCenterOffset, float distanceFactor) {
     this.centralAtom = centralAtom;
     modelIndex = centralAtom.mi;
     this.ptCenter = ptCenter;
@@ -36,13 +37,15 @@ public class Polyhedron {
     this.visible = true;
     this.normixes = new short[planeCount];
     //this.planeCount = planeCount;
-    this.planes = new byte[planeCount * 3];
+    this.planes = new P3i[planeCount];
     for (int i = nPoints; --i >= 0;)
       vertices[i] = otherAtoms[i];
     for (int i = planeCount; --i >= 0;)
       this.normixes[i] = normixes[i];
-    for (int i = planeCount * 3; --i >= 0;)
-      this.planes[i] = planes[i];
+    for (int i = planeCount; --i >= 0;) {
+      P3i p = planes[i];
+      this.planes[i] = P3i.new3(p.x, p.y, p.z);
+    }
     this.collapsed = collapsed;
     this.faceCenterOffset = faceCenterOffset;
     this.distanceFactor = distanceFactor;

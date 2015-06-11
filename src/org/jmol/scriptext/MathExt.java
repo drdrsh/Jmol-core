@@ -1261,6 +1261,7 @@ public class MathExt {
     // format("byteArray", x)
     // format("array", x)
     SV x1 = (args.length < 2 ? mp.getX() : null);
+    
     String format = (args.length == 0 ? "%U" : SV.sValue(args[0]));
     if (x1 == null) {
       int pt = (isLabel ? -1 : SV.getFormatType(format));

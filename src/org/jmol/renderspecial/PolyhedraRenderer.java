@@ -73,24 +73,24 @@ public class PolyhedraRenderer extends ShapeRenderer {
       return false;
     }
     P3[] vertices = p.vertices;
-    byte[] planes;
     if (screens3f == null || screens3f.length < vertices.length) {
       screens3f = new P3[vertices.length];
       for (int i = vertices.length; --i >= 0;)
         screens3f[i] = new P3();
     }
-    planes = p.planes;
+    P3[] sc = this.screens3f;
+    P3i[] planes = p.planes;
     for (int i = vertices.length; --i >= 0;) {
       Atom atom = (vertices[i] instanceof Atom ? (Atom) vertices[i] : null);
       if (atom == null) {
-        tm.transformPtScrT3(vertices[i], screens3f[i]);
+        tm.transformPtScrT3(vertices[i], sc[i]);
       } else if (atom.isVisible(myVisibilityFlag)) {
-        screens3f[i].set(atom.sX, atom.sY, atom.sZ);
+        sc[i].set(atom.sX, atom.sY, atom.sZ);
       } else if (vibs && atom.hasVibration()) {
         scrVib = tm.transformPtVib(atom, ms.vibrations[atom.i]);
-        screens3f[i].set(scrVib.x, scrVib.y, scrVib.z);
+        sc[i].set(scrVib.x, scrVib.y, scrVib.z);
       } else {
-        tm.transformPt3f(atom, screens3f[i]);
+        tm.transformPt3f(atom, sc[i]);
       }
     }
 
@@ -99,16 +99,20 @@ public class PolyhedraRenderer extends ShapeRenderer {
 
     // no edges to new points when not collapsed
     if (!needTranslucent || g3d.setC(colix))
-      for (int i = 0, j = 0; j < planes.length;)
-        fillFace(p.normixes[i++], screens3f[planes[j++]],
-            screens3f[planes[j++]], screens3f[planes[j++]]);
+      for (int i = planes.length; --i >= 0;) {
+        P3i pl = planes[i];
+        fillFace(p.normixes[i], sc[pl.x], sc[pl.y],
+            sc[pl.z]);
+      }
     // edges are not drawn translucently ever
     if (p.colixEdge != C.INHERIT_ALL)
       colix = p.colixEdge;
     if (g3d.setC(C.getColixTranslucent3(colix, false, 0)))
-      for (int i = 0, j = 0; j < planes.length;)
-        drawFace(p.normixes[i++], screens3f[planes[j++]],
-            screens3f[planes[j++]], screens3f[planes[j++]]);
+      for (int i = planes.length; --i >= 0;) {
+        P3i pl = planes[i];
+        drawFace(p.normixes[i], sc[pl.x], sc[pl.y],
+            sc[pl.z]);
+      }
     return needTranslucent;
   }
 
