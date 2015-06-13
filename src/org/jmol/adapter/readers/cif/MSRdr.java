@@ -686,7 +686,6 @@ public class MSRdr implements MSInterface {
         }
       }
     P3 p3 = toP3(p);
-    // test linear combination -3 to +3:
     int jmin = (modDim < 2 ? 0 : -3);
     int jmax = (modDim < 2 ? 0 : 3);
     int kmin = (modDim < 3 ? 0 : -3);
@@ -694,6 +693,7 @@ public class MSRdr implements MSInterface {
     for (int i = -3; i <= 3; i++)
       for (int j = jmin; j <= jmax; j++)
         for (int k = kmin; k <= kmax; k++) {
+          // test linear combination -3 to +3:
           pt.setT(qs[0]);
           pt.scale(i);
           if (modDim > 1 && qs[1] != null)
@@ -715,6 +715,29 @@ public class MSRdr implements MSInterface {
             }
             return p;
           }
+          // test linear combination 1/[-3 to +3]:
+          pt.setT(qs[0]);
+          pt.scale(1f/i);
+          if (modDim > 1 && qs[1] != null)
+            pt.scaleAdd2(1f/j, qs[1], pt);
+          if (modDim > 2 && qs[2] != null)
+            pt.scaleAdd2(1f/k, qs[2], pt);
+          if (pt.distanceSquared(p3) < 0.0001f) {
+            p = new double[modDim];
+            switch (modDim) {
+            default:
+              p[2] = 1f/k;
+              //$FALL-THROUGH$
+            case 2:
+              p[1] = 1f/j;
+              //$FALL-THROUGH$
+            case 1:
+              p[0] = 1f/i;
+              break;
+            }
+            return p;
+          }
+          
         }
 
     // test dropped rational component

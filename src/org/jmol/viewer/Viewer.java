@@ -3521,7 +3521,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       handleError(er, false);
       setErrorMessage("Error during rendering: " + er, null);
     } catch (Exception e) {
-      System.out.println("render error");
+      System.out.println("render error" + e);
+      if (!isJS)
+        e.printStackTrace();
     }
     return image;
   }
@@ -7642,7 +7644,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     }
     String s = (String) setLoadFormat("_" + smiles, type, false);
     if (type == '2') { 
-      fm.loadImage(s, "\1" + smiles);
+      fm.loadImage(s, "\1" + smiles, false);
       return  s;
     }
     if (type == '/')
@@ -8018,8 +8020,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    *        if this is an echo rather than the background
    * @param sc
    *        delivered in JavaScript from Platform.java
+   * @return false
    */
-  void loadImageData(Object image, String nameOrError, String echoName,
+  public boolean loadImageData(Object image, String nameOrError, String echoName,
                      ScriptContext sc) {
     if (image == null && nameOrError != null)
       scriptEcho(nameOrError);
@@ -8037,6 +8040,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       sc.mustResumeEval = true;
       eval.resumeEval(sc);
     }
+    return false;
   }
 
   public String cd(String dir) {

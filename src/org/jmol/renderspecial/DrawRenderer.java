@@ -69,7 +69,7 @@ public class DrawRenderer extends MeshRenderer {
     needTranslucent = false;
     imageFontScaling = vwr.imageFontScaling;
     Draw draw = (Draw) shape;
-    isPrecision = true;
+    isPrecision = vwr.tm.perspectiveDepth;
     for (int i = draw.meshCount; --i >= 0;) {
       Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
       if (mesh.connections != null) {
@@ -101,7 +101,6 @@ public class DrawRenderer extends MeshRenderer {
 
    @Override
   protected void render2(boolean isExport) {
-    isPrecision = vwr.tm.perspectiveDepth;
     drawType = dmesh.drawType;
     diameter = dmesh.diameter;
     width = dmesh.width;

@@ -144,7 +144,7 @@ abstract class OutputManager {
         isOK = true;
         Map<String, Object> info = new Hashtable<String, Object>();
         info.put("_IMAGE_", image);
-        vwr.fm.loadImage(info, fileName);
+        vwr.fm.loadImage(info, fileName, false);
         return errMsg = "OK - viewing " + fileName.substring(1);
       }
       if (out == null)

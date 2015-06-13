@@ -869,7 +869,7 @@ public class Resolver {
           || line.startsWith("%BLOCK POSITIONS_FRAC")
           || line.startsWith("%BLOCK POSITIONS_ABS") 
           || line.contains("<-- E")) return "Castep";
-      if (i > 6 && i < 10 && (line.startsWith("DIRECT") || line.startsWith("CARTESIAN")))
+      if (i >= 6 && i < 10 && (line.startsWith("DIRECT") || line.startsWith("CARTESIAN")))
         return "VaspPoscar";        
     }
     return null;

@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+import javajs.api.JmolObjectInterface;
+
 /**
  * 
  * A method to allow a JavaScript Ajax 
@@ -31,20 +33,23 @@ public class AjaxURLConnection extends URLConnection {
    * the method is "private", but in JavaScript that can still be overloaded.
    * Just set something to org.jmol.awtjs.JmolURLConnection.prototype.doAjax
    * 
-   * @return file data as a javajs.util.SB or byte[] depending upon the file type.
+   * @return file data as a javajs.util.SB or byte[] depending upon the file
+   *         type.
    * 
    * 
    */
+  @SuppressWarnings("null")
   private Object doAjax() {
+    JmolObjectInterface jmol = null;
     /**
      * @j2sNative
      * 
-     *            return Jmol._doAjax(this.url, this.postOut, this.bytesOut);
+     *            jmol = Jmol;
      * 
      */
     {
-      return null;
     }
+    return jmol._doAjax(url, postOut, bytesOut);
   }
 
   @Override

@@ -213,6 +213,22 @@ public class Rdr implements GenericLineReader {
     return abMagic;
   }
 
+  public static String guessMimeTypeForBytes(byte[] bytes) {
+     // only options here are JPEG, PNG, GIF, and BMP
+    switch (bytes.length < 2 ? -1 : bytes[1]) {
+    case 0:
+      return "image/jpg"; // 0xFF 0x00 ...
+    case 0x49:
+      return "image/gif"; // GIF89a...
+    case 0x4D:
+      return "image/BMP"; // BM...
+    case 0x50:
+      return "image/png";
+    default:
+      return  "image/unknown";
+    }
+  }
+
 
   ////////// stream/byte methods ///////////
   

@@ -561,7 +561,8 @@ public class JmolUtil implements JmolZipUtilities {
   }
 
   @Override
-  public Object getImage(Viewer vwr, Object fullPathNameOrBytes, String echoName) {
+  public Object getImage(Viewer vwr, Object fullPathNameOrBytes,
+                         String echoName, boolean forceSync) {
     Object image = null;
     Object info = null;
     GenericPlatform apiPlatform = vwr.apiPlatform;
@@ -569,58 +570,68 @@ public class JmolUtil implements JmolZipUtilities {
     String fullPathName = "" + fullPathNameOrBytes;
     if (fullPathNameOrBytes instanceof String) {
       boolean isBMP = fullPathName.toUpperCase().endsWith("BMP");
-      if (fullPathName.indexOf("|") > 0 || isBMP) {
+      // previously we were loading images 
+      if (forceSync || fullPathName.indexOf("|") > 0 || isBMP) {
         Object ret = vwr.fm.getFileAsBytes(fullPathName, null);
         if (!AU.isAB(ret))
           return "" + ret;
-        image = (vwr.isJS ? ret : apiPlatform.createImage(ret));
-      } else if (vwr.isJS) {
+        // converting bytes to an image in JavaScript is a synchronous process
+        if (vwr.isJS)
+          info = new Object[] { echoName, fullPathNameOrBytes, ret };
+        else
+          image = apiPlatform.createImage(ret);
       } else if (OC.urlTypeIndex(fullPathName) >= 0) {
-        try {
-          image = apiPlatform.createImage(new URL((URL) null, fullPathName,
-              null));
-        } catch (Exception e) {
-          return "bad URL: " + fullPathName;
-        }
+        // if JavaScript returns an image, than it must have been cached, and 
+        // the call was not asynchronous after all.
+        if (vwr.isJS)
+          info = new Object[] { echoName, fullPathNameOrBytes, null };
+        else
+          try {
+            image = apiPlatform.createImage(new URL((URL) null, fullPathName,
+                null));
+          } catch (Exception e) {
+            return "bad URL: " + fullPathName;
+          }
       } else {
         createImage = true;
       }
     } else if (vwr.isJS) {
-      image = fullPathNameOrBytes;
+      // not sure that this can work. 
+      // ensure that apiPlatform.createImage is called
+      //
+      info = new Object[] { echoName,
+          Rdr.guessMimeTypeForBytes((byte[]) fullPathNameOrBytes),
+          fullPathNameOrBytes };
     } else {
       createImage = true;
     }
     if (createImage)
-      image = apiPlatform.createImage("\1close".equals(fullPathNameOrBytes) ? "\1close" + echoName : fullPathNameOrBytes);
+      image = apiPlatform
+          .createImage("\1close".equals(fullPathNameOrBytes) ? "\1close"
+              + echoName : fullPathNameOrBytes);
+    else if (info != null) // JavaScript only
+      image = apiPlatform.createImage(info);
 
     /**
+     * 
      * @j2sNative
      * 
-     *            info = [echoName, fullPathNameOrBytes];
+     *            return image;
      * 
      */
     {
       if (image == null)
         return null;
-    }
-    try {
-      if (!apiPlatform.waitForDisplay(info, image))
-        return null;
-      /**
-       * 
-       * note -- JavaScript just returns immediately, because we must wait for
-       * the image to load, and it is single-threaded
-       * 
-       * @j2sNative
-       * 
-       *            return null;
-       */
-      {
-        return (apiPlatform.getImageWidth(image) < 1 ?  "invalid or missing image " + fullPathName : image);
+      try {
+        if (!apiPlatform.waitForDisplay(info, image))
+          return null;
+        return (apiPlatform.getImageWidth(image) < 1 ? "invalid or missing image "
+            + fullPathName
+            : image);
+      } catch (Exception e) {
+        return e.toString() + " opening " + fullPathName;
       }
-    } catch (Exception e) {
-      return e.toString() + " opening " + fullPathName;
     }
   }
-
+  
 }

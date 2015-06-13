@@ -25,6 +25,7 @@ package org.jmol.consolejs;
 
 import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolScriptEditorInterface;
+import org.jmol.api.JmolToJSmolInterface;
 import org.jmol.console.GenericConsole;
 import org.jmol.viewer.Viewer;
 
@@ -51,7 +52,7 @@ public class AppletConsole extends GenericConsole {
   public AppletConsole() {
   }
 
-  Object jsConsole;
+  JSConsole jsConsole;
 
   @Override
   public void start(Viewer vwr) {
@@ -78,26 +79,13 @@ public class AppletConsole extends GenericConsole {
 
   @Override
   protected void setTitle() {
-    /**
-     * @j2sNative
-     * 
-     * if (this.jsConsole)
-     *   this.jsConsole.setTitle(this.getLabel("title"));
-     * 
-     */
-    {}
+    if (jsConsole != null)
+      jsConsole.setTitle(getLabel("title"));
   }
 
   @Override
   public void setVisible(boolean visible) {
-    /**
-     * @j2sNative
-     * 
-     *            this.jsConsole.setVisible(visible);
-     * 
-     */
-    {
-    }
+    jsConsole.setVisible(visible);
   }
 
   @Override

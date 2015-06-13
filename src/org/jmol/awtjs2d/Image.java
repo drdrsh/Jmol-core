@@ -30,6 +30,7 @@ import java.util.Map;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericImageDialog;
+import javajs.api.JmolObjectInterface;
 import javajs.awt.Font;
 
 /**
@@ -200,13 +201,6 @@ class Image {
   public static GenericImageDialog getImageDialog(Viewer vwr,
                                                String title,
                                                Map<String, GenericImageDialog> imageMap) {
-    /**
-     * @j2sNative
-     * 
-     * return new Jmol.Console.Image(vwr, title, imageMap);
-     */
-    {
-      return null;
-    }
+    return Platform.Jmol()._consoleGetImageDialog(vwr, title, imageMap);
   }
 }

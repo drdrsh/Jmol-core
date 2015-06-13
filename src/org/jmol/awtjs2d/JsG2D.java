@@ -76,15 +76,7 @@ public class JsG2D implements GenericGraphics {
 
 	@Override
 	public Object newGrayScaleImage(Object context, Object image, int width, int height, int[] grayBuffer) {
-		
-		/**
-		 * @j2sNative
-		 * 
-		 * image = Jmol._newGrayScaleImage(context, image, width, height, grayBuffer);
-		 */
-		{
-		}
-		return image;
+		return Platform.Jmol()._newGrayScaleImage(context, image, width, height, grayBuffer);
 	}
 
 	@Override

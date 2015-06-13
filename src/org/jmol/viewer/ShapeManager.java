@@ -441,6 +441,7 @@ public class ShapeManager {
     boolean vibs = (vibrationVectors != null && tm.vibrationOn);
     boolean checkOccupancy = (ms.bsModulated != null);
     Atom[] atoms = ms.at;
+    int occ;
     boolean haveMods = false;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       // note that this vibration business is not compatible with
@@ -456,20 +457,19 @@ public class ShapeManager {
       if (d == Atom.MAD_GLOBAL)
         d = (int) (vwr.getFloat(T.atoms) * 2000);
       atom.sD = (short) vwr.tm.scaleToScreen(screen.z, d);
-      if (checkOccupancy) {
-        int occ = vibrationVectors[i].getOccupancy100(vibs);
-        if (occ != Integer.MIN_VALUE) {
-          //System.out.println(atom + " " + occ);
-          haveMods = true;
-          atom.setShapeVisibility(Atom.ATOM_VISSET, false);
-          if (occ >= 0 && occ < 50)
-            atom.setShapeVisibility(Atom.ATOM_NOTHIDDEN | JC.VIS_BALLS_FLAG,
-                false);
-          else
-            atom.setShapeVisibility(Atom.ATOM_NOTHIDDEN
-                | (atom.madAtom > 0 ? JC.VIS_BALLS_FLAG : 0), true);
-          ms.occupancies[atom.i] = Math.abs(occ);
-        }
+      if (checkOccupancy
+          && vibrationVectors[i] != null
+          && (occ = vibrationVectors[i].getOccupancy100(vibs)) != Integer.MIN_VALUE) {
+        //System.out.println(atom + " " + occ);
+        haveMods = true;
+        atom.setShapeVisibility(Atom.ATOM_VISSET, false);
+        if (occ >= 0 && occ < 50)
+          atom.setShapeVisibility(Atom.ATOM_NOTHIDDEN | JC.VIS_BALLS_FLAG,
+              false);
+        else
+          atom.setShapeVisibility(Atom.ATOM_NOTHIDDEN
+              | (atom.madAtom > 0 ? JC.VIS_BALLS_FLAG : 0), true);
+        ms.occupancies[atom.i] = Math.abs(occ);
       }
     }
     if (haveMods)

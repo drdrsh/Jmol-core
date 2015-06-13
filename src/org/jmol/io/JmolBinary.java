@@ -105,8 +105,8 @@ public class JmolBinary {
     return getJzu().getAtomSetCollectionOrBufferedReaderFromZip(fm.vwr, adapter, is, fileName, zipDirectory, htParams, 1, asBufferedReader);
   }
 
-  public Object getImage(Object fullPathNameOrBytes, String echoName) {
-    return getJzu().getImage(fm.vwr, fullPathNameOrBytes, echoName);
+  public Object getImage(Object fullPathNameOrBytes, String echoName, boolean forceSync) {
+    return getJzu().getImage(fm.vwr, fullPathNameOrBytes, echoName, forceSync);
   }
 
   public static void getFileReferences(String script, Lst<String> fileList) {

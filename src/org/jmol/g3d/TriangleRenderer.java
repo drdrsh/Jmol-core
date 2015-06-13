@@ -460,7 +460,9 @@ public class TriangleRenderer extends PrecisionRenderer implements G3DRenderer {
       for (int y = 0, i = iRaster; y < dy; ++i, ++y) {
         axRaster[i] = xCurrent;
         if (i == 0 || i > iRaster) { // must always skip first on second time around
-          azRaster[i] = (int) (ab[i] = getZCurrent(a0, b0, zy++));
+          if (i > ab.length)
+            System.out.println("triangle rend errror");
+            azRaster[i] = (int) (ab[i] = getZCurrent(a0, b0, zy++));
           if (isEast) {
             //aa[i] and bb[i] are derived z values now
             //System.out.println(i + " axw " + axW[i] + " aa " + aa[i] + " x "

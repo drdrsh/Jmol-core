@@ -2918,17 +2918,16 @@ public class ScriptEval extends ScriptExpr {
         break;
       default:
         String file = paramAsStr(checkLast(i));
+        if (chk)
+          return;
         if (file.equalsIgnoreCase("none") || file.length() == 0) {
           vwr.setBackgroundImage(null, null);
           return;
         }
-        if (file.startsWith(";base64,"))
-          o = new BArray(Base64.decodeBase64(file));
-        else 
-          o = file;
+        o = (file.startsWith(";base64,") ?  new BArray(Base64.decodeBase64(file)) : file);
       }
-      if (!chk)
-        vwr.fm.loadImage(o, null);
+      if (vwr.fm.loadImage(o, null, !useThreads()))
+          throw new ScriptInterruption(this,"backgroundImage", 1);
       return;
     }
     if (theTok == T.none || isColorParam(i)) {
@@ -7122,8 +7121,8 @@ public class ScriptEval extends ScriptExpr {
             getShapePropertyData(JC.SHAPE_ECHO, "currentTarget", data);
             id = data[0];
           }
-          if (!chk && vwr.ms.getEchoStateActive())
-            vwr.fm.loadImage(getToken(pt).value, id);
+          if (!chk && vwr.ms.getEchoStateActive() && vwr.fm.loadImage(getToken(pt).value, id, !useThreads()))
+            throw new ScriptInterruption(this, "setEchoImage", 1);
           return;
         }
         cmdEcho(pt);

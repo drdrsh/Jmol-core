@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.Map;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolToJSmolInterface;
+import org.jmol.script.ScriptContext;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericImageDialog;
@@ -155,8 +157,12 @@ public class Platform implements GenericPlatform {
 		Display.requestFocusInWindow(canvas);
 	}
 
-	@Override
+	@SuppressWarnings({ "null", "unused" })
+  @Override
   public void repaint(Object canvas) {
+	  
+	  JmolToJSmolInterface jmol = null;
+	  
     /**
      * Jmol._repaint(applet,asNewThread)
      * 
@@ -168,12 +174,14 @@ public class Platform implements GenericPlatform {
      * 
      * @j2sNative
      * 
-     * if (typeof Jmol != "undefined" && Jmol._repaint)
-     *   Jmol._repaint(this.vwr.html5Applet,true);
+     * jmol = (typeof Jmol != "undefined" && Jmol._repaint ? Jmol : null);
      * 
      */
     {
     }
+    if (jmol != null)
+      jmol._repaint(((Viewer) vwr).html5Applet,true);
+
 	}
 
 	@Override
@@ -199,18 +207,6 @@ public class Platform implements GenericPlatform {
   public void notifyEndOfRendering() {
   }
 
-  /**
-   * could be byte[] (from ZIP file) or String (local file name) or URL
-   * @param data 
-   * @return image object
-   * 
-   */
-	@Override
-  public Object createImage(Object data) {
-	  // N/A in JS
-	  return null;
-	}
-
 	@Override
   public void disposeGraphics(Object gOffscreen) {
 	  // N/A
@@ -231,7 +227,10 @@ public class Platform implements GenericPlatform {
      *       Jmol._setCanvasImage(canvas, width, height);
 	   *     if (canvas.buf32) return canvas.buf32;
 	   */
-	  {}
+	  {
+	    // placeholder for Eclipse referencing
+	    Jmol()._setCanvasImage(canvas, width, height);
+	  }
     int[] buf = Image.grabPixels(Image.getGraphics(canvas), width, height); 
     /**
      * @j2sNative
@@ -282,32 +281,34 @@ public class Platform implements GenericPlatform {
 
 	@Override
   public Object newBufferedImage(Object image, int w, int h) {
-    /**
-     * @j2sNative
-     * 
-     *  if (typeof Jmol != "undefined" && Jmol._getHiddenCanvas)
-     *    return Jmol._getHiddenCanvas(this.vwr.html5Applet, "stereoImage", w, h); 
-     */
-    {}
-    return null;
+    return Jmol()._getHiddenCanvas(((Viewer) vwr).html5Applet, "stereoImage", w, h);
 	}
 
 	@Override
   public Object newOffScreenImage(int w, int h) {
-    /**
-     * @j2sNative
-     * 
-     *  if (typeof Jmol != "undefined" && Jmol._getHiddenCanvas)
-     *    return Jmol._getHiddenCanvas(this.vwr.html5Applet, "textImage", w, h); 
-     */
-    {}
-    return null;
+    return Jmol()._getHiddenCanvas(((Viewer) vwr).html5Applet, "textImage", w, h);
 	}
 
-	@Override
+  @Override
   public boolean waitForDisplay(Object echoNameAndPath, Object zipBytes)
-			throws InterruptedException {
-  
+      throws InterruptedException {
+    // not necessary in JavaScript
+    return false;
+  }
+  /**
+   * 
+   * @param name_path_bytes
+   * @return image object or null if asynchronous
+   * 
+   */
+  @Override
+  public Object createImage(Object name_path_bytes) {
+    String echoName = ((String[]) name_path_bytes)[0];
+    String path = ((String[]) name_path_bytes)[1];
+    byte[] bytes = ((byte[][]) name_path_bytes)[2];
+    Viewer vwr = (Viewer) this.vwr;
+    ScriptContext sc = (bytes == null ? vwr.getEvalContextAndHoldQueue(vwr.eval) : null); 
+    Object f = null;
 	  /**
 	   * 
 	   * this is important specifically for retrieving images from
@@ -318,20 +319,16 @@ public class Platform implements GenericPlatform {
 	   * 
 	   * @j2sNative
 	   * 
-     * if (typeof Jmol == "undefined" || !Jmol._getHiddenCanvas) return false;
-	   * var vwr = this.vwr;
-	   * var sc = vwr.getEvalContextAndHoldQueue(vwr.eval);
-	   * var echoName = echoNameAndPath[0];
-	   * return Jmol._loadImage(this, echoNameAndPath, zipBytes, 
-	   *   function(canvas, pathOrError) { vwr.loadImageData(canvas, pathOrError, echoName, sc) }
-	   * );
+	   * f = function(canvas, pathOrError) { vwr.loadImageData(canvas, pathOrError, echoName, sc) };
+	   * 
 	   * 
 	   */	  
 	  {
-	    return false;	    
+	    // this call is never made - it is just here as an Eclipse proxy for the above callback
+	    vwr.loadImageData(bytes, path, echoName, sc);
 	  }
-	}
-
+	  return Jmol()._loadImage(this, echoName, path, bytes, f);
+  }
 	// /// FONT
 
 	@Override
@@ -467,6 +464,18 @@ public class Platform implements GenericPlatform {
   public GenericImageDialog getImageDialog(String title,
                                         Map<String, GenericImageDialog> imageMap) {
     return Image.getImageDialog((Viewer) vwr, title, imageMap);
+  }
+
+  public static JmolToJSmolInterface Jmol() {
+    /**
+     * @j2sNative
+     *
+     * return Jmol;
+     * 
+     */
+    {
+      return null;
+    }
   }
 
 

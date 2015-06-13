@@ -98,9 +98,11 @@ public class PolyhedraRenderer extends ShapeRenderer {
     frontOnly = (drawEdges == Polyhedra.EDGES_FRONT);
 
     // no edges to new points when not collapsed
+//    int m = (int) ( Math.random() * 14);
     if (!needTranslucent || g3d.setC(colix))
       for (int i = planes.length; --i >= 0;) {
         P3i pl = planes[i];
+//        if (i < m)
         fillFace(p.normixes[i], sc[pl.x], sc[pl.y],
             sc[pl.z]);
       }

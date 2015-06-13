@@ -24,6 +24,9 @@
 
 package org.jmol.shapespecial;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.c.PAL;
 import org.jmol.java.BS;
@@ -37,6 +40,7 @@ import org.jmol.util.Normix;
 
 import javajs.util.AU;
 import javajs.util.Measure;
+import javajs.util.P4;
 import javajs.util.SB;
 import javajs.util.P3;
 import javajs.util.P3i;
@@ -444,6 +448,8 @@ public class Polyhedra extends AtomShape {
     if (bsTemp == null)
       bsTemp = Normix.newVertexBitSet();
     P3i[] p = planesT;
+    P4 plane = new P4();
+    V3 vTemp = new V3();
     boolean collapsed = isCollapsed;
     float offset = faceCenterOffset;
     int fmax = FACE_COUNT_MAX;
@@ -451,6 +457,7 @@ public class Polyhedra extends AtomShape {
     P3 rpt = randomPoint;
     BS bsT = bsTemp;
     short[] n = normixesT;
+    boolean doCheckPlane  = (nother1 > 5);
     for (int i = 0; i < nother2; i++)
       for (int j = i + 1; j < nother1; j++) {
         if (points[i].distance(points[j]) > distMax)
@@ -527,7 +534,9 @@ public class Polyhedra extends AtomShape {
             } else {
               // finally, the standard face:
               p[planeCount] = P3i.new3(isWindingOK ? i : j, isWindingOK ? j : i, k);
-              n[planeCount++] = Normix.getNormixV(normal, bsT);
+              n[planeCount] = Normix.getNormixV(normal, bsT);
+              if (!doCheckPlane || checkPlane(points, ptCenter, p, n, planeCount, plane, vTemp))
+                planeCount++;
             }
           }
         }
@@ -538,6 +547,32 @@ public class Polyhedra extends AtomShape {
       Logger.info("planeCount=" + planeCount + " nPoints=" + nPoints);
     return new Polyhedron(centralAtom, ptCenter, nPoints, planeCount,
         otherAtoms, n, p, collapsed, offset, factor);
+  }
+  
+
+  Map<Integer,String> htNormMap = new Hashtable<Integer, String>();
+
+
+  private boolean checkPlane(P3[] points, int ptCenter, P3i[] planes, short[] normals, int index, P4 plane, V3 vNorm) {
+    P3i pt = planes[index];
+    Integer norm = Integer.valueOf(normals[index]);
+    String list = htNormMap.get(norm);
+    String key = "_" + pt.x + "_" + pt.y + "_" + pt.z + "_" + pt.x + "_;" ;
+    if (list == null) {
+      htNormMap.put(norm, key);
+    } else {
+      if (list.indexOf("_" + pt.x + "_" + pt.y + "_") >= 0
+          || list.indexOf("_" + pt.y + "_" + pt.z + "_") >= 0
+          || list.indexOf("_" + pt.z + "_" + pt.x + "_") >= 0)
+        return  false;
+      htNormMap.put(norm, list + key);
+    }
+    
+    plane = Measure.getPlaneThroughPoints(points[pt.x], points[pt.y], points[pt.z], 
+        vNorm, vAB, plane);
+    float d = Measure.distanceToPlane(plane, points[ptCenter]);
+    System.out.println("" + norm + " " + pt + " " + d);
+    return true;
   }
 
   private String faceId(int i, int j, int k) {
@@ -589,7 +624,7 @@ public class Polyhedra extends AtomShape {
           : 0);
     }
   }
-
+  
   @Override
   public String getShapeState() {
     if (polyhedronCount == 0)

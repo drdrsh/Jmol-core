@@ -21,6 +21,6 @@ public interface JmolZipUtilities {
 
   public String[] spartanFileList(GenericZipTools zpt, String name, String zipDirectory);
 
-  public Object getImage(Viewer vwr, Object fullPathNameOrBytes, String echoName);
+  public Object getImage(Viewer vwr, Object fullPathNameOrBytes, String echoName, boolean forceSync);
 
 }

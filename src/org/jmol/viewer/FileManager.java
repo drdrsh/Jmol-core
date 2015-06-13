@@ -817,21 +817,24 @@ public class FileManager implements BytePoster {
     return true;
   }
 
+  /**
+   * Load an image
+   * @param nameOrBytes
+   * @param echoName
+   * @param forceSync TODO
+   * @return true if asynchronous
+   */
   @SuppressWarnings("unchecked")
-  public void loadImage(Object nameOrBytes, String echoName) {
+  public boolean loadImage(Object nameOrBytes, String echoName, boolean forceSync) {
     Object image = null;
     String nameOrError = null;
     byte[] bytes = null;
-    boolean isShowImage = (echoName != null && echoName.startsWith("\1"));
-    if (isShowImage) {
-      if (echoName.equals("\1closeall\1null")) {
-        vwr.loadImageData(Boolean.TRUE, "\1closeall", "\1closeall", null);
-        return;
-      }
-      if ("\1close".equals(nameOrBytes)) {
-        vwr.loadImageData(Boolean.FALSE, "\1close", echoName, null);
-        return;
-      }
+    boolean isPopupImage = (echoName != null && echoName.startsWith("\1"));
+    if (isPopupImage) {
+      if (echoName.equals("\1closeall\1null"))
+        return vwr.loadImageData(Boolean.TRUE, "\1closeall", "\1closeall", null);
+      if ("\1close".equals(nameOrBytes))
+        return vwr.loadImageData(Boolean.FALSE, "\1close", echoName, null);
     }
     if (nameOrBytes instanceof Map) {
       nameOrBytes = (((Map<String, Object>) nameOrBytes).containsKey("_DATA_") ? ((Map<String, Object>) nameOrBytes)
@@ -840,6 +843,7 @@ public class FileManager implements BytePoster {
     if (nameOrBytes instanceof SV)
       nameOrBytes = ((SV) nameOrBytes).value;
     String name = (nameOrBytes instanceof String ? (String) nameOrBytes : null);
+    boolean isAsynchronous = false;
     if (name != null && name.startsWith(";base64,")) {
       bytes = Base64.decodeBase64(name);
     } else if (nameOrBytes instanceof BArray) {
@@ -849,20 +853,24 @@ public class FileManager implements BytePoster {
       nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
           : names[0].replace('\\', '/'));
       if (names != null)
-        image = getJmb().getImage(nameOrError, echoName);
+        image = getJmb().getImage(nameOrError, echoName, forceSync);
+      isAsynchronous = (image == null);        
     } else {
       image = nameOrBytes;
     }
-    if (bytes != null)
-      image = getJmb().getImage(bytes, echoName);
+    if (bytes != null) {
+      image = getJmb().getImage(bytes, echoName, true);
+      isAsynchronous = false;
+    }
     if (image instanceof String) {
       nameOrError = (String) image;
       image = null;
     }
     if (!vwr.isJS && image != null && bytes != null)
       nameOrError = ";base64," + Base64.getBase64(bytes).toString();
-    if (!vwr.isJS || isShowImage && nameOrError == null)
-      vwr.loadImageData(image, nameOrError, echoName, null);
+    if (!vwr.isJS || isPopupImage && nameOrError == null)
+      return vwr.loadImageData(image, nameOrError, echoName, null);
+    return isAsynchronous;
     // JSmol will call that from awtjs2d.Platform.java asynchronously
   }
 

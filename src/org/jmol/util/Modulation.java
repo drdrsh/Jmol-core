@@ -325,7 +325,7 @@ public class Modulation {
   static double[][] legendre;
 
   synchronized void calcLegendre(int m) {
-    if (legendre != null && legendre.length > m)
+    if (legendre != null && legendre.length >= m + 5)
       return;
     legendre = new double[m + 5][];
     double[] pn_1 = legendre[0] = new double[] { 1 };

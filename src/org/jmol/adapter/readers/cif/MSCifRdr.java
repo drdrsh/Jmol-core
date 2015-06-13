@@ -217,8 +217,8 @@ public class MSCifRdr extends MSRdr {
     //_jana:
     "*_displace_legendre_atom_site_label", // 61 
     "*_displace_legendre_axis", 
-    "*_displace_legendre_param_order", 
-    "*_displace_legendre_param_coeff",
+    "*_displace_legendre_param_order",  // NOT SUPPORTED
+    "*_displace_legendre_param_coeff",  // NOT SUPPORTED
     "*_u_legendre_atom_site_label", // 65  
     "*_u_legendre_tens_elem",
     "*_u_legendre_param_order", 

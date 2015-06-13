@@ -2206,7 +2206,7 @@ public class CmdExt extends ScriptExt {
     }
     if (!chk)
       vwr.fm.loadImage(isClose ? "\1close" : fileName, "\1" + fileName + "\1"
-          + ("".equals(id) || id == null ? null : id));
+          + ("".equals(id) || id == null ? null : id), false);
   }
   
   private void mapProperty() throws ScriptException {
@@ -4014,7 +4014,7 @@ public class CmdExt extends ScriptExt {
         break;
       case T.drawing:
         if (msg.length() > 0) {
-          vwr.fm.loadImage(vwr.setLoadFormat("_" + msg, '2', false), "\1" + msg);
+          vwr.fm.loadImage(vwr.setLoadFormat("_" + msg, '2', false), "\1" + msg, false);
           return;
         }
         msg = "Could not show drawing -- Either insufficient atoms are selected or the model is a PDB file.";

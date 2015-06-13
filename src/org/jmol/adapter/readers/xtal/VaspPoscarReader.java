@@ -140,7 +140,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
       float radius = Float.NaN;
       String[] tokens = PT.getTokens(rdline());
       if (radiusPt == Integer.MIN_VALUE) {
-        for (int j = tokens.length - 1; --j > 2;)
+        for (int j = tokens.length; --j > 2;)
           if (tokens[j].equals("radius")) {
             radiusPt = j + 1;
           } else if (getElement(tokens[j]) != null) {
