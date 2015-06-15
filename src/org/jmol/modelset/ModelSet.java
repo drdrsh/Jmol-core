@@ -438,6 +438,10 @@ import java.util.Properties;
       int modelIndex = getModelNumberIndex(modelNumber, true, true);
       return (modelIndex < 0 && modelNumber > 0 ? new BS()
           : vwr.getModelUndeletedAtomsBitSet(modelIndex));
+    case T.polyhedra:
+      Object[] data = new Object[] { null, null };
+      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "centers", data);
+      return (data[1] == null ? new BS() : (BS) data[1]);
     }
   }
   
@@ -506,6 +510,7 @@ import java.util.Properties;
       bsAtoms = null;
     }
     BS bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+    boolean localEnvOnly = (bsAtoms != null && bs.cardinality() != bsAtoms.cardinality());
     if (bsAtoms != null)
       bs.and(bsAtoms);
     iAtom = bs.nextSetBit(0);
@@ -516,9 +521,29 @@ import java.util.Properties;
     Object obj = vwr.shm.getShapePropertyIndex(JC.SHAPE_VECTORS, "mad", iAtom);
     boolean haveVibration = (obj != null && ((Integer) obj).intValue() != 0 || vwr
         .tm.vibrationOn);
+    
     SymmetryInterface symmetry = Interface.getSymmetry(vwr, "ms");
-    pointGroup = symmetry.setPointGroup(pointGroup, at, bs, haveVibration,
-        vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance));
+    
+    T3[] pts = at;
+    SymmetryInterface pointGroup = this.pointGroup;
+    boolean isPolyhedron = (type != null && type.toUpperCase().indexOf(":POLY") >= 0); 
+    if (isPolyhedron) {
+
+      Object[] data = new Object[] { Integer.valueOf(iAtom), null};
+      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "points", data);
+      pts = (T3[]) data[1]; 
+      if (pts == null)
+        return null;
+      bs = null;
+      haveVibration = false;
+      pointGroup = null;
+    }
+    if (type != null && type.indexOf(":") >= 0)
+      type = type.substring(0, type.indexOf(":"));
+    pointGroup = symmetry.setPointGroup(pointGroup, pts, bs, haveVibration,
+        vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance), localEnvOnly);
+    if (!isPolyhedron)
+      this.pointGroup = pointGroup;
     if (!doAll && !asInfo)
       return pointGroup.getPointGroupName();
     Object ret = pointGroup.getPointGroupInfo(modelIndex, asDraw, asInfo, type,
@@ -2325,9 +2350,20 @@ import java.util.Properties;
       return deleteConnections(minD, maxD, order, bsA, bsB, isBonds, matchNull);
     case T.legacyautobonding:
     case T.auto:
-      if (order != Edge.BOND_AROMATIC)
-        return autoBond(bsA, bsB, bsBonds, isBonds, matchHbond,
-            connectOperation == T.legacyautobonding);
+      if (order != Edge.BOND_AROMATIC) {
+          if (isBonds) {
+            BS bs = bsA;
+            bsA = new BS();
+            bsB = new BS();
+            for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+              bsA.set(bo[i].atom1.i);
+              bsB.set(bo[i].atom2.i);
+            }
+          }
+          return new int[] {
+              matchHbond ? autoHbond(bsA, bsB, false) : autoBondBs4(bsA, bsB, null,
+                  bsBonds, vwr.getMadBond(), connectOperation == T.legacyautobonding), 0 };
+        }
       idOrModifyOnly = autoAromatize = true;
       break;
     case T.identify:
@@ -2502,9 +2538,9 @@ import java.util.Properties;
             || isFirstExcluded && bsExclude.get(j)
             || useOccupation && occupancies != null && (occupancies[i] < 50) != (occupancies[j] < 50))
           continue;        
-        short order = getBondOrderFull(myBondingRadius,
+        int order = (isBondable(myBondingRadius,
             atomNear.getBondingRadius(), iter.foundDistance2(),
-            minBondDistance2, bondTolerance);
+            minBondDistance2, bondTolerance)? 1 : 0);
         if (order > 0
             && autoBondCheck(atom, atomNear, order, mad, bsBonds))
           nNew++;
@@ -2515,6 +2551,20 @@ import java.util.Properties;
       Logger.checkTimer("autoBond", false);
     return nNew;
   }
+
+  public boolean isBondable(float bondingRadiusA,
+                                       float bondingRadiusB, 
+                                       float distance2,
+                                       float minBondDistance2,
+                                       float bondTolerance) {
+    if (bondingRadiusA == 0 || bondingRadiusB == 0
+        || distance2 < minBondDistance2)
+      return false;
+    float maxAcceptable = bondingRadiusA + bondingRadiusB + bondTolerance;
+    float maxAcceptable2 = maxAcceptable * maxAcceptable;
+    return (distance2 <= maxAcceptable2);
+  }
+
 
   private boolean maxBondWarned;
 
@@ -2611,9 +2661,9 @@ import java.util.Properties;
           continue;
         if (!(isAtomInSetA && isNearInSetB || isAtomInSetB && isNearInSetA))
           continue;
-        short order = getBondOrderFull(myBondingRadius,
+        int order = (isBondable(myBondingRadius,
             atomNear.getBondingRadius(), iter.foundDistance2(),
-            minBondDistance2, bondTolerance);
+            minBondDistance2, bondTolerance) ? 1 : 0);
         if (order > 0) {
           if (autoBondCheck(atom, atomNear, order, mad, bsBonds))
             nNew++;
@@ -2622,22 +2672,6 @@ import java.util.Properties;
       iter.release();
     }
     return nNew;
-  }
-
-  private int[] autoBond(BS bsA, BS bsB, BS bsBonds, boolean isBonds,
-                         boolean matchHbond, boolean legacyAutoBond) {
-    if (isBonds) {
-      BS bs = bsA;
-      bsA = new BS();
-      bsB = new BS();
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        bsA.set(bo[i].atom1.i);
-        bsB.set(bo[i].atom2.i);
-      }
-    }
-    return new int[] {
-        matchHbond ? autoHbond(bsA, bsB, false) : autoBondBs4(bsA, bsB, null,
-            bsBonds, vwr.getMadBond(), legacyAutoBond), 0 };
   }
 
 
@@ -3975,5 +4009,39 @@ import java.util.Properties;
     return (Map<String, String>) (o == null ? getInfoM("hetNames") : o);
   }
 
+  public Object getUnitCellPointsWithin(float distance, BS bs, P3 pt,
+                                        boolean asMap) {
+    Lst<P3> lst = new Lst<P3>();
+    Map<String, Object> map = null;
+    Lst<Integer> lstI = null;
+    if (asMap) {
+      map = new Hashtable<String, Object>();
+      lstI = new Lst<Integer>();
+      map.put("atomIndex", lstI);
+      map.put("points", lst);
+    }
+    int iAtom = (bs == null ? -1 : bs.nextSetBit(0));
+    bs = vwr.getModelUndeletedAtomsBitSet(iAtom < 0 ? vwr.am.cmi : at[iAtom].mi);
+    if (iAtom < 0)
+      iAtom = bs.nextSetBit(0);      
+    if (iAtom >= 0) {
+      SymmetryInterface unitCell = getUnitCellForAtom(iAtom);
+      if (unitCell != null) {
+        AtomIndexIterator iter = unitCell.getIterator(vwr, at[iAtom], at, bs,
+            distance);
+        if (pt != null)
+          iter.setCenter(pt, distance);
+        while (iter.hasNext()) {
+          iAtom = iter.next();
+          pt = iter.getPosition();
+          lst.addLast(pt);
+          if (asMap) {
+            lstI.addLast(Integer.valueOf(iAtom));
+          }
+        }
+      }
+    }
+    return (asMap ? map : lst);
+  }
 }
 

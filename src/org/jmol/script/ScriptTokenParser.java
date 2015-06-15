@@ -496,7 +496,8 @@ abstract class ScriptTokenParser {
     case T.centroid:
       return clauseCell(tok);
     case T.connected:
-      return clauseConnected();
+    case T.polyhedra:
+      return clauseConnected(tok == T.polyhedra);
     case T.search:
     case T.smiles:
       return clauseSubstructure();
@@ -757,6 +758,7 @@ abstract class ScriptTokenParser {
       case T.coord:
       case T.element:
       case T.group:
+      case T.unitcell:
       case T.helix:
       case T.model:
       case T.molecule:
@@ -818,6 +820,7 @@ abstract class ScriptTokenParser {
             break;
           case T.group:
           case T.vanderwaals:
+          case T.unitcell:
             getToken();
             addTokenToPostfix(T.string, T.nameOf(tok));
             break;
@@ -865,7 +868,7 @@ abstract class ScriptTokenParser {
     return true;
   }
 
-  private boolean clauseConnected() {
+  private boolean clauseConnected(boolean isPolyhedra) {
     addNextToken();
     // connected (1,3, single, .....)
     if (!addNextTokenIf(T.leftparen)) {
@@ -877,6 +880,10 @@ abstract class ScriptTokenParser {
       if (addNextTokenIf(T.integer))
         if (!addNextTokenIf(T.comma))
           break;
+      if (isPolyhedra) {
+        returnToken();
+        break;
+      }
       if (addNextTokenIf(T.integer))
         if (!addNextTokenIf(T.comma))
           break;

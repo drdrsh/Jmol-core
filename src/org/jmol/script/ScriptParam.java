@@ -601,6 +601,8 @@ abstract public class ScriptParam extends ScriptError {
    * @throws ScriptException
    */
   public P3[] getPointArray(int i, int nPoints, boolean allowNull) throws ScriptException {
+    if (nPoints == Integer.MAX_VALUE)
+      nPoints = -1;
     P3[] points = (nPoints < 0 ? null : new P3[nPoints]);
     Lst<P3> vp = (nPoints < 0 ? new Lst<P3>() : null);
     int tok = (i < 0 ? T.varray : getToken(i++).tok);

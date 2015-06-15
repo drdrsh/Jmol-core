@@ -75,7 +75,7 @@ public class SmilesMeasure  {
   
   boolean check() {
     for (int i = 0; i < type; i++) {
-      int iAtom = search.patternAtoms[indices[i]].getMatchingAtom();
+      int iAtom = search.patternAtoms[indices[i]].getMatchingAtomIndex();
       //System.out.print(iAtom + "-");
       points[i] = (P3) search.jmolAtoms[iAtom];
       //System.out.println(points[i]);

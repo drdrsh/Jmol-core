@@ -69,7 +69,7 @@ public class DrawRenderer extends MeshRenderer {
     needTranslucent = false;
     imageFontScaling = vwr.imageFontScaling;
     Draw draw = (Draw) shape;
-    isPrecision = vwr.tm.perspectiveDepth;
+    isPrecision = true;//vwr.tm.perspectiveDepth;
     for (int i = draw.meshCount; --i >= 0;) {
       Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
       if (mesh.connections != null) {
@@ -89,6 +89,14 @@ public class DrawRenderer extends MeshRenderer {
       }
       if (renderMesh2(mesh))
         renderInfo();
+      if (!isExport 
+          && mesh.visibilityFlags != 0
+          && vwr.getPickingMode() == ActionManager.PICKING_DRAW) {
+        if (!g3d.setC(C.getColixTranslucent3(C.GOLD, true, 0.5f)))
+          needTranslucent = true;
+        else
+          renderHandles();
+      }
     }
     return needTranslucent;
   }
@@ -99,7 +107,7 @@ public class DrawRenderer extends MeshRenderer {
         && (dmesh.modelFlags == null || dmesh.bsMeshesVisible.get(i));
   }
 
-   @Override
+  @Override
   protected void render2(boolean isExport) {
     drawType = dmesh.drawType;
     diameter = dmesh.diameter;
@@ -110,10 +118,9 @@ public class DrawRenderer extends MeshRenderer {
       drawLineData(mesh.lineData);
       return;
     }
-    boolean isDrawPickMode = (vwr.getPickingMode() == ActionManager.PICKING_DRAW);
     int nPoints = vertexCount;
     boolean isCurved = ((drawType == EnumDrawType.CURVE
-        || drawType == EnumDrawType.ARROW || drawType == EnumDrawType.ARC) && vertexCount >= 2);
+        || drawType == EnumDrawType.ARROW || drawType == EnumDrawType.ARC) && vertexCount > 2);
     boolean isSegments = (drawType == EnumDrawType.LINE_SEGMENT);
     if (width > 0 && isCurved) {
       pt1f.set(0, 0, 0);
@@ -122,7 +129,8 @@ public class DrawRenderer extends MeshRenderer {
         pt1f.add(vertices[i]);
       pt1f.scale(1f / n);
       tm.transformPtScr(pt1f, pt1i);
-      diameter = (int) vwr.tm.scaleToScreen(pt1i.z, (int) Math.floor(width * 1000));
+      diameter = (int) vwr.tm.scaleToScreen(pt1i.z,
+          (int) Math.floor(width * 1000));
       if (diameter == 0)
         diameter = 1;
     }
@@ -159,7 +167,8 @@ public class DrawRenderer extends MeshRenderer {
       if (dmesh.scale > 0)
         width *= dmesh.scale;
       if (width > 0)
-        diameter = (int) vwr.tm.scaleToScreen(pt1i.z, (int) Math.floor(width * 1000));
+        diameter = (int) vwr.tm.scaleToScreen(pt1i.z,
+            (int) Math.floor(width * 1000));
       if (diameter > 0 && (mesh.drawTriangles || mesh.fillTriangles)) {
         g3d.addRenderer(T.circle);
         g3d.drawFilledCircle(colix, mesh.fillTriangles ? colix : 0, diameter,
@@ -183,9 +192,11 @@ public class DrawRenderer extends MeshRenderer {
       // crossing point
       pt1f.scaleAdd2(fractionalOffset, vTemp, vertices[0]);
       // define rotational axis
-      M3 mat = new M3().setAA(A4.newVA(vTemp, (float) (nDegreesOffset * Math.PI / 180)));
+      M3 mat = new M3().setAA(A4.newVA(vTemp,
+          (float) (nDegreesOffset * Math.PI / 180)));
       // vector to rotate
-      vTemp2.sub2(vertexCount > 2 ? vertices[2] : Draw.randomPoint(), vertices[0]);
+      vTemp2.sub2(vertexCount > 2 ? vertices[2] : Draw.randomPoint(),
+          vertices[0]);
       vTemp2.cross(vTemp, vTemp2);
       vTemp2.cross(vTemp2, vTemp);
       vTemp2.normalize();
@@ -195,10 +206,10 @@ public class DrawRenderer extends MeshRenderer {
       float degrees = theta / 5;
       while (Math.abs(degrees) > 5)
         degrees /= 2;
-      nPoints = Math.round (theta / degrees) + 1;
+      nPoints = Math.round(theta / degrees) + 1;
       while (nPoints < 10) {
         degrees /= 2;
-        nPoints = Math.round (theta / degrees) + 1;
+        nPoints = Math.round(theta / degrees) + 1;
       }
       mat.setAA(A4.newVA(vTemp, (float) (degrees * Math.PI / 180)));
       screens = vwr.allocTempScreens(nPoints);
@@ -244,19 +255,16 @@ public class DrawRenderer extends MeshRenderer {
       g3d.addRenderer(T.hermitelevel);
       for (int i = 0, i0 = 0; i < nPoints - 1; i++) {
         g3d.fillHermite(tension, diameter, diameter, diameter, p3Screens[i0],
-                p3Screens[i], p3Screens[i + 1], p3Screens[i
-                    + (i == nPoints - 2 ? 1 : 2)]);
+            p3Screens[i], p3Screens[i + 1], p3Screens[i
+                + (i == nPoints - 2 ? 1 : 2)]);
         i0 = i;
       }
     } else if (isSegments) {
       for (int i = 0; i < nPoints - 1; i++)
-        drawLine(i, i + 1, true, vertices[i], vertices[i + 1], screens[i],
+        drawEdge(i, i + 1, true, vertices[i], vertices[i + 1], screens[i],
             screens[i + 1]);
     }
 
-    if (isDrawPickMode && !isExport) {
-      renderHandles();
-    }
   }
 
   private void getConnectionPoints() {
@@ -332,7 +340,7 @@ public class DrawRenderer extends MeshRenderer {
       P3[] pts = lineData.get(i);
       tm.transformPtScr(pts[0], pt1i);
       tm.transformPtScr(pts[1], pt2i);
-      drawLine(-1, -2, true, pts[0], pts[1], pt1i, pt2i);
+      drawEdge(-1, -2, true, pts[0], pts[1], pt1i, pt2i);
     }
   }
 

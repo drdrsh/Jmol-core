@@ -217,7 +217,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       if ((vertexCount = mesh.vc) == 0)
         return false;
       normixes = mesh.normixes;
-      if (normixes == null || vertices == null)
+      if (normixes == null  && mesh.pc >= 0 || vertices == null)
         return false;
       // this can happen when user switches windows
       // during a surface calculation
@@ -278,47 +278,57 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected void render2b(boolean generateSet) {
     if (!g3d.setC(isGhostPass ? mesh.slabColix : colix))
       return;
-    if (renderLow || mesh.showPoints || mesh.pc == 0)
+    if (renderLow || mesh.showPoints || mesh.pc <= 0)
       renderPoints(); 
     if (!renderLow && (isGhostPass ? mesh.slabMeshType == T.mesh : mesh.drawTriangles))
       renderTriangles(false, mesh.showTriangles, false);
-    if (!renderLow && (isGhostPass ? mesh.slabMeshType == T.fill : mesh.fillTriangles))
+    if (!renderLow && mesh.pc > 0 && (isGhostPass ? mesh.slabMeshType == T.fill : mesh.fillTriangles))
       renderTriangles(true, mesh.showTriangles, generateSet);
   }
 
   protected void renderPoints() {
-    if (mesh.isTriangleSet) {
-      int[][] polygonIndexes = mesh.pis;
-      BS bsPoints = BS.newN(mesh.vc);
-      if (haveBsDisplay) {
-        bsPoints.setBits(0, mesh.vc);
-        bsPoints.andNot(mesh.bsDisplay);
-      }
-      for (int i = mesh.pc; --i >= 0;) {
-        if (!isPolygonDisplayable(i))
-          continue;
-        int[] p = polygonIndexes[i];
-        if (frontOnly && transformedVectors[normixes[i]].z < 0)
-          continue;
-        for (int j = p.length - 1; --j >= 0;) {
-          int pt = p[j];
-          if (bsPoints.get(pt))
-            continue;
-          bsPoints.set(pt);
-
-          if (renderLow) {
-            P3i s = screens[pt];
-            g3d.drawPixel(s.x, s.y, s.z);
-          } else {
-            g3d.fillSphereI(4, screens[pt]);
-          }
-        }
-      }
+    if (!mesh.isTriangleSet || mesh.pc < 0) {
+      for (int i = vertexCount; --i >= 0;)
+        if (!frontOnly || normixes == null || transformedVectors[normixes[i]].z >= 0)
+          drawPoint(i, false);
       return;
     }
-    for (int i = vertexCount; --i >= 0;)
-      if (!frontOnly || transformedVectors[normixes[i]].z >= 0)
-        g3d.fillSphereI(4, screens[i]);
+    int[][] polygonIndexes = mesh.pis;
+    BS bsPoints = BS.newN(mesh.vc);
+    if (haveBsDisplay) {
+      bsPoints.setBits(0, mesh.vc);
+      bsPoints.andNot(mesh.bsDisplay);
+    }
+    for (int i = mesh.pc; --i >= 0;) {
+      if (!isPolygonDisplayable(i))
+        continue;
+      int[] p = polygonIndexes[i];
+      if (frontOnly && transformedVectors[normixes[i]].z < 0)
+        continue;
+      for (int j = p.length - 1; --j >= 0;) {
+        int pt = p[j];
+        if (bsPoints.get(pt))
+          continue;
+        bsPoints.set(pt);
+        drawPoint(pt, true);
+      }
+    }
+  }
+
+  private void drawPoint(int pt, boolean forTriangle) {
+    if (renderLow && forTriangle) {
+      P3i s = screens[pt];
+      g3d.drawPixel(s.x, s.y, s.z);
+    } else if (mesh.pc >= 0) {
+      drawMeshSphere(screens[pt]);
+    } else {
+      // scaled point drawing
+      drawEdge(pt, pt, false, vertices[pt], vertices[pt], screens[pt], null);
+    }
+  }
+  
+  private void drawMeshSphere(P3i pt) {
+    g3d.fillSphereI(4, pt);
   }
 
   protected BS bsPolygonsToExport = new BS();
@@ -352,7 +362,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
         continue;
       if (iB == iC) {
         // line or point
-        drawLine(iA, iB, fill, vertices[iA], vertices[iB], screens[iA],
+        drawEdge(iA, iB, fill, vertices[iA], vertices[iB], screens[iA],
             screens[iB]);
         continue;
       }
@@ -374,13 +384,13 @@ public abstract class MeshRenderer extends ShapeRenderer {
         if (iShowTriangles)
           check = 7;
         if ((check & 1) == 1)
-          drawLine(iA, iB, true, vertices[iA], vertices[iB], screens[iA],
+          drawEdge(iA, iB, true, vertices[iA], vertices[iB], screens[iA],
               screens[iB]);
         if ((check & 2) == 2)
-          drawLine(iB, iC, true, vertices[iB], vertices[iC], screens[iB],
+          drawEdge(iB, iC, true, vertices[iB], vertices[iC], screens[iB],
               screens[iC]);
         if ((check & 4) == 4)
-          drawLine(iA, iC, true, vertices[iA], vertices[iC], screens[iA],
+          drawEdge(iA, iC, true, vertices[iA], vertices[iC], screens[iA],
               screens[iC]);
         continue;
       }
@@ -498,7 +508,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return check;
   }
 
-  protected void drawLine(int iA, int iB, boolean fill, T3 vA, T3 vB, P3i sA,
+  protected void drawEdge(int iA, int iB, boolean fill, T3 vA, T3 vB, P3i sA,
                           P3i sB) {
     byte endCap = (iA != iB && !fill ? GData.ENDCAPS_NONE : width < 0
         || width == -0.0 || iA != iB && isTranslucent ? GData.ENDCAPS_FLAT

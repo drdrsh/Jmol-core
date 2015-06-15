@@ -162,7 +162,7 @@ public class CGORenderer extends DrawRenderer {
         // width and number of points?
         getPoint(j + 2, pt0, pt0i);
         getPoint(j + (is2D ? 4 : 5), pt1, pt1i);
-        drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
+        drawEdge(1, 2, false, pt0, pt1, pt0i, pt1i);
         break;
       case CGOMesh.BEGIN:
         glMode = cgoMesh.getInt(j + 1);
@@ -180,7 +180,7 @@ public class CGORenderer extends DrawRenderer {
         //$FALL-THROUGH$
       case CGOMesh.END:
         if (glMode == CGOMesh.GL_LINE_LOOP && nPts >= 3)
-          drawLine(1, 2, true, pt0, pt3, pt0i, pt3i);
+          drawEdge(1, 2, true, pt0, pt3, pt0i, pt3i);
         nPts = 0;
         break;
       case CGOMesh.COLOR:
@@ -202,12 +202,12 @@ public class CGORenderer extends DrawRenderer {
         case -1:
           break;
         case CGOMesh.GL_POINTS:
-          drawLine(1, 1, false, pt0, pt0, pt0i, pt0i);
+          drawEdge(1, 1, false, pt0, pt0, pt0i, pt0i);
           break;
         case CGOMesh.GL_LINES:
           if (nPts == 2) {
             getPoint(j, pt1, pt1i);
-            drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
+            drawEdge(1, 2, false, pt0, pt1, pt0i, pt1i);
             nPts = 0;
           }
           break;
@@ -227,7 +227,7 @@ public class CGORenderer extends DrawRenderer {
           spt = pt0i;
           pt0i = pt1i;
           pt1i = spt;
-          drawLine(1, 2, true, pt0, pt1, pt0i, pt1i);
+          drawEdge(1, 2, true, pt0, pt1, pt0i, pt1i);
           break;
         case CGOMesh.GL_TRIANGLES:
           switch (nPts) {
@@ -302,7 +302,7 @@ public class CGORenderer extends DrawRenderer {
         width = cgoMesh.getFloat(j + 7);
         getColix(true);
         getColix(false); // for now -- ignore second color
-        drawLine(1, 2, false, pt0, pt1, pt0i, pt1i);
+        drawEdge(1, 2, false, pt0, pt1, pt0i, pt1i);
         width = 0;
         break;
       case CGOMesh.TRICOLOR_TRIANGLE:

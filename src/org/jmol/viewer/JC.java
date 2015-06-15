@@ -996,6 +996,22 @@ public final class JC {
   public static final int JSV_STRUCTURE = 21;
   public static final int JSV_SEND_H1SIMULATE = 28;
 
+  // this list is also in org.jmol.viewer.JC
+  public static final int SMILES_EXPLICIT_H               = 0x001;
+  public static final int SMILES_TOPOLOGY                 = 0x002;
+  public static final int SMILES_BIO                      = 0x100;
+  public static final int SMILES_BIO_ALLOW_UNMACHED_RINGS = 0x101;
+  public static final int SMILES_BIO_CROSSLINK            = 0x102;
+  public static final int SMILES_BIO_COMMENT              = 0x104;
+  
+  public static final int SMILES_TYPE_SMILES       = 0x010000;
+  public static final int SMILES_TYPE_SMARTS       = 0x020000;
+  public static final int SMILES_MATCH_ALL         = 0x100000;
+  public static final int SMILES_MATCH_ONE         = 0x200000;
+  public static final int SMILES_RETURN_FIRST       = 0x400000;
+
+
+
 
   public static int getJSVSyncSignal(String script) {
     return (script.length() < 7 ? -1 : ("" +

@@ -851,6 +851,15 @@ public class ScriptMathProcessor {
       return eval.getMathExt().evaluate(this, op, args, tok);
     if (op.tok == T.propselector)
       xPt--; // pop x in "x.func(...)"
+    switch (tok) {
+    case T.connected:
+    case T.polyhedra:
+    case T.search:
+    case T.smiles:
+    case T.within:
+    case T.contact:
+      return addXBs(new BS());
+    }
     return addXBool(true);
   }
   

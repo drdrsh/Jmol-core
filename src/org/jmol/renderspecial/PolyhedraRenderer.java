@@ -72,14 +72,14 @@ public class PolyhedraRenderer extends ShapeRenderer {
     } else if (!g3d.setC(colix)) {
       return false;
     }
-    P3[] vertices = p.vertices;
+    P3[] vertices = p.points;
     if (screens3f == null || screens3f.length < vertices.length) {
       screens3f = new P3[vertices.length];
       for (int i = vertices.length; --i >= 0;)
         screens3f[i] = new P3();
     }
     P3[] sc = this.screens3f;
-    P3i[] planes = p.planes;
+    int[][] planes = p.planes;
     for (int i = vertices.length; --i >= 0;) {
       Atom atom = (vertices[i] instanceof Atom ? (Atom) vertices[i] : null);
       if (atom == null) {
@@ -98,40 +98,49 @@ public class PolyhedraRenderer extends ShapeRenderer {
     frontOnly = (drawEdges == Polyhedra.EDGES_FRONT);
 
     // no edges to new points when not collapsed
-//    int m = (int) ( Math.random() * 14);
+       // int m = (int) ( Math.random() * 16);
     if (!needTranslucent || g3d.setC(colix))
       for (int i = planes.length; --i >= 0;) {
-        P3i pl = planes[i];
-//        if (i < m)
-        fillFace(p.normixes[i], sc[pl.x], sc[pl.y],
-            sc[pl.z]);
+        int[] pl = planes[i];
+        //if (i != m)continue;
+        //if (p.normixes[i] == 206 || p.normixes[i] == 226)continue;
+        //System.out.println("pr " + p.normixes[i]);
+        try {
+        g3d.fillTriangleTwoSided(p.normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]]);
+        } catch (Exception e){
+          System.out.println("heorhe");
+        }
+        if (pl[3] >= 0)
+          g3d.fillTriangleTwoSided(p.normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);          
       }
     // edges are not drawn translucently ever
     if (p.colixEdge != C.INHERIT_ALL)
       colix = p.colixEdge;
     if (g3d.setC(C.getColixTranslucent3(colix, false, 0)))
       for (int i = planes.length; --i >= 0;) {
-        P3i pl = planes[i];
-        drawFace(p.normixes[i], sc[pl.x], sc[pl.y],
-            sc[pl.z]);
+        int[] pl = planes[i];
+        if (pl[3] < 0) {
+          drawFace(p.normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], -pl[3]);
+        } else {
+          drawFace(p.normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], 3);
+          drawFace(p.normixes[i], sc[pl[0]], sc[pl[2]], sc[pl[3]], 6);          
+        }
+          
       }
     return needTranslucent;
   }
 
-  private void drawFace(short normix, P3 a, P3 b, P3 c) {
+  private void drawFace(short normix, P3 a, P3 b, P3 c, int edgeMask) {
     if (isAll || frontOnly && vwr.gdata.isDirectedTowardsCamera(normix)) {
-      drawCylinderTriangle(a, b, c);
+      int d = (g3d.isAntialiased() ? 6 : 3);
+      if ((edgeMask & 1) == 1)
+        g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, a, b);
+      if ((edgeMask & 2) == 2)
+        g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, b, c);
+      if ((edgeMask & 4) == 4)
+        g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, a, c);
     }
   }
 
-  private void drawCylinderTriangle(P3 a, P3 b, P3 c) {    
-    int d = (g3d.isAntialiased() ? 6 : 3);
-    g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, a, b);
-    g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, b, c);
-    g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL, d, a, c);
-  }
 
-  private void fillFace(short normix, P3 a, P3 b, P3 c) {
-    g3d.fillTriangleTwoSided(normix, a, b, c);
-  }
 }

@@ -28,6 +28,7 @@ import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
+import javajs.util.T3;
 
 import java.util.Hashtable;
 
@@ -39,6 +40,8 @@ import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.util.Node;
+
 import javajs.util.P3;
 import javajs.util.V3;
 
@@ -133,7 +136,7 @@ class PointGroup {
   private Operation[][] axes = new Operation[maxAxis][];
   private int nAtoms;
   private float radius;
-  private float distanceTolerance = 0.2f;
+  private float distanceTolerance = 0.25f; // making this just a bit more generous
   private float linearTolerance = 8f;
   private float cosTolerance = 0.99f; // 8 degrees
   private String name = "C_1?";
@@ -150,19 +153,39 @@ class PointGroup {
   
   final private P3 center = new P3();
 
-  private P3[] points;
-  private Atom[] atoms;
+  private T3[] points;
   private int[] elements;
 
   private BS bsAtoms;
+
+  private boolean haveVibration;
+
+  private boolean localEnvOnly;
+
+
+  /**
+   * 
+   * @param pgLast
+   * @param atomset
+   * @param bsAtoms
+   * @param haveVibration
+   * @param distanceTolerance
+   * @param linearTolerance
+   * @param localEnvOnly
+   * @return a PointGroup
+   */
   
-  static PointGroup getPointGroup(PointGroup pgLast, Atom[] atomset,
+  static PointGroup getPointGroup(PointGroup pgLast, T3[] atomset,
                                          BS bsAtoms, boolean haveVibration,
                                          float distanceTolerance,
-                                         float linearTolerance) {
+                                         float linearTolerance, boolean localEnvOnly) {
     PointGroup pg = new PointGroup();
-    return (pg.set(pgLast, atomset, bsAtoms, haveVibration, distanceTolerance,
-        linearTolerance) ? pg : pgLast);
+    pg.distanceTolerance = distanceTolerance;
+    pg.linearTolerance = linearTolerance;
+    pg.bsAtoms = (bsAtoms == null ? BSUtil.newBitSet2(0, atomset.length) : bsAtoms);
+    pg.haveVibration = haveVibration;
+    pg.localEnvOnly = localEnvOnly;
+    return (pg.set(pgLast, atomset) ? pg : pgLast);
   }
 
   private PointGroup() {
@@ -171,25 +194,24 @@ class PointGroup {
   private boolean isEqual(PointGroup pg) {
     if (pg == null)
       return false;
-    if (this.linearTolerance != pg.linearTolerance 
-        || this.distanceTolerance != pg.distanceTolerance
-        || this.nAtoms != pg.nAtoms || !this.bsAtoms.equals(pg.bsAtoms))
+    if (linearTolerance != pg.linearTolerance 
+        || distanceTolerance != pg.distanceTolerance
+        || nAtoms != pg.nAtoms
+        || localEnvOnly != pg.localEnvOnly
+        || haveVibration != pg.haveVibration
+        || bsAtoms ==  null ? pg.bsAtoms != null : !bsAtoms.equals(pg.bsAtoms))
       return false;
     for (int i = 0; i < nAtoms; i++) {
       // real floating == 0 here because they must be IDENTICAL POSITIONS
-      if (elements[i] != pg.elements[i] || points[i].distance(pg.points[i]) != 0)
+      if (elements[i] != pg.elements[i] || !points[i].equals(pg.points[i]))
         return false;
     }
     return true;
   }
   
-  private boolean set(PointGroup pgLast, Atom[] atomset, BS bsAtoms,
-      boolean haveVibration, float distanceTolerance, float linearTolerance) {
-    this.distanceTolerance = distanceTolerance;
-    this.linearTolerance = linearTolerance;
-    this.bsAtoms = bsAtoms;
+  private boolean set(PointGroup pgLast, T3[] atomset) {
     cosTolerance = (float) (Math.cos(linearTolerance / 180 * Math.PI));
-    if (!getAtomsAndElements(atomset, bsAtoms)) {
+    if (!getPointsAndElements(atomset)) {
       Logger.error("Too many atoms for point group calculation");
       name = "point group not determined -- ac > " + ATOM_COUNT_MAX
           + " -- select fewer atoms and try again.";
@@ -200,7 +222,7 @@ class PointGroup {
       P3[] atomVibs = new P3[points.length];
       for (int i = points.length; --i >= 0;) {
         atomVibs[i] = P3.newP(points[i]);
-        V3 v = atoms[i].getVibrationVector();
+        V3 v = ((Atom) points[i]).getVibrationVector();
         if (v != null)
           atomVibs[i].add(v);
       }
@@ -363,23 +385,26 @@ class PointGroup {
   }
 
   private final static int ATOM_COUNT_MAX = 100;
-  private boolean getAtomsAndElements(Atom[] atomset, BS bsAtoms) {
+
+  private boolean getPointsAndElements(T3[] atomset) {
     int ac = BSUtil.cardinalityOf(bsAtoms);
     if (ac > ATOM_COUNT_MAX)
       return false;
     points = new P3[ac];
-    atoms = new Atom[ac];
     elements = new int[ac];
-    if (ac == 0) 
+    if (ac == 0)
       return true;
     nAtoms = 0;
-    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
-        points[nAtoms] = P3.newP(atomset[i]);
-        atoms[nAtoms] = atomset[i];
-        int bondIndex = 1 + Math.max(3, atomset[i].getCovalentBondCount());
-        elements[nAtoms] = atomset[i].getElementNumber() * bondIndex;
-        center.add(points[nAtoms++]);
+    // we optionally include bonding information
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1), nAtoms++) {
+      T3 p = points[nAtoms] = atomset[i];
+      if (p instanceof Node) {
+        int bondIndex = (localEnvOnly ? 1 : 1 + Math.max(3,
+            ((Node) p).getCovalentBondCount()));
+        elements[nAtoms] = ((Node) p).getElementNumber() * bondIndex;
       }
+      center.add(points[nAtoms]);
+    }
     center.scale(1f / nAtoms);
     for (int i = nAtoms; --i >= 0;) {
       float r = center.distance(points[i]);
@@ -406,7 +431,7 @@ class PointGroup {
       if (i == centerAtomIndex) {
         nFound++;
       } else {
-        P3 a1 = points[i];
+        T3 a1 = points[i];
         int e1 = elements[i];
         if (q != null) {
           pt.sub2(a1, center);
@@ -419,7 +444,7 @@ class PointGroup {
           // actually doing a rotation/reflection
           // we do a rotation INVERSION. This works
           // due to the symmetry of S2, S4, and S8
-          // For S3 and S6, we play the trick of 
+          // For S3 and S6, we play the trick of b
           // rotating as C6 and C3, respectively, 
           // THEN doing the rotation/inversion. 
           vTemp.sub2(center, pt);
@@ -430,9 +455,9 @@ class PointGroup {
           continue;
         }
         for (int j = points.length; --j >= 0;) {
-          if (j == i || elements[j] != e1)
+          if (j == i || j == centerAtomIndex || elements[j] != e1)
             continue;
-          P3 a2 = points[j];
+          T3 a2 = points[j];
           if (pt.distance(a2) < distanceTolerance) {
             nFound++;
             continue out;
@@ -442,7 +467,7 @@ class PointGroup {
     return nFound == points.length;
   }
 
-  private boolean isLinear(P3[] atoms) {
+  private boolean isLinear(T3[] atoms) {
     V3 v1 = null;
     if (atoms.length < 2)
       return false;
@@ -498,10 +523,10 @@ class PointGroup {
     for (int i = points.length; --i >= 0;) {
       if (i == centerAtomIndex)
         continue;
-      P3 a1 = points[i];
+      T3 a1 = points[i];
       int e1 = elements[i];
       for (int j = points.length; --j > i;) {
-        P3 a2 = points[j];
+        T3 a2 = points[j];
         if (elements[j] != e1)
           continue;
 
@@ -751,7 +776,7 @@ class PointGroup {
     for (int i = points.length; --i >= 0;) {
       if (i == centerAtomIndex)
         continue;
-      P3 a1 = points[i];
+      T3 a1 = points[i];
       int e1 = elements[i];
       for (int j = points.length; --j > i;) {
         if (haveAxes && elements[j] != e1)
@@ -762,7 +787,7 @@ class PointGroup {
         // first, check planes through two atoms and the center
         // or perpendicular to a linear A -- 0 -- B set
 
-        P3 a2 = points[j];
+        T3 a2 = points[j];
         pt.add2(a1, a2);
         pt.scale(0.5f);
         v1.sub2(a1, center);

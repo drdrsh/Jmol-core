@@ -476,6 +476,7 @@ public class CmdExt extends ScriptExt {
       throws ScriptException {
     switch (tokAt(i)) {
     case T.fill:
+      htParams.put("packed", Boolean.TRUE);
       T3[] pts = null;
       int tok = tokAt(++i);
       switch (tok) {
@@ -486,6 +487,9 @@ public class CmdExt extends ScriptExt {
         if (e.isArrayParameter(i)) {
           pts = e.getPointArray(i, -1, false);
           i = e.iToken;
+        } else if (isFloatParameter(i)) {
+          float d = floatParameter(i);
+          pts = new P3[] { new P3(), P3.new3(d, d, d) };
         } else {
           pts = new P3[0];
           --i;
@@ -512,7 +516,7 @@ public class CmdExt extends ScriptExt {
       case 2:
         // origin and diagonal vector
         T3 a = pts[1];
-        pts = new T3[] { pts[0], P3.newP(pts[0]), new P3(), new P3(), new P3() };
+        pts = new T3[] { pts[0], P3.newP(pts[0]), new P3(), new P3() };
         pts[1].x = a.x;
         pts[2].y = a.y;
         pts[3].z = a.z;
@@ -525,7 +529,8 @@ public class CmdExt extends ScriptExt {
         break;
       default:
         // {0 0 0} with 10x10x10 cell
-        pts = new T3[] { new P3(), P3.new3(10, 0, 0), P3.new3(0, 10, 0), P3.new3(0, 0, 10) };
+        pts = new T3[] { new P3(), P3.new3(10, 0, 0), P3.new3(0, 10, 0),
+            P3.new3(0, 0, 10) };
       }
       htParams.put("fillRange", pts);
       sOptions.append(" FILL [" + pts[0] + pts[1] + pts[2] + pts[3] + "]");
@@ -1157,8 +1162,8 @@ public class CmdExt extends ScriptExt {
           vwr.setDihedrals(list, null, 1);
         }
         float stddev = eval.getSmilesExt().getSmilesCorrelation(bsFrom, bsTo,
-            strSmiles, null, null, m4, null, !isSmiles, false, null, center,
-            false, false);
+            strSmiles, null, null, m4, null, false, null, center,
+            false, isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS);
         if (Float.isNaN(stddev)) {
           showString("structures do not match");
           return;
@@ -1279,7 +1284,7 @@ public class CmdExt extends ScriptExt {
       int[][] maps = null;
       try {
         maps = vwr.getSmilesMatcher().getCorrelationMaps(smarts, atoms,
-            ac, vwr.bsA(), true, false);
+            ac, vwr.bsA(), JC.SMILES_TYPE_SMARTS);
       } catch (Exception ex) {
         eval.evalError(ex.getMessage(), null);
       }
@@ -3151,6 +3156,10 @@ public class CmdExt extends ScriptExt {
       String propertyName = null;
       Object propertyValue = null;
       switch (getToken(i).tok) {
+      case T.unitcell:
+        propertyName = "unitCell";
+        propertyValue = Boolean.TRUE;
+        break;
       case T.delete:
       case T.on:
       case T.off:
@@ -3212,6 +3221,12 @@ public class CmdExt extends ScriptExt {
             && !needsGenerating) {
           propertyName = "toBitSet";
           propertyValue = atomExpressionAt(++i);
+          i = eval.iToken;
+          needsGenerating = true;
+          break;
+        } else if (eval.isArrayParameter(i + 1)) {
+          propertyName = "toVertices";
+          propertyValue = eval.getPointArray(i + 1, -1, false);
           i = eval.iToken;
           needsGenerating = true;
           break;
@@ -4391,8 +4406,12 @@ public class CmdExt extends ScriptExt {
         msg = vwr.ms.getPDBHeader(vwr.am.cmi);
       break;
     case T.pointgroup:
+      String typ = eval.optParameterAsString(2);
+      if (typ.length() == 0)
+        typ = null;
+      len = slen;
       if (!chk)
-        showString(vwr.ms.getPointGroupAsString(vwr.bsA(), false, null, 0, 0));
+        showString(vwr.ms.getPointGroupAsString(vwr.bsA(), false, "show:" + typ, 0, 0));
       return;
     case T.symmetry:
       if (!chk)

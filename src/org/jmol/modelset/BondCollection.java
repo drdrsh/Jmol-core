@@ -235,16 +235,6 @@ abstract public class BondCollection extends AtomCollection {
         energy)).index;
   }
 
-  protected static short getBondOrderFull(float bondingRadiusA,
-                             float bondingRadiusB, float distance2,
-                             float minBondDistance2, float bondTolerance) {
-    if (bondingRadiusA == 0 || bondingRadiusB == 0 || distance2 < minBondDistance2)
-      return 0;
-    float maxAcceptable = bondingRadiusA + bondingRadiusB + bondTolerance;
-    float maxAcceptable2 = maxAcceptable * maxAcceptable;
-    return (distance2 > maxAcceptable2 ? (short) 0 : (short) 1);
-  }
-
   protected void deleteAllBonds2() {
     vwr.setShapeProperty(JC.SHAPE_STICKS, "reset", null);
     for (int i = bondCount; --i >= 0;) {

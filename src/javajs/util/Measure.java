@@ -257,28 +257,6 @@ final public class Measure {
     ptProj.add2(pt, vNorm);
   }
 
-  /**
-   * 
-   * @param ptCenter
-   * @param ptA
-   * @param ptB
-   * @param ptC
-   * @param isOutward
-   * @param normal
-   * @return        true if winding is proper; false if not
-   */
-  public static boolean getNormalFromCenter(P3 ptCenter, P3 ptA, P3 ptB,
-                            P3 ptC, boolean isOutward, V3 normal) {
-    // for Polyhedra
-    V3 vAB = new V3();
-    float d = getNormalThroughPoints(ptA, ptB, ptC, normal, vAB);
-    boolean isReversed = (distanceToPlaneV(normal, d, ptCenter) > 0);
-    if (isReversed == isOutward)
-      normal.scale(-1f);
-    //System.out.println("Draw v vector scale 2.0 " + Escape.escape(ptCenter) + Escape.escape(normal));
-    return !isReversed;
-  }
-
   public final static V3 axisY = V3.new3(0, 1, 0);
   
   public static void getNormalToLine(P3 pointA, P3 pointB,

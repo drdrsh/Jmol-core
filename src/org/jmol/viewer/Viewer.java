@@ -395,7 +395,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (bsSelected == null)
       bsSelected = bsA();
     return getSmilesMatcher().getSubstructureSet(smarts, ms.at, ms.ac,
-        bsSelected, true, false);
+        bsSelected, JC.SMILES_TYPE_SMARTS);
   }
 
   @SuppressWarnings({ "unchecked", "null", "unused" })
@@ -8548,7 +8548,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public String getSmiles(BS bs) throws Exception {
-    return getSmilesOpt(bs, -1, -1, false, false, false, false, false);
+    return getSmilesOpt(bs, -1, -1, 0);
   }
 
   /**
@@ -8561,27 +8561,20 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    *        when bsSeleced == null, first atomIndex or -1 for current
    * @param index2
    *        when bsSeleced == null, end atomIndex or -1 for current
-   * @param explicitH
-   *        include all H atoms, not just stereochemical ones
-   * @param isBioSmiles
-   * @param bioAllowUnmatchedRings
-   * @param bioAddCrossLinks
-   * @param bioAddComment
-   * 
+   * @param flags see JC.SMILES_xxxx
    * @return SMILES string
    * @throws Exception
    */
-  public String getSmilesOpt(BS bsSelected, int index1, int index2,
-                             boolean explicitH, boolean isBioSmiles,
-                             boolean bioAllowUnmatchedRings,
-                             boolean bioAddCrossLinks, boolean bioAddComment)
+  public String getSmilesOpt(BS bsSelected, int index1, int index2, int flags)
       throws Exception {
+    String bioComment = ((flags & JC.SMILES_BIO_COMMENT) == JC.SMILES_BIO_COMMENT ? getJmolVersion() + " "
+        + getModelName(am.cmi) : null);
     Atom[] atoms = ms.at;
     if (bsSelected == null) {
       if (index1 < 0 || index2 < 0) {
         bsSelected = bsA();
       } else {
-        if (isBioSmiles) {
+        if ((flags & JC.SMILES_BIO) == JC.SMILES_BIO) {
           if (index1 > index2) {
             int i = index1;
             index1 = index2;
@@ -8594,10 +8587,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         bsSelected.setBits(index1, index2 + 1);
       }
     }
-    String bioComment = (bioAddComment ? getJmolVersion() + " "
-        + getModelName(am.cmi) : null);
-    return getSmilesMatcher().getSmiles(atoms, ms.ac, bsSelected, isBioSmiles,
-        bioAllowUnmatchedRings, bioAddCrossLinks, bioComment, explicitH);
+    return getSmilesMatcher().getSmiles(atoms, ms.ac, bsSelected, bioComment, flags);
   }
 
   public String prompt(String label, String data, String[] list,

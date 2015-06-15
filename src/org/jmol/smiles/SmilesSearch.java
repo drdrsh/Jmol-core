@@ -177,6 +177,8 @@ public class SmilesSearch extends JmolMolecule {
   }
 
   void setRingData(BS bsA) throws InvalidSmilesException {
+    if (isTopology)
+      needAromatic = false;
     if (needAromatic)
       needRingData = true;
     boolean noAromatic = ((flags & Edge.FLAG_NO_AROMATIC) != 0);
@@ -457,7 +459,7 @@ public class SmilesSearch extends JmolMolecule {
 
       jmolAtom = jmolAtoms[iAtom];
 
-      if (!isRingCheck) {
+      if (!isRingCheck && !isTopology) {
         // check atoms 
         if (patternAtom.atomsOr != null) {
           for (int ii = 0; ii < patternAtom.nAtomsOr; ii++)
@@ -491,7 +493,7 @@ public class SmilesSearch extends JmolMolecule {
         // bonds to the previously assigned atoms matches
 
         SmilesAtom atom1 = patternBond.atom1;
-        int matchingAtom = atom1.getMatchingAtom();
+        int matchingAtom = atom1.getMatchingAtomIndex();
 
         // BIOSMILES/BIOSMARTS check is by group
 
@@ -525,7 +527,7 @@ public class SmilesSearch extends JmolMolecule {
       // Note that we explicitly do a reference using
       // index because this could be a SEARCH [x,x] "sub" atom.
 
-      patternAtoms[patternAtom.index].setMatchingAtom(iAtom);
+      patternAtoms[patternAtom.index].setMatchingAtom(jmolAtoms[iAtom], iAtom);
 
       // The atom has passed both the atom and the bond test.
       // Add this atom to the growing list.
@@ -584,7 +586,7 @@ public class SmilesSearch extends JmolMolecule {
         BS bs = BSUtil.copy(bsFound);
         if (newPatternAtom.notBondedIndex >= 0) {
           SmilesAtom pa = patternAtoms[newPatternAtom.notBondedIndex];
-          Node a = jmolAtoms[pa.getMatchingAtom()];
+          Node a = pa.getMatchingAtom();
           if (pa.isBioAtom) {
             // clear out adjacent residues
             int ii = ((BNode) a).getOffsetResidueAtom("0", 1);
@@ -625,7 +627,7 @@ public class SmilesSearch extends JmolMolecule {
       // have a connection in the real molecule between these two
       // particular atoms. So we just follow that connection. 
 
-      jmolAtom = jmolAtoms[newPatternBond.atom1.getMatchingAtom()];
+      jmolAtom = newPatternBond.atom1.getMatchingAtom();
 
       // Option 2: The connecting bond is a bio sequence or
       // from ~GGC(T)C:ATTC...
@@ -702,7 +704,7 @@ public class SmilesSearch extends JmolMolecule {
     BS bs = new BS();
     int nMatch = 0;
     for (int j = 0; j < ac; j++) {
-      int i = patternAtoms[j].getMatchingAtom();
+      int i = patternAtoms[j].getMatchingAtomIndex();
       if (!firstAtomOnly && top.haveSelected && !patternAtoms[j].selected)
         continue;
       nMatch++;
@@ -723,7 +725,7 @@ public class SmilesSearch extends JmolMolecule {
         bsCheck.clearAll();
         for (int j = 0; j < ac; j++) {
           //System.out.println("checking return for " + patternAtoms[j]);
-          bsCheck.set(patternAtoms[j].getMatchingAtom());
+          bsCheck.set(patternAtoms[j].getMatchingAtomIndex());
         }
         if (bsCheck.cardinality() != ac)
           return true;
@@ -740,7 +742,7 @@ public class SmilesSearch extends JmolMolecule {
       for (int j = 0, nn = 0; j < ac; j++) {
         if (!firstAtomOnly && top.haveSelected && !patternAtoms[j].selected)
           continue;
-        map[nn++] = patternAtoms[j].getMatchingAtom();
+        map[nn++] = patternAtoms[j].getMatchingAtomIndex();
       }
       vReturn.addLast(map);
       return !firstMatchOnly;
@@ -760,7 +762,7 @@ public class SmilesSearch extends JmolMolecule {
       for (int k = atomNum * 3 + 2; --k > atomNum;)
         ringSets.append("-").appendI(
             patternAtoms[(k <= atomNum * 2 ? atomNum * 2 - k + 1 : k - 1)
-                % atomNum].getMatchingAtom());
+                % atomNum].getMatchingAtomIndex());
       ringSets.append("- ");
       return true;
     }
@@ -1137,7 +1139,7 @@ public class SmilesSearch extends JmolMolecule {
       //System.out.println("");
       for (int i = 0; i < ac; i++) {
         SmilesAtom sAtom = patternAtoms[i];
-        Node atom0 = jmolAtoms[sAtom.getMatchingAtom()];
+        Node atom0 = sAtom.getMatchingAtom();
         int nH = sAtom.missingHydrogenCount;
         if (nH < 0)
           nH = 0;
@@ -1183,9 +1185,9 @@ public class SmilesSearch extends JmolMolecule {
               if (sAtom2 == null)
                 sAtom2 = sAtom1;
             } else if (jn[0] == null) {
-              jn[0] = getJmolAtom(sAtom1.getMatchingAtom());
+              jn[0] = sAtom1.getMatchingAtom();
             } else {
-              jn[1] = getJmolAtom(sAtom1.getMatchingAtom());
+              jn[1] = sAtom1.getMatchingAtom();
             }
           }
           if (sAtom2 == null)
@@ -1197,9 +1199,9 @@ public class SmilesSearch extends JmolMolecule {
             sAtom1 = sAtom2.bonds[k].getOtherAtom(sAtom2);
             if (sAtom2.bonds[k].matchingBond.getCovalentOrder() == 2) {
             } else if (jn[2] == null) {
-              jn[2] = getJmolAtom(sAtom1.getMatchingAtom());
+              jn[2] = sAtom1.getMatchingAtom();
             } else {
-              jn[3] = getJmolAtom(sAtom1.getMatchingAtom());
+              jn[3] = sAtom1.getMatchingAtom();
             }
           }
 
@@ -1229,7 +1231,7 @@ public class SmilesSearch extends JmolMolecule {
             atom2 = getJmolAtom(sAtom.getMatchingBondedAtom(1));
             break;
           case 1:
-            atom2 = getHydrogens(getJmolAtom(sAtom.getMatchingAtom()), null);
+            atom2 = getHydrogens(sAtom.getMatchingAtom(), null);
             if (sAtom.isFirst) {
               Node a = atom2;
               atom2 = atom1;
@@ -1334,10 +1336,10 @@ public class SmilesSearch extends JmolMolecule {
         }
         if (isSmilesFind)
           setSmilesBondCoordinates(sAtom1, sAtom2, bondType);
-        Node dbAtom1 = getJmolAtom(sAtom1.getMatchingAtom());
-        Node dbAtom2 = getJmolAtom(sAtom2.getMatchingAtom());
-        Node dbAtom1a = getJmolAtom(sAtomDirected1.getMatchingAtom());
-        Node dbAtom2a = getJmolAtom(sAtomDirected2.getMatchingAtom());
+        Node dbAtom1 = sAtom1.getMatchingAtom();
+        Node dbAtom2 = sAtom2.getMatchingAtom();
+        Node dbAtom1a = sAtomDirected1.getMatchingAtom();
+        Node dbAtom2a =  sAtomDirected2.getMatchingAtom();
         if (dbAtom1a == null || dbAtom2a == null)
           return false;
         SmilesMeasure.setTorsionData((P3) dbAtom1a, (P3) dbAtom1,
@@ -1367,7 +1369,7 @@ public class SmilesSearch extends JmolMolecule {
 
   private void getX(SmilesAtom sAtom, Node[] jn, int pt,
                     boolean haveCoordinates, boolean needHSwitch) {
-    Node atom = getJmolAtom(sAtom.getMatchingAtom());
+    Node atom = getJmolAtom(sAtom.getMatchingAtomIndex());
     boolean doSwitch = sAtom.isFirst || pt == 3;
     if (haveCoordinates) {
       if (isSmarts) {
@@ -1397,7 +1399,7 @@ public class SmilesSearch extends JmolMolecule {
           v.setT(((P3)jn[4]));
           doSwitch = false;
         } else {
-          v.scaleAdd2(n + 1,(P3) getJmolAtom(sAtom.getMatchingAtom()), v);
+          v.scaleAdd2(n + 1,(P3) getJmolAtom(sAtom.getMatchingAtomIndex()), v);
           doSwitch = isSmilesFind || doSwitch ;
         }
         jn[pt] = new SmilesAtom().setIndex(-1);
@@ -1475,8 +1477,8 @@ public class SmilesSearch extends JmolMolecule {
 
   private void setSmilesBondCoordinates(SmilesAtom sAtom1, SmilesAtom sAtom2,
                                         int bondType) {
-    Node dbAtom1 = jmolAtoms[sAtom1.getMatchingAtom()];
-    Node dbAtom2 = jmolAtoms[sAtom2.getMatchingAtom()];
+    Node dbAtom1 = jmolAtoms[sAtom1.getMatchingAtomIndex()];
+    Node dbAtom2 = jmolAtoms[sAtom2.getMatchingAtomIndex()];
     // Note that the directionality of the bond depends upon whether
     // the alkene C is the first or the second atom in the bond. 
     // if it is the first -- C(/X)= or C/1= -- then the X is UP
@@ -1612,11 +1614,11 @@ public class SmilesSearch extends JmolMolecule {
     int chiralClass = atomSite >> 8;
     int chiralOrder = atomSite & 0xFF;
     Node a2 = (chiralClass == 2 || chiralClass == 3 ?
-      a2 = jmolAtoms[sAtom2.getMatchingAtom()] : null);
+      a2 = jmolAtoms[sAtom2.getMatchingAtomIndex()] : null);
         
     // set the chirality center at the origin
     atom.set(0, 0, 0);
-    atom = jmolAtoms[sAtom.getMatchingAtom()];
+    atom = jmolAtoms[sAtom.getMatchingAtomIndex()];
     atom.set(0, 0, 0);
 
     int[] map = getMappedAtoms(atom, a2, cAtoms);
@@ -1729,6 +1731,8 @@ public class SmilesSearch extends JmolMolecule {
   }
   VTemp v = new VTemp();
   
+  boolean isTopology;
+  
   static boolean isDiaxial(Node atomA, Node atomB, Node atom1, Node atom2, VTemp v, float f) {
     v.vA.sub2((P3) atomA, (P3) atom1);
     v.vB.sub2((P3) atomB, (P3) atom2);
@@ -1827,7 +1831,7 @@ public class SmilesSearch extends JmolMolecule {
       if (!sAtom.isFirst && n == 1 && cclass > 0)
         bsFixH.set(ptAtom);
 
-      sAtom.setMatchingAtom(ptAtom++);
+      sAtom.setMatchingAtom(null, ptAtom++);
       SmilesBond[] bonds = new SmilesBond[sAtom.getBondCount() + n];
       atom.setBonds(bonds);
       while (--n >= 0) {
@@ -1845,7 +1849,7 @@ public class SmilesSearch extends JmolMolecule {
     // set up bonds
     for (int i = 0; i < ac; i++) {
       SmilesAtom sAtom = patternAtoms[i];
-      int i1 = sAtom.getMatchingAtom();
+      int i1 = sAtom.getMatchingAtomIndex();
       SmilesAtom atom1 = atoms[i1];
       int n = sAtom.getBondCount();
       for (int j = 0; j < n; j++) {
@@ -1886,13 +1890,13 @@ public class SmilesSearch extends JmolMolecule {
             order = Edge.BOND_COVALENT_TRIPLE;
             break;
           }
-          SmilesAtom atom2 = atoms[sBond.atom2.getMatchingAtom()];
+          SmilesAtom atom2 = atoms[sBond.atom2.getMatchingAtomIndex()];
           SmilesBond b = new SmilesBond(atom1, atom2, order, false);
           // do NOT add this bond to the second atom -- we will do that later;
           atom2.bondCount--;
           Logger.info("" + b);
         } else {
-          SmilesAtom atom2 = atoms[sBond.atom1.getMatchingAtom()];
+          SmilesAtom atom2 = atoms[sBond.atom1.getMatchingAtomIndex()];
           SmilesBond b = atom2.getBondTo(atom1);
           // NOW we can add this bond
           atom1.addBond(b);

@@ -201,6 +201,8 @@ public class Mesh extends MeshSurface {
   }
 
   public short[] setNormixes(V3[] normals) {
+    if (normals == null)
+      return (normixes = null);
     normixes = new short[normixCount];
     if (bsTemp == null)
       bsTemp = Normix.newVertexBitSet();
@@ -215,6 +217,8 @@ public class Mesh extends MeshSurface {
 
   public V3[] getNormals(T3[] vertices, P4 plane) {
     normixCount = (isTriangleSet ? pc : vc);
+    if (normixCount < 0)
+      return null;
     V3[] normals = new V3[normixCount];
     for (int i = normixCount; --i >= 0;)
       normals[i] = new V3();

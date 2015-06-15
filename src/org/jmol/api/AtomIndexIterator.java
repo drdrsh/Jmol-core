@@ -6,6 +6,7 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.java.BS;
 import org.jmol.modelset.ModelSet;
 
+import javajs.util.P3;
 import javajs.util.T3;
 
 
@@ -28,5 +29,6 @@ public interface AtomIndexIterator {
   public boolean hasNext();
   public int next();
   public float foundDistance2();
+  public P3 getPosition();
   public void release();
 }

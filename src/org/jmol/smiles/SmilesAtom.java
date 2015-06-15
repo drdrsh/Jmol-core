@@ -34,6 +34,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.Edge;
 import org.jmol.util.BNode;
 import org.jmol.util.Logger;
+import org.jmol.util.Node;
 
 //import org.jmol.util.Logger;
 
@@ -97,7 +98,7 @@ public class SmilesAtom extends P3 implements BNode {
 
   private int atomicMass = Integer.MIN_VALUE;
   private int charge = Integer.MIN_VALUE;
-  private int matchingAtom = -1;
+  private int matchingIndex = -1;
   private int chiralClass = Integer.MIN_VALUE;
   private int chiralOrder = Integer.MIN_VALUE;
   private boolean isAromatic;
@@ -167,7 +168,7 @@ public class SmilesAtom extends P3 implements BNode {
     if (isAromatic)
       s = s.toLowerCase();
     return "[" + s + '.' + index
-        + (matchingAtom >= 0 ? "(" + matchingAtom + ")" : "")
+        + (matchingIndex >= 0 ? "(" + matchingNode + ")" : "")
         //    + " ch:" + charge 
         //    + " ar:" + isAromatic 
         //    + " H:" + explicitHydrogenCount
@@ -195,6 +196,7 @@ public class SmilesAtom extends P3 implements BNode {
   int ringMembership = Integer.MIN_VALUE;
   int ringSize = Integer.MIN_VALUE;
   int ringConnectivity = -1;
+  private Node matchingNode;
 
   public SmilesAtom setAll(int iComponent, int ptAtom, int flags, int atomicNumber,
       int charge) {
@@ -393,20 +395,30 @@ public class SmilesAtom extends P3 implements BNode {
    * Returns the number of a matching atom in a molecule.
    * This value is temporary, it is used during the pattern matching algorithm.
    * 
-   * @return matching atom.
+   * @return matching atom index
    */
-  public int getMatchingAtom() {
-    return matchingAtom;
+  public int getMatchingAtomIndex() {
+    return matchingIndex;
+  }
+
+  /**
+   * Returns the matching atom or null.
+   * @return matching atom
+   */
+  public Node getMatchingAtom() {
+    return matchingNode;
   }
 
   /**
    * Sets the number of a matching atom in a molecule.
    * This value is temporary, it is used during the pattern matching algorithm.
+   * @param jmolAtom 
    * 
-   * @param atom Temporary: number of a matching atom in a molecule.
+   * @param index Temporary: number of a matching atom in a molecule.
    */
-  public void setMatchingAtom(int atom) {
-    matchingAtom = atom;
+  public void setMatchingAtom(Node jmolAtom, int index) {
+    matchingNode = jmolAtom;
+    matchingIndex = index;
   }
 
   /**
@@ -617,7 +629,7 @@ public class SmilesAtom extends P3 implements BNode {
     if (i >= bondCount)
       return -1;
     SmilesBond b = bonds[i];
-    return (b.atom1 == this ? b.atom2 : b.atom1).matchingAtom;
+    return (b.atom1 == this ? b.atom2 : b.atom1).matchingIndex;
   }
 
   @Override

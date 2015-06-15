@@ -253,8 +253,10 @@ public class IsoExt extends ScriptExt {
       // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
       int pt = 2;
       String type = (tokAt(pt) == T.scale ? "" : eval.optParameterAsString(pt));
-      if (type.equals("chemicalShift"))
+      if (type.equalsIgnoreCase("chemicalShift"))
         type = "cs";
+      else if (type.equalsIgnoreCase("polyhedra"))
+        type = ":poly";
       float scale = 1;
       int index = 0;
       if (type.length() > 0) {
@@ -359,7 +361,9 @@ public class IsoExt extends ScriptExt {
           invArg();
         }
         break;
+      case T.point:
       case T.polygon:
+        boolean isPoints = (eval.theTok == T.point);
         propertyName = "polygon";
         havePoints = true;
         Lst<Object> v = new Lst<Object>();
@@ -375,28 +379,33 @@ public class IsoExt extends ScriptExt {
           points = new P3[nVertices];
           for (int j = 0; j < nVertices; j++)
             points[j] = centerParameter(++eval.iToken);
+          i = eval.iToken;
         }
-        int[][] polygons;
-        if (slen == ++eval.iToken) {
-          if (chk)
-            return false;
-          polygons = ((MeshCapper) Interface.getInterface("org.jmol.util.MeshCapper", vwr, "script")).set(null).triangulatePolygon(points);
-        } else {
-          switch (getToken(eval.iToken).tok) {
-          case T.matrix3f:
-          case T.matrix4f:
-            SV sv = SV.newT(eval.theToken);
-            sv.toArray();
-            vpolygons = sv.getList();
-            nTriangles = vpolygons.size();
-            break;
-          case T.varray:
-            vpolygons = ((SV) eval.theToken).getList();
-            nTriangles = vpolygons.size();
-            break;
-          default:
-            nTriangles = Math.max(0, intParameter(eval.iToken));
-          }
+        int[][] polygons = null;
+        switch (tokAt(i + 1)) {
+        case T.matrix3f:
+        case T.matrix4f:
+          SV sv = SV.newT(getToken(++i));
+          sv.toArray();
+          vpolygons = sv.getList();
+          nTriangles = vpolygons.size();
+          break;
+        case T.varray:
+          vpolygons = ((SV) getToken(++i)).getList();
+          nTriangles = vpolygons.size();
+          break;
+        case T.integer:
+          nTriangles = intParameter(++i);
+          if (nTriangles < 0)
+            isPoints = true;
+          break;
+        default:
+          if (!isPoints && !chk)
+            polygons = ((MeshCapper) Interface.getInterface(
+                "org.jmol.util.MeshCapper", vwr, "script")).set(null)
+                .triangulatePolygon(points);
+        }
+        if (polygons == null && !isPoints) {
           polygons = AU.newInt2(nTriangles);
           for (int j = 0; j < nTriangles; j++) {
             float[] f = (vpolygons == null ? eval.floatParameterSet(
@@ -528,7 +537,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.varray:
         propertyName = "modelBasedPoints";
-        propertyValue = SV.strListValue(eval.theToken);
+        propertyValue = eval.theToken.value;
         havePoints = true;
         break;
       case T.spacebeforesquare:

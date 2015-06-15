@@ -390,7 +390,7 @@ public class T {
   public final static int nbo          = shapeCommand | 19 | misc;
   public final static int pmesh        = shapeCommand | 20;
   public final static int plot3d       = shapeCommand | 22;
-  public final static int polyhedra    = shapeCommand | 24;
+//  public final static int polyhedra    = shapeCommand | 24 | predefinedset;
   //public final static int spacefill see floatproperty
   public final static int struts       = shapeCommand | 26 | defaultON | expression;
   public final static int unitcell     = shapeCommand | 28 | deprecatedparam | expression | predefinedset | defaultON;
@@ -705,6 +705,8 @@ public class T {
   public final static int color            = 4 | 0 << 9 | mathfunc | intproperty | scriptCommand | deprecatedparam | settable;
   public final static int compare          = 5 | 0 << 9 | mathfunc | scriptCommand;
   public final static int connected        = 6 | 0 << 9 | mathfunc;
+  public final static int polyhedra        = 7 | 0 << 9 | mathfunc | shapeCommand;
+
   public final static int data             = 8 | 0 << 9 | mathfunc | scriptCommand;
   public final static int format           = 7 | 0 << 9 | mathfunc | mathproperty | strproperty | settable;
   public final static int function         = 9 | 0 << 9 | mathfunc | flowCommand;
@@ -1777,6 +1779,7 @@ public class T {
         "pmesh",
         "polygon",
         "polyhedra",
+        "polyhedron",
         "print",
         "process",
         "prompt",
@@ -2805,6 +2808,7 @@ public class T {
         pmesh,                              // "pmesh"
         polygon,                            // "polygon"
         polyhedra,                          // "polyhedra"
+        -1,                                 // "polyhedron"
         print,                              // "print"
         process,                            // "process"
         prompt,                             // "prompt"

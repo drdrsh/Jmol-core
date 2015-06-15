@@ -1353,6 +1353,8 @@ public class Atom extends Point3fi implements BNode {
 
   public T3 atomPropertyTuple(Viewer vwr, int tok, P3 ptTemp) {
     switch (tok) {
+    case T.coord:
+      return P3.newP(this);
     case T.fracxyz:
       return getFractionalCoordPt(!vwr.g.legacyJavaFloat, !group.chain.model.isJmolDataFrame,
           ptTemp);

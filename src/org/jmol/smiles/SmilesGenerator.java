@@ -81,10 +81,11 @@ public class SmilesGenerator {
   private Map<String, Object[]> htRingsSequence = new Hashtable<String, Object[]>();
   private Map<String, Object[]> htRings = new Hashtable<String, Object[]>();
   private BS bsIncludingH;
+  private boolean topologyOnly;
 
   // generation of SMILES strings
 
-  String getSmiles(Node[] atoms, int ac, BS bsSelected, boolean explicitH)
+  String getSmiles(Node[] atoms, int ac, BS bsSelected, boolean explicitH, boolean topologyOnly)
       throws InvalidSmilesException {
     int i = bsSelected.nextSetBit(0);
     if (i < 0)
@@ -93,6 +94,7 @@ public class SmilesGenerator {
     this.ac = ac;
     this.bsSelected = bsSelected = BSUtil.copy(bsSelected);
     this.explicitH = explicitH;
+    this.topologyOnly = topologyOnly;
     return getSmilesComponent(atoms[i], bsSelected, true, false);
   }
 
@@ -242,7 +244,7 @@ public class SmilesGenerator {
         if (a.getElementNumber() == 1 && a.getIsotopeNumber() == 0)
           bsSelected.clear(j);
       }
-    if (bsSelected.cardinality() > 2) {
+    if (!topologyOnly && bsSelected.cardinality() > 2) {
       SmilesSearch search = null;
       search = SmilesParser.getMolecule("A[=&@]A", true);
       search.jmolAtoms = atoms;
@@ -261,8 +263,12 @@ public class SmilesGenerator {
     bsToDo = BSUtil.copy(bsSelected);
     SB sb = new SB();
 
+    
+    // The idea hear is to allow a hypervalent atom to be listed first
     for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1))
       if (atoms[i].getCovalentBondCount() > 4) {
+        if (atom == null)
+          sb.append(".");
         getSmiles(sb, atoms[i], allowConnectionsToOutsideWorld, false,
             explicitH);
         atom = null;
@@ -615,7 +621,6 @@ public class SmilesGenerator {
       if (bond == bond0)
         continue;
       Node a = bond.getOtherAtomNode(atom);
-      String s = getRingCache(atomIndex, a.getIndex(), htRings);
       strBond = SmilesBond.getBondOrderString(bond.order);
       if (!deferStereo) {
         chBond = getBondStereochemistry(bond, atom);
@@ -624,7 +629,7 @@ public class SmilesGenerator {
       }
 
       sMore.append(strBond);
-      sMore.append(s);
+      sMore.append(getRingCache(atomIndex, a.getIndex(), htRings));
       if (stereoFlag < 7)
         stereo[stereoFlag++] = a;
       if (sp2Atoms != null && nSp2Atoms < 5)
@@ -658,7 +663,9 @@ public class SmilesGenerator {
     // .[CYS.SG#16] could match either the atom number or the element number 
     if (Logger.debugging)
       sb.append("\n//* " + atom + " *//\t");
-    if (isExtension && groupType.length() != 0 && atomName.length() != 0)
+    if (topologyOnly)
+      sb.append("*");
+    else if (isExtension && groupType.length() != 0 && atomName.length() != 0)
       addBracketedBioName(sb, atom, "." + atomName);
     else
       sb.append(SmilesAtom
@@ -876,8 +883,7 @@ public class SmilesGenerator {
     Object[] o = ht.get(key);
     String s = (o == null ? null : (String) o[0]);
     if (s == null) {
-      ht.put(key, new Object[] {
-          s = SmilesParser.getRingPointer(++nPairs), Integer.valueOf(i1) });
+      ht.put(key, new Object[] {s = getRingPointer(++nPairs), Integer.valueOf(i1) });
       if (Logger.debugging)
         Logger.debug("adding for " + i0 + " ring key " + nPairs + ": " + key);
     } else {
@@ -885,7 +891,11 @@ public class SmilesGenerator {
       if (Logger.debugging)
         Logger.debug("using ring key " + key);
     }
-    return s;//  + " _" + key + "_ \n";
+    return s;
+  }
+
+  private String getRingPointer(int i) {
+    return (i < 10 ? "" + i : i < 100 ? "%" + i : "%(" + i + ")");
   }
 
   private void dumpRingKeys(SB sb, Map<String, Object[]> ht) {

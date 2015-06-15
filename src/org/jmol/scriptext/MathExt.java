@@ -132,7 +132,8 @@ public class MathExt {
       return evaluateCompare(mp, args);
     case T.bondcount:
     case T.connected:
-      return evaluateConnected(mp, args, tok == T.bondcount);
+    case T.polyhedra:
+      return evaluateConnected(mp, args, tok);
     case T.contact:
       return evaluateContact(mp, args);
     case T.cross:
@@ -471,7 +472,7 @@ public class MathExt {
         if (bs1 == null || bs2 == null)
           return mp.addXStr("IDENTICAL");
         stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, smiles1, null,
-            null, null, null, false, false, null, null, false, false);
+            null, null, null, false, null, null, false, JC.SMILES_TYPE_SMILES);
         return mp.addXStr(stddev < 0.2f ? "IDENTICAL"
             : "IDENTICAL or CONFORMATIONAL ISOMERS (RMSD=" + stddev + ")");
       } else if (isSmiles) {
@@ -499,8 +500,9 @@ public class MathExt {
           allMaps = true;
         }
         stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, sOpt, ptsA,
-            ptsB, m, null, !isSmiles, isMap, null, null, !allMaps && !bestMap,
-            bestMap);
+            ptsB, m, null, isMap, null, null, bestMap, 
+                   (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS) 
+                   | (!allMaps && !bestMap ? JC.SMILES_RETURN_FIRST : 0));
         if (isMap) {
           int nAtoms = ptsA.size();
           if (nAtoms == 0)
@@ -535,7 +537,7 @@ public class MathExt {
   }
 
   private boolean evaluateConnected(ScriptMathProcessor mp, SV[] args,
-                                    boolean isBondCount) throws ScriptException {
+                                    int tok) throws ScriptException {
     /*
      * Several options here:
      * 
@@ -558,6 +560,7 @@ public class MathExt {
      * 
      */
 
+    boolean isBondCount = (tok == T.bondcount);
     if (args.length > 5 || isBondCount && args.length != 1)
       return false;
     float min = Integer.MIN_VALUE, max = Integer.MAX_VALUE;
@@ -568,7 +571,13 @@ public class MathExt {
     BS atoms2 = null;
     boolean haveDecimal = false;
     boolean isBonds = false;
-    if (isBondCount) {
+    switch (tok) {
+    case T.polyhedra:
+      int nv = (args.length > 0 ? SV.iValue(args[0]) : -1);
+      Object[] data = new Object[] { Integer.valueOf(nv), null };
+      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "centers", data);
+      return mp.addXBs(data[1] == null ? new BS() : (BS) data[1]); 
+    case T.bondcount:
       SV x1 = mp.getX();
       if (x1.tok != T.bitset)
         return false;
@@ -1043,15 +1052,17 @@ public class MathExt {
                 (BS) x1.value, false,
                 (isMF ? null : vwr.ms.getCellWeights((BS) x1.value)), isON));
           if (isSequence)
-            return mp.addXStr(vwr.getSmilesOpt((BS) x1.value, -1, -1, false,
-                true, isAll, isAll, false));
+            return mp.addXStr(vwr.getSmilesOpt((BS) x1.value, -1, -1, 
+                JC.SMILES_BIO 
+                | (isAll ? JC.SMILES_BIO_ALLOW_UNMACHED_RINGS | JC.SMILES_BIO_CROSSLINK : 0)));
           if (isSmiles || isSearch)
             sFind = flags;
           BS bsMatch3D = bs2;
           if (asBonds) {
             // this will return a single match
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
-                vwr.ms.at, vwr.ms.ac, (BS) x1.value, !isSmiles, true);
+                vwr.ms.at, vwr.ms.ac, (BS) x1.value, 
+                (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS) | JC.SMILES_RETURN_FIRST);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
             ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value,
@@ -2443,9 +2454,10 @@ public class MathExt {
       try {
         BS bsSelected = (args.length == 2 && args[1].tok == T.bitset ? SV
             .bsSelectVar(args[1]) : null);
-        bs = vwr.getSmilesMatcher().getSubstructureSet(pattern,
-            vwr.ms.at, vwr.ms.ac, bsSelected,
-            tok != T.smiles, false);
+        //         BS bsSelected, boolean isSmarts,        boolean firstMatchOnly
+        bs = vwr.getSmilesMatcher().getSubstructureSet(pattern, vwr.ms.at,
+            vwr.ms.ac, bsSelected,
+            (tok == T.smiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }
@@ -2598,6 +2610,7 @@ public class MathExt {
     ModelSet ms = vwr.ms;
     boolean isWithinModelSet = false;
     boolean isWithinGroup = false;
+    boolean isWithinUnitcell = false;
     boolean isDistance = (isVdw || tok == T.decimal || tok == T.integer);
     RadiusData rd = null;
     switch (tok) {
@@ -2646,17 +2659,22 @@ public class MathExt {
       case T.off:
         isWithinModelSet = args[1].asBoolean();
         i = 0;
+        if (args.length > 2 && SV.sValue(args[2]).equalsIgnoreCase("unitcell"))
+          tok = T.unitcell;
         break;
       case T.string:
         String s = SV.sValue(args[1]);
         if (s.startsWith("$"))
           return mp.addXBs(getAtomsNearSurface(distance, s.substring(1)));
         isWithinGroup = (s.equalsIgnoreCase("group"));
-        isVdw = (s.equalsIgnoreCase("vanderwaals"));
+        isVdw = (!isWithinGroup && s.equalsIgnoreCase("vanderwaals"));
+        isWithinUnitcell  = (!isWithinGroup && s.equalsIgnoreCase("unitcell"));
         if (isVdw) {
           withinSpec = null;
           tok = T.vanderwaals;
-        } else {
+        } else if (isWithinUnitcell) {
+          tok = T.unitcell; 
+        } else {         
           tok = T.group;
         }
         break;
@@ -2706,6 +2724,7 @@ public class MathExt {
       case T.off:
       case T.group:
       case T.vanderwaals:
+      case T.unitcell:
       case T.plane:
       case T.hkl:
       case T.coord:
@@ -2733,11 +2752,18 @@ public class MathExt {
     }
     if (i > 0 && plane == null && pt == null && !(args[i].value instanceof BS))
       return false;
+    // if we have anythink, it must have a point or a plane or a bitset from here on out    
     if (plane != null)
       return mp.addXBs(ms.getAtomsNearPlane(distance, plane));
+
+    bs = (args[i].tok == T.bitset ? SV.bsSelectVar(args[i]) : null);
+    if (tok == T.unitcell) {
+      boolean asMap = isWithinModelSet;
+      return mp.addXObj(vwr.ms.getUnitCellPointsWithin(distance, bs, pt, asMap));
+    }
     if (pt != null)
       return mp.addXBs(vwr.getAtomsNearPt(distance, pt));
-    bs = (args[i].tok == T.bitset ? SV.bsSelectVar(args[i]) : null);
+    
     if (tok == T.sequence)
       return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs));
     if (bs == null)

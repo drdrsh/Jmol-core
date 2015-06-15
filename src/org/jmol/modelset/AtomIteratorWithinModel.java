@@ -34,6 +34,7 @@ import org.jmol.bspt.Bspf;
 import org.jmol.bspt.CubeIterator;
 import org.jmol.java.BS;
 
+import javajs.util.P3;
 import javajs.util.T3;
 
 import org.jmol.viewer.Viewer;
@@ -210,6 +211,12 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
       cubeIterator.release();
       cubeIterator = null;
     }
+  }
+
+
+  @Override
+  public P3 getPosition() {
+    return null;
   }
 
 }

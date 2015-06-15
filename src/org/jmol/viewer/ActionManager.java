@@ -1652,7 +1652,7 @@ public class ActionManager implements EventManager {
     if (a1 < 0 || a2 < 0)
       return;
     try {
-      String sequence = vwr.getSmilesOpt(null, a1, a2, false, true, false, false, false);
+      String sequence = vwr.getSmilesOpt(null, a1, a2, JC.SMILES_BIO);
       vwr.setStatusMeasuring("measureSequence", -2, sequence, 0);
     } catch (Exception e) {
       Logger.error(e.toString());

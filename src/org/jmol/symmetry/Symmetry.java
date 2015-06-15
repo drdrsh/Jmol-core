@@ -26,6 +26,7 @@ package org.jmol.symmetry;
 
 import java.util.Map;
 
+import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
@@ -95,13 +96,14 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public SymmetryInterface setPointGroup(SymmetryInterface siLast,
-                                         Atom[] atomset, BS bsAtoms,
+                                         T3[] atomset, BS bsAtoms,
                                          boolean haveVibration,
                                          float distanceTolerance,
-                                         float linearTolerance) {
+                                         float linearTolerance,
+                                         boolean localEnvOnly) {
     pointGroup = PointGroup.getPointGroup(siLast == null ? null
         : ((Symmetry) siLast).pointGroup, atomset, bsAtoms, haveVibration,
-        distanceTolerance, linearTolerance);
+        distanceTolerance, linearTolerance, localEnvOnly);
     return this;
   }
 
@@ -180,8 +182,9 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setFinalOperations(String name, P3[] atoms, int iAtomFirst,
-                                 int noSymmetryCount, boolean doNormalize, String filterSymop) {
-    if (name != null && (name.startsWith("bio") || name.indexOf(" *(") >= 0))  // filter SYMOP
+                                 int noSymmetryCount, boolean doNormalize,
+                                 String filterSymop) {
+    if (name != null && (name.startsWith("bio") || name.indexOf(" *(") >= 0)) // filter SYMOP
       spaceGroup.name = name;
     if (filterSymop != null) {
       Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
@@ -189,7 +192,8 @@ public class Symmetry implements SymmetryInterface {
       for (int i = 1; i < spaceGroup.operationCount; i++)
         if (filterSymop.contains(" " + (i + 1) + " "))
           lst.addLast(spaceGroup.operations[i]);
-      spaceGroup = SpaceGroup.createSpaceGroup(-1,  name + " *(" + filterSymop.trim() + ")", lst);
+      spaceGroup = SpaceGroup.createSpaceGroup(-1,
+          name + " *(" + filterSymop.trim() + ")", lst);
     }
     spaceGroup.setFinalOperations(atoms, iAtomFirst, noSymmetryCount,
         doNormalize);
@@ -276,7 +280,7 @@ public class Symmetry implements SymmetryInterface {
     spaceGroup.operations[i].setSigma(code, sigma);
     return s;
   }
-  
+
   @Override
   public String getMatrixFromString(String xyz, float[] rotTransMatrix,
                                     boolean allowScaling, int modDim) {
@@ -289,7 +293,8 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public String getSpaceGroupName() {
     return (symmetryInfo != null ? symmetryInfo.sgName
-        : spaceGroup != null ? spaceGroup.getName() : unitCell != null && unitCell.name.length() > 0 ? "cell=" + unitCell.name : "");
+        : spaceGroup != null ? spaceGroup.getName() : unitCell != null
+            && unitCell.name.length() > 0 ? "cell=" + unitCell.name : "");
   }
 
   @Override
@@ -326,18 +331,21 @@ public class Symmetry implements SymmetryInterface {
   }
 
   /**
-   * Set the symmetry in  the  
+   * Set the symmetry in the
    */
   @SuppressWarnings("unchecked")
   @Override
   public void setSymmetryInfo(int modelIndex,
-                              Map<String, Object> modelAuxiliaryInfo, float[] unitCellParams) {
+                              Map<String, Object> modelAuxiliaryInfo,
+                              float[] unitCellParams) {
     symmetryInfo = new SymmetryInfo();
-    float[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo, unitCellParams);
+    float[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
+        unitCellParams);
     if (params == null)
       return;
     setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"));
-    unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo.get("moreUnitCellInfo");
+    unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
+        .get("moreUnitCellInfo");
     modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
     setOffsetPt((T3) modelAuxiliaryInfo.get("unitCellOffset"));
     M3 matUnitCellOrientation = (M3) modelAuxiliaryInfo
@@ -384,8 +392,9 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Lst<String> getMoreInfo() {
-   return unitCell.moreInfo;
+    return unitCell.moreInfo;
   }
+
   public String getUnitsymmetryInfo() {
     // not used in Jmol?
     return unitCell.dumpInfo(false);
@@ -517,7 +526,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public SymmetryInterface getUnitCell(T3[] points, boolean setRelative, String name) {
+  public SymmetryInterface getUnitCell(T3[] points, boolean setRelative,
+                                       String name) {
     unitCell = UnitCell.newP(points, setRelative);
     if (name != null)
       unitCell.name = name;
@@ -592,20 +602,22 @@ public class Symmetry implements SymmetryInterface {
 
   private SymmetryDesc getDesc(ModelSet modelSet) {
     return (desc == null ? (desc = ((SymmetryDesc) Interface.getInterface(
-        "org.jmol.symmetry.SymmetryDesc", modelSet.vwr, "eval"))): desc);
+        "org.jmol.symmetry.SymmetryDesc", modelSet.vwr, "eval"))) : desc);
   }
 
   @Override
-  public Object getSymmetryInfoAtom(ModelSet modelSet, BS bsAtoms, String xyz, int op,
-                                P3 pt, P3 pt2, String id, int type) {
-    return getDesc(modelSet).getSymmetryInfoAtom(bsAtoms, xyz, op, pt, pt2, id, type, modelSet);
+  public Object getSymmetryInfoAtom(ModelSet modelSet, BS bsAtoms, String xyz,
+                                    int op, P3 pt, P3 pt2, String id, int type) {
+    return getDesc(modelSet).getSymmetryInfoAtom(bsAtoms, xyz, op, pt, pt2, id,
+        type, modelSet);
   }
 
   @Override
-  public String getSymmetryInfoString(ModelSet modelSet, int modelIndex, int symOp,
-                                      P3 pt1, P3 pt2, String drawID, String type) {
+  public String getSymmetryInfoString(ModelSet modelSet, int modelIndex,
+                                      int symOp, P3 pt1, P3 pt2, String drawID,
+                                      String type) {
     return getDesc(modelSet).getSymmetryInfoString(this, modelIndex, symOp,
-                                      pt1, pt2, drawID, type, modelSet);
+        pt1, pt2, drawID, type, modelSet);
   }
 
   @Override
@@ -618,7 +630,8 @@ public class Symmetry implements SymmetryInterface {
   public Object getSymmetryInfo(ModelSet modelSet, int iModel, int iAtom,
                                 SymmetryInterface uc, String xyz, int op,
                                 P3 pt, P3 pt2, String id, int type) {
-    return getDesc(modelSet).getSymmetryInfo(this, iModel, iAtom, (Symmetry) uc, xyz, op, pt, pt2, id, type, modelSet);
+    return getDesc(modelSet).getSymmetryInfo(this, iModel, iAtom,
+        (Symmetry) uc, xyz, op, pt, pt2, id, type, modelSet);
   }
 
   @Override
@@ -630,7 +643,7 @@ public class Symmetry implements SymmetryInterface {
    * Accepts a string, a 3x3 matrix, or a 4x4 matrix.
    * 
    * Returns a set of four values as a P3 array consisting of an origin and
-   * three unit cell vectors a, b, and c. 
+   * three unit cell vectors a, b, and c.
    */
   @Override
   public T3[] getV0abc(Object def) {
@@ -658,7 +671,7 @@ public class Symmetry implements SymmetryInterface {
     }
     // We have an operator that may need reversing.
     // Note that translations are limited to 1/2, 1/3, 1/4, 1/6, 1/8.
-    
+
     V3[] pts = new V3[4];
     P3 pt = new P3();
     M3 m3 = new M3();
@@ -672,7 +685,7 @@ public class Symmetry implements SymmetryInterface {
     } else {
       m3.transpose();
     }
-    
+
     // Note that only the origin is translated;
     // the others are vectors from the origin.
 
@@ -701,12 +714,13 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setAxes(float scale, P3[] axisPoints, P3 fixedOrigin, P3 originPoint) {
+  public void setAxes(float scale, P3[] axisPoints, P3 fixedOrigin,
+                      P3 originPoint) {
     P3[] vertices = getUnitCellVerticesNoOffset();
     P3 offset = getCartesianOffset();
     if (fixedOrigin == null)
       originPoint.add2(offset, vertices[0]);
-    else 
+    else
       offset = fixedOrigin;
     axisPoints[0].scaleAdd2(scale, vertices[4], offset);
     axisPoints[1].scaleAdd2(scale, vertices[2], offset);
@@ -727,6 +741,13 @@ public class Symmetry implements SymmetryInterface {
       loadUC = true;
     }
     return loadUC;
+  }
+
+  @Override
+  public AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms,
+                                       BS bsAtoms, float radius) {
+    return ((UnitCellIterator) Interface.getInterface("org.jmol.symmetry.UnitCellIterator", vwr, "script"))
+        .set(unitCell, atom, atoms, bsAtoms, radius);
   }
 
 }

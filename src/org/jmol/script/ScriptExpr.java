@@ -800,6 +800,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.contact:
       case T.connected:
       case T.comma:
+      case T.polyhedra:
         rpn.addOp(instruction);
         break;
       case T.all:

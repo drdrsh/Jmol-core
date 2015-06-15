@@ -38,6 +38,7 @@ import javajs.util.Lst;
 import javajs.util.Measure;
 
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.util.M4;
 import javajs.util.P3;
@@ -70,21 +71,22 @@ public class SmilesExt {
    * @param ptsB
    * @param m4
    * @param vReturn
-   * @param isSmarts
    * @param asMap
    * @param mapSet
    * @param center
-   * @param firstMatchOnly
    * @param bestMap
+   * @param flags
    * @return standard deviation
    * @throws ScriptException
    */
   public float getSmilesCorrelation(BS bsA, BS bsB, String smiles,
-                                     Lst<P3> ptsA, Lst<P3> ptsB, M4 m4,
-                                     Lst<BS> vReturn, boolean isSmarts,
-                                     boolean asMap, int[][] mapSet, P3 center,
-                                     boolean firstMatchOnly, boolean bestMap)
+                                    Lst<P3> ptsA, Lst<P3> ptsB, M4 m4,
+                                    Lst<BS> vReturn, 
+                                    boolean asMap, int[][] mapSet, P3 center,
+                                    boolean bestMap, int flags)
       throws ScriptException {
+
+//   middle two: boolean isSmarts,boolean firstMatchOnly, 
     float tolerance = (mapSet == null ? 0.1f : Float.MAX_VALUE);
     try {
       if (ptsA == null) {
@@ -96,8 +98,8 @@ public class SmilesExt {
 
       Atom[] atoms = e.vwr.ms.at;
       int ac = e.vwr.ms.ac;
-      int[][] maps = sm.getCorrelationMaps(smiles,
-          atoms, ac, bsA, isSmarts, true);
+      int[][] maps = sm.getCorrelationMaps(smiles, atoms, ac, bsA,
+          flags | JC.SMILES_RETURN_FIRST);
       if (maps == null)
         e.evalError(sm.getLastException(), null);
       if (maps.length == 0)
@@ -105,8 +107,7 @@ public class SmilesExt {
       int[] mapFirst = maps[0];
       for (int i = 0; i < mapFirst.length; i++)
         ptsA.addLast(atoms[mapFirst[i]]);
-      maps = sm.getCorrelationMaps(smiles, atoms,
-          ac, bsB, isSmarts, firstMatchOnly);
+      maps = sm.getCorrelationMaps(smiles, atoms, ac, bsB, flags);
       if (maps == null)
         e.evalError(sm.getLastException(), null);
       if (maps.length == 0)
@@ -164,11 +165,14 @@ public class SmilesExt {
 
     // just retrieving the SMILES or bioSMILES string
 
-    if (pattern.length() == 0 || pattern.equals("H")) {
+    if (pattern.length() == 0 || pattern.equals("H") || pattern.equals("*")) {
       boolean isBioSmiles = (!asOneBitset);
       try {
-        return e.vwr.getSmilesOpt(bsSelected, 0, 0, pattern.equals("H"),
-            isBioSmiles, false, true, true);
+        return e.vwr.getSmilesOpt(bsSelected, 0, 0, 
+              (pattern.equals("H") ? JC.SMILES_EXPLICIT_H : 0)
+            | (pattern.equals("*") ? JC.SMILES_TOPOLOGY : 0)
+            | (isBioSmiles ? JC.SMILES_BIO | JC.SMILES_BIO_CROSSLINK | JC.SMILES_BIO_COMMENT : 0)
+        );
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }
@@ -185,7 +189,7 @@ public class SmilesExt {
         if (asAtoms)
           b = sm.getSubstructureSetArray(pattern,
               e.vwr.ms.at, e.vwr.ms.ac, bsSelected, null,
-              isSmarts, false);
+              isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES);
         else
           b = sm.find(pattern, smiles, isSmarts, false);
 
@@ -201,7 +205,8 @@ public class SmilesExt {
 
       Lst<BS> vReturn = new Lst<BS>();
       float stddev = getSmilesCorrelation(bsMatch3D, bsSelected, pattern, null,
-          null, null, vReturn, isSmarts, false, null, null, false, false);
+          null, null, vReturn, false, null, null, false, 
+          isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES);
       if (Float.isNaN(stddev)) {
         if (asOneBitset)
           return new BS();
@@ -237,8 +242,8 @@ public class SmilesExt {
   public float[] getFlexFitList(BS bs1, BS bs2, String smiles1,
                                  boolean isSmarts) throws ScriptException {
     int[][] mapSet = AU.newInt2(2);
-    getSmilesCorrelation(bs1, bs2, smiles1, null, null, null, null, isSmarts,
-        false, mapSet, null, false, false);
+    getSmilesCorrelation(bs1, bs2, smiles1, null, null, null, null,
+        false, mapSet, null, false, isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES);
     if (mapSet[0] == null)
       return null;
     int[][] bondMap1 = e.vwr.ms.getDihedralMap(mapSet[0]);

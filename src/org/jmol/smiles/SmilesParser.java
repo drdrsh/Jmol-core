@@ -335,8 +335,12 @@ public class SmilesParser {
 
     molecule.setAtomArray();
 
+    molecule.isTopology = true;
     for (int i = molecule.ac; --i >= 0;) {
       SmilesAtom atom = molecule.patternAtoms[i];
+      if (molecule.isTopology &&  
+          (atom.elementNumber != -2 || atom.nAtomsOr > 0 || atom.nPrimitives > 0))
+        molecule.isTopology = false;
       atom.setBondArray();
       if (!isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount(molecule))
         throw new InvalidSmilesException("unbracketed atoms must be one of: "
@@ -449,6 +453,7 @@ public class SmilesParser {
     int pt = 0;
     char ch;
     SmilesBond bond = null;
+    
     while (pattern != null && pattern.length() != 0) {
       int index = 0;
       if (currentAtom == null || bond != null && bond.order == SmilesBond.TYPE_NONE) {
@@ -1367,10 +1372,6 @@ public class SmilesParser {
     while ((ch = getChar(pattern, ++pt)) != ch0 && ch != '\0') {
     }
     return (ch == '\0' ? -1 : pt);
-  }
-
-  static String getRingPointer(int i) {
-    return (i < 10 ? "" + i : i < 100 ? "%" + i : "%(" + i + ")");
   }
 
   /**

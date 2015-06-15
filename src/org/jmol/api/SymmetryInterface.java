@@ -156,10 +156,10 @@ public interface SymmetryInterface {
 
   public SymmetryInterface setPointGroup(
                                      SymmetryInterface pointGroupPrevious,
-                                     Atom[] atomset, BS bsAtoms,
+                                     T3[] atomset, BS bsAtoms,
                                      boolean haveVibration,
                                      float distanceTolerance,
-                                     float linearTolerance);
+                                     float linearTolerance, boolean localEnvOnly);
 
   public void setSpaceGroup(boolean doNormalize);
 
@@ -199,5 +199,7 @@ public interface SymmetryInterface {
   public void setAxes(float scale, P3[] axisPoints, P3 fixedOrigin, P3 originPoint);
 
   public boolean getState(SB commands);
+
+  public AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms, BS bstoms, float radius);
 
 }

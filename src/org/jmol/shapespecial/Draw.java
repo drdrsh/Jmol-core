@@ -50,6 +50,7 @@ import javajs.util.V3;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import org.jmol.java.BS;
+import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;
@@ -603,7 +604,7 @@ protected void resetObjects() {
         thisMesh.vs = (P3[]) polygon.get(0);
         thisMesh.pis = (int[][]) polygon.get(1);
         thisMesh.drawVertexCount = thisMesh.vc = thisMesh.vs.length;
-        thisMesh.pc = thisMesh.pis.length;
+        thisMesh.pc = (thisMesh.pis == null ? -1 : thisMesh.pis.length);
         for (int i = 0; i < thisMesh.pc; i++) {
           for (int j = 0; j < 3; j++)
             if (thisMesh.pis[i][j] >= thisMesh.vc)
@@ -787,12 +788,13 @@ protected void resetObjects() {
         break;
       case PT_MODEL_BASED_POINTS:
         // from list variables
-        String[] modelBasedPoints = (String[]) info[1];
+        @SuppressWarnings("unchecked")
+        Lst<SV> modelBasedPoints = (Lst<SV>)info[1];
         if (bsAllModels == null)
           bsAllModels = new BS();
-        for (int j = 0; j < modelBasedPoints.length; j++)
+        for (int j = 0; j < modelBasedPoints.size(); j++)
           if (iModel < 0 || j == iModel) {
-            Object point = Escape.uABsM(modelBasedPoints[j]);
+            Object point = modelBasedPoints.get(j);
             bsAllModels.set(j);
             if (point instanceof P3) {
               addPoint((P3) point, j);
