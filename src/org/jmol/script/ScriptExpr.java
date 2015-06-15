@@ -1191,9 +1191,12 @@ abstract class ScriptExpr extends ScriptParam {
     Map<String, Object> ht = new Hashtable<String, Object>();
     int closer = (tokAt(i) == T.leftbrace ? T.rightbrace : T.rightsquare);
     for (i = i + 1; i < slen; i++) {
-      if (tokAt(i) == closer)
+      int tok = tokAt(i);
+      if (tok == closer)
         break;
-      String key = optParameterAsString(i++);
+      // myName is from a user-defined variable. 
+      String key = (tok == T.identifier && st[i].intValue == 0 ? ((SV) st[i++]).myName
+          : SV.sValue(st[i++]));
       if (tokAt(i++) != T.colon)
         invArg();
       // look to end of array or next comma

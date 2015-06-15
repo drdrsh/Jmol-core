@@ -82,7 +82,7 @@ abstract class ScriptTokenParser {
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 
-  protected boolean logMessages = false;
+  protected boolean logMessages = true;
 
   protected T[] atokenInfix;
   protected int itokenInfix;

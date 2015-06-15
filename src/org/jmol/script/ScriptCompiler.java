@@ -139,8 +139,7 @@ public class ScriptCompiler extends ScriptTokenParser {
   private int tokInitialPlusPlus;
   private int afterWhite;
   private boolean isDotDot;
-  private String ident;
-  private String identLC;
+  private String ident, identLC;
 
   synchronized ScriptContext compile(String filename, String script,
                                      boolean isPredefining, boolean isSilent,
@@ -908,13 +907,19 @@ public class ScriptCompiler extends ScriptTokenParser {
     ident = script.substring(ichToken, ichToken + cchToken);
     identLC = ident.toLowerCase();
     boolean isUserVar = (lastToken.tok != T.per && !isDotDot && isContextVariable(identLC));
+    String myName = (isUserVar ? ident : null);
     String preserveCase = null;
     if (nTokens == 0)
       isUserToken = isUserVar;
     if (nTokens == 1
-        && (tokCommand == T.function || tokCommand == T.parallel || tokCommand == T.var)
-        || nTokens != 0 && isUserVar || !isDotDot
-        && isUserFunction(identLC) && ((preserveCase = ident) != null)
+        && (tokCommand == T.function || tokCommand == T.parallel 
+        || tokCommand == T.var)
+        
+        || nTokens != 0 && isUserVar 
+        
+        || !isDotDot && isUserFunction(identLC) && ((preserveCase = ident) != null)
+        
+        
         && (thisFunction == null || !thisFunction.name.equals(identLC))) {
       // we need to allow:
 
@@ -948,6 +953,9 @@ public class ScriptCompiler extends ScriptTokenParser {
     if (theToken == null) {
       if (identLC.indexOf("property_") == 0) {
         theToken = T.o(T.property, identLC);
+      } else if (myName != null) {
+        theToken = SV.newSV(T.identifier, 0, ident);
+        ((SV)theToken).myName = myName;
       } else {
         theToken = T.o(T.identifier, ident);
       }
