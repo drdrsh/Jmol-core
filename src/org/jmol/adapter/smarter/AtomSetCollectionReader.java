@@ -1312,6 +1312,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         if (s == null)
           s = rd();
         if (width == 0) {
+          s = PT.rep(s, "-", " -");
           tokens = PT.getTokens(s);
         } else {
           tokens = new String[s.length() / width];
