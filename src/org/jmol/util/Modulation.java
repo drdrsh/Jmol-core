@@ -2,6 +2,9 @@ package org.jmol.util;
 
 import java.util.Hashtable;
 
+import javajs.util.AU;
+import javajs.util.PT;
+
 /**
  * A class to allow for more complex vibrations and associated phenomena, such
  * as modulated crystals, including Fourier series, Crenel functions, and
@@ -322,32 +325,47 @@ public class Modulation {
     return info;
   }
 
-  static double[][] legendre;
+  static double[][] legendre = new double[][] { new double[] { 1 } , new double[] { 0, 1} };
 
   synchronized void calcLegendre(int m) {
-    if (legendre != null && legendre.length >= m + 5)
+    int n = legendre.length;
+    if (n > m)
       return;
-    legendre = new double[m + 5][];
-    double[] pn_1 = legendre[0] = new double[] { 1 };
-    double[] pn = legendre[1] = new double[] { 0, 1 };
-    //(n+1) P_{n+1}(x) = (2n+1) x P_n(x) - n P_{n-1}(x)
-    for (int n = 1; n < m + 3; n++) {
-      double[] p = legendre[n + 1] = new double[n + 2];
-      for (int i = 0; i <= n; i++) {
-        p[i + 1] = (2 * n + 1) * pn[i] / (n + 1);
-        if (i < n)
-          p[i] += -n * pn_1[i] / (n + 1);
+    m += 3; // three at a time
+    double[][] l = AU.newDouble2(m + 1);
+    for (int i = 0; i < n; i++)
+      l[i] = legendre[i];
+    // n P_{n}(x) = (2n-1)(x)P_{n-1}(x) - (n-1) P_{n-2}(x)    
+    for (; n <= m; n++) {
+      double[] p = l[n] = new double[n + 1];
+      for (int i = 0; i < n; i++) {
+        p[i + 1] = (2 * n - 1) * l[n - 1][i] / n;
+        if (i < n - 1)
+          p[i] += (1 - n) * l[n - 2][i] / n;
       }
-      pn_1 = pn;
-      pn = p;
     }
+    legendre = l;
+//    System.out.println(PT.toJSON(null, legendre));
+//    System.out.println("----");
   }
-//  static {
-//    for (double n = -5; n < 5; n+=0.2 ){
-//      double fact = (n < -1 ? 1 : -1);
-//      double nt = n;
-//    System.out.println(nt + "\t" + (((nt + 1)%2) + (fact)) + "\t");
+  
+//  synchronized void calcLegendre0(int m) {
+//    if (legendre != null && legendre.length >= m + 5)
+//      return;
+//    legendre = new double[m + 5][];
+//    double[] pn_1 = legendre[0] = new double[] { 1 };
+//    double[] pn = legendre[1] = new double[] { 0, 1 };
+//    //(n+1) P_{n+1}(x) = (2n+1) x P_n(x) - n P_{n-1}(x)
+//    for (int n = 1; n < m + 3; n++) {
+//      double[] p = legendre[n + 1] = new double[n + 2];
+//      for (int i = 0; i <= n; i++) {
+//        p[i + 1] = (2 * n + 1) * pn[i] / (n + 1);
+//        if (i < n)
+//          p[i] += -n * pn_1[i] / (n + 1);
+//      }
+//      pn_1 = pn;
+//      pn = p;
 //    }
-//    System.out.println("ok" + (-4.35%2));
 //  }
+
 }
