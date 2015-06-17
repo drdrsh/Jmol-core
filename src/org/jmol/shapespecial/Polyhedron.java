@@ -34,9 +34,11 @@ public class Polyhedron {
   Map<String, Object> getInfo() {
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("vertexCount", Integer.valueOf(nVertices));
+    info.put("modelNumber", Integer.valueOf(centralAtom.getModelNumber()));
     info.put("modelIndex", Integer.valueOf(centralAtom.mi));
     info.put("planeCount", Integer.valueOf(planes.length));
-    info.put("_ipt", Integer.valueOf(centralAtom.i));
+    info.put("centerAtomIndex", Integer.valueOf(centralAtom.i));
+    info.put("centerAtomNumber", Integer.valueOf(centralAtom.getAtomNumber()));
     info.put("center", P3.newP(centralAtom));
     info.put("vertices", AU.arrayCopyPt(points, nVertices));
     info.put("polygons", AU.arrayCopyII(planes, planes.length));

@@ -509,10 +509,11 @@ public class Polyhedra extends AtomShape {
 
     int nother1 = iCenter - 1;
     int nother2 = iCenter - 2;
+    boolean isComplex = (nother1 > 6);
     // for many-vertex polygons we reduce the  distance allowed to avoid through-polyhedron faces
     float factor = (!Float.isNaN(distanceFactor) ? distanceFactor
-        : nother1 <= 6 ? DEFAULT_DISTANCE_FACTOR
-            : DEFAULT_MANY_VERTEX_DISTANCE_FACTOR);
+        //: isComplex ? DEFAULT_MANY_VERTEX_DISTANCE_FACTOR 
+            : DEFAULT_DISTANCE_FACTOR);
     BS bs = BS.newN(iCenter);
     boolean isOK = (dAverage == 0);
 
@@ -543,7 +544,7 @@ public class Polyhedra extends AtomShape {
           if (Logger.debugging) {
             Logger.debug("Polyhedra distanceFactor for " + iCenter
                 + " atoms increased to " + factor + " in order to include "
-                + ((Atom) otherAtoms[i]).getInfo());
+                + otherAtoms[i] );
           }
           break;
         }
@@ -592,7 +593,7 @@ public class Polyhedra extends AtomShape {
     BS bsTemp = Normix.newVertexBitSet();
     short[] n = normixesT;
     Map<Integer,String> htNormMap = new Hashtable<Integer, String>();
-    boolean doCheckPlane = (nother1 > 5);
+    boolean doCheckPlane = isComplex;
     for (int i = 0; i < nother2; i++)
       for (int j = i + 1; j < nother1; j++) {
         if (points[i].distance(points[j]) > distMax)
@@ -678,6 +679,7 @@ public class Polyhedra extends AtomShape {
         }
       }
     nPoints--;
+    
     if (Logger.debugging) {
       Logger
           .info("Polyhedron planeCount=" + planeCount + " nPoints=" + nPoints);
@@ -728,7 +730,28 @@ public class Polyhedra extends AtomShape {
   private boolean checkPlane(P3[] points, int ptCenter, int[][] planes,
                              short[] normals, int index, P4 plane, V3 vNorm,
                              Map<Integer, String> htNormMap) {
+    
     int[] p1 = planes[index];
+    
+    
+    // Check here for a 3D convex hull: 
+    plane = Measure.getPlaneThroughPoints(points[p1[0]], points[p1[1]],
+        points[p1[2]], vNorm, vAB, plane);
+//    P3 ptest = P3.newP(points[p1[0]]);
+//    ptest.add(points[p1[1]]);
+//    ptest.add(points[p1[2]]);
+//    ptest.scale(1/3f);
+//    System.out.println("$draw ID p" + index +" vector " + ptest  + vNorm);
+
+    // See if all vertices are OUTSIDE the the plane we are considering.      
+    for (int j = 0; j < ptCenter; j++) {
+      vAB.sub2(points[p1[0]], points[j]);
+      if (vAB.dot(vNorm) < -0.1) {
+        //System.out.println("$draw ID p" + index + "_" + j + points[j]); 
+        return false;
+      }
+    }
+
     Integer normix = Integer.valueOf(normals[index]);
     String list = htNormMap.get(normix);
     if (list == null) {
@@ -783,9 +806,8 @@ public class Polyhedra extends AtomShape {
       }
       htNormMap.put(normix, list + match);
     }
-    plane = Measure.getPlaneThroughPoints(points[p1[0]], points[p1[1]],
-        points[p1[2]], vNorm, vAB, plane);
-    float d = Measure.distanceToPlane(plane, points[ptCenter]);
+
+    //float d = Measure.distanceToPlane(plane, points[ptCenter]);
     //System.out.println("" + normix + " "  + Normix.getVertexVectors()[normix] + " " + getKey(p1, index) + " " + d);
     return true;
   }
@@ -833,7 +855,7 @@ public class Polyhedra extends AtomShape {
 
   @Override
   public void setModelVisibilityFlags(BS bsModels) {
-    /*
+     /*
      * set all fixed objects visible; others based on model being displayed note
      * that this is NOT done with atoms and bonds, because they have mads. When
      * you say "frame 0" it is just turning on all the mads.

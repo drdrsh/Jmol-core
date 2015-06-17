@@ -70,10 +70,9 @@ public class SV extends T implements JSONEncodable {
 
   public int index = Integer.MAX_VALUE;    
 
-  private final static int FLAG_CANINCREMENT = 1;
   private final static int FLAG_MODIFIED = 2;
 
-  private int flags = ~FLAG_CANINCREMENT & FLAG_MODIFIED;
+  private int flags = FLAG_MODIFIED;
   public String myName;
 
   public static SV newV(int tok, Object value) {
@@ -405,7 +404,6 @@ public class SV extends T implements JSONEncodable {
 
   public SV setName(String name) {
     this.myName = name;
-    flags |= FLAG_CANINCREMENT;
     //System.out.println("Variable: " + name + " " + intValue + " " + value);
     return this;
   }
@@ -422,23 +420,26 @@ public class SV extends T implements JSONEncodable {
   }
   
   boolean canIncrement() {
-    return true;//tokAttr(flags, FLAG_CANINCREMENT);
-  }
-
-  boolean increment(int n) {
-    if (!canIncrement())
-      return false;
     switch (tok) {
     case integer:
-      intValue += n;
-      break;
     case decimal:
-      value = Float.valueOf(((Float) value).floatValue() + n);
-      break;
+      return true;//tokAttr(flags, FLAG_CANINCREMENT);
     default:
       return false;
     }
-    return true;
+  }
+
+  boolean increment(int n) {
+    switch (tok) {
+    case integer:
+      intValue += n;
+      return true;
+    case decimal:
+      value = Float.valueOf(((Float) value).floatValue() + n);
+      return true;
+    default:
+      return false;
+    }
   }
 
   public boolean asBoolean() {

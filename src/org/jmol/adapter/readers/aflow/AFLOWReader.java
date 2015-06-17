@@ -113,7 +113,7 @@ public class AFLOWReader extends VaspPoscarReader {
   protected void initializeReader() throws Exception {
     readPRE = checkFilterKey("PRE");
 //    readPOST = !checkFilterKey("NOPOST");
-    forcePacked = !checkFilterKey("NOPACK");
+//    forcePacked = !checkFilterKey("NOPACK");
 
     String s;
     

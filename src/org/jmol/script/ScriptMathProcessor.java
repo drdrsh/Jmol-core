@@ -881,7 +881,20 @@ public class ScriptMathProcessor {
             && oStack[oPt] == null))
       return true;
 
-    SV x2 = getX();
+    SV x2;
+    switch (op.tok) {
+    case T.minusMinus:
+    case T.plusPlus:
+      if (xPt >= 0 && xStack[xPt].canIncrement()) {
+        x2 = xStack[xPt--];
+        wasX = false;
+        break;
+      }
+      //$FALL-THROUGH$
+    default:
+      x2 = getX();
+      break;
+    }
     if (x2 == T.tokenArrayOpen)
       return false;
 
@@ -892,6 +905,7 @@ public class ScriptMathProcessor {
     switch (op.tok) {
     case T.minusMinus:
     case T.plusPlus:
+      // we are looking out for an array selection here
       x1 = x2;
       if (!chk) {
         //System.out.println("ptx="+ ptx + " " + pto);
