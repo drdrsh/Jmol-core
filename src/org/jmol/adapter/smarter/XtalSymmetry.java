@@ -454,10 +454,12 @@ public class XtalSymmetry {
     symmetry.toFractional(pt, false);
     setSymmetryMinMax(pt);
     // allow for some imprecision
-    minXYZ = P3i.new3((int) Math.floor(rminx + 0.001f),
-        (int) Math.floor(rminy + 0.001f), (int) Math.floor(rminz + 0.001f));
-    maxXYZ = P3i.new3((int) Math.ceil(rmaxx - 0.001f),
-        (int) Math.ceil(rmaxy - 0.001f), (int) Math.ceil(rmaxz - 0.001f));
+    minXYZ = P3i.new3((int) Math.min(0,Math.floor(rminx + 0.001f)),
+        (int) Math.min(0, Math.floor(rminy + 0.001f)), 
+        (int) Math.min(0, Math.floor(rminz + 0.001f)));
+    maxXYZ = P3i.new3((int) Math.max(1,Math.ceil(rmaxx - 0.001f)),
+        (int) Math.max(1,Math.ceil(rmaxy - 0.001f)), 
+        (int) Math.max(1,Math.ceil(rmaxz - 0.001f)));
   }
 
   /**

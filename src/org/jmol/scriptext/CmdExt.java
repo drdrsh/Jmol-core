@@ -3564,7 +3564,7 @@ public class CmdExt extends ScriptExt {
     if (pt + 2 == argCount) {
       String s = SV.sValue(tokenAt(++pt, args));
       if (s.length() > 0 && s.charAt(0) != '.')
-        type = val.toUpperCase();
+        type = s.toUpperCase();
     }
 
     // set the file name
