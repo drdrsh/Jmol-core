@@ -26,6 +26,7 @@ package org.jmol.smiles;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.P3;
 import javajs.util.PT;
 
 import org.jmol.api.SmilesMatcherInterface;
@@ -33,6 +34,7 @@ import org.jmol.java.BS;
 import org.jmol.util.BNode;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Node;
+import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
 
 /**
@@ -165,7 +167,9 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   public int areEqual(String smiles1, String smiles2) throws Exception {
     InvalidSmilesException.clear();
     BS[] result = findPriv(smiles1, SmilesParser.getMolecule(smiles2, false),
-        JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL);
+        (smiles1.indexOf("*") >= 0 ? JC.SMILES_TYPE_SMARTS
+            : JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL)
+            | JC.SMILES_RETURN_FIRST);
     return (result == null ? -1 : result.length);
   }
 
@@ -177,7 +181,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * @return true only if the SMILES strings match and there are no errors
    * @throws Exception
    */
-  public boolean areEqual(String smiles, SmilesSearch molecule)
+  public boolean areEqualTest(String smiles, SmilesSearch molecule)
       throws Exception {
     //String pattern, String smiles, boolean isSmarts,    boolean firstMatchOnly    
     BS[] ret = findPriv(smiles, molecule, JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL | JC.SMILES_RETURN_FIRST);
@@ -345,6 +349,54 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     return (BS[]) matchPriv(pattern, atoms, ac, bsSelected, bsAromatic, 
         flags | JC.SMILES_MATCH_ONE | SMILES_MODE_ARRAY);
   }
+  
+  /**
+   * Generate a topological SMILES string from a set of faces
+   * @param faces
+   * @param atomCount
+   * @return topological SMILES string
+   * @throws Exception 
+   */
+  @Override
+  public String polyhedronToSmiles(int[][] faces, int atomCount, P3[] points) throws Exception {
+    SmilesAtom[] atoms = new SmilesAtom[atomCount];
+    for (int i = 0; i < atomCount; i++) {
+      atoms[i] = new SmilesAtom();
+      P3 pt = (points == null ? null : points[i]);
+      atoms[i].elementNumber = (pt == null ? -2 : 
+        pt instanceof Node ? ((Node) pt).getElementNumber() : 
+          pt instanceof Point3fi ? ((Point3fi) pt).sD
+              : -2);
+      atoms[i].index = i;
+    }
+    int nBonds = 0;
+    for (int i = faces.length; --i >= 0;) {
+      int[] face = faces[i];
+      int n = face.length;
+      for (int j = n; --j >= 0;) {
+        int iatom = face[j];
+        if (iatom < 0 || iatom >= atomCount)
+          continue;
+        int iatom2 = face[(j + 1) %n];
+        if (iatom2 < 0 || iatom2 >= atomCount)
+          iatom2 = face[(j + 2) %n];
+        if (iatom2 < 0 || iatom2 >= atomCount)
+          continue;
+        if (atoms[iatom].getBondTo(atoms[iatom2]) == null) {
+          SmilesBond b = new SmilesBond(atoms[iatom], atoms[iatom2], SmilesBond.TYPE_SINGLE,  false);
+          b.index = nBonds++;
+        }
+      }
+    }
+    for (int i = 0; i < atomCount; i++) {
+      int n = atoms[i].bondCount; 
+      if (n == 0 || n != atoms[i].bonds.length)
+        atoms[i].bonds = (SmilesBond[]) AU.arrayCopyObject(atoms[i].bonds, n);
+    }
+    return getSmiles(atoms, atomCount, BSUtil.newBitSet2(0,  atomCount), null, (points == null ? JC.SMILES_TOPOLOGY : JC.SMILES_TYPE_SMILES));
+    
+  }
+
 
   /**
    * Rather than returning bitsets, this method returns the sets of matching
@@ -361,12 +413,12 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * 
    */
   @Override
-  public int[][] getCorrelationMaps(String pattern, Node[] atoms, int ac,
+  public int[][] getCorrelationMaps(String pattern, Node[] atoms, int atomCount,
                                     BS bsSelected, int flags) throws Exception {
     //boolean isSmarts, boolean matchAllAtoms,  boolean firstMatchOnly
     //  isSmarts,       false, firstMatchOnly, MODE_MAP);
 
-    return (int[][]) matchPriv(pattern, atoms, ac, bsSelected, null, 
+    return (int[][]) matchPriv(pattern, atoms, atomCount, bsSelected, null, 
         flags | JC.SMILES_MATCH_ONE | SMILES_MODE_MAP);
   }
 

@@ -105,7 +105,8 @@ class UnitCell extends SimpleUnitCell {
   }
 
   /**
-   * when offset is null, 
+   * when offset is null, use the current cell, otherwise use the original unit cell
+   * 
    * @param pt
    * @param offset
    */

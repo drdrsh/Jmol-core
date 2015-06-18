@@ -28,7 +28,17 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javajs.util.AU;
+import javajs.util.Lst;
+import javajs.util.Measure;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.SB;
+import javajs.util.V3;
+
 import org.jmol.api.AtomIndexIterator;
+import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.c.PAL;
 import org.jmol.java.BS;
@@ -36,28 +46,17 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.script.T;
 import org.jmol.shape.AtomShape;
-import org.jmol.shapespecial.Draw.EnumDrawType;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Logger;
 import org.jmol.util.Normix;
-
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.T3;
-import javajs.util.V3;
 
 
 
 public class Polyhedra extends AtomShape {
 
   private final static float DEFAULT_DISTANCE_FACTOR = 1.85f;
-  private final static float DEFAULT_MANY_VERTEX_DISTANCE_FACTOR = 1.5f;
+//  private final static float DEFAULT_MANY_VERTEX_DISTANCE_FACTOR = 1.5f;
   private final static float DEFAULT_FACECENTEROFFSET = 0.25f;
   private final static int EDGES_NONE = 0;
   public final static int EDGES_ALL = 1;
@@ -74,6 +73,10 @@ public class Polyhedra extends AtomShape {
   private static final int MODE_ITERATE = 3;
   private static final int MODE_BITSET = 4;
   private static final int MODE_UNITCELL = 5;
+  /**
+   * a dot product comparison term
+   */
+  private static final float DEFAULT_PLANAR_PARAM = 0.98f;
 
   public int polyhedronCount;
   public Polyhedron[] polyhedrons = new Polyhedron[32];
@@ -97,13 +100,14 @@ public class Polyhedra extends AtomShape {
   
   private boolean useUnitCell;
   private int nPoints;
+  private float planarParam;
 
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
 
     if ("init" == propertyName) {
       faceCenterOffset = DEFAULT_FACECENTEROFFSET;
-      distanceFactor = Float.NaN;
+      distanceFactor = planarParam = Float.NaN;
       radius = 0.0f;
       nVertices = 0;
       nPoints = 0;
@@ -184,6 +188,12 @@ public class Polyhedra extends AtomShape {
     if ("distanceFactor" == propertyName) {
       // not a general user option
       distanceFactor = ((Float) value).floatValue();
+      return;
+    }
+
+    if ("planarParam" == propertyName) {
+      // not a general user option
+      planarParam = ((Float) value).floatValue();
       return;
     }
 
@@ -278,13 +288,14 @@ public class Polyhedra extends AtomShape {
   
   @Override
   public boolean getPropertyData(String property, Object[] data) {
+    int iatom;
     if (property == "points") {
-      int iAtom = ((Integer) data[0]).intValue();
+      iatom = ((Integer) data[0]).intValue();
       for (int i = polyhedronCount; --i >= 0;) {
-        if (polyhedrons[i].centralAtom.i == iAtom) {
+        if (polyhedrons[i].centralAtom.i == iatom) {
           if (polyhedrons[i].collapsed)
             break;
-          data[1] = polyhedrons[i].points;
+          data[1] = polyhedrons[i].vertices;
           return true;
         }
       }
@@ -292,24 +303,51 @@ public class Polyhedra extends AtomShape {
     }
     if (property == "centers") {
       BS bs = new BS();
+      String smiles = (String) data[1];
+      SmilesMatcherInterface sm = (smiles == null ? null : vwr
+          .getSmilesMatcher());
       Integer n = (Integer) data[0];
-      int nv = (n == null ? -1 : n.intValue());
+      
+      int nv = (smiles != null ? PT.countChar(smiles, '*') : n == null ? Integer.MIN_VALUE : n.intValue());
+      if (smiles !=  null && nv == 0)
+        nv = Integer.MIN_VALUE;
       for (int i = polyhedronCount; --i >= 0;) {
-        if (nv < 0 || polyhedrons[i].nVertices == nv)
-          bs.set(polyhedrons[i].centralAtom.i);
+        if (nv > 0 && polyhedrons[i].nVertices != nv 
+            || nv > Integer.MIN_VALUE && nv < 0 && polyhedrons[i].faces.length != -nv)
+          continue;
+        if (smiles == null) {
+            bs.set(polyhedrons[i].centralAtom.i);
+        } else if (sm != null){
+          String smiles0 = polyhedrons[i].getSmiles(sm, false);
+          try {
+            if (sm.areEqual(smiles, smiles0) > 0)
+              bs.set(polyhedrons[i].centralAtom.i);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
       }
-      data[1] = bs;
+      data[2] = bs;
       return true;
+    }
+    if (property == "info") {
+      iatom = ((Integer) data[0]).intValue();
+      for (int i = polyhedronCount; --i >= 0;) {
+        if (polyhedrons[i].centralAtom.i == iatom) {
+          data[1] = polyhedrons[i].getInfo(vwr);
+          return true;
+        }
+      }
+      return false;      
     }
     return false;
   }
   
   @Override
   public Lst<Map<String, Object>> getShapeDetail() {
-    Lst<Map<String, Object>> lst = new  Lst<Map<String,Object>>();
-    for (int i = 0; i < polyhedronCount; i++) {
-      lst.addLast(polyhedrons[i].getInfo());
-    }
+    Lst<Map<String, Object>> lst = new Lst<Map<String, Object>>();
+    for (int i = 0; i < polyhedronCount; i++)
+      lst.addLast(polyhedrons[i].getInfo(vwr));
     return lst;
   }
   
@@ -498,6 +536,7 @@ public class Polyhedra extends AtomShape {
     int nPoints = iCenter + 1;
     float distMax = 0;
     float dAverage = 0;
+    float planarParam = (Float.isNaN(this.planarParam) ? DEFAULT_PLANAR_PARAM : this.planarParam);
 
     P3[] points = new P3[MAX_VERTICES * 3];
     points[iCenter] = otherAtoms[iCenter] = centralAtom;
@@ -672,7 +711,7 @@ public class Polyhedra extends AtomShape {
               n[planeCount] = Normix.getNormixV(normal, bsTemp);
               if (!doCheckPlane
                   || checkPlane(points, iCenter, p, n, planeCount, plane,
-                      vTemp, htNormMap))
+                      vTemp, htNormMap, planarParam))
                 planeCount++;
             }
           }
@@ -687,7 +726,7 @@ public class Polyhedra extends AtomShape {
         Logger.info("Polyhedron " + getKey(p[i], i));
     }
     return new Polyhedron(centralAtom, iCenter, nPoints, planeCount,
-        otherAtoms, n, p, collapsed, offset, factor);
+        otherAtoms, n, p, collapsed, offset, factor, planarParam);
   }
   
   /**
@@ -729,7 +768,7 @@ public class Polyhedra extends AtomShape {
    */
   private boolean checkPlane(P3[] points, int ptCenter, int[][] planes,
                              short[] normals, int index, P4 plane, V3 vNorm,
-                             Map<Integer, String> htNormMap) {
+                             Map<Integer, String> htNormMap, float planarParam) {
     
     int[] p1 = planes[index];
     
@@ -759,7 +798,7 @@ public class Polyhedra extends AtomShape {
       V3[] norms = Normix.getVertexVectors();
       V3 norm = norms[normals[index]];
       for (Entry<Integer, String> e: htNormMap.entrySet()) {
-        if (norms[e.getKey().intValue()].dot(norm) > 0.95f) {
+        if (norms[e.getKey().intValue()].dot(norm) > planarParam) {
           list = e.getValue();
           break;
         }

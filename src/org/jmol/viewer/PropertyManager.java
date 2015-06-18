@@ -1960,6 +1960,9 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
   }
 
 
+  /**
+   * PDB line sorter 
+   */
   @Override
   public int compare(String s1, String s2) {
     int atA = PT.parseInt(s1.substring(10, 16));

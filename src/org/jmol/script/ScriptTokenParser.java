@@ -877,13 +877,19 @@ abstract class ScriptTokenParser {
       return true;
     }
     while (true) {
-      if (addNextTokenIf(T.integer))
-        if (!addNextTokenIf(T.comma))
+      if (addNextTokenIf(T.integer)) {
+        if (!addNextTokenIf(T.comma)) {
           break;
-      if (isPolyhedra) {
-        returnToken();
+        }
+        if (isPolyhedra) {
+          returnToken();
+          break;
+        }
+      } else if (isPolyhedra && 
+          (addNextTokenIf(T.string) || addNextTokenIf(T.identifier))) {
         break;
       }
+
       if (addNextTokenIf(T.integer))
         if (!addNextTokenIf(T.comma))
           break;
@@ -893,16 +899,16 @@ abstract class ScriptTokenParser {
       if (addNextTokenIf(T.decimal))
         if (!addNextTokenIf(T.comma))
           break;
-        Object o = getToken().value;
-        String strOrder = (o instanceof String ? (String) o : " ");
-        int intType = ScriptParam.getBondOrderFromString(strOrder);
-        if (intType == Edge.BOND_ORDER_NULL) {
-          returnToken();
-        } else {
-          addTokenToPostfix(T.string, strOrder);
-          if (!addNextTokenIf(T.comma))
-            break;
-        }
+      Object o = getToken().value;
+      String strOrder = (o instanceof String ? (String) o : " ");
+      int intType = ScriptParam.getBondOrderFromString(strOrder);
+      if (intType == Edge.BOND_ORDER_NULL) {
+        returnToken();
+      } else {
+        addTokenToPostfix(T.string, strOrder);
+        if (!addNextTokenIf(T.comma))
+          break;
+      }
       if (addNextTokenIf(T.rightparen))
         return true;
       if (!clauseOr(tokPeekIs(T.leftparen))) // *expression*

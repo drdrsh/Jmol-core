@@ -1894,7 +1894,8 @@ public class SmilesSearch extends JmolMolecule {
           SmilesBond b = new SmilesBond(atom1, atom2, order, false);
           // do NOT add this bond to the second atom -- we will do that later;
           atom2.bondCount--;
-          Logger.info("" + b);
+          if (Logger.debugging)
+            Logger.info("" + b);
         } else {
           SmilesAtom atom2 = atoms[sBond.atom1.getMatchingAtomIndex()];
           SmilesBond b = atom2.getBondTo(atom1);

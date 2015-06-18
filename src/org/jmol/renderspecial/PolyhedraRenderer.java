@@ -24,6 +24,7 @@
 package org.jmol.renderspecial;
 
 
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.render.ShapeRenderer;
 import org.jmol.script.T;
@@ -43,12 +44,14 @@ public class PolyhedraRenderer extends ShapeRenderer {
   private P3[] screens3f;
   private P3i scrVib;
   private boolean vibs;
+  private BS bsSelected;
 
   @Override
   protected boolean render() {
     Polyhedra polyhedra = (Polyhedra) shape;
     Polyhedron[] polyhedrons = polyhedra.polyhedrons;
     drawEdges = polyhedra.drawEdges;
+    bsSelected = (vwr.getSelectionHalosEnabled() ? vwr.bsA() : null);
     g3d.addRenderer(T.triangles);
     vibs = (ms.vibrations != null && tm.vibrationOn);
     boolean needTranslucent = false;
@@ -72,14 +75,14 @@ public class PolyhedraRenderer extends ShapeRenderer {
     } else if (!g3d.setC(colix)) {
       return false;
     }
-    P3[] vertices = p.points;
+    P3[] vertices = p.vertices;
     if (screens3f == null || screens3f.length < vertices.length) {
       screens3f = new P3[vertices.length];
       for (int i = vertices.length; --i >= 0;)
         screens3f[i] = new P3();
     }
     P3[] sc = this.screens3f;
-    int[][] planes = p.planes;
+    int[][] planes = p.faces;
     for (int i = vertices.length; --i >= 0;) {
       Atom atom = (vertices[i] instanceof Atom ? (Atom) vertices[i] : null);
       if (atom == null) {
@@ -94,15 +97,15 @@ public class PolyhedraRenderer extends ShapeRenderer {
       }
     }
 
-    isAll = (drawEdges == Polyhedra.EDGES_ALL);
+    isAll = (drawEdges == Polyhedra.EDGES_ALL || bsSelected != null);
     frontOnly = (drawEdges == Polyhedra.EDGES_FRONT);
 
     // no edges to new points when not collapsed
-       // int m = (int) ( Math.random() * 16);
+   // int m = (int) ( Math.random() * 24);
     if (!needTranslucent || g3d.setC(colix))
       for (int i = planes.length; --i >= 0;) {
         int[] pl = planes[i];
-        //if (i != m)continue;
+     //   if (i != m)continue;
         //if (p.normixes[i] == 206 || p.normixes[i] == 226)continue;
         //System.out.println("pr " + p.normixes[i]);
         try {
@@ -114,7 +117,9 @@ public class PolyhedraRenderer extends ShapeRenderer {
           g3d.fillTriangleTwoSided(p.normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);          
       }
     // edges are not drawn translucently ever
-    if (p.colixEdge != C.INHERIT_ALL)
+    if (bsSelected != null && bsSelected.get(iAtom)) 
+      colix = C.GOLD;
+    else if (p.colixEdge != C.INHERIT_ALL)
       colix = p.colixEdge;
     if (g3d.setC(C.getColixTranslucent3(colix, false, 0)))
       for (int i = planes.length; --i >= 0;) {

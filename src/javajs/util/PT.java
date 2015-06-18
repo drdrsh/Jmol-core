@@ -366,6 +366,14 @@ public class PT {
     return tokens;
   }
 
+  public static int countChar(String line, char c) {
+    int tokenCount = 0;
+    int pt = -1;
+    while ((pt = line.indexOf(c, pt + 1)) >= 0)
+      tokenCount++;
+    return  tokenCount;
+  }
+  
   public static int countTokens(String line, int ich) {
     int tokenCount = 0;
     if (line != null) {

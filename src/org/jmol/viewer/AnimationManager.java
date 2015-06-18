@@ -455,7 +455,7 @@ public class AnimationManager {
     int nDisplayed = 0;
     int frameDisplayed = 0;
     for (int iframe = firstFrameIndex; iframe != lastFrameIndex; iframe += frameStep) {
-      int i = modelIndexForFrame(iframe);
+      int i = modelIndexForFrame(iframe); 
       if (!vwr.ms.isJmolDataFrameForModel(i)) {
         bsVisibleModels.set(i);
         nDisplayed++;

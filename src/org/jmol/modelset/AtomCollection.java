@@ -1606,7 +1606,7 @@ abstract public class AtomCollection {
         // with reference to atoms connected to connecting atom.
         // vRef is a pseudo-random vector
         // z is along the bond
-        for (int i = 0; i < attached[0].bonds.length; i++) {
+        for (int i = attached[0].getBondCount(); --i >= 0;) {
           if (attached[0].bonds[i].isCovalent()
               && attached[0].getBondedAtomIndex(i) != atom.i) {
             x.sub2(attached[0], attached[0].bonds[i].getOtherAtom(attached[0]));

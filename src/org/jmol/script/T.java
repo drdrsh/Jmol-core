@@ -699,13 +699,15 @@ public class T {
 
   // xxx(a,b,c,d,e,...)
   
+  public final static int in                = 1 | 0 << 9 | mathfunc | mathproperty;
   public final static int angle            = 1 | 0 << 9 | mathfunc;
   public final static int array            = 2 | 0 << 9 | mathfunc;
   public final static int axisangle        = 3 | 0 << 9 | mathfunc;
+  public final static int bin              = 3 | 0 << 9 | mathfunc | mathproperty;
   public final static int color            = 4 | 0 << 9 | mathfunc | intproperty | scriptCommand | deprecatedparam | settable;
   public final static int compare          = 5 | 0 << 9 | mathfunc | scriptCommand;
   public final static int connected        = 6 | 0 << 9 | mathfunc;
-  public final static int polyhedra        = 7 | 0 << 9 | mathfunc | shapeCommand;
+  public final static int polyhedra        = 7 | 0 << 9 | mathfunc | mathproperty | shapeCommand;
 
   public final static int data             = 8 | 0 << 9 | mathfunc | scriptCommand;
   public final static int format           = 7 | 0 << 9 | mathfunc | mathproperty | strproperty | settable;
@@ -793,13 +795,11 @@ public class T {
 
   // ___.xxx(a,b,c)
   
-  public final static int bin          = 1 | 3 << 9 | mathfunc | mathproperty;
   public final static int symop        = 2 | 3 << 9 | mathfunc | mathproperty | intproperty; 
   public final static int find         = 3 | 3 << 9 | mathfunc | mathproperty;
 
   // anything beyond 3 are set "unlimited"
 
-  public final static int in           = 1 | 0 << 9 | mathfunc | mathproperty;
   public final static int replace      = 2 | 7 << 9 | mathfunc | mathproperty;
 
   // set parameters 
@@ -1296,6 +1296,7 @@ public class T {
   public final static int phase          = misc  | 270;
   public final static int play    = misc  | 272;
   public final static int playrev = misc  | 274;
+  public final static int planarparam    = misc  | 275;
   public final static int pocket         = misc  | 276;
   public final static int pointgroup     = misc  | 278;
   public final static int pointsperangstrom = misc  | 280;
@@ -2284,6 +2285,7 @@ public class T {
        "perpendicular",
        "perp",
        "phase",
+       "planarParam",
        "pocket",
        "pointsPerAngstrom",
        "radical",
@@ -3313,6 +3315,7 @@ public class T {
         perpendicular,                      //        "perpendicular"
         -1,                                 //        "perp"
         phase,                              //        "phase"
+        planarparam,                        //        "planarparam"
         pocket,                             //        "pocket"
         pointsperangstrom,                  //        "pointsPerAngstrom"
         radical,                            //        "radical"

@@ -4378,11 +4378,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     prevFrame = currentFrame;
     prevMorphModel = currentMorphModel;
 
-    String entryName;
+    String entryName = getModelName(currentFrame);
     if (isMovie) {
-      entryName = "" + (currentFrame + 1);
+      entryName = "" + (entryName == "" ? currentFrame + 1 : am.caf + 1) + ": " + entryName;
     } else {
-      entryName = getModelName(currentFrame);
       String script = "" + getModelNumberDotted(currentFrame);
       if (!entryName.equals(script))
         entryName = script + ": " + entryName;

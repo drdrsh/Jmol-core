@@ -55,12 +55,17 @@ public class SmilesAtom extends P3 implements BNode {
     return ("0;11;AL;33;TH;TP;OH;77;SP;".indexOf(xx) + 1) / 3;
   }
 
-  static final String UNBRACKETED_SET = "B, C, N, O, P, S, F, Cl, Br, I,";
+//Jmol allows * in SMILES as a wild card
+  static final String UNBRACKETED_SET = "B, C, N, O, P, S, F, Cl, Br, I, *,"; 
+  
 
   static boolean allowSmilesUnbracketed(String xx) {
     return (UNBRACKETED_SET.indexOf(xx + ",") >= 0);
   }
 
+  SmilesAtom() {
+//    System.out.println("new atom");
+  }
   SmilesAtom[] atomsOr;
   int nAtomsOr;
 
@@ -224,10 +229,8 @@ public class SmilesAtom extends P3 implements BNode {
       return true;
     // Determining max count
     int count = getDefaultCount(elementNumber, isAromatic);
-    if (count == -2)
-      return false;
-    if (count == -1)
-      return true;
+    if (count < 0)
+      return (count == -1);
 
     if (elementNumber == 7 && isAromatic && bondCount == 2) {
       // is it -N= or -NH- ? 
@@ -271,6 +274,7 @@ public class SmilesAtom extends P3 implements BNode {
     switch (elementNumber) {
     case 0:
     case -1: // A a
+    case -2: // *
       return -1;
     case 6: // C
       return (isAromatic ? 3 : 4);
@@ -765,7 +769,8 @@ public class SmilesAtom extends P3 implements BNode {
         : getDefaultCount(atomicNumber, false));
     return (count == valence ? sym : "["
         + (isotopeNumber <= 0 ? "" : "" + isotopeNumber) + sym
-        + (charge < 0 ? "" + charge : charge > 0 ? "+" + charge : "") + stereo
+        + (charge < 0 && charge != Integer.MIN_VALUE ? "" + charge 
+            : charge > 0 ? "+" + charge : "") + stereo
         + (nH > 1 ? "H" + nH : nH == 1 ? "H" : "") + "]");
   }
 

@@ -420,7 +420,7 @@ public class StatusManager {
   synchronized void setStatusFrameChanged(int fileNo, int modelNo, int firstNo,
                                           int lastNo, int currentFrame,
                                           float currentMorphModel, String entryName) {
-    if (vwr.ms == null)
+    if (vwr.ms == null) 
       return;
     boolean animating = vwr.am.animationOn;
     int frameNo = (animating ? -2 - currentFrame : currentFrame);

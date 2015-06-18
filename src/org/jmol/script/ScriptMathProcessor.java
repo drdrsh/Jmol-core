@@ -823,6 +823,10 @@ public class ScriptMathProcessor {
     return v;
   }
 
+  int getXTok() {
+    return  (xPt < 0 ? T.nada : xStack[xPt].tok);
+  }
+
   private boolean evaluateFunction(int tok) throws ScriptException {
     T op = oStack[oPt--];
     // for .xxx or .xxx() functions
@@ -1784,12 +1788,6 @@ public class ScriptMathProcessor {
           (BS) val, vwr.ms.getAtomIndices(bs))));
     }
     return false;
-  }
-
-  public SV evalOp(T token) throws ScriptException {
-    if (!addOp(token) || !operate())
-      return null;
-    return xStack[xPt--];
   }
 
   

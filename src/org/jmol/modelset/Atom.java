@@ -330,6 +330,11 @@ public class Atom extends Point3fi implements BNode {
     return (bonds == null ? new Edge[0] : bonds);
   }
   
+  @Override
+  public int getBondCount() {
+    return (bonds == null ? 0 : bonds.length);    
+  }
+  
   public void setTranslucent(boolean isTranslucent, float translucentLevel) {
     colixAtom = C.getColixTranslucent3(colixAtom, isTranslucent, translucentLevel);    
   }

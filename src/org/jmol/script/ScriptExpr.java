@@ -28,9 +28,11 @@ import org.jmol.scriptext.IsoExt;
 import org.jmol.scriptext.MathExt;
 import org.jmol.scriptext.ScriptExt;
 import org.jmol.scriptext.SmilesExt;
+import org.jmol.shape.Shape;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
+import org.jmol.viewer.JC;
 
 /**
  * The ScriptExpr class holds the main functions for 
@@ -168,6 +170,7 @@ abstract class ScriptExpr extends ScriptParam {
      * These assignments are made by the compiler when seeing a VAR keyword.
      */
     boolean isImplicitAtomProperty = (localVar != null);
+    boolean isWhere = (localVar == null &&  localVars != null);
     boolean isOneExpressionOnly = (pt < 0);
     boolean returnBoolean = (!asVector && key == null);
     boolean returnString = (!asVector && key != null && key.length() == 0);
@@ -189,7 +192,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (isImplicitAtomProperty && tokAt(i + 1) != T.per) {
         // local variable definition
         SV token = (localVars != null && localVars.containsKey(theToken.value) ? null
-            : getBitsetPropertySelector(i));
+            : getBitsetPropertySelector(i, T.bitset));
         if (token != null) {
           rpn.addX(localVars.get(localVar));
           if (!rpn.addOpAllowMath(token, (tokAt(i + 1) == T.leftparen), T.nada))
@@ -365,25 +368,6 @@ abstract class ScriptExpr extends ScriptParam {
         }
         // for within:
         //$FALL-THROUGH$
-      case T.atomname:
-      case T.atomtype:
-      case T.branch:
-      case T.boundbox:
-      case T.chain:
-      case T.coord:
-      case T.dssr:
-      case T.element:
-      case T.group:
-      case T.model:
-      case T.molecule:
-      case T.rna3d:
-      case T.search:
-      case T.sequence:
-      case T.site:
-      case T.smiles:
-      case T.substructure:
-      case T.structure:
-        ////
       case T.on:
       case T.off:
       case T.string:
@@ -479,9 +463,10 @@ abstract class ScriptExpr extends ScriptParam {
             continue;
           }
         }
-        SV var = getBitsetPropertySelector(i + 1);
-        if (var == null)
-          invArg();
+        SV var = getBitsetPropertySelector(i + 1, rpn.getXTok());
+        if (var == null) {
+          
+        }
         // check for added min/max modifier
         boolean isUserFunction = (var.intValue == T.function);
         boolean allowMathFunc = true;
@@ -516,6 +501,28 @@ abstract class ScriptExpr extends ScriptParam {
           rpn.addOp(T.tokenRightParen);
         }
         break;
+      case T.atomname:
+      case T.atomtype:
+      case T.branch:
+      case T.boundbox:
+      case T.chain:
+      case T.coord:
+      case T.dssr:
+      case T.element:
+      case T.group:
+      case T.model:
+      case T.molecule:
+      case T.rna3d:
+      case T.search:
+      case T.sequence:
+      case T.site:
+      case T.smiles:
+      case T.substructure:
+      case T.structure:
+        if (!isWhere) {
+          rpn.addX(SV.newT(theToken));
+          break;
+        }
       default:
         if (theTok == T.leftsquare && tokAt(i + 2) == T.colon) {
           v = getAssocArray(i);
@@ -1490,7 +1497,7 @@ abstract class ScriptExpr extends ScriptParam {
     return bs;
   }
 
-  private SV getBitsetPropertySelector(int i) throws ScriptException {
+  private SV getBitsetPropertySelector(int i, int xTok) throws ScriptException {
     int tok = getToken(i).tok;
     switch (tok) {
     case T.min:
@@ -1502,10 +1509,10 @@ abstract class ScriptExpr extends ScriptParam {
     case T.property:
       break;
     default:
-      if (T.tokAttrOr(tok, T.atomproperty, T.mathproperty))
+      if (T.tokAttrOr(tok, T.atomproperty, T.mathproperty) || xTok == T.hash)
         break;
       if (tok != T.opIf && !T.tokAttr(tok, T.identifier))
-        return null;
+        break;
       String name = paramAsStr(i);
       if (vwr.isFunction(name.toLowerCase())) {
         tok = T.function;
@@ -1551,12 +1558,14 @@ abstract class ScriptExpr extends ScriptParam {
     float[] fout = (minmaxtype == T.allfloat ? new float[ac] : null);
     boolean isExplicitlyAll = (minmaxtype == T.minmaxmask || selectedFloat);
     tok &= ~T.minmaxmask;
+    Object[] info = null;
     if (tok == T.nada)
       tok = (isAtoms ? T.atoms : T.bonds);
 
     // determine property type:
 
     boolean isPt = false;
+    boolean isHash  = false;
     boolean isInt = false;
     boolean isString = false;
     switch (tok) {
@@ -1571,6 +1580,10 @@ abstract class ScriptExpr extends ScriptParam {
     case T.color:
     case T.screenxyz:
       isPt = true;
+      break;
+    case T.polyhedra:
+      isHash = true;
+      info = new Object[] {null, null};
       break;
     case T.function:
     case T.distance:
@@ -1670,7 +1683,7 @@ abstract class ScriptExpr extends ScriptParam {
       break;
     }
     ModelSet modelSet = vwr.ms;
-    int mode = (isPt ? 3 : isString ? 2 : isInt ? 1 : 0);
+    int mode = (isHash ? 4 : isPt ? 3 : isString ? 2 : isInt ? 1 : 0);
     if (isAtoms) {
       boolean haveBitSet = (bs != null);
       int i0, i1;
@@ -1801,6 +1814,18 @@ abstract class ScriptExpr extends ScriptParam {
               pt.add(t);
           }
           break;
+        case 4: // isHash
+          switch (tok) {
+          case T.polyhedra:
+            info[0] = Integer.valueOf(i);
+            vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "info", info);
+            if (info[1] != null) {
+              if (vout == null)
+                return info[1];
+              vout.addLast(info[1]);
+            }
+            break;
+          }
         }
         if (haveIndex)
           break;
@@ -1870,7 +1895,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (asVectorIfAll)
         return vout;
       int len = vout.size();
-      if (isString && !isExplicitlyAll && len == 1)
+      if ((isString || isHash) && !isExplicitlyAll && len == 1)
         return vout.get(0);
       if (selectedFloat) {
         fout = new float[len];
@@ -1911,6 +1936,8 @@ abstract class ScriptExpr extends ScriptParam {
     }
     if (isPt)
       return (n == 0 ? Integer.valueOf(-1) : P3.new3(pt.x / n, pt.y / n, pt.z / n));
+    if (isHash)
+      return new Hashtable<String, Object>();
     if (n == 0 || n == 1 && minmaxtype == T.stddev)
       return Float.valueOf(Float.NaN);
     if (isInt) {
@@ -2175,11 +2202,8 @@ abstract class ScriptExpr extends ScriptParam {
           || (t = vwr.g.getOrSetNewVariable(key, true)) == null)
         errorStr(ERROR_invalidArgument, key);
     }
-    if (t != null) {
-      t.setv(tv);
-      t.setModified(true);
-      return t;
-    }
+    if (t != null)
+      return t.setv(tv);
 
     Object vv = SV.oValue(tv);
 

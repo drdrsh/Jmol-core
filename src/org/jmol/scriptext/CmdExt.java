@@ -3236,15 +3236,11 @@ public class CmdExt extends ScriptExt {
         setPropertyName = "to";
         continue;
       case T.facecenteroffset:
-        if (!needsGenerating)
-          error(ScriptError.ERROR_insufficientArguments);
-        decimalPropertyName = "faceCenterOffset";
-        isDesignParameter = true;
-        continue;
+      case T.planarparam:
       case T.distancefactor:
         if (nAtomSets == 0)
           error(ScriptError.ERROR_insufficientArguments);
-        decimalPropertyName = "distanceFactor";
+        decimalPropertyName = T.nameOf(eval.theTok);
         isDesignParameter = true;
         continue;
       case T.color:

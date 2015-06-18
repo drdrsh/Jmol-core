@@ -3,6 +3,7 @@ package org.jmol.api;
 
 
 import javajs.util.Lst;
+import javajs.util.P3;
 
 import org.jmol.java.BS;
 import org.jmol.util.Node;
@@ -23,6 +24,8 @@ public interface SmilesMatcherInterface {
   public abstract String getRelationship(String smiles1, String smiles2) throws Exception;
 
   public abstract String reverseChirality(String smiles) throws Exception;
+
+  public abstract String polyhedronToSmiles(int[][] faces, int atomCount, P3[] points) throws Exception;
 
   
   // Internal -- Jmol use only -- 

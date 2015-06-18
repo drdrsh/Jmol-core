@@ -44,6 +44,7 @@ public class AFLOWReader extends VaspPoscarReader {
   private String listKey, listKeyCase;
   private int fileModelNumber;
   private boolean havePRE;
+  private String titleMsg;
   
 
 
@@ -156,7 +157,7 @@ public class AFLOWReader extends VaspPoscarReader {
 
   private boolean readPrePost() throws Exception {
     fileModelNumber++;
-    String titleMsg = "" + (modelNumber+1)
+    titleMsg = "#" + (modelNumber+1)
         + (getComposition ? "," + fileModelNumber + ", Cb=" + fracB : "");
     elementLabel = null;
     int n0 = asc.bsAtoms.cardinality();
@@ -273,15 +274,17 @@ public class AFLOWReader extends VaspPoscarReader {
         asc.setAtomSetEnergy(val, e);
       }
     }
-    asc.setAtomSetName(aabb + " " + cb + " " + listKey + "=" + listValStr);
+    asc.setAtomSetName(titleMsg + (getComposition ? "" : " Cb=" + cb) + " " + listKey + "=" + listValStr);
     float[] count_min = compositions.get(strcb);
-    if (count_min == null)
-      compositions.put(strcb, count_min = new float[] { 0, Float.MAX_VALUE });
-    count_min[0]++;
-    if (listVal < count_min[1])
-      count_min[1] = listVal;
     if (!doGetModel(++modelNumber, null))
       return false;
+    if (count_min == null)
+      compositions.put(strcb, count_min = new float[] { 0, Float.MAX_VALUE, 0 });
+    count_min[0]++;
+    if (listVal < count_min[1]) {
+      count_min[1] = listVal;
+      count_min[2] = fileModelNumber;
+    }
     while (line.indexOf("- URL -") < 0)
       rdline();
     sb.append("URL=" + rdline() + "|");
@@ -336,7 +339,7 @@ public class AFLOWReader extends VaspPoscarReader {
     Lst<String> list = new Lst<String>();
     for (Entry<String, float[]> e : compositions.entrySet()) {
       float[] count_min = (float[]) e.getValue();
-      list.addLast(e.getKey() + "\t" + ((int) count_min[0]) + "\t" + listKeyCase + "\t" + count_min[1]);
+      list.addLast(e.getKey() + "\t" + ((int) count_min[0]) + "\t" + (int) count_min[2]  + "\t" + listKeyCase + "\t" + count_min[1]);
     }
     String[] a = new String[list.size()];
     list.toArray(a);

@@ -416,12 +416,6 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void toCartesian(T3 fpt, boolean ignoreOffset) {
-    if (!isBio)
-      unitCell.toCartesian(fpt, ignoreOffset);
-  }
-
-  @Override
   public P3 toSupercell(P3 fpt) {
     return unitCell.toSupercell(fpt);
   }
@@ -430,6 +424,12 @@ public class Symmetry implements SymmetryInterface {
   public void toFractional(T3 pt, boolean isAbsolute) {
     if (!isBio)
       unitCell.toFractional(pt, isAbsolute);
+  }
+
+  @Override
+  public void toCartesian(T3 fpt, boolean ignoreOffset) {
+    if (!isBio)
+      unitCell.toCartesian(fpt, ignoreOffset);
   }
 
   @Override
@@ -747,7 +747,7 @@ public class Symmetry implements SymmetryInterface {
   public AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms,
                                        BS bsAtoms, float radius) {
     return ((UnitCellIterator) Interface.getInterface("org.jmol.symmetry.UnitCellIterator", vwr, "script"))
-        .set(unitCell, atom, atoms, bsAtoms, radius);
+        .set(this, atom, atoms, bsAtoms, radius);
   }
 
 }

@@ -1258,7 +1258,7 @@ public class TestSmilesParser extends TestCase {
    */
   private static void checkMolecule(String smiles, SmilesSearch expected) {
     try {
-      assertTrue(new SmilesMatcher().areEqual(smiles, expected));
+      assertTrue(new SmilesMatcher().areEqualTest(smiles, expected));
     } catch (Exception e) {
       assertTrue(false);
     }

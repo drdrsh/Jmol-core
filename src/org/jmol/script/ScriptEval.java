@@ -3439,9 +3439,7 @@ public class ScriptEval extends ScriptExpr {
       bsOrList = loopVars[1].value;
       // nth time through
       j = ++forVal.intValue;
-      if (forVar.isModified()) {
-        isOK = false;
-      } else if (forVal.tok == T.integer) {
+      if (forVal.tok == T.integer) {
         // values are stored in value as [i1 i2]
         isMinusMinus = (j < 0);
         int i1 = ((int[]) bsOrList)[0];
@@ -3550,7 +3548,6 @@ public class ScriptEval extends ScriptExpr {
         if (tok == T.in) {
           // start of FOR (i in x) block or FOR (i from x)
           forVar = getForVar(key);
-          forVar.setModified(false);
           if (inTok == T.integer) {
             // for (i from [0 31])
             forVar.tok = T.integer;

@@ -242,9 +242,10 @@ public class MathExt {
     return mp.addXAV(a);
   }
 
+  @SuppressWarnings("null")
   private boolean evaluateBin(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
-    if (args.length != 3)
+    if (args.length != 3 && args.length != 4)
       return false;
     SV x1 = mp.getX();
     boolean isListf = (x1.tok == T.listf);
@@ -253,14 +254,22 @@ public class MathExt {
     float f0 = SV.fValue(args[0]);
     float f1 = SV.fValue(args[1]);
     float df = SV.fValue(args[2]);
+    String key = (args.length == 4 ? SV.sValue(args[3]) : null);
     float[] data;
+    Map<String, SV>[] maps = null;
     if (isListf) {
       data = (float[]) x1.value;
     } else {
       Lst<SV> list = x1.getList();
       data = new float[list.size()];
+      if (key != null)
+        maps = AU.createArrayOfHashtable(list.size());
+      try {
       for (int i = list.size(); --i >= 0;)
-        data[i] = SV.fValue(list.get(i));
+        data[i] = SV.fValue(key == null ? list.get(i) : (maps[i] = list.get(i).getMap()).get(key));
+      }catch (Exception e) {
+        return false;
+      }
     }
     int nbins = Math.max((int) Math.floor((f1 - f0) / df + 0.01f), 1);
     int[] array = new int[nbins];
@@ -273,6 +282,16 @@ public class MathExt {
       else if (bin >= nbins)
         bin = nbins - 1;
       array[bin]++;
+      if (key != null) {
+        Map<String, SV> map = maps[i];
+        if (map == null)
+          continue;
+        map.put("_bin", SV.newI(bin));
+        float v1 = f0 + df * bin;
+        float v2 = v1 + df;
+        map.put("_binMin", SV.newV(T.decimal,  Float.valueOf(bin == 0 ? -Float.MAX_VALUE : v1)));
+        map.put("_binMax", SV.newV(T.decimal,  Float.valueOf(bin == nbins - 1 ? Float.MAX_VALUE  : v2)));        
+      }
     }
     return mp.addXAI(array);
   }
@@ -536,8 +555,8 @@ public class MathExt {
     }
   }
 
-  private boolean evaluateConnected(ScriptMathProcessor mp, SV[] args,
-                                    int tok) throws ScriptException {
+  private boolean evaluateConnected(ScriptMathProcessor mp, SV[] args, int tok)
+      throws ScriptException {
     /*
      * Several options here:
      * 
@@ -573,10 +592,21 @@ public class MathExt {
     boolean isBonds = false;
     switch (tok) {
     case T.polyhedra:
-      int nv = (args.length > 0 ? SV.iValue(args[0]) : -1);
-      Object[] data = new Object[] { Integer.valueOf(nv), null };
+      int nv = Integer.MIN_VALUE;
+      String smiles = null;
+      if (args.length > 0) {
+        switch (args[0].tok) {
+        case T.integer:
+          nv = args[0].intValue;
+          break;
+        case T.string:
+          smiles = SV.sValue(args[0]);
+          break;
+        }
+      }
+      Object[] data = new Object[] { Integer.valueOf(nv), smiles, null };
       vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "centers", data);
-      return mp.addXBs(data[1] == null ? new BS() : (BS) data[1]); 
+      return mp.addXBs(data[2] == null ? new BS() : (BS) data[2]);
     case T.bondcount:
       SV x1 = mp.getX();
       if (x1.tok != T.bitset)
@@ -1085,7 +1115,7 @@ public class MathExt {
       JmolPatternMatcher pm = getPatternMatcher();
       Pattern pattern = null;
       try {
-        pattern = pm.compile(sFind, isCaseInsensitive);
+        pattern = (sFind.length() == 0 ? null : pm.compile(sFind, isCaseInsensitive));
       } catch (Exception ex) {
         e.evalError(ex.toString(), null);
       }
@@ -1099,8 +1129,13 @@ public class MathExt {
       Lst<String> v = (asMatch ? new Lst<String>() : null);
       for (int i = 0; i < list.length; i++) {
         String what = list[i];
+        boolean isMatch;
+        if (pattern == null) {
+          isMatch = (what.length() != 0);
+        } else {
         matcher = pattern.matcher(what);
-        boolean isMatch = matcher.find();
+        isMatch = matcher.find();
+        }
         if (asMatch && isMatch || !asMatch && isMatch == !isReverse) {
           n++;
           bs.set(i);
@@ -1211,6 +1246,12 @@ public class MathExt {
       isJSON = true;
       propertyName = SV.sValue(args[pt++]);
     }
+    SV x = null;
+    if (isAtomProperty) {
+      x = mp.getX();
+      if (x.tok != T.bitset)
+          return mp.addXObj(vwr.extractProperty(x, propertyName, -1));
+    }
     if (isAtomProperty && !isAuxiliary && !lc.startsWith("bondinfo") && !lc.startsWith("atominfo"))
       propertyName = "atomInfo." + propertyName;
     Object propertyValue = "";
@@ -1237,9 +1278,6 @@ public class MathExt {
       }
     }
     if (isAtomProperty) {
-      SV x = mp.getX();
-      if (x.tok != T.bitset)
-        return false;
       BS bs = SV.bsSelectVar(x);
       int iAtom = bs.nextSetBit(0);
       if (iAtom < 0)
@@ -1250,7 +1288,7 @@ public class MathExt {
       propertyName = "auxiliaryInfo.models." + propertyName;
 
     propertyName = PT.rep(propertyName, ".[", "[");  
-    Object property = vwr.getProperty(null, propertyName, propertyValue);
+    Object property = vwr.getProperty(null, propertyName, x == null ? propertyValue : x);
     if (pt < args.length)
       property = vwr.extractProperty(property, args, pt);
     return mp.addXObj(isJSON ? "{" + PT.toJSON("value", property) + "}" : SV
@@ -1271,30 +1309,66 @@ public class MathExt {
     // format("JSON", x)
     // format("byteArray", x)
     // format("array", x)
-    SV x1 = (args.length < 2 ? mp.getX() : null);
-    
-    String format = (args.length == 0 ? "%U" : SV.sValue(args[0]));
+    SV x1 = (args.length < 2 || intValue == T.format ? mp.getX() : null);
+    String format = (args.length == 0 ? "%U" : args[0].tok == T.varray ? null : SV.sValue(args[0]));
+    if (x1 != null && format != null) {
+      // x1.format(["energy", "pointGroup"]);
+      // x1.format("%5.3f %5s", ["energy", "pointGroup"])
+      if (args.length == 2) {
+        Lst<SV> listIn = x1.getList();
+        Lst<SV> formatList = args[1].getList();
+        x1 = SV.getVariableList(getSublist(listIn, formatList));
+      }
+      args = new SV[] {args[0], x1};
+      x1 = null;
+    }
     if (x1 == null) {
       int pt = (isLabel ? -1 : SV.getFormatType(format));
       if (pt >= 0 && args.length != 2)
         return false;
       if (pt >= 0 || args.length < 2 || args[1].tok != T.varray)
-        return mp.addXObj(SV.format(args, pt));
+        return mp.addXObj(SV.format(args, pt, false));
       // fill an array with applied formats
       Lst<SV> a = args[1].getList();
       SV[] args2 = new SV[] { args[0], null };
       String[] sa = new String[a.size()];
       for (int i = sa.length; --i >= 0;) {
         args2[1] = a.get(i);
-        sa[i] = SV.format(args2, pt).toString();
+        sa[i] = SV.format(args2, pt, true).toString();
       }
       return mp.addXAS(sa);
     }
+    if (x1.tok == T.varray && format == null) {
+      Lst<SV> listIn = x1.getList();
+      Lst<SV> formatList = args[0].getList();
+      Lst<SV> listOut = getSublist(listIn, formatList);
+      return mp.addXList(listOut);
+    }
+    
     BS bs = SV.getBitSet(x1, true);
     boolean asArray = T.tokAttr(intValue, T.minmaxmask); // "all"
     return mp.addXObj(bs == null ? SV.sprintf(PT.formatCheck(format), x1) : e
         .getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,
             asArray));
+    
+  }
+
+  /**
+   * [ {...},{...}... ] ==> [[...],[...]]
+   * @param listIn
+   * @param formatList
+   * @return
+   */
+  private Lst<SV> getSublist(Lst<SV> listIn, Lst<SV> formatList) {
+    Lst<SV> listOut = new Lst<SV>();
+    for (int i = 0, n = listIn.size(); i < n; i++) {
+      Lst<SV> list = new Lst<SV>();
+      Map<String, SV> map = listIn.get(i).getMap();
+      for (int j = 0, n1 = formatList.size(); j < n1; j++)
+        list.addLast(map.get(SV.sValue(formatList.get(j))));
+      listOut.addLast(SV.getVariableList(list));
+    }
+    return listOut;
   }
 
   private boolean evaluateList(ScriptMathProcessor mp, int tok, SV[] args)

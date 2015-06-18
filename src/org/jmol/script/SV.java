@@ -70,9 +70,6 @@ public class SV extends T implements JSONEncodable {
 
   public int index = Integer.MAX_VALUE;    
 
-  private final static int FLAG_MODIFIED = 2;
-
-  private int flags = FLAG_MODIFIED;
   public String myName;
 
   public static SV newV(int tok, Object value) {
@@ -408,22 +405,11 @@ public class SV extends T implements JSONEncodable {
     return this;
   }
 
-  public boolean isModified() {
-    return tokAttr(flags, FLAG_MODIFIED);
-  }
-  
-  public void setModified(boolean tf) {
-    if (tf)
-      flags |= FLAG_MODIFIED;
-    else
-      flags &= ~FLAG_MODIFIED;
-  }
-  
   boolean canIncrement() {
     switch (tok) {
     case integer:
     case decimal:
-      return true;//tokAttr(flags, FLAG_CANINCREMENT);
+      return true;
     default:
       return false;
     }
@@ -1176,16 +1162,16 @@ public class SV extends T implements JSONEncodable {
   public static Object sprintf(String strFormat, SV var) {
     if (var == null)
       return strFormat;
+    boolean isArray = (var.tok == varray);
     int[] vd = (strFormat.indexOf("d") >= 0 || strFormat.indexOf("i") >= 0 ? new int[1]
         : null);
-    boolean isArray = (var.tok == varray);
     float[] vf = (strFormat.indexOf("f") >= 0 ? new float[1] : null);
     double[] ve = (strFormat.indexOf("e") >= 0 ? new double[1] : null);
     boolean getS = (strFormat.indexOf("s") >= 0);
     boolean getP = (strFormat.indexOf("p") >= 0 && (isArray || var.tok == point3f));
     boolean getQ = (strFormat.indexOf("q") >= 0 && (isArray || var.tok == point4f));
     Object[] of = new Object[] { vd, vf, ve, null, null, null};
-    if (!isArray)
+     if (!isArray)
       return sprintf(strFormat, var, of, vd, vf, ve, getS, getP, getQ);
     Lst<SV> sv = var.getList();
     String[] list2 = new String[sv.size()];
@@ -1196,6 +1182,14 @@ public class SV extends T implements JSONEncodable {
 
   private static String sprintf(String strFormat, SV var, Object[] of, 
                                 int[] vd, float[] vf, double[] ve, boolean getS, boolean getP, boolean getQ) {
+    if (var.tok == T.hash) {
+      int pt = strFormat.indexOf("[");
+      if (pt >= 0) {
+        int pt1;
+        var = var.getMap().get(strFormat.substring(pt + 1, pt1 = strFormat.indexOf("]")));
+        strFormat = strFormat.substring(0, pt) + strFormat.substring(pt1 + 1);
+      }      
+   }
     if (vd != null)
       vd[0] = iValue(var);
     if (vf != null)
@@ -1231,7 +1225,7 @@ public class SV extends T implements JSONEncodable {
    * @param pt 0: to JSON, 5: to base64, 12: to bytearray, 22: to array
    * @return formatted string
    */
-  public static Object format(SV[] args, int pt) {
+  public static Object format(SV[] args, int pt, boolean array2D) {
     switch (args.length) {
     case 0:
       return "";
@@ -1283,7 +1277,9 @@ public class SV extends T implements JSONEncodable {
     sb.append(format[0]);
     for (int i = 1; i < format.length; i++) {
       Object ret = sprintf(PT.formatCheck("%" + format[i]),
-          (i < args.length ? args[i] : null));
+          (args[1].tok == T.hash ? args[1] 
+              : args[1].tok == T.varray ? args[1].getList().get(i - 1)
+                  : i < args.length ? args[i] :  null));
       if (AU.isAS(ret)) {
         String[] list = (String[]) ret;
         for (int j = 0; j < list.length; j++)
