@@ -252,7 +252,7 @@ public class Dots extends AtomShape {
     }
 
     for (int i = ac; --i >= 0;) {
-      atoms[i].setShapeVisibility(vf, bsOn.get(i));
+      setShapeVisibility(atoms[i], bsOn.get(i));
     }
     if (!isVisible)
       return;

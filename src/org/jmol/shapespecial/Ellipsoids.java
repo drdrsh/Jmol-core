@@ -423,7 +423,7 @@ public class Ellipsoids extends Shape {
     setVis(simpleEllipsoids, bsModels, atoms);
     if (atomEllipsoids != null)
       for (int i = atoms.length; --i >= 0;)
-        atoms[i].setShapeVisibility(vf, false);
+        setShapeVisibility(atoms[i], false);
     setVis(atomEllipsoids, bsModels, atoms);
   }
 
@@ -438,7 +438,7 @@ public class Ellipsoids extends Shape {
           boolean isModAtom = ms.isModulated(t.atomIndex1);
           isOK =(!isModTensor && !isUnmodTensor || isModTensor == isModAtom);
         }
-        atoms[t.atomIndex1].setShapeVisibility(vf, true);
+        setShapeVisibility(atoms[t.atomIndex1], true);
       }
       e.visible = isOK && (e.modelIndex < 0 || bs.get(e.modelIndex));
     }

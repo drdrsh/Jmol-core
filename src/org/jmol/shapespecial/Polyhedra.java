@@ -908,6 +908,9 @@ public class Polyhedra extends AtomShape {
           && !ms.isAtomHidden(p.centralAtom.i) 
           && !ms.at[p.centralAtom.i].isDeleted() ? vf
           : 0);
+      if (p.visibilityFlags != 0)
+        setShapeVisibility(atoms[p.centralAtom.i], true);
+
     }
   }
   
