@@ -138,23 +138,21 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
     0.000000000  1.850000000  1.850000000    -0.270270270  0.270270270  0.270270270
     1.850000000  0.000000000  1.850000000     0.270270270 -0.270270270  0.270270270*/
 
-  private float[] unitCellData = new float[18];
-
   private void readUnitCellVectors() throws Exception {
     if (asc.ac > 0) {
       setSymmetry();
       asc.newAtomSet();
       setAtomSetInfo();
     }
-    fillFloatArray(null, 0, unitCellData);
-    setUnitCell();
+    float[] f = new float[3];
+    for (int i = 0; i < 3; i++)
+      addPrimitiveLatticeVector(i, fillFloatArray(fixMinus(rd()), 0, f), 0);
   }
 
-  private void setUnitCell() {
-    addPrimitiveLatticeVector(0, unitCellData, 0);
-    addPrimitiveLatticeVector(1, unitCellData, 6);
-    addPrimitiveLatticeVector(2, unitCellData, 12);
+  private String fixMinus(String line) {
+    return PT.rep(line, "-", " -");
   }
+
 
   private void setSymmetry() throws Exception {
     applySymmetryAndSetTrajectory();
@@ -178,8 +176,10 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
   ///This is the initial geometry not the geometry during the geometry dump
   private void readInitialCoordinates() throws Exception {
     int counter = 0;
-    while (rd() != null && line.length() > 10)
-      addAtomXYZSymName(getTokens(), 0, null, atomNames[counter++]);
+    while (rd() != null && line.length() > 10) {
+      addAtomXYZSymName(PT.getTokens(fixMinus(line)), 
+          0, null, atomNames[counter++]);
+    }
     asc.setAtomSetName("Initial Coordinates");
   }
 
