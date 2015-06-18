@@ -647,6 +647,8 @@ public class SV extends T implements JSONEncodable {
 
   private static void sValueArray(SB sb, SV vx, String path, String tabs,
                                   boolean isEscaped, boolean isRaw, boolean addValues, int maxLevels, boolean skipEmpty) {
+    if (vx == null)
+      System.out.println("hoho");
     switch (vx.tok) {
     case hash:
     case context:

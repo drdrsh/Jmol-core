@@ -587,7 +587,7 @@ public class ShapeManager {
       if (iShape != JC.SHAPE_MEASURES && getShape(iShape) != null)
         setShapeSizeBs(iShape, 0, null, bs);
     if (getShape(JC.SHAPE_POLYHEDRA) != null)
-      setShapePropertyBs(JC.SHAPE_POLYHEDRA, "delete", bs, null);
+      setShapePropertyBs(JC.SHAPE_POLYHEDRA, "off", bs, null);
     setLabel(null, bs);
     if (!isBond)
       vwr.setBooleanProperty("bondModeOr", bondmode);

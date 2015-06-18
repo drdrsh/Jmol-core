@@ -853,7 +853,7 @@ abstract public class ScriptParam extends ScriptError {
     switch (getToken(1).tok) {
     case T.only:
       restrictSelected(false, false);
-      break;
+      //$FALL-THROUGH$
     case T.on:
       break;
     case T.off:

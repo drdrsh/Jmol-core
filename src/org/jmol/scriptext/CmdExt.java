@@ -638,9 +638,14 @@ public class CmdExt extends ScriptExt {
             eval.loadFileResourceAsync(e1.getFileName());
           }
         return;
+      case T.symmetry:
       case T.pointgroup:
-        if (!chk)
-          showString(vwr.ms.calculatePointGroup(vwr.bsA()));
+        if (!chk) {
+          if (eval.tokAt(2) == T.polyhedra)
+            setShapeProperty(JC.SHAPE_POLYHEDRA, "symmetry", null);
+          else
+            showString(vwr.ms.calculatePointGroup(vwr.bsA()));
+        }
         return;
       case T.straightness:
         checkLength(2);
@@ -3160,8 +3165,12 @@ public class CmdExt extends ScriptExt {
         propertyName = "unitCell";
         propertyValue = Boolean.TRUE;
         break;
-      case T.delete:
+      case T.only:
+        e.restrictSelected(false, false);
+        eval.theTok = T.on;
+        //$FALL-THROUGH$
       case T.on:
+      case T.delete:
       case T.off:
         if (i + 1 != slen || needsGenerating || nAtomSets > 1 || nAtomSets == 0
             && "to".equals(setPropertyName))

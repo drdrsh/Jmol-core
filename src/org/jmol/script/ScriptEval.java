@@ -1775,7 +1775,7 @@ public class ScriptEval extends ScriptExpr {
   }
 
   @Override
-  protected void restrictSelected(boolean isBond, boolean doInvert) {
+  public void restrictSelected(boolean isBond, boolean doInvert) {
     
     // called by ScriptParam
     
@@ -3323,9 +3323,7 @@ public class ScriptEval extends ScriptExpr {
       switch (getToken(ipt).tok) {
       case T.only:
         restrictSelected(false, false);
-        value = 1;
-        type = EnumType.FACTOR;
-        break;
+        //$FALL-THROUGH$
       case T.on:
         value = 1;
         type = EnumType.FACTOR;
@@ -8946,7 +8944,7 @@ public class ScriptEval extends ScriptExpr {
     switch (tok) {
     case T.only:
       restrictSelected(false, false);
-      break;
+      //$FALL-THROUGH$
     case T.on:
       break;
     case T.off:
@@ -8975,11 +8973,8 @@ public class ScriptEval extends ScriptExpr {
     // token has ondefault1
     switch (getToken(1).tok) {
     case T.only:
-      if (chk)
-        return;
       restrictSelected(false, false);
-      mad = -1;
-      break;
+      //$FALL-THROUGH$
     case T.on:
       mad = -1; // means take default
       break;

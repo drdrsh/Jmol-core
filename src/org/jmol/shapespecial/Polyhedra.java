@@ -269,6 +269,12 @@ public class Polyhedra extends AtomShape {
       return;
     }
 
+    if (propertyName == "symmetry") {
+      for (int i = polyhedronCount; --i >= 0;)
+        polyhedrons[i].getSymmetry(vwr, true);
+      return;
+    }
+
     if (propertyName == "deleteModelAtoms") {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       for (int i = polyhedronCount; --i >= 0;) {
@@ -318,7 +324,8 @@ public class Polyhedra extends AtomShape {
         if (smiles == null) {
             bs.set(polyhedrons[i].centralAtom.i);
         } else if (sm != null){
-          String smiles0 = polyhedrons[i].getSmiles(sm, false);
+          polyhedrons[i].getSymmetry(vwr, false);
+          String smiles0 = polyhedrons[i].smiles;
           try {
             if (sm.areEqual(smiles, smiles0) > 0)
               bs.set(polyhedrons[i].centralAtom.i);

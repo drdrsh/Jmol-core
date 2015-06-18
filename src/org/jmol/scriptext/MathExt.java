@@ -1357,15 +1357,17 @@ public class MathExt {
    * [ {...},{...}... ] ==> [[...],[...]]
    * @param listIn
    * @param formatList
-   * @return
+   * @return sublist
    */
   private Lst<SV> getSublist(Lst<SV> listIn, Lst<SV> formatList) {
     Lst<SV> listOut = new Lst<SV>();
     for (int i = 0, n = listIn.size(); i < n; i++) {
       Lst<SV> list = new Lst<SV>();
       Map<String, SV> map = listIn.get(i).getMap();
-      for (int j = 0, n1 = formatList.size(); j < n1; j++)
-        list.addLast(map.get(SV.sValue(formatList.get(j))));
+      for (int j = 0, n1 = formatList.size(); j < n1; j++) {
+        SV v = map.get(SV.sValue(formatList.get(j)));
+        list.addLast(v == null ? SV.newS("") : v);
+      }
       listOut.addLast(SV.getVariableList(list));
     }
     return listOut;
