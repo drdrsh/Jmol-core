@@ -142,6 +142,9 @@ public class CmdExt extends ScriptExt {
     case T.image:
       image();
       break;
+    case T.macro:
+      macro();
+      break;
     case T.mapproperty:
       mapProperty();
       break;
@@ -189,6 +192,22 @@ public class CmdExt extends ScriptExt {
     return null;
   }
 
+
+  private void macro() throws ScriptException {
+    String key = e.optParameterAsString(1);
+    if (key.length() == 0)
+      return;
+    if (chk)
+      return;
+    String macro = JC.getMacro(key);
+    if (macro == null) {
+      showString("macro " + key  + " could not be found. Current macros include:\n" + JC.getMacroList());
+      return;
+    }
+    showString("running " + macro);
+    macro = vwr.getFileAsString3(macro, false, null);
+    e.runScript(macro);
+  }
 
   /**
    * used for TRY command

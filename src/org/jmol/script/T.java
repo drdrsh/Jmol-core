@@ -330,7 +330,8 @@ public class T {
   public final static int invertSelected = scriptCommand | 26;
 //public final static int load   see mathfunc
   public final static int loop         = scriptCommand | 27 | defaultON;
-  public final static int mapproperty  = scriptCommand | 28 | expression;
+  public final static int macro        = scriptCommand | 28;
+  public final static int mapproperty  = scriptCommand | 29 | expression;
   public final static int minimize     = scriptCommand | 30;
 //public final static int model  see mathfunc
 //public final static int measure   see mathfunc
@@ -2250,6 +2251,7 @@ public class T {
        "lonePair",
        "lp",
        "lumo",
+       "macro",
        "manifest",
        "mapProperty",
        "map",
@@ -3280,6 +3282,7 @@ public class T {
         lonepair,                           //        "lonePair"
         lp,                                 //        "lp"
         lumo,                               //        "lumo"
+        macro,                              //        "macro"  // added in Jmol 14.3.15
         manifest,                           //        "manifest"
         mapproperty,                        //        "mapProperty"
         -1,                                 //        "map"

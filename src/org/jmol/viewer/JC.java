@@ -32,6 +32,7 @@ import javajs.J2SIgnoreImport;
 import javajs.J2SRequireImport;
 
 import javajs.util.PT;
+import javajs.util.SB;
 import javajs.util.V3;
 
 import java.io.BufferedInputStream;
@@ -64,7 +65,25 @@ public final class JC {
     "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE" 
   };
+  
+  public static String[] macros = {
+    "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/AFLOW.spt"
+  };
 
+  public static String getMacroList() {
+    SB s = new SB();
+    for (int i = 0; i < macros.length; i += 2)
+      s.append(macros[i]).append("\t").append(macros[i + 1]).append("\n");
+    return s.toString();
+  }
+
+
+  public static String getMacro(String key) {
+    for (int i = 0; i < macros.length; i += 2)
+      if (macros[i].equals(key))
+        return macros[i + 1];
+    return null;
+  }
   
   public final static String copyright = "(C) 2015 Jmol Development";
   

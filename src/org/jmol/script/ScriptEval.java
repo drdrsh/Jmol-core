@@ -2520,6 +2520,7 @@ public class ScriptEval extends ScriptExpr {
     case T.hbond: // hbond connect
     case T.image:
     case T.stereo:
+    case T.macro:
     case T.mapproperty:
     case T.minimize:
     case T.modulation:
