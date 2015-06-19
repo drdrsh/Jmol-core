@@ -957,7 +957,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
     // override the insertString to make sure everything typed ends up at the end
     // or in the 'command line' using the proper font, and the newline is processed.
     @Override
-    public void insertString(int offs, String str, AttributeSet a)
+    public synchronized void insertString(int offs, String str, AttributeSet a)
         throws BadLocationException {
       int ichNewline = str.indexOf('\n');
       if (ichNewline != 0) {
