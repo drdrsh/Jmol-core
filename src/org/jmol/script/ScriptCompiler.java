@@ -65,7 +65,7 @@ public class ScriptCompiler extends ScriptTokenParser {
    */
 
   /**
-   * @param vwr 
+   * @param vwr
    * @j2sIgnoreSuperConstructor
    * 
    */
@@ -906,20 +906,19 @@ public class ScriptCompiler extends ScriptTokenParser {
   private void getPrefixToken() {
     ident = script.substring(ichToken, ichToken + cchToken);
     identLC = ident.toLowerCase();
-    boolean isUserVar = (lastToken.tok != T.per && !isDotDot && isContextVariable(identLC));
-    String myName = (isUserVar ? ident : null);
+    boolean isUserVar = isContextVariable(identLC);
+    String myName = ident;//(isUserVar ? ident : null);
     String preserveCase = null;
     if (nTokens == 0)
       isUserToken = isUserVar;
     if (nTokens == 1
-        && (tokCommand == T.function || tokCommand == T.parallel 
-        || tokCommand == T.var)
-        
-        || nTokens != 0 && isUserVar 
-        
-        || !isDotDot && isUserFunction(identLC) && ((preserveCase = ident) != null)
-        
-        
+        && (tokCommand == T.function || tokCommand == T.parallel || tokCommand == T.var)
+
+        || nTokens != 0 && isUserVar
+
+        || !isDotDot && isUserFunction(identLC)
+        && ((preserveCase = ident) != null)
+
         && (thisFunction == null || !thisFunction.name.equals(identLC))) {
       // we need to allow:
 
@@ -954,8 +953,8 @@ public class ScriptCompiler extends ScriptTokenParser {
       if (identLC.indexOf("property_") == 0) {
         theToken = T.o(T.property, identLC);
       } else if (myName != null) {
-        theToken = SV.newSV(T.identifier, 0, ident);
-        ((SV)theToken).myName = myName;
+        theToken = SV.newSV(T.identifier, Integer.MAX_VALUE, ident);
+        ((SV) theToken).myName = myName;
       } else {
         theToken = T.o(T.identifier, ident);
       }
@@ -986,8 +985,9 @@ public class ScriptCompiler extends ScriptTokenParser {
               && lastToken.tok == T.defaultdirectory || tokCommand == T.load
               || tokCommand == T.background || tokCommand == T.script));
       iHaveQuotedString = true;
-      if ((tokCommand == T.load || tokCommand == T.cgo) && lastToken.tok == T.data
-          || tokCommand == T.data && str.indexOf("@") < 0) {
+      if ((tokCommand == T.load || tokCommand == T.cgo)
+          && lastToken.tok == T.data || tokCommand == T.data
+          && str.indexOf("@") < 0) {
         if (!getData(str)) {
           return ERROR(ERROR_missingEnd, "data");
         }
@@ -1034,6 +1034,7 @@ public class ScriptCompiler extends ScriptTokenParser {
           cchToken = 1;
           switch (ch) {
           case '[':
+            tokLastMath = 1;
             addTokenToPrefix(T.tokenArrayOpen);
             bracketCount++;
             return CONTINUE;
@@ -1071,9 +1072,9 @@ public class ScriptCompiler extends ScriptTokenParser {
       if (nTokens == 2) {
         if (lastToken.tok == T.image)
           iHaveQuotedString = true;
-      } else
-        if (!iHaveQuotedString && lastToken.tok != T.domains && lastToken.tok != T.validation) {
-          return OK;
+      } else if (!iHaveQuotedString && lastToken.tok != T.domains
+          && lastToken.tok != T.validation) {
+        return OK;
       }
       //$FALL-THROUGH$
     case T.load:
@@ -1130,8 +1131,8 @@ public class ScriptCompiler extends ScriptTokenParser {
         }
       }
       if (!iHaveQuotedString
-          && lookingAtImpliedString(tokCommand == T.show, tokCommand == T.load, nTokens > 1
-              || tokCommand != T.script)) {
+          && lookingAtImpliedString(tokCommand == T.show, tokCommand == T.load,
+              nTokens > 1 || tokCommand != T.script)) {
         String str = script.substring(ichToken, ichToken + cchToken);
         if (tokCommand == T.script) {
           if (str.startsWith("javascript:")) {
@@ -1268,7 +1269,8 @@ public class ScriptCompiler extends ScriptTokenParser {
       boolean isBondOrMatrix = (script.charAt(ichToken) == '[');
       BS bs = lookingAtBitset();
       if (bs != null) {
-        addTokenToPrefix(T.o(T.bitset, isBondOrMatrix ? BondSet.newBS(bs, null) : bs));
+        addTokenToPrefix(T.o(T.bitset, isBondOrMatrix ? BondSet.newBS(bs, null)
+            : bs));
         return CONTINUE;
       }
       if (isBondOrMatrix) {
@@ -1905,8 +1907,8 @@ public class ScriptCompiler extends ScriptTokenParser {
   }
 
   private static ScriptFunction newScriptParallelProcessor(String name, int tok) {
-    ScriptFunction jpp = (ScriptFunction) Interface
-        .getInterface("org.jmol.script.ScriptParallelProcessor", null, null);
+    ScriptFunction jpp = (ScriptFunction) Interface.getInterface(
+        "org.jmol.script.ScriptParallelProcessor", null, null);
     jpp.set(name, tok);
     return jpp;
   }
@@ -1920,18 +1922,16 @@ public class ScriptCompiler extends ScriptTokenParser {
     ptNewSetModifier = (isNewSet ? (ident.equals("(") ? 2 : 1)
         : Integer.MAX_VALUE);
     // unfortunately we have to look here for defaultLattice, because it must not turn into a string.
-    return ((isSetBrace || theToken.tok == T.leftparen 
-        || theToken.tok == T.defaultlattice
-        || theToken.tok == T.plusPlus || theToken.tok == T.minusMinus) ? theToken
+    return ((isSetBrace || theToken.tok == T.leftparen
+        || theToken.tok == T.defaultlattice || theToken.tok == T.plusPlus || theToken.tok == T.minusMinus) ? theToken
         : T.o(T.identifier, ident));
   }
 
   private void checkUnquotedFileName() {
     int ichT = ichToken;
     char ch;
-    while (++ichT < cchScript
-        && !PT.isWhitespace(ch = script.charAt(ichT)) && ch != '#'
-        && ch != ';' && ch != '}') {
+    while (++ichT < cchScript && !PT.isWhitespace(ch = script.charAt(ichT))
+        && ch != '#' && ch != ';' && ch != '}') {
     }
     String name = script.substring(ichToken, ichT).replace('\\', '/');
     cchToken = ichT - ichToken;
@@ -2774,10 +2774,10 @@ public class ScriptCompiler extends ScriptTokenParser {
         tokLastMath = 1;
       // last is hack for insertion codes embedded in an atom expression :-(
       // select c3^a
-      while (PT.isLetterOrDigit(ch = charAt(ichT)) || ch == '_'
-          || ch == '*' && charAt(ichT - 1) == '?' || ch == '?' || ch == '~'
-          || ch == '\'' || ch == '\\' && charAt(ichT + 1) == '?' || ch == '^'
-          && ichT > ichT0 && PT.isDigit(charAt(ichT - 1)))
+      while (PT.isLetterOrDigit(ch = charAt(ichT)) || ch == '_' || ch == '*'
+          && charAt(ichT - 1) == '?' || ch == '?' || ch == '~' || ch == '\''
+          || ch == '\\' && charAt(ichT + 1) == '?' || ch == '^' && ichT > ichT0
+          && PT.isDigit(charAt(ichT - 1)))
         ++ichT;
       break;
     }

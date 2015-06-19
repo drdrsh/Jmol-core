@@ -66,7 +66,7 @@ public final class JC {
   };
 
   
-  public final static String copyright = "(C) 2012 Jmol Development";
+  public final static String copyright = "(C) 2015 Jmol Development";
   
   public final static String version;
   public final static String date;

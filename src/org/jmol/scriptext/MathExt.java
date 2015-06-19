@@ -839,13 +839,15 @@ public class MathExt {
    * x = {atomset1}.distance.max({atomset2}).max returns the furthest distance
    * from any atom in atomset1 to any atom in atomset2.
    * 
-   * x = {atomset1}.distance.all({atomset2}) returns an array or array of arrays of values
+   * x = {atomset1}.distance.all({atomset2}) returns an array or array of arrays
+   * of values
    * 
-   * @param mp 
-   * @param args 
-   * @param intValue optional .min .max
+   * @param mp
+   * @param args
+   * @param intValue
+   *        optional .min .max
    * @return true if successful
-   * @throws ScriptException 
+   * @throws ScriptException
    */
 
   private boolean evaluateDotDist(ScriptMathProcessor mp, SV[] args,
@@ -933,7 +935,10 @@ public class MathExt {
     float f = Float.NaN;
     try {
       if (isDist) {
-        f = (plane1 == null ? (plane2 == null ? pt2.distance(pt1) : Measure
+        if (plane2 != null && args.length == 2) 
+          f = Measure.directedDistanceToPlane(pt1, plane2, SV.ptValue(args[1]));
+         else 
+          f = (plane1 == null ? (plane2 == null ? pt2.distance(pt1) : Measure
             .distanceToPlane(plane2, pt1)) : Measure.distanceToPlane(plane1,
             pt2));
       } else {
@@ -1013,8 +1018,6 @@ public class MathExt {
   
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
-    if (args.length == 0)
-      return false;
 
     // {*}.find("CF",true|false)
     // {*}.find("MF")
@@ -1031,7 +1034,8 @@ public class MathExt {
 
     SV x1 = mp.getX();
     boolean isList = (x1.tok == T.varray);
-    String sFind = SV.sValue(args[0]);
+    boolean isEmpty = (args.length == 0);
+    String sFind = (isEmpty ? "" : SV.sValue(args[0]));
     String flags = (args.length > 1 && args[1].tok != T.on
         && args[1].tok != T.off ? SV.sValue(args[1]) : "");
     boolean isSequence = !isList && sFind.equalsIgnoreCase("SEQUENCE");
@@ -1082,17 +1086,22 @@ public class MathExt {
                 (BS) x1.value, false,
                 (isMF ? null : vwr.ms.getCellWeights((BS) x1.value)), isON));
           if (isSequence)
-            return mp.addXStr(vwr.getSmilesOpt((BS) x1.value, -1, -1, 
-                JC.SMILES_BIO 
-                | (isAll ? JC.SMILES_BIO_ALLOW_UNMACHED_RINGS | JC.SMILES_BIO_CROSSLINK : 0)));
+            return mp.addXStr(vwr.getSmilesOpt((BS) x1.value, -1, -1,
+                JC.SMILES_BIO
+                    | (isAll ? JC.SMILES_BIO_ALLOW_UNMACHED_RINGS
+                        | JC.SMILES_BIO_CROSSLINK : 0)));
           if (isSmiles || isSearch)
             sFind = flags;
           BS bsMatch3D = bs2;
           if (asBonds) {
             // this will return a single match
-            int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
-                vwr.ms.at, vwr.ms.ac, (BS) x1.value, 
-                (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS) | JC.SMILES_RETURN_FIRST);
+            int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(
+                sFind,
+                vwr.ms.at,
+                vwr.ms.ac,
+                (BS) x1.value,
+                (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
+                    | JC.SMILES_RETURN_FIRST);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
             ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value,
@@ -1114,27 +1123,46 @@ public class MathExt {
     if (isList || isPattern) {
       JmolPatternMatcher pm = getPatternMatcher();
       Pattern pattern = null;
-      try {
-        pattern = (sFind.length() == 0 ? null : pm.compile(sFind, isCaseInsensitive));
-      } catch (Exception ex) {
-        e.evalError(ex.toString(), null);
-      }
-      String[] list = SV.strListValue(x1);
+      String[] list = null;
       Lst<SV> svlist = (isList ? x1.getList() : null);
+      if (sFind.length() > 0) {
+        try {
+          pattern = (sFind.length() == 0 ? null : pm.compile(sFind,
+              isCaseInsensitive));
+          list = SV.strListValue(x1);
+        } catch (Exception ex) {
+          e.evalError(ex.toString(), null);
+        }
+      }
+      int nlist = (list == null ? svlist.size() : list.length);
       if (Logger.debugging)
         Logger.debug("finding " + sFind);
       BS bs = new BS();
       int n = 0;
       Matcher matcher = null;
       Lst<String> v = (asMatch ? new Lst<String>() : null);
-      for (int i = 0; i < list.length; i++) {
-        String what = list[i];
+      String what = "";
+      for (int i = 0; i < nlist; i++) {
         boolean isMatch;
         if (pattern == null) {
-          isMatch = (what.length() != 0);
+          SV o = svlist.get(i);
+          switch (o.tok) {
+          case T.hash:
+            isMatch = (o.getMap().isEmpty() != isEmpty);
+            break;
+          case T.varray:
+            isMatch = ((o.getList().size() == 0) != isEmpty);
+            break;
+          case T.string:
+            isMatch = ((o.asString().length() == 0) != isEmpty);
+            break;
+          default:
+            isMatch = true;
+          }
         } else {
-        matcher = pattern.matcher(what);
-        isMatch = matcher.find();
+          what = list[i];
+          matcher = pattern.matcher(what);
+          isMatch = matcher.find();
         }
         if (asMatch && isMatch || !asMatch && isMatch == !isReverse) {
           n++;
@@ -1150,9 +1178,9 @@ public class MathExt {
                 .addXStr(n == 0 ? "" : matcher.group()) : mp.addXInt(n == 0 ? 0
                 : matcher.start() + 1));
       }
-   // removed in 14.2/3.14 -- not documented and not expected      if (n == 1)
-//    return mp.addXStr(asMatch ? (String) v.get(0) : list[ipt]);
-  
+      // removed in 14.2/3.14 -- not documented and not expected      if (n == 1)
+      //    return mp.addXStr(asMatch ? (String) v.get(0) : list[ipt]);
+
       if (asMatch) {
         String[] listNew = new String[n];
         if (n > 0)
@@ -1165,8 +1193,8 @@ public class MathExt {
       }
       Lst<SV> l = new Lst<SV>();
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-          l.addLast(svlist.get(i));
-      return mp.addXList(l);      
+        l.addLast(svlist.get(i));
+      return mp.addXList(l);
     }
     if (isSequence) {
       return mp.addXStr(vwr.getJBR().toStdAmino3(SV.sValue(x1)));

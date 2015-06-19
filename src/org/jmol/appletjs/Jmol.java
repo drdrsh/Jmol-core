@@ -230,7 +230,7 @@ public class Jmol extends GenericApplet implements JSInterface {
        *              o = o[tokens[i]];
        *            for (var i = 0; i < data.length; i++) 
        *              data[i] && data[i].booleanValue && (data[i] = data[i].booleanValue());
-       *            return o(data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]); 
+       *            return o.apply(null,data)
        *            } catch (e) { System.out.println(callback + " failed " + e); }
        */
       {

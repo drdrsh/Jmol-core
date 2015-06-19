@@ -849,8 +849,9 @@ public class SV extends T implements JSONEncodable {
     case string:
       break;
     default:
-      return ((tokenIn instanceof SV) && ((SV) tokenIn).myName != null ? newI(0)
-          .setv((SV) tokenIn) : tokenIn);
+      return ((tokenIn instanceof SV) && ((SV) tokenIn).myName != null 
+      ? newI(0).setv((SV) tokenIn) 
+          : tokenIn);
     }
 
     // negative number is a count from the end

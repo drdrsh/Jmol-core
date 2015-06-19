@@ -439,7 +439,7 @@ public class ShapeManager {
     ms.getAtomsInFrame(bs);
     Vibration[] vibrationVectors = ms.vibrations;
     boolean vibs = (vibrationVectors != null && tm.vibrationOn);
-    boolean checkOccupancy = (ms.bsModulated != null);
+    boolean checkOccupancy = (ms.bsModulated != null && ms.occupancies != null);
     Atom[] atoms = ms.at;
     int occ;
     boolean haveMods = false;

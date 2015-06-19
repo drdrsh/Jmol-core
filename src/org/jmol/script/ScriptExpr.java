@@ -522,7 +522,7 @@ abstract class ScriptExpr extends ScriptParam {
         if (!isWhere) {
           rpn.addX(SV.newT(theToken));
           break;
-        }
+        }//$FALL-THROUGH$
       default:
         if (theTok == T.leftsquare && tokAt(i + 2) == T.colon) {
           v = getAssocArray(i);
