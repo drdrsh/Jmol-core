@@ -94,7 +94,10 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
       elementLabel = PT.getTokens(discardLinesUntilNonBlank());
     String[] elementCounts;
     if (PT.parseInt(elementLabel[0]) == Integer.MIN_VALUE) {
+      atomsLabeledInline = false;
       elementCounts = PT.getTokens(rdline());
+      while (line != null && (elementCounts.length == 0 || parseIntStr(elementCounts[0]) == Integer.MIN_VALUE))
+        elementCounts = PT.getTokens(rdline());      
       //   6    24    18     6     6    24
     } else {
       elementCounts = elementLabel;
