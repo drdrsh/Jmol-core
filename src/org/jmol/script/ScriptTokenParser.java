@@ -100,7 +100,8 @@ abstract class ScriptTokenParser {
 
   protected boolean compileExpressions() {
     
-    boolean isScriptExpression = (tokCommand == T.script && tokAt(2) == T.leftparen);
+    boolean isScriptExpression = ((tokCommand == T.script || tokCommand == T.macro) 
+        && tokAt(2) == T.leftparen);
     isEmbeddedExpression = (isScriptExpression 
         || (tokCommand != T.nada
              && (tokCommand != T.function 

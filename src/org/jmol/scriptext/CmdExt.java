@@ -205,8 +205,7 @@ public class CmdExt extends ScriptExt {
       return;
     }
     showString("running " + macro);
-    macro = vwr.getFileAsString3(macro, false, null);
-    e.runScript(macro);
+    e.cmdScript(T.macro, macro, null);
   }
 
   /**

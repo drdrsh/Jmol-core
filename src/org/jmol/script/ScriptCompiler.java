@@ -794,7 +794,7 @@ public class ScriptCompiler extends ScriptTokenParser {
    * @return true if found
    */
   private boolean wasImpliedScript() {
-    if (nTokens >= 2 && tokCommand == T.script && checkImpliedScriptCmd) {
+    if (nTokens >= 2 && (tokCommand == T.script || tokCommand == T.macro) && checkImpliedScriptCmd) {
       String s = (nTokens == 2 ? lastToken.value.toString().toUpperCase()
           : null);
       if (nTokens > 2 ? !(tokAt(2) == T.leftparen && ltoken.get(1).value
@@ -983,7 +983,7 @@ public class ScriptCompiler extends ScriptTokenParser {
           && lastToken.tok != T.inline
           && (tokCommand == T.set && nTokens == 2
               && lastToken.tok == T.defaultdirectory || tokCommand == T.load
-              || tokCommand == T.background || tokCommand == T.script));
+              || tokCommand == T.background || tokCommand == T.script || tokCommand == T.macro));
       iHaveQuotedString = true;
       if ((tokCommand == T.load || tokCommand == T.cgo)
           && lastToken.tok == T.data || tokCommand == T.data
@@ -1079,6 +1079,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       //$FALL-THROUGH$
     case T.load:
     case T.script:
+    case T.macro:
     case T.getproperty:
       if (script.charAt(ichToken) == '@') {
         iHaveQuotedString = true;
@@ -1132,7 +1133,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       }
       if (!iHaveQuotedString
           && lookingAtImpliedString(tokCommand == T.show, tokCommand == T.load,
-              nTokens > 1 || tokCommand != T.script)) {
+              nTokens > 1 || tokCommand != T.script && tokCommand != T.macro)) {
         String str = script.substring(ichToken, ichToken + cchToken);
         if (tokCommand == T.script) {
           if (str.startsWith("javascript:")) {
@@ -1189,7 +1190,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     // cd echo goto help hover javascript label message pause
     // possibly script
     implicitString &= (nTokens == 1);
-    if (implicitString && !(tokCommand == T.script && iHaveQuotedString)
+    if (implicitString && !((tokCommand == T.script || tokCommand == T.macro) && iHaveQuotedString)
         && lookingAtImpliedString(true, true, true)) {
       String str = script.substring(ichToken, ichToken + cchToken);
       if (tokCommand == T.label
@@ -2458,7 +2459,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       case '(':
         if (!allowSptParen) {
           // script command
-          if (ichT >= 5
+          if(tokCommand == T.macro || ichT >= 5
               && (script.substring(ichT - 4, ichT).equals(".spt")
                   || script.substring(ichT - 4, ichT).equals(".png") || script
                   .substring(ichT - 5, ichT).equals(".pngj"))) {

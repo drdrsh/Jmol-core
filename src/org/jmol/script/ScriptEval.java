@@ -6199,9 +6199,16 @@ public class ScriptEval extends ScriptExpr {
   
   public void cmdScript(int tok, String filename, String theScript)
       throws ScriptException {
+    if (tok == T.javascript) {
+      checkLength(2);
+      if (!chk)
+        vwr.jsEval(paramAsStr(1));
+      return;
+    }
     boolean loadCheck = true;
     boolean isCheck = false;
     boolean doStep = false;
+    boolean isAsync = vwr.async;
     int lineNumber = 0;
     int pc = 0;
     int lineEnd = 0;
@@ -6212,19 +6219,15 @@ public class ScriptEval extends ScriptExpr {
     String scriptPath = null;
     Lst<SV> params = null;
 
-    if (tok == T.javascript) {
-      checkLength(2);
-      if (!chk)
-        vwr.jsEval(paramAsStr(1));
-      return;
+    if (tok == T.macro) {
+      i = -2;
     }
-    boolean isAsync = vwr.async;
     if (filename == null && theScript == null) {
       tok = tokAt(i);
       if (tok != T.string)
         error(ERROR_filenameExpected);
       filename = paramAsStr(i);
-      
+
       if (filename.equalsIgnoreCase("async")) {
         isAsync = true;
         filename = paramAsStr(++i);
@@ -6261,7 +6264,8 @@ public class ScriptEval extends ScriptExpr {
             remotePath = paramAsStr(++i);
           filename = paramAsStr(++i);
         }
-        if ((vwr.isJS || vwr.testAsync) && (isAsync || filename.startsWith("?"))) {
+        if ((vwr.isJS || vwr.testAsync)
+            && (isAsync || filename.startsWith("?"))) {
           filename = loadFileAsync("SCRIPT_", filename, i, true);
           // on first pass a ScriptInterruption will be thrown; 
           // on the second pass we will have the file name, which will be cache://local_n__m
@@ -6298,14 +6302,17 @@ public class ScriptEval extends ScriptExpr {
               invArg();
           }
         }
-        if (tokAt(i) == T.leftparen) {
-          params = parameterExpressionList(i, -1, false);
-          i = iToken + 1;
-        }
-        checkLength(doStep ? i + 1 : i);
+        i = -i;
       }
     } else if (filename != null && isAsync) {
-        filename = loadFileAsync("SCRIPT_", filename, i, true);
+      filename = loadFileAsync("SCRIPT_", filename, i, true);
+    }
+    if (i < 0) {
+      if (tokAt(i = -i) == T.leftparen) {
+        params = parameterExpressionList(i, -1, false);
+        i = iToken + 1;
+      }
+      checkLength(doStep ? i + 1 : i);
     }
 
     // processing
@@ -6337,7 +6344,8 @@ public class ScriptEval extends ScriptExpr {
           "_arguments",
           (params == null ? SV.getVariableAI(new int[] {}) : SV
               .getVariableList(params)));
-      contextVariables.put("_argcount", SV.newI(params == null ? 0 : params.size()));
+      contextVariables.put("_argcount",
+          SV.newI(params == null ? 0 : params.size()));
 
       if (isCheck)
         listCommands = true;
@@ -6346,7 +6354,7 @@ public class ScriptEval extends ScriptExpr {
         Logger.startTimer("script");
       dispatchCommands(false, false, false);
       if (isStateScript)
-        ScriptManager.setStateScriptVersion(vwr,  null);
+        ScriptManager.setStateScriptVersion(vwr, null);
       if (timeMsg)
         showString(Logger.getTimerMsg("script", 0));
       isCmdLine_C_Option = saveLoadCheck;
