@@ -202,7 +202,7 @@ public class _TachyonExporter extends __RayTracerExporter {
     tm.unTransformPoint(screenTip, tempP2);
     radius = vwr.tm.unscaleToScreen(screenBase.z, radius);
     M3 matRotateScale = getRotationMatrix(tempP1, tempP2, radius);
-    jmolRenderer.drawSurface(getConeMesh(tempP1, matRotateScale, colix), colix);
+    export3D.drawSurface(getConeMesh(tempP1, matRotateScale, colix), colix);
   }
 
   @Override

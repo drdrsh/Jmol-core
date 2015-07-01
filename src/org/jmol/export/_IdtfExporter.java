@@ -567,7 +567,7 @@ public class _IdtfExporter extends __CartesianExporter {
 
   private M4 cylinderMatrix = new M4();
 
-  private void outputEllipsoid(P3 center, M4 sphereMatrix, short colix) {
+  private void outputEllipsoid(T3 center, M4 sphereMatrix, short colix) {
     if (!haveSphere) {
       models.append(getSphereResource());
       haveSphere = true;
@@ -1015,7 +1015,7 @@ public class _IdtfExporter extends __CartesianExporter {
   }
   
   @Override
-  protected void outputSphere(P3 center, float radius, short colix, boolean checkRadius) {
+  protected void outputSphere(T3 center, float radius, short colix, boolean checkRadius) {
     setSphereMatrix(center, radius, radius, radius, null, sphereMatrix);
     outputEllipsoid(center, sphereMatrix, colix);
   }

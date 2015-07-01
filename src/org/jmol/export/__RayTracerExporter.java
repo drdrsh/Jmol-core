@@ -38,7 +38,7 @@ import org.jmol.util.GData;
 import org.jmol.viewer.Viewer;
 
 /*
- * for PovRay and related ray tracers that use screen coordinates
+ * for PovRay and Tachyon Exporters, which use screen coordinates
  * 
  * 
  */
@@ -96,7 +96,7 @@ abstract class __RayTracerExporter extends ___Exporter {
                                     short colix);
   
   abstract protected void outputTextPixel(int x, int y, int z, int argb);
-
+  
   abstract protected void outputTriangle(T3 ptA, T3 ptB, T3 ptC, short colix);
 
   abstract protected void outputCone(P3 screenBase, P3 screenTip, float radius,
@@ -151,7 +151,7 @@ abstract class __RayTracerExporter extends ___Exporter {
 
   @Override
   void drawTextPixel(int argb, int x, int y, int z) {
-    outputTextPixel(x, y, z, argb);
+    outputTextPixel(x, y, fixScreenZ(z), argb);
   }
     
   @Override

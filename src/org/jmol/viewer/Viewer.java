@@ -1,4 +1,4 @@
-/* $RCSfile$
+  /* $RCSfile$
  * $Author: hansonr $
  * $Date: 2014-02-02 22:24:37 -0600 (Sun, 02 Feb 2014) $
  * $Revision: 19253 $
@@ -3512,8 +3512,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    *         of Jmol-Android a canvas in the case of JSmol
    */
   private Object getImage(boolean isDouble, boolean isImageWrite) {
-    if (isWebGL)
-      return null;
     Object image = null;
     try {
       beginRendering(isDouble, isImageWrite);
@@ -3583,7 +3581,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   @Override
   public Object getScreenImageBuffer(Object graphic, boolean isImageWrite) {
     if (isWebGL)
-      return null;
+      return (isImageWrite ? apiPlatform.allocateRgbImage(0, 0, null, 0, false, true) : null);
     boolean mergeImages = (graphic == null && isStereoDouble());
     Object imageBuffer;
     if (tm.stereoMode.isBiColor()) {
@@ -3621,8 +3619,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   @Override
   public byte[] getImageAsBytes(String type, int width, int height,
                                 int quality, String[] errMsg) {
-    return (isWebGL ? null : getOutputManager().getImageAsBytes(type, width,
-        height, quality, errMsg));
+    return getOutputManager().getImageAsBytes(type, width, height, quality, errMsg);
   }
 
   @Override

@@ -138,7 +138,7 @@ public abstract class ___Exporter {
   protected Viewer vwr;
   protected TransformManager tm;
   protected double privateKey;
-  protected JmolRendererInterface jmolRenderer;
+  protected JmolRendererInterface export3D;
   protected OC out;
   protected String fileName;
   protected String commandLineOptions;
@@ -188,10 +188,6 @@ public abstract class ___Exporter {
   public ___Exporter() {
   }
 
-  void setRenderer(JmolRendererInterface jmolRenderer) {
-    this.jmolRenderer = jmolRenderer;
-  }
-  
   boolean initializeOutput(Viewer vwr, double privateKey, GData gdata,
                            Map<String, Object> params) {
     return initOutput(vwr, privateKey, gdata, params);
@@ -310,7 +306,7 @@ public abstract class ___Exporter {
       Logger.info(ret);
       return "ERROR EXPORTING FILE: " + ret;
     }
-    return "OK " + out.getByteCount() + " " + jmolRenderer.getExportName() + " " + fileName ;
+    return "OK " + out.getByteCount() + " " + export3D.getExportName() + " " + fileName ;
   }
 
   protected String getExportDate() {
@@ -571,12 +567,14 @@ public abstract class ___Exporter {
   private int nImage;
   public short lineWidthMad;
 
+  protected int fixScreenZ(int z) {
+    return (z <= 3 ? z + (int) tm.cameraDistance : z);
+  }
+
   void plotImage(int x, int y, int z, Object image, short bgcolix, int width,
                  int height) {
-    if (z < 3)
-      z = (int) tm.cameraDistance;
     outputComment("start image " + (++nImage));
-    gdata.plotImage(x, y, z, image, jmolRenderer, bgcolix, width, height);
+    gdata.plotImage(x, y, z, image, export3D, bgcolix, width, height);
     outputComment("end image " + nImage);
   }
 
@@ -585,10 +583,8 @@ public abstract class ___Exporter {
     // trick here is that we use Jmol's standard g3d package to construct
     // the bitmap, but then output to jmolRenderer, which returns control
     // here via drawPixel.
-    if (z < 3)
-      z = (int) tm.cameraDistance;
     outputComment("start text " + (++nText) + ": " + text);
-    gdata.plotText(x, y, z, gdata.getColorArgbOrGray(colix), 0, text, font3d, jmolRenderer);
+    gdata.plotText(x, y, z, gdata.getColorArgbOrGray(colix), 0, text, font3d, export3D);
     outputComment("end text " + nText + ": " + text);
   }
 

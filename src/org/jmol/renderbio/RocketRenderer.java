@@ -118,7 +118,7 @@ public class RocketRenderer {
       tm.transformPt3f(pointStart, screenA);
       tm.transformPt3f((renderArrowHead ? pointBeforeEnd : pointEnd), screenB);
       int zMid = (int) Math.floor((screenA.z + screenB.z) / 2f);
-      int diameter = (int) vwr.tm.scaleToScreen(zMid, mad);
+      int diameter = ((int) vwr.tm.scaleToScreen(zMid, mad));
       if (!renderArrowHead || pointStart != pointBeforeEnd)
         g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, screenA, screenB);
       if (renderArrowHead) {

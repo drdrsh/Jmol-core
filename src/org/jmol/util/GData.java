@@ -537,6 +537,26 @@ public class GData implements JmolGraphicsInterface {
   public void clearFontCache() {
   }
 
+  public void drawQuadrilateralBits(JmolRendererInterface jmolRenderer, short colix, P3 screenA, P3 screenB,
+                                    P3 screenC, P3 screenD) {
+    //mesh only -- translucency has been checked
+    jmolRenderer.drawLineBits(colix, colix, screenA, screenB);
+    jmolRenderer.drawLineBits(colix, colix, screenB, screenC);
+    jmolRenderer.drawLineBits(colix, colix, screenC, screenD);
+    jmolRenderer.drawLineBits(colix, colix, screenD, screenA);
+  }
+
+  public void drawTriangleBits(JmolRendererInterface renderer, P3 screenA, short colixA, P3 screenB,
+                               short colixB, P3 screenC, short colixC, int check) {
+    // primary method for mapped Mesh
+    if ((check & 1) == 1)
+      renderer.drawLineBits(colixA, colixB, screenA, screenB);
+    if ((check & 2) == 2)
+      renderer.drawLineBits(colixB, colixC, screenB, screenC);
+    if ((check & 4) == 4)
+      renderer.drawLineBits(colixC, colixA, screenC, screenA);
+  }
+
   /**
    * @param x  
    * @param y 

@@ -1013,7 +1013,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
    *        pixel count
    */
   @Override
-  public void fillRect(int x, int y, int z, int zSlab, int widthFill,
+  public void fillTextRect(int x, int y, int z, int zSlab, int widthFill,
                        int heightFill) {
     // hover and labels only -- slab at atom or front -- simple Z/window clip
     if (isClippedZ(zSlab))
@@ -2068,28 +2068,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       mergeBufferPixel(pbuf, offset, bgargb, bgcolor);
     mergeBufferPixel(pbuf, offset, (argb & 0xFFFFFF) | shade << 24, bgcolor);
     zbuf[offset] = z;
-  }
-
-  @Override
-  public void drawQuadrilateralBits(short colix, P3 screenA, P3 screenB,
-                                    P3 screenC, P3 screenD) {
-    //mesh only -- translucency has been checked
-    drawLineBits(colix, colix, screenA, screenB);
-    drawLineBits(colix, colix, screenB, screenC);
-    drawLineBits(colix, colix, screenC, screenD);
-    drawLineBits(colix, colix, screenD, screenA);
-  }
-
-  @Override
-  public void drawTriangleBits(P3 screenA, short colixA, P3 screenB,
-                               short colixB, P3 screenC, short colixC, int check) {
-    // primary method for mapped Mesh
-    if ((check & 1) == 1)
-      drawLineBits(colixA, colixB, screenA, screenB);
-    if ((check & 2) == 2)
-      drawLineBits(colixB, colixC, screenB, screenC);
-    if ((check & 4) == 4)
-      drawLineBits(colixA, colixC, screenA, screenC);
   }
 
 }

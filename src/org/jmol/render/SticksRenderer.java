@@ -44,7 +44,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private float multipleBondSpacing;
   private float multipleBondRadiusFactor;
   private byte modeMultipleBond;
-  private boolean isCartesianExport;
+  private boolean isCartesian;
   //boolean showHydrogens;
   private byte endcaps;
 
@@ -85,7 +85,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     slabByAtom = vwr.getBoolean(T.slabbyatom);
     endcaps = GData.ENDCAPS_SPHERICAL;
     dashDots = (vwr.getBoolean(T.partialdots) ? sixdots : dashes);
-    isCartesianExport = (exportType == GData.EXPORT_CARTESIAN);
+    isCartesian = (exportType == GData.EXPORT_CARTESIAN);
     getMultipleBondSettings(false);
     wireframeOnly = !vwr.checkMotionRendering(T.bonds);
     ssbondsBackbone = vwr.getBoolean(T.ssbondsbackbone);
@@ -121,7 +121,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private void getMultipleBondSettings(boolean isPymol) {
     multipleBondSpacing = (isPymol ? 0.15f :vwr.getFloat(T.multiplebondspacing));
     multipleBondRadiusFactor = (isPymol ? 0.4f : vwr.getFloat(T.multiplebondradiusfactor));    
-    if (multipleBondSpacing == 0 && isCartesianExport)
+    if (multipleBondSpacing == 0 && isCartesian)
       multipleBondSpacing = 0.2f;
     modeMultipleBond = vwr.g.modeMultipleBond;
     showMultipleBonds = (multipleBondSpacing != 0
@@ -266,7 +266,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     width = (int) vwr.tm.scaleToScreen((zA + zB) / 2, mad);
     if (wireframeOnly && width > 0)
       width = 1;
-    if (!isCartesianExport) {
+    if (!isCartesian) {
       asLineOnly = (width <= 1);
       if (asLineOnly && (isAntialiased)) {
         width = 3;
@@ -292,7 +292,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
   }
     
   private void drawBond(int dottedMask) {
-    if (isCartesianExport && bondOrder == 1) {
+    if (isCartesian && bondOrder == 1) {
       // bypass screen rendering and just use the atoms themselves
       g3d.drawBond(a, b, colixA, colixB, endcaps, mad, -1);
       return;
@@ -341,7 +341,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
       p1.sub2(a, x);
       p2.sub2(b, x);
       while (true) {
-        if (isCartesianExport && !isDashed) {
+        if (isCartesian && !isDashed) {
           // bypass screen rendering and just use the atoms themselves
           g3d.drawBond(p1, p2, colixA, colixB, endcaps, mad, -2);
         } else {

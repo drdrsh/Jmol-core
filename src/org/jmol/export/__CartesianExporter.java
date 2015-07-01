@@ -195,7 +195,7 @@ abstract public class __CartesianExporter extends ___Exporter {
   abstract protected void outputEllipsoid(P3 center, P3[] points,
                                           short colix);
 
-  abstract protected void outputSphere(P3 ptAtom2, float f, short colix, boolean checkRadius);
+  abstract protected void outputSphere(T3 ptAtom2, float f, short colix, boolean checkRadius);
 
   abstract protected void outputTextPixel(P3 pt, int argb);
 
@@ -213,13 +213,14 @@ abstract public class __CartesianExporter extends ___Exporter {
     // the bitmap, but then output to jmolRenderer, which returns control
     // here via drawPixel.
     gdata.plotText(x, y, z, gdata.getColorArgbOrGray(colix), 0, text,
-        font3d, jmolRenderer);
+        font3d, export3D);
   }
 
   @Override
   void plotImage(int x, int y, int z, Object image, short bgcolix, int width,
                  int height) {
-    gdata.plotImage(x, y, z, image, jmolRenderer, bgcolix, width, height);
+    // not implemented in VRML
+    //    gdata.plotImage(x, y, z, image, jmolRenderer, bgcolix, width, height);
   }
 
   @Override
@@ -264,7 +265,7 @@ abstract public class __CartesianExporter extends ___Exporter {
 
   @Override
   void drawTextPixel(int argb, int x, int y, int z) {
-    // text only
+    // text only - HLine and VLine and plotImagePixel
     tempP3.set(x, y, z);
     tm.unTransformPoint(tempP3, tempP1);
     outputTextPixel(tempP1, argb);

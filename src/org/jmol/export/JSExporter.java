@@ -115,7 +115,7 @@ public class JSExporter extends __CartesianExporter {
    * @param pt 
    * @param o 
    */
-  private void jsSphere(Object applet, String id, boolean isNew, P3 pt,
+  private void jsSphere(Object applet, String id, boolean isNew, T3 pt,
                         Object[] o) {
     // implemented in JavaScript only
   }
@@ -172,7 +172,7 @@ public class JSExporter extends __CartesianExporter {
   }
 
 @Override
-  protected void outputSphere(P3 ptCenter, float radius, short colix,
+  protected void outputSphere(T3 ptCenter, float radius, short colix,
                               boolean checkRadius) {
     int iRad = Math.round(radius * 100);
     String check = round(ptCenter) + (checkRadius ? " " + iRad : "");

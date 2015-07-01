@@ -152,7 +152,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
         vwr.gdata.setColor(colors[i]);
         break;
       }
-      g3d.fillRect(x, y, 5, Integer.MIN_VALUE, dx, dy);
+      g3d.fillTextRect(x, y, 5, Integer.MIN_VALUE, dx, dy);
     }
     isosurface.keyXy[1] = (y + dy) / factor;
   }

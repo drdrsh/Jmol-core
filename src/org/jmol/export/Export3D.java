@@ -59,6 +59,8 @@ public class Export3D implements JmolRendererInterface {
 
   private boolean isWebGL;
 
+  private boolean isCartesian;
+
   public Export3D() {
     // by reflection
   }
@@ -70,8 +72,9 @@ public class Export3D implements JmolRendererInterface {
     isWebGL = exportName.equals("JS");
     if ((exporter = (___Exporter) Interface.getOption("export." + (isWebGL ? "" : "_") + exportName + "Exporter", vwr, "export")) == null)
       return null;
+    exporter.export3D = this;
+    isCartesian = (exporter.exportType == GData.EXPORT_CARTESIAN);
     this.gdata = gdata;
-    exporter.setRenderer(this);
     gdata.setNewWindowParametersForExport();
     slab = gdata.slab;
     width = gdata.width;
@@ -118,7 +121,7 @@ public class Export3D implements JmolRendererInterface {
 
   @Override
   public void renderBackground(JmolRendererInterface me) {
-    if (exporter.exportType == GData.EXPORT_RAYTRACER)
+    if (!isCartesian)
       gdata.renderBackground(me);
   }
 
@@ -175,7 +178,6 @@ public class Export3D implements JmolRendererInterface {
 
   private void drawHLine(int x, int y, int z, int w) {
     // hover, labels only
-    //OVERRIDDED IN JS
     int argbCurrent = gdata.getColorArgbOrGray(colix);
     if (w < 0) {
       x += w;
@@ -194,7 +196,6 @@ public class Export3D implements JmolRendererInterface {
    */
   private void drawVLine(int x, int y, int z, int h) {
     // hover, labels only
-    // OVERRIDDED IN JS
     int argbCurrent = gdata.getColorArgbOrGray(colix);
     if (h < 0) {
       y += h;
@@ -304,9 +305,8 @@ public class Export3D implements JmolRendererInterface {
    */
   @Override
   public void fillSphereBits(int diameter, P3 center) {
-    if (diameter == 0)
-      return;
-    exporter.fillSphere(colix, diameter, center);
+    if (diameter != 0)
+      exporter.fillSphere(colix, diameter, center);
   }
 
   /**
@@ -327,11 +327,12 @@ public class Export3D implements JmolRendererInterface {
    *        pixel count
    */
   @Override
-  public void fillRect(int x, int y, int z, int zSlab, int widthFill,
+  public void fillTextRect(int x, int y, int z, int zSlab, int widthFill,
                        int heightFill) {
     // hover and labels only -- slab at atom or front -- simple Z/window clip
-    if (gdata.isClippedZ(zSlab))
+    if (isCartesian || gdata.isClippedZ(zSlab))
       return;
+    z = exporter.fixScreenZ(z);
     ptA.set(x, y, z);
     ptB.set(x + widthFill, y, z);
     ptC.set(x + widthFill, y + heightFill, z);
@@ -400,9 +401,7 @@ public class Export3D implements JmolRendererInterface {
   @Override
   public void drawImage(Object objImage, int x, int y, int z, int zSlab,
                         short bgcolix, int width, int height) {
-    if (objImage == null || width == 0 || height == 0)
-      return;
-    if (gdata.isClippedZ(zSlab))
+    if (isCartesian || objImage == null || width == 0 || height == 0 || gdata.isClippedZ(zSlab))
       return;
     z = Math.max(slab, z);
     exporter.plotImage(x, y, z, objImage, bgcolix, width, height);
@@ -568,7 +567,12 @@ public class Export3D implements JmolRendererInterface {
   public void fillCylinderBits(byte endcaps, int diameter, P3 pointA, P3 pointB) {
     if (diameter <= 0)
       return;
-    exporter.fillCylinderScreenMad(colix, endcaps, diameter, pointA, pointB);
+    // diameter is in screen coordinates.
+    if (isCartesian) {
+      exporter.fillCylinderScreen(colix, endcaps, diameter, pointA, pointB, null, null, 0);
+    } else {
+      exporter.fillCylinderScreenMad(colix, endcaps, diameter, pointA, pointB);
+    }
   }
 
   @Override
@@ -607,18 +611,8 @@ public class Export3D implements JmolRendererInterface {
           screenC.y, screenC.z);
   }
 
-  @Override
-  public void drawTriangleBits(P3 screenA, short colixA, P3 screenB,
-                               short colixB, P3 screenC, short colixC, int check) {
-    // primary method for mapped Mesh
-    int mad = exporter.lineWidthMad;
-    byte endcaps = GData.ENDCAPS_FLAT;
-    if ((check & 1) == 1)
-      exporter.drawCylinder(screenA, screenB, colixA, colixB, endcaps, mad, 1);
-    if ((check & 2) == 2)
-      exporter.drawCylinder(screenB, screenC, colixB, colixC, endcaps, mad, 1);
-    if ((check & 4) == 4)
-      exporter.drawCylinder(screenA, screenC, colixA, colixC, endcaps, mad, 1);
+  public void drawLineBits(P3 screenA, P3 screenB, short colixA, short colixB) {
+    exporter.drawCylinder(screenA, screenB, colixA, colixB, GData.ENDCAPS_FLAT, exporter.lineWidthMad, 1);
   }
 
   @Override
@@ -680,15 +674,8 @@ public class Export3D implements JmolRendererInterface {
    */
 
   @Override
-  public void drawQuadrilateralBits(short colix, P3 screenA, P3 screenB,
-                                    P3 screenC, P3 screenD) {
-    setC(colix);
-    fillQuadrilateral(screenA, screenB, screenC, screenD);
-  }
-
-  @Override
   public void fillQuadrilateral(P3 pointA, P3 pointB, P3 pointC, P3 pointD) {
-    // hermite, rockets, cartoons
+    // hermite, rockets, cartoons, labels
     exporter.fillTriangle(colix, pointA, pointB, pointC, false);
     exporter.fillTriangle(colix, pointA, pointC, pointD, false);
   }
@@ -754,17 +741,17 @@ public class Export3D implements JmolRendererInterface {
 
   @Override
   public boolean isInDisplayRange(int x, int y) {
-    return (exporter.exportType == GData.EXPORT_CARTESIAN || gdata.isInDisplayRange(x, y));
+    return (isCartesian || gdata.isInDisplayRange(x, y));
   }
 
   public int clipCode(int x, int y, int z) {
-    return (exporter.exportType == GData.EXPORT_CARTESIAN ? gdata.clipCode(z)
+    return (isCartesian ? gdata.clipCode(z)
         : gdata.clipCode3(x, y, z));
   }
 
   @Override
   public boolean isClippedXY(int diameter, int x, int y) {
-    return (exporter.exportType != GData.EXPORT_CARTESIAN && gdata.isClippedXY(diameter, x, y));
+    return (!isCartesian && gdata.isClippedXY(diameter, x, y));
   }
 
   public boolean isClipped(int x, int y, int z) {
@@ -772,7 +759,7 @@ public class Export3D implements JmolRendererInterface {
   }
 
   protected boolean isClipped(int x, int y) {
-    return (exporter.exportType != GData.EXPORT_CARTESIAN && gdata.isClipped(x, y));
+    return (!isCartesian && gdata.isClipped(x, y));
   }
 
   public double getPrivateKey() {
@@ -843,6 +830,5 @@ public class Export3D implements JmolRendererInterface {
     }
     gdata.renderAllStrings(this);
   }
-
 
 }

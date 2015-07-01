@@ -134,7 +134,7 @@ class TextRenderer {
                               int x, int y, int z, int zSlab,
                               int boxWidth, int boxHeight,
                               float imageFontScaling, boolean atomBased) {
-    g3d.fillRect(x, y, z, zSlab, boxWidth, boxHeight);
+    g3d.fillTextRect(x, y, z, zSlab, boxWidth, boxHeight);
     g3d.setC(colix);
     if (!atomBased)
       return;

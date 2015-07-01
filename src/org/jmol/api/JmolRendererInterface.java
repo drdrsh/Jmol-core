@@ -75,10 +75,6 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
 
   public abstract void drawPoints(int count, int[] coordinates, int scale);
 
-  public abstract void drawQuadrilateralBits(short colix, P3 screenA,
-                                         P3 screenB, P3 screenC,
-                                         P3 screenD);
-
   /**
    * draws a rectangle
    * 
@@ -142,13 +138,9 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
 
   public abstract void drawSurface(MeshSurface meshSurface, short colix);
 
- public abstract void drawTriangle3C(P3i screenA, short colixA,
+  public abstract void drawTriangle3C(P3i screenA, short colixA,
                                     P3i screenB, short colixB,
                                     P3i screenC, short colixC, int check);
-
- public abstract void drawTriangleBits(P3 screenA, short colixA,
-                                     P3 screenB, short colixB,
-                                     P3 screenC, short colixC, int check);
 
   public abstract void fillConeScreen3f(byte endcap, int screenDiameter,
                                      P3 screenBase, P3 screenTip, boolean isBarb);
@@ -201,7 +193,7 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
    * @param heightFill
    *        pixel count
    */
-  public abstract void fillRect(int x, int y, int z, int zSlab, int widthFill,
+  public abstract void fillTextRect(int x, int y, int z, int zSlab, int widthFill,
                                 int heightFill);
 
   /**

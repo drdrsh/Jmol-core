@@ -278,7 +278,7 @@ public class _X3dExporter extends _VrmlExporter {
   }
 
   @Override
-  protected void outputSphereChildUnscaled(P3 center, float radius, short colix) {
+  protected void outputSphereChildUnscaled(T3 center, float radius, short colix) {
     output("<Transform translation='");
     output(center);
     output("'>\n<Shape ");
@@ -388,53 +388,44 @@ public class _X3dExporter extends _VrmlExporter {
 
   @Override
   protected void outputTextPixel(P3 pt, int argb) {
-    // text only
-    String color = rgbFractionalFromArgb(argb);
-    output("<Transform translation='");
-    output(pt);
-    output("'>\n<Shape ");
-    String child = useTable.getDef("p" + argb);
-    if (child.charAt(0) == '_') {
-      output("DEF='" + child + "'>");
-      output("<Sphere radius='0.01'/>");
-      output("<Appearance><Material diffuseColor='0 0 0' specularColor='0 0 0'"
-        + " ambientIntensity='0.0' shininess='0.0' emissiveColor='" 
-        + color + "'/></Appearance>'");
-    } else {
-      output(child + ">");
-    }
-    output("</Shape>\n");
-    output("</Transform>\n");
+//    // text only
+//    String color = rgbFractionalFromArgb(argb);
+//    output("<Transform translation='");
+//    output(pt);
+//    output("'>\n<Shape ");
+//    String child = useTable.getDef("p" + argb);
+//    if (child.charAt(0) == '_') {
+//      output("DEF='" + child + "'>");
+//      output("<Sphere radius='0.01'/>");
+//      output("<Appearance><Material diffuseColor='0 0 0' specularColor='0 0 0'"
+//        + " ambientIntensity='0.0' shininess='0.0' emissiveColor='" 
+//        + color + "'/></Appearance>'");
+//    } else {
+//      output(child + ">");
+//    }
+//    output("</Shape>\n");
+//    output("</Transform>\n");
   }
 
   @Override
   void plotText(int x, int y, int z, short colix, String text, Font font3d) {
-    if (z < 3)
-      z = (int) tm.cameraDistance;
-    String useFontStyle = font3d.fontStyle.toUpperCase();
-    String preFontFace = font3d.fontFace.toUpperCase();
-    String useFontFace = (preFontFace.equals("MONOSPACED") ? "TYPEWRITER"
-        : preFontFace.equals("SERIF") ? "SERIF" : "SANS");
     output("<Transform translation='");
-    tempP3.set(x, y, z);
-    tm.unTransformPoint(tempP3, tempP1);
-    output(tempP1);
+    output(setFont(x, y, z, colix, text, font3d));
     output("'>");
     // These x y z are 3D coordinates of echo or the atom the label is attached
     // to.
     output("<Billboard ");
-    String child = useTable.getDef("T" + colix + useFontFace + useFontStyle + "_" + text);
-    if (child.charAt(0) == '_') {
-      output("DEF='" + child + "' axisOfRotation='0 0 0'>"
+    if (fontChild.charAt(0) == '_') {
+      output("DEF='" + fontChild + "' axisOfRotation='0 0 0'>"
         + "<Transform translation='0.0 0.0 0.0'>"
         + "<Shape>");
       outputAppearance(colix, true);
       output("<Text string=" + PT.esc(text) + ">");
       output("<FontStyle ");
-      String fontstyle = useTable.getDef("F" + useFontFace + useFontStyle);
+      String fontstyle = useTable.getDef("F" + fontFace + fontStyle);
       if (fontstyle.charAt(0) == '_') {
-        output("DEF='" + fontstyle + "' size='0.4' family='" + useFontFace
-            + "' style='" + useFontStyle + "'/>");      
+        output("DEF='" + fontstyle + "' size='"+fontSize+"' family='" + fontFace
+            + "' style='" + fontStyle + "'/>");      
       } else {
         output(fontstyle + "/>");
       }
@@ -442,7 +433,7 @@ public class _X3dExporter extends _VrmlExporter {
       output("</Shape>");
       output("</Transform>");
     } else {
-      output(child + ">");
+      output(fontChild + ">");
     }
     output("</Billboard>\n");
     output("</Transform>\n");

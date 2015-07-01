@@ -116,7 +116,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
       invalidateMesh = true;
     isHighRes = TF;
 
-    TF = !wireframeOnly && vwr.getBoolean(T.cartoonsfancy);
+    TF = !wireframeOnly && (vwr.getBoolean(T.cartoonsfancy) || isExport);
     if (cartoonsFancy != TF) {
       invalidateMesh = true;
       cartoonsFancy = TF;
@@ -124,7 +124,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
     int val1 = vwr.getHermiteLevel();
     val1 = (val1 <= 0 ? -val1 : vwr.getInMotion(true) ? 0 : val1);
     if (cartoonsFancy && !wireframeOnly)
-      val1 = Math.max(val1, 3); // at least HermiteLevel 3 for "cartoonFancy"
+      val1 = Math.max(val1, 3); // at least HermiteLevel 3 for "cartoonFancy" and 
     //else if (val1 == 0 && exportType == GData.EXPORT_CARTESIAN)
       //val1 = 5; // forces hermite for 3D exporters
     if (val1 != hermiteLevel)// && val1 != 0)
@@ -481,7 +481,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
     g3d.setC(colix);
     if (ribbonBorder && aspectRatio == 0) {
       g3d.fillCylinderBits(GData.ENDCAPS_SPHERICAL,
-          (exportType == GData.EXPORT_CARTESIAN ? 50 : 3), //may not be right 0.05 
+          3,  
           screenArrowTop, screenArrowBot);
     }
   }

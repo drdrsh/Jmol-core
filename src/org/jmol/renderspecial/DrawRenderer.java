@@ -122,7 +122,7 @@ public class DrawRenderer extends MeshRenderer {
     boolean isCurved = ((drawType == EnumDrawType.CURVE
         || drawType == EnumDrawType.ARROW || drawType == EnumDrawType.ARC) && vertexCount > 2);
     boolean isSegments = (drawType == EnumDrawType.LINE_SEGMENT);
-    if (width > 0 && isCurved) {
+    if (width > 0 && isCurved || drawType == EnumDrawType.ARROW) {
       pt1f.set(0, 0, 0);
       int n = (drawType == EnumDrawType.ARC ? 2 : vertexCount);
       for (int i = 0; i < n; i++)

@@ -26,6 +26,7 @@ package org.jmol.render;
 
 
 import org.jmol.api.SymmetryInterface;
+import org.jmol.g3d.Graphics3D;
 import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
@@ -449,7 +450,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
           }
           continue;
         }
-        g3d.drawQuadrilateralBits(colix, p3Screens[iA], p3Screens[iB],
+        vwr.gdata.drawQuadrilateralBits(g3d, colix, p3Screens[iA], p3Screens[iB],
             p3Screens[iC], p3Screens[iD]);
       }
     }
@@ -460,7 +461,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
   private void drawTriangleBits(P3 screenA, short colixA, P3 screenB, short colixB,
                                 P3 screenC, short colixC, int check, int diam) {
     if (!antialias && diam == 1) {
-      g3d.drawTriangleBits(screenA, colixA, screenB, colixB, screenC, colixC,
+     vwr.gdata.drawTriangleBits(g3d, screenA, colixA, screenB, colixB, screenC, colixC,
           check);
       return;
     }
@@ -519,12 +520,10 @@ public abstract class MeshRenderer extends ShapeRenderer {
       if (exportType == GData.EXPORT_CARTESIAN) {
         pt1f.ave(vA, vB);
         tm.transformPtScr(pt1f, pt1i);
-        diameter = (int) Math
-            .floor(vwr.tm.unscaleToScreen(pt1i.z, diameter) * 1000);
       }
       if (iA == iB) {
         if (isPrecision) {
-          pt1f.set(sA.x,  sA.y,  sA.z);
+          pt1f.set(sA.x, sA.y, sA.z);
           g3d.fillSphereBits(diameter, pt1f);
         } else {
           g3d.fillSphereI(diameter, pt1i);
@@ -539,8 +538,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       pt1f.ave(vA, vB);
       tm.transformPtScr(pt1f, pt1i);
       int mad = (int) Math.floor(Math.abs(width) * 1000);
-      diameter = (int) (exportType == GData.EXPORT_CARTESIAN ? mad : vwr.tm
-          .scaleToScreen(pt1i.z, mad));
+      diameter = (int) (vwr.tm.scaleToScreen(pt1i.z, mad));
     }
     if (diameter == 0)
       diameter = 1;

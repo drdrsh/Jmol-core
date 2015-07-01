@@ -138,7 +138,7 @@ public class _MayaExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputSphere(P3 pt, float radius, short colix, boolean checkRadius) {
+  protected void outputSphere(T3 pt, float radius, short colix, boolean checkRadius) {
     //String color = rgbFromColix(colix);
     nBalls++;
     name = "nurbsSphere" + nBalls;

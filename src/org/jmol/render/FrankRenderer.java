@@ -57,7 +57,7 @@ public class FrankRenderer extends ShapeRenderer {
         vwr.gdata.height - dy, 0, (short) 0);
     if (modelKitMode) {
       //g3d.setColix(GData.GRAY);
-      g3d.fillRect(0, 0, 0, 0, dy * 2, dx * 3 / 2);
+      g3d.fillTextRect(0, 0, 0, 0, dy * 2, dx * 3 / 2);
     }
     return false;
   }

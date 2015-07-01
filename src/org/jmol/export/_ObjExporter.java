@@ -249,7 +249,7 @@ public class _ObjExporter extends __CartesianExporter {
    * @see org.jmol.export.__CartesianExporter#outputSphere(javax.vecmath.Point3f, float, short)
    */
   @Override
-  protected void outputSphere(P3 center, float radius, short colix, boolean checkRadius) {
+  protected void outputSphere(T3 center, float radius, short colix, boolean checkRadius) {
     // Note center is called ptAtom2 in the _CartesianExporter superclass
     // Note radius is called f in the _CartesianExporter superclass
     // Atom extends Point3fi extends Point3f, so this may be passed an Atom
@@ -277,14 +277,11 @@ public class _ObjExporter extends __CartesianExporter {
    */
   @Override
   protected void outputTextPixel(P3 pt, int argb) {
-    debugPrint("outputTextPixel");
-    if (surfacesOnly) {
-      debugPrint("  Not done owing to surfacesOnly");
-      return;
-    }
-
-    short colix = C.getColix(argb);
-    outputSphere(pt, pixelSize, colix, true);
+//    if (surfacesOnly) {
+//      return;
+//    }
+//    short colix = C.getColix(argb);
+//    outputSphere(pt, pixelSize, colix, true);
   }
 
   /* (non-Javadoc)
@@ -293,12 +290,9 @@ public class _ObjExporter extends __CartesianExporter {
   @Override
   protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3,
                                 short colix) {
-    debugPrint("outputTriangle");
     if (surfacesOnly) {
-      debugPrint("  Not done owing to surfacesOnly");
       return;
     }
-
     outputTriangle1(pt1, pt2, pt3, colix);
   }
 
@@ -597,7 +591,7 @@ public class _ObjExporter extends __CartesianExporter {
    * @param a
    * @param colix
    */
-  private void outputEllipsoid1(P3 center, float rx, float ry, float rz,
+  private void outputEllipsoid1(T3 center, float rx, float ry, float rz,
                                 A4 a, short colix) {
     MeshSurface data = MeshSurface.getSphereData(3);
     addTexture(colix, null);  

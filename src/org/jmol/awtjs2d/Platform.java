@@ -45,14 +45,21 @@ public class Platform implements GenericPlatform {
 	   * @j2sNative
 	   * 
      *     this.vwr = vwr;
-     *     this.canvas = canvas;
-     *     if (canvas != null) {
+     *     if (canvas == null) {
+     *       canvas = document.createElement('canvas');
+     *       this.context = canvas.getContext("2d");
+     *     } else {
 	   *       this.context = canvas.getContext("2d");
 	   *       canvas.imgdata = this.context.getImageData(0, 0, canvas.width, canvas.height);
 	   *       canvas.buf8 = canvas.imgdata.data;
 	   *     }
+     *     this.canvas = canvas;
 	   */
-	  {}
+	  {
+	    this.vwr = null;
+	    this.canvas = null;
+	    context = null;
+	  }
 		//
 		try {
 		  URL.setURLStreamHandlerFactory(new AjaxURLStreamHandlerFactory());
@@ -196,9 +203,23 @@ public class Platform implements GenericPlatform {
 
 	// //// Image
 
+	/**
+	 * Create an "image" that is either a canvas with width/height/buf32 
+	 * (from g3d.Platform32) or just an associative array with those (image writing
+	 */
 	@Override
   public Object allocateRgbImage(int windowWidth, int windowHeight,
 			int[] pBuffer, int windowSize, boolean backgroundTransparent, boolean isImageWrite) {
+	  if (pBuffer == null) {
+      pBuffer = grabPixels(null, 0, 0, null, 0, 0);
+      /**
+       * @j2sNative
+       * 
+       * windowWidth = this.canvas.width;
+       * windowHeight = this.canvas.height;
+       */
+      {}
+    }
 		return Image.allocateRgbImage(windowWidth, windowHeight, pBuffer,
 				windowSize, backgroundTransparent, (isImageWrite ? null : canvas));
 	}
@@ -212,35 +233,51 @@ public class Platform implements GenericPlatform {
 	  // N/A
 	}
 
-	@Override
-  public int[] grabPixels(Object canvas, int width, int height, 
-                          int[] pixels, int startRow, int nRows) {
-	  // from PNG and GIF and JPG image creators, also g3d.ImageRenderer.plotImage via drawImageToBuffer
-	  
-	  /**
-	   * 
-	   * (might be just an object with buf32 defined -- WRITE IMAGE)
-	   * 
-	   * @j2sNative
-	   * 
-	   *     if (canvas.image && (width != canvas.width || height != canvas.height))
-     *       Jmol._setCanvasImage(canvas, width, height);
-	   *     if (canvas.buf32) return canvas.buf32;
-	   */
-	  {
-	    // placeholder for Eclipse referencing
-	    Jmol()._setCanvasImage(canvas, width, height);
-	  }
-    int[] buf = Image.grabPixels(Image.getGraphics(canvas), width, height); 
+  @Override
+  public int[] grabPixels(Object canvas, int width, int height, int[] pixels,
+                          int startRow, int nRows) {
+    // from PNG and GIF and JPG image creators, also g3d.ImageRenderer.plotImage via drawImageToBuffer
+    Object context2d = null;
+    boolean isWebGL = (canvas == null);
+    /**
+     * 
+     * (might be just an object with buf32 defined -- WRITE IMAGE)
+     * 
+     * @j2sNative
+     * 
+     *            if(isWebGL) { this.canvas = canvas =
+     *            Jmol._loadImage(this,"webgl",""
+     *            +System.currentTimeMillis(),this
+     *            .vwr.html5Applet._canvas.toDataURL(),null,null); width =
+     *            canvas.imageWidth; height = canvas.imageHeight;
+     *            canvas.imageWidth = 0; }
+     * 
+     * 
+     *            if (canvas.image && (width != canvas.width || height !=
+     *            canvas.height)) Jmol._setCanvasImage(canvas, width, height);
+     *            if (canvas.buf32) return canvas.buf32; context2d =
+     *            canvas.getContext('2d');
+     */
+    {
+      // placeholder for Eclipse referencing
+      Jmol()._loadImage(this, null, null, null, null);
+      Jmol()._setCanvasImage(canvas, width, height);
+    }
+    int[] buf = Image.grabPixels(context2d, width, height);
     /**
      * @j2sNative
-     *  
-     *  canvas.buf32 = buf;
+     * 
+     *            canvas.buf32 = buf;
      * 
      */
-    {}
+    {
+    }
+    if (isWebGL) // WebGL reports 0 for background
+      for (int i = buf.length; --i >= 0;)
+        if (buf[i] == 0)
+          buf[i] = -1;
     return buf;
-	}
+  }
 
 	@Override
   public int[] drawImageToBuffer(Object gOffscreen, Object imageOffscreen,
@@ -261,7 +298,14 @@ public class Platform implements GenericPlatform {
 
 	@Override
   public Object getGraphics(Object canvas) {
-		return (canvas == null ? context : Image.getGraphics(canvas));
+    /**
+     * @j2sNative
+     * 
+     * return (canvas == null ? this.context : canvas.getContext("2d"));
+     */
+	  {
+	    return null;
+	  }
 	}
 
   @Override
@@ -348,7 +392,7 @@ public class Platform implements GenericPlatform {
 
 	@Override
   public Object getFontMetrics(Font font, Object context) {
-		return JSFont.getFontMetrics(font, context);
+		return JSFont.getFontMetrics(font, context == null ? this.context : context);
 	}
 
 	@Override

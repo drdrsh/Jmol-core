@@ -401,7 +401,7 @@ public class _VrmlExporter extends __CartesianExporter {
   private Map<String, Boolean> htSpheresRendered = new Hashtable<String, Boolean>();
 
   @Override
-  protected void outputSphere(P3 ptCenter, float radius, short colix, boolean checkRadius) {
+  protected void outputSphere(T3 ptCenter, float radius, short colix, boolean checkRadius) {
     radius = scale(radius);
     String check = round(scalePt(ptCenter)) + (checkRadius ? " " + (int) (radius * 100) : "");
     if (htSpheresRendered.get(check) != null)
@@ -410,7 +410,7 @@ public class _VrmlExporter extends __CartesianExporter {
     outputSphereChildUnscaled(ptCenter, radius, colix);
   }
 
-  protected void outputSphereChildUnscaled(P3 ptCenter, float radius, short colix) {
+  protected void outputSphereChildUnscaled(T3 ptCenter, float radius, short colix) {
     int iRad = (int) (radius * 100);
     String child = useTable.getDef("S" + colix + "_" + iRad);
     output("Transform{translation ");
@@ -429,19 +429,20 @@ public class _VrmlExporter extends __CartesianExporter {
 
   @Override
   protected void outputTextPixel(P3 pt, int argb) {
-    String color = rgbFractionalFromArgb(argb);
-    output("Transform{translation ");
-    output(pt);
-    output(" children ");
-    String child = useTable.getDef("p" + argb);
-    if (child.charAt(0) == '_') {
-      output("DEF " + child + " Shape{geometry Sphere{radius 0.01}");
-      output(" appearance Appearance{material Material{diffuseColor 0 0 0 specularColor 0 0 0 ambientIntensity 0.0 shininess 0.0 emissiveColor "
-          + color + " }}}");
-    } else {
-      output(child);
-    }
-    output("}\n");
+    // labels and images only -- ignore here
+//    String color = rgbFractionalFromArgb(argb);
+//    output("Transform{translation ");
+//    output(pt);
+//    output(" children ");
+//    String child = useTable.getDef("p" + argb);
+//    if (child.charAt(0) == '_') {
+//      output("DEF " + child + " Shape{geometry Sphere{radius 0.01}");
+//      output(" appearance Appearance{material Material{diffuseColor 0 0 0 specularColor 0 0 0 ambientIntensity 0.0 shininess 0.0 emissiveColor "
+//          + color + " }}}");
+//    } else {
+//      output(child);
+//    }
+//    output("}\n");
   }
 
   protected void outputTransRot(P3 pt1, P3 pt2, int x, int y, int z) {    
@@ -483,38 +484,46 @@ public class _VrmlExporter extends __CartesianExporter {
     output("}\n");
   }
 
+  protected float fontSize;
+  protected String fontFace;
+  protected String fontStyle;
+  protected String fontChild;
+
   @Override
   void plotText(int x, int y, int z, short colix, String text, Font font3d) {
-    if (z < 3)
-      z = (int) tm.cameraDistance;
-    String useFontStyle = font3d.fontStyle.toUpperCase();
-    String preFontFace = font3d.fontFace.toUpperCase();
-    String useFontFace = (preFontFace.equals("MONOSPACED") ? "TYPEWRITER"
-        : preFontFace.equals("SERIF") ? "SERIF" : "SANS");
     output("Transform{translation ");
-    tempP3.set(x, y, z);
-    tm.unTransformPoint(tempP3, tempP1);
-    output(tempP1);
+    output(setFont(x, y, z, colix, text, font3d));
     // These x y z are 3D coordinates of echo or the atom the label is attached
     // to.
     output(" children ");
-    String child = useTable.getDef("T" + colix + useFontFace + useFontStyle + "_" + text);
-    if (child.charAt(0) == '_') {
-      output("DEF " + child + " Billboard{axisOfRotation 0 0 0 children Transform{children Shape{");
+    if (fontChild.charAt(0) == '_') {
+      output("DEF " + fontChild + " Billboard{axisOfRotation 0 0 0 children Transform{children Shape{");
       outputAppearance(colix, true);
       output(" geometry Text{fontStyle ");
-      String fontstyle = useTable.getDef("F" + useFontFace + useFontStyle);
+      String fontstyle = useTable.getDef("F" + fontFace + fontStyle);
       if (fontstyle.charAt(0) == '_') {
-        output("DEF " + fontstyle + " FontStyle{size 0.4 family \"" + useFontFace
-            + "\" style \"" + useFontStyle + "\"}");      
+        output("DEF " + fontstyle + " FontStyle{size " + fontSize + " family \"" + fontFace
+            + "\" style \"" + fontStyle + "\"}");      
       } else {
         output(fontstyle);
       }
       output(" string " + PT.esc(text) + "}}}}");
     } else {
-      output(child);
+      output(fontChild);
     }
     output("}\n");
+  }
+
+  protected T3 setFont(int x, int y, int z, short colix, String text, Font font3d) {
+    tempP3.set(x, y, fixScreenZ(z));
+    tm.unTransformPoint(tempP3, tempP1);
+    fontStyle = font3d.fontStyle.toUpperCase();
+    fontFace = font3d.fontFace.toUpperCase();
+    fontFace = (fontFace.equals("MONOSPACED") ? "TYPEWRITER" 
+        : fontFace.equals("SERIF") ? "SERIF" : "Arial");
+    fontSize = font3d.fontSize * 0.015f;
+    fontChild = useTable.getDef("T" + colix + fontFace + fontStyle + fontSize + "_" + text);
+    return tempP1;
   }
 
   /*
