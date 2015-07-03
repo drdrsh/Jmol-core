@@ -4226,7 +4226,8 @@ public class ScriptEval extends ScriptExpr {
         htParams.put("fileData", strModel);
         htParams.put("isData", Boolean.TRUE);
         //note: ScriptCompiler will remove an initial \n if present
-        loadScript.appendC('\n').append(strModel).append(" end ").append(PT.esc(key));
+        loadScript.appendC('\n').append(strModel).append(" end ")
+            .append(PT.esc(key));
         if (ptVar < 0)
           i += 2; // skip END "key"
         break;
@@ -4320,12 +4321,16 @@ public class ScriptEval extends ScriptExpr {
           htParams.put("firstLastStep", new int[] { (int) pt.x, (int) pt.y,
               (int) pt.z });
           loadScript.append(" " + Escape.eP(pt));
-        } else if (tokAt(i) == T.bitset) {
-          bsModels = (BS) getToken(i++).value;
-          htParams.put("bsModels", bsModels);
-          loadScript.append(" " + Escape.eBS(bsModels));
         } else {
-          htParams.put("firstLastStep", new int[] { 0, -1, 1 });
+          switch (tokAt(i)) {
+          case T.bitset:
+            bsModels = (BS) getToken(i++).value;
+            htParams.put("bsModels", bsModels);
+            loadScript.append(" " + Escape.eBS(bsModels));
+            break;
+          default:
+            htParams.put("firstLastStep", new int[] { 0, -1, 1 });
+          }
         }
         break;
       case T.identifier:
@@ -4767,12 +4772,14 @@ public class ScriptEval extends ScriptExpr {
     case T.varray:
     case T.leftsquare:
     case T.spacebeforesquare:
+      System.out.println(sOptions);
       float[] data = floatParameterSet(i, 1, Integer.MAX_VALUE);
       i = iToken;
       BS bs = new BS();
       for (int j = 0; j < data.length; j++)
         if (data[j] >= 1 && data[j] == (int) data[j])
           bs.set((int) data[j] - 1);
+      htParams.remove("firstLastStep");
       htParams.put("bsModels", bs);
       int[] iArray = new int[bs.cardinality()];
       for (int pt = 0, j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1))
