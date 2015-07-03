@@ -191,7 +191,7 @@ public class CifReader extends AtomSetCollectionReader {
       skipping = false;
     }
     if (key.startsWith("loop_")) {
-      if (skipping) {
+      if (skipping && !isMMCIF) {
         parser.getTokenPeeked();
         parser.skipLoop(false);
       } else {
@@ -332,7 +332,8 @@ public class CifReader extends AtomSetCollectionReader {
   protected void newModel(int modelNo) throws Exception {
     skipping = !doGetModel(modelNumber = modelNo, null);
     if (skipping) {
-      parser.getTokenPeeked();
+      if (!isMMCIF)
+        parser.getTokenPeeked();
       return;
     }
     chemicalName = "";
