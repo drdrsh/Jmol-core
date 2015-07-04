@@ -4429,8 +4429,7 @@ public class ScriptEval extends ScriptExpr {
       case T.varray:
       case T.leftsquare:
       case T.spacebeforesquare:
-        getLoadModelIndex(i, sOptions, htParams);
-        tok = tokAt(i = ++iToken);
+        tok = tokAt(getLoadModelIndex(i, sOptions, htParams));
         break;
       }
       i = getCmdExt().getLoadSymmetryParams(i, sOptions, htParams);
@@ -4673,8 +4672,7 @@ public class ScriptEval extends ScriptExpr {
       case T.varray:
       case T.leftsquare:
       case T.spacebeforesquare:
-        getLoadModelIndex(i, sOptions, htParams);
-        i = iToken + 1;
+        i = getLoadModelIndex(i, sOptions, htParams);
         continue;
       case T.filter:
         filter = stringParameter(++i);
@@ -4757,12 +4755,16 @@ public class ScriptEval extends ScriptExpr {
     return false;
   }
 
-  private void getLoadModelIndex(int i, SB sOptions,
+  private int getLoadModelIndex(int i, SB sOptions,
                                  Map<String, Object> htParams)
       throws ScriptException {
+    int n;
     switch (tokAt(i)) {
     case T.integer:
-      int n = intParameter(i);
+      htParams.remove("firstLastStep");
+      htParams.remove("bsModel");
+      htParams.put("useFileModelNumbers", Boolean.TRUE);
+      n = intParameter(i);
       sOptions.append(" ").appendI(n);
       if (n < 0)
         htParams.put("vibrationNumber", Integer.valueOf(-n));
@@ -4772,21 +4774,25 @@ public class ScriptEval extends ScriptExpr {
     case T.varray:
     case T.leftsquare:
     case T.spacebeforesquare:
-      System.out.println(sOptions);
+      htParams.remove("firstLastStep");
       float[] data = floatParameterSet(i, 1, Integer.MAX_VALUE);
       i = iToken;
       BS bs = new BS();
-      for (int j = 0; j < data.length; j++)
-        if (data[j] >= 1 && data[j] == (int) data[j])
-          bs.set((int) data[j] - 1);
-      htParams.remove("firstLastStep");
-      htParams.put("bsModels", bs);
-      int[] iArray = new int[bs.cardinality()];
-      for (int pt = 0, j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1))
-        iArray[pt++] = j + 1;
+      int[] iArray = new int[data.length];
+      for (int j = 0; j < data.length; j++) {
+        n = (int) data[j];
+        if (data[j] >= 1 && data[j] == n)
+          bs.set(n - 1);
+        else
+          invArg();
+        iArray[j] = n;
+      }
       sOptions.append(" " + Escape.eAI(iArray));
+      htParams.put("bsModels", bs);
+      htParams.put("useFileModelNumbers", Boolean.TRUE);
       break;
     }
+    return iToken + 1;
   }
 
   private void finalizeLoad(boolean isAppend, boolean appendNew,

@@ -50,7 +50,9 @@ import javajs.util.V3;
 /**
  * A true line-free CIF file reader for CIF files.
  * 
- * Subclasses of CIF -- mmCIF/PDBx and msCIF -- are initialized from here.
+ * Subclasses of CIF -- mmCIF/PDBx (pre-initialized) and msCIF (initialized here).
+ * 
+ * Note that a file can be a PDB file without being 
  * 
  * Added nonstandard mCIF (magnetic_ tags) 5/2/2014 note that PRELIM keys can be
  * removed at some later time
@@ -92,7 +94,7 @@ public class CifReader extends AtomSetCollectionReader {
   private String chemicalName = "";
   private String thisStructuralFormula = "";
   private String thisFormula = "";
-  private boolean iHaveDesiredModel;
+  protected boolean iHaveDesiredModel;
   protected boolean isMMCIF;
   boolean isMagCIF;
   private String molecularType = "GEOM_BOND default";
@@ -101,7 +103,7 @@ public class CifReader extends AtomSetCollectionReader {
   private int conformationIndex;
   private int nMolecular = 0;
   private String appendedData;
-  private boolean skipping;
+  protected boolean skipping;
   protected int nAtoms;
   protected int ac;
 
@@ -470,7 +472,7 @@ public class CifReader extends AtomSetCollectionReader {
       Logger.debug(key);
   }
 
-  private void nextAtomSet() {
+  protected void nextAtomSet() {
     asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
     if (asc.iSet >= 0) {
       // note that there can be problems with multi-data mmCIF sets each with
@@ -993,7 +995,7 @@ public class CifReader extends AtomSetCollectionReader {
    * @throws Exception
    */
   boolean processAtomSiteLoopBlock(boolean isLigand) throws Exception {
-    int currentModelNo = -1; // PDBX
+    int pdbModelNo = -1; // PDBX
     boolean haveCoord = true;
     parseLoopParametersFor(FAMILY_ATOM, atomFields);
     if (fieldOf[CC_ATOM_X_IDEAL] != NONE) {
@@ -1003,13 +1005,17 @@ public class CifReader extends AtomSetCollectionReader {
       disableField(FRACT_X);
       disableField(FRACT_Y);
       disableField(FRACT_Z);
+      if (fieldOf[GROUP_PDB] != NONE && !isMMCIF) {
+        // this should not happen
+        setIsPDB();
+        isMMCIF = true;
+      }
     } else if (fieldOf[FRACT_X] != NONE) {
       setFractionalCoordinates(true);
       disableField(CARTN_X);
       disableField(CARTN_Y);
       disableField(CARTN_Z);
-    } else if (fieldOf[ANISO_LABEL] != NONE 
-        || fieldOf[ANISO_MMCIF_ID] != NONE
+    } else if (fieldOf[ANISO_LABEL] != NONE || fieldOf[ANISO_MMCIF_ID] != NONE
         || fieldOf[MOMENT_LABEL] != NONE) {
       haveCoord = false;
       // no coordinates, but valuable information
@@ -1021,39 +1027,21 @@ public class CifReader extends AtomSetCollectionReader {
     int modelField = fieldOf[MODEL_NO];
     int siteMult = 0;
     while (parser.getData()) {
-        if (modelField >= 0) {
-          fieldProperty(modelField);
-          int modelNo = parseIntStr(field);
-          if (modelNo != currentModelNo) {
-            if (iHaveDesiredModel && asc.atomSetCount > 0) {
-              parser.skipLoop(false);
-              // but only this atom loop
-              skipping = false;
-              continuing = true;
-              break;
-            }
-            currentModelNo = modelNo;
-            newModel(modelNo);
-            if (!skipping) {
-              nextAtomSet();
-              if (modelMap == null || asc.ac == 0)
-                modelMap = new Hashtable<String, Integer>();
-              modelMap.put("" + modelNo, Integer.valueOf(Math.max(0, asc.iSet)));
-              modelMap
-                  .put("_" + Math.max(0, asc.iSet), Integer.valueOf(modelNo));
-            }
-          }
-          if (skipping)
-            continue;
-        }
+      if (modelField >= 0) {
+        // mmCIF only
+        pdbModelNo = checkPDBModelField(modelField, pdbModelNo);
+        if (pdbModelNo < 0)
+          break;
+        if (skipping)
+          continue;
+      }
       Atom atom = null;
       if (haveCoord) {
         atom = new Atom();
       } else {
         if (fieldProperty(fieldOf[ANISO_LABEL]) != NONE
             || fieldProperty(fieldOf[ANISO_MMCIF_ID]) != NONE
-            || fieldProperty(fieldOf[MOMENT_LABEL]) != NONE
-            ) {
+            || fieldProperty(fieldOf[MOMENT_LABEL]) != NONE) {
           if ((atom = asc.getAtomFromName(field)) == null)
             continue; // atom has been filtered out
         } else {
@@ -1153,15 +1141,15 @@ public class CifReader extends AtomSetCollectionReader {
         case ASYM_ID:
           assemblyId = field;
           if (!useAuthorChainID)
-            setChainID(atom, strChain = field);            
+            setChainID(atom, strChain = field);
           break;
         case AUTH_ASYM_ID:
           if (useAuthorChainID)
-            setChainID(atom, strChain = field);            
+            setChainID(atom, strChain = field);
           break;
         case AUTH_SEQ_ID:
           maxSerial = Math.max(maxSerial,
-          atom.sequenceNumber = parseIntStr(field));
+              atom.sequenceNumber = parseIntStr(field));
           break;
         case INS_CODE:
           atom.insertionCode = firstChar;
@@ -1182,10 +1170,6 @@ public class CifReader extends AtomSetCollectionReader {
           }
           break;
         case GROUP_PDB:
-          if (!isMMCIF) {
-            setIsPDB();
-            isMMCIF = true;
-          }
           if ("HETATM".equals(field))
             atom.isHetero = true;
           break;
@@ -1317,6 +1301,17 @@ public class CifReader extends AtomSetCollectionReader {
     return true;
   }
 
+  /**
+   * @param modelField  
+   * @param currentModelNo 
+   * @return new currentModelNo
+   * @throws Exception 
+   */
+  protected int checkPDBModelField(int modelField, int currentModelNo) throws Exception {
+    // overridden in MMCIF reader
+    return 0;
+  }
+  
   protected Map<String, String> htHetero;
 
   /**

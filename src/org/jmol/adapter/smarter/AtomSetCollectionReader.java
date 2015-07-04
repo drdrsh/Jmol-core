@@ -180,6 +180,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected int vibrationNumber;
   public int desiredVibrationNumber = Integer.MIN_VALUE;
   protected BS bsModels;
+  protected boolean useFileModelNumbers; // PDB, MMCIF only
   protected boolean havePartialChargeFilter;
   public String calculationType = "?";
   protected String sgName;
@@ -566,6 +567,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     } else if (htParams.containsKey("bsModels")) {
       bsModels = (BS) htParams.get("bsModels");
     }
+    useFileModelNumbers = htParams.containsKey("useFileModelNumbers");
     if (htParams.containsKey("templateAtomCount"))
       templateAtomCount = ((Integer) htParams.get("templateAtomCount"))
           .intValue();

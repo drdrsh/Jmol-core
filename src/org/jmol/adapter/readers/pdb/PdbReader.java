@@ -239,7 +239,7 @@ public class PdbReader extends AtomSetCollectionReader {
     boolean isAtom = (ptOption == 0 || ptOption == 1);
     boolean isModel = (ptOption == 2);
     serial = (isAtom ? getSerial(6, 11) : 0);
-    boolean isNewModel = ((isTrajectory || isSequential) && !isMultiModel
+    boolean forceNewModel = ((isTrajectory || isSequential) && !isMultiModel
         && isAtom && serial == 1);
     if (getHeader) {
       if (isAtom || isModel)
@@ -247,12 +247,12 @@ public class PdbReader extends AtomSetCollectionReader {
       else
         readHeader(false);
     }
-    if (isModel || isNewModel) {
+    if (isModel || forceNewModel) {
       isMultiModel = isModel;
       getHeader = false;
       // PDB is different -- targets actual model number
-      int modelNo = (isNewModel ? modelNumber + 1 : getModelNumber());
-      modelNumber = (bsModels == null ? modelNo : modelNumber + 1);
+      int modelNo = (forceNewModel ? modelNumber + 1 : getModelNumber());
+      modelNumber = (useFileModelNumbers ? modelNo : modelNumber + 1);
       if (!doGetModel(modelNumber, null)) {
         handleTlsMissingModels();
         boolean isOK = checkLastModel();

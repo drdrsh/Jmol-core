@@ -41,6 +41,18 @@ import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 
 /**
+ * 
+ * mmCIF files are recognized prior to class creation. 
+ * Required fields include one of:
+ * 
+ *   _entry.id
+ *   _database_PDB_
+ *   _pdbx_
+ *   _chem_comp.pdbx_type
+ *   _audit_author.name
+ *   _atom_site.
+ * 
+ * 
  * @author Bob Hanson (hansonr@stolaf.edu)
  * 
  */
@@ -1058,6 +1070,38 @@ public class MMCifReader extends CifReader {
     if (key.startsWith(FAMILY_SHEET))
       return processStructSheetRangeLoopBlock();
     return false;
+  }
+
+  private int modelIndex = 0;
+  
+  @Override
+  protected int checkPDBModelField(int modelField, int currentModelNo) throws Exception {
+    // the model field value is only used if 
+    // it is indicated AFTER the file name in the load command, 
+    // not if we have a MODEL keyword before the file name.
+    // 
+    fieldProperty(modelField);
+    int modelNo = parseIntStr(field);
+    if (modelNo != currentModelNo) {
+      if (iHaveDesiredModel && asc.atomSetCount > 0) {
+        parser.skipLoop(false);
+        // but only this atom loop
+        skipping = false;
+        continuing = true;
+        return Integer.MIN_VALUE;
+      }
+      int modelNumberToUse = (useFileModelNumbers ? modelNo : ++modelIndex);
+      newModel(modelNumberToUse);
+      if (!skipping) {
+        nextAtomSet();
+        if (modelMap == null || asc.ac == 0)
+          modelMap = new Hashtable<String, Integer>();
+        modelMap.put("" + modelNo, Integer.valueOf(Math.max(0, asc.iSet)));
+        modelMap
+            .put("_" + Math.max(0, asc.iSet), Integer.valueOf(modelNo));
+      }
+    }
+    return modelNo;
   }
 
 }
