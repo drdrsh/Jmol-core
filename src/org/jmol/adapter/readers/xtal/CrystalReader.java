@@ -236,8 +236,13 @@ public class CrystalReader extends AtomSetCollectionReader {
     if (!doProcessLines)
       return true;
 
-    if (line.startsWith(" TOTAL ENERGY")) {
-      readEnergy();
+    if (line.startsWith(" TOTAL ENERGY(")) {
+      //TOTAL ENERGY CORRECTED: EXTERNAL STRESS CONTRIBUTION =    0.944E+00
+      //TOTAL ENERGY(DFT)(AU)( 27) -1.2874392471314E+04     DE (AU)   -5.323E-04
+      line = PT.rep(line, "( ", "(");
+      String[ ] tokens = getTokens();
+      energy = Double.valueOf(Double.parseDouble(tokens[2]));
+      setEnergy();
       rd();
       if (line.startsWith(" ********"))
         discardLinesUntilContains("SYMMETRY ALLOWED");
@@ -783,13 +788,6 @@ public class CrystalReader extends AtomSetCollectionReader {
     if (spaceGroupName != null)
       setSpaceGroupName(spaceGroupName);
     ac = 0;
-  }
-
-  private void readEnergy() {
-    line = PT.rep(line, "( ", "(");
-    String[] tokens = getTokens();
-    energy = Double.valueOf(Double.parseDouble(tokens[2]));
-    setEnergy();
   }
 
   private void setEnergy() {

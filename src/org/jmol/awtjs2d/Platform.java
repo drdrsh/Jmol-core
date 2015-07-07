@@ -321,15 +321,7 @@ public class Platform implements GenericPlatform {
 	@Override
   public Object getStaticGraphics(Object image, boolean backgroundTransparent) {
     // for text processing;
-    /**
-     * @j2sNative
-     * 
-     * return this.getGraphics(image);
-     * 
-     */
-    {
-    return null;
-    }
+    return getGraphics(image);
 	}
 
 	@Override
