@@ -158,24 +158,6 @@ class Image {
   }
 
   /**
-   * @param canvas  
-   * @param backgroundTransparent 
-   * @return context
-   */
-  static Object getStaticGraphics(Object canvas, boolean backgroundTransparent) {
-    // for text processing;
-    /**
-     * @j2sNative
-     * 
-     * return this.getGraphics(canvas);
-     * 
-     */
-    {
-    return null;
-    }
-  }
-
-  /**
    * @param vwr 
    * @param title 
    * @param imageMap  
