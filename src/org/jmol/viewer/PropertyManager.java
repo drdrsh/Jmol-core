@@ -265,15 +265,15 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       propertyName = fixSelectQuotes(propertyName);
     while ((pt = lc.indexOf("[select ", ++pt)) >= 0) {
       int pt2 = lc.indexOf(" where ", pt);
-      int pt3 = lc.indexOf("]", pt2 + 1);
+      int pt3 = lc.lastIndexOf("]");
       if (pt2 < 0 || pt2 > pt3)
         continue;
       propertyName = propertyName.substring(0, pt + 1) 
           + propertyName.substring(pt + 1, pt3).replace('.', '\1').replace('[', '\2').replace(']', '\3')
           + propertyName.substring(pt3);
     }
-    propertyName = propertyName.replace(']', '\0').replace('[', '\0')
-        .replace('.', '\0').replace('\1', '.').replace('\2', '[').replace('\3', ']');
+    propertyName = PT.rep(PT.rep(propertyName.replace(']', '\0').replace('[', '\0'), "..", "\4")
+        .replace('.', '\0').replace('\1', '.').replace('\2', '[').replace('\3', ']'),"\4","..");
     propertyName = PT.rep(propertyName, "\0\0", "\0");
     String[] names = PT.split(PT.trim(propertyName, "\0"), "\0");
     SV[] args = new SV[names.length];
