@@ -149,7 +149,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   public String getSmiles(Node[] atoms, int ac, BS bsSelected,
                              String bioComment, int flags) throws Exception {
 //  boolean asBioSmiles, boolean bioAllowUnmatchedRings,  boolean bioAddCrossLinks, boolean explicitH
-    InvalidSmilesException.clear();
+     InvalidSmilesException.clear();
     if (checkFlag(flags, JC.SMILES_BIO)) {
       boolean bioAllowUnmatchedRings = checkFlag(flags,
           JC.SMILES_BIO_ALLOW_UNMACHED_RINGS);
@@ -159,8 +159,10 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     }
     boolean explicitH = checkFlag(flags, JC.SMILES_EXPLICIT_H);
     boolean topologyOnly = checkFlag(flags, JC.SMILES_TOPOLOGY);
+    boolean getAromatic = !checkFlag(flags, JC.SMILES_NOAROMATIC);
+    
     return (new SmilesGenerator()).getSmiles(atoms, ac, bsSelected, explicitH,
-        topologyOnly);
+        topologyOnly, getAromatic);
   }
 
   @Override
@@ -208,6 +210,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
                    boolean firstMatchOnly) throws Exception {
 
     InvalidSmilesException.clear();
+    smiles = SmilesParser.cleanPattern(smiles);
+    pattern = SmilesParser.cleanPattern(pattern);
     SmilesSearch search = SmilesParser.getMolecule(smiles, false);
     // boolean isSmarts,  boolean matchAllAtoms, boolean firstMatchOnly
 
@@ -393,8 +397,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       if (n == 0 || n != atoms[i].bonds.length)
         atoms[i].bonds = (SmilesBond[]) AU.arrayCopyObject(atoms[i].bonds, n);
     }
-    return getSmiles(atoms, atomCount, BSUtil.newBitSet2(0,  atomCount), null, (points == null ? JC.SMILES_TOPOLOGY : JC.SMILES_TYPE_SMILES));
-    
+    return getSmiles(atoms, atomCount, BSUtil.newBitSet2(0,  atomCount), null, 
+        JC.SMILES_NOAROMATIC | (points == null ? JC.SMILES_TOPOLOGY : JC.SMILES_TYPE_SMILES));   
   }
 
 
@@ -485,6 +489,11 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       if (s.charAt(i) == '@')
         n++;
     return n;
+  }
+
+  @Override
+  public String cleanSmiles(String smiles) {
+    return SmilesParser.cleanPattern(smiles);
   }
 
 }

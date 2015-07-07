@@ -73,7 +73,16 @@ public class SimpleUnitCell {
   protected SimpleUnitCell() {
     fractionalOrigin = new P3();
   }
-  
+
+  /**
+   * 
+   * @param params len = 6 [a b c alpha beta gamma] 
+   *            or len = 15 [-1 0 0 0 0 0 va vb vc]
+   *            or len = 22 [a b c alpha beta gamma m00 m01 .. m33]
+   *            and/or len = 25 [......................  na nb nc]
+   *             
+   * @return a simple unit cell
+   */
   public static SimpleUnitCell newA(float[] params) {
     SimpleUnitCell c = new SimpleUnitCell();
     c.init(params);
@@ -95,9 +104,18 @@ public class SimpleUnitCell {
     gamma = params[5];
     
     // (int) Float.NaN == 0 (but not in JavaScript!)
-    na = Math.max(1, params.length >= 25 && !Float.isNaN(params[22]) ? (int) params[22] : 1);
-    nb = Math.max(1, params.length >= 25 && !Float.isNaN(params[23]) ? (int) params[23] : 1);
-    nc = Math.max(1, params.length >= 25 && !Float.isNaN(params[24]) ? (int) params[24] : 1);
+    // supercell
+    float fa = na = Math.max(1, params.length >= 25 && !Float.isNaN(params[22]) ? (int) params[22] : 1);
+    float fb = nb = Math.max(1, params.length >= 25 && !Float.isNaN(params[23]) ? (int) params[23] : 1);
+    float fc = nc = Math.max(1, params.length >= 25 && !Float.isNaN(params[24]) ? (int) params[24] : 1);
+    if (params.length > 25 && !Float.isNaN(params[25])) {
+      float fScale = params[25];
+      fa *= fScale;
+      fb *= fScale;
+      fc *= fScale;
+    } else {
+      fa = fb = fc = 1;
+    }
 
     if (a <= 0) {
       // must calculate a, b, c alpha beta gamma from Cartesian vectors;
@@ -127,18 +145,19 @@ public class SimpleUnitCell {
         params = n;
       }
     }
+    System.out.println("unitcell " + a + " " + b + " " + c);
     
-    a *= na;
+    a *= fa; 
     if (b <= 0) {
       b = c = 1;
       dimension = 1;
     } else if (c <= 0) {
       c = 1;
-      b *= nb;
+      b *= fb;
       dimension = 2;
     } else {
-      b *= nb;
-      c *= nc;
+      b *= fb;
+      c *= fc;
       dimension = 3;
     }
 
@@ -153,13 +172,13 @@ public class SimpleUnitCell {
         float f;
         switch (i % 4) {
         case 0:
-          f = na;
+          f = fa;
           break;
         case 1:
-          f = nb;
+          f = fb;
           break;
         case 2:
-          f = nc;
+          f = fc;
           break;
         default:
           f = 1;
@@ -176,9 +195,9 @@ public class SimpleUnitCell {
       // parameters with a 3 vectors
       // [a b c alpha beta gamma ax ay az bx by bz cx cy cz...]
       M4 m = matrixFractionalToCartesian = new M4();
-      m.setColumn4(0, params[6] * na, params[7] * na, params[8] * na, 0);
-      m.setColumn4(1, params[9] * nb, params[10] * nb, params[11] * nb, 0);
-      m.setColumn4(2, params[12] * nc, params[13] * nc, params[14] * nc, 0);
+      m.setColumn4(0, params[6] * fa, params[7] * fa, params[8] * fa, 0);
+      m.setColumn4(1, params[9] * fb, params[10] * fb, params[11] * fb, 0);
+      m.setColumn4(2, params[12] * fc, params[13] * fc, params[14] * fc, 0);
       m.setColumn4(3, 0, 0, 0, 1);
       matrixCartesianToFractional = M4.newM4(matrixFractionalToCartesian).invert();
     } else {
@@ -226,6 +245,7 @@ public class SimpleUnitCell {
   }
 
   private void setCellParams() {
+    System.out.println("unitcell " + a + " " + b + " " + c);
     cosAlpha = Math.cos(toRadians * alpha);
     sinAlpha = Math.sin(toRadians * alpha);
     cosBeta = Math.cos(toRadians * beta);

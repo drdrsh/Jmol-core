@@ -82,10 +82,11 @@ public class SmilesGenerator {
   private Map<String, Object[]> htRings = new Hashtable<String, Object[]>();
   private BS bsIncludingH;
   private boolean topologyOnly;
+  boolean getAromatic = true;
 
   // generation of SMILES strings
 
-  String getSmiles(Node[] atoms, int ac, BS bsSelected, boolean explicitH, boolean topologyOnly)
+  String getSmiles(Node[] atoms, int ac, BS bsSelected, boolean explicitH, boolean topologyOnly, boolean getAromatic)
       throws InvalidSmilesException {
     int i = bsSelected.nextSetBit(0);
     if (i < 0)
@@ -95,6 +96,7 @@ public class SmilesGenerator {
     this.bsSelected = bsSelected = BSUtil.copy(bsSelected);
     this.explicitH = explicitH;
     this.topologyOnly = topologyOnly;
+    this.getAromatic = getAromatic;
     return getSmilesComponent(atoms[i], bsSelected, true, false);
   }
 
@@ -244,7 +246,7 @@ public class SmilesGenerator {
         if (a.getElementNumber() == 1 && a.getIsotopeNumber() == 0)
           bsSelected.clear(j);
       }
-    if (!topologyOnly && bsSelected.cardinality() > 2) {
+    if (getAromatic && !topologyOnly && bsSelected.cardinality() > 2) {
       SmilesSearch search = null;
       search = SmilesParser.getMolecule("A[=&@]A", true);
       search.jmolAtoms = atoms;
@@ -512,8 +514,6 @@ public class SmilesGenerator {
     // 6) rings
 
     // add the bond to the previous atom
-
-    //System.out.println(" " + atom);
 
     String strBond = null;
     if (sp2Atoms == null)

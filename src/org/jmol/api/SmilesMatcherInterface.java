@@ -52,4 +52,6 @@ public interface SmilesMatcherInterface {
   public abstract String getSmiles(Node[] atoms, int ac, BS bsSelected,
                                       String bioComment, int flags) throws Exception;
 
+  public abstract String cleanSmiles(String smiles);
+
 }

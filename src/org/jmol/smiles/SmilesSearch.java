@@ -439,7 +439,7 @@ public class SmilesSearch extends JmolMolecule {
                                    int iAtom, boolean firstAtomOnly)
       throws InvalidSmilesException {
 
-    //System.out.println("checkMatch " + patternAtom + " atomnum=" + atomNum + " iatom=" + iAtom);
+    //System.out.println("checkMatch " + patternAtom + " atomnum=" + atomNum + " itry=" + iAtom + " " + bsFound + " " + pattern);
     Node jmolAtom;
     Edge[] jmolBonds;
     if (patternAtom == null) {
@@ -532,8 +532,11 @@ public class SmilesSearch extends JmolMolecule {
       // The atom has passed both the atom and the bond test.
       // Add this atom to the growing list.
 
-      if (Logger.debugging && !isSilent)
-        Logger.debug("pattern atom " + atomNum + " " + patternAtom);
+      if (Logger.debugging && !isSilent) {
+        for (int i = 0; i <= atomNum; i++)
+          Logger.debug("pattern atoms " + patternAtoms[i]);
+        Logger.debug("--ss--");
+      }
       bsFound.set(iAtom);
 
     }
@@ -554,20 +557,9 @@ public class SmilesSearch extends JmolMolecule {
 
     if (++atomNum < ac) {
 
-      //System.out.println("atomno=" + atomNum + " bsFound = " + bsFound + " " + this);
-      // so far, so good... not done yet... on to the next position...
-
-      /*
-      if (patternAtoms[atomNum].toString().indexOf("*") < 0) {
-        for (int i = 0; i < atomNum; i++)System.out.println(i + " " + patternAtoms[i]);
-      //System.out.println("");
-      }
-      */
       
       SmilesAtom newPatternAtom = patternAtoms[atomNum];
       
-      //System.out.println("continueMatch atomNum=" + atomNum + ", iAtom=" + iAtom + " checking " + newPatternAtom);
-
 
       // For all the pattern bonds for this atom...
       // find the bond to atoms already assigned.
@@ -580,10 +572,13 @@ public class SmilesSearch extends JmolMolecule {
       if (newPatternBond == null) {
 
         // Option 1: we are processing "."
+        
+        //
         // run through all unmatched and unbonded-to-match
         // selected Jmol atoms to see if there is a match. 
 
         BS bs = BSUtil.copy(bsFound);
+        BS bs0 = BSUtil.copy(bsFound);
         if (newPatternAtom.notBondedIndex >= 0) {
           SmilesAtom pa = patternAtoms[newPatternAtom.notBondedIndex];
           Node a = pa.getMatchingAtom();
@@ -617,7 +612,7 @@ public class SmilesSearch extends JmolMolecule {
               j = j1 - 1;
           }
         }
-        bsFound = bs;
+        bsFound = bs0;
         return true;
       }
 
@@ -724,7 +719,6 @@ public class SmilesSearch extends JmolMolecule {
       if (firstAtomOnly) {
         bsCheck.clearAll();
         for (int j = 0; j < ac; j++) {
-          //System.out.println("checking return for " + patternAtoms[j]);
           bsCheck.set(patternAtoms[j].getMatchingAtomIndex());
         }
         if (bsCheck.cardinality() != ac)
@@ -781,7 +775,6 @@ public class SmilesSearch extends JmolMolecule {
   }
 
   private void clearBsFound(int iAtom) {
-    //System.out.println("smiless " + iAtom + " " + bsFound + " " + bsFound.hashCode());
     
     if (iAtom < 0) {
       if (bsCheck == null) {bsFound.clearAll();}
@@ -808,8 +801,6 @@ public class SmilesSearch extends JmolMolecule {
     Node atom = jmolAtoms[iAtom];
     boolean foundAtom = patternAtom.not;
 
-    //if (pattern.indexOf("*") < 0)
-    //System.out.println("testing smilessearch");
 
     while (true) {
 
@@ -1032,8 +1023,6 @@ public class SmilesSearch extends JmolMolecule {
     
     boolean isAromatic1 = (!noAromatic && bsAromatic.get(iAtom1));
     boolean isAromatic2 = (!noAromatic && bsAromatic.get(iAtom2));
-    //if (pattern.indexOf("*") < 0)
-      //System.out.println("testing smilessearch");
     int order = bond.getCovalentOrder();
     if (isAromatic1 && isAromatic2) {
       switch (patternBond.order) {
@@ -1258,11 +1247,9 @@ public class SmilesSearch extends JmolMolecule {
               && !setSmilesCoordinates(atom0, sAtom, sAtom2, new Node[] {
                   atom1, atom2, atom3, atom4, atom5, atom6 }))
             return false;
-            //System.out.println(order + ":" + sAtom + "/" + atom0 + ":" + atom1 + "," + atom2 + "," + atom3 + "," + atom4);
           if (!checkStereochemistryAll(sAtom.not, atom0, chiralClass, order,
               atom1, atom2, atom3, atom4, atom5, atom6, v))
             return false;
-            //System.out.println("OK");
           continue;
         }
       }

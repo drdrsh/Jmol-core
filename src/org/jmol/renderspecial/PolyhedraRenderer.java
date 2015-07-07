@@ -101,13 +101,11 @@ public class PolyhedraRenderer extends ShapeRenderer {
     frontOnly = (drawEdges == Polyhedra.EDGES_FRONT);
 
     // no edges to new points when not collapsed
-   // int m = (int) ( Math.random() * 24);
+   //int m = (int) ( Math.random() * 24);
     if (!needTranslucent || g3d.setC(colix))
       for (int i = planes.length; --i >= 0;) {
         int[] pl = planes[i];
-     //   if (i != m)continue;
-        //if (p.normixes[i] == 206 || p.normixes[i] == 226)continue;
-        //System.out.println("pr " + p.normixes[i]);
+        //if (i != m)continue;
         try {
         g3d.fillTriangleTwoSided(p.normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]]);
         } catch (Exception e){

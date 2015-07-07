@@ -260,7 +260,11 @@ public class Polyhedra extends AtomShape {
     }
 
     if ("token" == propertyName) {
-      setLighting(((Integer) value).intValue() == T.fullylit, bs);
+      int tok = ((Integer) value).intValue();
+      if (tok == T.triangles && tok == T.notriangles) {
+      } else {
+        setLighting(tok == T.fullylit, bs);
+      }
       return;
     }
 
@@ -313,7 +317,8 @@ public class Polyhedra extends AtomShape {
       SmilesMatcherInterface sm = (smiles == null ? null : vwr
           .getSmilesMatcher());
       Integer n = (Integer) data[0];
-      
+      if (sm != null)
+        smiles = sm.cleanSmiles(smiles);
       int nv = (smiles != null ? PT.countChar(smiles, '*') : n == null ? Integer.MIN_VALUE : n.intValue());
       if (smiles !=  null && nv == 0)
         nv = Integer.MIN_VALUE;

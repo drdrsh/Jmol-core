@@ -3285,6 +3285,11 @@ public class CmdExt extends ScriptExt {
           error(ScriptError.ERROR_incompatibleArguments);
         typeSeen = true;
         break;
+      case T.triangles:
+      case T.notriangles:
+        propertyName = "token";
+        propertyValue = Integer.valueOf(e.theTok);
+        break;
       case T.noedges:
       case T.edges:
       case T.frontedges:

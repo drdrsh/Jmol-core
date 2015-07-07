@@ -64,11 +64,14 @@ class UnitCell extends SimpleUnitCell {
   public Lst<String> moreInfo;
   public String name = "";
   
-  UnitCell() {
-    
+  private UnitCell() {
+    super();  
   }
   
   /**
+   * 
+   * A special constructor for spacially defined unit cells.
+   * Not used by readers. 
    * 
    * @param points [origin, a, b, c]
    * @param setRelative

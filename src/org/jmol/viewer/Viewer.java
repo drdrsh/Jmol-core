@@ -4779,20 +4779,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * StatusManager.syncSend Viewer.setSyncTarget Viewer.syncScript
    */
 
-  public String dialogAsk(String type, String fileName, Map<String, Object> params) {
-    /**
-     * @j2sNative
-     * 
-     *            return prompt(type, fileName);
-     * 
-     */
-    {
-      // may have #NOCARTOONS#; and/or "#APPEND#; prepended
-      return (isKiosk || !haveAccess(ACCESS.ALL) ? null : sm.dialogAsk(type,
-          fileName, params));
-    }
-  }
-
   @Override
   public void showUrl(String urlString) {
     // applet.Jmol
@@ -8590,9 +8576,35 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return getSmilesMatcher().getSmiles(atoms, ms.ac, bsSelected, bioComment, flags);
   }
 
+  public void alert(String msg) {
+    prompt(msg, "OK", null, true);
+  }
+
   public String prompt(String label, String data, String[] list,
                        boolean asButtons) {
     return (isKiosk ? "null" : apiPlatform.prompt(label, data, list, asButtons));
+  }
+
+  /**
+   * Ask for new file name when opening a file
+   * 
+   * @param type
+   * @param fileName
+   * @param params
+   * @return new file name
+   */
+  public String dialogAsk(String type, String fileName, Map<String, Object> params) {
+    /**
+     * @j2sNative
+     * 
+     *            return prompt(type, fileName);
+     * 
+     */
+    {
+      // may have #NOCARTOONS#; and/or "#APPEND#; prepended
+      return (isKiosk || !haveAccess(ACCESS.ALL) ? null : sm.dialogAsk(type,
+          fileName, params));
+    }
   }
 
   public int stateScriptVersionInt;

@@ -393,6 +393,8 @@ public class MathExt {
     // compare({bitset},{bitset},"SMILES", "BONDS") 13.3.9
     // compare({bitest},{bitset},"MAP","smilesString")
     // compare({bitset},{bitset},"MAP")
+    // compare(@1,@2,"SMILES", "polyhedra"[,"stddev"])
+    // compare(@1,@2,"SMARTS", "polyhedra"[,"stddev"])
 
     if (args.length < 2 || args.length > 5)
       return false;
@@ -503,10 +505,13 @@ public class MathExt {
         boolean isSearch = (isMap || sOpt.equalsIgnoreCase("SMARTS"));
         if (isSmiles || isSearch)
           sOpt = (args.length > 3 ? SV.sValue(args[3]) : null);
-        boolean hMaps = (("H".equals(sOpt) || "allH".equals(sOpt) || "bestH"
-            .equals(sOpt)));
-        boolean allMaps = (("all".equals(sOpt) || "allH".equals(sOpt)));
-        boolean bestMap = (("best".equals(sOpt) || "bestH".equals(sOpt)));
+        boolean hMaps = (("H".equalsIgnoreCase(sOpt) || "allH".equalsIgnoreCase(sOpt) || "bestH"
+            .equalsIgnoreCase(sOpt)));
+        boolean isPolyhedron = ("polyhedra".equalsIgnoreCase(sOpt));
+        if (isPolyhedron)
+          sOpt = (args.length > 4 ? SV.sValue(args[4]) : null);
+        boolean allMaps = (("all".equalsIgnoreCase(sOpt) || "allH".equalsIgnoreCase(sOpt)));
+        boolean bestMap = (("best".equalsIgnoreCase(sOpt) || "bestH".equalsIgnoreCase(sOpt)));
         if (sOpt == null || hMaps || allMaps || bestMap) {
           // with explicitH we set to find only the first match.
           if (!isMap && !isSmiles)

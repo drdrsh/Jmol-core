@@ -208,6 +208,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private int lastModelNumber = Integer.MAX_VALUE;
   public int desiredSpaceGroupIndex = -1;
   protected P3 fileScaling;
+  protected float latticeScaling = Float.NaN;
   protected P3 fileOffset;
   private P3 fileOffsetFractional;
   P3 unitCellOffset;
@@ -697,12 +698,14 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     previousUnitCell = unitCellParams;
     iHaveUnitCell = ignoreFileUnitCell;
     if (!ignoreFileUnitCell) {
-      unitCellParams = new float[25];
+      unitCellParams = new float[26];
       //0-5 a b c alpha beta gamma
       //6-21 m00 m01... m33 cartesian-->fractional
       //22-24 supercell.x supercell.y supercell.z
+      //25 scaling
       for (int i = 25; --i >= 0;)
         unitCellParams[i] = Float.NaN;
+      unitCellParams[25] = latticeScaling;
       symmetry = null;
     }
     if (!ignoreFileSpaceGroupName)
@@ -1005,7 +1008,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       bsFilter = new BS();
       htParams.put("bsFilter", bsFilter);
       filter = (";" + filter + ";").replace(',', ';');
-      String s = getFilter("SYMOP=");
+      String s = getFilter("LATTICESCALING=");
+      if (s != null && unitCellParams.length > 25) 
+        unitCellParams[25] = latticeScaling = parseFloatStr(s); 
+      s = getFilter("SYMOP=");
       if (s != null)
         filterSymop = " " + s + " ";
       Logger.info("filtering with " + filter);

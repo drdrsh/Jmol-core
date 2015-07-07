@@ -1818,6 +1818,7 @@ abstract class ScriptExpr extends ScriptParam {
           switch (tok) {
           case T.polyhedra:
             info[0] = Integer.valueOf(i);
+            info[1] = "";
             vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "info", info);
             if (info[1] != null) {
               if (vout == null)
