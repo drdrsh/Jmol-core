@@ -145,7 +145,7 @@ public class SimpleUnitCell {
         params = n;
       }
     }
-    System.out.println("unitcell " + a + " " + b + " " + c);
+    //System.out.println("unitcell " + a + " " + b + " " + c);
     
     a *= fa; 
     if (b <= 0) {
@@ -245,7 +245,7 @@ public class SimpleUnitCell {
   }
 
   private void setCellParams() {
-    System.out.println("unitcell " + a + " " + b + " " + c);
+    //System.out.println("unitcell " + a + " " + b + " " + c);
     cosAlpha = Math.cos(toRadians * alpha);
     sinAlpha = Math.sin(toRadians * alpha);
     cosBeta = Math.cos(toRadians * beta);

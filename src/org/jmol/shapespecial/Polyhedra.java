@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.P4;
@@ -64,7 +65,7 @@ public class Polyhedra extends AtomShape {
   private final static int MAX_VERTICES = 250;
   private final static int FACE_COUNT_MAX = MAX_VERTICES - 3;
   private P3[] otherAtoms = new P3[MAX_VERTICES + 1];
-  private short[] normixesT = new short[MAX_VERTICES];
+  private V3[] normalsT = new V3[MAX_VERTICES + 1];
   private int[][] planesT = new int[MAX_VERTICES][3];
   private final static P3 randomPoint = P3.new3(3141f, 2718f, 1414f);
   
@@ -311,6 +312,16 @@ public class Polyhedra extends AtomShape {
       }
       return false;
     }
+    if (property == "move") {
+      BS bs = (BS) data[0];
+      M4 mat = (M4) data[1];
+      for (int i = polyhedronCount; --i >= 0;) {
+        Polyhedron p = polyhedrons[i];
+        if (bs.get(p.centralAtom.i))
+          p.move(mat);
+      }
+      return true;
+    }
     if (property == "centers") {
       BS bs = new BS();
       String smiles = (String) data[1];
@@ -319,16 +330,17 @@ public class Polyhedra extends AtomShape {
       Integer n = (Integer) data[0];
       if (sm != null)
         smiles = sm.cleanSmiles(smiles);
-      int nv = (smiles != null ? PT.countChar(smiles, '*') : n == null ? Integer.MIN_VALUE : n.intValue());
-      if (smiles !=  null && nv == 0)
+      int nv = (smiles != null ? PT.countChar(smiles, '*')
+          : n == null ? Integer.MIN_VALUE : n.intValue());
+      if (smiles != null && nv == 0)
         nv = Integer.MIN_VALUE;
       for (int i = polyhedronCount; --i >= 0;) {
-        if (nv > 0 && polyhedrons[i].nVertices != nv 
-            || nv > Integer.MIN_VALUE && nv < 0 && polyhedrons[i].faces.length != -nv)
+        if (nv > 0 && polyhedrons[i].nVertices != nv || nv > Integer.MIN_VALUE
+            && nv < 0 && polyhedrons[i].faces.length != -nv)
           continue;
         if (smiles == null) {
-            bs.set(polyhedrons[i].centralAtom.i);
-        } else if (sm != null){
+          bs.set(polyhedrons[i].centralAtom.i);
+        } else if (sm != null) {
           polyhedrons[i].getSymmetry(vwr, false);
           String smiles0 = polyhedrons[i].smiles;
           try {
@@ -350,7 +362,7 @@ public class Polyhedra extends AtomShape {
           return true;
         }
       }
-      return false;      
+      return false;
     }
     return false;
   }
@@ -366,7 +378,7 @@ public class Polyhedra extends AtomShape {
   private void setLighting(boolean isFullyLit, BS bs) {
     for (int i = polyhedronCount; --i >= 0;)
       if (bs.get(polyhedrons[i].centralAtom.i)) {
-        short[] normixes = polyhedrons[i].normixes;
+        short[] normixes = polyhedrons[i].getNormixes();
         polyhedrons[i].isFullyLit = isFullyLit;
         for (int j = normixes.length; --j >= 0;) {
           if (normixes[j] < 0 != isFullyLit)
@@ -542,7 +554,6 @@ public class Polyhedra extends AtomShape {
 
   private Polyhedron validatePolyhedron(Atom centralAtom, int vertexCount,
                                            P3[] otherAtoms) {
-    V3 normal = new V3();
     int planeCount = 0;
     int iCenter = vertexCount;
     int nPoints = iCenter + 1;
@@ -642,8 +653,9 @@ public class Polyhedra extends AtomShape {
     int vmax = MAX_VERTICES;
     P3 rpt = randomPoint;
     BS bsTemp = Normix.newVertexBitSet();
-    short[] n = normixesT;
+    V3[] normals = normalsT; 
     Map<Integer,String> htNormMap = new Hashtable<Integer, String>();
+    BS bsFlat = new BS();
     boolean doCheckPlane = isComplex;
     for (int i = 0; i < nother2; i++)
       for (int j = i + 1; j < nother1; j++) {
@@ -666,6 +678,7 @@ public class Polyhedra extends AtomShape {
           boolean isFlat = (faceCatalog.indexOf(faceId(i, j, k)) >= 0);
           // if center is on the face, then we need a different point to 
           // define the normal
+          V3 normal = new V3();
           boolean isWindingOK = (isFlat ? getNormalFromCenter(rpt, points[i],
               points[j], points[k], false, normal) : getNormalFromCenter(
               points[iCenter], points[i], points[j], points[k], true, normal));
@@ -690,8 +703,9 @@ public class Polyhedra extends AtomShape {
                 isWindingOK ? j : i, nRef , isFlat ? -7 : -6};
             getNormalFromCenter(points[k], points[i], points[j], ptRef, false,
                 normal);
-            n[planeCount++] = (isFlat ? Normix.get2SidedNormix(normal, bsTemp)
-                : Normix.getNormixV(normal, bsTemp));
+            if (isFlat)
+              bsFlat.set(planeCount);
+            normals[planeCount++] = normal;
           }
           facet = faceId(i, k, -1);
           if (collapsed || isFlat && facetCatalog.indexOf(facet) < 0) {
@@ -700,8 +714,9 @@ public class Polyhedra extends AtomShape {
                 isWindingOK ? k : i , isFlat ? -7 : -5};
             getNormalFromCenter(points[j], points[i], ptRef, points[k], false,
                 normal);
-            n[planeCount++] = (isFlat ? Normix.get2SidedNormix(normal, bsTemp)
-                : Normix.getNormixV(normal, bsTemp));
+            if (isFlat)
+              bsFlat.set(planeCount);
+            normals[planeCount++] = normal;
           }
           facet = faceId(j, k, -1);
           if (collapsed || isFlat && facetCatalog.indexOf(facet) < 0) {
@@ -710,8 +725,9 @@ public class Polyhedra extends AtomShape {
                 isWindingOK ? k : j , isFlat ? -7 : -4};
             getNormalFromCenter(points[i], ptRef, points[j], points[k], false,
                 normal);
-            n[planeCount++] = (isFlat ? Normix.get2SidedNormix(normal, bsTemp)
-                : Normix.getNormixV(normal, bsTemp));
+            if (isFlat)
+              bsFlat.set(planeCount);
+            normals[planeCount++] = normal;
           }
           if (!isFlat) {
             if (collapsed) {
@@ -720,10 +736,10 @@ public class Polyhedra extends AtomShape {
               // finally, the standard face:
               p[planeCount] = new int[] { isWindingOK ? i : j,
                   isWindingOK ? j : i, k, -7};
-              n[planeCount] = Normix.getNormixV(normal, bsTemp);
+              normals[planeCount] = normal;
               if (!doCheckPlane
-                  || checkPlane(points, iCenter, p, n, planeCount, plane,
-                      vTemp, htNormMap, planarParam))
+                  || checkPlane(points, iCenter, p, normals, planeCount, plane,
+                      vTemp, htNormMap, planarParam, bsTemp))
                 planeCount++;
             }
           }
@@ -738,7 +754,7 @@ public class Polyhedra extends AtomShape {
         Logger.info("Polyhedron " + getKey(p[i], i));
     }
     return new Polyhedron(centralAtom, iCenter, nPoints, planeCount,
-        otherAtoms, n, p, collapsed, offset, factor, planarParam);
+        otherAtoms, normals, bsFlat, p, collapsed, offset, factor, planarParam);
   }
   
   /**
@@ -776,11 +792,13 @@ public class Polyhedra extends AtomShape {
    * @param plane
    * @param vNorm
    * @param htNormMap
+   * @param planarParam 
+   * @param bsTemp 
    * @return true if valid
    */
   private boolean checkPlane(P3[] points, int ptCenter, int[][] planes,
-                             short[] normals, int index, P4 plane, V3 vNorm,
-                             Map<Integer, String> htNormMap, float planarParam) {
+                             V3[] normals, int index, P4 plane, V3 vNorm,
+                             Map<Integer, String> htNormMap, float planarParam, BS bsTemp) {
     
     int[] p1 = planes[index];
     
@@ -802,13 +820,12 @@ public class Polyhedra extends AtomShape {
         return false;
       }
     }
-
-    Integer normix = Integer.valueOf(normals[index]);
+    V3 norm = normals[index];
+    Integer normix = Integer.valueOf(Normix.getNormixV(norm, bsTemp));
     String list = htNormMap.get(normix);
     if (list == null) {
       // we must see if there is a close normix to this
       V3[] norms = Normix.getVertexVectors();
-      V3 norm = norms[normals[index]];
       for (Entry<Integer, String> e: htNormMap.entrySet()) {
         if (norms[e.getKey().intValue()].dot(norm) > planarParam) {
           list = e.getValue();
@@ -922,7 +939,6 @@ public class Polyhedra extends AtomShape {
           : 0);
       if (p.visibilityFlags != 0)
         setShapeVisibility(atoms[p.centralAtom.i], true);
-
     }
   }
   

@@ -242,7 +242,6 @@ public class MathExt {
     return mp.addXAV(a);
   }
 
-  @SuppressWarnings("null")
   private boolean evaluateBin(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
     if (args.length != 3 && args.length != 4)
@@ -447,14 +446,14 @@ public class MathExt {
           return mp.addXStr("NONE");
         if (bs1 != null)
           smiles1 = (String) e.getSmilesExt().getSmilesMatches("", null, bs1,
-              null, false, true);
+              null, false, true, false);
         boolean check;
         if (bs2 == null) {
           // note: find smiles1 IN smiles2 here
           check = (vwr.getSmilesMatcher().areEqual(smiles2, smiles1) > 0);
         } else {
           check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null, bs2,
-              null, false, true)).nextSetBit(0) >= 0);
+              null, false, true, false)).nextSetBit(0) >= 0);
         }
         if (!check) {
           // MF matched, but didn't match SMILES
@@ -469,7 +468,7 @@ public class MathExt {
                 check = (vwr.getSmilesMatcher().areEqual(smiles1, smiles2) > 0);
               } else {
                 check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null,
-                    bs2, null, false, true)).nextSetBit(0) >= 0);
+                    bs2, null, false, true, false)).nextSetBit(0) >= 0);
               }
               if (check)
                 return mp.addXStr("ENANTIOMERS");
@@ -480,7 +479,7 @@ public class MathExt {
                   smiles1) > 0);
             } else {
               Object ret = e.getSmilesExt().getSmilesMatches(
-                  "/nostereo/" + smiles1, null, bs2, null, false, true);
+                  "/nostereo/" + smiles1, null, bs2, null, false, true, false);
               check = (((BS) ret).nextSetBit(0) >= 0);
             }
             if (check)
@@ -519,7 +518,7 @@ public class MathExt {
           sOpt = "/noaromatic"
               + (allMaps || bestMap ? "/" : " nostereo/")
               + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null,
-                  bs1, null, false, true);
+                  bs1, null, false, true, false);
         } else {
           allMaps = true;
         }
@@ -552,7 +551,7 @@ public class MathExt {
         }
       }
       return (isStdDev || Float.isNaN(stddev) ? mp.addXFloat(stddev) : mp
-          .addXM4(m));
+          .addXM4(m.round(1e-7f)));
     } catch (Exception ex) {
       e.evalError(ex.getMessage() == null ? ex.toString() : ex.getMessage(),
           null);
@@ -1078,8 +1077,11 @@ public class MathExt {
           if (flags.equalsIgnoreCase("mf")) {
             ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSearch);
           } else {
+            boolean firstMatchOnly = (args.length < 4 || !isON);
+            if (args.length > 3)
+              isAll = (args[2].tok == T.on);
             ret = e.getSmilesExt().getSmilesMatches(flags, smiles, null, null,
-                isSearch, !isAll);
+                isSearch, !isAll, firstMatchOnly);
           }
           break;
         case T.bitset:
@@ -1110,7 +1112,7 @@ public class MathExt {
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
             ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value,
-                bsMatch3D, !isSmiles, !isAll);
+                bsMatch3D, !isSmiles, !isAll, false);
           }
           break;
         }
@@ -1344,9 +1346,10 @@ public class MathExt {
     // format("array", x)
     SV x1 = (args.length < 2 || intValue == T.format ? mp.getX() : null);
     String format = (args.length == 0 ? "%U" : args[0].tok == T.varray ? null : SV.sValue(args[0]));
-    if (x1 != null && format != null) {
+    if (args.length > 0 && x1 != null && format != null) {
       // x1.format(["energy", "pointGroup"]);
       // x1.format("%5.3f %5s", ["energy", "pointGroup"])
+      // but not x1.format()
       if (args.length == 2) {
         Lst<SV> listIn = x1.getList();
         Lst<SV> formatList = args[1].getList();
@@ -1359,8 +1362,10 @@ public class MathExt {
       int pt = (isLabel ? -1 : SV.getFormatType(format));
       if (pt >= 0 && args.length != 2)
         return false;
-      if (pt >= 0 || args.length < 2 || args[1].tok != T.varray)
-        return mp.addXObj(SV.format(args, pt, false));
+      if (pt >= 0 || args.length < 2 || args[1].tok != T.varray) {
+        Object o = SV.format(args, pt, false); 
+        return (format.equalsIgnoreCase("json") ? mp.addXStr((String)o) : mp.addXObj(o));
+      }
       // fill an array with applied formats
       Lst<SV> a = args[1].getList();
       SV[] args2 = new SV[] { args[0], null };
@@ -2749,7 +2754,7 @@ public class MathExt {
       if (!isOK)
         e.invArg();
       return mp.addXObj(e.getSmilesExt().getSmilesMatches(SV.sValue(args[1]), null, bsSelected,
-          null, tok == T.search, mp.asBitSet));
+          null, tok == T.search, mp.asBitSet, false));
     }
     if (withinSpec instanceof String) {
       if (tok == T.nada) {

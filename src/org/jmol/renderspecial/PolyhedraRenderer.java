@@ -102,17 +102,18 @@ public class PolyhedraRenderer extends ShapeRenderer {
 
     // no edges to new points when not collapsed
    //int m = (int) ( Math.random() * 24);
+    short[] normixes = p.getNormixes();
     if (!needTranslucent || g3d.setC(colix))
       for (int i = planes.length; --i >= 0;) {
         int[] pl = planes[i];
         //if (i != m)continue;
         try {
-        g3d.fillTriangleTwoSided(p.normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]]);
+        g3d.fillTriangleTwoSided(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]]);
         } catch (Exception e){
           System.out.println("heorhe");
         }
         if (pl[3] >= 0)
-          g3d.fillTriangleTwoSided(p.normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);          
+          g3d.fillTriangleTwoSided(normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);          
       }
     // edges are not drawn translucently ever
     if (bsSelected != null && bsSelected.get(iAtom)) 
@@ -123,10 +124,10 @@ public class PolyhedraRenderer extends ShapeRenderer {
       for (int i = planes.length; --i >= 0;) {
         int[] pl = planes[i];
         if (pl[3] < 0) {
-          drawFace(p.normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], -pl[3]);
+          drawFace(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], -pl[3]);
         } else {
-          drawFace(p.normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], 3);
-          drawFace(p.normixes[i], sc[pl[0]], sc[pl[2]], sc[pl[3]], 6);          
+          drawFace(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], 3);
+          drawFace(normixes[i], sc[pl[0]], sc[pl[2]], sc[pl[3]], 6);          
         }
           
       }

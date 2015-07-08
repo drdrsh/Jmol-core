@@ -3618,6 +3618,8 @@ import java.util.Properties;
   }
 
   public void recalculatePositionDependentQuantities(BS bs, M4 mat) {
+    if ((vwr.shm.getShape(JC.SHAPE_POLYHEDRA) != null))
+      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "move", new Object[] {bs, mat});
     if (haveStraightness)
       calculateStraightnessAll();
     recalculateLeadMidpointsAndWingVectors(-1);

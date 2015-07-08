@@ -1226,6 +1226,7 @@ public class SV extends T implements JSONEncodable {
    * 
    * @param args
    * @param pt 0: to JSON, 5: to base64, 12: to bytearray, 22: to array
+ * @param array2D 
    * @return formatted string
    */
   public static Object format(SV[] args, int pt, boolean array2D) {

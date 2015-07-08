@@ -730,7 +730,11 @@ public class T {
   public final static int tensor           = 24 | 0 << 9 | mathfunc | mathproperty;
   public final static int modulation       = 25 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
   public final static int _                = 26 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
-  
+
+  public final static int find         = 27 | 0 << 9 | mathfunc | mathproperty;
+  public final static int replace      = 28 | 0 << 9 | mathfunc | mathproperty;
+
+
   // xxx(a)
   
   public final static int acos         = 2 | 1 << 9 | mathfunc;
@@ -797,11 +801,6 @@ public class T {
   // ___.xxx(a,b,c)
   
   public final static int symop        = 2 | 3 << 9 | mathfunc | mathproperty | intproperty; 
-  public final static int find         = 3 | 3 << 9 | mathfunc | mathproperty;
-
-  // anything beyond 3 are set "unlimited"
-
-  public final static int replace      = 2 | 7 << 9 | mathfunc | mathproperty;
 
   // set parameters 
   

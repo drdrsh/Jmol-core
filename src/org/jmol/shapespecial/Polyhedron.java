@@ -4,24 +4,28 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.AU;
+import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.V3;
 
 import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.api.SymmetryInterface;
+import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.script.T;
 import org.jmol.util.C;
+import org.jmol.util.Normix;
 import org.jmol.viewer.Viewer;
 
 public class Polyhedron {
- 
+
   int modelIndex;
   public final Atom centralAtom;
   public final P3[] vertices;
   int nVertices;
   boolean visible;
-  public final short[] normixes;
+  private final V3[] normals;
+  private short[] normixes;
   public int[][] faces;
   public int visibilityFlags = 0;
   boolean collapsed = false;
@@ -32,23 +36,25 @@ public class Polyhedron {
   public String smiles, smarts;
   private SymmetryInterface pointGroup;
   Float volume;
-
-
+  private BS bsFlat;
 
   Polyhedron(Atom centralAtom, int nVertices, int nPoints, int planeCount,
-      P3[] otherAtoms, short[] normixes, int[][] planes, boolean collapsed, float faceCenterOffset, float distanceFactor, float planarParam) {
+      P3[] otherAtoms, V3[] normals, BS bsFlat, int[][] planes,
+      boolean collapsed, float faceCenterOffset, float distanceFactor,
+      float planarParam) {
     this.centralAtom = centralAtom;
     modelIndex = centralAtom.mi;
     this.nVertices = nVertices;
     this.vertices = new P3[nPoints + 1];
     this.visible = true;
-    this.normixes = new short[planeCount];
-    //this.planeCount = planeCount;
+    this.normals = new V3[planeCount];
+    this.bsFlat = bsFlat;
     this.faces = AU.newInt2(planeCount);
-    for (int i = nPoints + 1; --i >= 0;) // includes central atom as last atom or possibly reference point
+    for (int i = nPoints + 1; --i >= 0;)
+      // includes central atom as last atom or possibly reference point
       vertices[i] = otherAtoms[i];
     for (int i = planeCount; --i >= 0;)
-      this.normixes[i] = normixes[i];
+      this.normals[i] = V3.newV(normals[i]);
     for (int i = planeCount; --i >= 0;)
       this.faces[i] = planes[i];
     this.collapsed = collapsed;
@@ -100,7 +106,9 @@ public class Polyhedron {
   }
 
   /**
-   * allows for n-gon, not just triangle; if last component index is negative, then that's a mesh code
+   * allows for n-gon, not just triangle; if last component index is negative,
+   * then that's a mesh code
+   * 
    * @return volume
    */
   private Float getVolume() {
@@ -115,12 +123,11 @@ public class Polyhedron {
       int[] face = faces[i];
       for (int j = face.length - 2; --j >= 0;)
         if (face[j + 2] >= 0)
-          v += triangleVolume(face[j], face[j + 1], face[j + 2], vAB, vAC, vTemp);
+          v += triangleVolume(face[j], face[j + 1], face[j + 2], vAB, vAC,
+              vTemp);
     }
     return Float.valueOf(v / 6);
   }
-
-
 
   private float triangleVolume(int i, int j, int k, V3 vAB, V3 vAC, V3 vTemp) {
     // volume
@@ -131,23 +138,42 @@ public class Polyhedron {
     return vAC.dot(vTemp);
   }
 
-
-
   String getState() {
     P3 ptemp = new P3();
     String s = "({" + centralAtom.i + "}) TO [";
     for (int i = 0; i < nVertices; i++) {
       ptemp.setT(vertices[i]);
-      s += ptemp; 
+      s += ptemp;
     }
     s += "]";
-    return "  polyhedra " + s
-    + (collapsed ? " collapsed" : "") 
-    +  " distanceFactor " + distanceFactor
-    +  " faceCenterOffset " + faceCenterOffset 
-//    +  " planarParam " + planarParam 
-    + (isFullyLit ? " fullyLit" : "" ) + ";"
-    + (visible ? "" : "polyhedra off;") + "\n";
+    return "  polyhedra " + s + (collapsed ? " collapsed" : "")
+        + " distanceFactor " + distanceFactor + " faceCenterOffset "
+        + faceCenterOffset
+        //    +  " planarParam " + planarParam 
+        + (isFullyLit ? " fullyLit" : "") + ";"
+        + (visible ? "" : "polyhedra off;") + "\n";
   }
-  
+
+  public void move(M4 mat) {
+    for (int i = 0; i < nVertices; i++) {
+      P3 p = vertices[i];
+      if (p instanceof Atom)
+        p = vertices[i] = P3.newP(p);
+      mat.rotTrans(p);
+    }
+    for (int i = normals.length; --i >= 0;)
+      mat.rotate(normals[i]);
+    normixes = null;
+  }
+
+  public short[] getNormixes() {
+    if (normixes == null) {
+      normixes = new short[normals.length];
+      BS bsTemp = new BS();
+      for (int i = normals.length; --i >= 0;)
+        normixes[i] = (bsFlat.get(i) ? Normix.get2SidedNormix(normals[i],
+            bsTemp) : Normix.getNormixV(normals[i], bsTemp));
+    }
+    return normixes;
+  }
 }

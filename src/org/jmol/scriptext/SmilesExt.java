@@ -159,40 +159,67 @@ public class SmilesExt {
     return 0;
   }
 
+  /**
+   * @param pattern e
+   * @param smiles 
+   * @param bsSelected 
+   * @param bsMatch3D 
+   * @param isSmarts 
+   * @param asOneBitset 
+   * @param firstMatchOnly  
+   * @return 
+   * @throws ScriptException 
+   */
   public Object getSmilesMatches(String pattern, String smiles, BS bsSelected,
                                  BS bsMatch3D, boolean isSmarts,
-                                 boolean asOneBitset) throws ScriptException {
+                                 boolean asOneBitset, boolean firstMatchOnly) throws ScriptException {
 
     // just retrieving the SMILES or bioSMILES string
 
     if (pattern.length() == 0 || pattern.equals("H") || pattern.equals("*")) {
       boolean isBioSmiles = (!asOneBitset);
       try {
-        return e.vwr.getSmilesOpt(bsSelected, 0, 0, 
-              (pattern.equals("H") ? JC.SMILES_EXPLICIT_H : 0)
-            | (pattern.equals("*") ? JC.SMILES_TOPOLOGY : 0)
-            | (isBioSmiles ? JC.SMILES_BIO | JC.SMILES_BIO_CROSSLINK | JC.SMILES_BIO_COMMENT : 0)
-        );
+        return e.vwr.getSmilesOpt(
+            bsSelected,
+            0,
+            0,
+            (pattern.equals("H") ? JC.SMILES_EXPLICIT_H : 0)
+                | (pattern.equals("*") ? JC.SMILES_TOPOLOGY : 0)
+                | (isBioSmiles ? JC.SMILES_BIO | JC.SMILES_BIO_CROSSLINK
+                    | JC.SMILES_BIO_COMMENT : 0));
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }
     }
 
-    boolean asAtoms = true;
     BS[] b;
     if (bsMatch3D == null) {
 
       // getting a BitSet or BitSet[] from a set of atoms or a pattern.
 
-      asAtoms = (smiles == null);
       try {
-        if (asAtoms)
-          b = sm.getSubstructureSetArray(pattern,
-              e.vwr.ms.at, e.vwr.ms.ac, bsSelected, null,
-              isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES);
-        else
-          b = sm.find(pattern, smiles, isSmarts, false);
-
+        if (smiles == null) {
+          b = sm.getSubstructureSetArray(pattern, e.vwr.ms.at, e.vwr.ms.ac,
+              bsSelected, null, isSmarts ? JC.SMILES_TYPE_SMARTS
+                  : JC.SMILES_TYPE_SMILES);
+        } else {
+          int[][] map = sm.find(pattern, smiles, isSmarts, firstMatchOnly);
+          if (!asOneBitset)
+            return (!firstMatchOnly ? map : map.length == 0 ? new int[0] : map[0]);
+          BS bs = new BS();
+          for (int j = 0; j < map.length; j++) {
+            int[] a = map[j];
+            for (int k = a.length; --k >= 0;)
+              bs.set(a[k]);
+          }
+          if (!isSmarts)
+            return Integer.valueOf(bs.cardinality());
+          int[] iarray = new int[bs.cardinality()];
+          int pt = 0;
+          for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+            iarray[pt++] = i + 1;
+          return iarray;
+        }
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
         //if (!asAtoms && !isSmarts)
@@ -205,7 +232,7 @@ public class SmilesExt {
 
       Lst<BS> vReturn = new Lst<BS>();
       float stddev = getSmilesCorrelation(bsMatch3D, bsSelected, pattern, null,
-          null, null, vReturn, false, null, null, false, 
+          null, null, vReturn, false, null, null, false,
           isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES);
       if (Float.isNaN(stddev)) {
         if (asOneBitset)
@@ -220,19 +247,8 @@ public class SmilesExt {
       BS bs = new BS();
       for (int j = 0; j < b.length; j++)
         bs.or(b[j]);
-      if (asAtoms)
-        return bs;
-      if (!isSmarts)
-        return Integer.valueOf(bs.cardinality());
-      int[] iarray = new int[bs.cardinality()];
-      int pt = 0;
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-        iarray[pt++] = i + 1;
-      return iarray;
+      return bs;
     }
-    if (!asAtoms)
-      for (int j = 0; j < b.length; j++)
-        b[j] = BSUtil.copy2(b[j], new BondSet());
     Lst<BS> list = new Lst<BS>();
     for (int j = 0; j < b.length; j++)
       list.addLast(b[j]);

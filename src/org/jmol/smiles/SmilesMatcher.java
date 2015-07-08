@@ -99,8 +99,6 @@ import org.jmol.viewer.JC;
  */
 public class SmilesMatcher implements SmilesMatcherInterface {
 
-
-
   private final static int SMILES_MODE_BITSET       = 0x001000;
   private final static int SMILES_MODE_ARRAY        = 0x002000;
   private final static int SMILES_MODE_MAP          = 0x003000;
@@ -168,10 +166,10 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   @Override
   public int areEqual(String smiles1, String smiles2) throws Exception {
     InvalidSmilesException.clear();
-    BS[] result = findPriv(smiles1, SmilesParser.getMolecule(smiles2, false),
+    BS[] result = (BS[]) findPriv(smiles1, SmilesParser.getMolecule(smiles2, false),
         (smiles1.indexOf("*") >= 0 ? JC.SMILES_TYPE_SMARTS
             : JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL)
-            | JC.SMILES_RETURN_FIRST);
+            | JC.SMILES_RETURN_FIRST | SMILES_MODE_ARRAY);
     return (result == null ? -1 : result.length);
   }
 
@@ -186,7 +184,9 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   public boolean areEqualTest(String smiles, SmilesSearch molecule)
       throws Exception {
     //String pattern, String smiles, boolean isSmarts,    boolean firstMatchOnly    
-    BS[] ret = findPriv(smiles, molecule, JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL | JC.SMILES_RETURN_FIRST);
+    BS[] ret = (BS[]) findPriv(smiles, molecule, 
+          JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL 
+        | JC.SMILES_RETURN_FIRST | SMILES_MODE_ARRAY);
     return (ret != null && ret.length == 1);
   }
 
@@ -202,11 +202,11 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * @param isSmarts
    *        TRUE for SMARTS strings, FALSE for SMILES strings
    * @param firstMatchOnly
-   * @return number of occurances of pattern within smiles
+   * @return array of correlations of occurances of pattern within smiles
    * @throws Exception
    */
   @Override
-  public BS[] find(String pattern, String smiles, boolean isSmarts,
+  public int[][] find(String pattern, String smiles, boolean isSmarts,
                    boolean firstMatchOnly) throws Exception {
 
     InvalidSmilesException.clear();
@@ -215,9 +215,9 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     SmilesSearch search = SmilesParser.getMolecule(smiles, false);
     // boolean isSmarts,  boolean matchAllAtoms, boolean firstMatchOnly
 
-    return findPriv(pattern, search, 
+    return (int[][]) findPriv(pattern, search, 
         (isSmarts? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL)
-        | (firstMatchOnly ? JC.SMILES_RETURN_FIRST : 0));
+        | (firstMatchOnly ? JC.SMILES_RETURN_FIRST : 0) | SMILES_MODE_MAP);
   }
 
   @Override
@@ -429,15 +429,15 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   /////////////// private methods ////////////////
 
   // boolean isSmarts,  boolean matchAllAtoms, boolean firstMatchOnly
-  private BS[] findPriv(String pattern, SmilesSearch search, int flags)
+  private Object findPriv(String pattern, SmilesSearch search, int flags)
       throws Exception {
     // create a topological model set from smiles
     // do not worry about stereochemistry -- this
     // will be handled by SmilesSearch.setSmilesCoordinates
     BS bsAromatic = new BS();
     search.createTopoMap(bsAromatic);
-    return (BS[]) matchPriv(pattern, search.jmolAtoms, -search.jmolAtoms.length,
-        null, bsAromatic, flags | SMILES_MODE_ARRAY);
+    return matchPriv(pattern, search.jmolAtoms, -search.jmolAtoms.length,
+        null, bsAromatic, flags);
   }
 
   @SuppressWarnings({ "unchecked" })
