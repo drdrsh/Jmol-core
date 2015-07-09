@@ -3179,6 +3179,11 @@ public class CmdExt extends ScriptExt {
       String propertyName = null;
       Object propertyValue = null;
       switch (getToken(i).tok) {
+      case T.hash:
+        propertyName = "info";
+        propertyValue = e.theToken.value;
+        needsGenerating = true;
+        break;
       case T.unitcell:
         propertyName = "unitCell";
         propertyValue = Boolean.TRUE;

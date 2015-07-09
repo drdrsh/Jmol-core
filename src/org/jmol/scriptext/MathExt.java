@@ -115,7 +115,7 @@ public class MathExt {
       return evaluateList(mp, op.intValue, args);
     case T.array:
     case T.leftsquare:
-      return evaluateArray(mp, args, tok == T.leftsquare);
+      return evaluateArray(mp, args, false);
     case T.axisangle:
     case T.quaternion:
       return evaluateQuaternion(mp, args, tok);

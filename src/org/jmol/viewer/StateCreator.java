@@ -570,23 +570,25 @@ public class StateCreator extends JmolStateCreator {
     }
     commands.append("# frame state;\n");
     commands.append("# modelCount ").appendI(modelCount).append(";\n# first ")
-        .append(vwr.getModelNumberDotted(0)).append(";\n# last ").append(
-            vwr.getModelNumberDotted(modelCount - 1)).append(";\n");
+        .append(vwr.getModelNumberDotted(0)).append(";\n# last ")
+        .append(vwr.getModelNumberDotted(modelCount - 1)).append(";\n");
     if (am.backgroundModelIndex >= 0)
-      app(commands, "set backgroundModel "
-          + vwr.getModelNumberDotted(am.backgroundModelIndex));
+      app(commands,
+          "set backgroundModel "
+              + vwr.getModelNumberDotted(am.backgroundModelIndex));
     if (vwr.tm.bsFrameOffsets != null) {
       app(commands, "frame align " + Escape.eBS(vwr.tm.bsFrameOffsets));
     } else if (vwr.ms.translations != null) {
       for (int i = modelCount; --i >= 0;) {
         P3 t = (vwr.ms.getTranslation(i));
         if (t != null)
-          app(commands, "frame " + vwr.ms.getModelNumberDotted(i) + " align " + t);          
+          app(commands, "frame " + vwr.ms.getModelNumberDotted(i) + " align "
+              + t);
       }
     }
-    app(commands, "frame RANGE "
-        + am.getModelSpecial(AnimationManager.FRAME_FIRST) + " "
-        + am.getModelSpecial(AnimationManager.FRAME_LAST));
+    app(commands,
+        "frame RANGE " + am.getModelSpecial(AnimationManager.FRAME_FIRST) + " "
+            + am.getModelSpecial(AnimationManager.FRAME_LAST));
     app(commands, "animation DIRECTION "
         + (am.animationDirection == 1 ? "+1" : "-1"));
     app(commands, "animation FPS " + am.animationFps);
@@ -601,9 +603,10 @@ public class StateCreator extends JmolStateCreator {
       app(commands, "frame " + (i + 1));
       showModel = (am.cmi != am.modelIndexForFrame(i));
     }
-    if (showModel)
-      app(commands, "model "
-          + am.getModelSpecial(AnimationManager.MODEL_CURRENT));
+    if (showModel) {
+      String s = am.getModelSpecial(AnimationManager.MODEL_CURRENT);
+      app(commands, s.equals("0") ? "frame *" : "model " + s);
+    }
     app(commands, "animation "
         + (!am.animationOn ? "OFF" : am.currentDirection == 1 ? "PLAY"
             : "PLAYREV"));

@@ -3641,8 +3641,10 @@ import java.util.Properties;
   public void moveAtoms(M4 m4, M3 mNew, M3 rotation, V3 translation, BS bs,
                         P3 center, boolean isInternal, boolean translationOnly) {
     if (m4 != null) {
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         m4.rotTrans(at[i]);
+        taintAtom(i, TAINT_COORD);
+      }
       mat4.setM4(m4);
       translation = null;
     } else if (!translationOnly) {
@@ -3689,8 +3691,10 @@ import java.util.Properties;
       }
     }
     if (translation != null) {
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         at[i].add(translation);
+        taintAtom(i, TAINT_COORD);
+      }
       if (!translationOnly) {
         mat4t.setIdentity();
         mat4t.setTranslation(translation);

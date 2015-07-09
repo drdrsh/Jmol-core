@@ -91,7 +91,7 @@ public class FilesReader implements JmolFilesReaderInterface {
     String name = fullPathNamesIn[i];
     String[] subFileList = null;
     htParams.remove("subFileList");
-    if (name.indexOf("|") >= 0) {
+    if (name.indexOf("|") >= 0  && !htParams.containsKey("isStateScript")) {
       subFileList = PT.split(name, "|");
       name = subFileList[0];
     }

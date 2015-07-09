@@ -276,8 +276,6 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * @param atoms
    * @param ac
    * @param bsSelected
-   * @param isSmarts
-   * @param firstMatchOnly
    * @return BitSet indicating which atoms match the pattern.
    */
 
@@ -340,8 +338,6 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * @param ac
    * @param bsSelected
    * @param bsAromatic
-   * @param isSmarts
-   * @param firstMatchOnly
    * @return BitSet Array indicating which atoms match the pattern.
    * @throws Exception
    */
@@ -409,10 +405,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * @param pattern
    *        SMILES or SMARTS pattern.
    * @param atoms
-   * @param ac
    * @param bsSelected
-   * @param isSmarts
-   * @param firstMatchOnly
    * @return a set of atom correlations
    * 
    */

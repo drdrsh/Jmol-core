@@ -23,14 +23,15 @@
  */
 package org.openscience.jmol.app.jmolpanel.console;
 
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;
-import javax.swing.JTextArea;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+
 import javax.swing.JOptionPane;
-import javax.swing.text.Document;
+import javax.swing.JTextArea;
+
 import org.jmol.i18n.GT;
 import org.openscience.jmol.app.jmolpanel.LoopedStreams;
 
@@ -73,16 +74,16 @@ public class ConsoleTextArea extends JTextArea {
         StringBuilder sb = new StringBuilder();
         try {
           String s;
-          Document doc = getDocument();
+          //Document doc = getDocument();
           s = br.readLine();
           while (s != null) {
-            boolean caretAtEnd = false;
-            caretAtEnd = (getCaretPosition() == doc.getLength());
+            //boolean caretAtEnd = false;
+            //caretAtEnd = (getCaretPosition() == doc.getLength());
             sb.setLength(0);
             append(sb.append(s).append('\n').toString());
-            if (caretAtEnd) {
-              setCaretPosition(doc.getLength());
-            }
+            //if (caretAtEnd) {
+              //setCaretPosition(doc.getLength());
+           //}
             s = br.readLine();
           }
         } catch (IOException e) {
