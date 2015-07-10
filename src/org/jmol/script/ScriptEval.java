@@ -4429,7 +4429,7 @@ public class ScriptEval extends ScriptExpr {
       case T.varray:
       case T.leftsquare:
       case T.spacebeforesquare:
-        tok = tokAt(getLoadModelIndex(i, sOptions, htParams));
+        i = getLoadModelIndex(i, sOptions, htParams);
         break;
       }
       i = getCmdExt().getLoadSymmetryParams(i, sOptions, htParams);
@@ -4776,7 +4776,6 @@ public class ScriptEval extends ScriptExpr {
     case T.spacebeforesquare:
       htParams.remove("firstLastStep");
       float[] data = floatParameterSet(i, 1, Integer.MAX_VALUE);
-      i = iToken;
       BS bs = new BS();
       int[] iArray = new int[data.length];
       for (int j = 0; j < data.length; j++) {
