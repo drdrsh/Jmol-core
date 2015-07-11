@@ -1071,7 +1071,7 @@ public class PT {
    * @return         formatted string
    */
   
-  public static String formatString(String strFormat, String key, String strT,
+  private static String formatString(String strFormat, String key, String strT,
                                     float floatT, double doubleT, boolean doOne) {
     if (strFormat == null)
       return null;
@@ -1114,7 +1114,7 @@ public class PT {
         if (strFormat.charAt(ich) == '.') {
           ++ich;
           if ((ch = strFormat.charAt(ich)) == '-') {
-            isExponential = true;
+            isExponential = (strT == null);
             ++ich;
           } 
           if ((ch = strFormat.charAt(ich)) >= '0' && ch <= '9') {
@@ -1122,7 +1122,7 @@ public class PT {
             ++ich;
           }
           if (isExponential)
-            precision = -precision - (strT == null ? 1 : 0);
+            precision = -precision - 1;
         }
         String st = strFormat.substring(ich, ich + len);
         if (!st.equals(key)) {
