@@ -41,7 +41,6 @@ import javajs.util.XmlUtil;
 
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -85,7 +84,7 @@ import org.jmol.viewer.binding.Binding;
 
 
 @J2SIgnoreImport({ javajs.util.XmlUtil.class })
-public class PropertyManager implements JmolPropertyManager, Comparator<String> {
+public class PropertyManager implements JmolPropertyManager {
 
   public PropertyManager() {
     // required for reflection
@@ -1849,7 +1848,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
             "ATOM  %5.-5i  %-3.3a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null));
       String XX = a.getElementSymbolIso(false).toUpperCase();
-      XX = (a.group.getBioPolymerIndexInModel() + "    ").substring(0, 4)
+      XX = pdbKey(a.group.getBioPolymerIndexInModel())
+          + pdbKey(a.group.groupIndex)
           + LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0', null, ptTemp)
           + (XX.length() == 1 ? " " + XX : XX.substring(0, 2)) + "  ";
       getPointTransf(-1, vwr.ms, a, q, ptTemp);
@@ -1890,10 +1890,8 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
                 //$FALL-THROUGH$
               case 1:
                 out.append("CONECT").append(
-                    PT.formatStringI("%5i", "i", map
-                        .get(Integer.valueOf(iThis)).intValue()));
-                String s = PT.formatStringI("%5i", "i",
-                    map.get(Integer.valueOf(iOther)).intValue());
+                    PT.formatStringS("%5s", "s", "" + map.get(Integer.valueOf(iThis))));
+                String s = PT.formatStringS("%5s", "s", "" + map.get(Integer.valueOf(iOther)));
                 for (int k = 0; k < n; k++)
                   out.append(s);
                 out.append("\n");
@@ -1904,6 +1902,11 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
       }
     }
     return out.toString();
+  }
+
+  private String pdbKey(int np) {
+    String xp = (np < 0 ? "!999" : "   " + np); 
+    return xp.substring(xp.length() - 4);
   }
 
   /**
@@ -1918,44 +1921,42 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
    * @param out 
    */
   private void fixPDBFormat(Lst<String> lines, Map<Integer, Integer> map, OC out) {
-    lines.addLast("9999XXXXXX99999999999999999999!99!");
+    lines.addLast("!999!999XXXXXX99999999999999999999!99!");
     String[] alines = new String[lines.size()]; 
     lines.toArray(alines);
-    Arrays.sort(alines, this);
+    Arrays.sort(alines);
     lines.clear();
-    for (int i = 0, n = alines.length; i < n; i++)
+    for (int i = 0, n = alines.length; i < n; i++) {
       lines.addLast(alines[i]);
-    int noff = 1;
+    }
     String lastPoly = null;
     String lastLine = null;
-    for (int i = 0, n = lines.size(); i < n; i++) {
+    int n = lines.size();
+    for (int i = 0; i < n; i++) {
       String s = lines.get(i);
       String poly = s.substring(0, 4);
-      s = s.substring(4);
+      s = s.substring(8);
       boolean isTerm = false;
       boolean isLast = (s.indexOf("!99!") >= 0);
       if (!poly.equals(lastPoly) || isLast) {
-        if (lastPoly != null && !lastPoly.equals("-1  ")) {
+        if (lastPoly != null && !lastPoly.equals("!999")) {
           isTerm = true;
           //TER     458      ASN A  78C                                                      
-          s = "TER   " + s.substring(6, 11) + "      "
+          s = "TER   " + lastLine.substring(6, 11) + "      "
               + lastLine.substring(17, 27);
-          lines.set(i, s);
+          lines.add(i, poly + "!!!!" + s);
+          n++;
         }
         lastPoly = poly;
       }
       if (isLast && !isTerm)
         break;
-      int p = PT.parseInt(s.substring(6, 11));
+      lastLine = s;
       if (map != null && !isTerm)
-        map.put(Integer.valueOf(p), Integer.valueOf(i + noff));
-      String si = "     " + (i + noff);
+        map.put(Integer.valueOf(PT.parseInt(s.substring(6, 11))), Integer.valueOf(i + 1));
+      String si = "     " + (i + 1);
       out.append(s.substring(0, 6)).append(si.substring(si.length() - 5))
           .append(s.substring(11)).append("\n");
-      if (isTerm) {
-        noff++;
-      }
-      lastLine = s;
     }
   }
 
@@ -1963,7 +1964,6 @@ public class PropertyManager implements JmolPropertyManager, Comparator<String> 
   /**
    * PDB line sorter 
    */
-  @Override
   public int compare(String s1, String s2) {
     int atA = PT.parseInt(s1.substring(10, 16));
     int atB = PT.parseInt(s2.substring(10, 16));
