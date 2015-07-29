@@ -227,15 +227,6 @@ public class Model {
     return null;
   }
 
-  protected BS getConformationBS(int conformationIndex, BS bsSelected) {
-    if (conformationIndex > 0 && conformationIndex >= altLocCount)
-      return null;
-    BS bsConformation = ms.vwr.getModelUndeletedAtomsBitSet(modelIndex);
-    if (bsSelected != null)
-      bsConformation.and(bsSelected);
-    return (bsConformation.nextSetBit(0) < 0 ? null : bsConformation);
-  }
-
   public void fixIndices(int modelIndex, int nAtomsDeleted, BS bsDeleted) {
     // also in BioModel
     fixIndicesM(modelIndex, nAtomsDeleted, bsDeleted);

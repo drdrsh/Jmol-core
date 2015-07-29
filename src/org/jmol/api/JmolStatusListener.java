@@ -26,8 +26,6 @@ package org.jmol.api;
 
 import java.util.Map;
 
-import javajs.awt.Dimension;
-
 public interface JmolStatusListener extends JmolCallbackListener {
 /*
  * These methods specifically provide notification from 
@@ -80,7 +78,7 @@ public interface JmolStatusListener extends JmolCallbackListener {
 
   public void showUrl(String url);
 
-  public Dimension resizeInnerPanel(String data);
+  public int[] resizeInnerPanel(String data);
 
   public Map<String, Object> getJSpecViewProperty(String type);
 

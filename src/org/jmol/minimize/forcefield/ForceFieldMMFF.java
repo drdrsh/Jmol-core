@@ -179,7 +179,7 @@ OHMW1
 public class ForceFieldMMFF extends ForceField {
 
   
-  private boolean useEmpiricalRules = true;
+  //private boolean useEmpiricalRules = true;
   
   private static final int A4_VDW = 122;
   private static final int A4_BNDK = 123;
@@ -249,7 +249,8 @@ public class ForceFieldMMFF extends ForceField {
     if (!setArrays(m.atoms, m.bsAtoms, m.bonds, m.rawBondCount, false, false))
       return false;  
     setModelFields();
-    fixTypes();
+    if (!fixTypes())
+      return false;
     calc = new CalculationsMMFF(this, ffParams, minAtoms, minBonds, 
         minAngles, minTorsions, minPositions, minimizer.constraints);
     calc.setLoggingEnabled(true);
@@ -936,7 +937,7 @@ public class ForceFieldMMFF extends ForceField {
      return bTypes;
    }
 
-  private void fixTypes() {
+  private boolean fixTypes() {
     // set atom types in minAtoms
     for (int i = minAtomCount; --i >= 0;) {
       MinAtom a = minAtoms[i];
@@ -953,6 +954,8 @@ public class ForceFieldMMFF extends ForceField {
       MinBond bond = minBonds[i];
       bond.type = rawBondTypes[bond.rawIndex];
       bond.key = getKey(bond, bond.type, TYPE_BOND);
+      if (bond.key == null)
+        return false;
     }
     
     for (int i = minAngles.length; --i >= 0;) {
@@ -965,6 +968,7 @@ public class ForceFieldMMFF extends ForceField {
       MinTorsion torsion = minTorsions[i];
       torsion.key = getKey(torsion, torsion.type, TYPE_TORSION);
     }
+    return true;
   }
 
   private final static int[] sbMap = {0, 1, 3, 5, 4, 6, 8, 9, 11};
@@ -1094,8 +1098,8 @@ public class ForceFieldMMFF extends ForceField {
     // default typing
     switch (ktype) {
     case TYPE_BOND:
-      if (!useEmpiricalRules)
-        return key;
+//      if (!useEmpiricalRules)
+//        return key;
       return (ddata != null && ddata[0] > 0 ? key : applyEmpiricalRules(o, ddata, TYPE_BOND));
     case TYPE_ANGLE:
       if (ddata != null && ddata[0] != 0)
@@ -1109,8 +1113,8 @@ public class ForceFieldMMFF extends ForceField {
           key = getTorsionKey(0, 2, 2);
         ddata = (double[]) ffParams.get(key);
       }
-      if (!useEmpiricalRules)
-        return key;
+//      if (!useEmpiricalRules)
+//        return key;
       return (ddata != null ? key : applyEmpiricalRules(o, ddata, TYPE_TORSION));
     case TYPE_SB:
       // use periodic row info
@@ -1126,8 +1130,8 @@ public class ForceFieldMMFF extends ForceField {
         return key;
     }
     // run through equivalent types, really just 3
-    if (!useEmpiricalRules && ddata != null)
-      return key;
+//    if (!useEmpiricalRules && ddata != null)
+//      return key;
     boolean isSwapped = false;
     boolean haveKey = false;
     for (int i = 0; i < 3 && !haveKey; i++) {
@@ -1163,9 +1167,9 @@ public class ForceFieldMMFF extends ForceField {
       key = Integer.valueOf(key.intValue() ^ 0xFF);
     }
     
-    if (!useEmpiricalRules)
-      return key;
-
+//    if (!useEmpiricalRules)
+//      return key;
+//
     ddata = (double[]) ffParams.get(key);
     // default typing
     switch (ktype) {

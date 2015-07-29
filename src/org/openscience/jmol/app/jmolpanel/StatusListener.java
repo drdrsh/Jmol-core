@@ -452,7 +452,7 @@ System.out.println("StatusListener notifyFileLoaded: " + fileName);
   }
 
   @Override
-  public Dimension resizeInnerPanel(String data) {
+  public int[] resizeInnerPanel(String data) {
     return jmol.resizeInnerPanel(data);
   }
 

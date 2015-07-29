@@ -787,26 +787,43 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
   }
 
   /**
-   * @param conformationIndex
+   * @param conformationIndex0
    * @param doSet 
+   * @param bsConformation
    * @param bsRet
-   * @param bsSelected
+   * @return true;
    */
-  public void getConformation(int conformationIndex, boolean doSet, BS bsSelected, BS bsRet) {
-    int nAltLocs = altLocCount;
-    BS bsConformation = getConformationBS(conformationIndex, bsSelected);
-    if (bsConformation == null)
-      return;
-    if (conformationIndex >= 0) {
-      if (nAltLocs > 0)
-        for (int i = bioPolymerCount; --i >= 0;)
-          bioPolymers[i].getConformation(bsConformation, conformationIndex);
-      BS bs = new BS();
-      String altLocs = ms.getAltLocListInModel(modelIndex);
-      for (int c = altLocCount; --c >= 0;)
-        if (c != conformationIndex)
-          bsConformation.andNot(ms.getAtomBitsMDa(T.spec_alternate,
-              altLocs.substring(c, c + 1), bs));
+  public boolean getConformation(int conformationIndex0, boolean doSet, BS bsConformation, BS bsRet) {
+    if (conformationIndex0 >= 0) {
+      int nAltLocs = altLocCount;
+      if (nAltLocs > 0) {
+        Atom[] atoms = ms.at;
+        Group g = null;
+        char ch = '\0';
+        int conformationIndex = conformationIndex0;
+        BS bsFound = new BS();
+        for (int i = bsConformation.nextSetBit(0); i >= 0; i = bsConformation.nextSetBit(i + 1)) {
+            Atom atom = atoms[i];
+            char altloc = atom.altloc;
+            // ignore (include) atoms that have no designation
+            if (altloc == '\0')
+              continue;
+            if (atom.group != g) {
+              g = atom.group;
+              ch = '\0';
+              conformationIndex = conformationIndex0;
+              bsFound.clearAll();
+            }
+            // count down until we get the desired index into the list
+            if (conformationIndex >= 0 && altloc != ch && !bsFound.get(altloc)) {
+              ch = altloc;
+              conformationIndex--;
+              bsFound.set(altloc);
+            }
+            if (conformationIndex >= 0 || altloc != ch)
+              bsConformation.clear(i);
+          }
+      }
     }
     if (bsConformation.nextSetBit(0) >= 0) {
       bsRet.or(bsConformation);      
@@ -814,6 +831,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
         for (int j = bioPolymerCount; --j >= 0;)
           bioPolymers[j].setConformation(bsConformation);
     }
+    return true;
   }
 
   private void addBioPolymer(BioPolymer polymer) {

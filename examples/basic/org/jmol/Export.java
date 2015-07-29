@@ -238,8 +238,8 @@ class MyStatusListener implements JmolStatusListener {
   }
 
   @Override
-  public javajs.awt.Dimension resizeInnerPanel(String data) {
-    return new javajs.awt.Dimension(0, 0);
+  public int[] resizeInnerPanel(String data) {
+    return null;
   }
 
   @Override

@@ -1593,11 +1593,10 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     } 
   }
   
-  javajs.awt.Dimension resizeInnerPanel(String data) {
+  int[] resizeInnerPanel(String data) {
     int width = vwr.getScreenWidth();
     int height = vwr.getScreenHeight();
     String info = width + " " + height;
-    javajs.awt.Dimension d = new javajs.awt.Dimension(0,0);
     if (data == null) {
       data = info;
    } else {
@@ -1606,18 +1605,18 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
      if (pt >= 0 && pt2 > pt)
        data = data.substring(pt + 21, pt2).trim();
      if (data.equals(info))
-       return d.set(width, height);
+       return new int[] {width, height};
    }
     info = JOptionPane.showInputDialog(GT._("width height?"), data);
     if (info == null)
-      return d.set(width, height);
+      return new int[] {width, height};
     float[] dims = new float[2];
     int n = Parser.parseStringInfestedFloatArray(info, null, dims);
     if (n < 2)
-      return d.set(width, height);
+      return new int[] {width, height};
     System.out.println("JmolPanel requesting display "+ info + " " +dims[0] + " " + dims[1]);
     resizeDisplay((int) dims[0], (int) dims[1]);
-    return d.set((int) dims[0], (int) dims[1]);
+    return new int[] {(int) dims[0], (int) dims[1]};
   }
 
   void resizeDisplay(int width, int height) {

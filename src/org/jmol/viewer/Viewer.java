@@ -23,39 +23,54 @@
  */
 package org.jmol.viewer;
 
-import org.jmol.script.ScriptContext;
-import org.jmol.script.SV;
-import org.jmol.script.T;
-import org.jmol.shape.AtomShape;
-import org.jmol.shape.Measures;
-import org.jmol.shape.Shape;
-import org.jmol.thread.TimeoutThread;
-import org.jmol.i18n.GT;
-import org.jmol.java.BS;
-import org.jmol.modelset.Atom;
-import org.jmol.modelset.AtomCollection;
-import org.jmol.modelset.Bond;
-import org.jmol.modelset.Group;
-import org.jmol.modelset.LabelToken;
-import org.jmol.modelset.Measurement;
-import org.jmol.modelset.MeasurementData;
-import org.jmol.modelset.MeasurementPending;
-import org.jmol.modelset.ModelSet;
-import org.jmol.modelset.Orientation;
-import org.jmol.modelset.StateScript;
-import org.jmol.modelset.TickInfo;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.net.URL;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import javajs.J2SIgnoreImport;
+import javajs.api.GenericCifDataParser;
+import javajs.api.GenericMenuInterface;
+import javajs.api.GenericMouseInterface;
+import javajs.api.GenericPlatform;
+import javajs.api.GenericZipTools;
+import javajs.api.PlatformViewer;
+import javajs.awt.Dimension;
+import javajs.awt.Font;
+import javajs.util.CU;
+import javajs.util.DF;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.Rdr;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
 
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
-import org.jmol.api.JmolAnnotationParser;
-import org.jmol.api.JmolBioResolver;
-import org.jmol.api.JmolDataManager;
-import org.jmol.api.JmolNMRInterface;
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
+import org.jmol.api.JmolAnnotationParser;
 import org.jmol.api.JmolAppConsoleInterface;
+import org.jmol.api.JmolBioResolver;
 import org.jmol.api.JmolCallbackListener;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolJSpecView;
+import org.jmol.api.JmolNMRInterface;
 import org.jmol.api.JmolParallelProcessor;
 import org.jmol.api.JmolPropertyManager;
 import org.jmol.api.JmolRendererInterface;
@@ -74,70 +89,44 @@ import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.AtomDataServer;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
-
 import org.jmol.c.FIL;
 import org.jmol.c.STER;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
-
-import javajs.J2SIgnoreImport;
+import org.jmol.i18n.GT;
+import org.jmol.java.BS;
+import org.jmol.modelset.Atom;
+import org.jmol.modelset.AtomCollection;
+import org.jmol.modelset.Bond;
+import org.jmol.modelset.Group;
+import org.jmol.modelset.LabelToken;
+import org.jmol.modelset.Measurement;
+import org.jmol.modelset.MeasurementData;
+import org.jmol.modelset.MeasurementPending;
+import org.jmol.modelset.ModelSet;
+import org.jmol.modelset.Orientation;
+import org.jmol.modelset.StateScript;
+import org.jmol.modelset.TickInfo;
+import org.jmol.script.SV;
+import org.jmol.script.ScriptContext;
+import org.jmol.script.T;
+import org.jmol.shape.AtomShape;
+import org.jmol.shape.Measures;
+import org.jmol.shape.Shape;
+import org.jmol.thread.TimeoutThread;
+import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.CommandHistory;
-
-import javajs.api.GenericCifDataParser;
-import javajs.api.GenericPlatform;
-import javajs.api.GenericMouseInterface;
-import javajs.api.GenericMenuInterface;
-import javajs.api.GenericZipTools;
-import javajs.api.PlatformViewer;
-import javajs.awt.Dimension;
-import javajs.awt.Font;
-
-import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.GData;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
-
-import javajs.util.PT;
 import org.jmol.util.Parser;
-
-import javajs.util.P3;
-import javajs.util.P4;
 import org.jmol.util.Rectangle;
-
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.Rdr;
-import javajs.util.CU;
-import javajs.util.DF;
-import javajs.util.OC;
-import javajs.util.M3;
-import javajs.util.P3i;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.util.TempArray;
 import org.jmol.viewer.binding.Binding;
-
-import javajs.util.Lst;
-import javajs.util.SB;
-
-import java.util.Hashtable;
-import java.util.Iterator;
-
-import java.util.Map;
-import java.util.Properties;
-import java.util.Map.Entry;
-
-import java.net.URL;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
 
 /*
  * 
@@ -8818,12 +8807,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   @Override
-  public Dimension resizeInnerPanel(int width, int height) {
-    if (autoExit || !haveDisplay) {
-      setScreenDimension(width, height);
-      return dimScreen;
-    }
-    return sm.resizeInnerPanel(width, height);
+  public int[] resizeInnerPanel(int width, int height) {
+    if (!autoExit && haveDisplay)
+      return sm.resizeInnerPanel(width, height);
+    setScreenDimension(width, height);
+    return new int[] { dimScreen.width, dimScreen.height };
   }
 
   public String getFontLineShapeState(String s, String myType,

@@ -27,10 +27,13 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javajs.util.PT;
 
@@ -55,14 +58,16 @@ import org.jmol.io.JmolBinary;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.script.ScriptContext;
+import org.openscience.jmol.app.jmolpanel.PreferencesDialog;
 
-public final class ScriptEditor extends JDialog implements JmolScriptEditorInterface, ActionListener {
+public final class ScriptEditor extends JDialog implements JmolScriptEditorInterface, ActionListener, WindowListener {
 
   protected EditorTextPane editor;
   private JButton openButton;
   private JButton closeButton;
   private JButton loadButton;
   private JButton topButton;
+  private JButton fontButton;
   private JButton checkButton;
   private JButton runButton;
   private JButton pauseButton;
@@ -130,10 +135,12 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     editor = new EditorTextPane();
     editor.setDragEnabled(true);
     JScrollPane editorPane = new JScrollPane(editor);
+    updateFontSize();
 
     consoleButton = setButton(GT._("Console"));
     if (!vwr.isApplet || vwr.getBooleanProperty("_signedApplet"))
       openButton = setButton(GT._("Open"));
+    fontButton = setButton(GT._("Font"));
     loadButton = setButton(GT._("Script"));
     checkButton = setButton(GT._("Check"));
     topButton = setButton(PT.split(GT._("Top[as in \"go to the top\" - (translators: remove this bracketed part]"), "[")[0]);
@@ -327,6 +334,13 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       gotoTop();
       return;
     }
+    if (source == fontButton) {
+      PreferencesDialog d = (PreferencesDialog) vwr.getProperty("DATA_API", "getPreference", null);
+      if (d != null)
+        d.setFontScale(-1);
+      updateFontSize();
+      return;
+    }
     if (source == checkButton) {
       checkScript();
       return;
@@ -364,6 +378,16 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   }
  
+  private int fontSize;
+
+  public void updateFontSize() {
+    int scale = PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference", "consoleFontScale"));
+    scale = (scale < 0 ? 1 : scale) % 5;
+    fontSize = scale * 4 + 12;
+    if (editor != null)
+      editor.setFont(new Font("dialog", Font.PLAIN, fontSize));
+  }
+
   private static String[] lastOpened = {"?.spt", null} ;
   private void doOpen() {
     vwr.fm.getFileDataAsString(lastOpened, -1, false, false, true);
@@ -429,7 +453,6 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       super(new EditorDocument());
       editorDoc = (EditorDocument) getDocument();
       editorDoc.setEditorTextPane(this);
-      //this.vwr = scriptEditor.vwr;
     }
 
     public void clearContent() {
@@ -582,5 +605,46 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       output(JmolBinary.getEmbeddedScript(msg));
     }
     setVisible(true);
+  }
+
+  @Override
+  public void windowOpened(WindowEvent e) {
+    // TODO
+    
+  }
+
+  @Override
+  public void windowClosing(WindowEvent e) {
+    // TODO
+    
+  }
+
+  @Override
+  public void windowClosed(WindowEvent e) {
+    // TODO
+    
+  }
+
+  @Override
+  public void windowIconified(WindowEvent e) {
+    // TODO
+    
+  }
+
+  @Override
+  public void windowDeiconified(WindowEvent e) {
+    // TODO
+    
+  }
+
+  @Override
+  public void windowActivated(WindowEvent e) {
+    updateFontSize();
+  }
+
+  @Override
+  public void windowDeactivated(WindowEvent e) {
+    // TODO
+    
   }
 }

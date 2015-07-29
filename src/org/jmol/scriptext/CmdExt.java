@@ -1267,6 +1267,8 @@ public class CmdExt extends ScriptExt {
         vwr.addStateScript("configuration " + n + ";", true, false);
       } else {
         bsAtoms = atomExpressionAt(1);
+        if (chk)
+          return;
         n = intParameter(e.checkLast(e.iToken + 1));
         vwr.addStateScript("configuration " + bsAtoms + " " + n + ";", true, false);
         bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1, true, bsAtoms);

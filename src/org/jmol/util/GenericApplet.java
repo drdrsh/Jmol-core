@@ -883,8 +883,8 @@ public abstract class GenericApplet implements JmolAppletInterface,
   }
 
   @Override
-  public Dimension resizeInnerPanel(String data) {
-    return new Dimension(0, 0);
+  public int[] resizeInnerPanel(String data) {
+    return new int[] { viewer.getScreenWidth(), viewer.getScreenHeight() };
   }
 
   //////////// applet registration for direct applet-applet communication ////////////

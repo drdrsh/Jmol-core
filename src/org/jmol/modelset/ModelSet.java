@@ -103,80 +103,80 @@ import java.util.Properties;
  * Bob Hanson, 5/2007, 10/2007
  * 
  */
- public class ModelSet extends BondCollection {
+public class ModelSet extends BondCollection {
 
-   protected BS bsSymmetry;
+  protected BS bsSymmetry;
 
-   public String modelSetName;
-   
-   public Model[] am;
-   /**
-    * model count
-    */
-   public int mc;
-   
-   public SymmetryInterface[] unitCells;
-   public boolean haveUnitCells;
+  public String modelSetName;
 
-   protected final Atom[] closest;
+  public Model[] am;
+  /**
+   * model count
+   */
+  public int mc;
 
-   protected int[] modelNumbers; // from adapter -- possibly PDB MODEL record; possibly modelFileNumber
-   public int[] modelFileNumbers; // file * 1000000 + modelInFile (1-based)
-   public String[] modelNumbersForAtomLabel, modelNames, frameTitles;
+  public SymmetryInterface[] unitCells;
+  public boolean haveUnitCells;
 
-   protected BS[] elementsPresent;
+  protected final Atom[] closest;
 
-   protected boolean isXYZ;
+  protected int[] modelNumbers; // from adapter -- possibly PDB MODEL record; possibly modelFileNumber
+  public int[] modelFileNumbers; // file * 1000000 + modelInFile (1-based)
+  public String[] modelNumbersForAtomLabel, modelNames, frameTitles;
 
-   public Properties modelSetProperties;
-   public Map<String, Object> msInfo;
+  protected BS[] elementsPresent;
 
-   protected boolean someModelsHaveSymmetry;
-   protected boolean someModelsHaveAromaticBonds;
-   protected boolean someModelsHaveFractionalCoordinates;
+  protected boolean isXYZ;
 
-   ////////////////////////////////////////////
+  public Properties modelSetProperties;
+  public Map<String, Object> msInfo;
 
-   private boolean isBbcageDefault;
-   public BS bboxModels;
-   private BS bboxAtoms;
-   private final BoxInfo boxInfo;
+  protected boolean someModelsHaveSymmetry;
+  protected boolean someModelsHaveAromaticBonds;
+  protected boolean someModelsHaveFractionalCoordinates;
 
-   public Lst<StateScript> stateScripts;
-   /*
-    * stateScripts are connect commands that must be executed in sequence.
-    * 
-    * What I fear is that in deleting models we must delete these connections,
-    * and in deleting atoms, the bitsets may not be retrieved properly. 
-    * 
-    * 
-    */
-   private int thisStateModel;
+  ////////////////////////////////////////////
 
-   protected Lst<V3[]> vibrationSteps;
+  private boolean isBbcageDefault;
+  public BS bboxModels;
+  private BS bboxAtoms;
+  private final BoxInfo boxInfo;
 
-   private BS selectedMolecules;
+  public Lst<StateScript> stateScripts;
+  /*
+   * stateScripts are connect commands that must be executed in sequence.
+   * 
+   * What I fear is that in deleting models we must delete these connections,
+   * and in deleting atoms, the bitsets may not be retrieved properly. 
+   * 
+   * 
+   */
+  private int thisStateModel;
 
-   //private final static boolean MIX_BSPT_ORDER = false;
-   boolean showRebondTimes = true;
+  protected Lst<V3[]> vibrationSteps;
 
-   protected BS bsAll;
+  private BS selectedMolecules;
 
-   public ShapeManager sm;
+  //private final static boolean MIX_BSPT_ORDER = false;
+  boolean showRebondTimes = true;
 
-   private static float hbondMin = 2.5f;
-   public boolean proteinStructureTainted;
-   public SymmetryInterface symTemp;
+  protected BS bsAll;
 
-   public Hashtable<String, BS> htPeaks;
+  public ShapeManager sm;
 
-   private Quat[] vOrientations;
-   private Triangulator triangulator;
-   
-   private final P3 ptTemp, ptTemp1, ptTemp2;
-   private final M3 matTemp, matInv;
-   private final M4 mat4, mat4t;
-   private final V3 vTemp;
+  private static float hbondMin = 2.5f;
+  public boolean proteinStructureTainted;
+  public SymmetryInterface symTemp;
+
+  public Hashtable<String, BS> htPeaks;
+
+  private Quat[] vOrientations;
+  private Triangulator triangulator;
+
+  private final P3 ptTemp, ptTemp1, ptTemp2;
+  private final M3 matTemp, matInv;
+  private final M4 mat4, mat4t;
+  private final V3 vTemp;
 
   ////////////////////////////////////////////////////////////////
 
@@ -189,23 +189,23 @@ import java.util.Properties;
   public ModelSet(Viewer vwr, String name) {
     this.vwr = vwr;
     modelSetName = name;
-    
+
     selectedMolecules = new BS();
     stateScripts = new Lst<StateScript>();
-    
+
     boxInfo = new BoxInfo();
     boxInfo.addBoundBoxPoint(P3.new3(-10, -10, -10));
     boxInfo.addBoundBoxPoint(P3.new3(10, 10, 10));
-    
+
     am = new Model[1];
     modelNumbers = new int[1]; // from adapter -- possibly PDB MODEL record; possibly modelFileNumber
     modelFileNumbers = new int[1]; // file * 1000000 + modelInFile (1-based)
     modelNumbersForAtomLabel = new String[1];
     modelNames = new String[1];
     frameTitles = new String[1];
-    
+
     closest = new Atom[1];
-    
+
     ptTemp = new P3();
     ptTemp1 = new P3();
     ptTemp2 = new P3();
@@ -274,8 +274,8 @@ import java.util.Properties;
                                  boolean doSetTrajectory) {
     if (useModelNumber) {
       for (int i = 0; i < mc; i++)
-        if (modelNumbers[i] == modelNumber 
-            || modelNumber < 1000000 && modelNumbers[i] == 1000000 + modelNumber)
+        if (modelNumbers[i] == modelNumber || modelNumber < 1000000
+            && modelNumbers[i] == 1000000 + modelNumber)
           return i;
       return -1;
     }
@@ -298,12 +298,12 @@ import java.util.Properties;
     }
     return null;
   }
-  
 
   public void setTrajectory(int modelIndex) {
-    if (modelIndex >= 0 && isTrajectory(modelIndex) && at[am[modelIndex].firstAtomIndex].mi != modelIndex)
+    if (modelIndex >= 0 && isTrajectory(modelIndex)
+        && at[am[modelIndex].firstAtomIndex].mi != modelIndex)
       trajectory.setModel(modelIndex);
-  }  
+  }
 
   public BS getBitSetTrajectories() {
     return (trajectory == null ? null : trajectory.getModelsSelected());
@@ -319,16 +319,18 @@ import java.util.Properties;
   public void morphTrajectories(int m1, int m2, float f) {
     if (m1 >= 0 && m2 >= 0 && isTrajectory(m1) && isTrajectory(m2))
       trajectory.morph(m1, m2, f);
-  }  
-  
-  public P3[] translations;
-  
-  public P3 getTranslation(int iModel) {
-    return (translations == null || iModel >= translations.length ? null : translations[iModel]); 
   }
-  
+
+  public P3[] translations;
+
+  public P3 getTranslation(int iModel) {
+    return (translations == null || iModel >= translations.length ? null
+        : translations[iModel]);
+  }
+
   /**
-   * move atoms by vector pt; used for co-centering with FRAME ALIGN {atoms} TRUE
+   * move atoms by vector pt; used for co-centering with FRAME ALIGN {atoms}
+   * TRUE
    * 
    * @param iModel
    * @param pt
@@ -424,27 +426,28 @@ import java.util.Properties;
 
   /**
    * general lookup for integer type -- from Eval
-   * @param tokType   
-   * @param specInfo  
+   * 
+   * @param tokType
+   * @param specInfo
    * @return bitset; null only if we mess up with name
    */
   public BS getAtoms(int tokType, Object specInfo) {
     switch (tokType) {
     default:
-      return BSUtil.andNot(getAtomBitsMaybeDeleted(tokType, specInfo), vwr
-          .slm.bsDeleted);
+      return BSUtil.andNot(getAtomBitsMaybeDeleted(tokType, specInfo),
+          vwr.slm.bsDeleted);
     case T.spec_model:
       int modelNumber = ((Integer) specInfo).intValue();
       int modelIndex = getModelNumberIndex(modelNumber, true, true);
-      return (modelIndex < 0 && modelNumber > 0 ? new BS()
-          : vwr.getModelUndeletedAtomsBitSet(modelIndex));
+      return (modelIndex < 0 && modelNumber > 0 ? new BS() : vwr
+          .getModelUndeletedAtomsBitSet(modelIndex));
     case T.polyhedra:
       Object[] data = new Object[] { null, null };
       vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "centers", data);
       return (data[1] == null ? new BS() : (BS) data[1]);
     }
   }
-  
+
   public int findNearestAtomIndex(int x, int y, BS bsNot, int min) {
     if (ac == 0)
       return -1;
@@ -471,33 +474,32 @@ import java.util.Properties;
     else
       userProperties.put(name, property);
   }
-*/  
+  */
 
   ///////// atom and shape selecting /////////
 
   public String calculatePointGroup(BS bsAtoms) {
-    return (String) calculatePointGroupForFirstModel(bsAtoms, false,
-        false, false, null, 0, 0);
+    return (String) calculatePointGroupForFirstModel(bsAtoms, false, false,
+        false, null, 0, 0);
   }
 
   @SuppressWarnings("unchecked")
   public Map<String, Object> getPointGroupInfo(BS bsAtoms) {
-    return (Map<String, Object>) calculatePointGroupForFirstModel(bsAtoms, false,
-        false, true, null, 0, 0);
+    return (Map<String, Object>) calculatePointGroupForFirstModel(bsAtoms,
+        false, false, true, null, 0, 0);
   }
-  
-  public String getPointGroupAsString(BS bsAtoms, boolean asDraw,
-                                      String type, int index, float scale) {
-    return (String) calculatePointGroupForFirstModel(bsAtoms, true,
-        asDraw, false, type, index, scale);
+
+  public String getPointGroupAsString(BS bsAtoms, boolean asDraw, String type,
+                                      int index, float scale) {
+    return (String) calculatePointGroupForFirstModel(bsAtoms, true, asDraw,
+        false, type, index, scale);
   }
 
   private SymmetryInterface pointGroup;
 
   private BoxInfo defaultBBox;
-  
-  private Object calculatePointGroupForFirstModel(BS bsAtoms,
-                                                  boolean doAll,
+
+  private Object calculatePointGroupForFirstModel(BS bsAtoms, boolean doAll,
                                                   boolean asDraw,
                                                   boolean asInfo, String type,
                                                   int index, float scale) {
@@ -510,7 +512,8 @@ import java.util.Properties;
       bsAtoms = null;
     }
     BS bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-    boolean localEnvOnly = (bsAtoms != null && bs.cardinality() != bsAtoms.cardinality());
+    boolean localEnvOnly = (bsAtoms != null && bs.cardinality() != bsAtoms
+        .cardinality());
     if (bsAtoms != null)
       bs.and(bsAtoms);
     iAtom = bs.nextSetBit(0);
@@ -519,19 +522,18 @@ import java.util.Properties;
       iAtom = bs.nextSetBit(0);
     }
     Object obj = vwr.shm.getShapePropertyIndex(JC.SHAPE_VECTORS, "mad", iAtom);
-    boolean haveVibration = (obj != null && ((Integer) obj).intValue() != 0 || vwr
-        .tm.vibrationOn);
-    
+    boolean haveVibration = (obj != null && ((Integer) obj).intValue() != 0 || vwr.tm.vibrationOn);
+
     SymmetryInterface symmetry = Interface.getSymmetry(vwr, "ms");
-    
+
     T3[] pts = at;
     SymmetryInterface pointGroup = this.pointGroup;
-    boolean isPolyhedron = (type != null && type.toUpperCase().indexOf(":POLY") >= 0); 
+    boolean isPolyhedron = (type != null && type.toUpperCase().indexOf(":POLY") >= 0);
     if (isPolyhedron) {
 
-      Object[] data = new Object[] { Integer.valueOf(iAtom), null};
+      Object[] data = new Object[] { Integer.valueOf(iAtom), null };
       vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "points", data);
-      pts = (T3[]) data[1]; 
+      pts = (T3[]) data[1];
       if (pts == null)
         return null;
       bs = null;
@@ -541,31 +543,31 @@ import java.util.Properties;
     if (type != null && type.indexOf(":") >= 0)
       type = type.substring(0, type.indexOf(":"));
     pointGroup = symmetry.setPointGroup(pointGroup, pts, bs, haveVibration,
-        vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance), localEnvOnly);
+        vwr.getFloat(T.pointgroupdistancetolerance),
+        vwr.getFloat(T.pointgrouplineartolerance), localEnvOnly);
     if (!isPolyhedron)
       this.pointGroup = pointGroup;
     if (!doAll && !asInfo)
       return pointGroup.getPointGroupName();
     Object ret = pointGroup.getPointGroupInfo(modelIndex, asDraw, asInfo, type,
         index, scale);
-    return (asInfo ? ret : (mc > 1 ? "frame " + getModelNumberDotted(modelIndex) + "; "
-        : "") + ret);
+    return (asInfo ? ret : (mc > 1 ? "frame "
+        + getModelNumberDotted(modelIndex) + "; " : "")
+        + ret);
   }
-  
+
   public String getDefaultStructure(BS bsAtoms, BS bsModified) {
-    return (haveBioModels ? bioModelset.getAllDefaultStructures(bsAtoms, bsModified) : "");
+    return (haveBioModels ? bioModelset.getAllDefaultStructures(bsAtoms,
+        bsModified) : "");
   }
 
-
-  
   ///// super-overloaded methods ///////
-  
-  
+
   public int[] makeConnections(float minDistance, float maxDistance, int order,
                                int connectOperation, BS bsA, BS bsB,
-                               BS bsBonds, boolean isBonds, boolean addGroup, float energy) {
-    if (connectOperation == T.auto
-        && order != Edge.BOND_H_REGULAR) {
+                               BS bsBonds, boolean isBonds, boolean addGroup,
+                               float energy) {
+    if (connectOperation == T.auto && order != Edge.BOND_H_REGULAR) {
       String stateScript = "connect ";
       if (minDistance != JC.DEFAULT_MIN_CONNECT_DISTANCE)
         stateScript += minDistance + " ";
@@ -575,10 +577,10 @@ import java.util.Properties;
           (isBonds ? null : bsA), (isBonds ? null : bsB), " auto", false, true);
     }
     moleculeCount = 0;
-    return makeConnections2(minDistance, maxDistance, order,
-        connectOperation, bsA, bsB, bsBonds, isBonds, addGroup, energy);
+    return makeConnections2(minDistance, maxDistance, order, connectOperation,
+        bsA, bsB, bsBonds, isBonds, addGroup, energy);
   }
-  
+
   @SuppressWarnings("unchecked")
   public void setPdbConectBonding(int baseAtomIndex, int baseModelIndex,
                                   BS bsExclude) {
@@ -590,7 +592,7 @@ import java.util.Properties;
       int nConnect = vConnect.size();
       setInfo(i, "initialBondCount", Integer.valueOf(nConnect));
       int[] atomInfo = (int[]) getInfo(i, "PDB_CONECT_firstAtom_count_max");
-      int firstAtom = atomInfo[0] +  baseAtomIndex;
+      int firstAtom = atomInfo[0] + baseAtomIndex;
       int atomMax = firstAtom + atomInfo[1];
       int max = atomInfo[2];
       int[] serialMap = new int[max + 1];
@@ -619,16 +621,17 @@ import java.util.Properties;
             bsExclude.set(targetIndex);
         }
         // don't connect differing altloc
-        if (atomA.altloc == atomB.altloc
-            || atomA.altloc == '\0' || atomB.altloc == '\0')
-          getOrAddBond(atomA, atomB, order, (order == Edge.BOND_H_REGULAR ? 1 : mad), null, 0, false);
+        if (atomA.altloc == atomB.altloc || atomA.altloc == '\0'
+            || atomB.altloc == '\0')
+          getOrAddBond(atomA, atomB, order, (order == Edge.BOND_H_REGULAR ? 1
+              : mad), null, 0, false);
       }
     }
   }
-  
+
   public void deleteAllBonds() {
     moleculeCount = 0;
-    for (int i = stateScripts.size(); --i >= 0;) { 
+    for (int i = stateScripts.size(); --i >= 0;) {
       if (stateScripts.get(i).isConnect()) {
         stateScripts.remove(i);
       }
@@ -646,7 +649,8 @@ import java.util.Properties;
     int baseModel = 0;
     for (int i = 0; i < mc; i++) {
       boolean isTraj = isTrajectory(i);
-      boolean isBase = (isTraj && bsModels.get(baseModel = am[i].trajectoryBaseIndex));
+      boolean isBase = (isTraj && bsModels
+          .get(baseModel = am[i].trajectoryBaseIndex));
       if (bsModels.get(i)) {
         if (isTraj && !isBase) {
           bsModels.set(baseModel);
@@ -659,7 +663,7 @@ import java.util.Properties;
       }
     }
   }
-  
+
   public BS deleteModels(BS bsModels) {
     // full models are deleted for any model containing the specified atoms
     includeAllRelatedFrames(bsModels);
@@ -667,7 +671,7 @@ import java.util.Properties;
     int nModelsDeleted = BSUtil.cardinalityOf(bsModels);
     if (nModelsDeleted == 0)
       return null;
-    
+
     moleculeCount = 0;
     if (msInfo != null)
       msInfo.remove("models");
@@ -708,11 +712,11 @@ import java.util.Properties;
     deleteBonds(bsBonds, true);
 
     // main deletion cycle
-    
+
     for (int i = 0, mpt = 0; i < oldModelCount; i++) {
       if (!bsModels.get(i)) {
         mpt++;
-         continue;
+        continue;
       }
       int nAtoms = oldModels[i].act;
       if (nAtoms == 0)
@@ -742,7 +746,7 @@ import java.util.Properties;
     haveBioModels = false;
     for (int i = mc; --i >= 0;)
       if (am[i].isBioModel) {
-        haveBioModels= true;
+        haveBioModels = true;
         bioModelset = (JmolBioModelSet) am[i];
       }
     validateBspf(false);
@@ -821,8 +825,9 @@ import java.util.Properties;
         // convert to atom indices
         float[] newValues = new float[ac];
         try {
-        for (int i = bs.nextSetBit(0), ii = 0; i >= 0; i = bs.nextSetBit(i + 1))
-          newValues[i] = values[ii++];
+          for (int i = bs.nextSetBit(0), ii = 0; i >= 0; i = bs
+              .nextSetBit(i + 1))
+            newValues[i] = values[ii++];
         } catch (Exception e) {
           return;
         }
@@ -847,12 +852,13 @@ import java.util.Properties;
     }
     setAPm(bs, tok, iValue, fValue, sValue, values, list);
   }
-  
+
   @SuppressWarnings("unchecked")
   public Object getFileData(int modelIndex) {
     if (modelIndex < 0)
       return "";
-    Map<String, Object> fileData = (Map<String, Object>) getInfo(modelIndex, "fileData");
+    Map<String, Object> fileData = (Map<String, Object>) getInfo(modelIndex,
+        "fileData");
     if (fileData != null)
       return fileData;
     if (!getInfoB(modelIndex, "isCIF"))
@@ -861,21 +867,21 @@ import java.util.Properties;
     setInfo(modelIndex, "fileData", fileData);
     return fileData;
   }
-  
+
   /**
    * these are hydrogens that are being added due to a load 2D command and are
    * therefore not to be flagged as NEW
    * 
    * @param vConnections
    * @param pts
-   * @return            BitSet of new atoms
+   * @return BitSet of new atoms
    */
   public BS addHydrogens(Lst<Atom> vConnections, P3[] pts) {
     int modelIndex = mc - 1;
     BS bs = new BS();
     if (isTrajectory(modelIndex) || am[modelIndex].getGroupCount() > 1) {
       // can't add atoms to a trajectory or a system with multiple groups!
-      return bs; 
+      return bs;
     }
     growAtomArrays(ac + pts.length);
     RadiusData rd = vwr.rd;
@@ -885,16 +891,14 @@ import java.util.Properties;
       Atom atom1 = vConnections.get(i);
       // hmm. atom1.group will not be expanded, though...
       // something like within(group,...) will not select these atoms!
-      Atom atom2 = addAtom(
-          modelIndex, atom1.group, 
-          1, "H" + n, null, n, atom1.getSeqID(), n, 
-          pts[i], Float.NaN, null, 
-          0, 0, 100, Float.NaN, null, 
-          false, (byte) 0, null);
-      
+      Atom atom2 = addAtom(modelIndex, atom1.group, 1, "H" + n, null, n,
+          atom1.getSeqID(), n, pts[i], Float.NaN, null, 0, 0, 100, Float.NaN,
+          null, false, (byte) 0, null);
+
       atom2.setMadAtom(vwr, rd);
       bs.set(atom2.i);
-      bondAtoms(atom1, atom2, Edge.BOND_COVALENT_SINGLE, mad, null, 0, false, false);
+      bondAtoms(atom1, atom2, Edge.BOND_COVALENT_SINGLE, mad, null, 0, false,
+          false);
     }
     // must reset the shapes to give them new atom counts and arrays
     sm.loadDefaultShapes(this);
@@ -924,7 +928,7 @@ import java.util.Properties;
     frameTitles = mergeModelSet.frameTitles;
     if (msInfo != null)
       msInfo.remove("models");
-     mergeAtomArrays(mergeModelSet);
+    mergeAtomArrays(mergeModelSet);
   }
 
   public SymmetryInterface getUnitCell(int modelIndex) {
@@ -933,16 +937,17 @@ import java.util.Properties;
     if (am[modelIndex].simpleCage != null)
       return am[modelIndex].simpleCage;
     if (unitCells != null && modelIndex < unitCells.length
-                && unitCells[modelIndex].haveUnitCell())
+        && unitCells[modelIndex].haveUnitCell())
       return unitCells[modelIndex];
     if (getInfo(modelIndex, "unitCellParams") != null) {
       if (unitCells == null)
         unitCells = new SymmetryInterface[mc];
-      getSymTemp(true).setSymmetryInfo(modelIndex, am[modelIndex].auxiliaryInfo, null);
+      getSymTemp(true).setSymmetryInfo(modelIndex,
+          am[modelIndex].auxiliaryInfo, null);
       SymmetryInterface unitCell = symTemp;
       symTemp = null;
       haveUnitCells = true;
-      return unitCells[modelIndex] = unitCell;              
+      return unitCells[modelIndex] = unitCell;
     }
     return null;
   }
@@ -965,7 +970,7 @@ import java.util.Properties;
    * @return Vector
    */
   public Lst<Object> getPlaneIntersection(int type, P4 plane, float scale,
-                                           int flags, SymmetryInterface uc) {
+                                          int flags, SymmetryInterface uc) {
     T3[] pts = null;
     switch (type) {
     case T.unitcell:
@@ -1014,13 +1019,13 @@ import java.util.Properties;
   }
 
   public String getFrameTitle(int modelIndex) {
-    return (modelIndex >= 0 && modelIndex < mc ? frameTitles[modelIndex]
-        : "");
+    return (modelIndex >= 0 && modelIndex < mc ? frameTitles[modelIndex] : "");
   }
 
   public String getModelNumberForAtomLabel(int modelIndex) {
     return modelNumbersForAtomLabel[modelIndex];
   }
+
   /**
    * In versions earlier than 12.1.51, groups[] was a field of ModelCollection.
    * But this is not necessary, and it was wasting space. This method is only
@@ -1111,8 +1116,7 @@ import java.util.Properties;
 
   public VDW getDefaultVdwType(int modelIndex) {
     return (!am[modelIndex].isBioModel ? VDW.AUTO_BABEL
-        : am[modelIndex].hydrogenCount == 0 ? VDW.AUTO_JMOL
-            : VDW.AUTO_BABEL); // RASMOL is too small
+        : am[modelIndex].hydrogenCount == 0 ? VDW.AUTO_JMOL : VDW.AUTO_BABEL); // RASMOL is too small
   }
 
   public boolean setRotationRadius(int modelIndex, float angstroms) {
@@ -1164,15 +1168,15 @@ import java.util.Properties;
       P3[] vertices = defaultBBox.getBoundBoxVertices();
       boxInfo.reset();
       for (int j = 0; j < 8; j++)
-        boxInfo.addBoundBoxPoint(vertices[j]);      
+        boxInfo.addBoundBoxPoint(vertices[j]);
     }
     boxInfo.setBbcage(scale);
   }
 
   /**
-   * The default bounding box is created 
-   * when the LOAD .... FILL BOUNDBOX or FILL UNITCELL
-   * is use. 
+   * The default bounding box is created when the LOAD .... FILL BOUNDBOX or
+   * FILL UNITCELL is use.
+   * 
    * @return default bounding box, possibly null
    */
   private BoxInfo getDefaultBoundBox() {
@@ -1297,7 +1301,6 @@ import java.util.Properties;
     return points;
   }
 
-
   public P3 getAtomSetCenter(BS bs) {
     P3 ptCenter = new P3();
     int nPoints = 0;
@@ -1329,6 +1332,7 @@ import java.util.Properties;
       break;
     }
   }
+
   public StateScript addStateScript(String script1, BS bsBonds, BS bsAtoms1,
                                     BS bsAtoms2, String script2,
                                     boolean addFrameNumber,
@@ -1360,10 +1364,10 @@ import java.util.Properties;
   public Map<STR, float[]> getStructureList() {
     return vwr.getStructureList();
   }
+
   public Object getInfoM(String keyName) {
     // the preferred method now
-    return (msInfo == null ? null : msInfo
-        .get(keyName));
+    return (msInfo == null ? null : msInfo.get(keyName));
   }
 
   public boolean getMSInfoB(String keyName) {
@@ -1373,7 +1377,7 @@ import java.util.Properties;
 
   /**
    * could be the base model or one of the subframes
-   *
+   * 
    * @param modelIndex
    * @return is any part of a trajectory
    */
@@ -1456,8 +1460,8 @@ import java.util.Properties;
   }
 
   public String getModelNumberDotted(int modelIndex) {
-    return (mc < 1 || modelIndex >= mc || modelIndex < 0 ? ""
-        : Escape.escapeModelFileNumber(modelFileNumbers[modelIndex]));
+    return (mc < 1 || modelIndex >= mc || modelIndex < 0 ? "" : Escape
+        .escapeModelFileNumber(modelFileNumbers[modelIndex]));
   }
 
   public int getModelNumber(int modelIndex) {
@@ -1662,8 +1666,7 @@ import java.util.Properties;
   }
 
   private String getInsertionListInModel(int modelIndex) {
-    String str = (String) getInfo(modelIndex,
-        "insertionCodes");
+    String str = (String) getInfo(modelIndex, "insertionCodes");
     return (str == null ? "" : str);
   }
 
@@ -1680,7 +1683,8 @@ import java.util.Properties;
   public int getLastVibrationVector(int modelIndex, int tok) {
     if (vibrations != null) {
       Vibration v;
-      int a1 = (modelIndex < 0 || isTrajectory(modelIndex) || modelIndex >= mc - 1 ? ac : am[modelIndex + 1].firstAtomIndex);
+      int a1 = (modelIndex < 0 || isTrajectory(modelIndex)
+          || modelIndex >= mc - 1 ? ac : am[modelIndex + 1].firstAtomIndex);
       int a0 = (modelIndex <= 0 ? 0 : am[modelIndex].firstAtomIndex);
       for (int i = a1; --i >= a0;) {
         if ((modelIndex < 0 || at[i].mi == modelIndex)
@@ -1800,7 +1804,8 @@ import java.util.Properties;
       }
     }
     if (Math.abs(cPos + cNeg) > 0.01f) {
-      Logger.info("Dipole calculation requires balanced charges: " + cPos + " " + cNeg);
+      Logger.info("Dipole calculation requires balanced charges: " + cPos + " "
+          + cNeg);
       return null;
     }
     if (nNeg == 0 || nPos == 0)
@@ -1879,12 +1884,12 @@ import java.util.Properties;
       bsModelAtoms[i] = vwr.getModelUndeletedAtomsBitSet(i);
       m = am[i];
       m.moleculeCount = 0;
-      biobranches = (m.isBioModel ? ((JmolBioModel) m).getBioBranches(biobranches) : null);
+      biobranches = (m.isBioModel ? ((JmolBioModel) m)
+          .getBioBranches(biobranches) : null);
     }
     // problem, as with 1gzx, is that this does not include non-protein cofactors that are 
     // covalently bonded. So we indicate a set of "biobranches" in JmolMolecule.getMolecules
-    molecules = JmolMolecule.getMolecules(at, bsModelAtoms, biobranches,
-        null);
+    molecules = JmolMolecule.getMolecules(at, bsModelAtoms, biobranches, null);
     moleculeCount = molecules.length;
     for (int i = moleculeCount; --i >= 0;) {
       m = am[molecules[i].modelIndex];
@@ -1998,7 +2003,6 @@ import java.util.Properties;
     return (modelIndex < 0 ? bondCount : am[modelIndex].getBondCount());
   }
 
-
   public int getAtomCountInModel(int modelIndex) {
     return (modelIndex < 0 ? ac : am[modelIndex].act);
   }
@@ -2052,7 +2056,8 @@ import java.util.Properties;
     case T.basepair:
     case T.sequence:
       bs = new BS();
-      return (haveBioModels ? bioModelset.getAtomBitsStr(tokType, (String) specInfo, bs) : bs);
+      return (haveBioModels ? bioModelset.getAtomBitsStr(tokType,
+          (String) specInfo, bs) : bs);
     case T.bonds:
     case T.isaromatic:
       return getAtomBitsMDb(tokType, specInfo);
@@ -2157,12 +2162,14 @@ import java.util.Properties;
         int id;
         for (int i = m.chainCount; --i >= 0;) {
           Chain chain = m.chains[i];
-          if (chainID == -1 || chainID == (id = chain.chainID) || !caseSensitive
-              && id > 0 && id < 300 && chainID == chainToUpper(id)) {
+          if (chainID == -1 || chainID == (id = chain.chainID)
+              || !caseSensitive && id > 0 && id < 300
+              && chainID == chainToUpper(id)) {
             Group[] groups = chain.groups;
             int n = chain.groupCount;
             for (int index = 0; index >= 0;) {
-              index = selectSeqcodeRange(groups, n, index, seqcodeA, seqcodeB, bs);
+              index = selectSeqcodeRange(groups, n, index, seqcodeA, seqcodeB,
+                  bs);
             }
           }
         }
@@ -2170,12 +2177,11 @@ import java.util.Properties;
     return bs;
   }
 
-  private static int selectSeqcodeRange(Group[] groups, int n, int index, int seqcodeA, int seqcodeB,
-                                BS bs) {
+  private static int selectSeqcodeRange(Group[] groups, int n, int index,
+                                        int seqcodeA, int seqcodeB, BS bs) {
     int seqcode, indexA, indexB, minDiff;
     boolean isInexact = false;
-    for (indexA = index; indexA < n
-        && groups[indexA].seqcode != seqcodeA; indexA++) {
+    for (indexA = index; indexA < n && groups[indexA].seqcode != seqcodeA; indexA++) {
     }
     if (indexA == n) {
       // didn't find A exactly -- go find the nearest that is GREATER than this value
@@ -2196,8 +2202,7 @@ import java.util.Properties;
       indexB = n - 1;
       isInexact = true;
     } else {
-      for (indexB = indexA; indexB < n
-          && groups[indexB].seqcode != seqcodeB; indexB++) {
+      for (indexB = indexA; indexB < n && groups[indexB].seqcode != seqcodeB; indexB++) {
       }
       if (indexB == n) {
         // didn't find B exactly -- get the nearest that is LESS than this value
@@ -2257,7 +2262,8 @@ import java.util.Properties;
             continue;
           if (distance < 0) {
             getAtomsWithin(distance,
-                at[i].getFractionalUnitCoordPt(fixJavaFloat, true, ptTemp), bsResult, -1);
+                at[i].getFractionalUnitCoordPt(fixJavaFloat, true, ptTemp),
+                bsResult, -1);
             continue;
           }
           setIteratorForAtom(iter, iModel, i, distance, rd);
@@ -2331,9 +2337,9 @@ import java.util.Properties;
   }
 
   public int[] makeConnections2(float minD, float maxD, int order,
-                                   int connectOperation, BS bsA, BS bsB,
-                                   BS bsBonds, boolean isBonds,
-                                   boolean addGroup, float energy) {
+                                int connectOperation, BS bsA, BS bsB,
+                                BS bsBonds, boolean isBonds, boolean addGroup,
+                                float energy) {
     if (bsBonds == null)
       bsBonds = new BS();
     boolean matchAny = (order == Edge.BOND_ORDER_ANY);
@@ -2351,19 +2357,20 @@ import java.util.Properties;
     case T.legacyautobonding:
     case T.auto:
       if (order != Edge.BOND_AROMATIC) {
-          if (isBonds) {
-            BS bs = bsA;
-            bsA = new BS();
-            bsB = new BS();
-            for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-              bsA.set(bo[i].atom1.i);
-              bsB.set(bo[i].atom2.i);
-            }
+        if (isBonds) {
+          BS bs = bsA;
+          bsA = new BS();
+          bsB = new BS();
+          for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+            bsA.set(bo[i].atom1.i);
+            bsB.set(bo[i].atom2.i);
           }
-          return new int[] {
-              matchHbond ? autoHbond(bsA, bsB, false) : autoBondBs4(bsA, bsB, null,
-                  bsBonds, vwr.getMadBond(), connectOperation == T.legacyautobonding), 0 };
         }
+        return new int[] {
+            matchHbond ? autoHbond(bsA, bsB, false) : autoBondBs4(bsA, bsB,
+                null, bsBonds, vwr.getMadBond(),
+                connectOperation == T.legacyautobonding), 0 };
+      }
       idOrModifyOnly = autoAromatize = true;
       break;
     case T.identify:
@@ -2378,7 +2385,7 @@ import java.util.Properties;
     }
     boolean anyOrNoId = (!identifyOnly || matchAny);
     boolean notAnyAndNoId = (!identifyOnly && !matchAny);
-    
+
     defaultCovalentMad = vwr.getMadBond();
     boolean minDIsFrac = (minD < 0);
     boolean maxDIsFrac = (maxD < 0);
@@ -2438,9 +2445,8 @@ import java.util.Properties;
               bondAB.setOrder(order);
               bsAromatic.clear(bondAB.index);
             }
-            if (anyOrNoId || order == bondAB.order
-                || newOrder == bondAB.order || matchHbond
-                && bondAB.isHydrogen()) {
+            if (anyOrNoId || order == bondAB.order || newOrder == bondAB.order
+                || matchHbond && bondAB.isHydrogen()) {
               bsBonds.set(bondAB.index);
               nModified++;
             }
@@ -2453,8 +2459,7 @@ import java.util.Properties;
     if (autoAromatize)
       assignAromaticBondsBs(true, bsBonds);
     if (!identifyOnly)
-      sm.setShapeSizeBs(JC.SHAPE_STICKS, Integer.MIN_VALUE, null,
-          bsBonds);
+      sm.setShapeSizeBs(JC.SHAPE_STICKS, Integer.MIN_VALUE, null, bsBonds);
     return new int[] { nNew, nModified };
   }
 
@@ -2512,8 +2517,7 @@ import java.util.Properties;
       if (modelIndex != lastModelIndex) {
         lastModelIndex = modelIndex;
         if (isJmolDataFrameForModel(modelIndex)) {
-          i = am[modelIndex].firstAtomIndex + am[modelIndex].act
-              - 1;
+          i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
           continue;
         }
         useOccupation = getInfoB(modelIndex, "autoBondUsingOccupation"); // JANA reader
@@ -2535,14 +2539,13 @@ import java.util.Properties;
         // BOTH must be excluded in order to ignore bonding
         if (!isNearInSetA && !isNearInSetB
             || !(isAtomInSetA && isNearInSetB || isAtomInSetB && isNearInSetA)
-            || isFirstExcluded && bsExclude.get(j)
-            || useOccupation && occupancies != null && (occupancies[i] < 50) != (occupancies[j] < 50))
-          continue;        
-        int order = (isBondable(myBondingRadius,
-            atomNear.getBondingRadius(), iter.foundDistance2(),
-            minBondDistance2, bondTolerance)? 1 : 0);
-        if (order > 0
-            && autoBondCheck(atom, atomNear, order, mad, bsBonds))
+            || isFirstExcluded && bsExclude.get(j) || useOccupation
+            && occupancies != null
+            && (occupancies[i] < 50) != (occupancies[j] < 50))
+          continue;
+        int order = (isBondable(myBondingRadius, atomNear.getBondingRadius(),
+            iter.foundDistance2(), minBondDistance2, bondTolerance) ? 1 : 0);
+        if (order > 0 && autoBondCheck(atom, atomNear, order, mad, bsBonds))
           nNew++;
       }
       iter.release();
@@ -2552,11 +2555,9 @@ import java.util.Properties;
     return nNew;
   }
 
-  public boolean isBondable(float bondingRadiusA,
-                                       float bondingRadiusB, 
-                                       float distance2,
-                                       float minBondDistance2,
-                                       float bondTolerance) {
+  public boolean isBondable(float bondingRadiusA, float bondingRadiusB,
+                            float distance2, float minBondDistance2,
+                            float bondTolerance) {
     if (bondingRadiusA == 0 || bondingRadiusB == 0
         || distance2 < minBondDistance2)
       return false;
@@ -2565,11 +2566,10 @@ import java.util.Properties;
     return (distance2 <= maxAcceptable2);
   }
 
-
   private boolean maxBondWarned;
 
-  private boolean autoBondCheck(Atom atomA, Atom atomB, int order,
-                                             short mad, BS bsBonds) {
+  private boolean autoBondCheck(Atom atomA, Atom atomB, int order, short mad,
+                                BS bsBonds) {
     if (atomA.getCurrentBondCount() > JC.MAXIMUM_AUTO_BOND_COUNT
         || atomB.getCurrentBondCount() > JC.MAXIMUM_AUTO_BOND_COUNT) {
       if (!maxBondWarned)
@@ -2661,9 +2661,8 @@ import java.util.Properties;
           continue;
         if (!(isAtomInSetA && isNearInSetB || isAtomInSetB && isNearInSetA))
           continue;
-        int order = (isBondable(myBondingRadius,
-            atomNear.getBondingRadius(), iter.foundDistance2(),
-            minBondDistance2, bondTolerance) ? 1 : 0);
+        int order = (isBondable(myBondingRadius, atomNear.getBondingRadius(),
+            iter.foundDistance2(), minBondDistance2, bondTolerance) ? 1 : 0);
         if (order > 0) {
           if (autoBondCheck(atom, atomNear, order, mad, bsBonds))
             nNew++;
@@ -2673,7 +2672,6 @@ import java.util.Properties;
     }
     return nNew;
   }
-
 
   /**
    * a generalized formation of HBONDS, carried out in relation to calculate
@@ -2824,8 +2822,7 @@ import java.util.Properties;
       }
     }
     iter.release();
-    sm.setShapeSizeBs(JC.SHAPE_STICKS, Integer.MIN_VALUE, null,
-        bsHBonds);
+    sm.setShapeSizeBs(JC.SHAPE_STICKS, Integer.MIN_VALUE, null, bsHBonds);
     if (showRebondTimes)
       Logger.checkTimer("hbond", false);
     return (haveHAtoms ? nNew : -nNew);
@@ -2900,8 +2897,7 @@ import java.util.Properties;
         sb.append(" baseModelId=").append(
             PT.esc((String) getInfo(ib, "jdxModelID")));
       sb.append(" name=").append(PT.esc(getModelName(i))).append(" title=")
-          .append(PT.esc(getModelTitle(i)))
-          .append(" hasVibrationVectors=\"")
+          .append(PT.esc(getModelTitle(i))).append(" hasVibrationVectors=\"")
           .appendB(vwr.modelHasVibrationVectors(i)).append("\" />");
     }
     sb.append("\n</models>");
@@ -2921,7 +2917,8 @@ import java.util.Properties;
   }
 
   public SymmetryInterface getSymTemp(boolean forceNew) {
-    return (symTemp == null || forceNew ? (symTemp = Interface.getSymmetry(vwr, "ms")) : symTemp);
+    return (symTemp == null || forceNew ? (symTemp = Interface.getSymmetry(vwr,
+        "ms")) : symTemp);
   }
 
   public void createModels(int n) {
@@ -3042,8 +3039,7 @@ import java.util.Properties;
     if (bs == null)
       return;
     BS bsBonds = new BS();
-    for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs
-        .nextSetBit(i + 1))
+    for (int i = bs.nextSetBit(0); i >= 0 && i < ac; i = bs.nextSetBit(i + 1))
       at[i].delete(bsBonds);
     for (int i = 0; i < mc; i++) {
       am[i].bsAtomsDeleted.or(bs);
@@ -3097,7 +3093,7 @@ import java.util.Properties;
     if (atomSeqIDs != null)
       for (int i = i0; i < ac; i++)
         atomSeqIDs[i] = atomSeqIDs[map[i]];
-    
+
     if (bfactor100s != null)
       for (int i = i0; i < ac; i++)
         bfactor100s[i] = bfactor100s[map[i]];
@@ -3135,17 +3131,14 @@ import java.util.Properties;
       atomSeqIDs = AU.arrayCopyI(atomSeqIDs, newLength);
   }
 
-  public Atom addAtom(int modelIndex, Group group, 
-                      int atomicAndIsotopeNumber,
-                      String atomName, String atomType, int atomSerial, int atomSeqID, 
-                      int atomSite, P3 xyz,
-                      float radius, V3 vib, int formalCharge,
-                      float partialCharge, float occupancy, float bfactor,
-                      Lst<Object> tensors, boolean isHetero,
-                      byte specialAtomID, BS atomSymmetry) {
-    Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius,
-        atomSymmetry, atomSite, (short) atomicAndIsotopeNumber, formalCharge,
-        isHetero);
+  public Atom addAtom(int modelIndex, Group group, int atomicAndIsotopeNumber,
+                      String atomName, String atomType, int atomSerial,
+                      int atomSeqID, int atomSite, P3 xyz, float radius,
+                      V3 vib, int formalCharge, float partialCharge,
+                      float occupancy, float bfactor, Lst<Object> tensors,
+                      boolean isHetero, byte specialAtomID, BS atomSymmetry) {
+    Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius, atomSymmetry,
+        atomSite, (short) atomicAndIsotopeNumber, formalCharge, isHetero);
     am[modelIndex].act++;
     am[modelIndex].bsAtoms.set(ac);
     if (Elements.isElement(atomicAndIsotopeNumber, 1))
@@ -3320,8 +3313,8 @@ import java.util.Properties;
         continue;
       }
       float energy = (f.length > 4 ? f[4] : 0);
-      bondAtoms(at[index1], at[index2], order, mad, null, energy,
-          addGroup, true);
+      bondAtoms(at[index1], at[index2], order, mad, null, energy, addGroup,
+          true);
     }
     if (bsDelete.nextSetBit(0) >= 0)
       deleteBonds(bsDelete, false);
@@ -3547,10 +3540,10 @@ import java.util.Properties;
         : q.getTheta() == 0 ? "{0 0 0 1}" : q.toString());
   }
 
-
   public Lst<Object> intersectPlane(P4 plane, Lst<Object> v, int i) {
     return (triangulator == null ? (triangulator = (Triangulator) Interface
-        .getUtil("TriangleData", vwr, "ms")) : triangulator).intersectPlane(plane, v, i);
+        .getUtil("TriangleData", vwr, "ms")) : triangulator).intersectPlane(
+        plane, v, i);
   }
 
   public SymmetryInterface getUnitCellForAtom(int index) {
@@ -3560,7 +3553,7 @@ import java.util.Properties;
       JmolModulationSet ms = getModulation(index);
       SymmetryInterface uc = (ms == null ? null : ms.getSubSystemUnitCell());
       if (uc != null)
-        return uc;  // subsystems
+        return uc; // subsystems
     }
     return getUnitCell(at[index].mi);
   }
@@ -3619,7 +3612,8 @@ import java.util.Properties;
 
   public void recalculatePositionDependentQuantities(BS bs, M4 mat) {
     if ((vwr.shm.getShape(JC.SHAPE_POLYHEDRA) != null))
-      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "move", new Object[] {bs, mat});
+      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "move", new Object[] {
+          bs, mat });
     if (haveStraightness)
       calculateStraightnessAll();
     recalculateLeadMidpointsAndWingVectors(-1);
@@ -3715,7 +3709,7 @@ import java.util.Properties;
       Atom a1 = at[(int) dihedralList[pt + 1]];
       V3 v = V3.newVsub(at[(int) dihedralList[pt + 2]], a1);
       float angle = (dihedralList[pt + 5] - dihedralList[pt + 4]) * f;
-      A4 aa = A4.newVA(v, (float)(-angle / TransformManager.degreesPerRadian));
+      A4 aa = A4.newVA(v, (float) (-angle / TransformManager.degreesPerRadian));
       matTemp.setAA(aa);
       ptTemp.setT(a1);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -3724,7 +3718,7 @@ import java.util.Properties;
         at[i].add(ptTemp);
         taintAtom(i, TAINT_COORD);
       }
-    }    
+    }
   }
 
   public void setAtomCoordsRelative(T3 offset, BS bs) {
@@ -3737,7 +3731,7 @@ import java.util.Properties;
 
   public void setAtomCoords(BS bs, int tokType, Object xyzValues) {
     setAtomCoord2(bs, tokType, xyzValues);
-    switch(tokType) {
+    switch (tokType) {
     case T.vibx:
     case T.viby:
     case T.vibz:
@@ -3748,8 +3742,7 @@ import java.util.Properties;
     }
   }
 
-  public void invertSelected(P3 pt, P4 plane, int iAtom,
-                             BS invAtoms, BS bs) {
+  public void invertSelected(P3 pt, P4 plane, int iAtom, BS invAtoms, BS bs) {
     if (pt != null) {
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         float x = (pt.x - at[i].x) * 2;
@@ -3781,12 +3774,13 @@ import java.util.Properties;
       if (bonds == null)
         return;
       BS bsAtoms = new BS();
-      Lst<P3> vNot = new  Lst<P3>();
+      Lst<P3> vNot = new Lst<P3>();
       BS bsModel = vwr.getModelUndeletedAtomsBitSet(thisAtom.mi);
       for (int i = 0; i < bonds.length; i++) {
         Atom a = bonds[i].getOtherAtom(thisAtom);
         if (invAtoms.get(a.i)) {
-            bsAtoms.or(JmolMolecule.getBranchBitSet(at, a.i, bsModel, null, iAtom, true, true));
+          bsAtoms.or(JmolMolecule.getBranchBitSet(at, a.i, bsModel, null,
+              iAtom, true, true));
         } else {
           vNot.addLast(a);
         }
@@ -3810,11 +3804,11 @@ import java.util.Properties;
       bs.and(bsAtoms);
       wts = new float[bsAtoms.cardinality()];
       for (int p = 0; i >= 0; i = bsAtoms.nextSetBit(i + 1))
-        wts[p++] = SimpleUnitCell.getCellWeight(at[i].getFractionalUnitCoordPt(true, false, pt));
+        wts[p++] = SimpleUnitCell.getCellWeight(at[i].getFractionalUnitCoordPt(
+            true, false, pt));
     }
     return wts;
   }
-
 
   public Quat[] getAtomGroupQuaternions(BS bsAtoms, int nMax, char qtype) {
     // run through list, getting quaternions. For simple groups, 
@@ -3842,18 +3836,22 @@ import java.util.Properties;
     return v.toArray(new Quat[v.size()]);
   }
 
-  public BS getConformation(int modelIndex, int conformationIndex,
-                            boolean doSet, BS bsAtoms) {
+  public BS getConformation(int modelIndex, int conformationIndex, boolean doSet, BS bsSelected) {
     BS bs = new BS();
+    BS bsAtoms;
     for (int i = mc; --i >= 0;)
       if (i == modelIndex || modelIndex < 0) {
-        if (am[i].isBioModel) {
-          ((BioModel) am[i]).getConformation(conformationIndex, doSet, bsAtoms,
-              bs);
+        Model m = am[i];
+        if (conformationIndex >= m.altLocCount)
           continue;
-        }
-        BS bsConformation = am[i].getConformationBS(conformationIndex, bsAtoms);
-        if (bsConformation == null)
+        bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+        if (bsSelected != null)
+          bsAtoms.and(bsSelected);
+        if (bsAtoms.nextSetBit(0) < 0)
+          continue;
+        if (am[i].isBioModel
+            && ((BioModel) am[i]).getConformation(conformationIndex, doSet,
+                bsAtoms, bs))
           continue;
         if (conformationIndex >= 0) {
           int nAltLocs = getAltLocCountInModel(i);
@@ -3861,25 +3859,25 @@ import java.util.Properties;
           BS bsTemp = new BS();
           for (int c = nAltLocs; --c >= 0;)
             if (c != conformationIndex)
-              bsConformation.andNot(getAtomBitsMDa(T.spec_alternate,
+              bsAtoms.andNot(getAtomBitsMDa(T.spec_alternate,
                   altLocs.substring(c, c + 1), bsTemp));
         }
-        if (bsConformation.nextSetBit(0) >= 0)
-          bs.or(bsConformation);
+        if (bsAtoms.nextSetBit(0) >= 0)
+          bs.or(bsAtoms);
       }
     return bs;
   }
 
-
   ///// bio-only methods /////
-  
+
   public BS getSequenceBits(String specInfo, BS bs) {
-    return (haveBioModels ?
-        bioModelset.getAllSequenceBits(specInfo, bs) : new BS());
+    return (haveBioModels ? bioModelset.getAllSequenceBits(specInfo, bs)
+        : new BS());
   }
 
   public int getBioPolymerCountInModel(int modelIndex) {
-    return (haveBioModels ? bioModelset.getBioPolymerCountInModel(modelIndex) : 0);
+    return (haveBioModels ? bioModelset.getBioPolymerCountInModel(modelIndex)
+        : 0);
   }
 
   public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList,
@@ -3892,7 +3890,7 @@ import java.util.Properties;
 
   public void recalculateLeadMidpointsAndWingVectors(int modelIndex) {
     if (haveBioModels)
-      bioModelset.recalculatePoints(modelIndex); 
+      bioModelset.recalculatePoints(modelIndex);
   }
 
   /**
@@ -3923,34 +3921,38 @@ import java.util.Properties;
       bioModelset.calculateStraightnessAll();
   }
 
-  /** see comments in org.jmol.modelsetbio.AlphaPolymer.java
+  /**
+   * see comments in org.jmol.modelsetbio.AlphaPolymer.java
    * 
-   * Struts are calculated for atoms in bs1 connecting to atoms in bs2.
-   * The two bitsets may overlap. 
+   * Struts are calculated for atoms in bs1 connecting to atoms in bs2. The two
+   * bitsets may overlap.
    * 
    * @param bs1
    * @param bs2
-   * @return     number of struts found
+   * @return number of struts found
    */
   public int calculateStruts(BS bs1, BS bs2) {
     return (haveBioModels ? bioModelset.calculateStruts(bs1, bs2) : 0);
   }
-  
+
   public BS getGroupsWithin(int nResidues, BS bs) {
-    return (haveBioModels ? bioModelset.getGroupsWithinAll(nResidues, bs) : new BS());
+    return (haveBioModels ? bioModelset.getGroupsWithinAll(nResidues, bs)
+        : new BS());
   }
 
   public String getProteinStructureState(BS bsAtoms, int mode) {
-    return (haveBioModels ? bioModelset.getFullProteinStructureState(bsAtoms, mode) : "");
+    return (haveBioModels ? bioModelset.getFullProteinStructureState(bsAtoms,
+        mode) : "");
   }
 
   public String calculateStructures(BS bsAtoms, boolean asDSSP,
                                     boolean doReport,
                                     boolean dsspIgnoreHydrogen,
                                     boolean setStructure) {
-    return (haveBioModels ? bioModelset.calculateAllStuctures(bsAtoms, asDSSP, doReport, dsspIgnoreHydrogen, setStructure) : "");
+    return (haveBioModels ? bioModelset.calculateAllStuctures(bsAtoms, asDSSP,
+        doReport, dsspIgnoreHydrogen, setStructure) : "");
   }
-  
+
   /**
    * allows rebuilding of PDB structures; also accessed by ModelManager from
    * Eval
@@ -3965,14 +3967,15 @@ import java.util.Properties;
    * @return report
    * 
    */
-  public String calculateStructuresAllExcept(BS alreadyDefined,
-                                                boolean asDSSP,
-                                                boolean doReport,
-                                                boolean dsspIgnoreHydrogen,
-                                                boolean setStructure,
-                                                boolean includeAlpha) {
+  public String calculateStructuresAllExcept(BS alreadyDefined, boolean asDSSP,
+                                             boolean doReport,
+                                             boolean dsspIgnoreHydrogen,
+                                             boolean setStructure,
+                                             boolean includeAlpha) {
     freezeModels();
-    return (haveBioModels ? bioModelset.calculateAllStructuresExcept(alreadyDefined, asDSSP, doReport, dsspIgnoreHydrogen, setStructure, includeAlpha): "");
+    return (haveBioModels ? bioModelset.calculateAllStructuresExcept(
+        alreadyDefined, asDSSP, doReport, dsspIgnoreHydrogen, setStructure,
+        includeAlpha) : "");
   }
 
   public void recalculatePolymers(BS bsModelsExcluded) {
@@ -3986,12 +3989,10 @@ import java.util.Properties;
           modelsExcluded);
   }
 
-
   public void calcSelectedMonomersCount() {
     if (haveBioModels)
       bioModelset.calcSelectedMonomersCount();
   }
-
 
   public void setProteinType(BS bs, STR type) {
     if (haveBioModels)
@@ -4027,9 +4028,10 @@ import java.util.Properties;
       map.put("points", lst);
     }
     int iAtom = (bs == null ? -1 : bs.nextSetBit(0));
-    bs = vwr.getModelUndeletedAtomsBitSet(iAtom < 0 ? vwr.am.cmi : at[iAtom].mi);
+    bs = vwr
+        .getModelUndeletedAtomsBitSet(iAtom < 0 ? vwr.am.cmi : at[iAtom].mi);
     if (iAtom < 0)
-      iAtom = bs.nextSetBit(0);      
+      iAtom = bs.nextSetBit(0);
     if (iAtom >= 0) {
       SymmetryInterface unitCell = getUnitCellForAtom(iAtom);
       if (unitCell != null) {

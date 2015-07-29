@@ -35,7 +35,6 @@ import org.jmol.java.BS;
 import org.jmol.util.BoxInfo;
 
 import javajs.api.GenericPlatform;
-import javajs.awt.Dimension;
 import javajs.util.P3;
 import javajs.util.V3;
 import org.jmol.viewer.Viewer;
@@ -522,7 +521,7 @@ abstract public class JmolViewer {
 
   abstract public Object evaluateExpression(Object expression);
 
-  abstract public Dimension resizeInnerPanel(int width, int height);
+  abstract public int[] resizeInnerPanel(int width, int height);
 
   /**
    * run a script immediately and return output buffer string
