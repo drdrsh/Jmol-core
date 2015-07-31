@@ -1051,19 +1051,20 @@ public class T {
   public final static int modelkitmode                   = booleanparam | 107;  // 12.0.RC15
   public final static int modulateoccupancy              = booleanparam | 108;  // 14.3.13
   public final static int monitorenergy                  = booleanparam | 109;
-  public final static int multiprocessor                 = booleanparam | 110;
-  public final static int navigatesurface                = booleanparam | 111;
-  public final static int navigationmode                 = booleanparam | 112;
-  public final static int navigationperiodic             = booleanparam | 113;
-  public final static int partialdots                    = booleanparam | 114; // 12.1.46
-  public final static int pdbaddhydrogens                = booleanparam | 115;
-  public final static int pdbgetheader                   = booleanparam | 116;
-  public final static int pdbsequential                  = booleanparam | 117;
-  public final static int perspectivedepth               = booleanparam | 118;
-  public final static int preservestate                  = booleanparam | 119;
-  public final static int rangeselected                  = booleanparam | 120;
-  public final static int refreshing                     = booleanparam | 121;
-  public final static int ribbonborder                   = booleanparam | 122;
+  public final static int multiplebondbananas            = booleanparam | 110;
+  public final static int multiprocessor                 = booleanparam | 111;
+  public final static int navigatesurface                = booleanparam | 112;
+  public final static int navigationmode                 = booleanparam | 113;
+  public final static int navigationperiodic             = booleanparam | 114;
+  public final static int partialdots                    = booleanparam | 115; // 12.1.46
+  public final static int pdbaddhydrogens                = booleanparam | 116;
+  public final static int pdbgetheader                   = booleanparam | 117;
+  public final static int pdbsequential                  = booleanparam | 118;
+  public final static int perspectivedepth               = booleanparam | 119;
+  public final static int preservestate                  = booleanparam | 120;
+  public final static int rangeselected                  = booleanparam | 121;
+  public final static int refreshing                     = booleanparam | 122;
+  public final static int ribbonborder                   = booleanparam | 123;
   public final static int rocketbarrels                  = booleanparam | 124;
   public final static int saveproteinstructurestate      = booleanparam | 126;
   public final static int scriptqueue                    = booleanparam | 128;
@@ -2578,6 +2579,7 @@ public class T {
        "modelkitMode",
        "modulateOccupancy",
        "monitorEnergy",
+       "multiplebondbananas",
        "multipleBondRadiusFactor",
        "multipleBondSpacing",
        "multiProcessor",
@@ -3609,6 +3611,7 @@ public class T {
         modelkitmode,                       //        "modelkitMode"
         modulateoccupancy,
         monitorenergy,                      //        "monitorEnergy"
+        multiplebondbananas,
         multiplebondradiusfactor,           //        "multipleBondRadiusFactor"
         multiplebondspacing,                //        "multipleBondSpacing"
         multiprocessor,                     //        "multiProcessor"

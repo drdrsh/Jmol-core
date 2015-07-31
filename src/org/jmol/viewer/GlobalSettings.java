@@ -301,6 +301,7 @@ public class GlobalSettings {
       setF("modulationScale", modulationScale);
       setB("monitorEnergy", monitorEnergy);
       setF("multipleBondRadiusFactor", multipleBondRadiusFactor);
+      setB("multipleBondBananas", multipleBondBananas);
       setF("multipleBondSpacing", multipleBondSpacing);
       setB("multiProcessor", multiProcessor && (Viewer.nProcessors > 1));
       setB("navigationMode", navigationMode);
@@ -525,6 +526,7 @@ public class GlobalSettings {
     boolean ssbondsBackbone = false;
     float multipleBondSpacing = -1;     // 0.35?
     float multipleBondRadiusFactor = 0; // 0.75?
+    boolean multipleBondBananas = false;
 
     //secondary structure + Rasmol
 
@@ -1034,6 +1036,8 @@ public class GlobalSettings {
       // these next two might be part of a 2D->3D operation
       app(str, "set minimizationCriterion  " + minimizationCriterion);
       app(str, "set minimizationSteps  " + minimizationSteps);
+      // Jmol 14.3.15 introduces bananas, but this setting should not carry through from one model to the next
+      app(str, "set multipleBondBananas false");
       app(
           str,
           "set pdbAddHydrogens "

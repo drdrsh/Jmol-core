@@ -183,48 +183,14 @@ public class DrawRenderer extends MeshRenderer {
       //renderArrowHead(controlHermites[nHermites - 2], controlHermites[nHermites - 1], false);
       // 
       // {pt1} {pt2} {ptref} {nDegreesOffset, theta, fractionalOffset}
+      T3 ptRef = (vertexCount > 2 ? vertices[2] : Draw.randomPoint());
       float nDegreesOffset = (vertexCount > 3 ? vertices[3].x : 0);
       float theta = (vertexCount > 3 ? vertices[3].y : 360);
       if (theta == 0)
         return;
       float fractionalOffset = (vertexCount > 3 ? vertices[3].z : 0);
-      vTemp.sub2(vertices[1], vertices[0]);
-      // crossing point
-      pt1f.scaleAdd2(fractionalOffset, vTemp, vertices[0]);
-      // define rotational axis
-      M3 mat = new M3().setAA(A4.newVA(vTemp,
-          (float) (nDegreesOffset * Math.PI / 180)));
-      // vector to rotate
-      vTemp2.sub2(vertexCount > 2 ? vertices[2] : Draw.randomPoint(),
-          vertices[0]);
-      vTemp2.cross(vTemp, vTemp2);
-      vTemp2.cross(vTemp2, vTemp);
-      vTemp2.normalize();
-      vTemp2.scale(dmesh.scale / 2);
-      mat.rotate(vTemp2);
-      //control points
-      float degrees = theta / 5;
-      while (Math.abs(degrees) > 5)
-        degrees /= 2;
-      nPoints = Math.round(theta / degrees) + 1;
-      while (nPoints < 10) {
-        degrees /= 2;
-        nPoints = Math.round(theta / degrees) + 1;
-      }
-      mat.setAA(A4.newVA(vTemp, (float) (degrees * Math.PI / 180)));
-      screens = vwr.allocTempScreens(nPoints);
-      p3Screens = vwr.allocTempPoints(nPoints);
-      int iBase = nPoints - (dmesh.scale < 2 ? 3 : 3);
-      for (int i = 0; i < nPoints; i++) {
-        if (i == iBase)
-          pt0.setT(pt1);
-        pt1.scaleAdd2(1, vTemp2, pt1f);
-        if (i == 0)
-          pt2.setT(pt1);
-        tm.transformPtScr(pt1, screens[i]);
-        tm.transformPtScrT3(pt1, p3Screens[i]);
-        mat.rotate(vTemp2);
-      }
+      nPoints = setArc(vertices[0], vertices[1], ptRef, nDegreesOffset, theta,
+          fractionalOffset, dmesh.scale);
       if (dmesh.isVector && !dmesh.noHead) {
         renderArrowHead(pt0, pt1, 0.3f, false, false, dmesh.isBarb);
         tm.transformPtScr(pt1f, screens[nPoints - 1]);
@@ -265,6 +231,48 @@ public class DrawRenderer extends MeshRenderer {
             screens[i + 1]);
     }
 
+  }
+
+  private int setArc(T3 v1, T3 v2, T3 ptRef, float nDegreesOffset,
+                       float theta, float fractionalOffset, float scale) {
+    vTemp.sub2(v2, v1);
+    // crossing point
+    pt1f.scaleAdd2(fractionalOffset, vTemp, v1);
+    // define rotational axis
+    M3 mat = new M3().setAA(A4.newVA(vTemp,
+        (float) (nDegreesOffset * Math.PI / 180)));
+    // vector to rotate
+    vTemp2.sub2(ptRef,
+        v1);
+    vTemp2.cross(vTemp, vTemp2);
+    vTemp2.cross(vTemp2, vTemp);
+    vTemp2.normalize();
+    vTemp2.scale(scale / 2);
+    mat.rotate(vTemp2);
+    //control points
+    float degrees = theta / 5;
+    while (Math.abs(degrees) > 5)
+      degrees /= 2;
+    int nPoints = Math.round(theta / degrees) + 1;
+    while (nPoints < 10) {
+      degrees /= 2;
+      nPoints = Math.round(theta / degrees) + 1;
+    }
+    mat.setAA(A4.newVA(vTemp, (float) (degrees * Math.PI / 180)));
+    screens = vwr.allocTempScreens(nPoints);
+    p3Screens = vwr.allocTempPoints(nPoints);
+    int iBase = nPoints - (dmesh.scale < 2 ? 3 : 3);
+    for (int i = 0; i < nPoints; i++) {
+      if (i == iBase)
+        pt0.setT(pt1);
+      pt1.scaleAdd2(1, vTemp2, pt1f);
+      if (i == 0)
+        pt2.setT(pt1);
+      tm.transformPtScr(pt1, screens[i]);
+      tm.transformPtScrT3(pt1, p3Screens[i]);
+      mat.rotate(vTemp2);
+    }
+    return nPoints;
   }
 
   private void getConnectionPoints() {

@@ -34,6 +34,9 @@ import org.jmol.script.T;
 import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.Edge;
+
+import javajs.util.A4;
+import javajs.util.M3;
 import javajs.util.P3;
 import javajs.util.V3;
 import org.jmol.viewer.JC;
@@ -43,6 +46,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private boolean showMultipleBonds;
   private float multipleBondSpacing;
   private float multipleBondRadiusFactor;
+  private boolean bondsPerp;
+  private boolean useBananas;
   private byte modeMultipleBond;
   private boolean isCartesian;
   //boolean showHydrogens;
@@ -113,14 +118,17 @@ public class SticksRenderer extends FontLineShapeRenderer {
     return needTranslucent;
   }
 
-//  if (haveMultipleBonds) {
-//    vwr.setFloatProperty("multipleBondSpacing", 0.15f);
-//    vwr.setFloatProperty("multipleBondRadiusFactor", 0.4f);
-//  }
-
   private void getMultipleBondSettings(boolean isPymol) {
+    useBananas = (vwr.getBoolean(T.multiplebondbananas) && !isPymol);
+    // negative spacing is relative, depending upon atom-atom distance;
+    // positive spacing is absolute, for fixed in-plane (radiusFactor > 0) or perp-plane (radiusFactor < 0)
     multipleBondSpacing = (isPymol ? 0.15f :vwr.getFloat(T.multiplebondspacing));
-    multipleBondRadiusFactor = (isPymol ? 0.4f : vwr.getFloat(T.multiplebondradiusfactor));    
+    // negative radius factor indicates perpendicular fixed double bond
+    multipleBondRadiusFactor = (isPymol ? 0.4f : vwr.getFloat(T.multiplebondradiusfactor));
+    bondsPerp = (useBananas || multipleBondSpacing > 0 && multipleBondRadiusFactor < 0);
+    if (useBananas)
+      multipleBondSpacing = (multipleBondSpacing < 0 ? -multipleBondSpacing * 0.4f : multipleBondSpacing);
+    multipleBondRadiusFactor = Math.abs(multipleBondRadiusFactor);
     if (multipleBondSpacing == 0 && isCartesian)
       multipleBondSpacing = 0.2f;
     modeMultipleBond = vwr.g.modeMultipleBond;
@@ -335,9 +343,29 @@ public class SticksRenderer extends FontLineShapeRenderer {
         y.cross(y, x);
         y.normalize();
       }
+      if (bondsPerp)
+        y.cross(y, x);
       y.scale(multipleBondSpacing);
       x.setT(y);
       x.scale((bondOrder - 1) / 2f);
+      if (useBananas) {
+        drawBanana(a, b, x, 0);
+        switch (bondOrder) {
+        case 4:
+          drawBanana(a, b, x, 90);
+          drawBanana(a, b, x, -90);
+          //$FALL-THROUGH$
+        case 2:
+        default:
+          drawBanana(a, b, x, 180);
+          break;
+        case 3:
+          drawBanana(a, b, x, 120);
+          drawBanana(a, b, x, -120);
+          break;
+        }
+        return;
+      }
       p1.sub2(a, x);
       p2.sub2(b, x);
       while (true) {
@@ -378,6 +406,32 @@ public class SticksRenderer extends FontLineShapeRenderer {
         break;
       stepAxisCoordinates();
     }
+  }
+
+  private M3 rot;
+  private A4 a4;
+  private void drawBanana(Atom a, Atom b, V3 x, int deg) {
+    g3d.addRenderer(T.hermitelevel);
+    vectorT.sub2(b, a);
+    if (rot == null) {
+      rot = new M3();
+      a4 = new A4();
+    }
+    a4.setVA(vectorT, (float) (deg * Math.PI / 180));
+    rot.setAA(a4);
+    pointT.setT(a);
+    pointT3.setT(b);
+    pointT2.ave(a, b);
+    rot.rotate2(x, vectorT);
+    pointT2.add(vectorT);
+    tm.transformPtScrT3(a, pointT);
+    tm.transformPtScrT3(pointT2, pointT2);
+    tm.transformPtScrT3(b, pointT3);
+    int w = Math.max(width, 1);
+    g3d.setC(colixA);
+    g3d.fillHermite(5, w, w, w, pointT, pointT, pointT2, pointT3);
+    g3d.setC(colixB);
+    g3d.fillHermite(5, w, w, w, pointT, pointT2, pointT3, pointT3);
   }
 
   private int xAxis1, yAxis1, xAxis2, yAxis2, dxStep, dyStep;

@@ -214,7 +214,7 @@ public class VectorsRenderer extends ShapeRenderer {
     }
     if (!standardVector) {
       tm.transformPtScrT3(pointVectorEnd, screenVectorEnd);
-      tm.transformPtScrT3(pointVectorStart, screenVectorEnd);
+      tm.transformPtScrT3(pointVectorStart, screenVectorStart);
       if (drawCap)
         pointArrowHead.add2(pointVectorEnd, headOffsetVector);
       else

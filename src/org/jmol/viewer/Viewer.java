@@ -2531,6 +2531,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     setSelectionHalosEnabled(false);
     tm.setCenter();
     am.initializePointers(1);
+    setBooleanProperty("multipleBondBananas", false);
     if (!ms.getMSInfoB("isPyMOL")) {
       clearAtomSets();
       setCurrentModelIndex(0);
@@ -5040,6 +5041,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return g.messageStyleChime;
     case T.modelkitmode:
       return g.modelKitMode;
+    case T.multiplebondbananas:
+      return g.multipleBondBananas;
     case T.navigationmode:
       return g.navigationMode;
     case T.navigationperiodic:
@@ -5857,6 +5860,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   private void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.multiplebondbananas:
+      // 14.3.15
+      g.multipleBondBananas = value;
+      break;
     case T.modulateoccupancy:
       // 12.0.RC6
       g.modulateOccupancy = value;
