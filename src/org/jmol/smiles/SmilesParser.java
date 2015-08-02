@@ -339,7 +339,7 @@ public class SmilesParser {
     for (int i = molecule.ac; --i >= 0;) {
       SmilesAtom atom = molecule.patternAtoms[i];
       if (molecule.isTopology &&  
-          (atom.elementNumber != -2 || atom.nAtomsOr > 0 || atom.nPrimitives > 0))
+          (atom.hasSubpattern || atom.elementNumber != -2 || atom.nAtomsOr > 0 || atom.nPrimitives > 0))
         molecule.isTopology = false;
       atom.setBondArray();
       if (!isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount(molecule))
@@ -550,6 +550,7 @@ public class SmilesParser {
               subPattern += ".0";
             currentAtom = parseAtom(molecule, null, subPattern, currentAtom,
                 bond, ch == '[', false, isBranchAtom);
+            currentAtom.hasSubpattern = true;
             if (bond.order != SmilesBond.TYPE_UNKNOWN
                 && bond.order != SmilesBond.TYPE_NONE)
               bond.set2a(null, currentAtom);
@@ -766,7 +767,6 @@ public class SmilesParser {
 
     SmilesAtom newAtom = (atomSet == null ? molecule.addAtom()
         : isPrimitive ? atomSet.addPrimitive() : atomSet.addAtomOr());
-
     if (braceCount > 0)
       newAtom.selected = true;
 

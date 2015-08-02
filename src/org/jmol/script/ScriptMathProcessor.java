@@ -1775,17 +1775,16 @@ public class ScriptMathProcessor {
       }
       break;
     case T.bitset:
-      if (op.intValue == T.bonds && x2.value instanceof BondSet)
+      boolean isAtoms = (op.intValue != T.bonds); 
+      if (!isAtoms && x2.value instanceof BondSet)
         return addX(x2);
       BS bs = SV.bsSelectVar(x2);
-      if (bs.cardinality() == 1 && (op.intValue & T.minmaxmask) == 0)
+      if (isAtoms && bs.cardinality() == 1 && (op.intValue & T.minmaxmask) == 0)
         op.intValue |= T.min;
       Object val = eval.getBitsetProperty(bs, op.intValue, null, null,
           x2.value, op.value, false, x2.index, true);
-      if (op.intValue != T.bonds)
-        return addXObj(val);
-      return addX(SV.newV(T.bitset, BondSet.newBS(
-          (BS) val, vwr.ms.getAtomIndices(bs))));
+      return (isAtoms ? addXObj(val) : addX(SV.newV(T.bitset, BondSet.newBS(
+          (BS) val, vwr.ms.getAtomIndices(bs)))));
     }
     return false;
   }

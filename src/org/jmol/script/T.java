@@ -1149,7 +1149,7 @@ public class T {
   public final static int basepair      = misc  | 40;
   public final static int binary        = misc  | 42;
   public final static int blockdata     = misc  | 44;
-  public final static int bondset       = misc  | 46;
+  public final static int bondset       = misc  | 46; // never used
   public final static int bottom        = misc  | 47;
   public final static int brillouin     = misc  | 48;
   public final static int cancel        = misc  | 50;

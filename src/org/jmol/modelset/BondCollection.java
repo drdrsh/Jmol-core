@@ -128,8 +128,7 @@ abstract public class BondCollection extends AtomCollection {
       Bond bond = bo[iBond];
       boolean isSelected1 = bsAtoms.get(bond.atom1.i);
       boolean isSelected2 = bsAtoms.get(bond.atom2.i);
-      if ((!bondSelectionModeOr & isSelected1 & isSelected2)
-          || (bondSelectionModeOr & (isSelected1 | isSelected2)))
+      if (bondSelectionModeOr ? isSelected1 || isSelected2 : isSelected1 && isSelected2)
         bs.set(iBond);
     }
     return bs;

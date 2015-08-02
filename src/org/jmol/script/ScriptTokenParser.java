@@ -264,6 +264,7 @@ abstract class ScriptTokenParser {
 
   protected Map<String, Boolean> htUserFunctions;
   protected boolean isUserFunction(String name) {
+    name = name.toLowerCase();
     return (!isStateScript && (vwr.isFunction(name) || htUserFunctions.containsKey(name)));
   }
 

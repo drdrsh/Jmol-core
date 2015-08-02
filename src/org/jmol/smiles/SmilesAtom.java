@@ -202,6 +202,7 @@ public class SmilesAtom extends P3 implements BNode {
   int ringSize = Integer.MIN_VALUE;
   int ringConnectivity = -1;
   private Node matchingNode;
+  public boolean hasSubpattern;
 
   public SmilesAtom setAll(int iComponent, int ptAtom, int flags, int atomicNumber,
       int charge) {
