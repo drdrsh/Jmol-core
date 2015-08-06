@@ -843,6 +843,8 @@ public class ActionManager implements EventManager {
 
   @Override
   public void mouseEnterExit(long time, int x, int y, boolean isExit) {
+    if (vwr.tm.stereoDoubleDTI)
+      x = x << 1;
     setCurrent(time, x, y, 0);
     //if (isExit)
       //exitMeasurementMode("mouseExit");
@@ -877,7 +879,8 @@ public class ActionManager implements EventManager {
       return;
     if (Logger.debuggingHigh && mode != Event.MOVED)
       vwr.showString("mouse action: " + mode + " " + buttonMods + " " + Binding.getMouseActionName(Binding.getMouseAction(count, buttonMods, mode), false), false);
-
+    if (vwr.tm.stereoDoubleDTI)
+      x = x << 1;
     switch (mode) {
     case Event.MOVED:
       setCurrent(time, x, y, buttonMods);
@@ -1569,7 +1572,7 @@ public class ActionManager implements EventManager {
   }
 
   private boolean isZoomArea(int x) {
-    return x > vwr.getScreenWidth() * (vwr.isStereoDouble() ? 2 : 1)
+    return x > vwr.getScreenWidth() * (vwr.tm.stereoDoubleFull || vwr.tm.stereoDoubleDTI ? 2 : 1)
         * SLIDE_ZOOM_X_PERCENT / 100f;
   }
 

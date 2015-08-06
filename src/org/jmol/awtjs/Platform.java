@@ -17,7 +17,7 @@ public class Platform extends org.jmol.awtjs2d.Platform {
 
   @Override
 	public void drawImage(Object g, Object img, int x, int y, int width,
-			int height) {
+			int height, boolean isDTI) {
     // not used in WebGL version
 	}
 

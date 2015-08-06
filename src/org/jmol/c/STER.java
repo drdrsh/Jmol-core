@@ -31,6 +31,7 @@ public enum STER {
   REDCYAN("REDCYAN", true),
   REDBLUE("REDBLUE", true),
   REDGREEN("REDGREEN", true),
+  DTI("DTI", false), // left/right squished
   CUSTOM("", true)
   ;
 

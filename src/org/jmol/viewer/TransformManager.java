@@ -2235,6 +2235,7 @@ public class TransformManager {
 
   STER stereoMode = STER.NONE;
   int[] stereoColors;
+  boolean stereoDoubleDTI, stereoDoubleFull;
 
   void setStereoMode2(int[] twoColors) {
     stereoMode = STER.CUSTOM;
@@ -2244,6 +2245,8 @@ public class TransformManager {
   void setStereoMode(STER stereoMode) {
     stereoColors = null;
     this.stereoMode = stereoMode;
+    stereoDoubleDTI = (stereoMode == STER.DTI);
+    stereoDoubleFull = (stereoMode == STER.DOUBLE);
   }
 
   float stereoDegrees = Float.NaN; // set in state manager
@@ -2646,7 +2649,6 @@ public class TransformManager {
   //////////////  optional navigation support ///////////////////////
 
   private JmolNavigatorInterface nav;
-
 
   private void navInterrupt() {
     if (nav != null)

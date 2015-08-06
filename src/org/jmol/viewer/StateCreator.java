@@ -778,12 +778,13 @@ public class StateCreator extends JmolStateCreator {
     commands.append(vwr.getOrientationText(T.name, null));
 
     app(commands, moveToText);
-    if (tm.stereoMode != STER.NONE)
-      app(commands, "stereo "
-          + (tm.stereoColors == null ? tm.stereoMode.getName() : Escape
-              .escapeColor(tm.stereoColors[0])
-              + " " + Escape.escapeColor(tm.stereoColors[1])) + " "
-          + tm.stereoDegrees);
+// stereo mode should not be in the state - just a display option
+//    if (tm.stereoMode != STER.NONE)
+//      app(commands, "stereo "
+//          + (tm.stereoColors == null ? tm.stereoMode.getName() : Escape
+//              .escapeColor(tm.stereoColors[0])
+//              + " " + Escape.escapeColor(tm.stereoColors[1])) + " "
+//          + tm.stereoDegrees);
     if (!navigating && !tm.zoomEnabled)
       app(commands, "zoom off");
     commands.append("  slab ").appendI(tm.slabPercentSetting).append(";depth ")

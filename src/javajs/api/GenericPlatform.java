@@ -50,7 +50,7 @@ public interface GenericPlatform extends FontManager {
 
   void disposeGraphics(Object graphicForText);
 
-  void drawImage(Object g, Object img, int x, int y, int width, int height);
+  void drawImage(Object g, Object img, int x, int y, int width, int height, boolean isDTI);
 
   int[] drawImageToBuffer(Object gObj, Object imageOffscreen,
                           Object image, int width, int height, int bgcolor);

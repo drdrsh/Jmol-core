@@ -3294,7 +3294,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     // so don't try dim1.equals(dim2)
     height = Math.min(height, maximumSize);
     width = Math.min(width, maximumSize);
-    if (isStereoDouble())
+    if (tm.stereoDoubleFull)
       width = (width + 1) / 2;
     if (dimScreen.width == width && dimScreen.height == height)
       return;
@@ -3408,8 +3408,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       if (!checkStereoSlave || gRight == null) {
         getScreenImageBuffer(gLeft, false);
       } else {
-        render1(gRight, getImage(true, false), 0, 0);
-        render1(gLeft, getImage(false, false), 0, 0);
+        drawImage(gRight, getImage(true, false), 0, 0, tm.stereoDoubleDTI);
+        drawImage(gLeft, getImage(false, false), 0, 0, tm.stereoDoubleDTI);
       }
       //System.out.println(Thread.currentThread() +
       // "notifying repaintManager repaint is done");
@@ -3555,11 +3555,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * @param img
    * @param x
    * @param y
+   * @param isDTI DTI format -- scrunch width by factor of two
    */
-  private void render1(Object graphic, Object img, int x, int y) {
+  private void drawImage(Object graphic, Object img, int x, int y, boolean isDTI) {
     if (graphic != null && img != null) {
       apiPlatform.drawImage(graphic, img, x, y, dimScreen.width,
-          dimScreen.height);
+          dimScreen.height, isDTI);
     }
     gdata.releaseScreenImage();
   }
@@ -3572,7 +3573,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public Object getScreenImageBuffer(Object graphic, boolean isImageWrite) {
     if (isWebGL)
       return (isImageWrite ? apiPlatform.allocateRgbImage(0, 0, null, 0, false, true) : null);
-    boolean mergeImages = (graphic == null && isStereoDouble());
+    boolean isDouble = tm.stereoDoubleFull || tm.stereoDoubleDTI;
+    boolean mergeImages = (graphic == null && isDouble);
     Object imageBuffer;
     if (tm.stereoMode.isBiColor()) {
       beginRendering(true, isImageWrite);
@@ -3585,20 +3587,28 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       gdata.applyAnaglygh(tm.stereoMode, tm.stereoColors);
       imageBuffer = gdata.getScreenImage(isImageWrite);
     } else {
-      imageBuffer = getImage(isStereoDouble(), isImageWrite);
+      imageBuffer = getImage(isDouble, isImageWrite);
     }
     Object imageBuffer2 = null;
     if (mergeImages) {
       imageBuffer2 = apiPlatform.newBufferedImage(imageBuffer,
-          dimScreen.width << 1, dimScreen.height);
+          (tm.stereoDoubleDTI ? dimScreen.width : dimScreen.width << 1), dimScreen.height);
       graphic = apiPlatform.getGraphics(imageBuffer2);
     }
     if (graphic != null) {
-      if (isStereoDouble()) {
-        render1(graphic, imageBuffer, dimScreen.width, 0);
+      if (isDouble) {
+        if (tm.stereoMode == STER.DTI) {
+          drawImage(graphic, imageBuffer, dimScreen.width >> 1, 0, true);
+          imageBuffer = getImage(false, false);
+          drawImage(graphic, imageBuffer, 0, 0, true);        
+          graphic = null;
+        } else {
+        drawImage(graphic, imageBuffer, dimScreen.width, 0, false);
         imageBuffer = getImage(false, false);
+        }
       }
-      render1(graphic, imageBuffer, 0, 0);
+      if (graphic != null)
+        drawImage(graphic, imageBuffer, 0, 0, false);        
     }
     return (mergeImages ? imageBuffer2 : imageBuffer);
   }
@@ -6906,10 +6916,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       tm.setStereoMode2(twoColors);
     else
       tm.setStereoMode(stereoMode);
-  }
-
-  boolean isStereoDouble() {
-    return tm.stereoMode == STER.DOUBLE;
   }
 
   // //////////////////////////////////////////////////////////////

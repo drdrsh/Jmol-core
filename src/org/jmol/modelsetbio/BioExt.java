@@ -684,10 +684,13 @@ public class BioExt {
     }
     Atom[] atoms = ms.at;
     bsCheck.and(vwr.getModelUndeletedAtomsBitSet(m.modelIndex));
-    for (int i = bsCheck.nextSetBit(0); i >= 0; i = bsCheck.nextSetBit(i + 1))
-      if (atoms[i].checkVisible() && atoms[i].atomID == JC.ATOMID_ALPHA_CARBON
-          && atoms[i].group.groupID != JC.GROUPID_CYSTEINE)
+    for (int i = bsCheck.nextSetBit(0); i >= 0; i = bsCheck.nextSetBit(i + 1)) {
+      Atom a = atoms[i];
+      if (a.checkVisible() && a.atomID == JC.ATOMID_ALPHA_CARBON
+          && a.group.groupID != JC.GROUPID_CYSTEINE
+          && atoms[i].group.leadAtomIndex >= 0)
         vCA.addLast(atoms[i]);
+    }
     if (vCA.size() == 0)
       return 0;
     Lst<Atom[]> struts = calculateStruts(ms, bs1, bs2, vCA, 
