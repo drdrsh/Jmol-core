@@ -130,7 +130,7 @@ public class AwtPlatform implements GenericPlatform {
   }
 
   @Override
-	public void drawImage(Object g, Object img, int x, int y, int width, int height) {
+	public void drawImage(Object g, Object img, int x, int y, int width, int height, boolean isDTI) {
     Image.drawImage(g, img, x, y, width, height);
   }
 

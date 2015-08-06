@@ -138,7 +138,7 @@ public class JsPlatform implements GenericPlatform {
 
   @Override
 	public void drawImage(Object context, Object canvas, int x, int y, int width,
-                        int height) {
+                        int height, boolean isDTI) {
     
     // from Viewer.render1
     Image.drawImage(context, canvas, x, y, width, height);

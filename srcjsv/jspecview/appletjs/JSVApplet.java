@@ -593,11 +593,6 @@ public class JSVApplet implements JSVAppletInterface,
 	}
 
 	@Override
-	public Object getGLmolView() {
-		return null;
-	}
-
-	@Override
 	public String getFullName() {
 		return app.vwr.fullName;
 	}
@@ -623,13 +618,13 @@ public class JSVApplet implements JSVAppletInterface,
 		app.vwr.updateJS();		
 	}
 
-	@Override
-	public String loadInlineString(String mol, String script, boolean isAppend) {
-		// not supported
-		return null;
-	}
-
-	@Override
+  /**
+   * possibly called from JSmolJSV.js upon start up
+   *  
+   * @param fileName
+   * @return error or null
+   */
+  
 	public String openFile(String fileName) {
 	  app.vwr.openFile(fileName, true);
 	  return null;
