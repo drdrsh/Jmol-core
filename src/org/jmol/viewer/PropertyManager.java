@@ -1999,7 +1999,7 @@ public class PropertyManager implements JmolPropertyManager {
     BS bsWritten = new BS();
     char ctype = '\0';
     LabelToken[] tokens = vwr.ms.getLabeler().compile(vwr,
-        "ATOM  %-6i%4a%1A%3n %1c%4R%1E   ", '\0', null);
+        "ATOM  %-6i%4a%1A%3.-3n %1c%4R%1E   ", '\0', null);
     if (parameters == null) {
       ctype = (type.length() > 11 && type.indexOf("quaternion ") >= 0 ? type
           .charAt(11) : 'R');
@@ -2019,7 +2019,9 @@ public class PropertyManager implements JmolPropertyManager {
       P3 factors = (P3) parameters[6];
       P3 center = (P3) parameters[7];
       String format = (String) parameters[8];
+      String[] properties = (String[]) parameters[9];
       boolean isPDBFormat = (factors != null && format == null);
+      Atom[] atoms = vwr.ms.at;
       if (isPDBFormat) {
         out.append("REMARK   6 Jmol PDB-encoded data: ").append(type)
             .append(";\n");
@@ -2028,10 +2030,42 @@ public class PropertyManager implements JmolPropertyManager {
             .append(Escape.eP(maxXYZ)).append(" unScaledXyz = xyz * ")
             .append(Escape.eP(factors)).append(" + ").append(Escape.eP(center))
             .append(";\n");
+        String atomNames = null;
+        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+            .nextSetBit(i + 1)) {
+          String name = "" + atoms[i].getAtomName();
+          if (atomNames != null || name.length() > 4) {
+            if (atomNames == null) {
+              atomNames = "";
+              i = -1;
+              continue;
+            }
+            atomNames += " " + name;
+          }
+        }
+        if (atomNames != null)
+          out.append("REMARK   6 Jmol atom names").append(atomNames).append("\n");
+        String resNames = null;
+        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+            .nextSetBit(i + 1)) {
+          String name = "" + atoms[i].getGroup3(true);
+          if (resNames != null || name.length() > 3) {
+            if (resNames == null) {
+              resNames = "";
+              i = -1;
+              continue;
+            }
+            resNames += " " + name;
+          }
+        }
+        if (resNames != null)
+          out.append("REMARK   6 Jmol residue names").append(resNames).append("\n");
+        for (int i = 0; i < properties.length; i++)
+          if (properties[i] != null)
+            out.append("REMARK   6 Jmol property ").append(properties[i]).append(";\n");
       }
       String strExtra = "";
       Atom atomLast = null;
-      Atom[] atoms = vwr.ms.at;
       P3 ptTemp = new P3();
       if (!isPDBFormat) {
         if (format == null)

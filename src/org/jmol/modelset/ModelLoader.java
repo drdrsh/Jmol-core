@@ -60,6 +60,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 /* 
@@ -170,7 +171,7 @@ public final class ModelLoader {
     isMutate = ms.getMSInfoB("isMutate");
     if (ms.haveBioModels)
       jbr = vwr.getJBR().setLoader(this);
-    jmolData = (String) ms.getInfoM("jmolData");
+    jmolData = (adapterModelCount == 0 ? (String) ms.getInfoM("jmolData") : null);
     fileHeader = (String) ms.getInfoM("fileHeader");
     Lst<P3[]> steps = (Lst<P3[]>) ms.getInfoM("trajectorySteps");
     isTrajectory = (steps != null);
@@ -440,6 +441,8 @@ public final class ModelLoader {
       Map<String, Object> atomProperties = (Map<String, Object>) ms.getInfo(i,
           "atomProperties");
       // list of properties that are to be transfered to H atoms as well.
+      if (jmolData != null)
+        addJmolDataProperties(ms.am[i], (Map<String, float[]>) ms.getInfo(i, "jmolDataProperties"));
       String groupList = (String) ms.getInfo(i,
           "groupPropertyList");
       if (atomProperties == null)
@@ -615,10 +618,10 @@ public final class ModelLoader {
       if (atomInfo != null)
         ms.setInfo(modelIndex, "PDB_CONECT_firstAtom_count_max", atomInfo);
     }
-    // this next sets the bitset length to avoid 
-    // unnecessary calls to System.arrayCopy
     Model[] models = ms.am;
     Atom[] atoms = ms.at;
+    // this next sets the bitset length to avoid 
+    // unnecessary calls to System.arrayCopy
     models[modelIndex].bsAtoms.set(atoms.length + 1);
     models[modelIndex].bsAtoms.clear(atoms.length + 1);
     String codes = (String) ms.getInfo(modelIndex, "altLocs");
@@ -834,6 +837,26 @@ public final class ModelLoader {
       }
     }
     Logger.info(nRead + " atoms created");    
+  }
+
+  private void addJmolDataProperties(Model m, Map<String, float[]> jmolDataProperties) {
+    if (jmolDataProperties == null)
+      return;
+    BS bs = m.bsAtoms;
+    for (Entry<String, float[]> e : jmolDataProperties.entrySet()) {
+      String key = e.getKey();
+      float[] data = e.getValue();
+      if (key.startsWith("property_")) {
+        vwr.setData(
+            key,
+            new Object[] { key, data, bs,
+                Integer.valueOf(JmolDataManager.DATA_TYPE_AF) }, 0, 0, 0, 0, 0);
+      } else {
+        int tok = T.getTokFromName(key);
+        if (T.tokAttr(tok, T.settable))
+          vwr.setAtomProperty(bs, tok, 0, 0, null, data, null);
+      }
+    }
   }
 
   /**

@@ -28,6 +28,18 @@ package org.jmol.adapter.smarter;
 import java.io.BufferedReader;
 import java.util.Map;
 
+import javajs.api.GenericBinaryDocument;
+import javajs.api.GenericLineReader;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
+
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
@@ -36,21 +48,6 @@ import org.jmol.script.SV;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
-import org.jmol.util.Parser;
-
-import javajs.api.GenericBinaryDocument;
-import javajs.api.GenericLineReader;
-import javajs.util.M3;
-import javajs.util.P3;
-
-import javajs.util.OC;
-import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
-import javajs.util.Lst;
-import javajs.util.SB;
-
 import org.jmol.viewer.Viewer;
 
 
@@ -211,7 +208,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected float latticeScaling = Float.NaN;
   protected P3 fileOffset;
   private P3 fileOffsetFractional;
-  P3 unitCellOffset;
+  protected P3 unitCellOffset;
   private boolean unitCellOffsetFractional;
   private Lst<String> moreUnitCellInfo;
 
@@ -1449,67 +1446,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   public void checkCurrentLineForScript() {
-    if (line.indexOf("Jmol") >= 0) {
-      if (line.indexOf("Jmol PDB-encoded data") >= 0) {
-        asc.setInfo("jmolData", line);
-        if (!line.endsWith("#noautobond"))
-          line += "#noautobond";
-      }
-      if (line.indexOf("Jmol data min") >= 0) {
-        Logger.info(line);
-        // The idea here is to use a line such as the following:
-        //
-        // REMARK   6 Jmol data min = {-1 -1 -1} max = {1 1 1} 
-        //                      unScaledXyz = xyz / {10 10 10} + {0 0 0} 
-        //                      plotScale = {100 100 100}
-        //
-        // to pass on to Jmol how to graph non-molecular data. 
-        // The format allows for the actual data to be linearly transformed
-        // so that it fits into the PDB format for x, y, and z coordinates.
-        // This adapter will then unscale the data and also pass on to
-        // Jmol the unit cell equivalent that takes the actual data (which
-        // will be considered the fractional coordinates) to Jmol coordinates,
-        // which will be a cube centered at {0 0 0} and ranging from {-100 -100 -100}
-        // to {100 100 100}.
-        //
-        // Jmol 12.0.RC23 uses this to pass through the adapter a quaternion,
-        // ramachandran, or other sort of plot.
-
-        float[] data = new float[15];
-        Parser.parseStringInfestedFloatArray(line.substring(10).replace('=', ' ')
-            .replace('{', ' ').replace('}', ' '), null, data);
-        P3 minXYZ = P3.new3(data[0], data[1], data[2]);
-        P3 maxXYZ = P3.new3(data[3], data[4], data[5]);
-        fileScaling = P3.new3(data[6], data[7], data[8]);
-        fileOffset = P3.new3(data[9], data[10], data[11]);
-        P3 plotScale = P3.new3(data[12], data[13], data[14]);
-        if (plotScale.x <= 0)
-          plotScale.x = 100;
-        if (plotScale.y <= 0)
-          plotScale.y = 100;
-        if (plotScale.z <= 0)
-          plotScale.z = 100;
-        if (fileScaling.y == 0)
-          fileScaling.y = 1;
-        if (fileScaling.z == 0)
-          fileScaling.z = 1;
-        setFractionalCoordinates(true);
-        latticeCells = new int[3];
-        asc.xtalSymmetry = null;
-        setUnitCell(plotScale.x * 2 / (maxXYZ.x - minXYZ.x), plotScale.y * 2
-            / (maxXYZ.y - minXYZ.y), plotScale.z * 2
-            / (maxXYZ.z == minXYZ.z ? 1 : maxXYZ.z - minXYZ.z), 90, 90, 90);
-        unitCellOffset = P3.newP(plotScale);
-        unitCellOffset.scale(-1);
-        getSymmetry();
-        symmetry.toFractional(unitCellOffset, false);
-        unitCellOffset.scaleAdd2(-1f, minXYZ, unitCellOffset);
-        symmetry.setOffsetPt(unitCellOffset);
-        asc.setInfo("jmolDataScaling",
-            new P3[] { minXYZ, maxXYZ, plotScale });
-        doApplySymmetry = true;
-      }
-    }
     if (line.endsWith("#noautobond")) {
       line = line.substring(0, line.lastIndexOf('#')).trim();
       asc.setNoAutoBond();

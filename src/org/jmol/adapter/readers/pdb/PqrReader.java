@@ -25,6 +25,7 @@
 package org.jmol.adapter.readers.pdb;
 
 import org.jmol.adapter.readers.pdb.PdbReader;
+import org.jmol.adapter.smarter.Atom;
 
 /**
  * PQR file reader.
@@ -60,13 +61,17 @@ PDB files can be converted to PQR by the PDB2PQR software[3], which adds missing
 public class PqrReader extends PdbReader {
 
   
-  protected boolean gromacsWideFormat;
-
   @Override
-  protected void initializeReader() throws Exception {
-    isPQR = true;
-    super.initializeReader();
+  protected void setAdditionalAtomParameters(Atom atom) {
+    if (gromacsWideFormat) {
+      atom.partialCharge = parseFloatRange(line, 60, 68);
+      atom.radius = fixRadius(parseFloatRange(line, 68, 76));
+    } else {
+      String[] tokens = getTokens();
+      int pt = tokens.length - 2 - (line.length() > 75 ? 1 : 0);
+      atom.partialCharge = parseFloatStr(tokens[pt++]);
+      atom.radius = fixRadius(parseFloatStr(tokens[pt]));
+    }
   }
-      
 }
 

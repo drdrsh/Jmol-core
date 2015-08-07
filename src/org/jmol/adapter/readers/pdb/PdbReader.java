@@ -116,8 +116,7 @@ public class PdbReader extends AtomSetCollectionReader {
   private boolean isConnectStateBug;
   private boolean isLegacyModelType;
 
-  private boolean gromacsWideFormat;
-  protected boolean isPQR;
+  protected boolean gromacsWideFormat;
   
   private final Map<String, Map<String, Boolean>> htFormul = new Hashtable<String, Map<String, Boolean>>();
   private Map<String, String> htHetero;
@@ -327,14 +326,6 @@ public class PdbReader extends AtomSetCollectionReader {
       formul();
       return true;
     case 17:
-      if (line.contains("The B-factors in this file hold atomic radii")) {
-        isPQR = true;
-        return true;
-      }
-      if (line.contains("This file does not adhere to the PDB standard")) {
-        gromacsWideFormat = true;
-        return true;
-      }
       if (line.startsWith("REMARK 350")) {
         remark350();
         return false;
@@ -343,11 +334,14 @@ public class PdbReader extends AtomSetCollectionReader {
         remark290();
         return false;
       }
+      if (line.contains("This file does not adhere to the PDB standard")) {
+        gromacsWideFormat = true;
+      }
       if (getTlsGroups) {
         if (line.indexOf("TLS DETAILS") > 0)
           return remarkTls();
       }
-      checkCurrentLineForScript();
+      checkRemark();
       return true;
     case 18:
       header();
@@ -366,6 +360,10 @@ public class PdbReader extends AtomSetCollectionReader {
       checkDSSR();
     }
     return true;
+  }
+
+  protected void checkRemark() {
+    checkCurrentLineForScript();
   }
 
   private void checkDSSR() throws Exception {
@@ -1020,21 +1018,7 @@ REMARK 290 REMARK: NULL
    * @param atom
    */
   protected void setAdditionalAtomParameters(Atom atom) {
-    if (isPQR) {
-      if (gromacsWideFormat) {
-        atom.partialCharge = parseFloatRange(line, 60, 68);
-        atom.radius = fixRadius(parseFloatRange(line, 68, 76));
-      } else {
-        String[] tokens = getTokens();
-        int pt = tokens.length - 2 - (line.length() > 75 ? 1 : 0);
-        atom.partialCharge = parseFloatStr(tokens[pt++]);
-        atom.radius = fixRadius(parseFloatStr(tokens[pt]));
-      }
-      return;
-    }
-    
-    float floatOccupancy;
-    
+    float floatOccupancy;    
     if (gromacsWideFormat) {
       floatOccupancy = parseFloatRange(line, 60, 68);
       atom.bfactor = fixRadius(parseFloatRange(line, 68, 76));

@@ -50,7 +50,7 @@ public class Resolver {
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
                  "Molden;MopacGraphf;GenNBO;NWChem;Odyssey;Psi;Qchem;Spartan;SpartanSmol;" +
                  "WebMO;",
-    "pdb.", ";Pdb;Pqr;P2n;",
+    "pdb.", ";Pdb;Pqr;P2n;JmolData;",
     "pymol.", ";PyMOL;",
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;", 
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
@@ -347,12 +347,22 @@ public class Resolver {
   private final static String[] jcampdxStartRecords = 
   { "Jcampdx", "##TITLE" };
   
+  private final static String[] jmoldataStartRecords = 
+  { "JmolData", "REMARK   6 Jmol" };
+
+  private final static String[] pqrStartRecords = 
+  { "Pqr", "REMARK   1 PQR", "REMARK    The B-factors" };
+
+  private final static String[] p2nStartRecords = 
+  { "P2n", "REMARK   1 P2N" };
+
   private final static String[][] fileStartsWithRecords =
   { sptRecords, m3dStartRecords, cubeFileStartRecords, 
     mol2Records, webmoFileStartRecords, 
     moldenFileStartRecords, dcdFileStartRecords, tlsDataOnlyFileStartRecords,
     inputFileStartRecords, magresFileStartRecords, pymolStartRecords, 
-    janaStartRecords, jsonStartRecords, jcampdxStartRecords };
+    janaStartRecords, jsonStartRecords, jcampdxStartRecords, 
+    jmoldataStartRecords, pqrStartRecords, p2nStartRecords };
 
   ////////////////////////////////////////////////////////////////
   // Test 3. check first time for special file types
@@ -595,12 +605,6 @@ public class Resolver {
   private final static String[] cifLineStartRecords =
   { "Cif", "data_", "_publ" };
 
-  private final static String[] pqrLineStartRecords = 
-  { "Pqr", "REMARK   1 PQR" };
-
-  private final static String[] p2nLineStartRecords = 
-  { "P2n", "REMARK   1 P2N" };
-
   private final static String[] pdbLineStartRecords = {
     "Pdb", "HEADER", "OBSLTE", "TITLE ", "CAVEAT", "COMPND", "SOURCE", "KEYWDS",
     "EXPDTA", "AUTHOR", "REVDAT", "SPRSDE", "JRNL  ", "REMARK ",
@@ -641,7 +645,7 @@ public class Resolver {
   { "VaspOutcar", " vasp.", " INCAR:" };
 
   private final static String[][] lineStartsWithRecords =
-  { mmcifLineStartRecords, cifLineStartRecords, pqrLineStartRecords, p2nLineStartRecords,
+  { mmcifLineStartRecords, cifLineStartRecords,
     pdbLineStartRecords, cgdLineStartRecords, shelxLineStartRecords, 
     ghemicalMMLineStartRecords, jaguarLineStartRecords, 
     mdlLineStartRecords, spartanSmolLineStartRecords, csfLineStartRecords, 

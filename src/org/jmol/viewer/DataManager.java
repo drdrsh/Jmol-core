@@ -239,14 +239,25 @@ public class DataManager implements JmolDataManager {
     return info;
   }
 
+  /**
+   * When bsSelected is not null, this returns a truncated array
+   * 
+   */
   @Override
-  public float[] getDataFloatA(String label) {
+  public float[] getDataFloatA(String label, BS bsSelected) {
     if (dataValues.size() == 0)
       return null;
     Object[] data = getData(label);
     if (data == null || ((Integer)data[DATA_TYPE]).intValue() != JmolDataManager.DATA_TYPE_AF)
       return null;
-    return (float[]) data[DATA_VALUE];
+    float[] f = (float[]) data[DATA_VALUE];
+    if (bsSelected == null)
+      return f;
+    float[] fnew = new float[bsSelected.cardinality()];
+    // load array
+    for (int i = 0, n = f.length, p = bsSelected.nextSetBit(0); p >= 0 && i < n; p = bsSelected.nextSetBit(p + 1))
+      fnew[i++] = f[p];
+    return fnew;
   }
 
   @Override

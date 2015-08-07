@@ -2859,7 +2859,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public void setCurrentColorRange(String label) {
-    float[] data = getDataFloat(label);
+    float[] data = getDataFloat(label, null);
     BS bs = (data == null ? null : (BS) (getDataManager().getData(label))[2]);
     if (bs != null && g.rangeSelected)
       bs.and(bsA());
@@ -2879,8 +2879,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return (type == null ? lastData : getDataManager().getData(type));
   }
 
-  public float[] getDataFloat(String label) {
-    return getDataManager().getDataFloatA(label);
+  public float[] getDataFloat(String label, BS bsSelected) {
+    return getDataManager().getDataFloatA(label, bsSelected);
   }
 
   public float[][] getDataFloat2D(String label) {

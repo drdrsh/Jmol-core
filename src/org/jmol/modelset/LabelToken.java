@@ -405,10 +405,10 @@ public class LabelToken {
         String propertyName = strFormat.substring(ich, ichClose).toLowerCase();
         if (propertyName.startsWith("property_")) {
           lt.tok = T.data;
-          lt.data = vwr.getDataFloat(propertyName);
+          lt.data = vwr.getDataFloat(propertyName, null);
         } else if (propertyName.startsWith("validation.")) {
           lt.tok = T.validation;
-          lt.data = vwr.getDataFloat("property_" + propertyName.substring(11));
+          lt.data = vwr.getDataFloat("property_" + propertyName.substring(11), null);
         } else {
           T token = T.getTokenFromName(propertyName);
           if (token != null && isLabelPropertyTok(token.tok))
@@ -427,7 +427,7 @@ public class LabelToken {
           break;
         }
         String s = strFormat.substring(ich, ichCloseBracket);
-        lt.data = vwr.getDataFloat(s);
+        lt.data = vwr.getDataFloat(s, null);
         // TODO untested j2s issue fix
         if (lt.data == null) {
           lt.data = vwr.getData(s);

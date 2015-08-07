@@ -28,7 +28,6 @@ import org.jmol.scriptext.IsoExt;
 import org.jmol.scriptext.MathExt;
 import org.jmol.scriptext.ScriptExt;
 import org.jmol.scriptext.SmilesExt;
-import org.jmol.shape.Shape;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
@@ -967,7 +966,7 @@ abstract class ScriptExpr extends ScriptParam {
           if (pc + 2 == code.length)
             invArg();
           if (!chk)
-            data = vwr.getDataFloat((String) code[++pc].value);
+            data = vwr.getDataFloat((String) code[++pc].value, null);
         }
         if (++pc == code.length)
           invArg(); // compiler would not let this happen, actually
@@ -1522,21 +1521,6 @@ abstract class ScriptExpr extends ScriptParam {
     return SV.newSV(T.propselector, tok, paramAsStr(i));
   }
 
-  public float[] getBitsetPropertyFloat(BS bs, int tok, float min, float max)
-      throws ScriptException {
-    float[] data = (float[]) getBitsetProperty(bs, tok, null, null, null, null,
-        false, Integer.MAX_VALUE, false);
-    if (!Float.isNaN(min))
-      for (int i = 0; i < data.length; i++)
-        if (data[i] < min)
-          data[i] = Float.NaN;
-    if (!Float.isNaN(max))
-      for (int i = 0; i < data.length; i++)
-        if (data[i] > max)
-          data[i] = Float.NaN;
-    return data;
-  }
-  
   @SuppressWarnings("unchecked")
   public Object getBitsetProperty(BS bs, int tok, P3 ptRef, P4 planeRef,
                                   Object tokenValue, Object opValue,
@@ -1663,7 +1647,7 @@ abstract class ScriptExpr extends ScriptParam {
       ptT = new P3();
       break;
     case T.property:
-      data = vwr.getDataFloat((String) opValue);
+      data = vwr.getDataFloat((String) opValue, null);
       break;
     }
 

@@ -1440,7 +1440,7 @@ public class IsoExt extends ScriptExt {
           data = new float[vwr.ms.ac];
           if (chk)
             continue;
-          data = vwr.getDataFloat(str);
+          data = vwr.getDataFloat(str, null);
           if (data == null)
             invArg();
           addShapeProperty(propertyList, propertyName, data);

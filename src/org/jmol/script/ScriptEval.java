@@ -8102,8 +8102,8 @@ public class ScriptEval extends ScriptExpr {
         if (pal == PAL.PROPERTY) {
           if (isColorIndex) {
             if (!chk) {
-              data = getBitsetPropertyFloat(bsSelected, (isByElement ? T.elemno
-                  : T.groupid) | T.allfloat, Float.NaN, Float.NaN);
+              data = getCmdExt().getBitsetPropertyFloat(bsSelected, (isByElement ? T.elemno
+                  : T.groupid) | T.allfloat, null, Float.NaN, Float.NaN);
             }
           } else {
             boolean isPropertyExplicit = name.equals("property");
@@ -8112,8 +8112,8 @@ public class ScriptEval extends ScriptExpr {
                 && T.tokAttr((tok = getToken(++index).tok), T.atomproperty)
                 && !T.tokAttr(tok, T.strproperty)) {
               if (!chk) {
-                data = getBitsetPropertyFloat(bsSelected, getToken(index).tok
-                    | T.allfloat, Float.NaN, Float.NaN);
+                data = getCmdExt().getBitsetPropertyFloat(bsSelected, getToken(index).tok
+                    | T.allfloat, null, Float.NaN, Float.NaN);
               }
               index++;
             } else if (!isPropertyExplicit && !isIsosurface) {

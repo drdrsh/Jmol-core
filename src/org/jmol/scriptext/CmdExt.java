@@ -2279,12 +2279,12 @@ public class CmdExt extends ScriptExt {
       if (T.tokAttrOr(tokProp1, T.intproperty, T.floatproperty)
           && T.tokAttrOr(tokProp2, T.intproperty, T.floatproperty)
           && T.tokAttrOr(tokKey, T.intproperty, T.floatproperty)) {
-        float[] data1 = eval.getBitsetPropertyFloat(bsFrom, tokProp1
-            | T.selectedfloat, Float.NaN, Float.NaN);
-        float[] data2 = eval.getBitsetPropertyFloat(bsFrom, tokKey
-            | T.selectedfloat, Float.NaN, Float.NaN);
-        float[] data3 = eval.getBitsetPropertyFloat(bsTo, tokKey
-            | T.selectedfloat, Float.NaN, Float.NaN);
+        float[] data1 = getBitsetPropertyFloat(bsFrom, tokProp1
+            | T.selectedfloat, null, Float.NaN, Float.NaN);
+        float[] data2 = getBitsetPropertyFloat(bsFrom, tokKey
+            | T.selectedfloat, null, Float.NaN, Float.NaN);
+        float[] data3 = getBitsetPropertyFloat(bsTo, tokKey
+            | T.selectedfloat, null, Float.NaN, Float.NaN);
         boolean isProperty = (tokProp2 == T.property);
         float[] dataOut = new float[isProperty ? vwr.ms.ac
             : data3.length];
@@ -2856,6 +2856,7 @@ public class CmdExt extends ScriptExt {
         eval.iToken = st.length;
         error(ScriptError.ERROR_endOfStatementUnexpected);
       }
+      eval.slen = slen = pt + 1;
       break;
     }
     String qFrame = "";
@@ -2865,7 +2866,9 @@ public class CmdExt extends ScriptExt {
     boolean isDerivative = false;
     boolean isSecondDerivative = false;
     boolean isRamachandranRelative = false;
-    int propertyX = 0, propertyY = 0, propertyZ = 0;
+    String[] props = new String[3];
+    int[] propToks = new int[3];
+
     BS bs = BSUtil.copy(vwr.bsA());
     String preSelected = "; select " + Escape.eBS(bs) + ";\n ";
     String type = eval.optParameterAsString(pt).toLowerCase();
@@ -2887,11 +2890,19 @@ public class CmdExt extends ScriptExt {
       break;
     case T.property:
       eval.iToken = pt0 + 1;
-      propertyX = plotProp();
-      if (propertyX == 0)
-        invArg();
-      propertyY = plotProp();
-      propertyZ = plotProp();
+      for (int i = 0; i < 3; i++) {
+        switch (tokAt(eval.iToken)) {
+        case T.format:
+        case T.min:
+        case T.max:
+          i = 2;
+          continue;
+        }
+        if (!T.tokAttr(propToks[i] = tokAt(eval.iToken), T.atomproperty))
+          invArg();
+        props[i] = getToken(eval.iToken).value.toString();
+        eval.iToken++;
+      }
       if (tokAt(eval.iToken) == T.format) {
         format = stringParameter(++eval.iToken);
         pdbFormat = false;
@@ -2905,9 +2916,9 @@ public class CmdExt extends ScriptExt {
         maxXYZ = getPoint3f(++eval.iToken, false);
         eval.iToken++;
       }
-      type = "property " + T.nameOf(propertyX)
-          + (propertyY == 0 ? "" : " " + T.nameOf(propertyY))
-          + (propertyZ == 0 ? "" : " " + T.nameOf(propertyZ));
+      type = "property " + props[0]
+          + (props[1] == null ? "" : " " + props[1])
+          + (props[2] == null ? "" : " " + props[2]);
       if (bs.nextSetBit(0) < 0)
         bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
       stateScript = "select " + Escape.eBS(bs) + ";\n ";
@@ -2975,25 +2986,30 @@ public class CmdExt extends ScriptExt {
 
     float[] dataX = null, dataY = null, dataZ = null;
     if (tok == T.property) {
-      dataX = eval.getBitsetPropertyFloat(bs, propertyX | T.selectedfloat,
-          (minXYZ == null ? Float.NaN : minXYZ.x), (maxXYZ == null ? Float.NaN
+      dataX = getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
+          propToks[0] == T.property? props[0] : null, (minXYZ == null ? Float.NaN : minXYZ.x), (maxXYZ == null ? Float.NaN
               : maxXYZ.x));
-      if (propertyY != 0)
-        dataY = eval.getBitsetPropertyFloat(bs, propertyY | T.selectedfloat,
-            (minXYZ == null ? Float.NaN : minXYZ.y),
+      props[0] = props[0] + " " + Escape.eAF(dataX);
+      if (props[1] != null) {
+        dataY = getBitsetPropertyFloat(bs, propToks[1] | T.selectedfloat,
+            propToks[1] == T.property? props[1] : null, (minXYZ == null ? Float.NaN : minXYZ.y),
             (maxXYZ == null ? Float.NaN : maxXYZ.y));
-      if (propertyZ != 0)
-        dataZ = eval.getBitsetPropertyFloat(bs, propertyZ | T.selectedfloat,
-            (minXYZ == null ? Float.NaN : minXYZ.z),
+        props[1] = props[1] + " " + Escape.eAF(dataY);
+      }
+      if (props[2] != null) {
+        dataZ = getBitsetPropertyFloat(bs, propToks[2] | T.selectedfloat,
+            propToks[2] == T.property? props[2] : null, (minXYZ == null ? Float.NaN : minXYZ.z),
             (maxXYZ == null ? Float.NaN : maxXYZ.z));
+        props[2] = props[2] + " " + Escape.eAF(dataZ);
+      }
       if (minXYZ == null)
-        minXYZ = P3.new3(getPlotMinMax(dataX, false, propertyX),
-            getPlotMinMax(dataY, false, propertyY),
-            getPlotMinMax(dataZ, false, propertyZ));
+        minXYZ = P3.new3(getPlotMinMax(dataX, false, propToks[0]),
+            getPlotMinMax(dataY, false, propToks[1]),
+            getPlotMinMax(dataZ, false, propToks[2]));
       if (maxXYZ == null)
-        maxXYZ = P3.new3(getPlotMinMax(dataX, true, propertyX),
-            getPlotMinMax(dataY, true, propertyY),
-            getPlotMinMax(dataZ, true, propertyZ));
+        maxXYZ = P3.new3(getPlotMinMax(dataX, true, propToks[0]),
+            getPlotMinMax(dataY, true, propToks[1]),
+            getPlotMinMax(dataZ, true, propToks[2]));
       Logger.info("plot min/max: " + minXYZ + " " + maxXYZ);
       P3 center = null;
       P3 factors = null;
@@ -3004,37 +3020,37 @@ public class CmdExt extends ScriptExt {
         center.ave(maxXYZ, minXYZ);
         factors.sub2(maxXYZ, minXYZ);
         factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
-        if (T.tokAttr(propertyX, T.intproperty)) {
+        if (T.tokAttr(propToks[0], T.intproperty)) {
           factors.x = 1;
           center.x = 0;
         } else if (factors.x > 0.1 && factors.x <= 10) {
           factors.x = 1;
         }
-        if (T.tokAttr(propertyY, T.intproperty)) {
+        if (T.tokAttr(propToks[1], T.intproperty)) {
           factors.y = 1;
           center.y = 0;
         } else if (factors.y > 0.1 && factors.y <= 10) {
           factors.y = 1;
         }
-        if (T.tokAttr(propertyZ, T.intproperty)) {
+        if (T.tokAttr(propToks[2], T.intproperty)) {
           factors.z = 1;
           center.z = 0;
         } else if (factors.z > 0.1 && factors.z <= 10) {
           factors.z = 1;
         }
-        if (propertyZ == 0 || propertyY == 0)
+        if (props[2] == null || props[1] == null)
           center.z = minXYZ.z = maxXYZ.z = factors.z = 0;
         for (int i = 0; i < dataX.length; i++)
           dataX[i] = (dataX[i] - center.x) / factors.x;
-        if (propertyY != 0)
+        if (props[1] != null)
           for (int i = 0; i < dataY.length; i++)
             dataY[i] = (dataY[i] - center.y) / factors.y;
-        if (propertyZ != 0)
+        if (props[2] != null)
           for (int i = 0; i < dataZ.length; i++)
             dataZ[i] = (dataZ[i] - center.z) / factors.z;
       }
       parameters = new Object[] { bs, dataX, dataY, dataZ, minXYZ, maxXYZ,
-          factors, center, format};
+          factors, center, format, props};
     }
 
     // all set...
@@ -3090,13 +3106,13 @@ public class CmdExt extends ScriptExt {
       float f = 3;
       script = "frame 0.0; frame last; reset;" + "select visible; spacefill "
           + f + "; wireframe 0;" + "draw plotAxisX" + modelCount
-          + " {100 -100 -100} {-100 -100 -100} \"" + T.nameOf(propertyX)
+          + " {100 -100 -100} {-100 -100 -100} \"" + props[0]
           + "\";" + "draw plotAxisY" + modelCount
-          + " {-100 100 -100} {-100 -100 -100} \"" + T.nameOf(propertyY)
+          + " {-100 100 -100} {-100 -100 -100} \"" + props[1]
           + "\";";
-      if (propertyZ != 0)
+      if (props[2] != null)
         script += "draw plotAxisZ" + modelCount
-            + " {-100 -100 100} {-100 -100 -100} \"" + T.nameOf(propertyZ)
+            + " {-100 -100 100} {-100 -100 -100} \"" + props[2]
             + "\";";
       break;
     case T.ramachandran:
@@ -3135,21 +3151,6 @@ public class CmdExt extends ScriptExt {
         + (type.length() > 0 ? " created: " + type
             + (isQuaternion ? qFrame : "") : ""));
     return "";
-  }
-
-  private int plotProp() {
-    int p = 0;
-    switch (tokAt(e.iToken)) {
-    case T.format:
-    case T.min:
-    case T.max:
-      break;
-    default:
-      if (T.tokAttr(p = tokAt(e.iToken), T.atomproperty))
-        e.iToken++;
-      break;
-    }
-    return p;
   }
 
   private boolean polyhedra() throws ScriptException {
@@ -4986,5 +4987,25 @@ public class CmdExt extends ScriptExt {
     }
     return data;
   }
+
+  public float[] getBitsetPropertyFloat(BS bs, int tok, String property,
+                                        float min, float max)
+      throws ScriptException {
+
+    float[] data = (property == null ?
+      (float[]) e.getBitsetProperty(bs, tok, null, null, null, null,
+          false, Integer.MAX_VALUE, false) 
+          : vwr.getDataFloat(property, bs));
+    if (!Float.isNaN(min))
+      for (int i = 0; i < data.length; i++)
+        if (data[i] < min)
+          data[i] = Float.NaN;
+    if (!Float.isNaN(max))
+      for (int i = 0; i < data.length; i++)
+        if (data[i] > max)
+          data[i] = Float.NaN;
+    return data;
+  }
+  
 
 }

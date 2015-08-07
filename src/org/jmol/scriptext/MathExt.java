@@ -790,10 +790,10 @@ public class MathExt {
     // parallel mp.addition of float property data sets
 
     if (selected.indexOf("property_") == 0) {
-      float[] f1 = vwr.getDataFloat(selected);
+      float[] f1 = vwr.getDataFloat(selected, null);
       if (f1 == null)
         return mp.addXStr("");
-      float[] f2 = (type.indexOf("property_") == 0 ? vwr.getDataFloat(type)
+      float[] f2 = (type.indexOf("property_") == 0 ? vwr.getDataFloat(type, null)
           : null);
       if (f2 != null) {
         f1 = AU.arrayCopyF(f1, -1);
