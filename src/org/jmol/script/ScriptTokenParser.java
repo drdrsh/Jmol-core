@@ -1111,7 +1111,7 @@ abstract class ScriptTokenParser {
       // select :a
     case T.percent:
       // select %1
-    case T.seqcode:
+    case T.inscode:
       // sequence code precompiled
       break;
     case T.times:
@@ -1142,7 +1142,7 @@ abstract class ScriptTokenParser {
       specSeen = true;
       tok = tokPeek();
     }
-    if (tok == T.integer || tok == T.times || tok == T.seqcode) {
+    if (tok == T.integer || tok == T.times || tok == T.inscode) {
       // [ala]33 
       // ala33
       // [ala]*
@@ -1263,7 +1263,7 @@ abstract class ScriptTokenParser {
     int seqcode = Integer.MAX_VALUE;
     int seqvalue = Integer.MAX_VALUE;
     switch (tokPeek()) {
-    case T.seqcode:
+    case T.inscode:
       seqcode = tokenNext().intValue;
       break;
     case T.integer:

@@ -1666,7 +1666,7 @@ public class ScriptEval extends ScriptExpr {
       case T.varray:
         sb.append(((SV) token).escape()); // list
         continue;
-      case T.seqcode:
+      case T.inscode:
         sb.appendC('^');
         continue;
       case T.spec_seqcode_range:

@@ -111,7 +111,7 @@ public class LabelToken {
       /* 'e' */T.element,
       /* 'f' */T.phi,
       /* 'G' */T.groupindex,
-      /* 'g' */'g', //getSelectedGroupIndexWithinChain()
+      /* 'g' */T.monomer, //getSelectedGroupIndexWithinChain()
       /* 'I' */T.bondingradius,
       /* 'i' */T.atomno,
       /* 'L' */T.polymerlength,
@@ -120,14 +120,14 @@ public class LabelToken {
       /* 'm' */T.group1,
       /* 'N' */T.molecule,
       /* 'n' */T.group,
-      /* 'O' */'O', // all symmetry operators
+      /* 'O' */79, // all symmetry operators
       /* 'o' */T.symmetry,
       /* 'P' */T.partialcharge,
       /* 'p' */T.psi,
-      /* 'Q' */'Q', //occupancy 0.0 to 1.0
+      /* 'Q' */81, //occupancy 0.0 to 1.0
       /* 'q' */T.occupancy,
       /* 'R' */T.resno,
-      /* 'r' */'r',
+      /* 'r' */T.seqcode,
       /* 'S' */T.site,
       /* 's' */T.chain,
       /* 'T' */T.straightness,
@@ -136,7 +136,7 @@ public class LabelToken {
       /* 'u' */T.surfacedistance,
       /* 'V' */T.vanderwaals,
       /* 'v' */T.vibxyz,
-      /* 'W' */'W', // identifier and XYZ coord
+      /* 'W' */T.w, // identifier and XYZ coord
       /* 'X' */T.fracx,
       /* 'x' */T.atomx,
       /* 'x' */T.x,
@@ -549,28 +549,14 @@ public class LabelToken {
         strT = (formalCharge > 0 ? "" + formalCharge + "+"
             : formalCharge < 0 ? "" + -formalCharge + "-" : "");
         break;
-      case 'g':
-        strT = "" + atom.group.selectedIndex;
-        break;
       case T.model:
         strT = atom.getModelNumberForLabel();
-        break;
-      case 'O':
-        strT = atom.getSymmetryOperatorList(false);
         break;
       case T.occupancy:
         strT = "" + atom.atomPropertyInt(t.tok);
         break;
-      case 'Q':
-        floatT = atom.getOccupancy100() / 100f;
-        break;
       case T.radius:
         floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);
-        break;
-      case 'r':
-        strT = atom.group.getSeqcodeString();
-        if (strT == null)
-          strT = "1";
         break;
       case T.strucid:
         strT = atom.group.getStructureId();
@@ -594,12 +580,22 @@ public class LabelToken {
         if (Float.isNaN(floatT))
           strT = "";
         break;
+      case T.seqcode: // see 1h4w  184^A
       case T.structure:
       case T.substructure:
         strT = atom.atomPropertyString(vwr, t.tok);
         break;
-      case 'W':
+      case T.w:
         strT = atom.getIdentityXYZ(false, ptTemp);
+        break;
+        
+      // characters only
+      // JavaScript switch cannot handle mixed cases of numbers and character codes
+      case 79://'O':
+        strT = atom.getSymmetryOperatorList(false);
+        break;
+      case 81://'Q':
+        floatT = atom.getOccupancy100() / 100f;
         break;
 
       // standard 

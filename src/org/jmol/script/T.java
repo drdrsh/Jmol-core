@@ -78,7 +78,7 @@ public class T {
   public final static String[] astrType;
   
   static {
-    astrType = "nada identifier integer decimal string seqcode hash array point point4 bitset matrix3f matrix4f array hash bytearray keyword".split(" ");    
+    astrType = "nada identifier integer decimal string inscode hash array point point4 bitset matrix3f matrix4f array hash bytearray keyword".split(" ");    
   }
 
   public final static int nada       =  0;
@@ -86,7 +86,7 @@ public class T {
   public final static int decimal    =  3;
   public final static int string     =  4;
   
-  public final static int seqcode    =  5; // only for debugging
+  public final static int inscode    =  5; 
   public final static int hash       =  6;  // associative array; Hashtable
   public final static int varray     =  7;  // List<ScriptVariable>
   public final static int point3f    =  8;
@@ -583,10 +583,11 @@ public class T {
   public final static int sequence      = strproperty | 8;
   public final static int identify      = strproperty | 9;
   public final static int insertion     = strproperty |10;
-  public final static int shape         = strproperty |11;
-  public final static int strucid       = strproperty |12;
-  public final static int symbol        = strproperty |13 | settable;
-  public final static int symmetry      = strproperty |14 | predefinedset;
+  public final static int seqcode       = strproperty |11;
+  public final static int shape         = strproperty |12;
+  public final static int strucid       = strproperty |13;
+  public final static int symbol        = strproperty |14 | settable;
+  public final static int symmetry      = strproperty |15 | predefinedset;
 
   public final static int atomno        = intproperty | 1 | settable;
   public final static int atomid        = intproperty | 2;
@@ -606,14 +607,15 @@ public class T {
   public final static int model         = intproperty | 14 | scriptCommand;
   public final static int modelindex    = intproperty | 15;
   public final static int molecule      = intproperty | 16;
-  public final static int polymer       = intproperty | 17;
-  public final static int polymerlength = intproperty | 18;
-  public final static int resno         = intproperty | 19 | settable;
-  public final static int seqid         = intproperty | 20;
-  public final static int site          = intproperty | 21;
-  public final static int strucno       = intproperty | 22;
-  public final static int subsystem     = intproperty | 23;
-  public final static int valence       = intproperty | 23 | settable;
+  public final static int monomer       = intproperty | 17;
+  public final static int polymer       = intproperty | 18;
+  public final static int polymerlength = intproperty | 19;
+  public final static int resno         = intproperty | 20 | settable;
+  public final static int seqid         = intproperty | 21;
+  public final static int site          = intproperty | 22;
+  public final static int strucno       = intproperty | 23;
+  public final static int subsystem     = intproperty | 24;
+  public final static int valence       = intproperty | 25 | settable;
 
   // float values must be multiplied by 100 prior to comparing to integer values
 
@@ -1251,7 +1253,6 @@ public class T {
   public final static int modifyorcreate = misc  | 202;
   public final static int modelbased     = misc  | 203;
   public final static int molecular      = misc  | 204;
-  public final static int monomer        = misc  | 205;
   public final static int morph          = misc  | 206;
   public final static int mouse          = misc  | 207;
   public final static int movie          = misc  | 208;
@@ -1866,6 +1867,7 @@ public class T {
         "rotation",
         "row",
         "sequence",
+        "seqcode",
         "shape",
         "state",
         "symbol",
@@ -2898,6 +2900,7 @@ public class T {
         rotation,                           // "rotation"
         row,                                // "row"
         sequence,                           // "sequence"
+        seqcode,                            // "seqcode"
         shape,                              // "shape"
         state,                              // "state"
         symbol,                             // "symbol"

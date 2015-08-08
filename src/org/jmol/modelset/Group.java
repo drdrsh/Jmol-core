@@ -249,10 +249,10 @@ public class Group {
   public static String getSeqcodeStringFor(int seqcode) {
     if (seqcode == Integer.MIN_VALUE)
       return null;
-    return (seqcode & INSERTION_CODE_MASK) == 0
-      ? "" + (seqcode >> SEQUENCE_NUMBER_SHIFT)
-      : "" + (seqcode >> SEQUENCE_NUMBER_SHIFT) 
-           + '^' + (char)(seqcode & INSERTION_CODE_MASK);
+    String s = "" + (seqcode >> SEQUENCE_NUMBER_SHIFT);
+    if ((seqcode & INSERTION_CODE_MASK) != 0)
+        s += "^" + (char)(seqcode & INSERTION_CODE_MASK);
+    return s;
   }
 
   public char getInsertionCode() {

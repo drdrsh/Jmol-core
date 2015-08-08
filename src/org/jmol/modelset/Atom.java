@@ -1114,6 +1114,8 @@ public class Atom extends Point3fi implements BNode {
       return mi;
     case T.molecule:
       return getMoleculeNumber(true);
+    case T.monomer:
+      return group.getMonomerIndex() + 1;
     case T.occupancy:
       return getOccupancy100();
     case T.polymer:
@@ -1311,6 +1313,7 @@ public class Atom extends Point3fi implements BNode {
 
   public String atomPropertyString(Viewer vwr, int tokWhat) {
     char ch;
+    String s;
     switch (tokWhat) {
     case T.altloc:
       ch = altloc;
@@ -1323,6 +1326,9 @@ public class Atom extends Point3fi implements BNode {
       return getChainIDStr();
     case T.sequence:
       return getGroup1('?');
+    case T.seqcode:
+      s = group.getSeqcodeString();
+      return (s == null ? "" : s);
     case T.group1:
       return getGroup1('\0');
     case T.group:
@@ -1336,7 +1342,7 @@ public class Atom extends Point3fi implements BNode {
       return (ch == '\0' ? "" : "" + ch);
     case T.label:
     case T.format:
-      String s = (String) vwr.shm.getShapePropertyIndex(JC.SHAPE_LABELS, "label", i);
+      s = (String) vwr.shm.getShapePropertyIndex(JC.SHAPE_LABELS, "label", i);
       if (s == null)
         s = "";
       return s;

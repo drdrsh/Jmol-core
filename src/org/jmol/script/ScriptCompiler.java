@@ -1231,7 +1231,7 @@ public class ScriptCompiler extends ScriptTokenParser {
           addTokenToPrefix(T.tokenMinus);
         }
         int seqcode = Group.getSeqcodeFor(seqNum, insertionCode);
-        addTokenToPrefix(T.tv(T.seqcode, seqcode, "seqcode"));
+        addTokenToPrefix(T.tv(T.inscode, seqcode, "seqcode"));
       } catch (NumberFormatException nfe) {
         return ERROR(ERROR_invalidExpressionToken, "" + ch);
       }

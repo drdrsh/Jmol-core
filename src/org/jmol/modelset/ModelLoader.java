@@ -849,6 +849,8 @@ public final class ModelLoader {
       float[] data = e.getValue();
       if (data.length != nAtoms)
         return;
+      if (PT.isOneOf(key, ";x;y;z;"))
+        key = "property_" + key;
       if (key.startsWith("property_")) {
         vwr.setData(
             key,

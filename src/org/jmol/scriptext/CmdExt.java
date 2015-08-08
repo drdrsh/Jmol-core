@@ -3105,9 +3105,8 @@ public class CmdExt extends ScriptExt {
     case T.property:
       vwr.setFrameTitle(modelCount - 1,
           type + " plot for model " + vwr.getModelNumberDotted(modelIndex));
-      float f = 3;
-      script = "frame 0.0; frame last; reset;" + "select visible; spacefill "
-          + f + "; wireframe 0;" + "draw plotAxisX" + modelCount
+      script = "frame 0.0; frame last; reset;" + "select visible; spacefill 3.0"
+          + "; wireframe 0;" + "draw plotAxisX" + modelCount
           + " {100 -100 -100} {-100 -100 -100} \"" + props[0]
           + "\";" + "draw plotAxisY" + modelCount
           + " {-100 100 -100} {-100 -100 -100} \"" + props[1]
