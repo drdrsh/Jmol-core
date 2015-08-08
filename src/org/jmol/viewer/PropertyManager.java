@@ -1837,15 +1837,15 @@ public class PropertyManager implements JmolPropertyManager {
         );
       else if (isHetero)
         tokens = (leftJustify ? LabelToken.compile(vwr,
-            "HETATM%5.-5i %-4.4a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
+            "HETATM%5.-5i %-4.4a%1A%3.3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null) : LabelToken.compile(vwr,
-            "HETATM%5.-5i  %-3.3a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
+            "HETATM%5.-5i  %-3.3a%1A%3.3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null));
       else
         tokens = (leftJustify ? LabelToken.compile(vwr,
-            "ATOM  %5.-5i %-4.4a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
+            "ATOM  %5.-5i %-4.4a%1A%3.3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null) : LabelToken.compile(vwr,
-            "ATOM  %5.-5i  %-3.3a%1A%3.-3n %1c%4.-4R%1E   _XYZ_"
+            "ATOM  %5.-5i  %-3.3a%1A%3.3n %1c%4.-4R%1E   _XYZ_"
                 + occTemp, '\0', null));
       String XX = a.getElementSymbolIso(false).toUpperCase();
       XX = pdbKey(a.group.getBioPolymerIndexInModel())
@@ -1960,18 +1960,21 @@ public class PropertyManager implements JmolPropertyManager {
     }
   }
 
-
-  /**
-   * PDB line sorter 
-   */
-  public int compare(String s1, String s2) {
-    int atA = PT.parseInt(s1.substring(10, 16));
-    int atB = PT.parseInt(s2.substring(10, 16));
-    int resA = PT.parseInt(s1.substring(26, 30));
-    int resB = PT.parseInt(s2.substring(26, 30));
-    return (resA < resB ? -1 : resA > resB ? 1 : atA < atB ? -1
-        : atA > atB ? 1 : 0);
-  }
+//
+//  /**
+//   * PDB line sorter 
+//   * @param s1 
+//   * @param s2 
+//   * @return -1, 0, or 1
+//   */
+//  public int compare(String s1, String s2) {
+//    int atA = PT.parseInt(s1.substring(10, 16));
+//    int atB = PT.parseInt(s2.substring(10, 16));
+//    int resA = PT.parseInt(s1.substring(26, 30));
+//    int resB = PT.parseInt(s2.substring(26, 30));
+//    return (resA < resB ? -1 : resA > resB ? 1 : atA < atB ? -1
+//        : atA > atB ? 1 : 0);
+//  }
 
   /* **********************
    * 
@@ -2024,7 +2027,7 @@ public class PropertyManager implements JmolPropertyManager {
       Atom[] atoms = vwr.ms.at;
       if (isPDBFormat) {
         out.append("REMARK   6 Jmol PDB-encoded data: ").append(type)
-            .append(";\n");
+            .append("; ").append(Viewer.getJmolVersion()).append("; ").append(vwr.apiPlatform.getDateFormat(null)).append("\n");
         out.append("REMARK   6 Jmol data").append(" min = ")
             .append(Escape.eP(minXYZ)).append(" max = ")
             .append(Escape.eP(maxXYZ)).append(" unScaledXyz = xyz * ")

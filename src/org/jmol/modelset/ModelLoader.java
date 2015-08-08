@@ -843,9 +843,12 @@ public final class ModelLoader {
     if (jmolDataProperties == null)
       return;
     BS bs = m.bsAtoms;
+    int nAtoms = bs.cardinality();
     for (Entry<String, float[]> e : jmolDataProperties.entrySet()) {
       String key = e.getKey();
       float[] data = e.getValue();
+      if (data.length != nAtoms)
+        return;
       if (key.startsWith("property_")) {
         vwr.setData(
             key,

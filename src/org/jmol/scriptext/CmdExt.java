@@ -2892,13 +2892,14 @@ public class CmdExt extends ScriptExt {
       eval.iToken = pt0 + 1;
       for (int i = 0; i < 3; i++) {
         switch (tokAt(eval.iToken)) {
+        case T.nada:
         case T.format:
         case T.min:
         case T.max:
           i = 2;
           continue;
         }
-        if (!T.tokAttr(propToks[i] = tokAt(eval.iToken), T.atomproperty))
+        if ((propToks[i] = tokAt(eval.iToken)) != T.property && !T.tokAttr(propToks[i], T.atomproperty))
           invArg();
         props[i] = getToken(eval.iToken).value.toString();
         eval.iToken++;
@@ -2985,22 +2986,23 @@ public class CmdExt extends ScriptExt {
     // prepare data for property plotting
 
     float[] dataX = null, dataY = null, dataZ = null;
+    String[] propData = new String[3];
     if (tok == T.property) {
       dataX = getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
           propToks[0] == T.property? props[0] : null, (minXYZ == null ? Float.NaN : minXYZ.x), (maxXYZ == null ? Float.NaN
               : maxXYZ.x));
-      props[0] = props[0] + " " + Escape.eAF(dataX);
+      propData[0] = props[0] + " " + Escape.eAF(dataX);
       if (props[1] != null) {
         dataY = getBitsetPropertyFloat(bs, propToks[1] | T.selectedfloat,
             propToks[1] == T.property? props[1] : null, (minXYZ == null ? Float.NaN : minXYZ.y),
             (maxXYZ == null ? Float.NaN : maxXYZ.y));
-        props[1] = props[1] + " " + Escape.eAF(dataY);
+        propData[1] = props[1] + " " + Escape.eAF(dataY);
       }
       if (props[2] != null) {
         dataZ = getBitsetPropertyFloat(bs, propToks[2] | T.selectedfloat,
             propToks[2] == T.property? props[2] : null, (minXYZ == null ? Float.NaN : minXYZ.z),
             (maxXYZ == null ? Float.NaN : maxXYZ.z));
-        props[2] = props[2] + " " + Escape.eAF(dataZ);
+        propData[2] = props[2] + " " + Escape.eAF(dataZ);
       }
       if (minXYZ == null)
         minXYZ = P3.new3(getPlotMinMax(dataX, false, propToks[0]),
@@ -3050,7 +3052,7 @@ public class CmdExt extends ScriptExt {
             dataZ[i] = (dataZ[i] - center.z) / factors.z;
       }
       parameters = new Object[] { bs, dataX, dataY, dataZ, minXYZ, maxXYZ,
-          factors, center, format, props};
+          factors, center, format, propData};
     }
 
     // all set...

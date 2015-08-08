@@ -140,7 +140,7 @@ public class GlobalSettings {
       setI("spinFps", TransformManager.DEFAULT_SPIN_FPS);
       setF("visualRange", TransformManager.DEFAULT_VISUAL_RANGE);
       setI("stereoDegrees", TransformManager.DEFAULT_STEREO_DEGREES);
-      setI("stateversion", 0); // only set by a saved state being recalled
+      //setI("stateversion", 0); // only set by a saved state being recalled
       setB("syncScript", vwr.sm.syncingScripts);
       setB("syncMouse", vwr.sm.syncingMouse);
       setB("syncStereo", vwr.sm.stereoSync);
