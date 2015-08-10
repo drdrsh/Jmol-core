@@ -23,22 +23,22 @@
 
 package org.jmol.viewer;
 
-import javajs.awt.Font;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
-
 import java.util.Map;
 
+import javajs.awt.Font;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.SB;
+
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.JmolScriptFunction;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.c.PAL;
-import org.jmol.c.STER;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.java.BS;
@@ -66,13 +66,11 @@ import org.jmol.shape.Shape;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
+import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.util.GData;
-import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 import org.jmol.util.Vibration;
-
-import javajs.util.P3;
 
 /**
  * StateCreator handles all aspects of working with the "state" as
@@ -479,11 +477,11 @@ public class StateCreator extends JmolStateCreator {
         String data = (String) vwr.ligandModels.get(key + "_data");
         if (data != null)
           cmds.append("  ").append(
-              Escape.encapsulateData("ligand_" + key, data.trim() + "\n", 0));
+              Escape.encapsulateData("ligand_" + key, data.trim() + "\n", JmolDataManager.DATA_TYPE_STRING));
         data = (String) vwr.ligandModels.get(key + "_file");
         if (data != null)
           cmds.append("  ").append(
-              Escape.encapsulateData("file_" + key, data.trim() + "\n", 0));
+              Escape.encapsulateData("file_" + key, data.trim() + "\n", JmolDataManager.DATA_TYPE_STRING));
       }
     }
     SB commands = new SB();

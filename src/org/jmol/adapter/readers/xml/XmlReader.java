@@ -153,7 +153,7 @@ public class XmlReader extends AtomSetCollectionReader {
     try {
       thisReader.processXml(this, saxReader);
     } catch (Exception e) {
-      return "Error reading XML: " + (parent.vwr.isJS ? e : e.getMessage());
+      return "Error reading XML: " + ((parent == null ? vwr : parent.vwr).isJS ? e : e.getMessage());
     }
     return null;
   }

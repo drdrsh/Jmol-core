@@ -292,12 +292,12 @@ public class XmlCmlReader extends XmlReader {
         if (atts.containsKey("atomRef1")) {
           breakOutBondTokens(atts.get("atomRef1"));
           for (int i = tokenCount; --i >= 0;)
-            bondArray[i].atomIndex1 = asc.getAtomIndex(tokens[i]);
+            bondArray[i].atomIndex1 = getAtomIndex(tokens[i]);
         }
         if (atts.containsKey("atomRef2")) {
           breakOutBondTokens(atts.get("atomRef2"));
           for (int i = tokenCount; --i >= 0;)
-            bondArray[i].atomIndex2 = asc.getAtomIndex(tokens[i]);
+            bondArray[i].atomIndex2 = getAtomIndex(tokens[i]);
         }
       } else if (name.equals("atomarray")) {
         state = MOLECULE_ATOM_ARRAY;
@@ -440,6 +440,10 @@ public class XmlCmlReader extends XmlReader {
     case MOLECULE_BOND_BUILTIN:
       break;
     }
+  }
+
+  private int getAtomIndex(String label) {
+    return asc.getAtomIndex(isSerial ? label.substring(1) : label);
   }
 
   final private static String[] unitCellParamTags = { "a", "b", "c", "alpha",

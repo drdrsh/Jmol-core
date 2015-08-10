@@ -42,6 +42,7 @@ import javajs.util.P4;
 import javajs.util.T3;
 import javajs.util.V3;
 
+import org.jmol.api.JmolDataManager;
 import org.jmol.java.BS;
 import org.jmol.script.SV;
 import org.jmol.script.T;
@@ -535,12 +536,23 @@ public class Escape {
   }
 
   public static String encapsulateData(String name, Object data, int depth) {
-    return "  DATA \"" + name + "\"\n" + 
-        (depth == 2 ?
-          escapeFloatAA((float[][]) data, true) + ";\n"
-          : depth == 3 ?
-              escapeFloatAAA((float[][][]) data, true) + ";\n"
-          : data) + "    END \"" + name + "\";\n";
+    String s;
+    switch (depth) {
+    case JmolDataManager.DATA_TYPE_AF:
+      s = escapeFloatA((float[]) data, false) + ";\n";
+      break;
+    case JmolDataManager.DATA_TYPE_AFF:
+      s = escapeFloatAA((float[][]) data, true) + ";\n";
+      break;
+    case JmolDataManager.DATA_TYPE_AFFF:
+      s = escapeFloatAAA((float[][][]) data, true) + ";\n";
+      break;
+    default:
+      s = data.toString();
+      break;
+    }
+    return "  DATA \"" + name + "\"\n" + s + "    END \"" + name + "\";\n";
+    
   }
 
 //  public static String escapeXml(Object value) {

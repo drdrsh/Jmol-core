@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.MepCalculationInterface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
@@ -1440,7 +1441,7 @@ public class IsoExt extends ScriptExt {
           data = new float[vwr.ms.ac];
           if (chk)
             continue;
-          data = vwr.getDataFloat(str, null);
+          data = (float[]) vwr.getDataObj(str, null, JmolDataManager.DATA_TYPE_AF);
           if (data == null)
             invArg();
           addShapeProperty(propertyList, propertyName, data);
@@ -2136,7 +2137,7 @@ public class IsoExt extends ScriptExt {
               nZ = Math.abs(nZ);
               xyzdata = floatArraySetXYZ(++eval.iToken, nX, nY, nZ);
             } else if (isXYZV) {
-              xyzdata = vwr.getDataFloat3D(name);
+              xyzdata = (float[][][]) vwr.getDataObj(name, null, JmolDataManager.DATA_TYPE_AFFF);
             } else {
               xyzdata = vwr.functionXYZ(name, nX, nY, nZ);
             }
@@ -2163,7 +2164,7 @@ public class IsoExt extends ScriptExt {
               nY = Math.abs(nY);
               fdata = floatArraySet(++eval.iToken, nX, nY);
             } else if (isXYZ) {
-              fdata = vwr.getDataFloat2D(name);
+              fdata = (float[][]) vwr.getDataObj(name, null, JmolDataManager.DATA_TYPE_AFF);
               nX = (fdata == null ? 0 : fdata.length);
               nY = 3;
             } else {

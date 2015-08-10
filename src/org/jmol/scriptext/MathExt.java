@@ -32,6 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolNMRInterface;
 import org.jmol.api.JmolPatternMatcher;
 import org.jmol.atomdata.RadiusData;
@@ -773,7 +774,7 @@ public class MathExt {
     }
     if (selected.indexOf("data2d_") == 0) {
       // tab, newline separated data
-      float[][] f1 = vwr.getDataFloat2D(selected);
+      float[][] f1 = (float[][]) vwr.getDataObj(selected, null, JmolDataManager.DATA_TYPE_AFF);
       if (f1 == null)
         return mp.addXStr("");
       if (args.length == 2 && args[1].tok == T.integer) {
@@ -790,10 +791,10 @@ public class MathExt {
     // parallel mp.addition of float property data sets
 
     if (selected.indexOf("property_") == 0) {
-      float[] f1 = vwr.getDataFloat(selected, null);
+      float[] f1 = (float[]) vwr.getDataObj(selected, null, JmolDataManager.DATA_TYPE_AF);
       if (f1 == null)
         return mp.addXStr("");
-      float[] f2 = (type.indexOf("property_") == 0 ? vwr.getDataFloat(type, null)
+      float[] f2 = (type.indexOf("property_") == 0 ? (float[]) vwr.getDataObj(selected, null, JmolDataManager.DATA_TYPE_AF)
           : null);
       if (f2 != null) {
         f1 = AU.arrayCopyF(f1, -1);
@@ -806,7 +807,7 @@ public class MathExt {
     // some other data type -- just return it
 
     //if (args.length == 1) {
-      Object[] data = vwr.getData(selected);
+      Object[] data = (Object[]) vwr.getDataObj(selected, null, JmolDataManager.DATA_TYPE_UNKNOWN);
       return mp.addXStr(data == null ? "" : "" + data[1]);
    // }
   }

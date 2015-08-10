@@ -458,8 +458,8 @@ public final class ModelLoader {
         }
         key = "property_" + key.toLowerCase();
         Logger.info("creating " + key + " for model " + ms.getModelName(i));
-        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE }, ms.ac, 0,
-            0, Integer.MAX_VALUE, 0);
+        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE }, 
+            ms.ac, 0, 0, Integer.MAX_VALUE, 0);
       }
     }
   }
@@ -839,7 +839,8 @@ public final class ModelLoader {
     Logger.info(nRead + " atoms created");    
   }
 
-  private void addJmolDataProperties(Model m, Map<String, float[]> jmolDataProperties) {
+  private void addJmolDataProperties(Model m,
+                                     Map<String, float[]> jmolDataProperties) {
     if (jmolDataProperties == null)
       return;
     BS bs = m.bsAtoms;
@@ -849,17 +850,28 @@ public final class ModelLoader {
       float[] data = e.getValue();
       if (data.length != nAtoms)
         return;
-      if (PT.isOneOf(key, ";x;y;z;"))
+      int tok = (key.startsWith("property_") ? T.property : T
+          .getTokFromName(key));
+      switch (tok) {
+      default:
+        if (T.tokAttr(tok, T.settable)) {
+          vwr.setAtomProperty(bs, tok, 0, 0, null, data, null);
+          break;
+        }
+        // not settable -- must encode as property_
+        //$FALL-THROUGH$
+      case T.x:
+      case T.y:
+      case T.z:
         key = "property_" + key;
-      if (key.startsWith("property_")) {
+        tok = T.property;
+        //$FALL-THROUGH$
+      case T.property:
+        // must create data set
         vwr.setData(
             key,
             new Object[] { key, data, bs,
                 Integer.valueOf(JmolDataManager.DATA_TYPE_AF) }, 0, 0, 0, 0, 0);
-      } else {
-        int tok = T.getTokFromName(key);
-        if (T.tokAttr(tok, T.settable))
-          vwr.setAtomProperty(bs, tok, 0, 0, null, data, null);
       }
     }
   }

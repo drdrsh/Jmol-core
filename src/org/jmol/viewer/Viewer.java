@@ -2859,8 +2859,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public void setCurrentColorRange(String label) {
-    float[] data = getDataFloat(label, null);
-    BS bs = (data == null ? null : (BS) (getDataManager().getData(label))[2]);
+    float[] data = (float[]) getDataObj(label, null, JmolDataManager.DATA_TYPE_AF);
+    BS bs = (data == null ? null : (BS) ((Object[])getDataObj(label, null, JmolDataManager.DATA_TYPE_UNKNOWN))[2]);
     if (bs != null && g.rangeSelected)
       bs.and(bsA());
     cm.setPropertyColorRangeData(data, bs);
@@ -2868,31 +2868,99 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   private Object[] lastData;
 
-  public void setData(String type, Object[] data, int arrayCount,
-                      int matchField, int matchFieldColumnCount, int field,
-                      int fieldColumnCount) {
-    getDataManager().setData(type, lastData = data, arrayCount, ms.ac,
-        matchField, matchFieldColumnCount, field, fieldColumnCount);
+  /**
+   * A general-purpose data storage method. Note that matchFieldCount and
+   * dataFieldCount should both be positive or both be negative.
+   * 
+   * @param key
+   * 
+   *        a simple key name for the data, starting with "property_" if user-defined
+   * 
+   * @param data
+   * 
+   *        data[0] -- label
+   * 
+   *        data[1] -- string or float[] or float[][] or float[][][]
+   * 
+   *        data[2] -- selection bitset or int[] atomMap when field > 0
+   * 
+   *        data[3] -- arrayDepth 0(String),1(float[]),2(float[][]),3(float[][][]) or -1
+   *        to indidate that it is set by data type
+   * 
+   *        data[4] -- Boolean.TRUE == saveInState
+   * 
+   * @param dataType
+   * 
+   *        see JmolDataManager interface
+   * 
+   * @param matchField
+   * 
+   *        if positive, data must match atomNo in this column
+   * 
+   *        if 0, no match column
+   * 
+   * @param matchFieldColumnCount
+   *        if positive, this number of characters in match column if 0,
+   *        reference is to tokens, not characters
+   * 
+   * @param dataField
+   * 
+   *        if positive, column containing the data
+   * 
+   *        if 0, values are a simple list; clear the data
+   * 
+   *        if Integer.MAX_VALUE, values are a simple list; don't clear the data
+   * 
+   *        if Integer.MIN_VALUE, have one SINGLE data value for all selected
+   *        atoms
+   * 
+   * @param dataFieldColumnCount
+   * 
+   *        if positive, this number of characters in data column
+   * 
+   *        if 0, reference is to tokens, not characters
+   */
+  public void setData(String key, Object[] data, int dataType,
+                      int matchField, int matchFieldColumnCount, int dataField,
+                      int dataFieldColumnCount) {
+    getDataManager().setData(key, lastData = data, dataType, ms.ac,
+        matchField, matchFieldColumnCount, dataField, dataFieldColumnCount);
   }
 
-  public Object[] getData(String type) {
-    return (type == null ? lastData : getDataManager().getData(type));
-  }
-
-  public float[] getDataFloat(String label, BS bsSelected) {
-    return getDataManager().getDataFloatA(label, bsSelected);
-  }
-
-  public float[][] getDataFloat2D(String label) {
-    return getDataManager().getDataFloat2D(label);
-  }
-
-  public float[][][] getDataFloat3D(String label) {
-    return getDataManager().getDataFloat3D(label);
+  /**
+   * Retrieve a data object
+   * 
+   * @param key
+   * 
+   * @param bsSelected
+   * 
+   *        selected atoms; for DATA_AF only
+   * 
+   * @param dataType
+   * 
+   *        see JmolDataManager interface
+   * 
+   * @return data object
+   * 
+   *         data[0] -- label (same as key)
+   * 
+   *         data[1] -- string or float[] or float[][] or float[][][]
+   * 
+   *         data[2] -- selection bitset or int[] atomMap when field > 0
+   * 
+   *         data[3] -- arrayDepth
+   *         0(String),1(float[]),2(float[][]),3(float[][][]) or -1 to indicate
+   *         that it is set by data type
+   * 
+   *         data[4] -- Boolean.TRUE == saveInState
+   */
+  public Object getDataObj(String key, BS bsSelected, int dataType) {
+    return (key == null && dataType == JmolDataManager.DATA_TYPE_LAST ? lastData
+        : getDataManager().getData(key, bsSelected, dataType));
   }
 
   public float getDataFloatAt(String label, int atomIndex) {
-    return getDataManager().getDataFloat(label, atomIndex);
+    return getDataManager().getDataFloatAt(label, atomIndex);
   }
 
   // boolean autoLoadOrientation() {
@@ -7519,7 +7587,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     nY = Math.abs(nY);
     float[][] fdata;
     if (data == null) {
-      fdata = getDataFloat2D(functionName);
+      fdata = (float[][]) getDataObj(functionName, null, JmolDataManager.DATA_TYPE_AFF);
       if (fdata != null)
         return fdata;
       data = "";
@@ -7544,7 +7612,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     nZ = Math.abs(nZ);
     float[][][] xyzdata;
     if (data == null) {
-      xyzdata = getDataFloat3D(functionName);
+      xyzdata = (float[][][]) getDataObj(functionName, null, JmolDataManager.DATA_TYPE_AFF);
       if (xyzdata != null)
         return xyzdata;
       data = "";

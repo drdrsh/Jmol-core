@@ -966,7 +966,7 @@ abstract class ScriptExpr extends ScriptParam {
           if (pc + 2 == code.length)
             invArg();
           if (!chk)
-            data = vwr.getDataFloat((String) code[++pc].value, null);
+            data = (float[]) vwr.getDataObj((String) code[++pc].value, null, JmolDataManager.DATA_TYPE_AF);
         }
         if (++pc == code.length)
           invArg(); // compiler would not let this happen, actually
@@ -1647,7 +1647,7 @@ abstract class ScriptExpr extends ScriptParam {
       ptT = new P3();
       break;
     case T.property:
-      data = vwr.getDataFloat((String) opValue, null);
+      data = (float[]) vwr.getDataObj((String) opValue, null, JmolDataManager.DATA_TYPE_AF);
       break;
     }
 

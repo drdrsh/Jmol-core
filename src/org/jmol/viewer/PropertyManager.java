@@ -49,6 +49,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolPropertyManager;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
@@ -621,7 +622,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_CONSOLE_TEXT:
       return vwr.getProperty("DATA_API", "consoleText", null);
     case PROP_DATA_INFO:
-      return vwr.getData(myParam.toString());
+      return vwr.getDataObj(myParam.toString(), null, JmolDataManager.DATA_TYPE_UNKNOWN);
     case PROP_ERROR_MESSAGE:
       return vwr.getErrorMessageUn();
     case PROP_EVALUATE:

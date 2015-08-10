@@ -37,6 +37,7 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3;
 
+import org.jmol.api.JmolDataManager;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.Edge;
@@ -405,10 +406,10 @@ public class LabelToken {
         String propertyName = strFormat.substring(ich, ichClose).toLowerCase();
         if (propertyName.startsWith("property_")) {
           lt.tok = T.data;
-          lt.data = vwr.getDataFloat(propertyName, null);
+          lt.data = vwr.getDataObj(propertyName, null, JmolDataManager.DATA_TYPE_AF);
         } else if (propertyName.startsWith("validation.")) {
           lt.tok = T.validation;
-          lt.data = vwr.getDataFloat("property_" + propertyName.substring(11), null);
+          lt.data = vwr.getDataObj("property_" + propertyName.substring(11), null, JmolDataManager.DATA_TYPE_AF);
         } else {
           T token = T.getTokenFromName(propertyName);
           if (token != null && isLabelPropertyTok(token.tok))
@@ -427,11 +428,11 @@ public class LabelToken {
           break;
         }
         String s = strFormat.substring(ich, ichCloseBracket);
-        lt.data = vwr.getDataFloat(s, null);
+        lt.data = vwr.getDataObj(s, null, JmolDataManager.DATA_TYPE_AF);
         // TODO untested j2s issue fix
         if (lt.data == null) {
-          lt.data = vwr.getData(s);
-          if (lt.data instanceof Object[]) {// either that or it is null
+          lt.data = vwr.getDataObj(s, null, JmolDataManager.DATA_TYPE_UNKNOWN);
+          if (lt.data != null) {
             lt.data = ((Object[]) lt.data)[1];
             if (lt.data instanceof String)
               lt.data = PT.split((String) lt.data, "\n");

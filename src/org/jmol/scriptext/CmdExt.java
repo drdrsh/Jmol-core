@@ -1923,8 +1923,7 @@ public class CmdExt extends ScriptExt {
     default:
       eval.bad();
     }
-    String dataType = dataLabel + " ";
-    dataType = dataType.substring(0, dataType.indexOf(" ")).toLowerCase();
+    String dataType = dataLabel.substring(0, (dataLabel + " ").indexOf(" ")).toLowerCase();
     if (dataType.equals("model") || dataType.equals("append")) {
       eval.cmdLoad();
       return;
@@ -1952,30 +1951,30 @@ public class CmdExt extends ScriptExt {
     // not saving this data in the state?
     if (dataType.equals("element_vdw")) {
       // vdw for now
-      d[0] = dataType;
-      d[1] = dataString.replace(';', '\n');
+      d[JmolDataManager.DATA_LABEL] = dataType;
+      d[JmolDataManager.DATA_VALUE] = dataString.replace(';', '\n');
       int n = Elements.elementNumberMax;
       int[] eArray = new int[n + 1];
       for (int ie = 1; ie <= n; ie++)
         eArray[ie] = ie;
-      d[2] = eArray;
-      d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
+      d[JmolDataManager.DATA_SELECTION] = eArray;
+      d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
       vwr.setData("element_vdw", d, n, 0, 0, 0, 0);
       return;
     }
     if (dataType.indexOf("data2d_") == 0) {
       // data2d_someName
-      d[0] = dataLabel;
-      d[1] = parseDataArray(dataString, false);
-      d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_AFF);
+      d[JmolDataManager.DATA_LABEL] = dataLabel;
+      d[JmolDataManager.DATA_VALUE] = parseDataArray(dataString, false);
+      d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_AFF);
       vwr.setData(dataLabel, d, 0, 0, 0, 0, 0);
       return;
     }
     if (dataType.indexOf("data3d_") == 0) {
       // data3d_someName
-      d[0] = dataLabel;
-      d[1] = parseDataArray(dataString, true);
-      d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_AFFF);
+      d[JmolDataManager.DATA_LABEL] = dataLabel;
+      d[JmolDataManager.DATA_VALUE] = parseDataArray(dataString, true);
+      d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_AFFF);
       vwr.setData(dataLabel, d, 0, 0, 0, 0, 0);
       return;
     }
@@ -1983,7 +1982,7 @@ public class CmdExt extends ScriptExt {
     if (dataType.indexOf("property_") == 0
         && !(tokens.length == 2 && tokens[1].equals("set"))) {
       BS bs = vwr.bsA();
-      d[0] = dataType;
+      d[JmolDataManager.DATA_LABEL] = dataType;
       int atomNumberField = (isOneValue ? 0 : ((Integer) vwr
           .getP("propertyAtomNumberField")).intValue());
       int atomNumberFieldColumnCount = (isOneValue ? 0 : ((Integer) vwr
@@ -2027,12 +2026,12 @@ public class CmdExt extends ScriptExt {
           bsTemp.set(atomNo);
           atomMap[atomNo] = j;
         }
-        d[2] = atomMap;
+        d[JmolDataManager.DATA_SELECTION] = atomMap;
       } else {
-        d[2] = BSUtil.copy(bs);
+        d[JmolDataManager.DATA_SELECTION] = BSUtil.copy(bs);
       }
-      d[1] = dataString;
-      d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
+      d[JmolDataManager.DATA_VALUE] = dataString;
+      d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
       vwr.setData(dataType, d, ac, atomNumberField,
           atomNumberFieldColumnCount, propertyField, propertyFieldColumnCount);
       return;
@@ -2040,15 +2039,15 @@ public class CmdExt extends ScriptExt {
     if ("occupany".equals(dataType))
         dataType = "occupancy"; // legacy misspelling in states
     int userType = AtomCollection.getUserSettableType(dataType);
-    if (userType >= 0) {
+    if (userType > JmolDataManager.DATA_TYPE_UNKNOWN) {
       // this is a known settable type or "property_xxxx"
       vwr.setAtomData(userType, dataType, dataString, isDefault);
       return;
     }
     // this is just information to be stored.
-    d[0] = dataLabel;
-    d[1] = dataString;
-    d[3] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
+    d[JmolDataManager.DATA_LABEL] = dataLabel;
+    d[JmolDataManager.DATA_VALUE] = dataString;
+    d[JmolDataManager.DATA_TYPE] = Integer.valueOf(JmolDataManager.DATA_TYPE_STRING);
     vwr.setData(dataType, d, 0, 0, 0, 0, 0);
   }
 
@@ -4310,9 +4309,9 @@ public class CmdExt extends ScriptExt {
     case T.data:
       String dtype = ((len = slen) == 3 ? paramAsStr(2) : null);
       if (!chk) {
-        Object[] data = vwr.getData(dtype);
+        Object[] data = (Object[]) vwr.getDataObj(dtype, null, JmolDataManager.DATA_TYPE_LAST);
         msg = (data == null ? "no data" : Escape.encapsulateData(
-            (String) data[0], data[1], ((Integer) data[3]).intValue()));
+            (String) data[JmolDataManager.DATA_LABEL], data[JmolDataManager.DATA_VALUE], ((Integer) data[JmolDataManager.DATA_TYPE]).intValue()));
       }
       break;
     case T.spacegroup:
@@ -4993,10 +4992,10 @@ public class CmdExt extends ScriptExt {
                                         float min, float max)
       throws ScriptException {
 
-    float[] data = (property == null ?
-      (float[]) e.getBitsetProperty(bs, tok, null, null, null, null,
+    float[] data = (float[]) (property == null ?
+      e.getBitsetProperty(bs, tok, null, null, null, null,
           false, Integer.MAX_VALUE, false) 
-          : vwr.getDataFloat(property, bs));
+          : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AF));
     if (!Float.isNaN(min))
       for (int i = 0; i < data.length; i++)
         if (data[i] < min)

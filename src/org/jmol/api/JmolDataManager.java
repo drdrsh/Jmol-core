@@ -9,11 +9,18 @@ import org.jmol.viewer.Viewer;
 
 public interface JmolDataManager {
 
+  public static final int DATA_TYPE_LAST = -2;
   public final static int DATA_TYPE_UNKNOWN = -1;
   public final static int DATA_TYPE_STRING = 0;
   public final static int DATA_TYPE_AF = 1;
   public final static int DATA_TYPE_AFF = 2;
   public final static int DATA_TYPE_AFFF = 3;
+  // indexes into Object[] data
+  public final static int DATA_LABEL = 0;
+  public final static int DATA_VALUE = 1;
+  public final static int DATA_SELECTION = 2;
+  public final static int DATA_TYPE = 3;
+  public final static int DATA_SAVE_IN_STATE = 4; // optional; defaults to TRUE
 
   JmolDataManager set(Viewer vwr);
 
@@ -21,22 +28,16 @@ public interface JmolDataManager {
 
   void clear();
 
-  Object[] getData(String type);
+  void deleteModelAtoms(int firstAtomIndex, int nAtoms, BS bsDeleted);
 
-  float[][] getDataFloat2D(String label);
+  Object getData(String label, BS bsSelected, int dataType);
 
-  float[][][] getDataFloat3D(String label);
-
-  float getDataFloat(String label, int atomIndex);
-
-  float[] getDataFloatA(String label, BS bsSelected);
+  float getDataFloatAt(String label, int atomIndex);
 
   String getDefaultVdwNameOrData(VDW type, BS bs);
 
-  void deleteModelAtoms(int firstAtomIndex, int nAtoms, BS bsDeleted);
-
-  void setData(String type, Object[] data, int arrayCount, int ac,
-               int matchField, int matchFieldColumnCount, int field,
-               int fieldColumnCount);
+  void setData(String type, Object[] data, int dataType, int ac,
+               int matchField, int matchFieldColumnCount, int dataField,
+               int dataFieldColumnCount);
 
 }
