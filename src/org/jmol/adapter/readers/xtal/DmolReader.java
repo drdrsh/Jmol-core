@@ -156,7 +156,7 @@ public class DmolReader extends AtomSetCollectionReader {
       float[] frequencies = new float[frequencyCount];
       for (int i = 1, n = 0; i < tokens.length; i += 2, n++) {
         frequencies[n] = parseFloatStr(tokens[i]);
-        if (Logger.debugging)
+        if (debugging)
           Logger.debug((vibrationNumber + n) + " frequency=" + frequencies[n]);
       }
 

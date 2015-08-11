@@ -52,15 +52,13 @@ import javajs.util.PT;
 
 public class FoldingXyzReader extends AtomSetCollectionReader {
 
-  private boolean haveBonds;
-
   @Override
   protected void initializeReader() {
   }
   
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    if (haveBonds)
+    if (asc.bondCount > 0)
       asc.setNoAutoBond();
     isTrajectory = false;
     finalizeReaderASCR();
@@ -173,8 +171,8 @@ public class FoldingXyzReader extends AtomSetCollectionReader {
         a1.atomName += "\0" + b[b0++];
       for (int j = b.length - 1; --j >= b0;) {
         Atom a2 = asc.getAtomFromName(b[j]);
-        if (a1.index < a2.index && asc.addNewBondWithOrderA(a1, a2, 1) != null)
-          haveBonds = true;
+        if (a1.index < a2.index)
+          asc.addNewBondWithOrderA(a1, a2, 1);
       }
     }
   }

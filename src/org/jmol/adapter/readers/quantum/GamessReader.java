@@ -134,7 +134,7 @@ abstract public class GamessReader extends MOReader {
       }
     }
 
-    if (Logger.debugging) {
+    if (debugging) {
       Logger.debug(shellCount + " slater shells read");
       Logger.debug(gaussianCount + " gaussian primitives read");
     }
@@ -161,7 +161,7 @@ abstract public class GamessReader extends MOReader {
         if (Float.isNaN(frequency))
           continue; // may be "I" for imaginary
         frequencies[frequencyCount++] = frequency;
-        if (Logger.debugging) {
+        if (debugging) {
           Logger.debug((vibrationNumber + 1) + " frequency=" + frequency);
         }
       }
@@ -390,7 +390,7 @@ $SYSTEM OPTIONS
         String key = type + tokens[i - 1];
         String value = (key.equals("basis_options_SPLIT3") ? tokens[++i] + " " + tokens[++i]
             + " " + tokens[++i] : tokens[++i]);
-        if (Logger.debugging)
+        if (debugging)
           Logger.debug(key + " = " + value);
         calcOptions.put(key, value);
         } catch (Exception e) {

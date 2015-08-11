@@ -119,7 +119,7 @@ public abstract class SpartanInputReader extends BasisFunctionReader {
       modelAtomCount++;
     }
     ac = asc.ac;
-    if (Logger.debugging)
+    if (debugging)
       Logger.debug(ac + " atoms read");
   }
 
@@ -162,7 +162,7 @@ public abstract class SpartanInputReader extends BasisFunctionReader {
       }
     }
     rd();
-    if (Logger.debugging)
+    if (debugging)
       Logger.debug(asc.bondCount + " bonds read");
   }
 }

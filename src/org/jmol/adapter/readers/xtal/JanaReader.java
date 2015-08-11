@@ -905,7 +905,7 @@ public class JanaReader extends AtomSetCollectionReader {
   private String readM40Floats() throws Exception {
     if ((line = rd()) == null || line.indexOf("-------") >= 0) 
       return (line = null);
-    if (Logger.debugging)
+    if (debugging)
       Logger.debug(line);
     parseM40Floats();
     return line;

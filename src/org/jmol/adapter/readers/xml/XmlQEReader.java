@@ -65,7 +65,7 @@ public class XmlQEReader extends XmlReader {
 
   @Override
   public void processStartElement(String localName) {
-    if (Logger.debugging)
+    if (debugging)
       Logger.debug("xmlqe: start " + localName);
 
     if (!parent.continuing)
@@ -100,7 +100,7 @@ public class XmlQEReader extends XmlReader {
   @Override
   void processEndElement(String localName) {
 
-    if (Logger.debugging)
+    if (debugging)
       Logger.debug("xmlqe: end " + localName);
 
     while (true) {

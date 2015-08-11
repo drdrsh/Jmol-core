@@ -58,6 +58,7 @@ public abstract class JmolAdapter {
   public final static int ORDER_COVALENT_SINGLE = Edge.BOND_COVALENT_SINGLE;
   public final static int ORDER_COVALENT_DOUBLE = Edge.BOND_COVALENT_DOUBLE;
   public final static int ORDER_COVALENT_TRIPLE = Edge.BOND_COVALENT_TRIPLE;
+  public final static int ORDER_COVALENT_QUAD   = Edge.BOND_COVALENT_QUADRUPLE;
   public final static int ORDER_AROMATIC        = Edge.BOND_AROMATIC;
   public final static int ORDER_AROMATIC_SINGLE = Edge.BOND_AROMATIC_SINGLE;
   public final static int ORDER_AROMATIC_DOUBLE = Edge.BOND_AROMATIC_DOUBLE;

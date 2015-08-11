@@ -135,6 +135,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public final static float ANGSTROMS_PER_BOHR = 0.5291772f; // used by SpartanArchive
 
   public boolean isBinary;
+  public boolean debugging;
 
   public AtomSetCollection asc;
   protected BufferedReader reader;
@@ -228,6 +229,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected void setupASCR(String fullPath, Map<String, Object> htParams, Object reader) {
     if (fullPath == null)
       return;
+    debugging = Logger.debugging;
     this.htParams = htParams;
     filePath = fullPath.replace('\\', '/');
     int i = filePath.lastIndexOf('/');
@@ -781,7 +783,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (!Float.isNaN(x) && i >= 6 && Float.isNaN(unitCellParams[6]))
       initializeCartesianToFractional();
     unitCellParams[i] = x;
-    if (Logger.debugging) {
+    if (debugging) {
       Logger.debug("setunitcellitem " + i + " " + x);
     }
     if (i < 6 || Float.isNaN(x))
@@ -1392,7 +1394,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         int iAtom = (atomIndexes == null ? atomPt : atomIndexes[atomPt]);
         if (iAtom < 0)
           continue;
-        if (Logger.debugging)
+        if (debugging)
           Logger.debug("atom " + iAtom + " vib" + j + ": " + vx + " " + vy + " "
               + vz);
         asc.addVibrationVectorWithSymmetry(iAtom0 + modelAtomCount * j++
@@ -1496,7 +1498,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (out != null && line != null)
       out.append(line).append("\n");
     ptLine++;
-    if (Logger.debugging)
+    if (debugging)
       Logger.debug(line);
     return line;
   }

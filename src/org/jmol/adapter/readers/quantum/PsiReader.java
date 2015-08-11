@@ -241,7 +241,7 @@ public class PsiReader extends MOReader {
         garray[i][j] = parseFloatStr(tokens[j]);
     }
     moData.put("gaussians", garray);
-    if (Logger.debugging) {
+    if (debugging) {
       Logger.debug(shellCount + " slater shells read");
       Logger.debug(gaussianCount + " gaussian primitives read");
     }

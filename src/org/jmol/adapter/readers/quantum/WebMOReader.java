@@ -99,7 +99,7 @@ public class WebMOReader extends MopacSlaterReader {
     finalizeReaderASCR();
     if (nOrbitals > 0)
       setMOs("eV");
-    if (Logger.debugging)
+    if (debugging)
       Logger.debug(orbitals.size() + " molecular orbitals read");
   }
   
@@ -287,7 +287,7 @@ public class WebMOReader extends MopacSlaterReader {
     }
     moData.put("shells", sdata);
     moData.put("gaussians", garray);
-    if (Logger.debugging) {
+    if (debugging) {
       Logger.debug(sdata.size() + " slater shells read");
       Logger.debug(garray.length + " gaussian primitives read");
     }

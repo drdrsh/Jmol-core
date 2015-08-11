@@ -297,7 +297,7 @@ public class GaussianFchkReader extends GaussianReader {
         slater[1] = BasisFunctionReader.getQuantumShellTagID(oType);      
       slater[2] = gaussianCount;
       slater[3] = nGaussians;
-      if (Logger.debugging)
+      if (debugging)
         Logger.debug("Slater " + shells.size() + " " + Escape.eAI(slater));
       shells.addLast(slater);
       for (int j = 0; j < nGaussians; j++) {

@@ -3924,7 +3924,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         return g.resolveDataBase("dssr", f);
       }
       // these are processed in SmarterJmolAdapter
-      return g.resolveDataBase("pdbe", f);
+      String pdbe = "pdbe";
+      if (f.length() == 5 && f.charAt(4) == '*') {
+        pdbe = "pdbe2";
+        f = f.substring(0, 4);
+      }
+      return g.resolveDataBase(pdbe, f);
     case ':': // PubChem
       format = g.pubChemFormat;
       if (f.equals("")) {

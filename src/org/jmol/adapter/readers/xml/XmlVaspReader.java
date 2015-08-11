@@ -70,7 +70,7 @@ public class XmlVaspReader extends XmlReader {
 
   @Override
   public void processStartElement(String localName) {
-    if (Logger.debugging) 
+    if (debugging) 
       Logger.debug("xmlvasp: start " + localName);
 
     if (!parent.continuing)
@@ -153,7 +153,7 @@ public class XmlVaspReader extends XmlReader {
   @Override
   void processEndElement(String localName) {
 
-    if (Logger.debugging) 
+    if (debugging) 
       Logger.debug("xmlvasp: end " + localName);
 
     while (true) {

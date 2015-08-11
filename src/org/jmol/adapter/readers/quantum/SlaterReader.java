@@ -99,7 +99,7 @@ abstract class SlaterReader extends BasisFunctionReader {
       for (int i = 0; i < slaterArray.length; i++) {
         SlaterData sd = slaterArray[i];
         sd.coef *= scaleSlater(sd.x, sd.y, sd.z, sd.r, sd.zeta);
-        if (Logger.debugging) {
+        if (debugging) {
           Logger.debug("SlaterReader " + i + ": " + sd.iAtom + " " + sd.x + " " + sd.y +  " " + sd.z + " " + sd.r + " " + sd.zeta + " " + sd.coef);
         }
       }

@@ -213,7 +213,7 @@ public class JaguarReader extends MOReader {
       }
     moData.put("shells", sarray);
     moData.put("gaussians", garray);
-    if (Logger.debugging) {
+    if (debugging) {
       Logger.debug(sarray.size() + " slater shells read");
       Logger.debug(gaussianCount + " gaussian primitives read");
     }
@@ -287,7 +287,7 @@ public class JaguarReader extends MOReader {
       garray[i] = gdata.get(i);
     moData.put("shells", sarray);
     moData.put("gaussians", garray);
-    if (Logger.debugging) {
+    if (debugging) {
       Logger.debug(sarray.size() + " slater shells read");
       Logger.debug(gaussianCount + " gaussian primitives read");
     }

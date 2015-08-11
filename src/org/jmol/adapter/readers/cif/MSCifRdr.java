@@ -286,9 +286,9 @@ public class MSCifRdr extends MSRdr {
       cr.asc.newAtomSet();
     cr.parseLoopParametersFor(CifReader.FAMILY_ATOM, modulationFields);
     int tok;
-    if (cr.fieldOf[JANA_FWV_Q1_COEF] != NONE) {
+    if (cr.key2col[JANA_FWV_Q1_COEF] != NONE) {
       // disable x y z for atom_site_fourier if we have coefficients
-      cr.fieldOf[FWV_X] = cr.fieldOf[FWV_Y] = cr.fieldOf[FWV_Z] = NONE;
+      cr.key2col[FWV_X] = cr.key2col[FWV_Y] = cr.key2col[FWV_Z] = NONE;
     }
     while (cr.parser.getData()) {
       boolean ignore = false;
@@ -299,7 +299,7 @@ public class MSCifRdr extends MSRdr {
       double c = Double.NaN;
       double w = Double.NaN;
       String fid = null;
-      int n = cr.parser.getFieldCount();
+      int n = cr.parser.getColumnCount();
       for (int i = 0; i < n; ++i) {
         switch (tok = fieldProperty(cr, i)) {
         case WV_ID:
@@ -588,10 +588,10 @@ public class MSCifRdr extends MSRdr {
     double[][] a = m.getArray();
     String key;
     int p;
-    int n = cr.parser.getFieldCount();
+    int n = cr.parser.getColumnCount();
     for (; i < n; ++i) {
       if ((p = fieldProperty(cr, i)) < 0 
-          || !(key = cr.parser.getField(p)).contains(term))
+          || !(key = cr.parser.getColumnName(p)).contains(term))
         continue;
       String[] tokens = PT.split(key, "_");
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
@@ -603,9 +603,9 @@ public class MSCifRdr extends MSRdr {
   }
 
   private int fieldProperty(CifReader cr, int i) {
-    return ((field = cr.parser.getLoopData(i)).length() > 0 
+    return ((field = cr.parser.getColumnData(i)).length() > 0 
         && field.charAt(0) != '\0' ? 
-            cr.propertyOf[i] : NONE);
+            cr.col2key[i] : NONE);
   }
 
 }

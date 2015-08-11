@@ -137,7 +137,7 @@ public class GaussianReader extends MOReader {
       if (!doGetModel(++modelNumber, null))
         return checkLastModel();
       equivalentAtomSets++;
-      //if (Logger.debugging)
+      //if (debugging)
         Logger.info(asc.atomSetCount + " model " + modelNumber + " step " + stepNumber
             + " equivalentAtomSet " + equivalentAtomSets + " calculation "
             + calculationNumber + " scan point " + scanPoint + line);
@@ -405,7 +405,7 @@ public class GaussianReader extends MOReader {
           int nGaussians = parseIntStr(tokens[1]);
           slater[2] = gaussianCount; // or parseInt(tokens[7]) - 1
           slater[3] = nGaussians;
-          if (Logger.debugging)
+          if (debugging)
             Logger.debug("Slater " + shells.size() + " " + Escape.eAI(slater));
           shells.addLast(slater);
           gaussianCount += nGaussians;
@@ -413,7 +413,7 @@ public class GaussianReader extends MOReader {
             rd();
             line = PT.rep(line, "D ", "D+");
             tokens = getTokens();
-            if (Logger.debugging)
+            if (debugging)
               Logger.debug("Gaussians " + (i + 1) + " " + Escape.eAS(tokens, true));
             gdata.addLast(tokens);
           }

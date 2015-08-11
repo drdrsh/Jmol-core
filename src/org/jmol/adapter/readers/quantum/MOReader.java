@@ -178,7 +178,7 @@ abstract public class MOReader extends BasisFunctionReader {
         return;
       }
       atoms[i].partialCharge = charge;      
-      if (Logger.debugging)
+      if (debugging)
         Logger.debug("Atom " + i + " using NBOcharge: " + charge);
     }
     Logger.info("Using NBO charges for Model " + asc.atomSetCount);
@@ -315,7 +315,7 @@ abstract public class MOReader extends BasisFunctionReader {
       rd();
     while (rd() != null) {
       String[] tokens = getTokens();
-      if (Logger.debugging) {
+      if (debugging) {
         Logger.debug(tokens.length + " --- " + line);
       }
       if (line.indexOf("end") >= 0)

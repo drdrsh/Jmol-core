@@ -54,7 +54,7 @@ public class XmlMagResReader extends XmlReader {
 
   @Override
   public void processStartElement(String localName) {
-    if (Logger.debugging) 
+    if (debugging) 
       Logger.debug("xmlmagres: start " + localName);
 
     if (!parent.continuing)
@@ -75,7 +75,7 @@ public class XmlMagResReader extends XmlReader {
   @Override
   void processEndElement(String localName) {
 
-    if (Logger.debugging) 
+    if (debugging) 
       Logger.debug("xmlmagres: end " + localName);
 
     while (true) {

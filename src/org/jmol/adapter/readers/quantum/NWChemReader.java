@@ -939,7 +939,7 @@ public class NWChemReader extends MOReader {
 //      
 //      readLine();
 //      String[] tokens = getTokens();
-//      if (Logger.debugging) {
+//      if (debugging) {
 //        Logger.debug(tokens.length + " --- " + line);
 //      }
 //      nThisLine = tokens.length;

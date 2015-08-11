@@ -388,13 +388,13 @@ public class MoldenReader extends MopacSlaterReader {
         if (alphaBeta.length() > 0)
           mo.put("type", alphaBeta);
         setMO(mo);
-        if (Logger.debugging) {
+        if (debugging) {
           Logger.debug(coefs.length + " coefficients in MO " + orbitals.size());
         }
       }
       line = l;
     }
-    if (Logger.debugging)
+    if (debugging)
       Logger.debug("read " + orbitals.size() + " MOs");
     setMOs("eV");
     if (haveEnergy && doSort)

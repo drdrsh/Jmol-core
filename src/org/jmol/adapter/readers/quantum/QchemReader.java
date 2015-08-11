@@ -304,7 +304,7 @@ $end
       for (int j = 0; j < tokens.length; j++)
         gaussians[i][j] = parseFloatStr(tokens[j]);
     }
-    if (Logger.debugging) {
+    if (debugging) {
       Logger.debug(shellCount + " slater shells read");
       Logger.debug(gaussianCount + " gaussian primitives read");
     }

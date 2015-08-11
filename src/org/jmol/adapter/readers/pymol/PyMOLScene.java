@@ -267,7 +267,7 @@ class PyMOLScene implements JmolSceneGenerator {
   private static void listToSettings(Lst<Object> list,
                               Map<Integer, Lst<Object>> objectSettings) {
     if (list != null && list.size() != 0) {
-//      if (Logger.debugging)
+//      if (debugging)
 //        Logger.info(objectName + " local settings: " + list.toString());
       for (int i = list.size(); --i >= 0;) {
         Lst<Object> setting = (Lst<Object>) list.get(i);

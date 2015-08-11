@@ -411,7 +411,7 @@ public class GenNBOReader extends MOReader {
       if (gaussians[i][1] == 0)
         gaussians[i][1] = gaussians[i][5];
     }
-    if (Logger.debugging) {
+    if (debugging) {
       Logger.debug(shells.size() + " slater shells read");
       Logger.debug(gaussians.length + " gaussian primitives read");
     }

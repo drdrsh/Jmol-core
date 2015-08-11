@@ -325,7 +325,7 @@ public class CrystalReader extends AtomSetCollectionReader {
   private boolean setDirect() throws Exception {
     boolean isBohr = (line.indexOf("(BOHR") >= 0);
     directLatticeVectors = read3Vectors(isBohr);
-//    if (Logger.debugging) {
+//    if (debugging) {
 //      addJmolScript("draw va vector {0 0 0} "
 //          + Escape.eP(directLatticeVectors[0]) + " color red");
 //      if (!isPolymer) {
@@ -949,7 +949,7 @@ public class CrystalReader extends AtomSetCollectionReader {
       int frequencyCount = frequencies.length;
       for (int i = 0; i < frequencyCount; i++) {
         frequencies[i] = parseFloatStr(tokens[i]);
-        if (Logger.debugging)
+        if (debugging)
           Logger.debug((vibrationNumber + i) + " frequency=" + frequencies[i]);
       }
       boolean[] ignore = new boolean[frequencyCount];

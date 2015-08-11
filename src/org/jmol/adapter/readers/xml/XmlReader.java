@@ -128,10 +128,10 @@ public class XmlReader extends AtomSetCollectionReader {
         spf.setNamespaceAware(true);
         javax.xml.parsers.SAXParser saxParser = spf.newSAXParser();
         saxReader = saxParser.getXMLReader();
-        if (Logger.debugging)
+        if (debugging)
           Logger.debug("Using JAXP/SAX XML parser.");
       } catch (Exception e) {
-        if (Logger.debugging)
+        if (debugging)
           Logger.debug("Could not instantiate JAXP/SAX XML reader: "
             + ((parent == null ? this : parent).vwr.isJS? e : e.getMessage()));
       }
