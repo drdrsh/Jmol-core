@@ -906,7 +906,7 @@ public class ScriptCompiler extends ScriptTokenParser {
   private void getPrefixToken() {
     ident = script.substring(ichToken, ichToken + cchToken);
     identLC = ident.toLowerCase();
-    boolean isUserVar = isContextVariable(identLC);
+    boolean isUserVar = lastToken.tok != T.per && !isDotDot && isContextVariable(identLC);
     String myName = ident;//(isUserVar ? ident : null);
     String preserveCase = null;
     if (nTokens == 0)
