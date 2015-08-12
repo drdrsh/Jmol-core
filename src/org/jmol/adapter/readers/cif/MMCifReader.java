@@ -1002,6 +1002,7 @@ public class MMCifReader extends CifReader {
       String key2 = vwr.getChainID(getField(STRUCT_CONN_ASYM2), true) + getField(STRUCT_CONN_COMP2)
           + parseFloatStr(getField(STRUCT_CONN_SEQ2))
           + getField(STRUCT_CONN_ATOM2) + getField(STRUCT_CONN_ALT2);
+      System.out.println(type + "\t" + key1 + " " + key2);
       int order = getBondOrder(getField(STRUCT_CONN_ORDER));
       if (structConnMap == null)
         structConnMap = new Lst<Object[]>();
@@ -1035,8 +1036,6 @@ public class MMCifReader extends CifReader {
   private boolean processCompBondLoopBlock() throws Exception {
     doSetBonds = true;
     parseLoopParametersFor(FAMILY_COMPBOND, chemCompBondFields);
-    if (!checkAllFieldsPresent(chemCompBondFields, true))
-      return false;
     while (parser.getData()) {
       String comp = getField(CHEM_COMP_BOND_ID);
       String atom1 = getField(CHEM_COMP_BOND_ATOM_ID_1);

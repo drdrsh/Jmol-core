@@ -1347,7 +1347,7 @@ public class MathExt {
     // format("array", x)
     SV x1 = (args.length < 2 || intValue == T.format ? mp.getX() : null);
     String format = (args.length == 0 ? "%U" : args[0].tok == T.varray ? null : SV.sValue(args[0]));
-    if (args.length > 0 && x1 != null && format != null) {
+    if (!isLabel && args.length > 0 && x1 != null && format != null) {
       // x1.format(["energy", "pointGroup"]);
       // x1.format("%5.3f %5s", ["energy", "pointGroup"])
       // but not x1.format()
@@ -1386,7 +1386,7 @@ public class MathExt {
     
     BS bs = SV.getBitSet(x1, true);
     boolean asArray = T.tokAttr(intValue, T.minmaxmask); // "all"
-    return mp.addXObj(bs == null ? SV.sprintf(PT.formatCheck(format), x1) : e
+    return mp.addXObj(format == null ? "" : bs == null ? SV.sprintf(PT.formatCheck(format), x1) : e
         .getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,
             asArray));
     
@@ -1394,20 +1394,36 @@ public class MathExt {
 
   /**
    * [ {...},{...}... ] ==> [[...],[...]]
+   * 
    * @param listIn
    * @param formatList
    * @return sublist
    */
   private Lst<SV> getSublist(Lst<SV> listIn, Lst<SV> formatList) {
     Lst<SV> listOut = new Lst<SV>();
+    Map<String, SV> map;
+    SV v;
+    Lst<SV> list;
     for (int i = 0, n = listIn.size(); i < n; i++) {
-      Lst<SV> list = new Lst<SV>();
-      Map<String, SV> map = listIn.get(i).getMap();
-      for (int j = 0, n1 = formatList.size(); j < n1; j++) {
-        SV v = map.get(SV.sValue(formatList.get(j)));
-        list.addLast(v == null ? SV.newS("") : v);
+      SV element = listIn.get(i);
+      switch (element.tok) {
+      case T.hash:
+        map = element.getMap();
+        list = new Lst<SV>();
+        for (int j = 0, n1 = formatList.size(); j < n1; j++) {
+          v = map.get(SV.sValue(formatList.get(j)));
+          list.addLast(v == null ? SV.newS("") : v);
+        }
+        listOut.addLast(SV.getVariableList(list));
+        break;
+      case T.varray:
+        map = new Hashtable<String, SV>();
+        list = element.getList();
+        for (int j = 0, n1 = Math.min(list.size(), formatList.size()); j < n1; j++) {
+          map.put(SV.sValue(formatList.get(j)), list.get(j));
+        }
+        listOut.addLast(SV.getVariable(map));
       }
-      listOut.addLast(SV.getVariableList(list));
     }
     return listOut;
   }
