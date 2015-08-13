@@ -541,6 +541,8 @@ public class Labels extends AtomShape {
         return;
       offsets = AU.ensureLengthI(offsets, i + 1);
     }
+    if (offset == 0)
+      offset = JC.LABEL_DEFAULT_OFFSET;
     offsets[i] = (offsets[i] & JC.LABEL_FLAGS) | offset;
 
     text = getLabel(i);
