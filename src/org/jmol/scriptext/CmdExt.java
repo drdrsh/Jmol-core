@@ -3958,7 +3958,8 @@ public class CmdExt extends ScriptExt {
     String name = null;
     int len = 2;
     T token = getToken(1);
-    int tok = (token instanceof SV ? T.nada : token.tok);
+    // T.identifier for SV is set for variable names 
+    int tok = (token instanceof SV && token.tok != T.identifier ? T.nada : token.tok);
     if (tok == T.string) {
       token = T.getTokenFromName(str.toLowerCase());
       if (token != null)
