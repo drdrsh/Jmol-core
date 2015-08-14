@@ -38,6 +38,7 @@ import javajs.awt.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
+import javajs.util.PT;
 
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
@@ -366,7 +367,7 @@ public class Labels extends AtomShape {
       Map<Integer, Text> labels = (Map<Integer, Text>) value;
       for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
           .nextSetBit(i + 1))
-        setTextLabel(i, labels.get(Integer.valueOf(i)));
+        setTextLabel(i, labels.get(Integer.valueOf(i)), null);
       return;
     }
 
@@ -403,7 +404,7 @@ public class Labels extends AtomShape {
       text = Text.newLabel(vwr, Font.getFont3D(fid), strings[i],
           getColix2(i, atoms[i], false), getColix2(i, atoms[i], true), 0,
           scalePixelsPerMicron);
-      setTextLabel(i, text);
+      setTextLabel(i, text, formats[i]);
       if (text == null)
         return;
     }
@@ -424,12 +425,12 @@ public class Labels extends AtomShape {
         .getScalePixelsPerAngstrom(false) * 10000f : 0);
   }
   
-  private void setTextLabel(int i, Text t) {
+  private void setTextLabel(int i, Text t, String format) {
     if (t == null)
       return;
     String label = t.getText();
     Atom atom = atoms[i];
-    addString(atom, i, label, label);
+    addString(atom, i, label, format == null ? PT.rep(label, "%", "%%") : format);
     setShapeVisibility(atom, true);
     if (t.colix >= 0)
       setLabelColix(i, t.colix, PAL.UNKNOWN.id);
