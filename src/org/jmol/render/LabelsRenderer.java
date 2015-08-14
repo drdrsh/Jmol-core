@@ -143,8 +143,9 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       if (boxXY == null)
         labels.putBox(i, boxXY = new float[5]);
       text = renderLabelOrMeasure(text, label);
-      if (text != null)
+      if (text != null) {
         labels.putLabel(i, text);
+      }
       if (isAntialiased) {
         boxXY[0] /= 2;
         boxXY[1] /= 2;

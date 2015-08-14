@@ -35,10 +35,8 @@ import org.jmol.viewer.Viewer;
 
 public class Text extends Object2d {
 
-  private static boolean isEcho;
+  private boolean isEcho;
 
-  public String textUnformatted;
-  
   public boolean doFormatText;
 
   public String[] lines;
@@ -55,6 +53,9 @@ public class Text extends Object2d {
   private int textWidth;
   private int textHeight;
   private String text;
+  public String textUnformatted;
+  
+  
   public String getText() {
     return text;
   }
@@ -93,8 +94,8 @@ public class Text extends Object2d {
   public static Text newEcho(Viewer vwr, Font font, String target,
                       short colix, int valign, int align,
                       float scalePixelsPerMicron) {
-    isEcho = true;
     Text t = new Text(vwr);
+    t.isEcho = true;
     t.set(font, colix, align, false, scalePixelsPerMicron);
     t.target = target;
     t.valign = valign;
@@ -133,8 +134,7 @@ public class Text extends Object2d {
       text = null;
     if (this.text != null && this.text.equals(text))
       return;
-    this.text = text;
-    textUnformatted = text;
+    this.text = textUnformatted = text;
     doFormatText = (isEcho && text != null && (text.indexOf("%{") >= 0 || text
         .indexOf("@{") >= 0));
     if (!doFormatText)
@@ -204,12 +204,6 @@ public class Text extends Object2d {
     boxHeight = textHeight + (fontScale >= 2 ? 16 : 8);
   }
 
-  public void formatText() {
-    text = (isEcho ? Txt.formatText(vwr, textUnformatted) : textUnformatted);
-    recalc();
-  }
-
-
   public void setPosition(float scalePixelsPerMicron, float imageFontScaling,
                           boolean isAbsolute, float[] boxXY) {
     if (boxXY == null)
@@ -221,8 +215,10 @@ public class Text extends Object2d {
       setFontScale(scalePixelsPerMicron / this.scalePixelsPerMicron);
     else if (fontScale != imageFontScaling)
       setFontScale(imageFontScaling);
-    if (doFormatText)
-      formatText();
+    if (doFormatText) {
+      text = (isEcho ? Txt.formatText(vwr, textUnformatted) : textUnformatted);
+      recalc();
+    }
     float dx = offsetX * imageFontScaling;
     float dy = offsetY * imageFontScaling;
     xAdj = (fontScale >= 2 ? 8 : 4);

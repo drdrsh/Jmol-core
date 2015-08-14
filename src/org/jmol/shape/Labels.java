@@ -448,9 +448,11 @@ public class Labels extends AtomShape {
     doAll |= isNew || label == null;
     Text text = getLabel(i);
     if (isScaled && doAll) {
-      putLabel(i, Text.newLabel(vwr, null, label, C.INHERIT_ALL, (short) 0, 0, scalePixelsPerMicron));
+      text = Text.newLabel(vwr, null, label, C.INHERIT_ALL, (short) 0, 0, scalePixelsPerMicron);
+      putLabel(i, text);
     } else if (text != null && label != null) {
       text.setText(label);
+      text.textUnformatted = strLabel;
     }
     if (!doAll)
       return;
@@ -500,8 +502,10 @@ public class Labels extends AtomShape {
   public void putLabel(int i, Text text) {
     if (text == null)
       atomLabels.remove(Integer.valueOf(i));
-    else
+    else {
       atomLabels.put(Integer.valueOf(i), text);
+      text.textUnformatted = formats[i]; 
+    }
   }
 
   public Text getLabel(int i) {
