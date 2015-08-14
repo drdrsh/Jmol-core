@@ -55,8 +55,7 @@ public class Hover extends TextShape {
     Font font3d = vwr.gdata.getFont3DFSS(FONTFACE, FONTSTYLE, FONTSIZE);
     short bgcolix = C.getColixS("#FFFFC3"); // 255, 255, 195
     short colix = C.BLACK;
-    currentObject = hoverText = Text.newLabel(vwr, font3d, null, colix, bgcolix, JC.TEXT_ALIGN_LEFT, 0,
-        null);
+    currentObject = hoverText = Text.newLabel(vwr, font3d, null, colix, bgcolix, JC.TEXT_ALIGN_LEFT, 0);
     hoverText.adjustForWindow = true;
   }
 

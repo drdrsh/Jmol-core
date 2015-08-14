@@ -147,6 +147,8 @@ public class Echo extends TextShape {
             halign = JC.TEXT_ALIGN_CENTER;
           } else if ("bottom" == target) {
             valign = JC.ECHO_BOTTOM;
+          } else if ("error" == target) {
+            valign = JC.ECHO_TOP;
           }
           text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE,
               FONTSIZE), target, COLOR, valign, halign, 0);

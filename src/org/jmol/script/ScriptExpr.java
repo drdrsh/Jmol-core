@@ -2143,29 +2143,37 @@ abstract class ScriptExpr extends ScriptParam {
         }
         break;
       case T.bitset:
-        propertyName = sel.asString();
-        boolean isprop = propertyName.startsWith("property_");
-        int tok = (isprop ? -1 : T.getTokFromName(propertyName));
-        if (tok == 0) {
-          iToken = pt;
-          error(ERROR_cannotSet);
-        }
         bs = SV.getBitSet(t, true);
         int nAtoms = vwr.ms.ac;
         int nbs = bs.cardinality();
-        if (isprop) {
-          Object obj = (tv.tok == T.varray ? SV.flistValue(tv, tv.getList()
-              .size() == nbs ? nbs : nAtoms) : tv.asString());
-          vwr.setData(
-              propertyName,
-              new Object[] { propertyName, obj, BSUtil.copy(bs),
-                  Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN) }, nAtoms,
-              0, 0, tv.tok == T.varray ? Integer.MAX_VALUE : Integer.MIN_VALUE,
-              0);
+        propertyName = sel.asString();
+        int tok = T.getTokFromName(propertyName);
+        switch(tok) {
+        case T.nada:
+          if (propertyName.startsWith("property_")) {
+            Object obj = (tv.tok == T.varray ? SV.flistValue(tv, tv.getList()
+                .size() == nbs ? nbs : nAtoms) : tv.asString());
+            vwr.setData(
+                propertyName,
+                new Object[] { propertyName, obj, BSUtil.copy(bs),
+                    Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN) }, nAtoms,
+                0, 0, tv.tok == T.varray ? Integer.MAX_VALUE : Integer.MIN_VALUE,
+                0);
+            break;
+          }
+          iToken = pt;
+          error(ERROR_cannotSet);
+          break;
+        case T.label:
+        case T.format:
+          vwr.shm.loadShape(JC.SHAPE_LABELS);
+          //$FALL-THROUGH$
+        default:
+          setBitsetProperty(bs, tok, tv.asInt(),
+              tv.asFloat(), tv);
           break;
         }
-        setBitsetProperty(bs, tok, tv.asInt(),
-            tv.asFloat(), tv);
+        break;
       }
       if (selectOne)
         t.setSelectedValue(sel.intValue, Integer.MAX_VALUE, tv);

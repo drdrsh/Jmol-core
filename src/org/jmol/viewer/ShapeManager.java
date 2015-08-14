@@ -348,10 +348,8 @@ public class ShapeManager {
   }
 
   public void setAtomLabel(String strLabel, int i) {
-    if (shapes == null)
-      return;
-    loadShape(JC.SHAPE_LABELS);
-    shapes[JC.SHAPE_LABELS].setProperty("label:"+strLabel, Integer.valueOf(i), null);
+    if (shapes != null)
+      shapes[JC.SHAPE_LABELS].setProperty("label:"+strLabel, Integer.valueOf(i), null);
   }
   
   /**

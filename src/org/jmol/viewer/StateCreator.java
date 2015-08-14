@@ -1188,14 +1188,14 @@ public class StateCreator extends JmolStateCreator {
       for (int i = l.bsSizeSet.nextSetBit(0); i >= 0; i = l.bsSizeSet
           .nextSetBit(i + 1)) {
         Text t = l.getLabel(i);
-        String cmd = null;
-        if (t != null) {
-          cmd = "label " + PT.esc(t.textUnformatted);
+        String cmd = "label ";
+        if (t == null) {
+          cmd += PT.esc(l.formats[i]);
+        } else {
+          cmd += PT.esc(t.textUnformatted);
           if (t.pymolOffset != null)
             cmd += ";set labelOffset " + Escape.eAF(t.pymolOffset);
         }
-        if (cmd == null)
-          cmd = "label " + PT.esc(l.formats[i]);
         BSUtil.setMapBitSet(temp, i, i, cmd);
         if (l.bsColixSet != null && l.bsColixSet.get(i))
           BSUtil.setMapBitSet(temp2, i, i, Shape.getColorCommand("label",

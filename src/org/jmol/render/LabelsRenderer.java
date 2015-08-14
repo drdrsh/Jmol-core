@@ -208,7 +208,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         return null;
       }
       text = Text.newLabel(vwr, font3d, label, labelColix, bgcolix, textAlign,
-          0, null);
+          0);
       text.atomX = atomPt.sX; // just for pointer
       text.atomY = atomPt.sY;
       text.atomZ = zSlab;

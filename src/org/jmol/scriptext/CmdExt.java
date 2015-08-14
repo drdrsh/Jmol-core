@@ -1567,7 +1567,7 @@ public class CmdExt extends ScriptExt {
       Text text = null;
       if (font != null)
         text = ((Text) Interface.getInterface("org.jmol.modelset.Text", vwr, "script")).newLabel(
-            vwr, font, "", colix, (short) 0, 0, 0, null);
+            vwr, font, "", colix, (short) 0, 0, 0);
       if (text != null)
         text.pymolOffset = offset;
       setShapeProperty(

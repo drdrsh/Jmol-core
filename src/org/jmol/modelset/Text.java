@@ -81,10 +81,10 @@ public class Text extends Object2d {
   }
 
   static public Text newLabel(Viewer vwr, Font font, String text,
-                              short colix, short bgcolix, int align, float scalePixelsPerMicron, float[] value) {
+                              short colix, short bgcolix, int align, float scalePixelsPerMicron) {
     // for labels and hover
     Text t = new Text(vwr);
-    t.set(font, colix, align, true, scalePixelsPerMicron, value);
+    t.set(font, colix, align, true, scalePixelsPerMicron);
     t.setText(text);
     t.bgcolix = bgcolix;
     return t;
@@ -95,10 +95,8 @@ public class Text extends Object2d {
                       float scalePixelsPerMicron) {
     isEcho = true;
     Text t = new Text(vwr);
-    t.set(font, colix, align, false, scalePixelsPerMicron, null);
+    t.set(font, colix, align, false, scalePixelsPerMicron);
     t.target = target;
-    if (target.equals("error"))
-      valign = JC.ECHO_TOP;
     t.valign = valign;
     t.z = 2;
     t.zSlab = Integer.MIN_VALUE;
@@ -106,12 +104,11 @@ public class Text extends Object2d {
   }
 
   private void set(Font font, short colix, int align, boolean isLabelOrHover,
-                   float scalePixelsPerMicron, float[] value) {
+                   float scalePixelsPerMicron) {
     this.scalePixelsPerMicron = scalePixelsPerMicron;
     this.isLabelOrHover = isLabelOrHover;
     this.colix = colix;
     this.align = align;
-    this.pymolOffset = value;
     this.setFont(font, isLabelOrHover);
   }
 
