@@ -902,8 +902,6 @@ public class ScriptMathProcessor {
     if (x2 == T.tokenArrayOpen)
       return false;
 
-    //unnecessary  -- getX() does this. x2 = selectX(x2);
-
     // unary:
 
     switch (op.tok) {
@@ -992,6 +990,8 @@ public class ScriptMathProcessor {
           break;
         }
       switch (iv) {
+      case T.array:
+        return addX(x2.toArray());
       case T.identifier:
         // special flag to get all properties.
         return (x2.tok == T.bitset && (chk ? addXStr("") : getAllProperties(x2,

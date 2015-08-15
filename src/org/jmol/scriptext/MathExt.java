@@ -116,7 +116,7 @@ public class MathExt {
       return evaluateList(mp, op.intValue, args);
     case T.array:
     case T.leftsquare:
-      return evaluateArray(mp, op.intValue, args);
+      return evaluateArray(mp, args);
     case T.axisangle:
     case T.quaternion:
       return evaluateQuaternion(mp, args, tok);
@@ -212,9 +212,7 @@ public class MathExt {
     return false;
   }
 
-  private boolean evaluateArray(ScriptMathProcessor mp, int tok, SV[] args) throws ScriptException {
-    if (args.length == 0 && tok != Integer.MAX_VALUE)
-      return (mp.getXTok() == T.varray ? (mp.wasX = true) : mp.addX(mp.getX().toArray()));
+  private boolean evaluateArray(ScriptMathProcessor mp, SV[] args) {
     SV[] a = new SV[args.length];    
     for (int i = a.length; --i >= 0;)
       a[i] = SV.newT(args[i]);
