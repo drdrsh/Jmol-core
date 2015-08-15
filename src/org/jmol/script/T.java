@@ -704,7 +704,7 @@ public class T {
   
   public final static int in                = 1 | 0 << 9 | mathfunc | mathproperty;
   public final static int angle            = 1 | 0 << 9 | mathfunc;
-  public final static int array            = 2 | 0 << 9 | mathfunc;
+  public final static int array            = 2 | 0 << 9 | mathfunc | mathproperty;
   public final static int axisangle        = 3 | 0 << 9 | mathfunc;
   public final static int bin              = 3 | 0 << 9 | mathfunc | mathproperty;
   public final static int color            = 4 | 0 << 9 | mathfunc | intproperty | scriptCommand | deprecatedparam | settable;

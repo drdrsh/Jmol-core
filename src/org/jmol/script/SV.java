@@ -1519,8 +1519,9 @@ public class SV extends T implements JSONEncodable {
     return list;
   }
 
-  public void toArray() {
+  public SV toArray() {
     int dim;
+    Lst<SV> o2;
     M3 m3 = null;
     M4 m4 = null;
     switch (tok) {
@@ -1532,11 +1533,14 @@ public class SV extends T implements JSONEncodable {
       m4 = (M4) value;
       dim = 4;
       break;
+    case varray:
+      return this;
     default:
-      return;
+      o2 = new Lst<SV>();
+      o2.addLast(this);
+      return newV(varray, o2);
     }
-    tok = varray;
-    Lst<SV> o2 = new  Lst<SV>(); //dim;
+    o2 = new  Lst<SV>();
     for (int i = 0; i < dim; i++) {
       float[] a = new float[dim];
       if (m3 == null)
@@ -1545,7 +1549,7 @@ public class SV extends T implements JSONEncodable {
         m3.getRow(i, a);
       o2.addLast(getVariableAF(a));
     }
-    value = o2;
+    return newV(varray, o2);
   }
 
   @SuppressWarnings("unchecked")

@@ -823,7 +823,7 @@ public class ScriptMathProcessor {
     return v;
   }
 
-  int getXTok() {
+  public int getXTok() {
     return  (xPt < 0 ? T.nada : xStack[xPt].tok);
   }
 

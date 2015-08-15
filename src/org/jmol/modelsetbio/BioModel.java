@@ -789,11 +789,11 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
   /**
    * @param conformationIndex0
    * @param doSet 
-   * @param bsConformation
+   * @param bsAtoms
    * @param bsRet
    * @return true;
    */
-  public boolean getConformation(int conformationIndex0, boolean doSet, BS bsConformation, BS bsRet) {
+  public boolean getConformation(int conformationIndex0, boolean doSet, BS bsAtoms, BS bsRet) {
     if (conformationIndex0 >= 0) {
       int nAltLocs = altLocCount;
       if (nAltLocs > 0) {
@@ -802,7 +802,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
         char ch = '\0';
         int conformationIndex = conformationIndex0;
         BS bsFound = new BS();
-        for (int i = bsConformation.nextSetBit(0); i >= 0; i = bsConformation.nextSetBit(i + 1)) {
+        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
             Atom atom = atoms[i];
             char altloc = atom.altloc;
             // ignore (include) atoms that have no designation
@@ -821,15 +821,15 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
               bsFound.set(altloc);
             }
             if (conformationIndex >= 0 || altloc != ch)
-              bsConformation.clear(i);
+              bsAtoms.clear(i);
           }
       }
     }
-    if (bsConformation.nextSetBit(0) >= 0) {
-      bsRet.or(bsConformation);      
+    if (bsAtoms.nextSetBit(0) >= 0) {
+      bsRet.or(bsAtoms);      
       if (doSet)
         for (int j = bioPolymerCount; --j >= 0;)
-          bioPolymers[j].setConformation(bsConformation);
+          bioPolymers[j].setConformation(bsAtoms);
     }
     return true;
   }

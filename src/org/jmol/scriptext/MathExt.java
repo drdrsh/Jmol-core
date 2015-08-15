@@ -116,7 +116,7 @@ public class MathExt {
       return evaluateList(mp, op.intValue, args);
     case T.array:
     case T.leftsquare:
-      return evaluateArray(mp, args, false);
+      return evaluateArray(mp, op.intValue, args);
     case T.axisangle:
     case T.quaternion:
       return evaluateQuaternion(mp, args, tok);
@@ -212,32 +212,10 @@ public class MathExt {
     return false;
   }
 
-  private boolean evaluateArray(ScriptMathProcessor mp, SV[] args,
-                                boolean allowMatrix) {
-    int len = args.length;
-    if (allowMatrix && (len == 4 || len == 3)) {
-      boolean isMatrix = true;
-      for (int i = 0; i < len && isMatrix; i++)
-        isMatrix = (args[i].tok == T.varray && args[i].getList().size() == len);
-      if (isMatrix) {
-        float[] m = new float[len * len];
-        int pt = 0;
-        for (int i = 0; i < len && isMatrix; i++) {
-          Lst<SV> list = args[i].getList();
-          for (int j = 0; j < len; j++) {
-            float x = SV.fValue(list.get(j));
-            if (Float.isNaN(x)) {
-              isMatrix = false;
-              break;
-            }
-            m[pt++] = x;
-          }
-        }
-        if (isMatrix)
-          return (len == 3 ? mp.addXM3(M3.newA9(m)) : mp.addXM4(M4.newA16(m)));
-      }
-    }
-    SV[] a = new SV[args.length];
+  private boolean evaluateArray(ScriptMathProcessor mp, int tok, SV[] args) throws ScriptException {
+    if (args.length == 0 && tok != Integer.MAX_VALUE)
+      return (mp.getXTok() == T.varray ? (mp.wasX = true) : mp.addX(mp.getX().toArray()));
+    SV[] a = new SV[args.length];    
     for (int i = a.length; --i >= 0;)
       a[i] = SV.newT(args[i]);
     return mp.addXAV(a);
@@ -2971,16 +2949,19 @@ public class MathExt {
       } else if (floatOrSVArray instanceof Lst<?>) {
         sv = (Lst<SV>) floatOrSVArray;
         ndata = sv.size();
-        if (ndata == 0)
-          break;
-        SV sv0 = sv.get(0);
-        if (sv0.tok == T.string && ((String) sv0.value).startsWith("{")) {
-          Object pt = SV.ptValue(sv0);
-          if (pt instanceof P3)
-            return getMinMaxPoint(sv, tok);
-          if (pt instanceof P4)
-            return getMinMaxQuaternion(sv, tok);
-          break;
+        if (ndata == 0) {
+          if (tok != T.pivot)
+            break;
+        } else {
+          SV sv0 = sv.get(0);
+          if (sv0.tok == T.string && ((String) sv0.value).startsWith("{")) {
+            Object pt = SV.ptValue(sv0);
+            if (pt instanceof P3)
+              return getMinMaxPoint(sv, tok);
+            if (pt instanceof P4)
+              return getMinMaxQuaternion(sv, tok);
+            break;
+          }
         }
       } else {
         break;
@@ -2990,7 +2971,7 @@ public class MathExt {
       boolean isMin = false;
       switch (tok) {
       case T.pivot:
-        htPivot = new Hashtable<String,Integer>();
+        htPivot = new Hashtable<String, Integer>();
         sum = minMax = 0;
         break;
       case T.min:
@@ -3025,14 +3006,15 @@ public class MathExt {
           sum += v;
           break;
         case T.pivot:
-          isInt &= (svi.tok == T.integer); 
+          isInt &= (svi.tok == T.integer);
           String key = svi.asString();
           Integer ii = htPivot.get(key);
-          htPivot.put(key, (ii == null ? new Integer(1) : new Integer(ii.intValue() + 1)));
+          htPivot.put(key,
+              (ii == null ? new Integer(1) : new Integer(ii.intValue() + 1)));
           break;
         case T.min:
         case T.max:
-          isInt &= (svi.tok == T.integer); 
+          isInt &= (svi.tok == T.integer);
           if (isMin == (v < sum)) {
             sum = v;
             if (isInt)

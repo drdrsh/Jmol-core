@@ -386,9 +386,7 @@ public class IsoExt extends ScriptExt {
         switch (tokAt(i + 1)) {
         case T.matrix3f:
         case T.matrix4f:
-          SV sv = SV.newT(getToken(++i));
-          sv.toArray();
-          vpolygons = sv.getList();
+          vpolygons = SV.newT(getToken(++i)).toArray().getList();
           nTriangles = vpolygons.size();
           break;
         case T.varray:

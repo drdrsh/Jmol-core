@@ -3836,32 +3836,35 @@ public class ModelSet extends BondCollection {
     return v.toArray(new Quat[v.size()]);
   }
 
-  public BS getConformation(int modelIndex, int conformationIndex, boolean doSet, BS bsSelected) {
+  public BS getConformation(int modelIndex, int conformationIndex,
+                            boolean doSet, BS bsSelected) {
     BS bs = new BS();
-    BS bsAtoms;
-    for (int i = mc; --i >= 0;)
-      if (i == modelIndex || modelIndex < 0) {
-        Model m = am[i];
-        if (conformationIndex >= m.altLocCount)
+    if (conformationIndex >= 0)
+      for (int i = mc; --i >= 0;) {
+        if (i != modelIndex && modelIndex >= 0)
           continue;
-        bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+        Model m = am[i];
+        BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
         if (bsSelected != null)
           bsAtoms.and(bsSelected);
         if (bsAtoms.nextSetBit(0) < 0)
           continue;
+        if (conformationIndex >= m.altLocCount) {
+          if (conformationIndex == 0)
+            bs.or(bsAtoms);
+          continue;
+        }
         if (am[i].isBioModel
             && ((BioModel) am[i]).getConformation(conformationIndex, doSet,
                 bsAtoms, bs))
           continue;
-        if (conformationIndex >= 0) {
-          int nAltLocs = getAltLocCountInModel(i);
-          String altLocs = getAltLocListInModel(i);
-          BS bsTemp = new BS();
-          for (int c = nAltLocs; --c >= 0;)
-            if (c != conformationIndex)
-              bsAtoms.andNot(getAtomBitsMDa(T.spec_alternate,
-                  altLocs.substring(c, c + 1), bsTemp));
-        }
+        int nAltLocs = getAltLocCountInModel(i);
+        String altLocs = getAltLocListInModel(i);
+        BS bsTemp = new BS();
+        for (int c = nAltLocs; --c >= 0;)
+          if (c != conformationIndex)
+            bsAtoms.andNot(getAtomBitsMDa(T.spec_alternate,
+                altLocs.substring(c, c + 1), bsTemp));
         if (bsAtoms.nextSetBit(0) >= 0)
           bs.or(bsAtoms);
       }
