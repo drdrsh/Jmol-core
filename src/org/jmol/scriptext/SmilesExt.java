@@ -213,11 +213,11 @@ public class SmilesExt {
               bs.set(a[k]);
           }
           if (!isSmarts)
-            return Integer.valueOf(bs.cardinality());
+            return new int[bs.cardinality()];
           int[] iarray = new int[bs.cardinality()];
           int pt = 0;
           for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-            iarray[pt++] = i + 1;
+            iarray[pt++] = i;
           return iarray;
         }
       } catch (Exception ex) {

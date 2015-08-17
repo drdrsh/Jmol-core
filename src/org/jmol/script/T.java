@@ -758,7 +758,6 @@ public class T {
   // two parameters and it CAN be a dot-function (but not both together)
   
   public final static int div          = 0 | 1 << 9 | mathfunc | mathproperty;
-  public final static int dot          = 1 | 1 << 9 | mathfunc | mathproperty;
   public final static int mul          = 3 | 1 << 9 | mathfunc | mathproperty;
   public final static int mul3         = 4 | 1 << 9 | mathfunc | mathproperty;
   public final static int sub          = 7 | 1 << 9 | mathfunc | mathproperty;
@@ -769,7 +768,6 @@ public class T {
 
   // xxx(a,b)
   
-  public final static int cross = 1 | 2 << 9 | mathfunc;
   public final static int load         = 3 | 2 << 9 | mathfunc | scriptCommand;
   public final static int script       = 5 | 2 << 9 | mathfunc | scriptCommand;
   public final static int substructure = 6 | 2 << 9 | mathfunc | intproperty | strproperty;
@@ -787,10 +785,12 @@ public class T {
   //so it can be a math property and it can have up to two parameters
   
   public final static int add          = 1 | 2 << 9 | mathfunc | mathproperty;
-  public final static int distance     = 2 | 2 << 9 | mathfunc | mathproperty;
-  public final static int push         = 3 | 2 << 9 | mathfunc | mathproperty | scriptCommand | noArgs; //internal only;
-  public final static int join         = 4 | 2 << 9 | mathfunc | mathproperty;
-  public final static int split        = 5 | 2 << 9 | mathfunc | mathproperty;
+  public final static int cross        = 2 | 2 << 9 | mathfunc | mathproperty;
+  public final static int distance     = 3 | 2 << 9 | mathfunc | mathproperty;
+  public final static int dot          = 4 | 2 << 9 | mathfunc | mathproperty;
+  public final static int push         = 5 | 2 << 9 | mathfunc | mathproperty | scriptCommand | noArgs; //internal only;
+  public final static int join         = 6 | 2 << 9 | mathfunc | mathproperty;
+  public final static int split        = 7 | 2 << 9 | mathfunc | mathproperty;
   
   // xxx(a,b,c)
   

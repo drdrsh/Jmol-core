@@ -451,6 +451,7 @@ abstract class ScriptExpr extends ScriptParam {
           case T.size:
           case T.keys:
           case T.type:
+          case T.array:
             if (tok == T.per)
               break;
             //$FALL-THROUGH$

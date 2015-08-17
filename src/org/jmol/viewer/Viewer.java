@@ -1345,6 +1345,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   private void clearAtomSets() {
     slm.setSelectionSubset(null);
     definedAtomSets.clear();
+    if (haveDisplay)
+      acm.exitMeasurementMode("clearAtomSets");
   }
 
   public BS getDefinedAtomSet(String name) {

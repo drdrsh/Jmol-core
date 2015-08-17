@@ -1801,6 +1801,7 @@ public class SmilesSearch extends JmolMolecule {
       atom.residueChar = sAtom.residueChar;
       atom.isBioAtom = sAtom.isBioAtom;
       atom.isLeadAtom = sAtom.isLeadAtom;
+      atom.mapIndex = i;
       atom.setAtomicMass(sAtom.getAtomicMass());
       //System.out.println(atom);
       // we pass on the aromatic flag because
@@ -1824,12 +1825,14 @@ public class SmilesSearch extends JmolMolecule {
       while (--n >= 0) {
         SmilesAtom atomH = atoms[ptAtom] = new SmilesAtom().setAll(0, ptAtom, 0,
             1, 0);
+        atomH.mapIndex = -i - 1;
         //System.out.println(atomH);
         ptAtom++;
         atomH.setBonds(new SmilesBond[1]);
         SmilesBond b = new SmilesBond(atom, atomH,
             Edge.BOND_COVALENT_SINGLE, false);
-        Logger.info("" + b);
+        if (Logger.debugging)
+          Logger.info("" + b);
       }
     }
 

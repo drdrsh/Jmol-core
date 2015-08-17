@@ -137,15 +137,14 @@ public class MathExt {
       return evaluateConnected(mp, args, tok);
     case T.contact:
       return evaluateContact(mp, args);
-    case T.cross:
-      return evaluateCross(mp, args);
     case T.data:
       return evaluateData(mp, args);
     case T.dot:
-      return evaluateDotDist(mp, args, 0);
+    case T.cross:
+      return evaluateDotDist(mp, args, tok, op.intValue);
     case T.distance:
       if (op.tok == T.propselector)
-        return evaluateDotDist(mp, args, op.intValue);
+        return evaluateDotDist(mp, args, tok, op.intValue);
       //$FALL-THROUGH$
     case T.angle:
     case T.measure:
@@ -701,19 +700,6 @@ public class MathExt {
     return mp.addXBs(bsB);
   }
 
-  private boolean evaluateCross(ScriptMathProcessor mp, SV[] args) {
-    if (args.length != 2)
-      return false;
-    SV x1 = args[0];
-    SV x2 = args[1];
-    if (x1.tok != T.point3f || x2.tok != T.point3f)
-      return false;
-    V3 a = V3.newV((P3) x1.value);
-    V3 b = V3.newV((P3) x2.value);
-    a.cross(a, b);
-    return mp.addXPt(P3.newP(a));
-  }
-
   private boolean evaluateData(ScriptMathProcessor mp, SV[] args) {
 
     // x = data("somedataname") # the data
@@ -825,41 +811,51 @@ public class MathExt {
    * 
    * @param mp
    * @param args
-   * @param intValue
-   *        optional .min .max
+   * @param tok
+   * @param op
+   *        optional .min .max for distance
    * @return true if successful
    * @throws ScriptException
    */
 
-  private boolean evaluateDotDist(ScriptMathProcessor mp, SV[] args,
-                                  int intValue) throws ScriptException {
-    // distance and dot
-
-    boolean isDist = (intValue != 0);
+  private boolean evaluateDotDist(ScriptMathProcessor mp, SV[] args, int tok,
+                                  int op) throws ScriptException {
+    boolean isDist = (tok == T.distance);
+    SV x1, x2, x3 = null;
     switch (args.length) {
-    case 1:
-      break;
     case 2:
-      if (isDist)
+      if (op == Integer.MAX_VALUE) {
+        x1 = args[0];
+        x2 = args[1];
         break;
+      }
+      x3 = args[1];
       //$FALL-THROUGH$
+    case 1:
+      x1 = mp.getX();
+      x2 = args[0];
+      break;
     default:
       return false;
     }
-    SV x1 = mp.getX();
-    SV x2 = args[0];
+
+    if (tok == T.cross) {
+      P3 a = (x1.tok == T.point3f ? (P3) x1.value : P3.newP(mp.ptValue(x1)));
+      a.cross(a, mp.ptValue(x2));
+      return mp.addXPt(a);
+    }
+
     P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2));
     P4 plane2 = mp.planeValue(x2);
     if (isDist) {
-      int minMax = intValue & T.minmaxmask;
+      int minMax = (op == Integer.MIN_VALUE ? 0 : op & T.minmaxmask);
       boolean isMinMax = (minMax == T.min || minMax == T.max);
       boolean isAll = minMax == T.minmaxmask;
       switch (x1.tok) {
       case T.bitset:
         BS bs = SV.bsSelectVar(x1);
         BS bs2 = null;
-        boolean returnAtom = (isMinMax && args.length == 2 && args[1]
-            .asBoolean());
+        boolean returnAtom = (isMinMax && x3 != null && x3.asBoolean());
         switch (x2.tok) {
         case T.bitset:
           bs2 = (x2.tok == T.bitset ? SV.bsSelectVar(x2) : null);
@@ -871,7 +867,7 @@ public class MathExt {
             int iMinMax = Integer.MAX_VALUE;
             for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
               float d = (bs2 == null ? atoms[i].distanceSquared(pt2)
-                  : ((Float) e.getBitsetProperty(bs2, intValue, atoms[i],
+                  : ((Float) e.getBitsetProperty(bs2, op, atoms[i],
                       plane2, x1.value, null, false, x1.index, false))
                       .floatValue());
               if (minMax == T.min ? d >= dMinMax : d <= dMinMax)
@@ -902,11 +898,11 @@ public class MathExt {
             float[] data = new float[bs.cardinality()];
             for (int i = bs.nextSetBit(0), p = 0; i >= 0; i = bs
                 .nextSetBit(i + 1))
-              data[p++] = ((Float) e.getBitsetProperty(bs2, intValue, atoms[i],
+              data[p++] = ((Float) e.getBitsetProperty(bs2, op, atoms[i],
                   plane2, x1.value, null, false, x1.index, false)).floatValue();
             return mp.addXAF(data);
           }
-          return mp.addXObj(e.getBitsetProperty(bs, intValue, pt2, plane2,
+          return mp.addXObj(e.getBitsetProperty(bs, op, pt2, plane2,
               x1.value, null, false, x1.index, false));
         }
       }
@@ -916,12 +912,12 @@ public class MathExt {
     float f = Float.NaN;
     try {
       if (isDist) {
-        if (plane2 != null && args.length == 2) 
-          f = Measure.directedDistanceToPlane(pt1, plane2, SV.ptValue(args[1]));
-         else 
+        if (plane2 != null && x3 != null)
+          f = Measure.directedDistanceToPlane(pt1, plane2, SV.ptValue(x3));
+        else
           f = (plane1 == null ? (plane2 == null ? pt2.distance(pt1) : Measure
-            .distanceToPlane(plane2, pt1)) : Measure.distanceToPlane(plane1,
-            pt2));
+              .distanceToPlane(plane2, pt1)) : Measure.distanceToPlane(plane1,
+              pt2));
       } else {
         if (plane1 != null && plane2 != null) {
           // q1.dot(q2) assume quaternions
@@ -1021,7 +1017,7 @@ public class MathExt {
         && args[1].tok != T.off ? SV.sValue(args[1]) : "");
     boolean isSequence = !isList && sFind.equalsIgnoreCase("SEQUENCE");
     boolean isSmiles = !isList && sFind.equalsIgnoreCase("SMILES");
-    boolean isSearch = !isList && sFind.equalsIgnoreCase("SMARTS");
+    boolean isSMARTS = !isList && sFind.equalsIgnoreCase("SMARTS");
     boolean isChemical = !isList && sFind.equalsIgnoreCase("CHEMICAL");
     boolean isMF = !isList && sFind.equalsIgnoreCase("MF");
     boolean isCF = !isList && sFind.equalsIgnoreCase("CELLFORMULA");
@@ -1038,8 +1034,8 @@ public class MathExt {
           data = PT.rep(PT.rep(data, "InChI=", ""), "InChIKey=", "");
         return mp.addXStr(data);
       }
-      if (isSmiles || isSearch || x1.tok == T.bitset) {
-        int iPt = (isSmiles || isSearch ? 2 : 1);
+      if (isSmiles || isSMARTS || x1.tok == T.bitset) {
+        int iPt = (isSmiles || isSMARTS ? 2 : 1);
         BS bs2 = (iPt < args.length && args[iPt].tok == T.bitset ? (BS) args[iPt++].value
             : null);
         boolean asBonds = ("bonds".equalsIgnoreCase(SV
@@ -1052,13 +1048,30 @@ public class MathExt {
           if (bs2 != null)
             return false;
           if (flags.equalsIgnoreCase("mf")) {
-            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSearch);
+            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSMARTS);
           } else {
-            boolean firstMatchOnly = (args.length < 4 || !isON);
-            if (args.length > 3)
-              isAll = (args[2].tok == T.on);
-            ret = e.getSmilesExt().getSmilesMatches(flags, smiles, null, null,
-                isSearch, !isAll, firstMatchOnly);
+            String pattern = flags;
+            // "SMARTS",flags,asMap, allMappings
+            boolean allMappings = true;
+            boolean asMap = false;
+            switch (args.length) {
+            case 4:
+              allMappings = SV.bValue(args[3]);
+              //$FALL-THROUGH$
+            case 3:
+              asMap = SV.bValue(args[2]);
+              break;
+            }
+            try {          
+              ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null, null,
+                isSMARTS, !asMap, !allMappings);
+            } catch (Exception e) {
+              return mp.addXInt(-1);
+            }
+            if (!asMap && (!allMappings || !isSMARTS)) {
+              int len = ((int[]) ret).length;
+              return mp.addXInt(!allMappings && len > 0 ? 1 : len);
+            }
           }
           break;
         case T.bitset:
@@ -1074,7 +1087,7 @@ public class MathExt {
                 JC.SMILES_BIO
                     | (isAll ? JC.SMILES_BIO_ALLOW_UNMACHED_RINGS
                         | JC.SMILES_BIO_CROSSLINK : 0)));
-          if (isSmiles || isSearch)
+          if (isSmiles || isSMARTS)
             sFind = flags;
           BS bsMatch3D = bs2;
           if (asBonds) {
@@ -1243,8 +1256,6 @@ public class MathExt {
                                       boolean isAuxiliary, boolean isAtomProperty)
       throws ScriptException {
     int pt = 0;
-    if (isAuxiliary && args.length != 1)
-      return false;
     int tok = (args.length == 0 ? T.nada : args[0].tok);
     if (args.length == 2 && (tok == T.varray || tok == T.hash || tok == T.context)) {
       return mp.addXObj(vwr.extractProperty(args[0].value, args[1].value.toString(), -1));
@@ -1264,7 +1275,7 @@ public class MathExt {
       if (x.tok != T.bitset)
           return mp.addXObj(vwr.extractProperty(x, propertyName, -1));
     }
-    if (isAtomProperty && !isAuxiliary && !lc.startsWith("bondinfo") && !lc.startsWith("atominfo"))
+    if (isAtomProperty && !lc.startsWith("bondinfo") && !lc.startsWith("atominfo"))
       propertyName = "atomInfo." + propertyName;
     Object propertyValue = "";
     if (propertyName.equalsIgnoreCase("fileContents") && args.length > 2) {
@@ -1296,11 +1307,10 @@ public class MathExt {
         return mp.addXStr("");
       propertyValue = bs;
     }
-    if (isAuxiliary)
+    if (isAuxiliary && !isAtomProperty)
       propertyName = "auxiliaryInfo.models." + propertyName;
-
     propertyName = PT.rep(propertyName, ".[", "[");  
-    Object property = vwr.getProperty(null, propertyName, x == null ? propertyValue : x);
+    Object property = vwr.getProperty(null, propertyName, propertyValue);
     if (pt < args.length)
       property = vwr.extractProperty(property, args, pt);
     return mp.addXObj(isJSON ? "{" + PT.toJSON("value", property) + "}" : SV
@@ -1330,6 +1340,8 @@ public class MathExt {
       if (args.length == 2) {
         Lst<SV> listIn = x1.getList();
         Lst<SV> formatList = args[1].getList();
+        if (listIn == null  || formatList == null)
+          return false;
         x1 = SV.getVariableList(getSublist(listIn, formatList));
       }
       args = new SV[] {args[0], x1};

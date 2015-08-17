@@ -846,8 +846,8 @@ public class ActionManager implements EventManager {
     if (vwr.tm.stereoDoubleDTI)
       x = x << 1;
     setCurrent(time, x, y, 0);
-    //if (isExit)
-      //exitMeasurementMode("mouseExit");
+    if (isExit)
+      exitMeasurementMode("mouseExit"); //otherwise pending measurement can be left over.
   }
 
   private int pressAction;
@@ -925,7 +925,6 @@ public class ActionManager implements EventManager {
       //if (false && apm != PICKING_ASSIGN_ATOM 
       //    && apm != ACTION_pickMeasure
       //    && apm != PICKING_MEASURE_DISTANCE)
-      //  exitMeasurementMode(null);
       dragGesture.add(dragAction, x, y, time);
       checkDragWheelAction(dragAction, x, y, deltaX, deltaY, time,
           Event.DRAGGED);
@@ -1640,7 +1639,7 @@ public class ActionManager implements EventManager {
     measurementQueued = getMP();
   }
 
-  private void exitMeasurementMode(String refreshWhy) {
+  void exitMeasurementMode(String refreshWhy) {
     if (mp == null)
       return;
     vwr.setPendingMeasurement(mp = null);

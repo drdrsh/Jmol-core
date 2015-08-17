@@ -33,6 +33,7 @@ import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.java.BS;
 import org.jmol.util.BNode;
 import org.jmol.util.BSUtil;
+import org.jmol.util.Logger;
 import org.jmol.util.Node;
 import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
@@ -215,9 +216,15 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     SmilesSearch search = SmilesParser.getMolecule(smiles, false);
     // boolean isSmarts,  boolean matchAllAtoms, boolean firstMatchOnly
 
-    return (int[][]) findPriv(pattern, search, 
+    int[][] array = (int[][]) findPriv(pattern, search, 
         (isSmarts? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL)
         | (firstMatchOnly ? JC.SMILES_RETURN_FIRST : 0) | SMILES_MODE_MAP);
+    for (int i = array.length; --i >= 0;) {
+      int[] a = array[i];
+      for (int j = a.length; --j >= 0;)
+        a[j] = ((SmilesAtom) search.jmolAtoms[a[j]]).mapIndex;
+    }
+    return array;
   }
 
   @Override
@@ -393,8 +400,12 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       if (n == 0 || n != atoms[i].bonds.length)
         atoms[i].bonds = (SmilesBond[]) AU.arrayCopyObject(atoms[i].bonds, n);
     }
-    return getSmiles(atoms, atomCount, BSUtil.newBitSet2(0,  atomCount), null, 
-        JC.SMILES_NOAROMATIC | (points == null ? JC.SMILES_TOPOLOGY : JC.SMILES_TYPE_SMILES));   
+    boolean debug = Logger.debugging;
+    Logger.debugging = false;
+    String s = getSmiles(atoms, atomCount, BSUtil.newBitSet2(0,  atomCount), null, 
+        JC.SMILES_EXPLICIT_H | JC.SMILES_NOAROMATIC | (points == null ? JC.SMILES_TOPOLOGY : JC.SMILES_TYPE_SMILES));
+    Logger.debugging = debug;
+    return s;
   }
 
 
@@ -466,7 +477,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         return vl.toArray(AU.newInt2(vl.size()));
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      if (Logger.debugging)
+        e.printStackTrace();
       if (InvalidSmilesException.getLastError() == null)
         InvalidSmilesException.clear();
       throw new InvalidSmilesException(InvalidSmilesException.getLastError());

@@ -93,6 +93,8 @@ public abstract class ScriptError implements JmolScriptEvaluator {
     
     if (ignoreError)
       throw new NullPointerException();
+    if (strUntranslated == null)
+      strUntranslated = message;
     if (!chk) {
       // String s = vwr.getSetHistory(1);
       // vwr.addCommand(s + CommandHistory.ERROR_FLAG);

@@ -172,7 +172,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         text.colix = labelColix;
         text.bgcolix = bgcolix;
       } else {
-        if (text.pymolOffset[0] == 1)
+        if (Math.abs(text.pymolOffset[0]) == 1)
           pTemp.setT(atomPt);
         else
           pTemp.set(0, 0, 0);

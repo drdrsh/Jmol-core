@@ -978,9 +978,11 @@ public class ScriptMathProcessor {
         case T.hash:
         case T.context:
           switch (iv) {
-          case T.type:
+          // reserved words XXXX for x.XXXX
+          case T.array:
           case T.keys:
           case T.size:
+          case T.type:
             break;
           //$FALL-THROUGH$
           default:

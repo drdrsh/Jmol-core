@@ -203,6 +203,7 @@ public class SmilesAtom extends P3 implements BNode {
   int ringConnectivity = -1;
   private Node matchingNode;
   public boolean hasSubpattern;
+  public int mapIndex = -1; // in  CCC we have atoms 0, 1, and 2
 
   public SmilesAtom setAll(int iComponent, int ptAtom, int flags, int atomicNumber,
       int charge) {

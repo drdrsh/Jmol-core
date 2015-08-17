@@ -78,6 +78,11 @@ public class MeasuresRenderer extends LabelsRenderer {
     if (atomPt == null)
       atomPt = new Point3fi();
     Measures measures = (Measures) shape;
+    if (measures.ms != ms) {
+      System.out.println("!measure wrong modelset!");
+      measures.clear();
+      return false;    
+    }
     doJustify = vwr.getBoolean(T.justifymeasurements);
     modulating = ms.bsModulated != null; 
     // note that this COULD be screen pixels if <= 20. 
@@ -334,7 +339,12 @@ public class MeasuresRenderer extends LabelsRenderer {
   }
 
   private void renderPendingMeasurement() {
-    getPoints();
+    try {
+      getPoints();
+    } catch (Exception e) {
+      ((Measures) shape).mPending = null;
+      return;
+    }
     boolean renderLabel = (m.traceX == Integer.MIN_VALUE);
     g3d.setC(labelColix = (renderLabel ? vwr.cm.colixRubberband
         : count == 2 ? C.MAGENTA : C.GOLD));

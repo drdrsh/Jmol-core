@@ -434,15 +434,17 @@ public class PropertyManager implements JmolPropertyManager {
         if (arg.tok == T.select) {
           key = arg.myName;
           if (key.equals("**")) {
-            // find associated keys whose associated arrays fulfill the requirements
             key = "";
-            for (Entry<String, ?>e : h.entrySet()) {
-              String k = e.getKey();
-              SV v = (SV) e.getValue();
-              if (v.tok == T.hash) {
-                if (vwr.checkSelect((Map<String, SV>) v.value, (T[]) arg.value))
-                  key += "," + k;
+            for (Entry<?, ?> e : h.entrySet()) {
+              String k = (String) e.getKey();
+              Object o = e.getValue();
+              if ((o instanceof SV)) {
+                o = ((SV) o).getMap();
+              } else if (!(o instanceof Map<?,?>)){
+                o = null;
               }
+              if (o != null && vwr.checkSelect((Map<String, SV>) o, (T[]) arg.value))
+                key += "," + k;
             }
             if (key.length() == 0)
               return "";

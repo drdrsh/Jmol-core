@@ -120,11 +120,11 @@ public class AFLOWReader extends VaspPoscarReader {
     
     s = getFilter("CA=");
     if (s != null)
-      fracB = (1 - parseFloatStr(s.substring(1)));
+      fracB = (1 - parseFloatStr(s));
     
     s = getFilter("CB=");
     if (s != null)
-      fracB = parseFloatStr(s.substring(1));
+      fracB = parseFloatStr(s);
     
     s = getFilter("LIST=");
     listKey = (s == null ? "HF" : s);

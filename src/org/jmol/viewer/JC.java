@@ -884,7 +884,7 @@ public final class JC {
   private final static int LABEL_FLAGY_OFFSET_SHIFT   = 11;    // 11-20 is Y offset
   private final static int LABEL_FLAGX_OFFSET_SHIFT   = 21;    // 21-30 is X offset
   
-  public final static int LABEL_FLAGS                 = 0x07F;
+  public final static int LABEL_FLAGS                 = 0x03F; // does not include absolute or centered
   private final static int LABEL_POINTER_FLAGS        = 0x003;
   public final static int LABEL_POINTER_NONE          = 0x000;
   public final static int LABEL_POINTER_ON            = 0x001;  // add label pointer

@@ -363,11 +363,12 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     return null;
   }
 
-  private void clear() {
+  public void clear() {
     if (measurementCount == 0)
       return;
     measurementCount = 0;
     measurements.clear();
+    mPending = null;
     vwr.setStatusMeasuring("measureDeleted", -1, "all", 0);
   }
 

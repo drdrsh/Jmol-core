@@ -229,10 +229,11 @@ public class Text extends Object2d {
       if (pymolOffset != null) {
         float pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
         float pz = pymolOffset[3];
-        float dz = (pz < 0 ? -1 : 1) * Math.max(0, Math.abs(pz) - 1) * pixelsPerAngstrom;
+        float dz = (pz < 0 ? -1 : 1) * Math.max(0, Math.abs(pz) - 1)
+            * pixelsPerAngstrom;
         z -= (int) dz;
         pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
-        
+
         /* for whatever reason, Java returns an 
          * ascent that is considerably higher than a capital X
          * forget leading!
@@ -253,16 +254,25 @@ public class Text extends Object2d {
          *        
          * 
          */
+        // dx and dy are the overall object offset, with text
         dx = getPymolXYOffset(pymolOffset[1], textWidth, pixelsPerAngstrom);
-        dy = -getPymolXYOffset(-pymolOffset[2], ascent - descent, pixelsPerAngstrom);
+        int dh = ascent - descent;
+        dy = -getPymolXYOffset(-pymolOffset[2], dh, pixelsPerAngstrom)
+            - (textHeight + dh) / 2;
+        
+        //dy: added -lineHeight (for one line)
+        if (pymolOffset[0] == 1) { 
+          // from PyMOL - back to original plan
+         // dy += lineHeight;
+        }
+        
+        // xAdj and yAdj are the adjustments for the box itself relative to the text 
         xAdj = (fontScale >= 2 ? 8 : 4);
-        yAdj = 0;
-        dy += descent;
+        yAdj = -descent;
         boxXY[0] = movableX - xAdj;
         boxXY[1] = movableY - yAdj;
-        y0 = movableY - dy - descent;        
         isAbsolute = true;
-        boxYoff2 = -2; // empirical fudge factor 
+        boxYoff2 = -2; // empirical fudge factor
       } else {
         boxYoff2 = 0;
       }
@@ -279,11 +289,21 @@ public class Text extends Object2d {
       setBoxOffsetsInWindow(/*image == null ? fontScale * 5 :*/0,
           isLabelOrHover ? 16 * fontScale + lineHeight : 0, boxY - textHeight);
     //if (!isAbsolute)
-      y0 = boxY + yAdj;
+    y0 = boxY + yAdj;
   }
 
   private float getPymolXYOffset(float off, int width, float ppa) {
     float f = (off < -1 ? -1 : off > 1 ? 0 : (off - 1) / 2);
+    // offset
+    // -3     -2
+    // -2     -1
+    // -1      0 absolute, -1 width
+    //-0.5    -3/4  width
+    //  0     -1/2 width
+    // 0.5    -1/4 width
+    //  1      0
+    //  2      1
+    //  3      2
     off = (off < -1 || off > 1 ? off + (off < 0 ? 1 : -1) : 0);
     return f * width + off * ppa;
   }

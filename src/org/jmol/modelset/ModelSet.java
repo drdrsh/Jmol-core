@@ -4027,7 +4027,7 @@ public class ModelSet extends BondCollection {
     if (asMap) {
       map = new Hashtable<String, Object>();
       lstI = new Lst<Integer>();
-      map.put("atomIndex", lstI);
+      map.put("atoms", lstI);
       map.put("points", lst);
     }
     int iAtom = (bs == null ? -1 : bs.nextSetBit(0));

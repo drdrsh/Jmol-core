@@ -2494,7 +2494,7 @@ public class CmdExt extends ScriptExt {
       qtOffset = eval.getPoint3f(1, false);
       isQ = (tokAt(eval.iToken + 1) == T.on);
       break;
-    case T.identifier:
+    default:
       String s = eval.theToken.value.toString();
       i++;
       if (s.equalsIgnoreCase("t")) {
@@ -2534,19 +2534,6 @@ public class CmdExt extends ScriptExt {
       if (!chk)
         vwr.setFloatProperty("modulationScale", scale);
       return;
-      //    case T.fps:
-      //      float f = floatParameter(2);
-      //      if (!chk)
-      //        vwr.setModulationFps(f);
-      //      return;
-      //    case T.play:
-      //      int t0 = intParameter(2);
-      //      frameN = intParameter(3);
-      //      qtOffset = P3.new3(t0, t0, t0);
-      //      isQ = true;
-      //      break;
-    default:
-      invArg();
     }
     if (!chk) {
       vwr.tm.setVibrationPeriod(0);
@@ -2891,6 +2878,12 @@ public class CmdExt extends ScriptExt {
       eval.iToken = pt0 + 1;
       for (int i = 0; i < 3; i++) {
         switch (tokAt(eval.iToken)) {
+        case T.string:
+          propToks[i] = T.getTokFromName((String)eval.getToken(eval.iToken).value);
+          break;
+        default:
+          propToks[i] = tokAt(eval.iToken);
+          break;
         case T.nada:
         case T.format:
         case T.min:
@@ -2898,7 +2891,7 @@ public class CmdExt extends ScriptExt {
           i = 2;
           continue;
         }
-        if ((propToks[i] = tokAt(eval.iToken)) != T.property && !T.tokAttr(propToks[i], T.atomproperty))
+        if (propToks[i] != T.property && !T.tokAttr(propToks[i], T.atomproperty))
           invArg();
         props[i] = getToken(eval.iToken).value.toString();
         eval.iToken++;

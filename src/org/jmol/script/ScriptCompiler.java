@@ -1070,7 +1070,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     case T.show:
       // allowing for show domains and validation to take up rest of line
       if (nTokens == 2) {
-        if (lastToken.tok == T.image)
+        if (lastToken.tok == T.image || lastToken.tok == T.property)
           iHaveQuotedString = true;
       } else if (!iHaveQuotedString && lastToken.tok != T.domains
           && lastToken.tok != T.validation) {
@@ -2573,7 +2573,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     // to determine if it is an alpha
     char ch1;
     if (!eol(ch1 = charAt(ichT))) {
-      if (PT.isLetter(ch1) || ch1 == '?' || ch1 == '*')
+      if (PT.isLetter(ch1) || ch1 == '?' || ch1 == '*' || ch1 == '_')
         return false;
       //well, guess what? we also have to look for 86.1Na, so...
       //watch out for moveto..... 56.;refresh...

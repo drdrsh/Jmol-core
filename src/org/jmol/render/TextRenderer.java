@@ -59,6 +59,7 @@ class TextRenderer {
       // now write properly aligned text
       for (int i = 0; i < text.lines.length; i++) {
         text.setXYA(temp, i);
+        
         g3d.drawString(text.lines[i], text.font, (int) temp[0], (int) temp[1],
             text.z, text.zSlab, text.bgcolix);
       }
@@ -66,17 +67,12 @@ class TextRenderer {
       g3d.drawImage(text.image, (int) text.boxX, (int) text.boxY, text.z,
           text.zSlab, text.bgcolix, (int) text.boxWidth, (int) text.boxHeight);
     }
-    drawPointer(text, g3d);
-    return true;
-  }
-
-  static void drawPointer(Text text, JmolRendererInterface g3d) {
     // now draw the pointer, if requested
 
     if ((text.pointer & JC.LABEL_POINTER_ON) == 0
         || !g3d.setC((text.pointer & JC.LABEL_POINTER_BACKGROUND) != 0
             && text.bgcolix != 0 ? text.bgcolix : text.colix))
-      return;
+      return true;
     float w = text.boxWidth;
     float h = text.boxHeight;
     float pt = Float.NaN;
@@ -90,24 +86,25 @@ class TextRenderer {
             : h / 2);
     g3d.drawLineXYZ(text.atomX, text.atomY, text.atomZ, (int) x, (int) y,
         text.zSlab);
+    return true;
   }
 
   static void renderSimpleLabel(JmolRendererInterface g3d, Font font,
-                                 String strLabel, short colix, short bgcolix,
-                                 float[] boxXY, int z, int zSlab,
-                                 int xOffset, int yOffset, float ascent,
-                                 int descent, boolean doPointer,
-                                 short pointerColix, boolean isAbsolute) {
+                                String strLabel, short colix, short bgcolix,
+                                float[] boxXY, int z, int zSlab, int xOffset,
+                                int yOffset, float ascent, int descent,
+                                boolean doPointer, short pointerColix,
+                                boolean isAbsolute) {
 
     // old static style -- quick, simple, no line breaks, odd alignment?
     // LabelsRenderer only
 
     float boxWidth = font.stringWidth(strLabel) + 8;
     float boxHeight = ascent + descent + 8;
-    
+
     int x0 = (int) boxXY[0];
     int y0 = (int) boxXY[1];
-    
+
     Text.setBoxXY(boxWidth, boxHeight, xOffset, yOffset, boxXY, isAbsolute);
 
     float x = boxXY[0];
@@ -117,13 +114,14 @@ class TextRenderer {
           (int) boxHeight, 1, true);
     else
       g3d.setC(colix);
-    g3d.drawString(strLabel, font, (int) (x + 4),
-        (int) (y + 4 + ascent), z - 1, zSlab, bgcolix);
+    g3d.drawString(strLabel, font, (int) (x + 4), (int) (y + 4 + ascent),
+        z - 1, zSlab, bgcolix);
 
     if (doPointer) {
       g3d.setC(pointerColix);
       if (xOffset > 0)
-        g3d.drawLineXYZ(x0, y0, zSlab, (int) x, (int) (y + boxHeight / 2), zSlab);
+        g3d.drawLineXYZ(x0, y0, zSlab, (int) x, (int) (y + boxHeight / 2),
+            zSlab);
       else if (xOffset < 0)
         g3d.drawLineXYZ(x0, y0, zSlab, (int) (x + boxWidth),
             (int) (y + boxHeight / 2), zSlab);

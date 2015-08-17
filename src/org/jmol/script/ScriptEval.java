@@ -7182,7 +7182,8 @@ public class ScriptEval extends ScriptExpr {
         if (isPoint3f(2)) {
           // PyMOL offsets -- {x, y, z} in angstroms
           P3 pt = getPoint3f(2, false);
-          propertyValue = new float[] { 1, pt.x, pt.y, pt.z, 0, 0, 0 };
+          // minus 1 here means from Jmol, not from PyMOL
+          propertyValue = new float[] { -1, pt.x, pt.y, pt.z, 0, 0, 0 };
         } else if (isArrayParameter(2)) {
           // PyMOL offsets -- [1, scrx, scry, scrz, molx, moly, molz] in angstroms
           propertyValue = floatParameterSet(2, 7, 7);
