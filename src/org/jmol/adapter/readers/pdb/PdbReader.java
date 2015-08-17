@@ -402,6 +402,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
   }
 
   Map<String, String> htGroup1;
+  private int maxLength = 80;
   
   private String readHeader(boolean getLine) throws Exception {
     if (getLine) {
@@ -523,6 +524,8 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
     if (lineLength < 8)
       return;
     appendLoadNote(line.substring(7).trim());
+    if (lineLength == 80)
+      maxLength = 72; // old style
     String pdbID = (lineLength >= 66 ? line.substring(62, 66).trim() : "");
     if (pdbID.length() == 4) {
       asc.setCollectionName(pdbID);
@@ -534,10 +537,8 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
   }
 
   private void title() {
-    if (lineLength > 72)
-      line = line.substring(0, 72);
-    if (lineLength >= 10)
-      appendLoadNote(line.substring(10).trim());
+    if (lineLength > 10)
+      appendLoadNote(line.substring(10, Math.min(maxLength , line.length())).trim());
   }
   
   private void compnd(boolean isSource) {
