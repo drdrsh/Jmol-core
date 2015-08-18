@@ -2307,8 +2307,8 @@ abstract public class AtomCollection {
     case '?':
       for (int i = ac; --i >= 0;) {
         int atomSeqcode = at[i].group.seqcode;
-        if (!haveSeqNumber 
-            || seqNum == Group.getSeqNumberFor(atomSeqcode)
+        if ((!haveSeqNumber 
+            || seqNum == Group.getSeqNumberFor(atomSeqcode))
             && Group.getInsertionCodeFor(atomSeqcode) != 0) {
           bs.set(i);
           isEmpty = false;

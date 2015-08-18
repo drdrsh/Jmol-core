@@ -1342,6 +1342,7 @@ abstract class ScriptTokenParser {
     case T.string:
     case T.integer:
     case T.identifier:
+    case T.opIf:
     case T.x:
     case T.y:
     case T.z:
