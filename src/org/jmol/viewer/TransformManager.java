@@ -882,22 +882,28 @@ public class TransformManager {
     return slabPercentSetting;
   }
 
-  void slabByPercentagePoints(int percentage) {
-    slabPlane = null;
-    slabPercentSetting += percentage;
-    slabDepthChanged();
-    if (depthPercentSetting >= slabPercentSetting)
-      depthPercentSetting = slabPercentSetting - 1;
-  }
-
   private void slabDepthChanged() {
     vwr.g.setI("slab", slabPercentSetting);
     vwr.g.setI("depth", depthPercentSetting);
     finalizeTransformParameters(); // also sets _slabPlane and _depthPlane
   }
 
+  void slabByPercentagePoints(int percentage) {
+    slabPlane = null;
+    if (percentage < 0 ? slabPercentSetting <= Math.max(0, depthPercentSetting) 
+        : slabPercentSetting >= 100)
+      return;
+    slabPercentSetting += percentage;
+    slabDepthChanged();
+    if (depthPercentSetting >= slabPercentSetting)
+      depthPercentSetting = slabPercentSetting - 1;
+  }
+
   void depthByPercentagePoints(int percentage) {
     depthPlane = null;
+    if (percentage < 0 ? depthPercentSetting <= 0 
+        : depthPercentSetting >= Math.min(100, slabPercentSetting))
+      return;
     depthPercentSetting += percentage;
     if (slabPercentSetting <= depthPercentSetting)
       slabPercentSetting = depthPercentSetting + 1;
@@ -907,6 +913,9 @@ public class TransformManager {
   void slabDepthByPercentagePoints(int percentage) {
     slabPlane = null;
     depthPlane = null;
+    if (percentage < 0 ? slabPercentSetting <= Math.max(0, depthPercentSetting) 
+        : depthPercentSetting >= Math.min(100, slabPercentSetting))
+      return;
     slabPercentSetting += percentage;
     depthPercentSetting += percentage;
     slabDepthChanged();

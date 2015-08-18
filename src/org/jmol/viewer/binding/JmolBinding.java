@@ -45,6 +45,14 @@ public class JmolBinding extends Binding {
     bindAction(SINGLE|CTRL|SHIFT|LEFT|DRAG, ActionManager.ACTION_slab);
     bindAction(DOUBLE|CTRL|SHIFT|LEFT|DRAG, ActionManager.ACTION_depth); 
     bindAction(SINGLE|CTRL|ALT|SHIFT|LEFT|DRAG, ActionManager.ACTION_slabAndDepth);
+
+    bindAction(SINGLE|CTRL|WHEEL, ActionManager.ACTION_wheelZoom);
+    bindAction(SINGLE|SHIFT|WHEEL, ActionManager.ACTION_wheelZoom);
+    bindAction(SINGLE|CTRL|SHIFT|WHEEL, ActionManager.ACTION_wheelZoom);
+    
+    bindAction(SINGLE|CTRL|WHEEL, ActionManager.ACTION_slab);
+    bindAction(SINGLE|SHIFT|WHEEL, ActionManager.ACTION_depth); 
+    bindAction(SINGLE|CTRL|SHIFT|WHEEL, ActionManager.ACTION_slabAndDepth);
     
     bindAction(SINGLE|LEFT|DRAG, ActionManager.ACTION_swipe);
     bindAction(SINGLE|LEFT|DRAG, ActionManager.ACTION_spinDrawObjectCCW);

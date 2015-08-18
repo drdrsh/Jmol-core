@@ -1162,7 +1162,7 @@ public class ActionManager implements EventManager {
       return;
     }
     if (checkMotionRotateZoom(dragWheelAction, x, deltaX, deltaY, true)) {
-      if (vwr.tm.slabEnabled && checkSlideZoom(dragWheelAction))
+      if (vwr.tm.slabEnabled && bnd(dragWheelAction,ACTION_slabAndDepth))
         vwr.slabDepthByPixels(deltaY);
       else
         vwr.zoomBy(deltaY);
@@ -1187,14 +1187,7 @@ public class ActionManager implements EventManager {
             Integer.MAX_VALUE);
       }
       return;
-    } else if (bnd(dragWheelAction, ACTION_wheelZoom)) {
-      zoomByFactor(deltaY, Integer.MAX_VALUE, Integer.MAX_VALUE);
-      return;
-    } else if (bnd(dragWheelAction, ACTION_rotateZ)) {
-      setMotion(GenericPlatform.CURSOR_MOVE, true);
-      vwr.rotateZBy(-deltaX, Integer.MAX_VALUE, Integer.MAX_VALUE);
-      return;
-    }
+    } 
     if (vwr.tm.slabEnabled) {
       if (bnd(dragWheelAction, ACTION_depth)) {
         vwr.depthByPixels(deltaY);
@@ -1208,6 +1201,15 @@ public class ActionManager implements EventManager {
         vwr.slabDepthByPixels(deltaY);
         return;
       }
+    }
+    if (bnd(dragWheelAction, ACTION_wheelZoom)) {
+      zoomByFactor(deltaY, Integer.MAX_VALUE, Integer.MAX_VALUE);
+      return;
+    } 
+    if (bnd(dragWheelAction, ACTION_rotateZ)) {
+      setMotion(GenericPlatform.CURSOR_MOVE, true);
+      vwr.rotateZBy(-deltaX, Integer.MAX_VALUE, Integer.MAX_VALUE);
+      return;
     }
   }
 
@@ -1498,7 +1500,7 @@ public class ActionManager implements EventManager {
    */
   private boolean checkMotionRotateZoom(int mouseAction, int x, int deltaX,
                                         int deltaY, boolean isDrag) {
-    boolean isSlideZoom = checkSlideZoom(mouseAction);
+    boolean isSlideZoom = bnd(mouseAction, ACTION_slideZoom) && isZoomArea(pressed.x);
     boolean isRotateXY = bnd(mouseAction, ACTION_rotate);
     boolean isRotateZorZoom = bnd(mouseAction, ACTION_rotateZorZoom);
     if (!isSlideZoom && !isRotateXY && !isRotateZorZoom)
@@ -1564,10 +1566,6 @@ public class ActionManager implements EventManager {
   protected float getDegrees(float delta, boolean isX) {
     return delta / Math.min(500, isX ? vwr.getScreenWidth() 
         : vwr.getScreenHeight()) * 180 * mouseDragFactor;
-  }
-
-  private boolean checkSlideZoom(int action) {
-    return bnd(action, ACTION_slideZoom) && isZoomArea(pressed.x);
   }
 
   private boolean isZoomArea(int x) {
