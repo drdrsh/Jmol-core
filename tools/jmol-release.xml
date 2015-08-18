@@ -33,6 +33,16 @@
 	          />
   <echo message="version=${version}" />
 
+	<loadresource property="versionNoDate">
+	  <string value="${version}"/>
+	  <filterchain>
+	    <tokenfilter>
+	      <replaceregex pattern="([0-9.]+)_([0-9.]+)" replace="\1"/>
+	    </tokenfilter>
+	  </filterchain>
+	</loadresource>
+	<echo message="versionNoDate: ${versionNoDate}"/>
+	
   <!-- Copying files to website -->
   <target name="deploy" >
 
@@ -40,8 +50,8 @@
     <!-- Ask user for confirmation -->
 
     <input
-      message="Destination Path: (clear to exit)"
-      defaultvalue="${path.release}/${prefix.release}${version}"
+      message="Destination Path for ${version} (clear to exit)"
+      defaultvalue="${path.release}/${prefix.release}${versionNoDate}"
       addproperty="uploadPath"
     />
 
