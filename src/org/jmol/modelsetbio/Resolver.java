@@ -102,7 +102,7 @@ public final class Resolver implements JmolBioResolver, Comparator<String[]> {
     haveHsAlready = false;
     if (modelLoader == null) {
       ms = null;
-      bsAddedHydrogens = bsAtomsForHs = null;
+      bsAddedHydrogens = bsAtomsForHs = bsAssigned = null;
       htBondMap = null;
       htGroupBonds = null;
       hNames = null;
