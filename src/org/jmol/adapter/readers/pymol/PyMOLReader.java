@@ -1230,7 +1230,8 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
    * 
    */
   private void processMeshes() {
-    vwr.cachePut(pymolScene.surfaceInfoName, volumeData);
+    String fileName = vwr.fm.getFilePath(pymolScene.surfaceInfoName, true, false);
+    vwr.cachePut(fileName, volumeData);
     for (int i = mapObjects.size(); --i >= 0;) {
       Lst<Object> obj = mapObjects.get(i);
       String objName = obj.get(obj.size() - 1).toString();

@@ -1184,7 +1184,7 @@ public class FileManager implements BytePoster {
     // in the case of JavaScript local file reader, 
     // this will be a cached file, and the filename will not be known.
     int pt = key.indexOf("|");
-    if (pt >= 0)
+    if (pt >= 0 && !key.endsWith("##JmolSurfaceInfo##")) // check for PyMOL surface creation
       key = key.substring(0, pt);
     key = getFilePath(key, true, false);
     Object data = null;
