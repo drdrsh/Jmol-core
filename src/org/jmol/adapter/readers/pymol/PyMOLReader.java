@@ -1061,7 +1061,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       bsState.set(ac);
 
     String label = stringAt(a, 9);
-    String ssType = stringAt(a, 10);
+    String ssType = stringAt(a, 10).substring(0, 1);
     if (seqNo >= MIN_RESNO
         && (!ssType.equals(" ") || name.equals("CA") || isNucleic)) {
       BS bs = ssMapSeq.get(ssType);

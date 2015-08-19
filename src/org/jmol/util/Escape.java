@@ -118,6 +118,8 @@ public class Escape {
       return eP((T3) x);
     if (x instanceof P4)
       return eP4((P4) x);
+    if (AU.isAP(x))
+      return eAP((T3[]) x);
     if (AU.isAS(x))
       return eAS((String[]) x, true);
     if (x instanceof M34) 

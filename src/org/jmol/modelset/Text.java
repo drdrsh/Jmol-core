@@ -263,7 +263,7 @@ public class Text extends Object2d {
         //dy: added -lineHeight (for one line)
         if (pymolOffset[0] == 1) { 
           // from PyMOL - back to original plan
-         // dy += lineHeight;
+         dy -= descent;
         }
         
         // xAdj and yAdj are the adjustments for the box itself relative to the text 
