@@ -3816,7 +3816,7 @@ public class CmdExt extends ScriptExt {
         } else {
           if (fileName != null
               && (bytes = data = vwr.createZip(fileName,
-                  v.size() == 1 ? "BINARY" : "ZIPDATA", v)) == null)
+                  v.size() == 1 || fileName.endsWith(".png") ? "BINARY" : "ZIPDATA", v)) == null)
             eval.evalError("#CANCELED#", null);
         }
       } else if (data == "SPT") {

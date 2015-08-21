@@ -1244,15 +1244,15 @@ public class Atom extends Point3fi implements BNode {
     case T.spacefill:
       return getRadius();
     case T.screenx:
-      return sX;
+      return (vwr.antialiased ? sX / 2 : sX);
     case T.screeny:
-      return group.chain.model.ms.vwr.getScreenHeight() - sY;
+      return vwr.getScreenHeight() - (vwr.antialiased ? sY / 2 : sY);
     case T.screenz:
-      return sZ;
+      return (vwr.antialiased ? sZ / 2 : sZ);
     case T.selected:
       return (vwr.slm.isAtomSelected(i) ? 1 : 0);
     case T.surfacedistance:
-      group.chain.model.ms.getSurfaceDistanceMax();
+      vwr.ms.getSurfaceDistanceMax();
       return getSurfaceDistance100() / 100f;
     case T.temperature: // 0 - 9999
       return getBfactor100() / 100f;
