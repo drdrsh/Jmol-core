@@ -225,6 +225,8 @@ public class JDXReader implements JmolJDXMOLReader {
           if (!processTabularData(spectrum, dataLDRTable))
             throw new JSVException("Unable to read JDX file");
           addSpectrum(spectrum, false);
+          if (isSimulation && spectrum.getXUnits().equals("PPM"))
+          	spectrum.setHZtoPPM(true);
           spectrum = null;
           continue;
         }
@@ -905,8 +907,7 @@ public class JDXReader implements JmolJDXMOLReader {
     }
 
     if (freq != JDXDataObject.ERROR && spec.getXUnits().toUpperCase().equals("HZ")) {
-      double xScale = freq;
-      Coordinate.applyScale(xyCoords, (1 / xScale), 1);
+      Coordinate.applyScale(xyCoords, (1.0 / freq), 1);
       spec.setXUnits("PPM");
       spec.setHZtoPPM(true);
     }
