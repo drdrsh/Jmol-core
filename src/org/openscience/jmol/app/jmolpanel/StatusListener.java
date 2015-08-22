@@ -121,6 +121,8 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
   @SuppressWarnings("unchecked")
   @Override
   public void notifyCallback(CBK type, Object[] data) {
+    if (jmol.nboDialog != null)
+      jmol.nboDialog.notifyCallback(type, data);
     String strInfo = (data == null || data[1] == null ? null : data[1]
         .toString());
     Map<String, Object> info;
@@ -187,9 +189,9 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         String service = (String) info.get("service");
         if ("nbo".equals(service)) {
           if ("showPanel".equals(info.get("action")))
-            jmol.startNBO();
+          jmol.startNBO(null);
           else
-            jmol.getNBOService().processRequest(info);
+          jmol.getNBOService().processRequest(info, 0);
         }
       } catch (Exception e) {
         // ignore
@@ -220,7 +222,6 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
             .getPreference(data[2].toString()));
         return;
       }
-
       jmol.sendNioMessage(((Integer) data[3]).intValue(), strInfo);
       return;
     case DRAGDROP:
