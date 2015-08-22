@@ -100,12 +100,12 @@ abstract public class ScriptParam extends ScriptError {
     return SV.oValue(v);
   }
 
-  protected String getStringParameter(String var, boolean orReturnName) {
+  protected Object getVarParameter(String var, boolean orReturnName) {
     SV v = getContextVariableAsVariable(var);
     if (v != null)
-      return v.asString();
-    String val = "" + vwr.getP(var);
-    return (val.length() == 0 && orReturnName ? var : val);
+      return (orReturnName ? v.asString() : SV.oValue(v));
+    Object val = vwr.getP(var);    
+    return (orReturnName  && ("" + val).length() == 0 ? var : val);
   }
 
   public SV getContextVariableAsVariable(String var) {

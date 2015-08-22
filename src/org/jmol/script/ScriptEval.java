@@ -4501,11 +4501,25 @@ public class ScriptEval extends ScriptExpr {
         htParams.put("fileData", filename);
       } else if (filename.startsWith("@") && filename.length() > 1) {
         isVariable = true;
-        String s = getStringParameter(filename.substring(1), false);
-        htParams.put("fileData", s);
+        Object o = getVarParameter(filename.substring(1), false);
+        if (o instanceof Map<?, ?>) {
+          SV[] av = new SV[] {SV.newV(T.hash, o)};
+          getCmdExt().dispatch(T.binary, false, av);
+          htParams.put("imageData", av[0].value);
+          OC out = vwr.getOutputChannel(null, null);
+          htParams.put("outputChannel", out);
+          vwr.createZip("", "BINARY", htParams);
+          modelName = "cache://VAR_" + filename;
+          vwr.cacheFileByName("cache://VAR_*",false);
+          vwr.cachePut(modelName, out.toByteArray());
+          cmdScript(0, modelName, null);
+          return;
+        }
+        o = "" + o;
         loadScript = new SB().append("{\n    var ")
-            .append(filename.substring(1)).append(" = ").append(PT.esc(s))
-            .append(";\n    ").appendSB(loadScript);
+            .append(filename.substring(1)).append(" = ")
+            .append(PT.esc((String) o)).append(";\n    ").appendSB(loadScript);
+        htParams.put("fileData", o);
       } else if ((vwr.testAsync || vwr.isJS)
           && (isAsync || filename.startsWith("?"))) {
         localName = null;

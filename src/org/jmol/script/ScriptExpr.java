@@ -1102,7 +1102,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (tokWhat == T.color) {
         comparisonInt = CU.getArgbFromString((String) val);
         if (comparisonInt == 0 && T.tokAttr(tokValue, T.identifier)) {
-          val = getStringParameter((String) val, true);
+          val = getVarParameter((String) val, true);
           if (((String) val).startsWith("{")) {
             val = Escape.uP((String) val);
             if (val instanceof P3)

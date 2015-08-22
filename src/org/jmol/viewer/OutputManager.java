@@ -147,9 +147,7 @@ abstract class OutputManager {
         vwr.fm.loadImage(info, fileName, false);
         return errMsg = "OK - viewing " + fileName.substring(1);
       }
-      if (out == null)
-        out = openOutputChannel(privateKey, fileName, false, false);
-      if (out == null)
+      if (out == null && (out = openOutputChannel(privateKey, fileName, false, false)) == null)
         return errMsg = "ERROR: canceled";
       fileName = out.getFileName();
       String comment = null;
@@ -678,6 +676,7 @@ abstract class OutputManager {
       vwr.resizeImage(width, height, true, false, false);
       vwr.setModelVisibility();
     }
+    
     try {
       if (type.equals("JMOL"))
         type = "ZIPALL";

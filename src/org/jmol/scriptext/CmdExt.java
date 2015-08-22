@@ -106,6 +106,9 @@ public class CmdExt extends ScriptExt {
     slen = e.slen;
     this.st = st;
     switch (iTok) {
+    case T.binary:
+      st[0].value = prepareBinaryOutput((SV) st[0]);
+      return null;
     case T.assign:
       assign();
       break;
@@ -3550,6 +3553,7 @@ public class CmdExt extends ScriptExt {
 
     int quality = Integer.MIN_VALUE;
     if (pt0 < argCount) {
+      // get type
       val = SV.sValue(tokenAt(pt, args));
       if (val.equalsIgnoreCase("clipboard")) {
         if (chk)
@@ -3610,6 +3614,11 @@ public class CmdExt extends ScriptExt {
       fileName = SV.sValue(tokenAt(pt, args));
       if (fileName.equalsIgnoreCase("clipboard") || !vwr.haveAccess(ACCESS.ALL))
         fileName = null;
+      else if (isCommand && argCount != slen && tokAt(pt + 1) == T.per
+          && pt + 3 == argCount) {
+        pt += 2;
+        fileName += "." + SV.sValue(tokenAt(pt, args));
+      }
       break;
     default:
       invArg();
@@ -3775,49 +3784,24 @@ public class CmdExt extends ScriptExt {
           v = new Lst<Object>();
           v.addLast(((BArray) tVar.value).data);
         } else if (tVar.tok == T.hash) {
-          @SuppressWarnings("unchecked")
-          Map<String, SV> m = (Map<String, SV>) tVar.value;
-          if (m.containsKey("$_BINARY_$")) {
-            v = new Lst<Object>();
-            if (fileName != null)
-              for (Entry<String, SV> e : m.entrySet()) {
-                String key = e.getKey();
-                if (key.equals("$_BINARY_$"))
-                  continue;
-                SV o = e.getValue();
-                bytes = (o.tok == T.barray ? ((BArray) o.value).data : null);
-                if (bytes == null) {
-                  String s = o.asString();
-                  bytes = (s.startsWith(";base64,") ? Base64.decodeBase64(s)
-                      : s.getBytes());
-                }
-                if (key.equals("_DATA_")) {
-                  v = null;
-                  if (bytes == null)
-                    bytes = ((BArray) o.value).data;
-                  break;
-                } else if (key.equals("_IMAGE_")) {
-                  v.add(0, key);
-                  v.add(1, null);
-                  v.add(2, bytes);
-                } else {
-                  v.addLast(key);
-                  v.addLast(null);
-                  v.addLast(bytes);
-                }
-              }
-          }
+          v = (fileName == null ? new Lst<Object>() : prepareBinaryOutput(tVar));
         }
         if (v == null) {
-          if (bytes == null) {
-            data = tVar.asString();
-            type = "TXT";
-          }
+          //          if (bytes == null) {
+          data = tVar.asString();
+          type = "TXT";
+          //          }
         } else {
-          if (fileName != null
-              && (bytes = data = vwr.createZip(fileName,
-                  v.size() == 1 || fileName.endsWith(".png") ? "BINARY" : "ZIPDATA", v)) == null)
-            eval.evalError("#CANCELED#", null);
+          if (fileName != null) {
+            params = new Hashtable<String, Object>();
+            params.put("data", v);
+            if ((bytes = data = (String) vwr.createZip(
+                fileName,
+                v.size() == 1 || fileName.endsWith(".png")
+                    || fileName.endsWith(".pngj") ? "BINARY" : "ZIPDATA",
+                params)) == null)
+              eval.evalError("#CANCELED#", null);
+          }
         }
       } else if (data == "SPT") {
         if (isCoord) {
@@ -3832,9 +3816,12 @@ public class CmdExt extends ScriptExt {
                 remotePath, null);
         }
       } else if (data == "ZIP" || data == "ZIPALL") {
-        if (fileName != null
-            && (bytes = data = vwr.createZip(fileName, type, scripts)) == null)
-          eval.evalError("#CANCELED#", null);
+        if (fileName != null) {
+          params = new Hashtable<String, Object>();
+          params.put("data", scripts);
+          if ((bytes = data = (String) vwr.createZip(fileName, type, params)) == null)
+            eval.evalError("#CANCELED#", null);
+        }
       } else if (data == "HISTORY") {
         data = vwr.getSetHistory(Integer.MAX_VALUE);
         type = "SPT";
@@ -3924,6 +3911,40 @@ public class CmdExt extends ScriptExt {
     if (timeMsg)
       showString(Logger.getTimerMsg("write", 0));
     return writeMsg(msg);
+  }
+
+  public Lst<Object> prepareBinaryOutput(SV tvar) {
+    Map<String, SV> m = tvar.getMap();
+    if (m == null || !m.containsKey("$_BINARY_$"))
+      return null;
+    Lst<Object> v = new Lst<Object>();
+    for (Entry<String, SV> e : m.entrySet()) {
+      String key = e.getKey();
+      if (key.equals("$_BINARY_$"))
+        continue;
+      SV o = e.getValue();
+      byte[] bytes = (o.tok == T.barray ? ((BArray) o.value).data : null);
+      if (bytes == null) {
+        String s = o.asString();
+        bytes = (s.startsWith(";base64,") ? Base64.decodeBase64(s) : s
+            .getBytes());
+      }
+      if (key.equals("_DATA_")) {
+        // just return this binary data value
+        v = new Lst<Object>();
+        v.addLast(bytes);
+        return v;
+      } else if (key.equals("_IMAGE_")) {
+        v.add(0, key);
+        v.add(1, null);
+        v.add(2, bytes);
+      } else {
+        v.addLast(key);
+        v.addLast(null);
+        v.addLast(bytes);
+      }
+    }
+    return v;
   }
 
   private String writeMsg(String msg) throws ScriptException {
