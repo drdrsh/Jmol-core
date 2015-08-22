@@ -125,7 +125,7 @@ public class JSpecView implements JmolJSpecView {
       return null;
     case JC.JSV_SEND_JDXMOL:
     case JC.JSV_SEND_H1SIMULATE:
-      vwr.sm.syncSend(vwr.fullName + "JSpecView" + script.substring(11), ">", 0);
+      vwr.sm.syncSend(vwr.fullName + "JSpecView" + script.substring(10), ">", 0);
       return null;
     case JC.JSV_STRUCTURE:
       // application only -- NO! This is 2D -- does no good. We need
