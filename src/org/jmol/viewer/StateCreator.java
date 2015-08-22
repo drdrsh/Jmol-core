@@ -23,16 +23,17 @@
 
 package org.jmol.viewer;
 
+import javajs.awt.Font;
+import javajs.util.Lst;
+import javajs.util.PT;
+import javajs.util.SB;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.awt.Font;
-import javajs.util.Lst;
 import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.SB;
 
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
@@ -1784,8 +1785,15 @@ public class StateCreator extends JmolStateCreator {
     if (disableSend)
       sm.setSyncDriver(StatusManager.SYNC_DISABLE);
     if (script.indexOf("Mouse: ") != 0) {
-      int jsvMode = JC.getJSVSyncSignal(script);
-      switch (jsvMode) {
+      int serviceMode = JC.getServiceCommand(script);
+      switch (serviceMode) {
+      case JC.NBO_CONFIG:
+      case JC.NBO_MODEL:
+      case JC.NBO_RUN:
+      case JC.NBO_VIEW:
+      case JC.NBO_SEARCH:
+        sm.syncSend(script, ".", port);
+        return;        
       case JC.JSV_NOT:
         break;
       case JC.JSV_SEND_JDXMOL:
@@ -1797,7 +1805,7 @@ public class StateCreator extends JmolStateCreator {
       case JC.JSV_SETPEAKS:
       case JC.JSV_SELECT:
         // from JSpecView...
-        if ((script = vwr.getJSV().processSync(script, jsvMode)) == null)
+        if ((script = vwr.getJSV().processSync(script, serviceMode)) == null)
           return;
       }
       //System.out.println("Jmol executing script for JSpecView: " + script);

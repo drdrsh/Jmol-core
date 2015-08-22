@@ -184,7 +184,12 @@ public class GuiMap {
     labels.put("definecenter", GT._("Define &Center"));
     labels.put("tools", GT._("&Tools"));
     labels.put("gauss", GT._("&Gaussian..."));
-    labels.put("nbo", GT._("&NBO..."));
+    labels.put("nboMenu", "&NBO...");
+    labels.put("nboConfigScript", GT._("&Config"));
+    labels.put("nboModelScript", GT._("&Model"));
+    labels.put("nboRunScript", GT._("&Run"));
+    labels.put("nboViewScript", GT._("&View"));
+    labels.put("nboSearchScript", GT._("&Search"));
     labels.put("viewMeasurementTable", GT._("&Measurements") + "...");
     labels.put("distanceUnitsMenu", GT._("Distance &Units"));
     labels.put("distanceNanometersScript", GT._("&Nanometers 1E-9"));

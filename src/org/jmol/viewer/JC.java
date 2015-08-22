@@ -1009,13 +1009,6 @@ public final class JC {
     return hAlignNames[(align >> TEXT_ALIGN_SHIFT) & 3];
   }
   
-  public static final int JSV_NOT = -1;
-  public static final int JSV_SEND_JDXMOL = 0;
-  public static final int JSV_SETPEAKS = 7;
-  public static final int JSV_SELECT = 14;
-  public static final int JSV_STRUCTURE = 21;
-  public static final int JSV_SEND_H1SIMULATE = 28;
-
   public static final int SMILES_EXPLICIT_H               = 0x001;
   public static final int SMILES_TOPOLOGY                 = 0x002;
   public static final int SMILES_NOAROMATIC               = 0x004;
@@ -1032,14 +1025,32 @@ public final class JC {
 
 
 
+  public static final int JSV_NOT = -1;
+  public static final int JSV_SEND_JDXMOL = 0;
+  public static final int JSV_SETPEAKS = 7;
+  public static final int JSV_SELECT = 14;
+  public static final int JSV_STRUCTURE = 21;
+  public static final int JSV_SEND_H1SIMULATE = 28;
+  public static final int NBO_MODEL = 35;
+  public static final int NBO_RUN = 42;
+  public static final int NBO_VIEW = 49;
+  public static final int NBO_SEARCH = 56;
+  public static final int NBO_CONFIG = 63;
 
-  public static int getJSVSyncSignal(String script) {
+
+  public static int getServiceCommand(String script) {
     return (script.length() < 7 ? -1 : ("" +
-    		"JSPECVI" +
-    		"PEAKS: " +
-    		"SELECT:" +
-    		"JSVSTR:" +
-    		"H1SIMUL")
+        "JSPECVI" +
+        "PEAKS: " +
+        "SELECT:" +
+        "JSVSTR:" +
+        "H1SIMUL" +
+        "NBO:MOD" +
+        "NBO:RUN" +
+        "NBO:VIE" +
+        "NBO:SEA" +
+        "NBO:CON"
+        )
         .indexOf(script.substring(0, 7).toUpperCase()));
   }
 

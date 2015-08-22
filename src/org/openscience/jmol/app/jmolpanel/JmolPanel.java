@@ -201,7 +201,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private static final String copyScriptActionProperty = "copyScript";
   private static final String surfaceToolActionProperty = "surfaceTool";  private static final String pasteClipboardActionProperty = "pasteClipboard";
   private static final String gaussianAction = "gauss";
-  private static final String nboAction = "nbo";
+//  private static final String nboAction = "nbo";
   private static final String resizeAction = "resize";
   //private static final String saveasAction = "saveas";
   //private static final String vibAction = "vibrate";
@@ -951,6 +951,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           String menuKey = ((JmolAbstractButton) e.getSource()).getKey();
           if (menuKey.equals("display") || menuKey.equals("tools"))
             setMenuState();
+          if (menuKey.equals("nboMenu"))
+            setMenuNBO((JMenu) e.getSource());
         }
         @Override
         public void menuDeselected(MenuEvent e) {
@@ -1008,7 +1010,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       new RecentFilesAction(), povrayAction, writeAction, toWebAction, 
       new ScriptWindowAction(), new ScriptEditorAction(),
       new AtomSetChooserAction(), viewMeasurementTableAction, 
-      new GaussianAction(), new NBOAction(), new ResizeAction(), surfaceToolAction }
+      new GaussianAction(), /*new NBOAction(),*/ new ResizeAction(), surfaceToolAction }
   ;
 
   class CloseAction extends AbstractAction {
@@ -1090,17 +1092,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     }
   }
     
-  class NBOAction extends AbstractAction {
-    public NBOAction() {
-      super(nboAction);
-    }
-    
-    @Override
-    public void actionPerformed(ActionEvent e) {
-      startNBO();
-    }
-  }
-    
   class NewwinAction extends AbstractAction {
 
     NewwinAction() {
@@ -1120,12 +1111,34 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     newFrame.setVisible(true);
   }
   
-  void startNBO() {
+  void setMenuNBO(JMenu item) {
+    Component[] nodes = item.getMenuComponents();
+    for (int i = nodes.length; --i >= 0;) {
+      String text = ((JMenuItem) nodes[i]).getText();
+      nodes[i].setEnabled(text.equals("Config"));
+    }
+    getNBOService();
+    if (!nboService.restartIfNecessary()) {
+      return;
+    }
+    if (nboDialog == null)
+      nboDialog = new NBODialog(frame, vwr, nboService);
+    // individual nodes here
+    nodes[1].setEnabled(true); // model
+    nodes[2].setEnabled(true);//vwr.ms.at.length > 0); // run
+    //boolean viewOK = "gennbo".equals(vwr.ms.getInfo(vwr.am.cmi, "fileType"));
+    nodes[3].setEnabled(true); // view    
+    nodes[4].setEnabled(true); // search
+  }
+  void startNBO(String type) {
     getNBOService();
     if (nboDialog == null)
       nboDialog = new NBODialog(frame, vwr, nboService);
     else
       nboDialog.setVisible(true);
+    if (type != null)
+      nboDialog.openPanel(type.charAt(0));
+    
   }
 
   class UguideAction extends AbstractAction {

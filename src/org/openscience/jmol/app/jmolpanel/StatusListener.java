@@ -30,7 +30,6 @@ import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolSyncInterface;
 import org.jmol.c.CBK;
 import org.jmol.dialog.Dialog;
-import javajs.awt.Dimension;
 import javajs.util.PT;
 
 import org.jmol.util.Logger;
@@ -146,13 +145,13 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
           menuName = "";
         display.status.setStatus(1, menuName);
         if (jmol.frame != null) {
-          Font f = jmol.frame.getFont();
-          if (f != null) {
-            int m = jmol.frame.getFontMetrics(f).stringWidth("M");
-            int n = jmol.frame.getWidth() / m;
+          //Font f = jmol.frame.getFont();
+          //if (f != null) {
+            //int m = jmol.frame.getFontMetrics(f).stringWidth("M");
+            //int n = jmol.frame.getWidth() / m;
             //if (n < menuName.length())
               //menuName = menuName.substring(0, n) + "...";
-          }
+          //}
           jmol.frame.setTitle(menuName);
         }
         //        if (jSpecViewFrame != null)
@@ -220,6 +219,10 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
       if (lc.equals("getpreference")) {
         data[0] = (data[2] == null ? jmol.preferencesDialog : jmol
             .getPreference(data[2].toString()));
+        return;
+      }
+      if (strInfo != null && strInfo.toLowerCase().startsWith("nbo:")) {
+        jmol.startNBO(strInfo.substring(4).toLowerCase());
         return;
       }
       jmol.sendNioMessage(((Integer) data[3]).intValue(), strInfo);
