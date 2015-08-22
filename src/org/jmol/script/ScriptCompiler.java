@@ -1092,6 +1092,7 @@ public class ScriptCompiler extends ScriptTokenParser {
             String strFormat = script.substring(ichToken, ichToken + cchToken);
             T token = T.getTokenFromName(strFormat.toLowerCase());
             switch (token == null ? T.nada : token.tok) {
+            case T.var:
             case T.menu:
             case T.orientation:
             case T.append:

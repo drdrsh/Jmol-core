@@ -4127,6 +4127,7 @@ public class ScriptEval extends ScriptExpr {
     boolean isConcat = false;
     boolean doOrient = false;
     boolean appendNew = vwr.getBoolean(T.appendnew);
+    String filename = null;
     BS bsModels;
     int i = (tokAt(0) == T.data ? 0 : 1);
     String filter = null;
@@ -4185,6 +4186,16 @@ public class ScriptEval extends ScriptExpr {
       // load HISTORY
       // load NBO
       switch (tok) {
+      case T.var:
+        String var = paramAsStr(++i);
+        filename = "@" + var;
+        Object o = getVarParameter(var, false);
+        if (o instanceof Map<?, ?>) {
+          checkLength(3);
+          loadPNGJVar(filename, o, htParams);
+          return;
+        }
+        break;
       case T.nbo:
       case T.history:
       case T.menu:
@@ -4339,7 +4350,7 @@ public class ScriptEval extends ScriptExpr {
       default:
         modelName = "fileset";
       }
-      if (filenames == null && getToken(i).tok != T.string)
+      if (filename == null && filenames == null && getToken(i).tok != T.string)
         error(ERROR_filenameExpected);
     }
     // long timeBegin = System.currentTimeMillis();
@@ -4360,7 +4371,6 @@ public class ScriptEval extends ScriptExpr {
       }
     }
 
-    String filename = null;
     String appendedData = null;
     String appendedKey = null;
 
@@ -4368,8 +4378,8 @@ public class ScriptEval extends ScriptExpr {
       // end-of-command options:
       // LOAD SMILES "xxxx" --> load "$xxxx"
 
-      if (i == 0 || filenames == null
-          && (filename = paramAsStr(filePt)).length() == 0)
+      if (filename == null && (i == 0 || filenames == null
+          && (filename = paramAsStr(filePt)).length() == 0))
         filename = getFullPathName();
       if (filename == null && filenames == null) {
         cmdZap(false);
@@ -4401,7 +4411,7 @@ public class ScriptEval extends ScriptExpr {
 
       // LOAD "" --> prevous file      
 
-      if ((filename = paramAsStr(filePt)).length() == 0
+      if (filename == null && (filename = paramAsStr(filePt)).length() == 0
           && (filename = getFullPathName()) == null) {
         // no previously loaded file
         cmdZap(false);
@@ -4500,21 +4510,13 @@ public class ScriptEval extends ScriptExpr {
       if (isInline) {
         htParams.put("fileData", filename);
       } else if (filename.startsWith("@") && filename.length() > 1) {
-        isVariable = true;
         Object o = getVarParameter(filename.substring(1), false);
         if (o instanceof Map<?, ?>) {
-          SV[] av = new SV[] {SV.newV(T.hash, o)};
-          getCmdExt().dispatch(T.binary, false, av);
-          htParams.put("imageData", av[0].value);
-          OC out = vwr.getOutputChannel(null, null);
-          htParams.put("outputChannel", out);
-          vwr.createZip("", "BINARY", htParams);
-          modelName = "cache://VAR_" + filename;
-          vwr.cacheFileByName("cache://VAR_*",false);
-          vwr.cachePut(modelName, out.toByteArray());
-          cmdScript(0, modelName, null);
+          checkLength(i + 1);
+          loadPNGJVar(filename, o, htParams);
           return;
         }
+        isVariable = true;
         o = "" + o;
         loadScript = new SB().append("{\n    var ")
             .append(filename.substring(1)).append(" = ")
@@ -4663,6 +4665,19 @@ public class ScriptEval extends ScriptExpr {
     finalizeLoad(isAppend, appendNew, isConcat, doOrient, nFiles, ac0,
         modelCount0);
 
+  }
+
+  private void loadPNGJVar(String varName, Object o, Map<String, Object> htParams) throws ScriptException {
+    SV[] av = new SV[] {SV.newV(T.hash, o)};
+    getCmdExt().dispatch(T.binary, false, av);
+    htParams.put("imageData", av[0].value);
+    OC out = vwr.getOutputChannel(null, null);
+    htParams.put("outputChannel", out);
+    vwr.createZip("", "BINARY", htParams);
+    String modelName = "cache://VAR_" + varName;
+    vwr.cacheFileByName("cache://VAR_*",false);
+    vwr.cachePut(modelName, out.toByteArray());
+    cmdScript(0, modelName, null);
   }
 
   private String getLoadFilesList(int i, SB loadScript, SB sOptions,
