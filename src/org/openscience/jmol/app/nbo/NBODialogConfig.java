@@ -275,21 +275,6 @@ abstract class NBODialogConfig extends JDialog {
     });
   }
   
-//
-//  protected void clearPressed() {
-//    nboReport(null);
-//  }
-
-  /**
-   * Responds to cancel being press- or equivalent eg window closed.
-   */
-  void closePressed() {
-    nboService.closeProcess();
-    saveHistory();
-    setVisible(false);
-    dispose();
-  }
-
   /**
    * Just saves the path settings from this session.
    */
@@ -314,7 +299,7 @@ abstract class NBODialogConfig extends JDialog {
   /**
    * Show a file selector when the savePath button is pressed.
    */
-  void showNBOPathDialog() {
+  protected void showNBOPathDialog() {
     JFileChooser myChooser = new JFileChooser();
     String fname = serverPathLabel.getText();
     myChooser.setSelectedFile(new File(fname));

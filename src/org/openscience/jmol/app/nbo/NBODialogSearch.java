@@ -105,7 +105,7 @@ abstract class NBODialogSearch extends NBODialogView {
       "<OPBAS>    Matrix elements of chosen operator in chosen basis set",
       "<BAS1BAS2> Transformation matrix between chosen basis sets" };
   
-  String[] npa = {"NPA Atomic Properties:",
+  protected String[] npa = {"NPA Atomic Properties:",
       "  (1) NPA atomic charge",
       "  (2) NPA atomic spin density",
       "  (3) NEC atomic electron configuration",

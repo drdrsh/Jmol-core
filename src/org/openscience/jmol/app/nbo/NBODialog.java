@@ -211,12 +211,13 @@ public class NBODialog extends NBODialogSearch {
  }
 
   protected void close() {
-    this.dispose();
+    saveHistory();
     nboService.closeProcess();
     nboResetV();
     nboService.runScriptQueued("mo delete; nbo delete; select off");
+    dispose();
   }
-
+  
   private boolean checkEnabled() {
     haveService = (nboService.serverPath.length() > 0);
     boolean enabled = (haveService && nboService.restartIfNecessary());    
@@ -430,5 +431,7 @@ public class NBODialog extends NBODialogSearch {
   public void setStatus(String statusInfo) {
     statusLab.setText(statusInfo);
   }
+  
+  
 
 }
