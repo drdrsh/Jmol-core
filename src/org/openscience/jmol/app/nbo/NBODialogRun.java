@@ -68,17 +68,15 @@ abstract class NBODialogRun extends NBODialogModel {
 
   private String useExt;
   protected GaussianDialog gau;
-  protected JFrame runFrame;
-  protected DefaultListModel<String> sList;
-  protected JList<String> keywords;
-  private JComboBox<String> editOps;
-  private JButton run,save;
-  private DefaultComboBoxModel<String> editModel;
+  protected DefaultListModel<String> listModel;
+  protected JList<String> lstKeywords;
+  private JComboBox<String> comboEditOps;
+  private JButton jbRun, jbSave;
+  private DefaultComboBoxModel<String> comboModel;
   String fileData, fileData2, params;
 
   protected NBODialogRun(JFrame f) {
     super(f);
-    runFrame = f;
   }
 
   protected void buildRun(Container p) {
@@ -127,12 +125,12 @@ abstract class NBODialogRun extends NBODialogModel {
     runPanel.add(new JSeparator());
     box = Box.createHorizontalBox();
     box.add(new JLabel("EDIT ")).setFont(new Font("Arial",Font.BOLD,25));
-    editModel = new DefaultComboBoxModel<String>();
-    editModel.addElement("-type-");
-    editModel.addElement("$NBO Keylist");
-    box.add(editOps=new JComboBox<String>(editModel));
-    editOps.setEnabled(isJmolNBO);
-    editOps.addActionListener(new ActionListener() {
+    comboModel = new DefaultComboBoxModel<String>();
+    comboModel.addElement("-type-");
+    comboModel.addElement("$NBO Keylist");
+    box.add(comboEditOps=new JComboBox<String>(comboModel));
+    comboEditOps.setEnabled(isJmolNBO);
+    comboEditOps.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         editOpChanged();
@@ -144,55 +142,75 @@ abstract class NBODialogRun extends NBODialogModel {
     editBox.add(Box.createRigidArea(new Dimension(430,230)));
     runPanel.add(editBox);
     box = Box.createHorizontalBox();
-    box.add(run = new JButton("Run")).setFont(new Font("Arial",Font.PLAIN,20));
-    atNum = new JCheckBox("View atom numbers");
-    atNum.setEnabled(false);
-    atNum.setAlignmentX(0.5f);
-    atNum.addActionListener(new ActionListener() {
+    box.add(jbRun = new JButton("Run")).setFont(new Font("Arial",Font.PLAIN,20));
+    jCheckAtomNum = new JCheckBox("View atom numbers");
+    jCheckAtomNum.setEnabled(false);
+    jCheckAtomNum.setAlignmentX(0.5f);
+    jCheckAtomNum.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        if(!atNum.isSelected())
+        if(!jCheckAtomNum.isSelected())
           nboService.runScriptQueued("select {*};label off");
         else
           nboService.runScriptQueued("select {*};label %a");
         nboService.runScriptQueued("color labels white;select remove {*}");
       }
     });
-    box.add(atNum);
+    box.add(jCheckAtomNum);
     box.add(Box.createRigidArea(new Dimension(100,0)));
-    save = new JButton("Save File");
-    save.setEnabled(isJmolNBO);
-    save.addActionListener(new ActionListener() {
+    jbSave = new JButton("Save File");
+    jbSave.setEnabled(isJmolNBO);
+    jbSave.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         try {
           nboService.writeToFile(fileData+" "+params+sep+fileData2, inputFile);
           //System.out.println(fileData);
         } catch (IOException e1) {
-          appendModelOutPanel("-Error saving file-");
+          appendOutputWithCaret("-Error saving file-");
           return;
         }
-        appendModelOutPanel("-File saved-");
+        appendOutputWithCaret("-File saved-");
       }
     });
-    box.add(save);
-    run.setEnabled(isJmolNBO);
-    run.addActionListener(new ActionListener() {
+    box.add(jbSave);
+    jbRun.setEnabled(isJmolNBO);
+    jbRun.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        goRunClicked(nv.getText(),inputFile,null);
+        goRunClicked(jtSelectAtoms.getText(),inputFile,null);
       }
     });
     runPanel.add(box);
     if(isJmolNBO){
       getParams(inputFile);
-      editOps.setSelectedIndex(1);
+      comboEditOps.setSelectedIndex(1);
     }
     return runPanel;
   }
   
+  protected void essChanged() {
+    clearInputFile();
+    jbRun.setEnabled(false);
+    jbSave.setEnabled(false);
+    comboEditOps.setEnabled(false);
+    editBox.removeAll();
+    editBox.add(Box.createRigidArea(new Dimension(430,230)));
+    appendOutputWithCaret("ESS changed:\n  " + action.getSelectedItem().toString());
+    Object item = action.getSelectedItem();
+    if(item.equals("GenNBO")){
+      useExt = "47";
+      comboModel.removeElement("Gaussian Input File");
+      return;
+    }else if(item.equals("GO9")){
+      useExt = "gau";
+      comboModel.addElement("Gaussian Input File");
+      return;
+    }
+  }
+
   protected void editOpChanged(){
-    Object item = editOps.getSelectedItem();
+    Object item = comboEditOps.getSelectedItem();
     if(item.equals("-type-")){
       editBox.removeAll();
       editBox.add(Box.createRigidArea(new Dimension(430,230)));
@@ -202,7 +220,7 @@ abstract class NBODialogRun extends NBODialogModel {
       editBox.removeAll();
       JScrollPane p = new JScrollPane();
       editBox.setSize(new Dimension(430,230));
-      gau = new GaussianDialog(runFrame, vwr);
+      gau = new GaussianDialog((JFrame) getParent(), vwr);
       p.setViewportView(gau.getContentPane());
       editBox.add(p);
     }
@@ -221,17 +239,17 @@ abstract class NBODialogRun extends NBODialogModel {
     if (button == JFileChooser.APPROVE_OPTION) {
       inputFile = myChooser.getSelectedFile();
       setInputFile(inputFile,useExt, showWorkPathDone);
-      editOps.setEnabled(true);
+      comboEditOps.setEnabled(true);
       getParams(inputFile);
-      appendModelOutPanel("File loaded:\n  "+jobStem+"."+useExt);
-      editOps.setSelectedIndex(1);
+      appendOutputWithCaret("File loaded:\n  "+jobStem+"."+useExt);
+      comboEditOps.setSelectedIndex(1);
       if(!useExt.equals("47")) nboService.runScriptQueued("load \"input::"+inputFile.toString()+"\"");
-      run.setEnabled(true);
-      atNum.setEnabled(true);
-      save.setEnabled(true);
+      jbRun.setEnabled(true);
+      jCheckAtomNum.setEnabled(true);
+      jbSave.setEnabled(true);
       nboResetV();
       saveHistory();
-      isJmolNBO = isJmolNBO();
+      isJmolNBO = checkJmolNBO();
     }
   }
   
@@ -292,21 +310,21 @@ abstract class NBODialogRun extends NBODialogModel {
     if(inputFile!=null){
       editBox.removeAll();
       editBox.setSize(new Dimension(430,230));
-      sList = new DefaultListModel<String>();
+      listModel = new DefaultListModel<String>();
       for (String s : params.split(" |\\n"))
         if (s.length() > 1)
-          sList.addElement(s);
-      keywords = new JList<String>(sList);
-      keywords.addMouseListener(new MouseAdapter() {
+          listModel.addElement(s);
+      lstKeywords = new JList<String>(listModel);
+      lstKeywords.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
           if (e.getClickCount() == 2)
-            removeParams(keywords.getSelectedValuesList());
+            removeListParams(lstKeywords.getSelectedValuesList());
         }
       });
       Box box = Box.createHorizontalBox();
       JScrollPane p1 = new JScrollPane();
-      p1.getViewport().add(keywords);
+      p1.getViewport().add(lstKeywords);
       p1.setBorder(new TitledBorder("Current Keywords:"));
       box.add(p1);
       Box b = Box.createVerticalBox();
@@ -321,134 +339,122 @@ abstract class NBODialogRun extends NBODialogModel {
       b.add(but).addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
-          if(!keywords.isSelectionEmpty())
-            removeParams(keywords.getSelectedValuesList());
+          if(!lstKeywords.isSelectionEmpty())
+            removeListParams(lstKeywords.getSelectedValuesList());
         }
       });
       box.add(b);
       editBox.add(box);
-      nv = new JTextField();
-      nv.addActionListener(new ActionListener() {
+      jtSelectAtoms = new JTextField();
+      jtSelectAtoms.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-          addParams(nv.getText().split(" "));
+          addParams(jtSelectAtoms.getText().split(" "));
         }
       });
-      nv.setBorder(new TitledBorder("Additional Keywords"));
-      editBox.add(nv);
+      jtSelectAtoms.setBorder(new TitledBorder("Additional Keywords"));
+      editBox.add(jtSelectAtoms);
     }
   }
 
   protected void addParams(String[] s) {
-    appendModelOutPanel("Keyword(s) added:");
+    appendOutputWithCaret("Keyword(s) added:");
     for (String x : s)
       if (!x.equals("")){
         if(x.toUpperCase().indexOf("FILE=")>=0){
-          removeParams("FILE=");
+          removeStringParams("FILE=");
           String st = "FILE="+x.substring(5);
           params += st + " ";
-          sList.addElement(st);
-          appendModelOutPanel("  " + st);
+          listModel.addElement(st);
+          appendOutputWithCaret("  " + st);
         }else if (!params.contains(x.toUpperCase())) {
-          appendModelOutPanel("  " + x.toUpperCase());
+          appendOutputWithCaret("  " + x.toUpperCase());
             params += x.toUpperCase() + " ";
-            sList.addElement(x.toUpperCase());
+            listModel.addElement(x.toUpperCase());
           }else{ 
             params += x + " ";
-            sList.addElement(x);
+            listModel.addElement(x);
           }
       }
       
-    nv.setText("");
+    jtSelectAtoms.setText("");
   }
 
-  protected void removeParams(List<String> list) {
-    appendModelOutPanel("Keyword(s) removed:");
+  protected void removeListParams(List<String> list) {
+    appendOutputWithCaret("Keyword(s) removed:");
     for(String x : list){
-      sList.removeElement(x);
+      listModel.removeElement(x);
       if (params.toUpperCase().contains(x.toUpperCase())){
         params = params.substring(0, params.indexOf(x.toUpperCase()))+ params.substring(params.indexOf(x.toUpperCase())
             + x.length() );
-        appendModelOutPanel("  " + x);
+        appendOutputWithCaret("  " + x);
       }
     }
-    String item = keywords.getSelectedValue();
-    sList.removeElement(item);
+    String item = lstKeywords.getSelectedValue();
+    listModel.removeElement(item);
   }
   
-  private void removeParams(String str){
+  private void removeStringParams(String str) {
     String tmp = "";
-    for(String x:params.split(" "))
-      if(!x.contains(str))
+    for (String x : params.split(" "))
+      if (!x.contains(str))
         tmp = tmp.concat(x) + " ";
-      else sList.removeElement(x);
+      else
+        listModel.removeElement(x);
     params = tmp;
   }
 
-  protected void essChanged() {
-    clearInputFile();
-    run.setEnabled(false);
-    save.setEnabled(false);
-    editOps.setEnabled(false);
-    editBox.removeAll();
-    editBox.add(Box.createRigidArea(new Dimension(430,230)));
-    appendModelOutPanel("ESS changed:\n  " + action.getSelectedItem().toString());
-    Object item = action.getSelectedItem();
-    if(item.equals("GenNBO")){
-      useExt = "47";
-      editModel.removeElement("Gaussian Input File");
-      return;
-    }else if(item.equals("GO9")){
-      useExt = "gau";
-      editModel.addElement("Gaussian Input File");
-      return;
-    }
-  }
-
   @Override
-  synchronized protected void goRunClicked(String keywords, File inputFile, Runnable whenDone) {
+  synchronized protected void goRunClicked(String keywords, File inputFile,
+                                           Runnable whenDone) {
     String ess;
     if (inputFile == null) {
-      keywords = PT.clean(nv.getText());
+      keywords = PT.clean(jtSelectAtoms.getText());
       ess = "gennbo";
       inputFile = this.inputFile;
     } else {
-      if(action != null) ess = (String) action.getSelectedItem();
-      else ess = "gennbo";
+      if (action != null)
+        ess = (String) action.getSelectedItem();
+      else
+        ess = "gennbo";
     }
     runJob(keywords, inputFile, ess, whenDone);
   }
   
- private void runJob(String keywords, final File inputFile, String ess, final Runnable whenDone) {
-   String label = "";
-   for (String x : keywords.split(" ")) {
-     x = x.toUpperCase();
-     if (!params.contains(x))
-       label += x + " ";
-   }
-   if(fileData == null) getParams(inputFile);
-   if(!params.toUpperCase().contains("FILE=")) params += "FILE=" + jobStem;
-   params += label;
-   label = "";
-   try {
-     nboService.writeToFile(fileData + " " + params + sep + fileData2,
-         inputFile);
-   } catch (IOException e) {
-     Logger.info("Could not create " + inputFile);
-     return;
-   }
-   final SB sb = new SB();
-   appendToFile("GLOBAL C_PATH " + inputFile.getParent() + sep, sb);
-   appendToFile("GLOBAL C_JOBSTEM " + jobStem + sep, sb);
-   appendToFile("GLOBAL C_ESS " + ess + sep, sb);
-   appendToFile("GLOBAL C_LABEL_1 FILE="+jobStem, sb);
-   final String jobStem = this.jobStem;
-   nboService.queueJob("run", "running " + ess + "...", new Runnable() {
+  private void runJob(String keywords, final File inputFile, String ess,
+                      final Runnable whenDone) {
+    String label = "";
+    for (String x : keywords.split(" ")) {
+      x = x.toUpperCase();
+      if (!params.contains(x))
+        label += x + " ";
+    }
+    if (fileData == null)
+      getParams(inputFile);
+    if (!params.toUpperCase().contains("FILE="))
+      params += "FILE=" + jobStem;
+    params += label;
+    label = "";
+    try {
+      nboService.writeToFile(fileData + " " + params + sep + fileData2,
+          inputFile);
+    } catch (IOException e) {
+      Logger.info("Could not create " + inputFile);
+      return;
+    }
+    final SB sb = new SB();
+    appendToFile("GLOBAL C_PATH " + inputFile.getParent() + sep, sb);
+    appendToFile("GLOBAL C_JOBSTEM " + jobStem + sep, sb);
+    appendToFile("GLOBAL C_ESS " + ess + sep, sb);
+    appendToFile("GLOBAL C_LABEL_1 FILE=" + jobStem, sb);
+    final String jobStem = this.jobStem;
+    nboService.queueJob("run", "running " + ess + "...", new Runnable() {
       @Override
       public void run() {
         nboService.rawCmdNew("r", sb, true, NBOService.MODE_RUN);
         try {
-          nboService.writeToFile(fileData+" "+params+sep+fileData2, inputFile);
+          nboService.writeToFile(fileData + " " + params + sep + fileData2,
+              inputFile);
           getParams(inputFile);
           addList();
           //nboService.runScriptQueued("load " + inputFile.toString());
@@ -460,7 +466,7 @@ abstract class NBODialogRun extends NBODialogModel {
           e.printStackTrace();
         }
       }
-   });
- }
+    });
+  }
 }
 

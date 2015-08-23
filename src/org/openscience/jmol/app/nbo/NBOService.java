@@ -36,7 +36,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Scanner;
 
 import javajs.util.PT;
 import javajs.util.SB;
@@ -158,10 +157,9 @@ public class NBOService {
 
   NBODialog nboDialog;
 
-  private Process nboServer;
+  protected Process nboServer;
   protected Thread nboListener;
   private InputStream stdout;
-  private Scanner nboScanner;
   protected BufferedReader nboReader;
   private PrintWriter stdinWriter;
   protected static NBOJobQueueManager manager; 
@@ -186,7 +184,7 @@ public class NBOService {
    *        The interacting display we are reproducing (source of view angle
    *        info etc)
    */
-  public NBOService(Viewer vwr) {
+  public NBOService(Viewer vwr) {    
     this.vwr = vwr;
     sbRet = new SB();
     java.util.Properties props = JmolPanel.historyFile.getProperties();
@@ -234,7 +232,7 @@ public class NBOService {
         nboServer.exitValue();
         isClosed = true;
         System.out.println("NBOServe.exe has closed unexpectedly!");
-      } catch (Exception e) {
+      } catch (Exception IllegalThreadStateException) {
         //
       }
     if (nboSync || this.nboSync || nboServer == null || isClosed) {
@@ -309,6 +307,7 @@ public class NBOService {
       }
       try {
         Thread.sleep(10);
+        System.out.println("NBOService.waitfor()");
       } catch (InterruptedException e) {
         return false;
       }
@@ -344,12 +343,13 @@ public class NBOService {
 
   private void sendCmd(String s) {
     System.out.println("sending " + s);
-    if (s.startsWith("<"))
-      System.out.println(getFileData(serverDir + PT.trim(s, "<>")));
+    if (s.startsWith("\n<"))
+      System.out.println(getFileData(serverDir + PT.trim(s, "\n<>")));
     try {
       stdinWriter.println(s);
       stdinWriter.flush();
       Thread.sleep(10);
+      System.out.println("NBOService.sendCmd()");
     } catch (InterruptedException e) {
       // TODO
     }
@@ -373,7 +373,7 @@ public class NBOService {
       }
       if (!inData && line.indexOf("NBO") < 0
           && dialogMode == MODE_MODEL)
-        nboDialog.appendModelOutPanel(line);
+        nboDialog.addLine(NBODialogConfig.DIALOG_MODEL, line);
       if (inData && sbRet != null) {
         sbRet.append(line + "\n");
         if (line.indexOf("END") >= 0) {
@@ -433,8 +433,10 @@ public class NBOService {
             String line = null;
             try {
               Thread.sleep(25); // give it a breather after startup? 
+              System.out.println("NBOService.startProcess()");
               while ((line = nboReader.readLine()) != null) {
                 Thread.sleep(1);
+                System.out.println("NBOService.line");
                 // ignore the opener business
                 if (line.indexOf("DATA \" \"") >= 0) {
                   Logger.info(" [NBO opener ignored]");
@@ -450,11 +452,11 @@ public class NBOService {
                 Logger.info(line);
                 if (line.indexOf("*start*") >= 0) {
                   haveStart = inRequest = isWorking = true;
-                  nboDialog.reqInfo = "";
+                  nboDialog.addLine(NBODialogConfig.DIALOG_CONFIG, null);
                   continue;
                 }
                 if (line.indexOf("Permission denied") >= 0||line.indexOf("PGFIO-F")>=0 || line.indexOf("Invalid command")>=0) {
-                  vwr.alert(line
+                  nboDialog.alert(line
                       + "\n\nNBOServe could not access key files -- Is another version running? Perhaps NBOPro?");
                   isWorking = inRequest = isWorking = false;
                   manager.clearQueue();
@@ -478,16 +480,16 @@ public class NBOService {
                 case MODE_VIEW_LIST:
                 case MODE_SEARCH_VALUE:
                   if (isWorking && inRequest)
-                    nboDialog.nboViewAddLine(line);
+                    nboDialog.addLine(NBODialogConfig.DIALOG_VIEW, line);
                   break;
                 case MODE_SEARCH_LIST:
                   if (isWorking && inRequest) {
-                    nboDialog.nboSearchAddLineTokens(line);
+                    nboDialog.addLine(NBODialogConfig.DIALOG_LIST, line);
                   }
                   break;
                 case MODE_SEARCH_SELECT:
                   if (line.startsWith(" Select")) {
-                    nboDialog.nboSearchAddLine(line);
+                    nboDialog.addLine(NBODialogConfig.DIALOG_SEARCH, line);
                     isWorking = inRequest = false;
                   }
                   break;
@@ -497,7 +499,7 @@ public class NBOService {
                   break;
                 case MODE_MODEL:
                   if(line.indexOf("can't do that")>=0){
-                    nboDialog.appendModelOutPanel(line);
+                    nboDialog.addLine(NBODialogConfig.DIALOG_MODEL, line);
                     isWorking = inRequest = false;
                     break;
                   }
@@ -507,8 +509,17 @@ public class NBOService {
                   nboReport(line, dialogMode);
                   break;
                 }
+                try {
+                  int test = nboServer.exitValue();
+                  closeProcess();
+                  System.out.println("NBOService test = " + test);
+                  return;
+                } catch (Exception IllegalThreadStateException) {
+                  // still going
+                }
               }
             } catch (Throwable e1) {
+              closeProcess();
               // includes thread death
               return;
             }
@@ -525,12 +536,12 @@ public class NBOService {
     return null;
   }
 
-  @SuppressWarnings("deprecation")
   void closeProcess() {
     //    try {
     //      stdout.close();
     //    } catch (Exception e) {
     //    }
+    isWorking = false;
     stdout = null;
     try {
       stdinWriter.close();
@@ -538,17 +549,12 @@ public class NBOService {
     }
     stdinWriter = null;
     try {
-      nboScanner.close();
-    } catch (Exception e) {
-    }
-    nboScanner = null;
-    try {
       nboReader.close();
     } catch (Exception e) {
     }
     nboReader = null;
     try {
-      nboListener.stop();      
+      nboListener.interrupt();      
     } catch (Exception e) {
       System.out.println("can't interrupt");
     }
@@ -595,7 +601,7 @@ public class NBOService {
 
   synchronized public String evaluateJmolString(String expr) {
     synchronized (lock) {
-    return evaluateJmol(expr).asString();
+      return evaluateJmol(expr).asString();
     }
   }
 
@@ -643,6 +649,7 @@ public class NBOService {
         }
         if (doWait) {
           while (isWorking) {
+            System.out.println("NBOService rawCmd");
             Thread.sleep(10);
           }
         }

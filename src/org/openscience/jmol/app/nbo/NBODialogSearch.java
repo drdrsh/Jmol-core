@@ -24,7 +24,6 @@
 package org.openscience.jmol.app.nbo;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -40,7 +39,6 @@ import javajs.util.SB;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -278,11 +276,11 @@ abstract class NBODialogSearch extends NBODialogView {
     });
     keyWord.setEnabled(isJmolNBO);
     selectPanel.add(keyWord,BorderLayout.NORTH);
-    atNum = new JCheckBox("Show Atom #'s");
-    atNum.addActionListener(new ActionListener() {
+    jCheckAtomNum = new JCheckBox("Show Atom #'s");
+    jCheckAtomNum.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) { 
-        if(!atNum.isSelected())
+        if(!jCheckAtomNum.isSelected())
           nboService.runScriptQueued("select {*};label off");
         else
           nboService.runScriptQueued("select {*};label %a");
@@ -290,7 +288,7 @@ abstract class NBODialogSearch extends NBODialogView {
       }
     });
     Box bo = Box.createHorizontalBox();
-    bo.add(atNum);
+    bo.add(jCheckAtomNum);
     if(view){
       viewAll = new JCheckBox("View all");
       bo.add(viewAll);
@@ -310,15 +308,6 @@ abstract class NBODialogSearch extends NBODialogView {
     searchPanel.add(comboBox, BorderLayout.PAGE_START);
     searchPanel.add(modelOut(), BorderLayout.CENTER);
     return searchPanel;
-  }
-
-  void nboSearchAddLine(String line) {
-    reqInfo += line;
-  }
-
-  void nboSearchAddLineTokens(String line) {
-    if (reqInfo.trim().split(" ").length <= jmolAtomCount)
-      reqInfo += line + " ";
   }
 
   protected void getList1(final String get) {
@@ -354,74 +343,84 @@ abstract class NBODialogSearch extends NBODialogView {
       public void run() {
         JPanel l = new JPanel(new GridLayout(labs.length, 1));
         JPanel l2 = new JPanel(new GridLayout(labs.length, 1));
-        for(int i=0; i<labs.length; i++){
+        for (int i = 0; i < labs.length; i++) {
           final String key = get[i].split(" ")[0];
           l.add(new JLabel(labs[i]));
-          if(key.equals("b"))
+          if (key.equals("b"))
             l2.add(new JLabel(basis.getSelectedItem().toString()));
-          else if(key.equals("o")){
-            orb=new JComboBox<String>(lists.get(get[i]));
+          else if (key.equals("o")) {
+            orb = new JComboBox<String>(lists.get(get[i]));
             orb.addActionListener(new ActionListener() {
               @Override
               public void actionPerformed(ActionEvent e) {
-                showOrbJmol(basis.getSelectedItem().toString(),orb.getSelectedIndex()+1);
+                showOrbJmol(basis.getSelectedItem().toString(),
+                    orb.getSelectedIndex() + 1);
               }
             });
             orb.setSelectedIndex(0);
             l2.add(orb);
-          }else if(key.equals("d")||get[i].equals("c cmo")){
-            nbo1=new JComboBox<String>(lists.get(get[i]));
+          } else if (key.equals("d") || get[i].equals("c cmo")) {
+            nbo1 = new JComboBox<String>(lists.get(get[i]));
             nbo1.addActionListener(new ActionListener() {
               @Override
               public void actionPerformed(ActionEvent e) {
-                showOrbJmol(basis.getSelectedItem().toString(),nbo1.getSelectedIndex()+1);
+                showOrbJmol(basis.getSelectedItem().toString(),
+                    nbo1.getSelectedIndex() + 1);
               }
             });
             nbo1.setSelectedIndex(0);
             l2.add(nbo1);
-          }else if(key.equals("d'")||key.equals("n")||get[i].equals("a nbo")){
-            nbo2=new JComboBox<String>(lists.get(get[i]));
+          } else if (key.equals("d'") || key.equals("n")
+              || get[i].equals("a nbo")) {
+            nbo2 = new JComboBox<String>(lists.get(get[i]));
             nbo2.addActionListener(new ActionListener() {
               @Override
               public void actionPerformed(ActionEvent e) {
-                if(key.equals("n"))
-                  showOrbJmol("NBO",nbo2.getSelectedIndex()+1);
-                else if(key.equals("a")){
-                  showOrbJmol("NBO",lists.get("d nbo").length + 1 + nbo2.getSelectedIndex());
-                }else showOrbJmol(basis.getSelectedItem().toString(),nbo2.getSelectedIndex()+1);
+                if (key.equals("n"))
+                  showOrbJmol("NBO", nbo2.getSelectedIndex() + 1);
+                else if (key.equals("a")) {
+                  showOrbJmol("NBO",
+                      lists.get("d nbo").length + 1 + nbo2.getSelectedIndex());
+                } else
+                  showOrbJmol(basis.getSelectedItem().toString(),
+                      nbo2.getSelectedIndex() + 1);
               }
             });
             nbo2.setSelectedIndex(0);
             l2.add(nbo2);
-          }else if(key.equals("u")||key.equals("rs")){
+          } else if (key.equals("u") || key.equals("rs")) {
             unit = new JComboBox<String>(lists.get(get[i]));
             l2.add(unit);
-          }else if(key.equals("a")){
+          } else if (key.equals("a")) {
             at1 = new JComboBox<String>(lists.get(get[i]));
             at1.addActionListener(new ActionListener() {
               @Override
               public void actionPerformed(ActionEvent e) {
-                if(at2==null) 
-                  nboService.runScriptQueued("select on; select {*}["+(at1.getSelectedIndex()+1)+"]");
-                else 
-                  nboService.runScriptQueued("select on; select remove{*}; " +
-                      "select add {*}["+(at1.getSelectedIndex()+1)+"]; select add {*}["+(at2.getSelectedIndex()+1)+"]");
+                if (at2 == null)
+                  nboService.runScriptQueued("select on; select {*}["
+                      + (at1.getSelectedIndex() + 1) + "]");
+                else
+                  nboService.runScriptQueued("select on; select remove{*}; "
+                      + "select add {*}[" + (at1.getSelectedIndex() + 1)
+                      + "]; select add {*}[" + (at2.getSelectedIndex() + 1)
+                      + "]");
               }
             });
             at1.setSelectedIndex(0);
             l2.add(at1);
-          }else if(key.equals("a'")){
+          } else if (key.equals("a'")) {
             at2 = new JComboBox<String>(lists.get("a"));
             at2.addActionListener(new ActionListener() {
               @Override
               public void actionPerformed(ActionEvent e) {
-                nboService.runScriptQueued("select on; select remove{*}; " +
-                		"select add {*}["+(at1.getSelectedIndex()+1)+"]; select add {*}["+(at2.getSelectedIndex()+1)+"]");
+                nboService.runScriptQueued("select on; select remove{*}; "
+                    + "select add {*}[" + (at1.getSelectedIndex() + 1)
+                    + "]; select add {*}[" + (at2.getSelectedIndex() + 1) + "]");
               }
             });
             at2.setSelectedIndex(1);
             l2.add(at2);
-          }else if(key.equals("b1")){
+          } else if (key.equals("b1")) {
             l2.add(basis);
             basis.addActionListener(new ActionListener() {
               @Override
@@ -429,7 +428,7 @@ abstract class NBODialogSearch extends NBODialogView {
                 basChange();
               }
             });
-          }else if(key.equals("b2")){
+          } else if (key.equals("b2")) {
             bas2 = new JComboBox<String>(basSet);
             bas2.addActionListener(new ActionListener() {
               @Override
@@ -439,20 +438,21 @@ abstract class NBODialogSearch extends NBODialogView {
             });
             bas2.setSelectedIndex(1);
             l2.add(bas2);
-          }else if(key.equals("b12")){
+          } else if (key.equals("b12")) {
             basis = new JComboBox<String>(basSet);
             l2.add(basis);
-          }else if(key.equals("r")){
+          } else if (key.equals("r")) {
             row = new JComboBox<String>(lists.get("r"));
             l2.add(row);
-          }else if(key.equals("c")){
+          } else if (key.equals("c")) {
             col = new JComboBox<String>(lists.get("c"));
             l2.add(col);
           }
         }
-        appendModelOutPanel((!nboOutput.getText().equals(""))?"\n" + keyProp + " Search Results:":keyProp + " Search Results:");
-        comboBox.add(l,BorderLayout.WEST);
-        comboBox.add(l2,BorderLayout.CENTER);
+        appendOutputWithCaret((jpNboOutput.getText().equals("") ? "" : "\n")
+            + keyProp + " Search Results:");
+        comboBox.add(l, BorderLayout.WEST);
+        comboBox.add(l2, BorderLayout.CENTER);
       }
     });
 
@@ -493,7 +493,7 @@ abstract class NBODialogSearch extends NBODialogView {
       if (opList.getSelectedIndex() != 0)
       if (keyProp.equals("")) {
         operator = opList.getSelectedIndex();
-        String val = opList.getSelectedValue().trim();
+        //String val = opList.getSelectedValue().trim();
         if(lists.get("r")==null) getList1("r");
         if(lists.get("c")==null) getList1("c");
         setLists("b12 r c".split(" "),new String[] {"Basis:","Row: ", "Collumn: "});
@@ -813,7 +813,7 @@ abstract class NBODialogSearch extends NBODialogView {
         public void run() {
           reqInfo = "";
           nboService.rawCmdNew("s", sb, false, NBOService.MODE_SEARCH_VALUE);
-          appendModelOutPanel("  "+reqInfo);
+          appendOutputWithCaret("  "+reqInfo);
         }
       });
     }
@@ -822,7 +822,7 @@ abstract class NBODialogSearch extends NBODialogView {
   
   private boolean secondPick = true;
 
-  protected void notifyCallbackSearch(int atomIndex) {
+  protected void notifyCallbackS(int atomIndex) {
     if (at1 != null && at2 == null)
       at1.setSelectedIndex(atomIndex);
     else if (at1 != null && at2 != null)
@@ -834,4 +834,24 @@ abstract class NBODialogSearch extends NBODialogView {
         secondPick = true;
       }
   }
+  
+  protected void rawInputS(String cmd) {
+    if (cmd.startsWith("O ")) {
+      try {
+        int i = Integer.parseInt(cmd.split(" ")[1]);
+        orb.setSelectedIndex(i - 1);
+      } catch (Exception e) {
+        appendOutputWithCaret("Invalid command");
+      }
+    } else if (cmd.startsWith("A ")) {
+      try {
+        int i = Integer.parseInt(cmd.split(" ")[1]);
+        at1.setSelectedIndex(i - 1);
+      } catch (Exception e) {
+        appendOutputWithCaret("Invalid command");
+      }
+    }
+  }
+
+
 }

@@ -77,7 +77,6 @@ abstract class NBODialogView extends NBODialogRun {
   protected boolean oneD = true;
   protected boolean inLobes = true;
   protected JComboBox<String> list;
-  private DefaultComboBoxModel<String> listModel;
   protected JCheckBox selToggle;
   protected Hashtable<String, String[]> lists;
   protected int viewState;
@@ -192,7 +191,6 @@ abstract class NBODialogView extends NBODialogRun {
     super(f);
   }
 
-  @Override
   protected void buildView(Container p) {
     viewState = VIEW_STATE_MAIN;
     //numStor = 0;
@@ -246,7 +244,7 @@ abstract class NBODialogView extends NBODialogRun {
         new Font("Arial",Font.BOLD, 25));
     selectPanel.add(new JSeparator());
     box.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 5));
-    listModel = new DefaultComboBoxModel<String>();
+    DefaultComboBoxModel<String> listModel = new DefaultComboBoxModel<String>();
     (list = new JComboBox<String>(listModel)).setFont(nboFont);
     list.addActionListener(new ActionListener() {
       @Override
@@ -370,12 +368,12 @@ abstract class NBODialogView extends NBODialogRun {
     selectPanel.add(box);
     box2 = Box.createHorizontalBox();
     //box2.add(selToggle);
-    atNum = new JCheckBox("Show Atom #'s");
-    box2.add(atNum);
-    atNum.addActionListener(new ActionListener() {
+    jCheckAtomNum = new JCheckBox("Show Atom #'s");
+    box2.add(jCheckAtomNum);
+    jCheckAtomNum.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) { 
-        if(!atNum.isSelected())
+        if(!jCheckAtomNum.isSelected())
           nboService.runScriptQueued("select {*};label off");
         else
           nboService.runScriptQueued("select {*};label %a");
@@ -940,13 +938,6 @@ abstract class NBODialogView extends NBODialogRun {
     }
   }
 
-  protected void nboViewAddLine(String line) {
-    line = line.trim();
-    while (line.length() % 20 != 0)
-      line += " ";
-    reqInfo += line;
-  }
-
   @Override
   protected void showWorkpathDialogV(String workingPath) {
     JFileChooser myChooser = new JFileChooser();
@@ -1135,7 +1126,7 @@ abstract class NBODialogView extends NBODialogRun {
    *  
    * @param atomno
    */
-  protected void notifyCallbackView(String atomno) {
+  protected void notifyCallbackV(String atomno) {
     switch (viewState) {
     case VIEW_STATE_VECTOR:
       vectorFields[viewVectorPt++].setText(atomno); 
@@ -1150,5 +1141,45 @@ abstract class NBODialogView extends NBODialogRun {
       viewPlanePt = viewPlanePt % 3;
     }    
   }
+
+  protected void rawInputV(String cmd) {
+    if (!checkJmolNBO())
+      return;
+    if (cmd.startsWith("BAS"))
+      try {
+        basis.setSelectedItem(cmd.split(" ")[1]);
+        appendOutputWithCaret("Basis changed:\n  " + cmd.split(" ")[1]);
+      } catch (Exception e) {
+        appendOutputWithCaret("NBO View can't do that");
+      }
+    else if (cmd.startsWith("CON")) {
+      try {
+        int i = Integer.parseInt(cmd.split(" ")[1]);
+        list.setSelectedIndex(i - 1);
+        oneD = false;
+        goViewClicked();
+      } catch (Exception e) {
+        appendOutputWithCaret("NBO View can't do that");
+      }
+    } else if (cmd.startsWith("PR")) {
+      try {
+        int i = Integer.parseInt(cmd.split(" ")[1]);
+        list.setSelectedIndex(i - 1);
+        oneD = true;
+        goViewClicked();
+      } catch (Exception e) {
+        appendOutputWithCaret("NBO View can't do that");
+      }
+    } else if (cmd.startsWith("VIEW")) {
+      try {
+        int i = Integer.parseInt(cmd.split(" ")[1]);
+        dList.setSelectedIndex(i - 1);
+        view3D();
+      } catch (Exception e) {
+        appendOutputWithCaret("NBO View can't do that");
+      }
+    }
+  }
+
 
 }

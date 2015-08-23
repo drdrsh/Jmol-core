@@ -1111,27 +1111,35 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     newFrame.setVisible(true);
   }
   
+  /**
+   * @param item  
+   */
   void setMenuNBO(JMenu item) {
-    Component[] nodes = item.getMenuComponents();
-    for (int i = nodes.length; --i >= 0;) {
-      String text = ((JMenuItem) nodes[i]).getText();
-      nodes[i].setEnabled(text.equals("Config"));
-    }
-    getNBOService();
-    if (!nboService.restartIfNecessary()) {
-      return;
-    }
-    if (nboDialog == null)
-      nboDialog = new NBODialog(frame, vwr, nboService);
-    // individual nodes here
-    nodes[1].setEnabled(true); // model
-    nodes[2].setEnabled(true);//vwr.ms.at.length > 0); // run
-    //boolean viewOK = "gennbo".equals(vwr.ms.getInfo(vwr.am.cmi, "fileType"));
-    nodes[3].setEnabled(true); // view    
-    nodes[4].setEnabled(true); // search
+// no longer used - causes delay in hovering over NBO menu item
+//    Component[] nodes = item.getMenuComponents();
+//    
+//    for (int i = nodes.length; --i >= 0;) {
+//      String text = ((JMenuItem) nodes[i]).getText();
+//      nodes[i].setEnabled(text.equals("Config"));
+//    }
+//    getNBOService();
+//    if (!nboService.restartIfNecessary()) {
+//      return;
+//    }
+//    if (nboDialog == null)
+//      nboDialog = new NBODialog(frame, vwr, nboService);
+//    // individual nodes here
+//    nodes[1].setEnabled(true); // model
+//    nodes[2].setEnabled(true);//vwr.ms.at.length > 0); // run
+//    //boolean viewOK = "gennbo".equals(vwr.ms.getInfo(vwr.am.cmi, "fileType"));
+//    nodes[3].setEnabled(true); // view    
+//    nodes[4].setEnabled(true); // search
   }
   void startNBO(String type) {
+    
+    // this next is the problem
     getNBOService();
+
     if (nboDialog == null)
       nboDialog = new NBODialog(frame, vwr, nboService);
     else

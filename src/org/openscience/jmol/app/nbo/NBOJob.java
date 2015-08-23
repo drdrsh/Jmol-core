@@ -50,11 +50,11 @@ class NBOJob {
   public void run() {
     startTime = System.currentTimeMillis();
     if (service.nboDialog != null)
-      service.nboDialog.statusLab.setText(statusInfo);
+      service.nboDialog.setStatus(statusInfo);
     Logger.info("NBO job " + name + " started");      
     process.run();
     if (service.nboDialog != null)
-      service.nboDialog.statusLab.setText(null);
+      service.nboDialog.setStatus(null);
     Logger.info("NBO job " + name + " ended ms:" + (System.currentTimeMillis() - startTime));      
   }
 

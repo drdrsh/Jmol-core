@@ -211,6 +211,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
         jmol.gaussianDialog.updateModel(-1);
       break;
     case SYNC:
+      //System.out.println("StatusListener sync; " + strInfo);
       String lc = (strInfo == null ? "" : strInfo.toLowerCase());
       if (lc.startsWith("jspecview")) {
         setJSpecView(strInfo.substring(9).trim(), false, false);
