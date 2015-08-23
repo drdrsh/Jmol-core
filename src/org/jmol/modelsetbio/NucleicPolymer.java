@@ -115,7 +115,7 @@ public class NucleicPolymer extends PhosphorusPolymer {
       NucleicMonomer bestNucleotide = null;
       for (int j = other.monomerCount; --j >= 0;) {
         NucleicMonomer otherNucleotide = (NucleicMonomer) other.monomers[j];
-        if (!otherNucleotide.isPyrimidine())
+        if (!otherNucleotide.isPyrimidine)
           continue;
         Atom otherN3 = otherNucleotide.getN3();
         if (isInA ? !bsB.get(otherN3.i) : !bsA.get(otherN3.i))

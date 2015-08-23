@@ -34,6 +34,10 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javajs.util.SB;
 
@@ -53,6 +57,7 @@ import javax.swing.border.TitledBorder;
 
 import org.jmol.i18n.GT;
 import org.jmol.viewer.Viewer;
+import org.openscience.jmol.app.jmolpanel.GuiMap;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 abstract class NBODialogConfig extends JDialog {
@@ -461,21 +466,8 @@ abstract class NBODialogConfig extends JDialog {
     nboService.runScriptQueued("zap");
   }
 
-  protected static final String helpConfig = "                       NBOPro v.6\n"
-      +"The NBOPro6 program suite combines four distinct modules:\n"
-      +" (1) NBOModel (molecular design editor)\n"
-      +" (2) NBORun (GenNBO)\n"
-      +" (3) NBOView (orbital viewer)\n"
-      +" (4) NBOSearch (data miner)\n"
-      +"The modules have distinct but interrelated NBO capabilities.\n"
-      +"Each module has its own commands, syntax, and HELP screens.\n"
-      +"\n"
-      +"To get started, you must first locate your NBOServe executable"
-      +"in the CONFIG menu and press connect.  Once successfully connected"
-      +"the other modules will be available and you will not have to revisit" +
-      "the CONFIG menu as long as the location of the NBOServe executable " +
-      "is not changed.  All modules support the raw"
-      +"keyboard input from NBOPro6 by typing commands into the NBO Input line";
+  protected static String helpConfig;
+  
   protected static final String helpModel ="NBOModel COMMAND SYNTAX\n"
       +" \n"
       +"Command verbs are case-insensitive and can"
@@ -813,38 +805,6 @@ abstract class NBODialogConfig extends JDialog {
       +" 3CHB  1 2 :NH3     (hyperbonded N-W-N triad)\n"
       +" SHOW H2O           (water monomer)\n"
       +" 3CHB  2 3 :OH2     (H-bonded water dimer)\n";
-  protected final static String runHelp = "                  NBORun: GENERAL PROGRAM USAGE\n"
-      +"By default, the NBORun module performs NBO analysis of the"
-      +"selected wavefunction archive (.47) file 'JOB.47' and"
-      +"writes the output to a corresponding 'JOB.NBO' file (as"
-      +"though the 'GenNBO < JOB.47 > JOB.NBO' command were given)."
-      +"[Alternatively, NBORun can calculate the wavefunction with"
-      +"a chosen ESS program, specified by a corresponding 'ESS.BAT'"
-      +"batch file and 'JOB.ESS' input file (as though the command"
-      +"'ESS JOB.ESS' were given). This allows you to perform the"
-      +"wavefunction calculation and NBO analysis in a single step.]\n"
-      +" \n"
-      +"You will be prompted with the list of JOB.47 files as found"
-      +"in the directory last used by Jmol-NBO. After a particular JOB is selected,"
-      +"the program will display the current list of $NBO keyword"
-      +"options and allow you to insert additional options, if desired."
-      +"When notified that the job is finished processing the 'JOB.NBO' output becomes available for"
-      +"NBOView orbital plotting (if the PLOT keyword was included)"
-      +"or NBOSearch data-mining.\n";
-  protected final static String viewHelp = "                  NBOView: GENERAL PROGRAM USAGE\n"
-      +"NBOView program usage begins with selection of a JOB from "
-      +"available PLOT (.31-.41, .46) files on the current directory. "
-      +"Use the NBORun module to generate PLOT output files from "
-      +"any available archive (.47) file in the directory.  \n\nAfter "
-      +"selecting a basis set and orbital, press GO to view either "
-      +"a 1D profile or a 2D contour, with the vector/plane defined by the atoms highlighted on the model.  "
-      +"Selected atoms can be changed by clicking on the model.  "
-      +"To view a 3D bitmap image, select one of the 9 items in storage "
-      +"and press the '3D' button under display, raytracing may take some "
-      +"time so you may need to be patient "
-      +"The program presents many possible options to alter details "
-      +"of the view/camera model. If uncertain, the default values shown "
-      +"in the settings will be used.";
   protected final static String searchHelp = "             NBOSearch: COMMAND SYNTAX AND PROGRAM OVERVIEW\n"
       +"PROGRAM OVERVIEW:\n"
       +"Follow menu prompts through the decision tree to the "
@@ -898,5 +858,28 @@ abstract class NBODialogConfig extends JDialog {
   static final int DIALOG_SEARCH = 40;
   static final int DIALOG_LIST = -1; // used only for addLine
   
+
+  private final static Map<String, String> htHelp = new HashMap<String, String>();
+  
+  /**
+   * Retrieve and cache a help string.
+   *  
+   * @param key
+   * @return resource string or a message that it cannot be found
+   * 
+   */
+  synchronized protected String getHelp(String key) {
+    String help = htHelp.get(key);
+    if (help == null) {
+      try {
+        String fname = "org/openscience/jmol/app/nbo/help/" + key + ".txt";
+        help = GuiMap.getResourceString(this, fname);
+      } catch (IOException e) {
+        help = "<resource not found>";
+      }
+      htHelp.put(key, help);
+    }
+    return help;
+  }
 
 }

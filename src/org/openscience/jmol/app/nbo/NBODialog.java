@@ -33,6 +33,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -384,17 +386,17 @@ public class NBODialog extends NBODialogSearch {
     help.setSize(new Dimension(400, 400));
     switch (dialogMode) {
     case DIALOG_CONFIG:
-      p.setText(helpConfig);
+      p.setText(getHelp("config"));
       break;
     case DIALOG_MODEL:
       if (!helpDialogM(p, key))
         return;
       break;
     case DIALOG_RUN:
-      p.setText(runHelp);
+      p.setText(getHelp("run"));
       break;
     case DIALOG_VIEW:
-      p.setText(viewHelp);
+      p.setText(getHelp("view"));
       break;
     case DIALOG_SEARCH:
       p.setText(searchHelp);
@@ -405,7 +407,7 @@ public class NBODialog extends NBODialogSearch {
     help.setVisible(true);
   }
     
-   public void addLine(int type, String line) {
+  public void addLine(int type, String line) {
     switch (type) {
     case DIALOG_CONFIG:
       reqInfo = line;

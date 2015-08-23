@@ -134,6 +134,9 @@ public class NucleicMonomer extends PhosphorusMonomer {
    */
   private NucleicMonomer() {}
   
+  private boolean isPurine;
+  boolean isPyrimidine;
+  
   public static Monomer
     validateAndAllocate(Chain chain, String group3, int seqcode,
                         int firstAtomIndex, int lastAtomIndex,
@@ -146,6 +149,8 @@ public class NucleicMonomer extends PhosphorusMonomer {
     if (offsets == null)
       return null;
     
+    // Actually, O5T is never tested; it MUST have 05P. 
+    // O5P is part of the mask that got us here.
     if (!checkOptional(offsets, O5P, firstAtomIndex, 
         specialAtomIndexes[JC.ATOMID_O5T_TERMINUS]))
       return null;
@@ -169,15 +174,15 @@ public class NucleicMonomer extends PhosphorusMonomer {
   private NucleicMonomer set4(Chain chain, String group3, int seqcode,
                  int firstAtomIndex, int lastAtomIndex,
                  byte[] offsets) {
-    set3(chain, group3, seqcode,
+    set2(chain, group3, seqcode,
           firstAtomIndex, lastAtomIndex, offsets);
     if (!have(offsets, NP)) {
       offsets[0] = offsets[O5P];
       setLeadAtomIndex();
     }
-    this.hasRnaO2Prime = have(offsets, O2Pr);
-    this.isPyrimidine = have(offsets, O2);
-    this.isPurine = have(offsets, N7) && have(offsets, C8) && have(offsets, N9);
+    hasRnaO2Prime = have(offsets, O2Pr);
+    isPyrimidine = have(offsets, O2);
+    isPurine = have(offsets, N7) && have(offsets, C8) && have(offsets, N9);
     return this;
   }
 
@@ -194,10 +199,10 @@ public class NucleicMonomer extends PhosphorusMonomer {
     }
 
   @Override
-  public boolean isPurine() { return isPurine; }
+  public boolean isPurine() { return isPurine || !isPyrimidine && isPurineByID(); }
 
   @Override
-  public boolean isPyrimidine() { return isPyrimidine; }
+  public boolean isPyrimidine() { return isPyrimidine || !isPurine && isPyrimidineByID(); }
 
   public boolean isGuanine() { return have(offsets, N2); }
 
@@ -209,6 +214,10 @@ public class NucleicMonomer extends PhosphorusMonomer {
   }
 
     ////////////////////////////////////////////////////////////////
+
+  Atom getP() {
+    return getAtomFromOffsetIndex(P);
+  }
 
   Atom getC1P() {
     return getAtomFromOffsetIndex(C1P);

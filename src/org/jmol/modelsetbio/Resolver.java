@@ -1187,26 +1187,26 @@ public final class Resolver implements JmolBioResolver, Comparator<String[]> {
     // with the deprecation of +X, we will need a new
     // way to handle these. 
     
-    "G  ", // 24 starts nucleics 
+    "G  ", // 24 starts nucleics //0 
     "C  ", 
     "A  ",
     "T  ", 
     "U  ", 
-    "I  ", 
+    "I  ", // 29 / 5
     
-    "DG ", // 30 
+    "DG ", // 30 / 6
     "DC ",
     "DA ",
     "DT ",
     "DU ",
-    "DI ",
+    "DI ", // 35 / 11
     
-    "+G ", // 36
+    "+G ", // 36 / 12
     "+C ",
     "+A ",
     "+T ",
     "+U ",
-    "+I ",
+    "+I ", // 41 / 17
     /* removed bh 7/1/2011 this is isolated inosine, not a polymer "NOS", // inosine */
     
     // solvent types: -- if these numbers change, also change GROUPID_WATER,_SOLVENT,and_SULFATE

@@ -635,57 +635,64 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
             dsspIgnoreHydrogens, bsHBonds);
   }
 
-  private void getRasmolHydrogenBonds(BS bsA, BS bsB,
-                                      Lst<Bond> vHBonds, boolean nucleicOnly,
-                                      int nMax, boolean dsspIgnoreHydrogens,
-                                      BS bsHBonds) {    
-     boolean doAdd = (vHBonds == null);
-     if (doAdd)
-       vHBonds = new  Lst<Bond>();
-     if (nMax < 0)
-       nMax = Integer.MAX_VALUE;
-     boolean asDSSX = (bsB == null);
-     BioPolymer bp, bp1;
-     if (asDSSX && bioPolymerCount > 0) {
-       
-       calculateDssx(vHBonds, false, dsspIgnoreHydrogens, false);
-       
-     } else {
-       for (int i = bioPolymerCount; --i >= 0;) {
-         bp = bioPolymers[i];
-         int type = bp.getType();
-         if ((nucleicOnly || type != BioPolymer.TYPE_AMINO)
-             && type != BioPolymer.TYPE_NUCLEIC)
-           continue;
-         boolean isRNA = bp.isRna();
-         boolean isAmino = (type == BioPolymer.TYPE_AMINO);
-         if (isAmino)
-           bp.calcRasmolHydrogenBonds(null, bsA, bsB, vHBonds, nMax, null, true,
-               false);
-         for (int j = bioPolymerCount; --j >= 0;) {
-           if ((bp1 = bioPolymers[j]) != null && (isRNA || i != j)
-               && type == bp1.getType()) {
-             bp1.calcRasmolHydrogenBonds(bp, bsA, bsB, vHBonds, nMax, null,
-                 true, false);
-           }
-         }
-       }
-     }
-     
-     if (vHBonds.size() == 0 || !doAdd)
-       return;
-     hasRasmolHBonds = true;
-     for (int i = 0; i < vHBonds.size(); i++) {
-       HBond bond = (HBond) vHBonds.get(i);
-       Atom atom1 = bond.atom1;
-       Atom atom2 = bond.atom2;
-       if (atom1.isBonded(atom2))
-         continue;
-       int index = ms.addHBond(atom1, atom2, bond.order, bond.getEnergy());
-       if (bsHBonds != null)
-         bsHBonds.set(index);
-     }
-   }
+  private void getRasmolHydrogenBonds(BS bsA, BS bsB, Lst<Bond> vHBonds,
+                                      boolean nucleicOnly, int nMax,
+                                      boolean dsspIgnoreHydrogens, BS bsHBonds) {
+    boolean doAdd = (vHBonds == null);
+    if (doAdd)
+      vHBonds = new Lst<Bond>();
+    if (nMax < 0)
+      nMax = Integer.MAX_VALUE;
+    boolean asDSSX = (bsB == null);
+    BioPolymer bp, bp1;
+    if (asDSSX && bioPolymerCount > 0) {
+
+      calculateDssx(vHBonds, false, dsspIgnoreHydrogens, false);
+
+    } else {
+      for (int i = bioPolymerCount; --i >= 0;) {
+        bp = bioPolymers[i];
+        if (bp.monomerCount == 0)
+          continue;
+        int type = bp.getType();
+        boolean isRNA = false;
+        switch  (type) {
+        case BioPolymer.TYPE_AMINO:
+          if (nucleicOnly)
+            continue;
+          bp.calcRasmolHydrogenBonds(null, bsA, bsB, vHBonds, nMax, null, true,
+              false);
+          break;
+        case BioPolymer.TYPE_NUCLEIC:
+          isRNA = bp.monomers[0].isRna();
+          break;
+        default:
+          continue;
+        }
+        for (int j = bioPolymerCount; --j >= 0;) {
+          if ((bp1 = bioPolymers[j]) != null && (isRNA || i != j)
+              && type == bp1.getType()) {
+            bp1.calcRasmolHydrogenBonds(bp, bsA, bsB, vHBonds, nMax, null,
+                true, false);
+          }
+        }
+      }
+    }
+
+    if (vHBonds.size() == 0 || !doAdd)
+      return;
+    hasRasmolHBonds = true;
+    for (int i = 0; i < vHBonds.size(); i++) {
+      HBond bond = (HBond) vHBonds.get(i);
+      Atom atom1 = bond.atom1;
+      Atom atom2 = bond.atom2;
+      if (atom1.isBonded(atom2))
+        continue;
+      int index = ms.addHBond(atom1, atom2, bond.order, bond.getEnergy());
+      if (bsHBonds != null)
+        bsHBonds.set(index);
+    }
+  }
 
   @Override
   public void calculateStraightnessAll() {

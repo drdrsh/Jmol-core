@@ -461,6 +461,29 @@ public final class JC {
   public final static byte ATOMID_HO3_PRIME       = 89;
   public final static byte ATOMID_HO5_PRIME       = 90;
 
+  // These masks are only used for P-only and N-only polymers
+  // or cases where there are so few atoms that a monomer's type
+  // cannot be determined by checking actual atoms and connections.
+  // They are not used for NucleicMonomer or AminoMonomer classes.
+  //
+  //             I  A G        
+  //   purine:   100101 = 0x25
+  //
+  //              UT C
+  // pyrimidine: 011010 = 0x1A
+  //
+  //            +IUTACGDIUTACG IUTACG
+  //        dna: 001111 111111 001000 = 0x0FFC8
+  //  
+  //            +IUTACGDIUTACG IUTACG
+  //        rna: 110??? 000000 110111 = 0x30037
+  
+  public static final int PURINE_MASK = 0x25 | (0x25 << 6) | (0x25 << 12);
+  public static final int PYRIMIDINE_MASK = 0x1A | (0x1A << 6) | (0x1A << 12);
+  public static final int DNA_MASK = 0x0FFC8;
+  public static final int RNA_MASK = 0x30037;
+  
+
   
 
   ////////////////////////////////////////////////////////////////

@@ -431,12 +431,8 @@ public abstract class BioPolymer {
     return Float.NaN;
   }
 
-  public boolean isRna() {
-    return (monomerCount > 0 && monomers[0].isRna());
-  }
-
   public boolean isNucleic() {
-    return (monomerCount > 0 && (monomers[0].isDna() || monomers[0].isRna()));
+    return (monomerCount > 0 && this instanceof NucleicPolymer);
   }
 
   public void getRangeGroups(int nResidues, BS bsAtoms, BS bsResult) {

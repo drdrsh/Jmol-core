@@ -32,6 +32,8 @@ import javajs.util.Quat;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
+
 import javajs.util.P3;
 import org.jmol.c.STR;
 import org.jmol.java.BS;
@@ -189,19 +191,84 @@ public class Group {
     return -1;
   }
 
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
   public boolean isProtein() { 
-    return false; 
+    return (groupID >= 1 && groupID < JC.GROUPID_AMINO_MAX); 
   }
   
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
   public boolean isNucleic() {
-    return false;
-    //return (groupID >= JC.GROUPID_AMINO_MAX 
-      //  && groupID < JC.GROUPID_NUCLEIC_MAX); 
+    return (groupID >= JC.GROUPID_AMINO_MAX 
+        && groupID < JC.GROUPID_NUCLEIC_MAX); 
   }
-  public boolean isDna() { return false; }
-  public boolean isRna() { return false; }
-  public boolean isPurine() { return false; }
-  public boolean isPyrimidine() { return false; }
+  
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
+  public boolean isDna() { return isDnaByID(); }
+
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
+  public boolean isRna() { return isRnaByID(); }
+  
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
+  public boolean isPurine() { return isPurineByID(); }
+  
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
+  protected boolean isPurineByID() {
+    return (isNucleic() && (JC.PURINE_MASK & (1<<(groupID - JC.GROUPID_AMINO_MAX))) != 0);
+  }
+
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
+  public boolean isPyrimidine() { return isPyrimidineByID(); }
+  
+  protected boolean isPyrimidineByID() {
+    return (isNucleic() && (JC.PYRIMIDINE_MASK & (1<<(groupID - JC.GROUPID_AMINO_MAX))) != 0);
+  }
+
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
+  protected boolean isRnaByID() {
+    return (isNucleic() && (JC.RNA_MASK & (1<<(groupID - JC.GROUPID_AMINO_MAX))) != 0);
+  }
+
+  /**
+   * group ID-based definition
+   *  
+   * @return boolean
+   */
+  protected boolean isDnaByID() {
+    return (isNucleic() && (JC.DNA_MASK & (1<<(groupID - JC.GROUPID_AMINO_MAX))) != 0);
+  }
+
   public boolean isCarbohydrate() { return false; }
 
 

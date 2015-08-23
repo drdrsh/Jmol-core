@@ -60,12 +60,6 @@ public final class Chain {
    */
   public int selectedGroupCount;
 
-  /**
-   * set when a Monomer is constructed, and tested widely 
-   */
-  public boolean isDna, isRna;
-  
-
   Chain(Model model, int chainID, int chainNo) {
     this.model = model;
     this.chainID = chainID;

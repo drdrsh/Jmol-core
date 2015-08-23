@@ -24,12 +24,12 @@
 package org.jmol.modelsetbio;
 
 
-import org.jmol.c.STR;
-import org.jmol.modelset.Atom;
-import org.jmol.modelset.Chain;
 import javajs.util.P3;
 import javajs.util.Quat;
 import javajs.util.V3;
+
+import org.jmol.c.STR;
+import org.jmol.modelset.Chain;
 import org.jmol.viewer.JC;
 
 public class PhosphorusMonomer extends Monomer {
@@ -40,9 +40,6 @@ public class PhosphorusMonomer extends Monomer {
 
   private static float MAX_ADJACENT_PHOSPHORUS_DISTANCE = 8.0f;
  
-  protected boolean isPurine;
-  protected boolean isPyrimidine;
-
   @Override
   public final boolean isNucleic() {return true;}
 
@@ -59,45 +56,46 @@ public class PhosphorusMonomer extends Monomer {
     //Logger.debug("PhosphorusMonomer.validateAndAllocate");
     return (firstIndex != lastIndex
         || specialAtomIndexes[JC.ATOMID_NUCLEIC_PHOSPHORUS] != firstIndex ? null
-        : new PhosphorusMonomer().set3(chain, group3, seqcode, firstIndex,
+        : new PhosphorusMonomer().set2(chain, group3, seqcode, firstIndex,
             lastIndex, phosphorusOffsets));
   }
   
   ////////////////////////////////////////////////////////////////
 
-  protected PhosphorusMonomer set3(Chain chain, String group3, int seqcode,
-                                   int firstAtomIndex, int lastAtomIndex,
-                                   byte[] offsets) {
-    set2(chain, group3, seqcode, firstAtomIndex, lastAtomIndex, offsets);
-    if (group3.indexOf('T') >= 0)
-      chain.isDna = true;
-    if (group3.indexOf('U') + group3.indexOf('I') > -2)
-      chain.isRna = true;
-    isPurine = (group3.indexOf('A') + group3.indexOf('G') + group3.indexOf('I') > -3);
-    isPyrimidine = (group3.indexOf('T') + group3.indexOf('C')
-        + group3.indexOf('U') > -3);
-    return this;
-  }
-
-  Atom getP() {
-    return getAtomFromOffsetIndex(P);
-  }
-
-  boolean isPhosphorusMonomer() { return true; }
-
-  @Override
-  public boolean isDna() { 
-    return chain.isDna; }
-
-  @Override
-  public boolean isRna() { 
-    return chain.isRna; 
-    }
+//  protected PhosphorusMonomer set3(Chain chain, String group3, int seqcode,
+//                                   int firstAtomIndex, int lastAtomIndex,
+//                                   byte[] offsets) {
+//    set2(chain, group3, seqcode, firstAtomIndex, lastAtomIndex, offsets);
+  
+    // prior to Jmol 14.3.16_2015.08.23 the following code was used to
+    // set "isDNA" and "isRNA" for this class only (or, at least it was only used here)
+    // as well as purine and pyrimidine for this class.
+    // but this is no longer necessary; rather than doing it by name of group, which
+    // is unreliable; we just do it by PDB group name. 
+    // It's pushing to expect determination of these quantities for 
+    // non-standard groups in P-only monomers.
+  
+    //    if (group3.indexOf('T') >= 0)
+    //      chain.isDna = true;
+    //    if (group3.indexOf('U') + group3.indexOf('I') > -2)
+    //      chain.isRna = true;
+    //    isPurine = (group3.indexOf('A') + group3.indexOf('G') + group3.indexOf('I') > -3);
+    //    isPyrimidine = (group3.indexOf('T') + group3.indexOf('C')
+    //        + group3.indexOf('U') > -3);
+//    return this;
+//  }
 
   @Override
-  public boolean isPurine() { return isPurine; }
+  public boolean isDna() { return isDnaByID(); }
+
   @Override
-  public boolean isPyrimidine() { return isPyrimidine; }
+  public boolean isRna() { return isRnaByID(); }
+
+  @Override
+  public boolean isPurine() { return isPurineByID(); }
+  
+  @Override
+  public boolean isPyrimidine() { return isPyrimidineByID(); }
 
   @Override
   public Object getStructure() { return chain; }
