@@ -57,7 +57,7 @@ import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 abstract class NBODialogSearch extends NBODialogView {
 
-  NBODialogSearch(JFrame f) {
+  protected NBODialogSearch(JFrame f) {
     super(f);
     lists = new Hashtable<String, String[]>();
   }

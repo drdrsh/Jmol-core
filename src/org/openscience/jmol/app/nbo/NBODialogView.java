@@ -165,19 +165,6 @@ abstract class NBODialogView extends NBODialogRun {
       "g", "h" // 0 - 7  
   };
   
-  /**
-   * TODO this was sli business. not implemented?
-   * @return countouring parameters, I think contour levels
-   */
-  private String getContourParams() {
-    String s = "";
-    for (int i = 0; i < contourFields.length; i++)
-      s += "GLOBAL CONTOUR_" + contourFieldIDs[i] + " " + contourFields[i].getText()
-          + sep;
-    return s;
-
-  }
-
   protected DefaultListModel<String> model;
   protected JList<String> dList;
   protected int numStor = 0;
@@ -393,6 +380,19 @@ abstract class NBODialogView extends NBODialogRun {
     return selectPanel;
   }
 
+
+  /**
+   * TODO this was sli business. not implemented?
+   * @return countouring parameters, I think contour levels
+   */
+  private String getContourParams() {
+    String s = "";
+    for (int i = 0; i < contourFields.length; i++)
+      s += "GLOBAL CONTOUR_" + contourFieldIDs[i] + " " + contourFields[i].getText()
+          + sep;
+    return s;
+
+  }
 
   protected void showSelected(String[] s){
     if(!selToggle.isSelected()) return;

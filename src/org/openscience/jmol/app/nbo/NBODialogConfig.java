@@ -57,8 +57,6 @@ import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 abstract class NBODialogConfig extends JDialog {
 
-  public static final boolean TESTING = true;
-  
   protected static final String sep = System.getProperty("line.separator");
 
   protected static final String DEFAULT_PARAMS = "PLOT CMO DIPOLE STERIC";

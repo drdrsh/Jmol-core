@@ -101,7 +101,7 @@ class NBOJobQueueManager {
     }
   }
 
-  public void clearQueue() {
+  void clearQueue() {
     list.clear();
   }
 
