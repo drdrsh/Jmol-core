@@ -3571,9 +3571,10 @@ public class CmdExt extends ScriptExt {
           quality = SV.iValue(tokenAt(++pt, args));
       } else if (PT.isOneOf(val.toLowerCase(),
           ";xyz;xyzrn;xyzvib;mol;sdf;v2000;v3000;json;pdb;pqr;cml;")) {
+        // this still could be overruled by a type indicated
         type = val.toUpperCase();
         if (pt + 1 == argCount)
-          pt++;
+          pt++; // no PDB keyword given
       }
 
       // write [image|history|state] clipboard
@@ -3590,9 +3591,13 @@ public class CmdExt extends ScriptExt {
       }
     }
     if (pt + 2 == argCount) {
+      // unprocessed explicit type
+      // type may be defined already, but that could be from a file name extension
+      // here we override that
+      // write PDB "xxx.pdb"
       String s = SV.sValue(tokenAt(++pt, args));
       if (s.length() > 0 && s.charAt(0) != '.')
-        type = s.toUpperCase();
+        type = val.toUpperCase();
     }
 
     // set the file name
