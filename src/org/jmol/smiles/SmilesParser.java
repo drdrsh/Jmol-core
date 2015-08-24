@@ -168,6 +168,8 @@ public class SmilesParser {
         flags |= Edge.FLAG_AROMATIC_DOUBLE;
       if (strFlags.indexOf("NOSTEREO") >= 0)
         flags |= Edge.FLAG_IGNORE_STEREOCHEMISTRY;
+      if (strFlags.indexOf("INVERTSTEREO") >= 0)
+        flags |= Edge.FLAG_INVERT_STEREOCHEMISTRY;
     }
     if (pattern.indexOf("$") >= 0)
       pattern = parseVariables(pattern);
@@ -339,7 +341,7 @@ public class SmilesParser {
     for (int i = molecule.ac; --i >= 0;) {
       SmilesAtom atom = molecule.patternAtoms[i];
       if (molecule.isTopology &&  
-          (atom.hasSubpattern || atom.elementNumber != -2 || atom.nAtomsOr > 0 || atom.nPrimitives > 0))
+          (atom.hasSubpattern || atom.isBioAtom || atom.elementNumber != -2 || atom.nAtomsOr > 0 || atom.nPrimitives > 0))
         molecule.isTopology = false;
       atom.setBondArray();
       if (!isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount(molecule))
@@ -712,12 +714,28 @@ public class SmilesParser {
     return pattern;
   }
 
+  /**
+   * variables can be defined, as in 
+   * 
+   * select within(SMARTS,'$R1="[CH3, NH2]";$R2="[$([$R1]),OH]"; {a}[$R2]')
+   * 
+   * select within(SMARTS,'$R1="[CH3,NH2]";$R2="[OH]";  {a}[$([$R1]),$([$R2])]')
+   * 
+   * "select aromatic atoms bearing CH3, NH2, or OH"
+   * 
+   * 
+   * @param pattern
+   * @return substituted pattern
+   * @throws InvalidSmilesException
+   */
   private String parseVariables(String pattern) throws InvalidSmilesException {
     Lst<String> keys = new  Lst<String>();
     Lst<String> values = new  Lst<String>();
     int index;
     int ipt = 0;
     int iptLast = -1;
+    if (Logger.debugging)
+      Logger.info(pattern);
     while ((index = pattern.indexOf("$", ipt)) >= 0) {
       if (getChar(pattern, ipt + 1) == '(')
         break;
@@ -736,7 +754,16 @@ public class SmilesParser {
     }
     if (iptLast < 0)
       return pattern;
-    return PT.replaceStrings(pattern.substring(iptLast), keys, values);
+    pattern = pattern.substring(iptLast);
+    for (int i = keys.size(); --i >= 0;) {
+      String k = keys.get(i);
+      String v = values.get(i);
+      if (!v.equals(k))
+        pattern = PT.rep(pattern, k, v);
+    }
+    if (Logger.debugging)
+      Logger.info(pattern);
+    return pattern;
   }
 
   /**

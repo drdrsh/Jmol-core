@@ -248,8 +248,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       if (s.indexOf("/") >= 0 || s.indexOf("\\") >= 0 || s.indexOf("@") >= 0) {
         if (n1 == n2 && n1 > 0) {
           // reverse chirality centers
-          smiles1 = reverseChirality(smiles1);
-          check = (areEqual(smiles1, smiles2) > 0);
+          check = (areEqual("/invertstereo/" + smiles2, smiles1) > 0);
           if (check)
             return "enantiomers";
         }

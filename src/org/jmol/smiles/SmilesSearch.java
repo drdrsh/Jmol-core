@@ -51,6 +51,9 @@ import org.jmol.util.Logger;
  */
 public class SmilesSearch extends JmolMolecule {
 
+  public SmilesSearch() {
+  }
+  
   @Override
   public String toString() {
     SB sb = new SB().append(pattern);
@@ -124,7 +127,7 @@ public class SmilesSearch extends JmolMolecule {
 
   private Lst<Object> vReturn;
   BS bsReturn = new BS();
-  private boolean ignoreStereochemistry;
+  private boolean ignoreStereochemistry, invertStereochemistry;
   private boolean noAromatic;
   private boolean aromaticDouble;
     
@@ -304,6 +307,7 @@ public class SmilesSearch extends JmolMolecule {
                             boolean isRingCheck) throws InvalidSmilesException {
     search.ringSets = ringSets;
     search.jmolAtoms = jmolAtoms;
+    search.bioAtoms = bioAtoms;
     search.jmolAtomCount = jmolAtomCount;
     search.bsSelected = bsSelected;
     search.htNested = htNested;
@@ -391,6 +395,7 @@ public class SmilesSearch extends JmolMolecule {
      */
 
     ignoreStereochemistry = ((flags & Edge.FLAG_IGNORE_STEREOCHEMISTRY) != 0);
+    invertStereochemistry = ((flags & Edge.FLAG_INVERT_STEREOCHEMISTRY) != 0);
     noAromatic = ((flags & Edge.FLAG_NO_AROMATIC) != 0);
     aromaticDouble = ((flags & Edge.FLAG_AROMATIC_DOUBLE) != 0);
     
@@ -822,19 +827,26 @@ public class SmilesSearch extends JmolMolecule {
         foundAtom = (patternAtom.not != (((BS) o).get(iAtom)));
         break;
       }
+      // all types
+      if (patternAtom.residueName != null
+          && !patternAtom.residueName
+              .equals(((BNode)atom).getGroup3(false).toUpperCase()))
+        break;
+      // # <n> or Symbol Check atomic number
+      if (patternAtom.elementNumber >= 0
+          && patternAtom.elementNumber != atom.getElementNumber())
+        break;
+      if (patternAtom.jmolIndex >= 0
+          && atom.getIndex() != patternAtom.jmolIndex)
+        break;      
       if (patternAtom.isBioAtom) {
         BNode a = (BNode) atom;
-
         // BIOSMARTS
         if (patternAtom.atomName != null
             && (patternAtom.isLeadAtom() ? !a.isLeadAtom()
                 : !patternAtom.atomName.equals(a.getAtomName().toUpperCase())))
           break;
         if (patternAtom.notCrossLinked && a.getCrossLinkLeadAtomIndexes(null))
-          break;
-        if (patternAtom.residueName != null
-            && !patternAtom.residueName
-                .equals(a.getGroup3(false).toUpperCase()))
           break;
         if (patternAtom.residueChar != null) {
           if (patternAtom.isDna() && !a.isDna() || patternAtom.isRna()
@@ -857,10 +869,6 @@ public class SmilesSearch extends JmolMolecule {
           if (!isOK)
             break;
         }
-        // # <n> or Symbol Check atomic number
-        if (patternAtom.elementNumber >= 0
-            && patternAtom.elementNumber != atom.getElementNumber())
-          break;
 
       } else {
         if (patternAtom.atomName != null
@@ -868,17 +876,8 @@ public class SmilesSearch extends JmolMolecule {
           break;
         // "=" <n>  Jmol index
 
-        if (patternAtom.jmolIndex >= 0
-            && atom.getIndex() != patternAtom.jmolIndex)
-          break;
-
         if (patternAtom.atomType != null
             && !patternAtom.atomType.equals(atom.getAtomType()))
-          break;
-
-        // # <n> or Symbol Check atomic number
-        if (patternAtom.elementNumber >= 0
-            && patternAtom.elementNumber != atom.getElementNumber())
           break;
 
         // Check aromatic
@@ -1206,7 +1205,7 @@ public class SmilesSearch extends JmolMolecule {
             getX(sAtom, jn, 1, true, false);
           if (jn[3] == null)
             getX(sAtom2, jn, 3, true, false);
-          if (!checkStereochemistryAll(sAtom.not, atom0, chiralClass, order,
+          if (!checkStereochemistryAll(sAtom.not != invertStereochemistry, atom0, chiralClass, order,
               jn[0], jn[1], jn[2], jn[3], null, null, v))
             return false;
           continue;
@@ -1247,7 +1246,7 @@ public class SmilesSearch extends JmolMolecule {
               && !setSmilesCoordinates(atom0, sAtom, sAtom2, new Node[] {
                   atom1, atom2, atom3, atom4, atom5, atom6 }))
             return false;
-          if (!checkStereochemistryAll(sAtom.not, atom0, chiralClass, order,
+          if (!checkStereochemistryAll(sAtom.not != invertStereochemistry, atom0, chiralClass, order,
               atom1, atom2, atom3, atom4, atom5, atom6, v))
             return false;
           continue;
