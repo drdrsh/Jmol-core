@@ -2961,9 +2961,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         : getDataManager().getData(key, bsSelected, dataType));
   }
 
-  public float getDataFloatAt(String label, int atomIndex) {
-    return getDataManager().getDataFloatAt(label, atomIndex);
-  }
+//  public float getDataFloatAt(String label, int atomIndex) {
+//    return getDataManager().getDataFloatAt(label, atomIndex);
+//  }
 
   // boolean autoLoadOrientation() {
   // return true;//global.autoLoadOrientation; 12.0.RC10

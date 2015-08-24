@@ -950,14 +950,8 @@ public class ScriptCompiler extends ScriptTokenParser {
     }
 
     if (theToken == null) {
-      if (identLC.indexOf("property_") == 0) {
-        theToken = T.o(T.property, identLC);
-      } else if (myName != null) {
-        theToken = SV.newSV(T.identifier, Integer.MAX_VALUE, ident);
-        ((SV) theToken).myName = myName;
-      } else {
-        theToken = T.o(T.identifier, ident);
-      }
+      // myName is just in case this is being used as a key to a hash
+      theToken = SV.newSV((identLC.indexOf("property_") == 0 ? T.property : T.identifier), Integer.MAX_VALUE, ident).setName(myName);
     }
     theTok = theToken.tok;
   }

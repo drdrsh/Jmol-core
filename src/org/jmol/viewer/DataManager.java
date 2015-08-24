@@ -90,7 +90,7 @@ public class DataManager implements JmolDataManager {
      *   Integer.MIN_VALUE ==> one SINGLE data value should be used for all selected atoms
      */
     if (type == null) {
-      clear();
+      clear(  );
       return;
     }
     type = type.toLowerCase();
@@ -228,10 +228,11 @@ public class DataManager implements JmolDataManager {
   public Object getData(String label, BS bsSelected, int dataType) {
     if (dataValues.size() == 0 || label == null)
       return null;
+    label = label.toLowerCase();
     switch (dataType) {
     case JmolDataManager.DATA_TYPE_UNKNOWN:
     case JmolDataManager.DATA_TYPE_LAST:
-      if (!label.equalsIgnoreCase("types"))
+      if (!label.equals("types"))
         return dataValues.get(label);
       String[] info = new String[2];
       info[JmolDataManager.DATA_LABEL] = "types";
@@ -257,18 +258,18 @@ public class DataManager implements JmolDataManager {
     }
   }
 
-  @Override
-  public float getDataFloatAt(String label, int atomIndex) {
-    if (dataValues.size() > 0) {
-      Object[] data = (Object[]) getData(label, null, 0);
-      if (data != null && getType(data) == JmolDataManager.DATA_TYPE_AF) {
-        float[] f = (float[]) data[JmolDataManager.DATA_VALUE];
-        if (atomIndex < f.length)
-          return f[atomIndex];
-      }
-    }
-    return Float.NaN;
-  }
+//  @Override
+//  public float getDataFloatAt(String label, int atomIndex) {
+//    if (dataValues.size() > 0) {
+//      Object[] data = (Object[]) getData(label, null, 0);
+//      if (data != null && getType(data) == JmolDataManager.DATA_TYPE_AF) {
+//        float[] f = (float[]) data[JmolDataManager.DATA_VALUE];
+//        if (atomIndex < f.length)
+//          return f[atomIndex];
+//      }
+//    }
+//    return Float.NaN;
+//  }
 
   @Override
   public void deleteModelAtoms(int firstAtomIndex, int nAtoms, BS bsDeleted) {

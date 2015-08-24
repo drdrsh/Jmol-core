@@ -32,7 +32,7 @@ public interface JmolDataManager {
 
   Object getData(String label, BS bsSelected, int dataType);
 
-  float getDataFloatAt(String label, int atomIndex);
+  //float getDataFloatAt(String label, int atomIndex);
 
   String getDefaultVdwNameOrData(VDW type, BS bs);
 

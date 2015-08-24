@@ -840,7 +840,7 @@ public class MathExt {
     }
 
     if (tok == T.cross) {
-      P3 a = (x1.tok == T.point3f ? (P3) x1.value : P3.newP(mp.ptValue(x1)));
+      P3 a = P3.newP(mp.ptValue(x1));
       a.cross(a, mp.ptValue(x2));
       return mp.addXPt(a);
     }

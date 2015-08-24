@@ -464,9 +464,6 @@ abstract class ScriptExpr extends ScriptParam {
           }
         }
         SV var = getBitsetPropertySelector(i + 1, rpn.getXTok());
-        if (var == null) {
-          
-        }
         // check for added min/max modifier
         boolean isUserFunction = (var.intValue == T.function);
         boolean allowMathFunc = true;
@@ -1202,8 +1199,12 @@ abstract class ScriptExpr extends ScriptParam {
       if (tok == closer)
         break;
       // myName is from a user-defined variable. 
-      String key = (tok == T.identifier && st[i].intValue == 0 ? ((SV) st[i++]).myName
-          : SV.sValue(st[i++]));
+      String key = null;
+      if (st[i] instanceof SV)
+        key = ((SV) st[i]).myName;
+      if (key == null)
+        key = SV.sValue(st[i]);
+      i++;
       if (tokAt(i++) != T.colon)
         invArg();
       // look to end of array or next comma
