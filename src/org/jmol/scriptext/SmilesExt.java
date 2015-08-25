@@ -121,7 +121,7 @@ public class SmilesExt {
           for (int j = 0; j < maps[i].length; j++)
             ptsB.addLast(atoms[maps[i][j]]);
           Interface.getInterface("javajs.util.Eigen", e.vwr, "script");
-          float stddev = Measure.getTransformMatrix4(ptsA, ptsB, m, c);
+          float stddev = (ptsB.size() == 1 ? 0 : Measure.getTransformMatrix4(ptsA, ptsB, m, null));
           Logger.info("getSmilesCorrelation stddev=" + stddev);
           if (vReturn != null) {
             if (stddev < tolerance) {

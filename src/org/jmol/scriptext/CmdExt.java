@@ -1190,6 +1190,7 @@ public class CmdExt extends ScriptExt {
         float stddev = eval.getSmilesExt().getSmilesCorrelation(bsFrom, bsTo,
             strSmiles, null, null, m4, null, false, null, center,
             false, isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS);
+        System.out.println("compare:\n" + m4);
         if (Float.isNaN(stddev)) {
           showString("structures do not match");
           return;

@@ -821,7 +821,7 @@ public class ScriptEval extends ScriptExpr {
         if (compileScript(null, "e_x_p_r_e_s_s_i_o_n = " + expr, false)) {
           if (compileOnly)
             return aatoken[0];
-          setStatement(aatoken[0]);
+          setStatement(aatoken[0], 1);
           return (asVariable ? parameterExpressionList(2, -1, false).get(0)
               : parameterExpressionString(2, 0));
         }
@@ -875,6 +875,7 @@ public class ScriptEval extends ScriptExpr {
       scr = PT.rep(scr, "()", "(none)");
       if (compileScript(null, scr, false)) {
         st = aatoken[0];
+        setStatement(st, 0);
         bs = atomExpression(st, 1, 0, false, false, true, true);
       }
       popContext(false, false);
@@ -2183,7 +2184,7 @@ public class ScriptEval extends ScriptExpr {
         if (!"".equals(script))
           runScript(script);
       }
-      if (!setStatement(aatoken[pc])) {
+      if (!setStatement(aatoken[pc], 1)) {
         Logger.info(getCommand(pc, true, false)
             + " -- STATEMENT CONTAINING @{} SKIPPED");
         continue;
@@ -4041,7 +4042,7 @@ public class ScriptEval extends ScriptExpr {
   private void cmdHover() throws ScriptException {
     if (chk)
       return;
-    String strLabel = paramAsStr(1);
+    String strLabel = (slen == 1 ? "on" : paramAsStr(1));
     if (strLabel.equalsIgnoreCase("on"))
       strLabel = "%U";
     else if (strLabel.equalsIgnoreCase("off"))
@@ -7555,6 +7556,7 @@ public class ScriptEval extends ScriptExpr {
     BS bs = null;
     if (!chk)
       vwr.slm.setSelectionSubset(null);
+    // hover none --> subset exprbeg "off" exprend
     if (slen != 1 && (slen != 4 || !getToken(2).value.equals("off")))
       bs = atomExpressionAt(1);
     if (!chk)

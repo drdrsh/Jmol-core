@@ -341,7 +341,7 @@ public class SmilesParser {
     for (int i = molecule.ac; --i >= 0;) {
       SmilesAtom atom = molecule.patternAtoms[i];
       if (molecule.isTopology &&  
-          (atom.hasSubpattern || atom.isBioAtom || atom.elementNumber != -2 || atom.nAtomsOr > 0 || atom.nPrimitives > 0))
+          (atom.hasSubpattern || atom.iNested != 0 || atom.isBioAtom || atom.elementNumber != -2 || atom.nAtomsOr > 0 || atom.nPrimitives > 0))
         molecule.isTopology = false;
       atom.setBondArray();
       if (!isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount(molecule))
@@ -621,14 +621,13 @@ public class SmilesParser {
     // or C(.d1:1.5-1.6)C(.d1)
     // or C(.d1:!1.5-1.6)C(.d1)
     int pt = strMeasure.indexOf(":");
-    boolean isNot = false;
     String id = (pt < 0 ? strMeasure : strMeasure.substring(0, pt));
     while (pt != 0) { // no real repeat here -- just an enclosure for break
       int len = id.length();
       if (len == 1)
         id += "0";
       SmilesMeasure m = htMeasures.get(id);
-      if ((m == null) == (pt < 0))
+      if ((m == null) == (pt < 0) || len == 0)
         break;
       try {
         if (pt > 0) {
@@ -636,22 +635,33 @@ public class SmilesParser {
           if (type < 2)
             break;
           int[] ret = new int[1];
-          int index = getDigits(id, 1, ret);
-          int pt2 = strMeasure.indexOf(",", pt);
-          if (pt2 < 0)
-            pt2 = strMeasure.indexOf("-", pt + 1);
-          if (pt2 < 0)
+          getDigits(id, 1, ret);
+          int index = ret[0];
+          strMeasure = strMeasure.substring(pt + 1);
+          boolean isNot = strMeasure.startsWith("!");
+          if (isNot)
+            strMeasure = strMeasure.substring(1);          
+          boolean isNegative = (strMeasure.startsWith("-"));
+          if (isNegative)
+            strMeasure = strMeasure.substring(1);
+          strMeasure = PT.rep(strMeasure, "-", ",");
+          strMeasure = PT.rep(strMeasure, ",,", ",-");
+          if (isNegative)
+            strMeasure = "-" + strMeasure;
+          String[] tokens = PT.split(strMeasure, ",");
+          if(tokens.length % 2 == 1 || tokens.length > 8)
             break;
-          String s = strMeasure.substring(pt + 1, pt2);
-          if (s.startsWith("!")) {
-            isNot = true;
-            s = s.substring(1);
-          }
-          float min = (pt + 1 == pt2 ? 0 : PT.fVal(s));
-          s = strMeasure.substring(pt2 + 1);
-          float max = (s.length() == 0 ? Float.MAX_VALUE : PT.fVal(s));
-          m = new SmilesMeasure(molecule, index, type, min, max, isNot);
+          float[] vals = new float[tokens.length];
+          int i = tokens.length;
+          for (; --i >= 0;)
+             if (Float.isNaN(vals[i] = PT.fVal(tokens[i])))
+               break;
+          if (i >= 0)
+            break;
+          m = new SmilesMeasure(molecule, index, type, isNot);
           molecule.measures.addLast(m);
+          for (i = 0; i < vals.length; i += 2)
+            m.addRange(vals[i], vals[i+1]);
           if (index > 0)
             htMeasures.put(id, m);
           else if (index == 0 && Logger.debugging)

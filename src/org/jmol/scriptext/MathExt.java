@@ -378,6 +378,7 @@ public class MathExt {
     boolean isStdDev = sOpt.equalsIgnoreCase("stddev");
     boolean isIsomer = sOpt.equalsIgnoreCase("ISOMER");
     boolean isBonds = sOpt.equalsIgnoreCase("BONDS");
+    
     boolean isSmiles = (!isIsomer && args.length > (isStdDev ? 3 : 2));
     BS bs1 = (args[0].tok == T.bitset ? (BS) args[0].value : null);
     BS bs2 = (args[1].tok == T.bitset ? (BS) args[1].value : null);
@@ -386,29 +387,35 @@ public class MathExt {
     M4 m = new M4();
     stddev = Float.NaN;
     Lst<P3> ptsA, ptsB;
-    if (isSmiles) {
-      if (bs1 == null || bs2 == null)
-        return false;
-    }
-    if (isBonds) {
-      if (args.length != 4)
-        return false;
-      smiles1 = SV.sValue(args[2]);
-      isSmiles = smiles1.equalsIgnoreCase("SMILES");
-      try {
-        if (isSmiles)
-          smiles1 = vwr.getSmiles(bs1);
-      } catch (Exception ex) {
-        e.evalError(ex.getMessage(), null);
-      }
-      float[] data = e.getSmilesExt().getFlexFitList(bs1, bs2, smiles1,
-          !isSmiles);
-      return (data == null ? mp.addXStr("") : mp.addXAF(data));
-    }
     try {
+      if (isSmiles) {
+        if (bs1 == null || bs2 == null)
+          return false;
+      }
+      if (isBonds) {
+        if (args.length != 4)
+          return false;        
+        // A, B, ........................BONDS
+        // A, B, SMILES,...................BONDS
+        smiles1 = SV.sValue(args[2]);
+        isSmiles = smiles1.equalsIgnoreCase("SMILES");
+        try {
+          if (isSmiles)
+            smiles1 = vwr.getSmiles(bs1);
+        } catch (Exception ex) {
+          e.evalError(ex.getMessage(), null);
+        }
+        float[] data = e.getSmilesExt().getFlexFitList(bs1, bs2, smiles1,
+            !isSmiles);
+        return (data == null ? mp.addXStr("") : mp.addXAF(data));
+      }
       if (isIsomer) {
         if (args.length != 3)
           return false;
+        
+        // A, B, ISOMER
+
+
         if (bs1 == null && bs2 == null)
           return mp.addXStr(vwr.getSmilesMatcher()
               .getRelationship(smiles1, smiles2).toUpperCase());
@@ -438,8 +445,8 @@ public class MathExt {
               || s.indexOf("@") >= 0) {
             if (smiles1.indexOf("@") >= 0
                 && (bs2 != null || smiles2.indexOf("@") >= 0)) {
-              // reverse chirality centers
-              smiles1 = vwr.getSmilesMatcher().reverseChirality(smiles1);
+              // reverse chirality centers              
+              smiles1 = "/invertstereo/" + smiles1;//vwr.getSmilesMatcher().reverseChirality(smiles1);
               if (bs2 == null) {
                 check = (vwr.getSmilesMatcher().areEqual(smiles1, smiles2) > 0);
               } else {
@@ -471,37 +478,61 @@ public class MathExt {
             null, null, null, false, null, null, false, JC.SMILES_TYPE_SMILES);
         return mp.addXStr(stddev < 0.2f ? "IDENTICAL"
             : "IDENTICAL or CONFORMATIONAL ISOMERS (RMSD=" + stddev + ")");
-      } else if (isSmiles) {
+      }
+      if (isSmiles) {
+        // A, B, MAP
+        // A, B, MAP, [pattern "H" "allH" "bestH"], ["stddev"]
+        // A, B, SMILES, [pattern "H" "allH" "bestH"], ["stddev"]
+        // A, B, SMARTS, pattern, ["stddev"]
+        // A, B, SMILES, "polyhedron", [pattern "all" "best"], ["stddev"]
+        // A, B, SMARTS, "polyhedron", pattern, ["all" "best"], ["stddev"]
         ptsA = new Lst<P3>();
         ptsB = new Lst<P3>();
         sOpt = SV.sValue(args[2]);
         boolean isMap = sOpt.equalsIgnoreCase("MAP");
-        isSmiles = (sOpt.equalsIgnoreCase("SMILES"));
+        isSmiles = sOpt.equalsIgnoreCase("SMILES");
         boolean isSearch = (isMap || sOpt.equalsIgnoreCase("SMARTS"));
         if (isSmiles || isSearch)
-          sOpt = (args.length > 3 ? SV.sValue(args[3]) : null);
-        boolean hMaps = (("H".equalsIgnoreCase(sOpt) || "allH".equalsIgnoreCase(sOpt) || "bestH"
-            .equalsIgnoreCase(sOpt)));
+          sOpt = (args.length > (isStdDev ? 4 : 3) ? SV.sValue(args[3]) : null);
+        
+        // sOpts = "H", "allH", "bestH", "polyhedra", pattern, or null
+        boolean hMaps = (("H".equalsIgnoreCase(sOpt)
+            || "allH".equalsIgnoreCase(sOpt) || "bestH".equalsIgnoreCase(sOpt)));
         boolean isPolyhedron = ("polyhedra".equalsIgnoreCase(sOpt));
         if (isPolyhedron)
-          sOpt = (args.length > 4 ? SV.sValue(args[4]) : null);
-        boolean allMaps = (("all".equalsIgnoreCase(sOpt) || "allH".equalsIgnoreCase(sOpt)));
-        boolean bestMap = (("best".equalsIgnoreCase(sOpt) || "bestH".equalsIgnoreCase(sOpt)));
+          sOpt = (args.length > (isStdDev ? 5 : 4) ? SV.sValue(args[4]) : null);
+        boolean allMaps = (("all".equalsIgnoreCase(sOpt) || "allH"
+            .equalsIgnoreCase(sOpt)));
+        boolean bestMap = (("best".equalsIgnoreCase(sOpt) || "bestH"
+            .equalsIgnoreCase(sOpt)));
+        if ("stddev".equals(sOpt))
+          sOpt = null;
+        String pattern = sOpt;
         if (sOpt == null || hMaps || allMaps || bestMap) {
           // with explicitH we set to find only the first match.
-          if (!isMap && !isSmiles)
+          if (!isMap && !isSmiles || hMaps && isPolyhedron)
             return false;
-          sOpt = "/noaromatic"
+          pattern = "/noaromatic"
               + (allMaps || bestMap ? "/" : " nostereo/")
               + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null,
                   bs1, null, false, true, false);
         } else {
           allMaps = true;
         }
-        stddev = e.getSmilesExt().getSmilesCorrelation(bs1, bs2, sOpt, ptsA,
-            ptsB, m, null, isMap, null, null, bestMap, 
-                   (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS) 
-                   | (!allMaps && !bestMap ? JC.SMILES_RETURN_FIRST : 0));
+        stddev = e.getSmilesExt().getSmilesCorrelation(
+            bs1,
+            bs2,
+            pattern,
+            ptsA,
+            ptsB,
+            m,
+            null,
+            isMap,
+            null,
+            null,
+            bestMap,
+            (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
+                | (!allMaps && !bestMap ? JC.SMILES_RETURN_FIRST : 0));
         if (isMap) {
           int nAtoms = ptsA.size();
           if (nAtoms == 0)
@@ -516,9 +547,21 @@ public class MathExt {
                   ((Atom) ptsB.get(pt)).i };
           }
           return (allMaps ? mp.addXList(ret) : ret.size() > 0 ? mp.addXAII(ret
-              .get(0)) : mp.addXStr(""));
+               .get(0)) : mp.addXStr(""));
         }
       } else {
+        switch (args.length) {
+        case 2:
+          break;
+        case 3:
+          if (isStdDev)
+            break;
+          //$FALL-THROUGH$
+        default:
+          return false;
+        }
+        // A, B
+        // A, B, stddev
         ptsA = e.getPointVector(args[0], 0);
         ptsB = e.getPointVector(args[1], 0);
         if (ptsA != null && ptsB != null) {
@@ -1008,6 +1051,8 @@ public class MathExt {
     // {*}.find("ccCCN","BONDS")
     // {*}.find("SMILES","H")
     // {*}.find("chemical",type)
+    // {1.1}.find("SMILES", {2.1})
+    // {1.1}.find("SMARTS", {2.1})
 
     SV x1 = mp.getX();
     boolean isList = (x1.tok == T.varray);
@@ -1021,7 +1066,8 @@ public class MathExt {
     boolean isChemical = !isList && sFind.equalsIgnoreCase("CHEMICAL");
     boolean isMF = !isList && sFind.equalsIgnoreCase("MF");
     boolean isCF = !isList && sFind.equalsIgnoreCase("CELLFORMULA");
-    boolean isON = !isList && (args[args.length - 1].tok == T.on);
+    boolean isON = !isList && args.length > 0
+        && (args[args.length - 1].tok == T.on);
     try {
       if (isChemical) {
         String data = (x1.tok == T.bitset ? vwr.getSmiles(SV.getBitSet(x1,
@@ -1062,9 +1108,9 @@ public class MathExt {
               asMap = SV.bValue(args[2]);
               break;
             }
-            try {          
-              ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null, null,
-                isSMARTS, !asMap, !allMappings);
+            try {
+              ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
+                  null, isSMARTS, !asMap, !allMappings);
             } catch (Exception e) {
               return mp.addXInt(-1);
             }
@@ -1087,8 +1133,10 @@ public class MathExt {
                 JC.SMILES_BIO
                     | (isAll ? JC.SMILES_BIO_ALLOW_UNMACHED_RINGS
                         | JC.SMILES_BIO_CROSSLINK : 0)));
-          if (isSmiles || isSMARTS)
-            sFind = flags;
+          if (isSmiles || isSMARTS) {
+            sFind = (args.length > 1 && args[1].tok == T.bitset ? vwr
+                .getSmilesOpt((BS) args[1].value, 0, 0, 0) : flags);
+          }
           BS bsMatch3D = bs2;
           if (asBonds) {
             // this will return a single match

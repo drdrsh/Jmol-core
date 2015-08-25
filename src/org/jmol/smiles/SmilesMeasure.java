@@ -26,6 +26,7 @@ package org.jmol.smiles;
 
 
 import javajs.util.P3;
+import javajs.util.PT;
 
 public class SmilesMeasure  {
 
@@ -40,21 +41,27 @@ public class SmilesMeasure  {
   private int[] indices = new int[4];
   static final String TYPES = "__dat";
   
-  private float min;
-  private float max;
+  private float[] min = new float[4];
+  private float[] max = new float[4];
+  private int n = 0;
   
-  SmilesMeasure(SmilesSearch search, int index, int type, float min, float max, boolean isNot) {
+  SmilesMeasure(SmilesSearch search, int index, int type, boolean isNot) {
     this.search = search;
     this.type = Math.min(4, Math.max(type, 2));
     this.index = index;
-    this.min = Math.min(min, max);
-    this.max = Math.max(min, max);
     this.isNot = isNot;
   }
-  
+
+  void addRange(float min, float max) {
+    if (n >= 4)
+      return;
+    this.min[n] = Math.min(min, max);
+    this.max[n] = Math.max(min, max);
+    n++;
+  }
   @Override
   public String toString() {
-    String s = "(." + TYPES.charAt(type) + index + ":" + min + "," + max + ") for";
+    String s = "(." + TYPES.charAt(type) + index + ":" + PT.toJSON(null, min) + "," + PT.toJSON(null, max) + ") for";
     for (int i = 0; i < type; i++)
       s+= " " + (i >= nPoints ? "?" : "" + indices[i]);
     return s;
@@ -90,13 +97,16 @@ public class SmilesMeasure  {
       search.v.vB.sub2(points[2], points[1]);
       d = search.v.vA.angle(search.v.vB) / radiansPerDegree;
       break;
-    case 4: 
+    case 4:
       setTorsionData(points[0], points[1], points[2], points[3], search.v, true);
-      d = search.v.vTemp1.angle(search.v.vTemp2) / radiansPerDegree * (search.v.vNorm1.dot(search.v.vNorm2) < 0 ? 1 : -1);
+      d = search.v.vTemp1.angle(search.v.vTemp2) / radiansPerDegree
+          * (search.v.vNorm1.dot(search.v.vNorm2) < 0 ? 1 : -1);
       break;
     }
-    //System.out.println(type + " " + min + " " + max + " " + d + " " + isNot);
-    return ((d < min || d > max) == isNot);   
+    for (int i = 0; i < n; i++)
+      if (d >= min[i] && d <= max[i])
+        return !isNot;
+    return isNot;
   }
 
   public static void setTorsionData(P3 pt1a, P3 pt1,

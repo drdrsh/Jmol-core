@@ -2347,7 +2347,7 @@ abstract class ScriptExpr extends ScriptParam {
    * @throws ScriptException
    */
   @SuppressWarnings("unchecked")
-  protected boolean setStatement(T[] st0) throws ScriptException {
+  protected boolean setStatement(T[] st0, int pt0) throws ScriptException {
     st = st0;
     slen = st.length;
     if (slen == 0)
@@ -2355,7 +2355,7 @@ abstract class ScriptExpr extends ScriptParam {
     T[] fixed;
     int i;
     int tok;
-    for (i = 1; i < slen; i++) {
+    for (i = pt0; i < slen; i++) {
       if (st[i] == null) {
         slen = i;
         return true;
@@ -2375,8 +2375,8 @@ abstract class ScriptExpr extends ScriptParam {
     fixed = new T[slen];
     fixed[0] = st[0];
     boolean isExpression = false;
-    int j = 1;
-    for (i = 1; i < slen; i++) {
+    int j = pt0;
+    for (i = pt0; i < slen; i++) {
       if (st[i] == null)
         continue;
       switch (tok = getToken(i).tok) {
@@ -2400,7 +2400,7 @@ abstract class ScriptExpr extends ScriptParam {
         String s;
         String var = paramAsStr(i);
         boolean isClauseDefine = (tokAt(i) == T.expressionBegin);
-        boolean isSetAt = (j == 1 && st[0] == T.tokenSetCmd);
+        boolean isSetAt = (pt0 == 1 && j == 1 && st[0] == T.tokenSetCmd);
         if (isClauseDefine) {
           SV vt = parameterExpressionToken(++i);
           v = (vt.tok == T.varray ? vt : SV.oValue(vt));

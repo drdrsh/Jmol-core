@@ -263,6 +263,9 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     return "identical";
   }
 
+  /**
+   * Note, this may be incompatible with [$(select(..))]
+   */
   @Override
   public String reverseChirality(String smiles) {
     smiles = PT.rep(smiles, "@@", "!@");

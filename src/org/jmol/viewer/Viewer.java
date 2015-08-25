@@ -1,4 +1,4 @@
-  /* $RCSfile$
+/* $RCSfile$
  * $Author: hansonr $
  * $Date: 2014-02-02 22:24:37 -0600 (Sun, 02 Feb 2014) $
  * $Revision: 19253 $
@@ -628,6 +628,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       getScriptManager();
     zap(false, true, false); // here to allow echos
     g.setO("language", GT.getLanguage());
+    g.setO("_hoverLabel", hoverLabel);
     stm.setJmolDefaults();
     // this code will be shared between Jmol 14.0 and 14.1
     Elements.covalentVersion = Elements.RAD_COV_BODR_2014_02_22;
@@ -2529,7 +2530,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     rotatePrev1 = rotateBondIndex = -1;
     movingSelected = false;
     slm.noneSelected = Boolean.FALSE;
-    hoverEnabled = true;
+    setHoverEnabled(true);
     setSelectionHalosEnabled(false);
     tm.setCenter();
     am.initializePointers(1);
@@ -4063,16 +4064,22 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     setShapeSize(JC.SHAPE_STICKS, marBond * 2, BSUtil.setAll(ms.ac));
   }
 
-  int hoverAtomIndex = -1;
-  String hoverText;
-  public boolean hoverEnabled = true;
+  private int hoverAtomIndex = -1;
+  private String hoverText, hoverLabel = "%U";
+  private boolean hoverEnabled = true;
 
   public void setHoverLabel(String strLabel) {
     shm.loadShape(JC.SHAPE_HOVER);
     setShapeProperty(JC.SHAPE_HOVER, "label", strLabel);
-    hoverEnabled = (strLabel != null);
+    setHoverEnabled(strLabel != null);
+    g.setO("_hoverLabel", hoverLabel = strLabel);
     if (!hoverEnabled && !sm.haveHoverCallback())
       startHoverWatcher(false);
+  }
+  
+  private void setHoverEnabled(boolean tf) {
+    hoverEnabled = tf;
+    g.setB("_hoverEnabled", tf);
   }
 
   /*
@@ -4090,6 +4097,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   void hoverOn(int atomIndex, boolean isLabel) {
     g.removeParam("_objecthovered");
     g.setI("_atomhovered", atomIndex);
+    g.setO("_hoverLabel", hoverLabel);
     g.setUserVariable("hovered", SV.getVariable(BSUtil.newAndSetBit(atomIndex)));
     if (sm.haveHoverCallback())
       sm.setStatusAtomHovered(atomIndex, getAtomInfoXYZ(atomIndex, false));
@@ -4122,6 +4130,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     // from draw for drawhover on
     if (eval != null && isScriptExecuting())
       return;
+    g.setO("_hoverLabel", hoverLabel);
     if (id != null && pt != null) {
       g.setO("_objecthovered", id);
       g.setI("_atomhovered", -1);
@@ -8833,6 +8842,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public void calculatePartialCharges(BS bsSelected) throws JmolAsyncException {
     if (bsSelected == null || bsSelected.cardinality() == 0)
       bsSelected = getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
+    int pt = bsSelected.nextSetBit(0);
+    if (pt < 0)
+      return;
+    // this forces an array if it does not exist 
+    setAtomProperty(BSUtil.newAndSetBit(pt), T.partialcharge, 0, 1f, null, null, null);
     getMinimizer(true).calculatePartialCharges(ms.bo, ms.bondCount, ms.at,
         bsSelected);
   }

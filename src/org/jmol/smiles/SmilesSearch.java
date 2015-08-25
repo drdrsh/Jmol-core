@@ -70,7 +70,6 @@ public class SmilesSearch extends JmolMolecule {
 
   String pattern;
   Node[] jmolAtoms;
-  Node[] smartsAtoms;
   
   BNode[] bioAtoms;
   int jmolAtomCount;
@@ -1928,7 +1927,7 @@ public class SmilesSearch extends JmolMolecule {
       String key = entry.getValue().toString();
       if (key.startsWith("select")) {
         BS bs = (htNew.containsKey(key) ? (BS) htNew.get(key) 
-            : smartsAtoms[0].findAtomsLike(key.substring(6)));
+            : jmolAtoms[0].findAtomsLike(key.substring(6)));
         if (bs == null)
           bs = new BS();
         htNew.put(key, bs);

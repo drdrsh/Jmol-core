@@ -43,8 +43,7 @@ public class FrankRenderer extends ShapeRenderer {
         : C.GRAY);
     if (isExport
         || !vwr.getShowFrank()
-        || !g3d.setC(C.getColixTranslucent3(colix,
-            g3d.haveTranslucentObjects(), 0.5f)))
+        || !g3d.setC(colix))
       return false;
     if (vwr.frankOn && !vwr.noFrankEcho)
       return vwr.noFrankEcho;
