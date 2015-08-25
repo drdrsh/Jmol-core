@@ -70,13 +70,13 @@
 
     <!-- Ask user for username and password -->
     <input
-      message="${uploadPath} - Please enter username:"
+      message="${uploadPath} for ${version} Please enter your username."
       addproperty="ssh.user"
     >
     	<!-- handler type="secure"/ -->
     </input>
     <input
-      message="${uploadPath} - Please enter password:"
+      message="Please enter your password."
       addproperty="ssh.password"
     />
 
