@@ -73,9 +73,19 @@ abstract public class JmolThread extends Thread {
     if (eval == null || !isJS && !vwr.testAsync || !useTimeout)
       return;
     sc.mustResumeEval = !stopped;
-    eval.resumeEval(sc);
-    eval = null;
-    sc = null;
+    JmolScriptEvaluator eval = this.eval;
+    ScriptContext sc = this.sc;
+    this.eval = null;
+    this.sc = null;
+    /**
+     * @j2sNative
+     * 
+     * setTimeout(function() { eval.resumeEval(sc); }, 1);
+     * 
+     */
+    {
+      eval.resumeEval(sc);
+    }
   }
   
   @Override
