@@ -1377,9 +1377,8 @@ abstract class ScriptTokenParser {
 
 
   /**
-   * process /1   /1.1   /*
+   * process /1   /1.1   / *  or just /
    * 
-   * no longer accept just "/" here for implicit /1 
    * 
    * @return true if no error
    */
@@ -1394,11 +1393,12 @@ abstract class ScriptTokenParser {
           .valueOf(getToken().intValue)));
     case T.decimal:
       return generateResidueSpecCode(T.tv(T.spec_model, fixModelSpec(getToken()), theValue));
-//    case T.comma:
-//    case T.rightbrace:
-//    case T.nada:
-//      return generateResidueSpecCode(T.o(T.spec_model, Integer
-//          .valueOf(1)));
+    case T.comma:
+    case T.rightbrace:
+    case T.nada:
+      // these are necessary to allow for {1 1 1/} or {1/,1/,1} in fractional coordinates  
+      return generateResidueSpecCode(T.o(T.spec_model, Integer
+          .valueOf(1)));
     }
     return error(ERROR_invalidModelSpecification);
   }
