@@ -177,16 +177,15 @@ public class Measurement {
    * Used by MouseManager and Picking Manager to build the script
    * 
    * @param sep
-   * @param withModelIndex
-   * @return measure (atomIndex=1) (atomIndex=2)....
+   * @param withModelIndex is needed for points only
+   * @return measure ((1}) ({2})....
    */
   public String getMeasurementScript(String sep, boolean withModelIndex) {
-    String str = "";
-    // extra () are needed because of the possible context  symop({1}) ({2})
-    boolean asScript = (sep.equals(" "));
+    SB sb = new SB();
+    boolean asBitSet = (sep.equals(" "));
     for (int i = 1; i <= count; i++)
-      str += (i > 1 ? sep : " ") + getLabel(i, asScript, withModelIndex);
-    return str;
+      sb.append(i > 1 ? sep : " ").append(getLabel(i, asBitSet, withModelIndex));
+    return sb.toString();
   }
 
   public void formatMeasurementAs(String strFormat, String units,
@@ -375,15 +374,6 @@ public class Measurement {
     return sameAsIJ(countPlusIndices, pts, i, j);
   }
 
-  public Lst<String> toVector(boolean asBitSet) {
-    Lst<String> V = new Lst<String>();
-    for (int i = 1; i <= count; i++)
-      V.addLast(getLabel(i, asBitSet, false));
-    V.addLast(strMeasurement);
-    return V;
-  }
-
-  
   public float getMeasurement(Point3fi[] pts) {
     if (countPlusIndices == null)
       return Float.NaN;
@@ -413,12 +403,14 @@ public class Measurement {
 
   public String getLabel(int i, boolean asBitSet, boolean withModelIndex) {
     int atomIndex = countPlusIndices[i];
-    // double parens here because of situations like
-    //  draw symop({3}), which the compiler will interpret as symop()
-    return (atomIndex < 0 ? (withModelIndex ? "modelIndex "
-        + getAtom(i).mi + " " : "")
-        + Escape.eP(getAtom(i)) : asBitSet ? "(({" + atomIndex + "}))" : vwr
-        .getAtomInfo(atomIndex));
+    // double parens USED TO BE here because of situations like
+    //  draw symop({3}), which the compiler USED TO interpret as symop()
+    return (
+        atomIndex < 0 ? (withModelIndex ? "modelIndex "
+             + getAtom(i).mi + " " : "") + Escape.eP(getAtom(i)) 
+        : asBitSet ? "({" + atomIndex + "})" 
+        :vwr.getAtomInfo(atomIndex)
+       );
   }
 
   public void setModelIndex(short modelIndex) {

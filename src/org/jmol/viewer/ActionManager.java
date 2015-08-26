@@ -1999,7 +1999,7 @@ public class ActionManager implements EventManager {
     if (isSpin)
       runScript("spin" + s + " " + vwr.getInt(T.pickingspinrate));
     else
-      runScript("draw symop" + s + ";show symop" + s);
+      runScript("draw symop " + s + ";show symop " + s);
   }
 
   private void reset() {

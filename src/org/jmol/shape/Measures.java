@@ -43,6 +43,7 @@ import javajs.awt.Font;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
+import javajs.util.SB;
 
 
 import java.util.Hashtable;
@@ -122,7 +123,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         return;
       if (mPending.count > 1)
         vwr.setStatusMeasuring("measurePending", mPending
-            .count, mPending.toVector(false).toString(),
+            .count, getMessage(mPending, false),
             mPending.value);
       return;
     }
@@ -538,13 +539,26 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       return;
     measurements.addLast(measureNew);
     vwr.setStatusMeasuring("measureCompleted", measurementCount++,
-        measureNew.toVector(false).toString(), measureNew.value);
+        getMessage(measureNew, false), measureNew.value);
+  }
+
+  private static String getMessage(Measurement m, boolean asBitSet) {
+    // only for callback messages
+    SB sb = new SB();
+    sb.append("[");
+    for (int i = 1; i <= m.count; i++) {
+      if (i > 1)
+        sb.append(", ");
+      sb.append(m.getLabel(i, asBitSet, false));
+    }
+    sb.append("]");
+    return sb.toString();
   }
 
   private void deleteI(int i) {
     if (i >= measurements.size() || i < 0)
       return;
-    String msg = measurements.get(i).toVector(true).toString();
+    String msg = getMessage(measurements.get(i), true);
     measurements.remove(i);
     measurementCount--;
     vwr.setStatusMeasuring("measureDeleted", i, msg, 0);
@@ -563,7 +577,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
           m.mad = md.mad;
           break;
         case T.delete:
-          String msg = measurements.get(i).toVector(true).toString();
+          String msg = getMessage(measurements.get(i), true);
           measurements.remove(i);
           measurementCount--;
           vwr.setStatusMeasuring("measureDeleted", i, msg, 0);

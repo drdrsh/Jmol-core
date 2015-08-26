@@ -649,7 +649,7 @@ public class SmilesParser {
           if (isNegative)
             strMeasure = "-" + strMeasure;
           String[] tokens = PT.split(strMeasure, ",");
-          if(tokens.length % 2 == 1 || tokens.length > 8)
+          if(tokens.length % 2 == 1)
             break;
           float[] vals = new float[tokens.length];
           int i = tokens.length;
@@ -658,10 +658,8 @@ public class SmilesParser {
                break;
           if (i >= 0)
             break;
-          m = new SmilesMeasure(molecule, index, type, isNot);
+          m = new SmilesMeasure(molecule, index, type, isNot, vals);
           molecule.measures.addLast(m);
-          for (i = 0; i < vals.length; i += 2)
-            m.addRange(vals[i], vals[i+1]);
           if (index > 0)
             htMeasures.put(id, m);
           else if (index == 0 && Logger.debugging)

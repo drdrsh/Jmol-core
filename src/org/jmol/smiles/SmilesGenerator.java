@@ -69,7 +69,7 @@ public class SmilesGenerator {
   // data
 
   private VTemp vTemp = new VTemp();
-  private int nPairs;
+  private int nPairs, nPairsMax;
   private BS bsBondsUp = new BS();
   private BS bsBondsDn = new BS();
   private BS bsToDo;
@@ -80,6 +80,7 @@ public class SmilesGenerator {
 
   private Map<String, Object[]> htRingsSequence = new Hashtable<String, Object[]>();
   private Map<String, Object[]> htRings = new Hashtable<String, Object[]>();
+  private BS bsRingKeys = new BS();
   private BS bsIncludingH;
   private boolean topologyOnly;
   boolean getAromatic = true;
@@ -745,13 +746,13 @@ public class SmilesGenerator {
       if (!isAxial)
         bonds.addLast(bond1);
     }
-    int nPairs = axialPairs.size();
+    int npAxial = axialPairs.size();
 
     // AX6 or AX5 are fine as is
     // can't proceed if octahedral and not all axial pairs
     // or trigonal bipyramidal and no axial pair.
     
-    if (isOK || n == 6 && nPairs != 3 || n == 5 && nPairs == 0)
+    if (isOK || n == 6 && npAxial != 3 || n == 5 && npAxial == 0)
       return "";
     pair0 = axialPairs.get(0);
     bond1 = pair0[0];
@@ -761,13 +762,13 @@ public class SmilesGenerator {
     
     v.clear();
     v.addLast(bond1);
-    if (nPairs > 1)
+    if (npAxial > 1)
       bonds.addLast(axialPairs.get(1)[0]);
-    if (nPairs == 3)
+    if (npAxial == 3)
       bonds.addLast(axialPairs.get(2)[0]);
-    if (nPairs > 1)
+    if (npAxial > 1)
       bonds.addLast(axialPairs.get(1)[1]);
-    if (nPairs == 3)
+    if (npAxial == 3)
       bonds.addLast(axialPairs.get(2)[1]);
     for (int i = 0; i < bonds.size(); i++) {
       bond1 = bonds.get(i);
@@ -883,11 +884,24 @@ public class SmilesGenerator {
     Object[] o = ht.get(key);
     String s = (o == null ? null : (String) o[0]);
     if (s == null) {
-      ht.put(key, new Object[] {s = getRingPointer(++nPairs), Integer.valueOf(i1) });
+      bsRingKeys.set(++nPairs);
+      nPairsMax = Math.max(nPairs, nPairsMax);
+      ht.put(key,
+          new Object[] { s = getRingPointer(nPairs), Integer.valueOf(i1),
+              Integer.valueOf(nPairs) });
       if (Logger.debugging)
         Logger.debug("adding for " + i0 + " ring key " + nPairs + ": " + key);
     } else {
       ht.remove(key);
+      // let the ring count go up to 9 before resetting if all rings are closed;
+      // if it runs over 99 ever, then never reset it; 
+      // otherwise If it runs over 9 ever, then just reset it to 10
+      // otherwise if it hits 9, then reset it to 0
+      int nPair = ((Integer) o[2]).intValue();
+      bsRingKeys.clear(nPair);
+      if (bsRingKeys.nextSetBit(0) < 0 && (nPairsMax == 2 || nPairsMax == 99)) {
+        nPairsMax = nPairs = (nPairsMax == 99 ? 10 : 0);
+      }
       if (Logger.debugging)
         Logger.debug("using ring key " + key);
     }

@@ -40,32 +40,23 @@ public class SmilesMeasure  {
   
   private int[] indices = new int[4];
   static final String TYPES = "__dat";
+  final private float[] minmax;
   
-  private float[] min = new float[4];
-  private float[] max = new float[4];
-  private int n = 0;
-  
-  SmilesMeasure(SmilesSearch search, int index, int type, boolean isNot) {
+  SmilesMeasure(SmilesSearch search, int index, int type, boolean isNot,
+      float[] minmax) {
     this.search = search;
     this.type = Math.min(4, Math.max(type, 2));
     this.index = index;
     this.isNot = isNot;
+    this.minmax = minmax;
+    for (int i = minmax.length - 2; i >= 0; i -= 2)
+      if (minmax[i] > minmax[i + 1]) {
+        float min = minmax[i + 1];
+        minmax[i + 1] = minmax[i];
+        minmax[i] = min;
+      }
   }
 
-  void addRange(float min, float max) {
-    if (n >= 4)
-      return;
-    this.min[n] = Math.min(min, max);
-    this.max[n] = Math.max(min, max);
-    n++;
-  }
-  @Override
-  public String toString() {
-    String s = "(." + TYPES.charAt(type) + index + ":" + PT.toJSON(null, min) + "," + PT.toJSON(null, max) + ") for";
-    for (int i = 0; i < type; i++)
-      s+= " " + (i >= nPoints ? "?" : "" + indices[i]);
-    return s;
-  }
   boolean addPoint(int index) {
     if (nPoints == type)
       return false;
@@ -103,8 +94,8 @@ public class SmilesMeasure  {
           * (search.v.vNorm1.dot(search.v.vNorm2) < 0 ? 1 : -1);
       break;
     }
-    for (int i = 0; i < n; i++)
-      if (d >= min[i] && d <= max[i])
+    for (int i = minmax.length - 2; i >= 0; i -= 2)
+      if (d >= minmax[i] && d <= minmax[i + 1])
         return !isNot;
     return isNot;
   }
@@ -127,4 +118,13 @@ public class SmilesMeasure  {
     v.vTemp2.normalize();
     v.vNorm2.cross(v.vTemp1, v.vTemp2);
   }
+  
+  @Override
+  public String toString() {
+    String s = "(." + TYPES.charAt(type) + index + ":" + PT.toJSON(null, minmax) + ") for";
+    for (int i = 0; i < type; i++)
+      s+= " " + (i >= nPoints ? "?" : "" + indices[i]);
+    return s;
+  }
+
 }
