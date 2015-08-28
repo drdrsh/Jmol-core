@@ -42,7 +42,10 @@ import org.jmol.util.Logger;
 
 /**
  * Reader for Gaussian fchk files
- * also allows appended frequency info from the log file
+ * for vibrational modes, add Freq=(SaveNormalModes,Raman,VibRot) 
+ * 
+ * 
+ * also allows appended freq data
  * 
  * 
  * @author hansonr  Bob Hanson hansonr@stolaf.edu
@@ -69,15 +72,77 @@ public class GaussianFchkReader extends GaussianReader {
     readPartialCharges();
     readBasis();
     readMolecularObitals();
-    readFrequencies("NumFreq", false); // if log frequency info is appended
+    checkForFreq();
     continuing = false;
+  }
+
+  private void checkForFreq() throws Exception {
+    Integer n = (Integer) fileData.get("Vib-NDim");
+    if (n == null) {
+//      NumAtom 9
+//      NumFreq 21
+//                           1                      2                      3
+//                          A2                     B1                     A2
+//       Frequencies --   613.8891               622.9996               722.2497
+//       Red. masses --     3.1195                 3.8445                 1.3156
+//       Frc consts  --     0.6927                 0.8791                 0.4043
+      readFrequencies("NumFreq", false); // if freq file appended
+      return;
+    }
+    try {
+      int nModes  = n.intValue();
+      float[] vibE2 = (float[]) fileData.get("Vib-E2");
+      float[] modes = (float[]) fileData.get("Vib-Modes");      
+      float[] frequencies = fillFloat(vibE2, 0, nModes);
+      float[] red_masses = fillFloat(vibE2, nModes, nModes);
+      float[] frc_consts = fillFloat(vibE2, nModes * 2, nModes);
+      float[] intensities = fillFloat(vibE2, nModes * 3, nModes);
+      int ac = asc.getLastAtomSetAtomCount();
+      boolean[] ignore = new boolean[nModes];
+      int fpt = 0;
+      for (int i = 0; i < nModes; ++i) {
+        ignore[i] = !doGetVibration(++vibrationNumber);
+        if (ignore[i])
+          continue;   
+        int iAtom0 = asc.ac;
+        asc.cloneAtomSetWithBonds(true);
+        // set the properties
+        String name = asc.setAtomSetFrequency("Calculation " + calculationNumber, null, "" + frequencies[i], null);
+        appendLoadNote("model " + asc.atomSetCount + ": " + name);
+        namedSets.set(asc.iSet);
+        asc.setAtomSetModelProperty("ReducedMass",
+            red_masses[i]+" AMU");
+        asc.setAtomSetModelProperty("ForceConstant",
+            frc_consts[i]+" mDyne/A");
+        asc.setAtomSetModelProperty("IRIntensity",
+            intensities[i]+" KM/Mole");
+        for (int iAtom = 0; iAtom < ac; iAtom++) {
+          asc.addVibrationVectorWithSymmetry(iAtom0
+              + iAtom, modes[fpt++], modes[fpt++], modes[fpt++], false);
+        }
+      }
+    } catch (Exception e) {
+      Logger.error("Could not read Vib-E2 section: " + e.getMessage());
+    }
+
+  }
+
+  private float[] fillFloat(float[] f0, int i, int n) {
+    float[] f = new float[n];
+    for (int i1 = 0, ilast = i + n; i < ilast; i++, i1++)
+      f[i1] = f0[i];
+    return f;
   }
 
   private void readAllData() throws Exception {
     while ((line == null ? rd() : line) != null) {
       if (line.length() < 40) {
-        if (line.indexOf("NumAtom") == 0)
+        if (line.indexOf("NumAtom") == 0) {
+          // freq file appended
+//        NumAtom 9
+//        NumFreq 21 
           return;
+        }
         continue;
       }
       String name = PT.rep(line.substring(0, 40).trim(), " ", "");

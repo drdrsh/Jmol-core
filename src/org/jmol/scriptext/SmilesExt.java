@@ -24,24 +24,20 @@
 
 package org.jmol.scriptext;
 
+import javajs.util.AU;
+import javajs.util.Lst;
+import javajs.util.M4;
+import javajs.util.Measure;
+import javajs.util.P3;
+
 import org.jmol.api.Interface;
 import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
-import org.jmol.modelset.BondSet;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
-import org.jmol.util.BSUtil;
-
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.Measure;
-
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
-
-import javajs.util.M4;
-import javajs.util.P3;
 
 public class SmilesExt {
   
@@ -160,52 +156,47 @@ public class SmilesExt {
   }
 
   /**
-   * @param pattern e
-   * @param smiles 
-   * @param bsSelected 
-   * @param bsMatch3D 
-   * @param isSmarts 
-   * @param asOneBitset 
-   * @param firstMatchOnly  
-   * @return 
-   * @throws ScriptException 
+   * @param pattern
+   *        e
+   * @param smiles
+   * @param bsSelected
+   * @param bsMatch3D
+   * @param flags
+   * @param asOneBitset
+   * @param firstMatchOnly
+   * @return Object
+   * @throws ScriptException
    */
   public Object getSmilesMatches(String pattern, String smiles, BS bsSelected,
-                                 BS bsMatch3D, boolean isSmarts,
-                                 boolean asOneBitset, boolean firstMatchOnly) throws ScriptException {
+                                 BS bsMatch3D, int flags, boolean asOneBitset,
+                                 boolean firstMatchOnly) throws ScriptException {
 
     // just retrieving the SMILES or bioSMILES string
-
     if (pattern.length() == 0 || pattern.equals("H") || pattern.equals("*")) {
-      boolean isBioSmiles = (!asOneBitset);
       try {
         return e.vwr.getSmilesOpt(
             bsSelected,
             0,
             0,
-            (pattern.equals("H") ? JC.SMILES_EXPLICIT_H : 0)
-                | (pattern.equals("*") ? JC.SMILES_TOPOLOGY : 0)
-                | (isBioSmiles ? JC.SMILES_BIO | JC.SMILES_BIO_CROSSLINK
-                    | JC.SMILES_BIO_COMMENT : 0));
+            flags | (pattern.equals("H") ? JC.SMILES_EXPLICIT_H : 0)
+                | (pattern.equals("*") ? JC.SMILES_TOPOLOGY : 0));
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }
     }
-
     BS[] b;
     if (bsMatch3D == null) {
-
       // getting a BitSet or BitSet[] from a set of atoms or a pattern.
-
+      boolean isSmarts = JC.checkFlag(flags, JC.SMILES_TYPE_SMARTS);
       try {
         if (smiles == null) {
           b = sm.getSubstructureSetArray(pattern, e.vwr.ms.at, e.vwr.ms.ac,
-              bsSelected, null, isSmarts ? JC.SMILES_TYPE_SMARTS
-                  : JC.SMILES_TYPE_SMILES);
+              bsSelected, null, flags);
         } else {
           int[][] map = sm.find(pattern, smiles, isSmarts, firstMatchOnly);
           if (!asOneBitset)
-            return (!firstMatchOnly ? map : map.length == 0 ? new int[0] : map[0]);
+            return (!firstMatchOnly ? map : map.length == 0 ? new int[0]
+                : map[0]);
           BS bs = new BS();
           for (int j = 0; j < map.length; j++) {
             int[] a = map[j];
@@ -232,13 +223,9 @@ public class SmilesExt {
 
       Lst<BS> vReturn = new Lst<BS>();
       float stddev = getSmilesCorrelation(bsMatch3D, bsSelected, pattern, null,
-          null, null, vReturn, false, null, null, false,
-          isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES);
-      if (Float.isNaN(stddev)) {
-        if (asOneBitset)
-          return new BS();
-        return new String[] {};
-      }
+          null, null, vReturn, false, null, null, false, flags);
+      if (Float.isNaN(stddev))
+        return (asOneBitset ? new BS() : new String[] {});
       e.showString("RMSD " + stddev + " Angstroms");
       b = vReturn.toArray(new BS[vReturn.size()]);
     }

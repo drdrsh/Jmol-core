@@ -106,10 +106,6 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   private final static int SMILES_MODE_MASK         = 0x00F000;
 
 
-  private boolean checkFlag(int flags, int flag) {
-    return (flags & flag) == flag;
-  }
-
   @Override
   public String getLastException() {
     return InvalidSmilesException.getLastError();
@@ -149,19 +145,20 @@ public class SmilesMatcher implements SmilesMatcherInterface {
                              String bioComment, int flags) throws Exception {
 //  boolean asBioSmiles, boolean bioAllowUnmatchedRings,  boolean bioAddCrossLinks, boolean explicitH
      InvalidSmilesException.clear();
-    if (checkFlag(flags, JC.SMILES_BIO)) {
-      boolean bioAllowUnmatchedRings = checkFlag(flags,
+    if (JC.checkFlag(flags, JC.SMILES_BIO)) {
+      boolean bioAllowUnmatchedRings = JC.checkFlag(flags,
           JC.SMILES_BIO_ALLOW_UNMACHED_RINGS);
-      boolean bioAddCrossLinks = checkFlag(flags, JC.SMILES_BIO_CROSSLINK);
+      boolean bioAddCrossLinks = JC.checkFlag(flags, JC.SMILES_BIO_CROSSLINK);
       return (new SmilesGenerator()).getBioSmiles((BNode[]) atoms, ac,
           bsSelected, bioAllowUnmatchedRings, bioAddCrossLinks, bioComment);
     }
-    boolean explicitH = checkFlag(flags, JC.SMILES_EXPLICIT_H);
-    boolean topologyOnly = checkFlag(flags, JC.SMILES_TOPOLOGY);
-    boolean getAromatic = !checkFlag(flags, JC.SMILES_NOAROMATIC);
+    boolean explicitH = JC.checkFlag(flags, JC.SMILES_EXPLICIT_H);
+    boolean topologyOnly = JC.checkFlag(flags, JC.SMILES_TOPOLOGY);
+    boolean getAromatic = !JC.checkFlag(flags, JC.SMILES_NOAROMATIC);
+    boolean addAtomComment = JC.checkFlag(flags, JC.SMILES_ATOM_COMMENT);
     
     return (new SmilesGenerator()).getSmiles(atoms, ac, bsSelected, explicitH,
-        topologyOnly, getAromatic);
+        topologyOnly, getAromatic, addAtomComment);
   }
 
   @Override
@@ -452,7 +449,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
                        BS bsAromatic, int flags) throws Exception {
     InvalidSmilesException.clear();
     try {
-      SmilesSearch search = SmilesParser.getMolecule(pattern, checkFlag(flags, JC.SMILES_TYPE_SMARTS));
+      SmilesSearch search = SmilesParser.getMolecule(pattern, JC.checkFlag(flags, JC.SMILES_TYPE_SMARTS));
       search.jmolAtoms = atoms;
       if (atoms instanceof BNode[])
         search.bioAtoms = (BNode[]) atoms;
@@ -463,8 +460,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       search.getSelections();
       search.bsRequired = null;//(bsRequired != null && bsRequired.cardinality() > 0 ? bsRequired : null);
       search.setRingData(bsAromatic);
-      search.firstMatchOnly = checkFlag(flags, JC.SMILES_RETURN_FIRST);
-      search.matchAllAtoms = checkFlag(flags, JC.SMILES_MATCH_ALL);
+      search.firstMatchOnly = JC.checkFlag(flags, JC.SMILES_RETURN_FIRST);
+      search.matchAllAtoms = JC.checkFlag(flags, JC.SMILES_MATCH_ALL);
       switch (flags & SMILES_MODE_MASK) {
       case SMILES_MODE_BITSET:
         search.asVector = false;

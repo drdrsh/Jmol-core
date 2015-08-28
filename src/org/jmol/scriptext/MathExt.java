@@ -429,14 +429,14 @@ public class MathExt {
           return mp.addXStr("NONE");
         if (bs1 != null)
           smiles1 = (String) e.getSmilesExt().getSmilesMatches("", null, bs1,
-              null, false, true, false);
+              null, JC.SMILES_TYPE_SMILES, true, false);
         boolean check;
         if (bs2 == null) {
           // note: find smiles1 IN smiles2 here
           check = (vwr.getSmilesMatcher().areEqual(smiles2, smiles1) > 0);
         } else {
           check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null, bs2,
-              null, false, true, false)).nextSetBit(0) >= 0);
+              null, JC.SMILES_TYPE_SMILES, true, false)).nextSetBit(0) >= 0);
         }
         if (!check) {
           // MF matched, but didn't match SMILES
@@ -451,7 +451,7 @@ public class MathExt {
                 check = (vwr.getSmilesMatcher().areEqual(smiles1, smiles2) > 0);
               } else {
                 check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null,
-                    bs2, null, false, true, false)).nextSetBit(0) >= 0);
+                    bs2, null, JC.SMILES_TYPE_SMILES, true, false)).nextSetBit(0) >= 0);
               }
               if (check)
                 return mp.addXStr("ENANTIOMERS");
@@ -462,7 +462,7 @@ public class MathExt {
                   smiles1) > 0);
             } else {
               Object ret = e.getSmilesExt().getSmilesMatches(
-                  "/nostereo/" + smiles1, null, bs2, null, false, true, false);
+                  "/nostereo/" + smiles1, null, bs2, null, JC.SMILES_TYPE_SMILES, true, false);
               check = (((BS) ret).nextSetBit(0) >= 0);
             }
             if (check)
@@ -515,7 +515,7 @@ public class MathExt {
           pattern = "/noaromatic"
               + (allMaps || bestMap ? "/" : " nostereo/")
               + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null,
-                  bs1, null, false, true, false);
+                  bs1, null, JC.SMILES_TYPE_SMILES, true, false);
         } else {
           allMaps = true;
         }
@@ -1110,7 +1110,9 @@ public class MathExt {
             }
             try {
               ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
-                  null, isSMARTS, !asMap, !allMappings);
+                  null,
+                  isSMARTS ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
+                  !asMap, !allMappings);
             } catch (Exception e) {
               return mp.addXInt(-1);
             }
@@ -1149,8 +1151,12 @@ public class MathExt {
                     | JC.SMILES_RETURN_FIRST);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
+            int smilesFlags = (isSmiles ? JC.SMILES_TYPE_SMILES
+                : JC.SMILES_TYPE_SMARTS)
+                | (isON && sFind.length() == 0 ? JC.SMILES_BIO
+                    | JC.SMILES_BIO_COMMENT : 0);
             ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value,
-                bsMatch3D, !isSmiles, !isAll, false);
+                bsMatch3D, smilesFlags, !isON, false);
           }
           break;
         }
@@ -2782,8 +2788,8 @@ public class MathExt {
     RadiusData rd = null;
     switch (tok) {
     case T.branch:
-      return (i == 3 && args[1].value instanceof BS 
-      && args[2].value instanceof BS && mp.addXBs(vwr.getBranchBitSet(
+      return (i == 3 && args[1].value instanceof BS
+          && args[2].value instanceof BS && mp.addXBs(vwr.getBranchBitSet(
           ((BS) args[2].value).nextSetBit(0),
           ((BS) args[1].value).nextSetBit(0), true)));
     case T.smiles:
@@ -2806,8 +2812,10 @@ public class MathExt {
       }
       if (!isOK)
         e.invArg();
-      return mp.addXObj(e.getSmilesExt().getSmilesMatches(SV.sValue(args[1]), null, bsSelected,
-          null, tok == T.search, mp.asBitSet, false));
+      return mp.addXObj(e.getSmilesExt().getSmilesMatches(SV.sValue(args[1]),
+          null, bsSelected, null,
+          tok == T.search ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
+          mp.asBitSet, false));
     }
     if (withinSpec instanceof String) {
       if (tok == T.nada) {
@@ -2835,13 +2843,13 @@ public class MathExt {
           return mp.addXBs(getAtomsNearSurface(distance, s.substring(1)));
         isWithinGroup = (s.equalsIgnoreCase("group"));
         isVdw = (!isWithinGroup && s.equalsIgnoreCase("vanderwaals"));
-        isWithinUnitcell  = (!isWithinGroup && s.equalsIgnoreCase("unitcell"));
+        isWithinUnitcell = (!isWithinGroup && s.equalsIgnoreCase("unitcell"));
         if (isVdw) {
           withinSpec = null;
           tok = T.vanderwaals;
         } else if (isWithinUnitcell) {
-          tok = T.unitcell; 
-        } else {         
+          tok = T.unitcell;
+        } else {
           tok = T.group;
         }
         break;
@@ -2881,8 +2889,8 @@ public class MathExt {
       case T.rna3d:
       case T.domains:
       case T.validation:
-        return mp.addXBs(vwr.ms.getAtoms(tok,
-            SV.sValue(args[args.length - 1])));
+        return mp
+            .addXBs(vwr.ms.getAtoms(tok, SV.sValue(args[args.length - 1])));
       }
       break;
     case 3:
@@ -2926,11 +2934,12 @@ public class MathExt {
     bs = (args[i].tok == T.bitset ? SV.bsSelectVar(args[i]) : null);
     if (tok == T.unitcell) {
       boolean asMap = isWithinModelSet;
-      return mp.addXObj(vwr.ms.getUnitCellPointsWithin(distance, bs, pt, asMap));
+      return mp
+          .addXObj(vwr.ms.getUnitCellPointsWithin(distance, bs, pt, asMap));
     }
     if (pt != null)
       return mp.addXBs(vwr.getAtomsNearPt(distance, pt));
-    
+
     if (tok == T.sequence)
       return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs));
     if (bs == null)

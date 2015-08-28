@@ -84,10 +84,11 @@ public class SmilesGenerator {
   private BS bsIncludingH;
   private boolean topologyOnly;
   boolean getAromatic = true;
+  private boolean addAtomComment;
 
   // generation of SMILES strings
 
-  String getSmiles(Node[] atoms, int ac, BS bsSelected, boolean explicitH, boolean topologyOnly, boolean getAromatic)
+  String getSmiles(Node[] atoms, int ac, BS bsSelected, boolean explicitH, boolean topologyOnly, boolean getAromatic, boolean addAtomComment)
       throws InvalidSmilesException {
     int i = bsSelected.nextSetBit(0);
     if (i < 0)
@@ -98,6 +99,7 @@ public class SmilesGenerator {
     this.explicitH = explicitH;
     this.topologyOnly = topologyOnly;
     this.getAromatic = getAromatic;
+    this.addAtomComment = addAtomComment;
     return getSmilesComponent(atoms[i], bsSelected, true, false);
   }
 
@@ -122,7 +124,7 @@ public class SmilesGenerator {
         BNode a = atoms[i];
         String ch = a.getGroup1('?');
         String bioStructureName = a.getBioStructureTypeName();
-        boolean unknown = (ch.equals("?"));
+        boolean unknown = (ch == ch.toLowerCase());
         if (end != null) {
           if (sb.length() > 0)
             sb.append(end);
@@ -135,7 +137,7 @@ public class SmilesGenerator {
               len = s.length();
               sb.append(s);
             }
-            sb.append("~").appendC(bioStructureName.charAt(0)).append("~");
+            sb.append("~").appendC(bioStructureName.toLowerCase().charAt(0)).append("~");
             len++;
           } else {
             s = getSmilesComponent(a, bs, false, true);
@@ -157,7 +159,7 @@ public class SmilesGenerator {
           len = 2;
         }
         if (unknown) {
-          addBracketedBioName(sb, a, bioStructureName.length() > 0 ? ".0" : null);
+          addBracketedBioName(sb, a, bioStructureName.length() > 0 ? ".0" : null, false);
         } else {
           sb.append(ch);
         }
@@ -199,7 +201,7 @@ public class SmilesGenerator {
     return s;
   }
 
-  private void addBracketedBioName(SB sb, Node atom, String atomName) {
+  private void addBracketedBioName(SB sb, Node atom, String atomName, boolean addComment) {
     sb.append("[");
     if (atomName != null && atom instanceof BNode) {
       BNode a = (BNode) atom;
@@ -207,11 +209,13 @@ public class SmilesGenerator {
       sb.append(a.getGroup3(false));
       if (!atomName.equals(".0"))
         sb.append(atomName).append("#").appendI(a.getElementNumber());
+      if (addComment) {
       sb.append("//* ").appendI(
           a.getResno());
       if (chain.length() > 0)
         sb.append(":").append(chain);
       sb.append(" *//");
+      }
     } else {
       sb.append(Elements.elementNameFromNumber(atom.getElementNumber()));
     }
@@ -662,12 +666,12 @@ public class SmilesGenerator {
     // for bioSMARTS we provide the connecting atom if 
     // present. For example, in 1BLU we have 
     // .[CYS.SG#16] could match either the atom number or the element number 
-    if (Logger.debugging)
+    if (addAtomComment)
       sb.append("\n//* " + atom + " *//\t");
     if (topologyOnly)
       sb.append("*");
     else if (isExtension && groupType.length() != 0 && atomName.length() != 0)
-      addBracketedBioName(sb, atom, "." + atomName);
+      addBracketedBioName(sb, atom, "." + atomName, false);
     else
       sb.append(SmilesAtom
           .getAtomLabel(atomicNumber, isotope, valence, charge, nH, isAromatic,

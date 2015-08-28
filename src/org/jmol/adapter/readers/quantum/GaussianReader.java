@@ -65,7 +65,7 @@ public class GaussianReader extends MOReader {
   private String energyKey = "";
   
   /** The number of the calculation being interpreted. */
-  private int calculationNumber = 1;
+  protected int calculationNumber = 1;
   
   /**  The scan point, where -1 denotes no scan information. */
   private int scanPoint = -1;
@@ -78,7 +78,7 @@ public class GaussianReader extends MOReader {
   private int stepNumber;
 
   private int moModelSet = -1;
-  private BS namedSets = new BS();
+  protected BS namedSets = new BS();
 
 
   /**

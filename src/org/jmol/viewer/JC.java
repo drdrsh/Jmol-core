@@ -1032,22 +1032,22 @@ public final class JC {
     return hAlignNames[(align >> TEXT_ALIGN_SHIFT) & 3];
   }
   
-  public static final int SMILES_EXPLICIT_H               = 0x001;
-  public static final int SMILES_TOPOLOGY                 = 0x002;
-  public static final int SMILES_NOAROMATIC               = 0x004;
-  public static final int SMILES_BIO                      = 0x100;
-  public static final int SMILES_BIO_ALLOW_UNMACHED_RINGS = 0x101;
-  public static final int SMILES_BIO_CROSSLINK            = 0x102;
-  public static final int SMILES_BIO_COMMENT              = 0x104;
+  public static final int SMILES_TYPE_SMILES       = 0x1;
+  public static final int SMILES_TYPE_SMARTS       = 0x2;
   
-  public static final int SMILES_TYPE_SMILES       = 0x010000;
-  public static final int SMILES_TYPE_SMARTS       = 0x020000;
-  public static final int SMILES_MATCH_ALL         = 0x100000;
-  public static final int SMILES_MATCH_ONE         = 0x200000;
-  public static final int SMILES_RETURN_FIRST      = 0x400000;
+  public static final int SMILES_MATCH_ALL         = 0x10;
+  public static final int SMILES_MATCH_ONE         = 0x20;
+  public static final int SMILES_RETURN_FIRST      = 0x40;
 
-
-
+  public static final int SMILES_EXPLICIT_H               = 0x00100;
+  public static final int SMILES_TOPOLOGY                 = 0x00200;
+  public static final int SMILES_NOAROMATIC               = 0x00400;
+  public static final int SMILES_BIO                      = 0x10000;
+  public static final int SMILES_BIO_ALLOW_UNMACHED_RINGS = 0x10100;
+  public static final int SMILES_BIO_CROSSLINK            = 0x10200;
+  public static final int SMILES_BIO_COMMENT              = 0x10400;
+  public static final int SMILES_ATOM_COMMENT             = 0x20000;
+  
   public static final int JSV_NOT = -1;
   public static final int JSV_SEND_JDXMOL = 0;
   public static final int JSV_SETPEAKS = 7;
@@ -1078,5 +1078,9 @@ public final class JC {
   }
 
   public static String READER_NOT_FOUND = "File reader was not found:";
+
+  public static boolean checkFlag(int flags, int flag) {
+    return (flags & flag) == flag;
+  }
 
 }
