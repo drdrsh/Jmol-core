@@ -99,7 +99,7 @@ public class JaguarReader extends MOReader {
 
   private void readAtoms() throws Exception {
     // we only take the last set of atoms before the frequencies
-    asc.discardPreviousAtoms();
+    discardPreviousAtoms();
     // start parsing the atoms
     readLines(2);
     while (rd() != null && line.length() >= 60 && line.charAt(2) != ' ') {

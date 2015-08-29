@@ -56,6 +56,11 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
   private String[] filterTokens;
   private boolean filterIsNot; 
 
+  /**
+   * check line for filter options
+   * 
+   * @return true if a match
+   */
   protected boolean filterMO() {
     boolean isHeader = (line.indexOf('\n') == 0);
     if (!isHeader && !doReadMolecularOrbitals)
@@ -242,5 +247,11 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
 
   public final static int[][] getNewDfCoefMap() { return QS.getNewDfCoefMap(); }
 
+  @Override
+  protected void discardPreviousAtoms() {
+    asc.discardPreviousAtoms();
+    moData.remove("mos");
+    orbitals.clear();
+  }
 
 }

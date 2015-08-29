@@ -45,7 +45,7 @@ public class MoldenReader extends MopacSlaterReader {
     doSort = !checkFilterKey("NOSORT");
     loadGeometries = !vibOnly && desiredVibrationNumber < 0 && !checkFilterKey("NOOPT");
     loadVibrations = !optOnly && desiredModelNumber < 0 && !checkFilterKey("NOVIB");
-   
+    // replace filter with just three MO options
     if (checkFilterKey("ALPHA"))
       filter = "alpha";
     else if (checkFilterKey("BETA"))

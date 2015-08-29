@@ -116,7 +116,7 @@ public class MdTopReader extends ForceFieldReader {
       }
     }
     if (atoms2 != null) {
-      asc.discardPreviousAtoms();
+      discardPreviousAtoms();
       for (int i = 0; i < nAtoms; i++)
         asc.addAtom(atoms2[i]);
     }

@@ -102,15 +102,32 @@ abstract public class MOReader extends BasisFunctionReader {
   
   @Override
   protected void initializeReader() throws Exception {
-    line = "\nNBOs in the AO basis:";
-    getNBOs = filterMO();
+    line = "\nNBOs";
+    getNBOs = (filter != null && filterMO());
     line = "\nNBOCHARGES";
     getNBOCharges = (filter != null && filterMO());
-    if (filter == null)
-      return;
-    String f = PT.rep(filter, "NBOCHARGES", "");
-    if (f.length() < 3)
+    checkAndRemoveFilterKey("NBOCHARGES");
+    // allows for "!" and ";" 
+    if (filter != null && filter.length() < 3) 
       filter = null;
+  }
+  
+  /**
+   * Prior to filterMO all extraneous filter keys must be removed.
+   *
+   * 
+   * @param key
+   * @return true if the key existed; filter is set null if this is the only key
+   * 
+   */
+  
+  public boolean checkAndRemoveFilterKey(String key) {
+    if (!checkFilterKey(key))
+      return false;
+    filter = PT.rep(filter, key, "");
+    if (filter.length() == 0)
+      filter = null;
+    return true;
   }
   
   /**

@@ -682,11 +682,15 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
             && (firstLastStep[2] < 2 || (modelNumber - 1 - firstLastStep[0])
                 % firstLastStep[2] == 0));
     if (isOK && desiredModelNumber == 0)
-      asc.discardPreviousAtoms();
+      discardPreviousAtoms();
     haveModel |= isOK;
     if (isOK)
       doProcessLines = true;
     return isOK;
+  }
+
+  protected void discardPreviousAtoms() {
+    asc.discardPreviousAtoms();
   }
 
   private String previousSpaceGroup;

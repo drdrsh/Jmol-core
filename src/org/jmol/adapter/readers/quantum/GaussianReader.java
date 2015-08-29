@@ -24,24 +24,20 @@
 
 package org.jmol.adapter.readers.quantum;
 
-import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.SmarterJmolAdapter;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
+import javajs.util.V3;
 
-import java.util.Hashtable;
-
-import java.util.Map;
-
-
+import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.java.BS;
-
 import org.jmol.quantum.QS;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import javajs.util.V3;
 
 /**
  * Reader for Gaussian 94/98/03/09 output files.
@@ -80,6 +76,16 @@ public class GaussianReader extends MOReader {
   private int moModelSet = -1;
   protected BS namedSets = new BS();
 
+  private boolean isHighPrecision;
+  private boolean haveHighPrecision;
+  private boolean allowHighPrecision;
+
+
+  @Override 
+  protected void initializeReader() throws Exception {
+    allowHighPrecision = !checkAndRemoveFilterKey("NOHP");
+    super.initializeReader();
+  }
 
   /**
    * Reads a Collection of AtomSets from a BufferedReader.
@@ -134,13 +140,15 @@ public class GaussianReader extends MOReader {
     if (line.indexOf("Input orientation:") >= 0
         || line.indexOf("Z-Matrix orientation:") >= 0
         || line.indexOf("Standard orientation:") >= 0) {
-      if (!doGetModel(++modelNumber, null))
+      if (!doGetModel(++modelNumber, null)) {
+
         return checkLastModel();
+      }
       equivalentAtomSets++;
-      //if (debugging)
-        Logger.info(asc.atomSetCount + " model " + modelNumber + " step " + stepNumber
-            + " equivalentAtomSet " + equivalentAtomSets + " calculation "
-            + calculationNumber + " scan point " + scanPoint + line);
+      Logger.info(asc.atomSetCount + " model " + modelNumber + " step "
+          + stepNumber + " equivalentAtomSet " + equivalentAtomSets
+          + " calculation " + calculationNumber + " scan point " + scanPoint
+          + line);
       readAtoms();
       return false;
     }
@@ -170,7 +178,8 @@ public class GaussianReader extends MOReader {
       readDipoleMoment();
       return true;
     }
-    if (line.startsWith(" Standard basis:") || line.startsWith(" General basis read from")) {
+    if (line.startsWith(" Standard basis:")
+        || line.startsWith(" General basis read from")) {
       energyUnits = "";
       calculationType = line.substring(line.indexOf(":") + 1).trim();
       return true;
@@ -179,7 +188,7 @@ public class GaussianReader extends MOReader {
       readBasis();
       return true;
     }
-    if (line.indexOf("Molecular Orbital Coefficients") >= 0 
+    if (line.indexOf("Molecular Orbital Coefficients") >= 0
         || line.indexOf("Natural Orbital Coefficients") >= 0
         || line.indexOf("Natural Transition Orbitals") >= 0) {
       if (!filterMO())
@@ -292,6 +301,7 @@ public class GaussianReader extends MOReader {
     // this is needed for the last structure in an optimization
     // if energy information is found for this structure the reader
     // will overwrite this setting later.
+    haveHighPrecision = false;
     if (energyKey.length() != 0)
       asc.setAtomSetName(energyKey + " = " + energyString);
     asc.setAtomSetEnergy(energyString, parseFloatStr(energyString));
@@ -621,14 +631,23 @@ public class GaussianReader extends MOReader {
     while ((line= rd()) != null && line.length() > 15) {
       // we now have the line with the vibration numbers in them, but don't need it
       String[] symmetries = PT.getTokens(rd());
+      discardLinesUntilContains(" Frequencies");
+      isHighPrecision = (line.indexOf("---") > 0);
+      if (isHighPrecision ? !allowHighPrecision : haveHighPrecision)
+        return;
+      if (isHighPrecision && !haveHighPrecision) {
+        appendLoadNote("high precision vibrational modes enabled. Use filter 'NOHP' to disable.");
+        haveHighPrecision = true;
+      }
+      int width = (isHighPrecision ? 22 : 15);
       String[] frequencies = PT.getTokensAt(
-          discardLinesUntilStartsWith(" Frequencies"), 15);
+          line, width);
       String[] red_masses = PT.getTokensAt(
-          discardLinesUntilStartsWith(" Red. masses"), 15);
+          discardLinesUntilContains(isHighPrecision ? "Reduced masses" : "Red. masses"), width);
       String[] frc_consts = PT.getTokensAt(
-          discardLinesUntilStartsWith(" Frc consts"), 15);
+          discardLinesUntilContains(isHighPrecision ? "Force constants" : "Frc consts"), width);
       String[] intensities = PT.getTokensAt(
-          discardLinesUntilStartsWith(" IR Inten"), 15);
+          discardLinesUntilContains(isHighPrecision ? "IR Intensities" : "IR Inten"), width);
       int iAtom0 = asc.ac;
       int ac = asc.getLastAtomSetAtomCount();
       int frequencyCount = frequencies.length;
@@ -649,8 +668,11 @@ public class GaussianReader extends MOReader {
         asc.setAtomSetModelProperty("IRIntensity",
             intensities[i]+" KM/Mole");
       }
-      discardLinesUntilContains(" AN ");
-      fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0);
+      discardLinesUntilContains(" Atom ");
+      if (isHighPrecision)
+        fillFrequencyData(iAtom0, ac, ac, ignore, false, 23, 10, null, 0);
+      else
+        fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0);
     }
   }
   

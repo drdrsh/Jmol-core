@@ -110,7 +110,7 @@ public class AtomSetCollection {
   private Lst<String> trajectoryNames;
 
   public boolean doFixPeriodic;
-  public boolean allowMultiple;
+  public boolean allowMultiple; // set false only in CastepReader for a phonon file
 
   private Lst<AtomSetCollectionReader> readerList;
 
@@ -804,18 +804,28 @@ public class AtomSetCollection {
       setInfo("vibrationSteps", vibrationSteps);
   }
 
+  /**
+   * Create a new atoms set, clearing the atom map
+   * 
+   */
   public void newAtomSet() {
     newAtomSetClear(true);
   }
 
+  /**
+   * Create a new atom set, optionally clearing the atom map.
+   * 
+   * @param doClearMap set to false only in CastepReader
+   */
   public void newAtomSetClear(boolean doClearMap) {
 
+    // we call reader.discardPreviousAtoms here because it may be 
+    // overridden to do more than we do here (such as in BasisFunctionReader).
     if (!allowMultiple && iSet >= 0)
-      discardPreviousAtoms();
+      reader.discardPreviousAtoms();
     bondIndex0 = bondCount;
-    if (isTrajectory) {
-      discardPreviousAtoms();
-    }
+    if (isTrajectory)
+      reader.discardPreviousAtoms();
     iSet = atomSetCount++;
     if (atomSetCount > atomSetNumbers.length) {
       atomSetAtomIndexes = AU.doubleLengthI(atomSetAtomIndexes);
@@ -834,7 +844,7 @@ public class AtomSetCollection {
     } else {
       atomSetNumbers[iSet] = atomSetCount;
     }
-    if (doClearMap) // false for CASTEP reader
+    if (doClearMap) // false for CASTEP reader only
       atomSymbolicMap.clear();
     setCurrentModelInfo("title", collectionName);
   }
