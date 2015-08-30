@@ -30,6 +30,8 @@ package org.jmol.modelsetbio;
 import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Chain;
+import org.jmol.modelset.Structure;
+
 import javajs.util.P3;
 import javajs.util.Quat;
 import javajs.util.V3;
@@ -70,7 +72,7 @@ public class AlphaMonomer extends Monomer {
 //  private Map<String, Annotation> annotations;
   
   @Override
-  public Object getStructure() {
+  public Structure getStructure() {
     return proteinStructure;
   }
 

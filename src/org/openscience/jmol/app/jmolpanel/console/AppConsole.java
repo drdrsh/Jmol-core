@@ -29,6 +29,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -134,7 +135,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
   private JmolAbstractButton helpButton, undoButton, redoButton, checkButton, topButton, fontButton;
   private JPanel buttonPanel = new JPanel();
 
-  protected JScrollBar vBar;
+  protected JScrollBar vBar, hBar;
 
   /*
    * methods sendConsoleEcho and sendConsoleMessage(strStatus)
@@ -202,6 +203,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
       enabledButtons = ALL_BUTTONS;
     JScrollPane consolePane = new JScrollPane(console);
     vBar = consolePane.getVerticalScrollBar();
+    hBar = consolePane.getHorizontalScrollBar();
     String[] tokens = PT.getTokens(enabledButtons);
     for (int i = 0; i < tokens.length; i++)
       enableButton(tokens[i]);
@@ -775,6 +777,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
                   : 1) : vwr.getSetHistory(up ? -1
           : 1));
       if (cmd == null) {
+        hBar.setValue(0);
         return;
       }
       boolean isError = false;
@@ -1035,10 +1038,10 @@ public class AppConsole extends JmolConsole implements EnterListener {
       setCharacterAttributes(offsetAfterPrompt,
           getLength() - offsetAfterPrompt, att, true);
     }
-  }
-
+  }  
 }
 
 interface EnterListener {
   public void enterPressed();
 }
+

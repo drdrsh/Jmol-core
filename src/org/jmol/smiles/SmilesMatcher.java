@@ -139,26 +139,13 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   /**
    * internal to Jmol -- called by org.jmol.Viewer.getSmiles
    */
-  
+
   @Override
   public String getSmiles(Node[] atoms, int ac, BS bsSelected,
-                             String bioComment, int flags) throws Exception {
-//  boolean asBioSmiles, boolean bioAllowUnmatchedRings,  boolean bioAddCrossLinks, boolean explicitH
-     InvalidSmilesException.clear();
-    if (JC.checkFlag(flags, JC.SMILES_BIO)) {
-      boolean bioAllowUnmatchedRings = JC.checkFlag(flags,
-          JC.SMILES_BIO_ALLOW_UNMACHED_RINGS);
-      boolean bioAddCrossLinks = JC.checkFlag(flags, JC.SMILES_BIO_CROSSLINK);
-      return (new SmilesGenerator()).getBioSmiles((BNode[]) atoms, ac,
-          bsSelected, bioAllowUnmatchedRings, bioAddCrossLinks, bioComment);
-    }
-    boolean explicitH = JC.checkFlag(flags, JC.SMILES_EXPLICIT_H);
-    boolean topologyOnly = JC.checkFlag(flags, JC.SMILES_TOPOLOGY);
-    boolean getAromatic = !JC.checkFlag(flags, JC.SMILES_NOAROMATIC);
-    boolean addAtomComment = JC.checkFlag(flags, JC.SMILES_ATOM_COMMENT);
-    
-    return (new SmilesGenerator()).getSmiles(atoms, ac, bsSelected, explicitH,
-        topologyOnly, getAromatic, addAtomComment);
+                          String bioComment, int flags) throws Exception {
+    //  boolean asBioSmiles, boolean bioAllowUnmatchedRings,  boolean bioAddCrossLinks, boolean explicitH
+    InvalidSmilesException.clear();
+    return (new SmilesGenerator()).getSmiles(atoms, ac, bsSelected, bioComment, flags);
   }
 
   @Override

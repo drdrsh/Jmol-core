@@ -612,8 +612,8 @@ public class DSSP implements DSSPInterface {
    */
   private boolean checkBridge(Bridge bridge,
                               boolean isAntiparallel, int n1, int n2) {
-    Bridge b = htBridges.get(bridge.a.getOffsetResidueAtom("0", n1) + "-"
-        + bridge.b.getOffsetResidueAtom("0", n2));
+    Bridge b = htBridges.get(bridge.a.getOffsetResidueAtom("\0", n1) + "-"
+        + bridge.b.getOffsetResidueAtom("\0", n2));
     return (b != null && bridge.addBridge(b, htLadders));
   }
 

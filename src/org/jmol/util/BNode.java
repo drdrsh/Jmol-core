@@ -36,6 +36,7 @@ public interface BNode extends Node {
   
   // BIOSMILES/BIOSMARTS
   
+  public int getAtomNumber();
   public String getBioStructureTypeName();
   public String getGroup1(char c0);
   public String getGroup3(boolean allowNull);
@@ -43,15 +44,12 @@ public interface BNode extends Node {
   public int getChainID();
   public String getChainIDStr();
   public int getOffsetResidueAtom(String name, int offset);
-  public boolean getCrossLinkLeadAtomIndexes(Lst<Integer> vReturn);
+  public boolean getCrossLinkVector(Lst<Integer> vReturn, boolean crosslinkCovalent, boolean crosslinkHBond);
   public void getGroupBits(BS bs);
   public boolean isLeadAtom();
   public boolean isCrossLinked(BNode node);
-  public boolean isProtein();
-  public boolean isNucleic();
-  public boolean isDna();
-  public boolean isRna();
   public boolean isPurine();
   public boolean isPyrimidine();
   public boolean isDeleted();
+  char getBioSmilesType();
 }

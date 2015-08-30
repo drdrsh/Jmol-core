@@ -77,6 +77,7 @@ public class SmilesAtom extends P3 implements BNode {
   String residueName;
   String residueChar;
   boolean isBioAtom;
+  boolean isBioResidue;
   char bioType = '\0'; //* p n r d 
   boolean isLeadAtom;
   int notBondedIndex = -1;
@@ -93,6 +94,8 @@ public class SmilesAtom extends P3 implements BNode {
 
   int jmolIndex = -1;
   int elementNumber = -2; // UNDEFINED (could be A or a or *)
+  int atomNumber = Integer.MIN_VALUE; // PDB atom number Jmol 14.3.16
+  int residueNumber = Integer.MIN_VALUE; // PDB residue number Jmol 14.3.16
 
   int missingHydrogenCount = Integer.MIN_VALUE;
   int implicitHydrogenCount = Integer.MIN_VALUE;
@@ -108,6 +111,11 @@ public class SmilesAtom extends P3 implements BNode {
   private int chiralOrder = Integer.MIN_VALUE;
   private boolean isAromatic;
 
+  public boolean isDefined() {
+    return (hasSubpattern || iNested != 0 || isBioAtom 
+    || elementNumber != -2 || nAtomsOr > 0 || nPrimitives > 0);  
+  }
+
   void setBioAtom(char bioType) {
     isBioAtom = (bioType != '\0');
     this.bioType = bioType;
@@ -122,7 +130,7 @@ public class SmilesAtom extends P3 implements BNode {
       return;
     if (name.length() > 0)
       atomName = name;
-    if (name.equals("0"))
+    if (name.equals("\0"))
       isLeadAtom = true;
     // ensure that search does not skip groups
     if (parent != null) {
@@ -371,6 +379,14 @@ public class SmilesAtom extends P3 implements BNode {
   }
 
   /**
+   * Returns the Jmol atom number
+   */
+  @Override
+  public int getAtomNumber() {
+    return atomNumber;
+  } 
+
+  /**
    * Sets the atomic mass of the atom.
    * 
    * @param mass Atomic mass.
@@ -585,7 +601,7 @@ public class SmilesAtom extends P3 implements BNode {
       primitives = (SmilesAtom[]) AU.arrayCopyObject(primitives, primitives.length);
     for (int i = 0; i < bonds.length; i++) {
       if (isBioAtom && bonds[i].order == SmilesBond.TYPE_AROMATIC)
-        bonds[i].order = SmilesBond.TYPE_BIO_PAIR;
+        bonds[i].order = SmilesBond.TYPE_BIO_CROSSLINK;
       if (bonds[i].atom1.index > bonds[i].atom2.index) {
         // it is possible, particularly for a connection to a an atom 
         // with a branch:   C(CCCN1)1
@@ -625,6 +641,7 @@ public class SmilesAtom extends P3 implements BNode {
     return getBondCount();
   }
 
+  @Override
   public int getBondCount() {
     return (parent != null ? parent.getCovalentBondCount() : bondCount);
   }
@@ -710,11 +727,14 @@ public class SmilesAtom extends P3 implements BNode {
 
   @Override
   public int getOffsetResidueAtom(String name, int offset) {
-    if (isBioAtom)
+    if (isBioAtom) {
+      if (offset == 0)
+        return index;
       for (int k = 0; k < bonds.length; k++)
         if (bonds[k].getAtomIndex1() == index
             && bonds[k].order == SmilesBond.TYPE_BIO_SEQUENCE)
           return bonds[k].getOtherAtom(this).index;
+    }
     return -1;
   }
 
@@ -731,10 +751,13 @@ public class SmilesAtom extends P3 implements BNode {
   }
 
   @Override
-  public boolean getCrossLinkLeadAtomIndexes(Lst<Integer> vLinks) {
+  public boolean getCrossLinkVector(Lst<Integer> vLinks, boolean crosslinkCovalent, boolean crosslinkHBond) {
     for (int k = 0; k < bonds.length; k++)
-      if (bonds[k].order == SmilesBond.TYPE_BIO_PAIR)
+      if (bonds[k].order == SmilesBond.TYPE_BIO_CROSSLINK) {
+        vLinks.addLast(Integer.valueOf(this.index));
         vLinks.addLast(Integer.valueOf(bonds[k].getOtherAtom(this).index));
+        vLinks.addLast(Integer.valueOf(bonds[k].getOtherAtom(this).index));
+      }
     return true;
   }
 
@@ -745,7 +768,7 @@ public class SmilesAtom extends P3 implements BNode {
 
   @Override
   public int getResno() {
-    return 0;
+    return residueNumber;
   }
 
   @Override
@@ -777,23 +800,12 @@ public class SmilesAtom extends P3 implements BNode {
   }
 
   @Override
-  public boolean isDna() {
-    return bioType == 'd';
+  public char getBioSmilesType() {
+    return  bioType;
   }
 
-  @Override
-  public boolean isRna() {
-    return bioType == 'r';
-  }
-
-  @Override
   public boolean isNucleic() {
     return bioType == 'n' || bioType == 'r' || bioType == 'd';
-  }
-
-  @Override
-  public boolean isProtein() {
-    return bioType == 'p';
   }
 
   @Override
@@ -823,6 +835,7 @@ public class SmilesAtom extends P3 implements BNode {
 
   @Override
   public BS findAtomsLike(String substring) {
+    // n/a
     return null;
   }
 

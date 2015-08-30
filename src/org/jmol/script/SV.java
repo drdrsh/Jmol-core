@@ -66,7 +66,7 @@ import javajs.util.V3;
 public class SV extends T implements JSONEncodable {
 
   public final static SV vT = newSV(on, 1, "true");
-  final private static SV vF = newSV(off, 0, "false");
+  public final static SV vF = newSV(off, 0, "false");
 
   public int index = Integer.MAX_VALUE;    
 

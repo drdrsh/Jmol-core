@@ -8623,6 +8623,14 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return getSmilesOpt(bs, -1, -1, Logger.debugging ? JC.SMILES_ATOM_COMMENT : 0);
   }
 
+  public String getBioSmiles(BS bs) throws Exception {
+    return getSmilesOpt(bs, -1, -1,  
+          JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS
+        | JC.SMILES_BIO_COV_CROSSLINK
+        | JC.SMILES_BIO_COMMENT
+        | (Logger.debugging ? JC.SMILES_ATOM_COMMENT : 0));
+  }
+
   /**
    * returns the SMILES string for a sequence or atom set does not include
    * attached protons on groups

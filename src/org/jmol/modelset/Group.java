@@ -53,7 +53,7 @@ import java.util.Map;
  * 
  */
 @J2SRequireImport({java.lang.Short.class,org.jmol.viewer.JC.class})
-public class Group {
+public class Group implements Structure {
 
   public static String standardGroupList; // will be populated by org.jmol.biomodelset.Resolver
   public static String[] group3Names = new String[128];
@@ -127,10 +127,27 @@ public class Group {
    * 
    * @param bs
    */
+  @Override
   public void setAtomBits(BS bs) {
     bs.setBits(firstAtomIndex, lastAtomIndex + 1);
     if (bsAdded != null)
       bs.or(bsAdded);
+  }
+
+  /**
+   * Setting and clearing
+   * 
+   * @param bs
+   * @param bsOut 
+   */
+  @Override
+  public void setAtomBitsAndClear(BS bs, BS bsOut) {
+    bs.setBits(firstAtomIndex, lastAtomIndex + 1);
+    bsOut.clearBits(firstAtomIndex, lastAtomIndex + 1);
+    if (bsAdded != null) {
+      bs.or(bsAdded);
+      bsOut.andNot(bsAdded);
+    }
   }
 
   public boolean isSelected(BS bs) {
@@ -164,7 +181,7 @@ public class Group {
     return -1;
   }
 
-  public Object getStructure() {
+  public Structure getStructure() {
     return null;
   }
 
@@ -445,9 +462,11 @@ public class Group {
   /**
    * 
    * @param vReturn
+   * @param crosslinkHBond 
+   * @param crosslinkCovalent 
    * @return T/F
    */
-  public boolean getCrossLinkLead(Lst<Integer> vReturn) {
+  public boolean getCrossLinkVector(Lst<Integer> vReturn, boolean crosslinkCovalent, boolean crosslinkHBond) {
     return false;
   }
 

@@ -46,7 +46,7 @@ public class SmilesBond extends Edge {
   public final static int TYPE_RING = 0x41;
   public final static int TYPE_ANY = 0x51;
   public final static int TYPE_BIO_SEQUENCE = 0x60;
-  public final static int TYPE_BIO_PAIR = 0x70;
+  public final static int TYPE_BIO_CROSSLINK = 0x70;
   public final static int TYPE_MULTIPLE = 999;
 
 
@@ -232,7 +232,7 @@ public class SmilesBond extends Edge {
 
   @Override
   public boolean isCovalent() {
-    return order != TYPE_BIO_PAIR;
+    return order != TYPE_BIO_CROSSLINK;
   }
 
   public int getValence() {
@@ -241,7 +241,7 @@ public class SmilesBond extends Edge {
 
   @Override
   public boolean isHydrogen() {
-    return order == TYPE_BIO_PAIR;
+    return order == TYPE_BIO_CROSSLINK;
   }
 
   void switchAtoms() {

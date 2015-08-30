@@ -89,7 +89,7 @@ allows indication of "rings" using the digits 1-9, for example, <b>C1CCCC1</b>. 
 do not necessarily indicate rings. Rather, in association with "." component notation, 
 they may simply indicate <em>connectivity</em>. For example, ethane can be <b>CC</b> or <b>C1.C1</b>.
 The original SMILES notation allows up to 99 open connections using <b>$nn</b>, where nn is 10-99. 
-In generalizing SMILES to Jmol SMILES and Jmol BioSMILES, since connections can represent hydrogen bonds between nucleic acid chains, it was necessary to allow more 
+In generalizing SMILES to Jmol SMILES and Jmol bioSMILES, since connections can represent hydrogen bonds between nucleic acid chains, it was necessary to allow more 
 than 99 open connections. Adding parentheses, for example <b>%(130)</b>, allows for 
 an unlimited number of open connections. 
 
@@ -122,9 +122,9 @@ For example, note the difference when Jmol debugging is set ON for the <b>show S
 //* N8 #8 *//	[n]4
 </pre>
 This allows a direct correlation between an actual atom in the 3D structure and its contribution  to the SMILES string. 
-<br><br>Comments are used in bioSMILES representations for indicating
+<br><br>Comments are used in Jmol bioSMILES representations for indicating
 the Jmol version used for its creation as well as chain and residue information:
-<br><br><b>$ load =1crn; print {*}.find("SMILES",true)</b>
+<br><br><b>$ load =1crn; print {*}.find("SEQUENCE")</b>
 <pre>
 //* Jmol bioSMILES 14.3.16_2015.08.25  2015-08-25 09:07 1 *//
 //* chain A protein 1 *// ~p~TTCCPSIVARSNFNVCRLPGTPEAICATYTGCIIIPGATCPGDYAN //* 46 *//
@@ -133,41 +133,65 @@ the Jmol version used for its creation as well as chain and residue information:
 </table>  
 <br>
 <br>
-Jmol bioSMILES adds the following primitives:
+Jmol bioSMILES adds the following to Jmol SMILES:
 <br>
 <br>
 <table border="1" cellpadding="5" width="500">
-<tr><td>[residue.atomName#atomicNumber]</td><td>residue and atom name, with optional atomic number, for example [CYS.SG#16] or [ALA.CA]. 
-"0" for atomName indicates the "lead" atom -- for nucleic acids the phosphorus atom (or in some cases a terminal oxygen or hydrogen atom),
-and for proteins the alpha carbon. 
-and  .</td></tr>
-</table>  
-<br>
-<br>
-Jmol bioSMILES adds the following prefix and in-line options:
-<br>
-<br>
-<table border="1" cellpadding="5" width="500">
-<tr><td>~...~...</td><td>
+<tr><td valign=top>~X~</td><td>
+Jmol bioSMILES separates all protein, nucleic, and carbohydrate polymers into separate SMILES components,
+separated by ".". 
+The <b>Jmol bioSEQUENCE type</b>, consisting of a character surrounded by two tildes,
+ introduces each Jmol bioSEQUENCE component. 
+The character X may be one of <em>p</em>, <em>d</em>, <em>r</em>, or <em>c</em>, 
+indicating a protein, DNA, or RNA sequence, respectively. 
+Generally, the string will be 
+a sequence of standard single-character group symbols appropriate for that sequence type.
 
-Tilde indicates a bioSEQUENCE string. 
-Subsets include <b>"~p~"</b> protein-only sequence, 
-<b>"~n~"</b> nucleic-only sequence, 
-<b>"~d~"</b> DNA-only sequence, and 
-<b>"~r~"</b> RNA-only sequence. Generally, the string will be 
-standard single-character group symbols. For example: <b>select search("~d~AG")</b> or <b>select search("~p~A[G,P]")</b>.
-This search returns only the "lead atom" -- the 1-letter code is a stand-in for [XXX.0]. Groups may
-also be indicated in their standard Jmol notation, [XXX], or bioSMILES notation [XXX.YYY]. 
-These may be mixed. So, for example, <b>~p~G[ALA]C[ALA.N]</b>. 
-The bioSEQUENCE tilde must be repeated for each new component in the search (separated by ".").
+For example, the Jmol bioSEQUENCE
+string created using the commands <b>load =1crn; print {*}.find("SEQ")</b> is:
+<pre>
+~p~TTCCPSIVARSNFNVCRLPGTPEAICATYTGCIIIPGATCPGDYAN
+</pre>
+When a group is a non-standard amino acid or is present, it is indicated by its residue name in brackets.
 
+For example, the Jmol bioSEQUENCE returned from <b>load =4zyg; print {:A and protein}.find("SEQ")</b> 
+ is: 
+<pre>
+ ~p~MLVYGLYKSPLGYITVAKDDKGFIMLDFCDCVEGNSRDDSSFTEFFHK
+  LDLYFEGKPINLREPINLKTYPFRLSVFKEVMKIPWGKVMTYKQIADSLGTSPRAVGMALSKNPILLIIP<b>[SMC]</b>HR
+  VIAENGIGGYSRGVKLKRALLELEGVKIPE
+</pre>  
+where <b>[SMC]</b> indicates S-methylcysteine.
+<br><br>  
+Components that are not bioSEQUENCE types will indicate connectivity to a bioSEQUENCE (if such connection exists)
+via a fully qualified bioSMILES designation for the connected atoms. 
+For example, the magnesium atom component in PDB structure 1p9b is described by: 
+<pre>
+[Mg]123456.O3[C]N([O])[C][C]([O])[O].[IMO.O1#8]4.[GDP.O2B#8]2.[GLY.O#8]5.[ASP.OD1#8]6.[GDP.O2A#8]1.
+</pre>
+(The element number, #8 here, allows searching these jmol bioSMILES strings themselves, in the absence of the associated model.) 
+Notice that connection 3 here is a to an unidentified ligand. Jmol bioSMILES only abbreviates groups that are within polymers.
+Unconnected components such as water molecules will not be repeated; the Jmol bioSMILES representation of 
+a protein with associated water molecules will only show one component in the form:
+<pre>
+[O].
+</pre>
 </td></tr>
+<tr><td>  
+<b>branches and rings</b></td><td> Jmol BioSMILES allows for standard SMILES branching notation using parentheses or "ring" numbers. Within bioSEQUENCES, 
+branching indicates cross-linking. For instance, the commands <b>load =3LL2; print {carbohydrate}.find("SEQ", true)</b> reports for this branched carbohydrate:
+<pre>
+~c~[MAN]:1[MAN]:2[MAN].~c~[MAN]:2[MAN].~c~[MAN]:1[MAN][MAN]
+</pre>
+No indication is given for exact atom-atom connectivity in the Jmol bioSEQUENCE; all connectivity is at the level of residues.
+
 <tr><td>
 <b>"+" and ":" </b> 
 </td><td>
 Jmol BioSMARTS adds the + and : bond types for sequences. + indicates "connected groups", and ":" indicates "cross-linked groups". 
 Recognized cross-linking includes hydrogen bonding between the purine N1 and pyrimidine N3 in nucleic acids and cysteine-cysteine disulfide bonds in proteins. 
-Cross-linking can be "one-to-one" or "one-to-many". (In the future this could be expanded to carbohydrates.) The standard SMILES branching notation can also be used to represent cross-linking: 
+Cross-linking can be "one-to-one" or "one-to-many". (In the future this could be expanded to carbohydrates.)
+ The standard SMILES branching notation can also be used to represent cross-linking: 
 In normally hybridized DNA, <b>~C+C+C:G+G+G</b> would be three CG base-pairs (because the two strands are going in opposite direction).
 The default for bioSEQUENCE connections is "+", so this search could also be represented simply as <b>~CCC:GGG</b>. 
 "+" is only necessary when the search is not a bioSEQUENCE. 
@@ -181,8 +205,8 @@ For example,  <b>{[CYS.CA]+[PRO.N]}</b> allows selection of the alpha carbon on 
 <tr><td>
 
 </td><td>
-<b>branches and rings</b> Jmol BioSMILES allows for standard SMILES branching notation using parentheses. Within bioSEQUENCES, 
-branching indicates cross-linking. Thus, a three-base double-stranded DNA CG stretch could be indicated  <b>C(G)C(G)C(G)</b>. 
+
+Thus, a three-base double-stranded DNA CG stretch could be indicated  <b>C(G)C(G)C(G)</b>. 
 An empty branch, <b>C()</b>, indicates "not cross-linked" -- in this case 
 a cysteine without a disulphide bond or a cytidine that is not base-paired. For bioSMILES, which shows all cross-linking explicitly,
 the empty parentheses may be omitted.
@@ -191,17 +215,20 @@ Ring notation can also be used: C:1CC(GGG:1) ensures that
 the hybridization is as a true set of CG pairs. 
 
 In order to allow for more than 99 branches (or base pairs), we extend the ring % notation by enclosing the number in parentheses. 
-For example, a section of the large ribosomal unit for PDB code 1FFK reads:
+For example, a section of the large ribosomal unit for PDB code 1FFK reads using
+<b>load 1FFK;calculate hbonds; print {*}.find("SEQUENCE","H")</b>:
 <pre>
-//* chain 9 rna *// ~r~UUAG:%(792)G:%(793)C:%(794)G:%(795)G:%(796)C:%(797)CAC
-  AG:%(798)C:%(799)G:%(800)G:%(801)U:%(802)G:%(803)G:%(804)G:%(805)GUUGCCUC:%(806)
-  C:%(807)C:%(808)G:%(809)U:%(810)ACCC:%(811)AUCCCG:%(811)AACA:%(810)C:%(809)
-  G:%(808)G:%(807)AAG:%(806)AU:%(812)AA:%(812)GC:%(805)C:%(804)C:%(803)A:%(802)
-  C:%(801)C:%(800)AG:%(799)C:%(798)GUUC:%(813)C:%(814)G:%(815)G:%(816)G:%(817)
-  GAGUAC:%(818)U:%(819)G:%(820)G:%(821)A:%(822)G:%(823)UG:%(824)C:%(825)GCG
-  AG:%(825)C:%(824)C:%(823)U:%(822)C:%(821)U:%(820)G:%(819)G:%(818)GAAAC:%(817)
+...
+//* chain 9 RNA 1 *// ~r~UUAG:%(792)G:%(793)C:%(794)G:%(795)G:%(796)C:%(797)C
+  ACAG:%(798)C:%(799)G:%(800)G:%(801)U:%(802)G:%(803)G:%(804)G:%(805)GUUGCC
+  UC:%(806)C:%(807)C:%(808)G:%(809)U:%(810)ACCC:%(811)AUCCCG:%(811)AACA:%(810)
+  C:%(809)G:%(808)G:%(807)AAG:%(806)AU:%(812)AA:%(812)GC:%(805)C:%(804)C:%(803)
+  A:%(802)C:%(801)C:%(800)AG:%(799)C:%(798)GUUC:%(813)C:%(814)G:%(815)G:%(816)
+  G:%(817)GAGUAC:%(818)U:%(819)G:%(820)G:%(821)A:%(822)G:%(823)UG:%(824)C:%(825)
+  GCGAG:%(825)C:%(824)C:%(823)U:%(822)C:%(821)U:%(820)G:%(819)G:%(818)GAAAC:%(817)
   C:%(816)C:%(815)G:%(814)G:%(813)UUCG:%(797)C:%(796)C:%(795)G:%(794)C:%(793)
-  C:%(792)ACC.
+  C:%(792)ACC //* 122 *//.
+...
 </pre>
 
 
@@ -214,35 +241,6 @@ For example, a section of the large ribosomal unit for PDB code 1FFK reads:
 </table>  
 <br>
 <br>
-
-
-<b>[residueName.atomName]</b> For selecting specific residue atoms. Wild cards are optional: [ALA.*], [*.*], [*.CA]. The special
-designation "0" for an atom name, as in <b>[GLY.0]</b>, indicates the "lead atom" -- the alpha carbon for proteins or the phosphorus atom in nucleic acids. 
-<br><br>
-
-
-</li><li><b>[residueName.atomName#atomicNumber]</b> The residue/atom specifier may be extended with atomic number information. 
-This allows seasrching a bioSMILES string using SMARTS patterns that only involve standard atom types. In the above example, 
-notice that the connecting atoms to protein chains within the non-bioSEQUENCE component indicates the
-connections to the protein using this extended notation. Thus, both the actual 3D model and the bioSMARTS string for 1d66
-can be searched using the SMARTS search "CdS" as well as the more specific search "Cd[*.SG]". 
-<br><br>
-</li><li><b>"~"</b>  
-
-<br><br></li><li>
-
-<br><br>
-</li><li>
-
-</li></ol>
-
-
-</li>
-
-</ul>
-
-
-
 
 
 
@@ -343,6 +341,19 @@ Jmol SMARTS adds the following primitives:
 <tr><td>$n(pattern)</td><td>A specific number of occurances of <b>pattern</b>. For example, <b>C[$3(C=C)]C</b> is synonymous with <b>CC=CC=CC=CC</b>.</td></tr>
 <tr><td>$min-max(pattern)</td><td>A variable number of occurances of <b>pattern</b>. 
 For example: <b>A[$0-2(C:G)]A</b> is synonymous with <b>AA</b> or <b>AC(:G)A</b> or <b>AC(:G)C(:G)A</b>.</td></tr>
+<tr><td>residueName#resno.atomName#atomicNumber</b> </td><td>
+Both #resno and #atomicNumber are optional. This primitive may appear with other primitives provided (a) it is first, and (b) it is followed by an operator ("," ,"&", or ";").
+This allows searching a bioSMILES string using SMARTS patterns that only involve standard atom types. In the above example, 
+notice that the connecting atoms to protein chains within the non-bioSEQUENCE component indicates the
+connections to the protein using this extended notation. Thus, both the actual 3D model and the bioSMARTS string for 1d66
+can be searched using the SMARTS search "[Cd][S]" as well as the more specific search "Cd[*.SG]". 
+Wild cards provide additional options: [ALA.*], [*.*], [*.CA]. The special
+designation "0" for an atom name, as in <b>[GLY.0]</b>, indicates the "lead atom" -- the alpha carbon for proteins,
+the phosphorus atom in nucleic acids, or the anomeric carbon in carbohydrates.    
+</td></tr>
+
+
+
 </table>  
 <br>
 <br>
@@ -432,6 +443,15 @@ in this case being equivalent to (and slightly slower than) <b>select search("c{
 </table>  
 <br>
 <br>
+Jmol bioSMARTS adds the following primitives:
+<br>
+<br>
+<table border="1" cellpadding="5" width="500">
+<tr><td>[residue.atomName]</td><td>residue and atom name, with optional atomic number, for example [CYS.SG#16] or [ALA.CA]. 
+"0" for atomName indicates the "lead" atom -- for nucleic acids the phosphorus atom (or in some cases a terminal oxygen or hydrogen atom),
+and for proteins the alpha carbon. 
+and  .</td></tr>
+</table>  
 Jmol bioSMARTS adds the following primitives and options:
 <br>
 <br>

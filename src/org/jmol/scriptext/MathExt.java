@@ -1043,6 +1043,10 @@ public class MathExt {
     // {*}.find("MF")
     // {*}.find("MF", "C2H4")
     // {*}.find("SEQUENCE")
+    // {*}.find("SEQ")
+    // {*}.find("SEQ", true)
+    // {*}.find("SEQUENCE", true)
+    // {*}.find("SEQUENCE", "H")
     // "AVA".find("SEQUENCE")
     // {*}.find("SMARTS", "CCCC")
     // "CCCC".find("SMARTS", "CC")
@@ -1061,13 +1065,14 @@ public class MathExt {
     String flags = (args.length > 1 && args[1].tok != T.on
         && args[1].tok != T.off ? SV.sValue(args[1]) : "");
     boolean isSequence = !isList && sFind.equalsIgnoreCase("SEQUENCE");
+    boolean isSeq = !isList && sFind.equalsIgnoreCase("SEQ");
     boolean isSmiles = !isList && sFind.equalsIgnoreCase("SMILES");
     boolean isSMARTS = !isList && sFind.equalsIgnoreCase("SMARTS");
     boolean isChemical = !isList && sFind.equalsIgnoreCase("CHEMICAL");
     boolean isMF = !isList && sFind.equalsIgnoreCase("MF");
     boolean isCF = !isList && sFind.equalsIgnoreCase("CELLFORMULA");
-    boolean isON = !isList && args.length > 0
-        && (args[args.length - 1].tok == T.on);
+    SV argLast = (args.length > 0 ? args[args.length - 1] : SV.vF);
+    boolean isON = !isList && (argLast.tok == T.on);
     try {
       if (isChemical) {
         String data = (x1.tok == T.bitset ? vwr.getSmiles(SV.getBitSet(x1,
@@ -1130,15 +1135,19 @@ public class MathExt {
             return mp.addXStr(JmolMolecule.getMolecularFormula(vwr.ms.at,
                 (BS) x1.value, false,
                 (isMF ? null : vwr.ms.getCellWeights((BS) x1.value)), isON));
-          if (isSequence)
+          if (isSequence || isSeq) {
+            boolean isHH = (argLast.asString().equalsIgnoreCase("H"));
+            isAll |= isHH;
             return mp.addXStr(vwr.getSmilesOpt((BS) x1.value, -1, -1,
-                JC.SMILES_BIO
-                    | (isAll ? JC.SMILES_BIO_ALLOW_UNMACHED_RINGS
-                        | JC.SMILES_BIO_CROSSLINK : 0)));
-          if (isSmiles || isSMARTS) {
+                   (isAll ? JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS
+                        | JC.SMILES_BIO_COV_CROSSLINK 
+                        | (isHH ? JC.SMILES_BIO_HH_CROSSLINK : 0) 
+                   : 0)
+                   | (isSeq ? JC.SMILES_BIO_NOCOMMENTS : JC.SMILES_BIO)));
+          }
+          if (isSmiles || isSMARTS)
             sFind = (args.length > 1 && args[1].tok == T.bitset ? vwr
                 .getSmilesOpt((BS) args[1].value, 0, 0, 0) : flags);
-          }
           BS bsMatch3D = bs2;
           if (asBonds) {
             // this will return a single match
@@ -1153,7 +1162,7 @@ public class MathExt {
           } else {
             int smilesFlags = (isSmiles ? JC.SMILES_TYPE_SMILES
                 : JC.SMILES_TYPE_SMARTS)
-                | (isON && sFind.length() == 0 ? JC.SMILES_BIO
+                | (isON && sFind.length() == 0 ? JC.SMILES_BIO_COV_CROSSLINK
                     | JC.SMILES_BIO_COMMENT : 0);
             ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value,
                 bsMatch3D, smilesFlags, !isON, false);

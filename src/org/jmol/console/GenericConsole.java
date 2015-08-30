@@ -412,7 +412,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     if (cmd != null)
       input.setText(PT.escUnicode(cmd));
   }
-
+  
   /**
    * 
    * @param kcode

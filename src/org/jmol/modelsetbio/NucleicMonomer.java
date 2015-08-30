@@ -503,7 +503,9 @@ public boolean isCrossLinked(Group g) {
   }
  
   @Override
-  public boolean getCrossLinkLead(Lst<Integer> vReturn) {
+  public boolean getCrossLinkVector(Lst<Integer> vReturn, boolean crosslinkCovalent, boolean crosslinkHBond) {
+    if (!crosslinkHBond)
+      return false;
     Atom N = (isPurine ? getN1() : getN3());
     //System.out.println(N.getInfo());
     Bond[] bonds = N.bonds;
@@ -521,6 +523,8 @@ public boolean isCrossLinked(Group g) {
         if ((isPurine ? m.getN3() : m.getN1()) == N2) {
           if (vReturn == null)
             return true;
+          vReturn.addLast(Integer.valueOf(N.i));
+          vReturn.addLast(Integer.valueOf(N2.i));
           vReturn.addLast(Integer.valueOf(m.leadAtomIndex));
           haveCrossLinks = true;
         }

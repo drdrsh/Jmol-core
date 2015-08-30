@@ -900,8 +900,8 @@ public class PropertyManager implements JmolPropertyManager {
     bsExclude.or(bsSolvent);
     Atom[] atoms = ms.at;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1))
-      if (atoms[i].isProtein() || atoms[i].isNucleic())
-        bsExclude.set(i);
+      if (atoms[i].group.isProtein() || atoms[i].group.isDna() || atoms[i].group.isRna())
+        atoms[i].group.setAtomBitsAndClear(bsExclude, bsAtoms);
     BS[] bsModelAtoms = new BS[ms.mc];
     for (int i = ms.mc; --i >= 0;) {
       bsModelAtoms[i] = vwr.getModelUndeletedAtomsBitSet(i);

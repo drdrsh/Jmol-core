@@ -42,6 +42,7 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.BNode;
 import org.jmol.util.Node;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 /**
  * Double bond, allene, square planar and tetrahedral stereochemistry only
@@ -85,43 +86,55 @@ public class SmilesGenerator {
   private boolean topologyOnly;
   boolean getAromatic = true;
   private boolean addAtomComment;
+  private boolean noBioComment;
 
   // generation of SMILES strings
 
-  String getSmiles(Node[] atoms, int ac, BS bsSelected, boolean explicitH, boolean topologyOnly, boolean getAromatic, boolean addAtomComment)
+  String getSmiles(Node[] atoms, int ac, BS bsSelected, String comment, int flags)
       throws InvalidSmilesException {
-    int i = bsSelected.nextSetBit(0);
-    if (i < 0)
+    int ipt = bsSelected.nextSetBit(0);
+    if (ipt < 0)
       return "";
     this.atoms = atoms;
     this.ac = ac;
-    this.bsSelected = bsSelected = BSUtil.copy(bsSelected);
-    this.explicitH = explicitH;
-    this.topologyOnly = topologyOnly;
-    this.getAromatic = getAromatic;
-    this.addAtomComment = addAtomComment;
-    return getSmilesComponent(atoms[i], bsSelected, true, false);
+    addAtomComment = JC.checkFlag(flags, JC.SMILES_ATOM_COMMENT);
+    bsSelected = BSUtil.copy(bsSelected);    
+    
+    if (JC.checkFlag(flags, JC.SMILES_BIO))
+      return getBioSmiles(bsSelected, comment, flags);
+    
+    this.bsSelected = bsSelected;
+    explicitH = JC.checkFlag(flags, JC.SMILES_EXPLICIT_H);
+    topologyOnly = JC.checkFlag(flags, JC.SMILES_TOPOLOGY);
+    getAromatic = !JC.checkFlag(flags, JC.SMILES_NOAROMATIC);
+    return getSmilesComponent(atoms[ipt], bsSelected, true, false, false);
   }
 
-  String getBioSmiles(BNode[] atoms, int ac, BS bsSelected,
-                      boolean allowUnmatchedRings, boolean addCrossLinks, String comment)
+  private String getBioSmiles(BS bsSelected, String comment, int flags)
       throws InvalidSmilesException {
-    this.atoms = atoms;
-    this.ac = ac;
+    addAtomComment = JC.checkFlag(flags, JC.SMILES_ATOM_COMMENT);
+    boolean allowUnmatchedRings = JC.checkFlag(flags,
+        JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS);
+    boolean noBioComments = JC.checkFlag(flags, JC.SMILES_BIO_NOCOMMENTS);
+    boolean crosslinkCovalent = JC
+        .checkFlag(flags, JC.SMILES_BIO_COV_CROSSLINK);
+    boolean crosslinkHBonds = JC.checkFlag(flags, JC.SMILES_BIO_HH_CROSSLINK);
+    boolean addCrosslinks = (crosslinkCovalent || crosslinkHBonds);
     SB sb = new SB();
-    BS bs = BSUtil.copy(bsSelected);
-    if (comment != null)
-      sb.append("//* Jmol bioSMILES ").append(comment.replace('*', '_')).append(
-        " *//");
-    String end = "\n";
+    BS bs = bsSelected;
+    if (comment != null && !noBioComment)
+      sb.append("//* Jmol bioSMILES ").append(comment.replace('*', '_'))
+          .append(" *//");
+    String end = (noBioComment ? "" : "\n");
     BS bsIgnore = new BS();
     String lastComponent = null;
+    String groupString = "";
     String s;
-    Lst<Integer> vLinks = new  Lst<Integer>();
+    Lst<Integer> vLinks = new Lst<Integer>();
     try {
       int len = 0;
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        BNode a = atoms[i];
+        BNode a = (BNode) atoms[i];
         String ch = a.getGroup1('?');
         String bioStructureName = a.getBioStructureTypeName();
         boolean unknown = (ch == ch.toLowerCase());
@@ -132,45 +145,63 @@ public class SmilesGenerator {
           len = 0;
           if (bioStructureName.length() > 0) {
             int id = a.getChainID();
-            if (id != 0) {
-              s = "//* chain " + a.getChainIDStr() + " " + bioStructureName + " " + a.getResno() + " *// ";
+            if (id != 0 && !noBioComments) {
+              s = "//* chain " + a.getChainIDStr() + " " + bioStructureName
+                  + " " + a.getResno() + " *// ";
               len = s.length();
               sb.append(s);
             }
-            sb.append("~").appendC(bioStructureName.toLowerCase().charAt(0)).append("~");
             len++;
+            sb.append("~").appendC(bioStructureName.toLowerCase().charAt(0))
+                .append("~");
           } else {
-            s = getSmilesComponent(a, bs, false, true);
+            s = getSmilesComponent(a, bs, false, true, true);
             if (s.equals(lastComponent)) {
               end = "";
-            } else {
-              lastComponent = s;
-              String groupName = a.getGroup3(true);
-              if (groupName != null)
-                sb.append("//* ").append(groupName).append(" *//");
-              sb.append(s);
-              end = ".\n";
+              continue;
             }
+            lastComponent = s;
+            String groupName = a.getGroup3(true);
+            String key;
+            if (noBioComments) {
+              key = "/" + s + "/";
+            } else {
+              if (groupName != null) {
+                s = "//* " + groupName + " *//" + s;
+              }
+              key = s + "//";
+            }
+            if (groupString.indexOf(key) >= 0) {
+              end = "";
+              continue;
+            }
+            groupString += key;
+            sb.append(s);
+            end = (noBioComments ? "." : ".\n");
             continue;
           }
         }
-        if (len >= 75) {
+        if (len >= 75 && !noBioComments) {
           sb.append("\n  ");
           len = 2;
         }
+        if (addAtomComment)
+          sb.append("\n//* [" + a.getGroup3(false) + "#" + a.getResno()
+              + "] *//\t");
         if (unknown) {
-          addBracketedBioName(sb, a, bioStructureName.length() > 0 ? ".0" : null, false);
+          addBracketedBioName(sb, a, bioStructureName.length() > 0 ? ".0"
+              : null, false);
         } else {
           sb.append(ch);
         }
         len++;
-        int i0 = a.getOffsetResidueAtom("0", 0);
-        if (addCrossLinks) {
-          a.getCrossLinkLeadAtomIndexes(vLinks);
-          for (int j = 0; j < vLinks.size(); j++) {
+        //int i0 = a.getOffsetResidueAtom("\0", 0);
+        if (addCrosslinks) {
+          a.getCrossLinkVector(vLinks, crosslinkCovalent, crosslinkHBonds);
+          for (int j = 0; j < vLinks.size(); j += 3) {
             sb.append(":");
-            s = getRingCache(i0, vLinks.get(j).intValue(),
-                htRingsSequence);
+            s = getRingCache(vLinks.get(j).intValue(), vLinks.get(j + 1)
+                .intValue(), htRingsSequence);
             sb.append(s);
             len += 1 + s.length();
           }
@@ -178,13 +209,14 @@ public class SmilesGenerator {
         }
         a.getGroupBits(bsIgnore);
         bs.andNot(bsIgnore);
-        int i2 = a.getOffsetResidueAtom("0", 1);
+        int i2 = a.getOffsetResidueAtom("\0", 1);
         if (i2 < 0 || !bs.get(i2)) {
-          sb.append(" //* ").appendI(a.getResno()).append(" *//");       
+          if (!noBioComments)
+            sb.append(" //* ").appendI(a.getResno()).append(" *//");
           if (i2 < 0 && (i2 = bs.nextSetBit(i + 1)) < 0)
             break;
           if (len > 0)
-            end = ".\n";
+            end = (noBioComments ? "." : ".\n");
         }
         i = i2 - 1;
       }
@@ -198,10 +230,13 @@ public class SmilesGenerator {
     s = sb.toString();
     if (s.endsWith(".\n"))
       s = s.substring(0, s.length() - 2);
+    else if (noBioComments && s.endsWith("."))
+      s = s.substring(0, s.length() - 1);
     return s;
   }
 
-  private void addBracketedBioName(SB sb, Node atom, String atomName, boolean addComment) {
+  private void addBracketedBioName(SB sb, Node atom, String atomName,
+                                   boolean addComment) {
     sb.append("[");
     if (atomName != null && atom instanceof BNode) {
       BNode a = (BNode) atom;
@@ -210,11 +245,10 @@ public class SmilesGenerator {
       if (!atomName.equals(".0"))
         sb.append(atomName).append("#").appendI(a.getElementNumber());
       if (addComment) {
-      sb.append("//* ").appendI(
-          a.getResno());
-      if (chain.length() > 0)
-        sb.append(":").append(chain);
-      sb.append(" *//");
+        sb.append("//* ").appendI(a.getResno());
+        if (chain.length() > 0)
+          sb.append(":").append(chain);
+        sb.append(" *//");
       }
     } else {
       sb.append(Elements.elementNameFromNumber(atom.getElementNumber()));
@@ -231,11 +265,12 @@ public class SmilesGenerator {
    * @param bs
    * @param allowBioResidues 
    * @param allowConnectionsToOutsideWorld
+   * @param forceBrackets 
    * @return SMILES
    * @throws InvalidSmilesException
    */
   private String getSmilesComponent(Node atom, BS bs, boolean allowBioResidues,
-                                    boolean allowConnectionsToOutsideWorld)
+                                    boolean allowConnectionsToOutsideWorld, boolean forceBrackets)
       throws InvalidSmilesException {
 
     if (!explicitH && atom.getElementNumber() == 1 && atom.getEdges().length > 0)
@@ -276,13 +311,13 @@ public class SmilesGenerator {
       if (atoms[i].getCovalentBondCount() > 4) {
         if (atom == null)
           sb.append(".");
-        getSmiles(sb, atoms[i], allowConnectionsToOutsideWorld, false,
-            explicitH);
+        getSmilesAt(sb, atoms[i], allowConnectionsToOutsideWorld, false,
+            explicitH, forceBrackets);
         atom = null;
       }
     if (atom != null)
-      while ((atom = getSmiles(sb, atom, allowConnectionsToOutsideWorld, true,
-          explicitH)) != null) {
+      while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld, true,
+          explicitH, forceBrackets)) != null) {
       }
     while (bsToDo.cardinality() > 0 || !htRings.isEmpty()) {
       Iterator<Object[]> e = htRings.values().iterator();
@@ -296,8 +331,8 @@ public class SmilesGenerator {
       sb.append(".");
       prevSp2Atoms = null;
       prevAtom = null;
-      while ((atom = getSmiles(sb, atom, allowConnectionsToOutsideWorld, true,
-          explicitH)) != null) {
+      while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld, true,
+          explicitH, forceBrackets)) != null) {
       }
     }
     if (!htRings.isEmpty()) {
@@ -448,9 +483,9 @@ public class SmilesGenerator {
     }
   }
 
-  private Node getSmiles(SB sb, Node atom,
+  private Node getSmilesAt(SB sb, Node atom,
                              boolean allowConnectionsToOutsideWorld, 
-                             boolean allowBranches, boolean explicitH) {
+                             boolean allowBranches, boolean explicitH, boolean forceBrackets) {
     int atomIndex = atom.getIndex();
 
     if (!bsToDo.get(atomIndex))
@@ -582,7 +617,7 @@ public class SmilesGenerator {
       prevAtom = atom;
       prevSp2Atoms = null;
       Edge bond0t = bond0;
-      getSmiles(s2, a, allowConnectionsToOutsideWorld, allowBranches, explicitH);
+      getSmilesAt(s2, a, allowConnectionsToOutsideWorld, allowBranches, explicitH, forceBrackets);
       bond0 = bond0t;
       s2.append(")");
       if (sMore.indexOf(s2.toString()) >= 0)
@@ -674,7 +709,7 @@ public class SmilesGenerator {
       addBracketedBioName(sb, atom, "." + atomName, false);
     else
       sb.append(SmilesAtom
-          .getAtomLabel(atomicNumber, isotope, valence, charge, nH, isAromatic,
+          .getAtomLabel(atomicNumber, isotope, (forceBrackets ? -1 : valence), charge, nH, isAromatic,
               atat != null ? atat : checkStereoPairs(atom, atomIndex, stereo, stereoFlag)));
     sb.appendSB(sMore);
 

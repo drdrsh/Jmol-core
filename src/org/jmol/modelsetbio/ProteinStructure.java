@@ -31,9 +31,10 @@ import javajs.util.V3;
 
 import org.jmol.c.STR;
 import org.jmol.java.BS;
+import org.jmol.modelset.Structure;
 import org.jmol.util.Logger;
 
-public abstract class ProteinStructure {
+public abstract class ProteinStructure implements Structure {
 
   STR type;
   STR subtype;
@@ -45,14 +46,14 @@ public abstract class ProteinStructure {
   public int nRes;
   protected AlphaPolymer apolymer;
   protected int monomerIndexFirst;
+  int monomerIndexLast;
   protected P3 axisA, axisB;
   protected V3 axisUnitVector;
   protected V3 vectorProjection;
 
   private static int globalStrucNo = 1000;
-  int monomerIndexLast;
   private P3[] segments;
-  
+
   /**
    * 
    * @param apolymer
@@ -60,26 +61,24 @@ public abstract class ProteinStructure {
    * @param monomerIndex
    * @param monomerCount
    */
-  protected void setupPS(AlphaPolymer apolymer, STR type,
-                       int monomerIndex, int monomerCount) {
+  protected void setupPS(AlphaPolymer apolymer, STR type, int monomerIndex,
+                         int monomerCount) {
     strucNo = ++globalStrucNo;
     this.apolymer = apolymer;
     this.type = type;
     vectorProjection = new V3();
     monomerIndexFirst = monomerIndex;
     addMonomer(monomerIndex + monomerCount - 1);
-    if(Logger.debugging)
-      Logger.info(
-          "Creating ProteinStructure " + strucNo 
-          + " " + type.getBioStructureTypeName(false) 
-          + " from " + monomerIndexFirst + " through "+ monomerIndexLast
-          + " in polymer " + apolymer);
+    if (Logger.debugging)
+      Logger.info("Creating ProteinStructure " + strucNo + " "
+          + type.getBioStructureTypeName(false) + " from " + monomerIndexFirst
+          + " through " + monomerIndexLast + " in polymer " + apolymer);
   }
 
   /**
-   * Note that this method does not check to see 
-   * that there are no overlapping protein structures.
-   *  
+   * Note that this method does not check to see that there are no overlapping
+   * protein structures.
+   * 
    * @param index
    */
   void addMonomer(int index) {
@@ -117,13 +116,13 @@ public abstract class ProteinStructure {
       STR type = monomers[++index].getProteinStructureType();
       int mLast = -1;
       for (int i = 0, pt = index; i < n; i++, pt++) {
-        ((AlphaMonomer)monomers[pt]).setStructure(null);//, false);
+        ((AlphaMonomer) monomers[pt]).setStructure(null);//, false);
         //System.out.println("bp monomer=" + pt + " " + monomers[pt] + " " + type);
         mLast = monomers[pt].setProteinStructureType(type, mLast);
       }
     }
     //System.out.println("remMonomer First = " + monomerIndexFirst + " last="
-      //  + monomerIndexLast);
+    //  + monomerIndexLast);
   }
 
   public void calcAxis() {
@@ -131,16 +130,17 @@ public abstract class ProteinStructure {
   }
 
   public boolean isWithin(int monomerIndex) {
-    return (monomerIndex > monomerIndexFirst 
-        && monomerIndex < monomerIndexLast);
+    return (monomerIndex > monomerIndexFirst && monomerIndex < monomerIndexLast);
   }
 
   private Map<Monomer, Integer> resMap;
+
   public int getIndex(Monomer monomer) {
     if (resMap == null) {
       resMap = new Hashtable<Monomer, Integer>();
-      for (int i = nRes; --i >= 0; )
-        resMap.put(apolymer.monomers[monomerIndexFirst + i], Integer.valueOf(i));
+      for (int i = nRes; --i >= 0;)
+        resMap
+            .put(apolymer.monomers[monomerIndexFirst + i], Integer.valueOf(i));
     }
     Integer ii = resMap.get(monomer);
     return (ii == null ? -1 : ii.intValue());
@@ -149,7 +149,7 @@ public abstract class ProteinStructure {
   /**
    * 
    * 
-   * @return points for rocket segment rendering 
+   * @return points for rocket segment rendering
    */
   public P3[] getSegments() {
     if (segments == null)
@@ -179,7 +179,7 @@ public abstract class ProteinStructure {
       //there isn't anything significant about seeing the
       //amino colors in different-sized slices, and (IMHO)
       //it looks better this way anyway. RMH 11/2006
-      
+
       //apolymer.getLeadMidPoint(monomerIndex + i, point);
       //projectOntoAxis(point);
     }
@@ -200,24 +200,31 @@ public abstract class ProteinStructure {
     segments = null;
   }
 
-  BS getAtoms(BS bs) {
+  @Override
+  public void setAtomBits(BS bs) {
     Monomer[] ms = apolymer.monomers;
     for (int i = monomerIndexFirst; i <= monomerIndexLast; i++)
       ms[i].setAtomBits(bs);
-    return bs;
+  }
+
+  @Override
+  public void setAtomBitsAndClear(BS bs, BS bsOut) {
+    Monomer[] ms = apolymer.monomers;
+    for (int i = monomerIndexFirst; i <= monomerIndexLast; i++)
+      ms[i].setAtomBitsAndClear(bs, bsOut);
   }
 
   public Monomer findMonomer(BS bsAtoms, boolean isFirst) {
     Monomer[] ms = apolymer.monomers;
     if (isFirst) {
-      for (int i = monomerIndexFirst; i <= monomerIndexLast; i++) 
+      for (int i = monomerIndexFirst; i <= monomerIndexLast; i++)
         if (bsAtoms == null || bsAtoms.get(ms[i].leadAtomIndex))
           return ms[i];
     } else {
       for (int i = monomerIndexLast; i >= monomerIndexFirst; --i)
         if (bsAtoms == null || bsAtoms.get(ms[i].leadAtomIndex))
           return ms[i];
-    }    
+    }
     return null;
   }
 }

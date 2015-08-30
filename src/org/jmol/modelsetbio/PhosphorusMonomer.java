@@ -30,6 +30,7 @@ import javajs.util.V3;
 
 import org.jmol.c.STR;
 import org.jmol.modelset.Chain;
+import org.jmol.modelset.Structure;
 import org.jmol.viewer.JC;
 
 public class PhosphorusMonomer extends Monomer {
@@ -98,7 +99,7 @@ public class PhosphorusMonomer extends Monomer {
   public boolean isPyrimidine() { return isPyrimidineByID(); }
 
   @Override
-  public Object getStructure() { return chain; }
+  public Structure getStructure() { return chain; }
 
   @Override
   public STR getProteinStructureType() {

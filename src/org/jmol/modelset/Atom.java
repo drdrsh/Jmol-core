@@ -590,7 +590,8 @@ public class Atom extends Point3fi implements BNode {
     return (type == null ? getAtomName() : type);
   }
    
-   public int getAtomNumber() {
+   @Override
+  public int getAtomNumber() {
      int[] atomSerials = group.chain.model.ms.atomSerials;
      // shouldn't ever be null.
      return (atomSerials == null ? i : atomSerials[i]);
@@ -918,23 +919,12 @@ public class Atom extends Point3fi implements BNode {
   }
 
   @Override
-  public boolean isProtein() {
-    return group.isProtein();
-  }
-
-  @Override
-  public boolean isNucleic() {
-    return group.isNucleic();
-  }
-
-  @Override
-  public boolean isDna() {
-    return group.isDna();
-  }
-  
-  @Override
-  public boolean isRna() {
-    return group.isRna();
+  public char getBioSmilesType() {
+    return  (group.isProtein() ? 'p'
+        : group.isDna() ? 'd'
+            : group.isRna() ? 'r'
+                : group.isCarbohydrate() ? 'c'
+                    : ' ');
   }
 
   @Override
@@ -1394,6 +1384,7 @@ public class Atom extends Point3fi implements BNode {
 
   @Override
   public int getOffsetResidueAtom(String name, int offset) {
+    // used by DSSP and SMILES
     return group.getAtomIndex(name, offset);
   }
   
@@ -1402,9 +1393,12 @@ public class Atom extends Point3fi implements BNode {
     return group.isCrossLinked(((Atom) node).group);
   }
 
+  /**
+   * Used by SMILES to get vector of cross-links
+   */
   @Override
-  public boolean getCrossLinkLeadAtomIndexes(Lst<Integer> vReturn) {
-    return group.getCrossLinkLead(vReturn);
+  public boolean getCrossLinkVector(Lst<Integer> vReturn, boolean crosslinkCovalent, boolean crosslinkHBond) {
+    return group.getCrossLinkVector(vReturn, crosslinkCovalent, crosslinkHBond);
   }
   
   @Override

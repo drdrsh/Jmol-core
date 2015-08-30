@@ -1039,14 +1039,16 @@ public final class JC {
   public static final int SMILES_MATCH_ONE         = 0x20;
   public static final int SMILES_RETURN_FIRST      = 0x40;
 
-  public static final int SMILES_EXPLICIT_H               = 0x00100;
-  public static final int SMILES_TOPOLOGY                 = 0x00200;
-  public static final int SMILES_NOAROMATIC               = 0x00400;
-  public static final int SMILES_BIO                      = 0x10000;
-  public static final int SMILES_BIO_ALLOW_UNMACHED_RINGS = 0x10100;
-  public static final int SMILES_BIO_CROSSLINK            = 0x10200;
-  public static final int SMILES_BIO_COMMENT              = 0x10400;
-  public static final int SMILES_ATOM_COMMENT             = 0x20000;
+  public static final int SMILES_EXPLICIT_H                = 0x00100;
+  public static final int SMILES_TOPOLOGY                  = 0x00200;
+  public static final int SMILES_NOAROMATIC                = 0x00400;
+  public static final int SMILES_BIO                       = 0x10000;
+  public static final int SMILES_BIO_ALLOW_UNMATCHED_RINGS = 0x11000;
+  public static final int SMILES_BIO_COV_CROSSLINK         = 0x12000;
+  public static final int SMILES_BIO_HH_CROSSLINK          = 0x16000;
+  public static final int SMILES_BIO_COMMENT               = 0x30000;
+  public static final int SMILES_BIO_NOCOMMENTS            = 0x50000;
+  public static final int SMILES_ATOM_COMMENT              = 0x80000;
   
   public static final int JSV_NOT = -1;
   public static final int JSV_SEND_JDXMOL = 0;

@@ -49,6 +49,7 @@ import org.jmol.modelset.JmolBioModelSet;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
+import org.jmol.modelset.Structure;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
@@ -448,7 +449,6 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
       ProteinStructure ps = lstStr.get(i);
       if (ps.type != type)
         continue;
-      bs.clearAll();
       // could be a subset of atoms, not just the ends
       Monomer m1 = ps.findMonomer(bsAtoms, true);
       Monomer m2 = ps.findMonomer(bsAtoms, false);
@@ -466,9 +466,11 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
       case SHEET:
         n++;
         if (scriptMode) {
+          bs.clearAll();
+          ps.setAtomBits(bs);
           String stype = subtype.getBioStructureTypeName(false);
           cmd.append("  structure ").append(stype).append(" ")
-              .append(Escape.eBS(ps.getAtoms(bs))).append(comment)
+              .append(Escape.eBS(bs)).append(comment)
               .append(" & (" + res1 + " - " + res2 + ")").append(";\n");
         } else {
           String str;
@@ -1008,49 +1010,66 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     Atom[] at = ms.at;
     int ac = ms.ac;
     int i = 0;
+    Group g;
     switch (tokType) {
-    case T.carbohydrate:
-      for (i = ac; --i >= 0;)
-        if (at[i].group.isCarbohydrate())
-          bs.set(i);
-      break;
-    case T.dna:
-      for (i = ac; --i >= 0;)
-        if (at[i].isDna())
-          bs.set(i);
-      break;
     case T.helix: // WITHIN -- not ends
     case T.sheet: // WITHIN -- not ends
-      STR type = (tokType == T.helix ? STR.HELIX
-          : STR.SHEET);
-      for (i = ac; --i >= 0;)
-        if (at[i].group.isWithinStructure(type))
-          bs.set(i);
+      STR type = (tokType == T.helix ? STR.HELIX : STR.SHEET);
+      for (i = ac; --i >= 0;) {
+        if ((g = at[i].group).isWithinStructure(type))
+          g.setAtomBits(bs);
+        i = g.firstAtomIndex;
+      }
+      break;
+    case T.carbohydrate:
+      for (i = ac; --i >= 0;) {
+        if ((g = at[i].group).isCarbohydrate())
+          g.setAtomBits(bs);
+        i = g.firstAtomIndex;
+      }
+      break;
+    case T.dna:
+      for (i = ac; --i >= 0;) {
+        if ((g = at[i].group).isDna())
+          g.setAtomBits(bs);
+        i = g.firstAtomIndex;
+      }
       break;
     case T.nucleic:
-      for (i = ac; --i >= 0;)
-        if (at[i].isNucleic())
-          bs.set(i);
+      for (i = ac; --i >= 0;) {
+        if ((g = at[i].group).isNucleic())
+          g.setAtomBits(bs);
+        i = g.firstAtomIndex;
+      }
       break;
     case T.protein:
-      for (i = ac; --i >= 0;)
-        if (at[i].isProtein())
-          bs.set(i);
+      for (i = ac; --i >= 0;) {
+        if ((g = at[i].group).isProtein())
+          g.setAtomBits(bs);
+        i = g.firstAtomIndex;
+
+      }
       break;
     case T.purine:
-      for (i = ac; --i >= 0;)
-        if (at[i].isPurine())
-          bs.set(i);
+      for (i = ac; --i >= 0;) {
+        if ((g = at[i].group).isPurine())
+          g.setAtomBits(bs);
+        i = g.firstAtomIndex;
+      }
       break;
     case T.pyrimidine:
-      for (i = ac; --i >= 0;)
-        if (at[i].isPyrimidine())
-          bs.set(i);
+      for (i = ac; --i >= 0;) {
+        if ((g = at[i].group).isPyrimidine())
+          g.setAtomBits(bs);
+        i = g.firstAtomIndex;
+      }
       break;
     case T.rna:
-      for (i = ac; --i >= 0;)
-        if (at[i].isRna())
-          bs.set(i);
+      for (i = ac; --i >= 0;) {
+        if ((g = at[i].group).isRna())
+          g.setAtomBits(bs);
+        i = g.firstAtomIndex;
+      }
       break;
     }
     if (i < 0)
@@ -1063,45 +1082,23 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
 
     int i0 = bsInfo.nextSetBit(0);
     if (i0 < 0)
-      return bs;    
+      return bs;
     i = 0;
     switch (tokType) {
     case T.polymer:
       // within(polymer,...)
-      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        if (bs.get(i))
-          continue;
+      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1)) {
         int iPolymer = at[i].group.getBioPolymerIndexInModel();
-        bs.set(i);
-        for (int j = i; --j >= 0;)
-          if (at[j].group.getBioPolymerIndexInModel() == iPolymer)
-            bs.set(j);
-          else
-            break;
-        for (; ++i < ac;)
-          if (at[i].group.getBioPolymerIndexInModel() == iPolymer)
-            bs.set(i);
-          else
-            break;
+        if (iPolymer >= 0)
+          ((Monomer) at[i].group).bioPolymer.setAtomBitsAndClear(bs, bsInfo);
       }
       break;
     case T.structure:
       // within(structure,...)
-      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i+1)) {
-        if (bs.get(i))
-          continue;
-        Object structure = at[i].group.getStructure();
-        bs.set(i);
-        for (int j = i; --j >= 0;)
-          if (at[j].group.getStructure() == structure)
-            bs.set(j);
-          else
-            break;
-        for (; ++i < ac;)
-          if (at[i].group.getStructure() == structure)
-            bs.set(i);
-          else
-            break;
+      for (i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1)) {
+        Structure structure = at[i].group.getStructure();
+        if (structure != null)
+          structure.setAtomBitsAndClear(bs, bsInfo);
       }
       break;
     }

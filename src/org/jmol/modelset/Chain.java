@@ -31,7 +31,7 @@ import org.jmol.java.BS;
  * particularly whether this monomer is RNA or DNA.
  * 
  */
-public final class Chain {
+public final class Chain implements Structure {
 
   public Model model;
   /**
@@ -96,6 +96,11 @@ public final class Chain {
   public void setAtomBits(BS bs) {
     for (int i = 0; i < groupCount; i++)
       groups[i].setAtomBits(bs);
+  }
+
+  public void setAtomBitsAndClear(BS bs, BS bsOut) {
+    for (int i = 0; i < groupCount; i++)
+      groups[i].setAtomBitsAndClear(bs, bsOut);
   }
 
 }

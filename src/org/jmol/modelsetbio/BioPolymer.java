@@ -27,6 +27,7 @@ import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Model;
+import org.jmol.modelset.Structure;
 
 import javajs.util.Lst;
 import javajs.util.P3;
@@ -48,7 +49,7 @@ import org.jmol.script.T;
  * collections of unique chain identifiers in the file. 
  * 
  */
-public abstract class BioPolymer {
+public abstract class BioPolymer implements Structure {
 
   protected BioPolymer() {
     
@@ -86,6 +87,17 @@ public abstract class BioPolymer {
     for (int i = monomerCount; --i >= 0;)
       monomers[i].setBioPolymer(this, i);
     model = monomers[0].getModel();
+  }
+  
+  @Override
+  public void setAtomBits(BS bs) {
+    getRange(bs, true);
+  }
+  
+  @Override
+  public void setAtomBitsAndClear(BS bs, BS bsOut) {
+    for (int i = monomerCount; --i >= 0;)
+      monomers[i].setAtomBitsAndClear(bs, bsOut);
   }
   
   public void getRange(BS bs, boolean isMutated) {

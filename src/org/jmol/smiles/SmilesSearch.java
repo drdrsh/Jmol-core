@@ -503,7 +503,7 @@ public class SmilesSearch extends JmolMolecule {
 
         switch (patternBond.order) {
         case SmilesBond.TYPE_BIO_SEQUENCE:
-        case SmilesBond.TYPE_BIO_PAIR:
+        case SmilesBond.TYPE_BIO_CROSSLINK:
           if (!checkMatchBond(patternAtom, atom1, patternBond, iAtom,
               matchingAtom, null))
             return true;
@@ -588,10 +588,10 @@ public class SmilesSearch extends JmolMolecule {
           Node a = pa.getMatchingAtom();
           if (pa.isBioAtom) {
             // clear out adjacent residues
-            int ii = ((BNode) a).getOffsetResidueAtom("0", 1);
+            int ii = ((BNode) a).getOffsetResidueAtom("\0", 1);
             if (ii >= 0)
               bs.set(ii);
-            ii = ((BNode) a).getOffsetResidueAtom("0", -1);
+            ii = ((BNode) a).getOffsetResidueAtom("\0", -1);
             if (ii >= 0)
               bs.set(ii);
           } else {
@@ -648,12 +648,13 @@ public class SmilesSearch extends JmolMolecule {
           bsFound = bs;
         }
         return true;
-      case SmilesBond.TYPE_BIO_PAIR:
+      case SmilesBond.TYPE_BIO_CROSSLINK:
         Lst<Integer> vLinks = new  Lst<Integer>();
-        ((BNode)jmolAtom).getCrossLinkLeadAtomIndexes(vLinks);
+        ((BNode)jmolAtom).getCrossLinkVector(vLinks, true, true);
         BS bs = BSUtil.copy(bsFound);
         ((BNode)jmolAtom).getGroupBits(bsFound);
-        for (int j = 0; j < vLinks.size(); j++)
+        // here we only use the third entry -- lead atoms
+        for (int j = 2; j < vLinks.size(); j += 3)
           if (!checkMatch(newPatternAtom, atomNum, vLinks.get(j).intValue(), firstAtomOnly))
             return false;
         bsFound = bs;
@@ -805,7 +806,6 @@ public class SmilesSearch extends JmolMolecule {
     Node atom = jmolAtoms[iAtom];
     boolean foundAtom = patternAtom.not;
 
-
     while (true) {
 
       int n;
@@ -827,54 +827,81 @@ public class SmilesSearch extends JmolMolecule {
         break;
       }
       // all types
-      if (patternAtom.residueName != null
-          && !patternAtom.residueName
-              .equals(((BNode)atom).getGroup3(false).toUpperCase()))
+      if (patternAtom.atomNumber != Integer.MIN_VALUE
+          && patternAtom.atomNumber != (((BNode) atom).getAtomNumber()))
         break;
       // # <n> or Symbol Check atomic number
       if (patternAtom.elementNumber >= 0
           && patternAtom.elementNumber != atom.getElementNumber())
         break;
+      // "=" <n>  Jmol index
       if (patternAtom.jmolIndex >= 0
           && atom.getIndex() != patternAtom.jmolIndex)
-        break;      
-      if (patternAtom.isBioAtom) {
+        break;
+      if (patternAtom.atomName != null
+          && (patternAtom.isLeadAtom() ? !((BNode) atom).isLeadAtom()
+              : !patternAtom.atomName.equals(((BNode) atom).getAtomName()
+                  .toUpperCase())))
+        break;
+      if (patternAtom.isBioResidue) {
         BNode a = (BNode) atom;
-        // BIOSMARTS
-        if (patternAtom.atomName != null
-            && (patternAtom.isLeadAtom() ? !a.isLeadAtom()
-                : !patternAtom.atomName.equals(a.getAtomName().toUpperCase())))
+        if (patternAtom.residueName != null
+            && !patternAtom.residueName
+                .equals(a.getGroup3(false).toUpperCase()))
           break;
-        if (patternAtom.notCrossLinked && a.getCrossLinkLeadAtomIndexes(null))
+        if (patternAtom.residueNumber != Integer.MIN_VALUE
+            && patternAtom.residueNumber != (a.getResno()))
           break;
-        if (patternAtom.residueChar != null) {
-          if (patternAtom.isDna() && !a.isDna() || patternAtom.isRna()
-              && !a.isRna() || patternAtom.isProtein() && !a.isProtein()
-              || patternAtom.isNucleic() && !a.isNucleic())
+        if (patternAtom.residueChar != null || patternAtom.elementNumber == -2) {
+          char atype = a.getBioSmilesType();
+          char ptype = patternAtom.getBioSmilesType();
+          char resChar = (patternAtom.residueChar == null ? '*' : patternAtom.residueChar.charAt(0));
+          boolean ok = true;
+          boolean isNucleic = false;
+          switch (ptype) {
+          case '*':
+            ok = true;
+            break;
+          case 'n':
+            ok = (atype == 'r' || atype == 'c');
+            isNucleic = true;
+            break;
+          case 'r':
+          case 'c':
+            isNucleic = true;
+            //$FALL-THROUGH$
+          default:
+            ok = (atype == ptype);
+            break;
+          }
+          if (!ok)
             break;
           String s = a.getGroup1('\0').toUpperCase();
-          boolean isOK = patternAtom.residueChar.equals(s);
-          switch (patternAtom.residueChar.charAt(0)) {
+          boolean isOK = (resChar == s.charAt(0));
+          switch (resChar) {
+          case '*':
+            isOK = true;
+            break;
           case 'N':
-            isOK = patternAtom.isNucleic() ? a.isNucleic() : isOK;
+            isOK = (atype == 'r' || atype == 'c');
             break;
           case 'R': // arginine purine
-            isOK = patternAtom.isNucleic() ? a.isPurine() : isOK;
+            isOK = isNucleic ? a.isPurine() : isOK;
             break;
           case 'Y': // tyrosine or pyrimidine
-            isOK = patternAtom.isNucleic() ? a.isPyrimidine() : isOK;
+            isOK = isNucleic ? a.isPyrimidine() : isOK;
             break;
           }
           if (!isOK)
             break;
         }
-
+        if (patternAtom.isBioAtom) {
+          // BIOSMARTS
+          // cross linking, residueChar, 
+          if (patternAtom.notCrossLinked && a.getCrossLinkVector(null, true, true))
+            break;
+        }
       } else {
-        if (patternAtom.atomName != null
-            && (!patternAtom.atomName.equals(atom.getAtomName().toUpperCase())))
-          break;
-        // "=" <n>  Jmol index
-
         if (patternAtom.atomType != null
             && !patternAtom.atomType.equals(atom.getAtomType()))
           break;
@@ -1012,10 +1039,10 @@ public class SmilesSearch extends JmolMolecule {
     boolean bondFound = false;
     
     switch (patternBond.order) {
-    case SmilesBond.TYPE_BIO_SEQUENCE:
-      return (patternBond.isNot != (bioAtoms[iAtom2].getOffsetResidueAtom("0", 1)
-          == bioAtoms[iAtom1].getOffsetResidueAtom("0", 0)));
-    case SmilesBond.TYPE_BIO_PAIR:
+    case SmilesBond.TYPE_BIO_SEQUENCE: // +
+      return (patternBond.isNot != (bioAtoms[iAtom2].getOffsetResidueAtom("\0", 1)
+          == bioAtoms[iAtom1].getOffsetResidueAtom("\0", 0)));
+    case SmilesBond.TYPE_BIO_CROSSLINK: // :
       return (patternBond.isNot != bioAtoms[iAtom1].isCrossLinked(bioAtoms[iAtom2]));
     }
     
@@ -1797,7 +1824,10 @@ public class SmilesSearch extends JmolMolecule {
       atom.atomName = sAtom.atomName;
       atom.residueName = sAtom.residueName;
       atom.residueChar = sAtom.residueChar;
+      atom.residueNumber = sAtom.residueNumber;
+      atom.atomNumber = sAtom.residueNumber;
       atom.isBioAtom = sAtom.isBioAtom;
+      atom.bioType = sAtom.bioType;
       atom.isLeadAtom = sAtom.isLeadAtom;
       atom.mapIndex = i;
       atom.setAtomicMass(sAtom.getAtomicMass());
@@ -1861,7 +1891,7 @@ public class SmilesSearch extends JmolMolecule {
           case SmilesBond.TYPE_DIRECTIONAL_2:
             order = Edge.BOND_STEREO_FAR;
             break;
-          case SmilesBond.TYPE_BIO_PAIR:
+          case SmilesBond.TYPE_BIO_CROSSLINK:
           case SmilesBond.TYPE_BIO_SEQUENCE:
             order = sBond.order;
             break;

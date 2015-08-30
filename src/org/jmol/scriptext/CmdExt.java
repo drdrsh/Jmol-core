@@ -3979,7 +3979,8 @@ public class CmdExt extends ScriptExt {
     int len = 2;
     T token = getToken(1);
     // T.identifier for SV is set for variable names 
-    int tok = (token instanceof SV && token.tok != T.identifier ? T.nada : token.tok);
+    int tok = (token instanceof SV && token.tok != T.identifier ? T.nada
+        : token.tok);
     if (tok == T.string) {
       token = T.getTokenFromName(str.toLowerCase());
       if (token != null)
@@ -4065,16 +4066,20 @@ public class CmdExt extends ScriptExt {
     case T.drawing:
     case T.chemical:
     case T.smiles:
-      checkLength(tok == T.chemical ? 3 : 2);
+      checkLength(tok == T.chemical || tok == T.smiles && tokAt(2) != T.nada ? len = 3
+          : 2);
       if (chk)
         return;
       try {
-        if (tok != T.smiles)
+        if (tok != T.smiles) {
           msg = vwr.getDataBaseName(null);
-        if (msg != null && (msg.startsWith("$") || msg.startsWith(":"))) {
-          msg = msg.substring(1);
-        } else {
-          msg = null;
+          if (msg != null && (msg.startsWith("$") || msg.startsWith(":"))) {
+            msg = msg.substring(1);
+          } else {
+            msg = null;
+          }
+        } else if (eval.optParameterAsString(2).equalsIgnoreCase("true")) {
+          msg = vwr.getBioSmiles(null);
         }
         if (msg == null)
           msg = vwr.getSmiles(null);
@@ -4086,7 +4091,8 @@ public class CmdExt extends ScriptExt {
         break;
       case T.drawing:
         if (msg.length() > 0) {
-          vwr.fm.loadImage(vwr.setLoadFormat("_" + msg, '2', false), "\1" + msg, false);
+          vwr.fm.loadImage(vwr.setLoadFormat("_" + msg, '2', false),
+              "\1" + msg, false);
           return;
         }
         msg = "Could not show drawing -- Either insufficient atoms are selected or the model is a PDB file.";
@@ -4118,7 +4124,7 @@ public class CmdExt extends ScriptExt {
       checkLength(len = ++eval.iToken);
       if (!chk)
         msg = vwr.ms.getSymTemp(true).getSymmetryInfoString(vwr.ms, vwr.am.cmi,
-          iop, pt1, pt2, null, type);
+            iop, pt1, pt2, null, type);
       break;
     case T.vanderwaals:
       VDW vdwType = null;
@@ -4248,8 +4254,7 @@ public class CmdExt extends ScriptExt {
       break;
     case T.display:// deprecated
     case T.selectionhalos:
-      msg = "selectionHalos "
-          + (vwr.getSelectionHalosEnabled() ? "ON" : "OFF");
+      msg = "selectionHalos " + (vwr.getSelectionHalosEnabled() ? "ON" : "OFF");
       break;
     case T.hetero:
       msg = "set selectHetero " + vwr.getBoolean(T.hetero);
@@ -4330,9 +4335,12 @@ public class CmdExt extends ScriptExt {
     case T.data:
       String dtype = ((len = slen) == 3 ? paramAsStr(2) : null);
       if (!chk) {
-        Object[] data = (Object[]) vwr.getDataObj(dtype, null, JmolDataManager.DATA_TYPE_LAST);
+        Object[] data = (Object[]) vwr.getDataObj(dtype, null,
+            JmolDataManager.DATA_TYPE_LAST);
         msg = (data == null ? "no data" : Escape.encapsulateData(
-            (String) data[JmolDataManager.DATA_LABEL], data[JmolDataManager.DATA_VALUE], ((Integer) data[JmolDataManager.DATA_TYPE]).intValue()));
+            (String) data[JmolDataManager.DATA_LABEL],
+            data[JmolDataManager.DATA_VALUE],
+            ((Integer) data[JmolDataManager.DATA_TYPE]).intValue()));
       }
       break;
     case T.spacegroup:
@@ -4344,7 +4352,8 @@ public class CmdExt extends ScriptExt {
       } else {
         String sg = paramAsStr(2);
         if (!chk)
-          info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(vwr.ms, PT.rep(sg, "''", "\""));
+          info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(vwr.ms,
+              PT.rep(sg, "''", "\""));
       }
       if (info != null)
         msg = "" + info.get("spaceGroupInfo") + info.get("symmetryInfo");
@@ -4468,7 +4477,8 @@ public class CmdExt extends ScriptExt {
         typ = null;
       len = slen;
       if (!chk)
-        showString(vwr.ms.getPointGroupAsString(vwr.bsA(), false, "show:" + typ, 0, 0));
+        showString(vwr.ms.getPointGroupAsString(vwr.bsA(), false,
+            "show:" + typ, 0, 0));
       return;
     case T.symmetry:
       if (!chk)
