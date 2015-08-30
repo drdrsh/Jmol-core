@@ -177,71 +177,23 @@ a protein with associated water molecules will only show one component in the fo
 [O].
 </pre>
 </td></tr>
-<tr><td>  
-<b>branches and rings</b></td><td> Jmol BioSMILES allows for standard SMILES branching notation using parentheses or "ring" numbers. Within bioSEQUENCES, 
-branching indicates cross-linking. For instance, the commands <b>load =3LL2; print {carbohydrate}.find("SEQ", true)</b> reports for this branched carbohydrate:
+<tr><td valign="top">  
+<b>":"</b></td><td> 
+Jmol bioSEQUENCES utilize the bond type ":" to indicate "cross-linked groups". 
+Recognized cross-linking includes hydrogen bonding between the purine N1 and pyrimidine N3 in nucleic acids,
+hydrogen bonds created with <b>create hbonds</b>, cysteine-cysteine disulfide bonds 
+in proteins, and ether linkages between carbohydrate residues.
+For instance, the commands <b>load =3LL2; print {carbohydrate}.find("SEQ", true)</b> reports for this branched carbohydrate:
 <pre>
 ~c~[MAN]:1[MAN]:2[MAN].~c~[MAN]:2[MAN].~c~[MAN]:1[MAN][MAN]
 </pre>
-No indication is given for exact atom-atom connectivity in the Jmol bioSEQUENCE; all connectivity is at the level of residues.
-
-<tr><td>
-<b>"+" and ":" </b> 
-</td><td>
-Jmol BioSMARTS adds the + and : bond types for sequences. + indicates "connected groups", and ":" indicates "cross-linked groups". 
-Recognized cross-linking includes hydrogen bonding between the purine N1 and pyrimidine N3 in nucleic acids and cysteine-cysteine disulfide bonds in proteins. 
-Cross-linking can be "one-to-one" or "one-to-many". (In the future this could be expanded to carbohydrates.)
- The standard SMILES branching notation can also be used to represent cross-linking: 
-In normally hybridized DNA, <b>~C+C+C:G+G+G</b> would be three CG base-pairs (because the two strands are going in opposite direction).
-The default for bioSEQUENCE connections is "+", so this search could also be represented simply as <b>~CCC:GGG</b>. 
-"+" is only necessary when the search is not a bioSEQUENCE. 
-For example,  <b>{[CYS.CA]+[PRO.N]}</b> allows selection of the alpha carbon on one residue and the backbone nitrogen atom on the next.
-
-
-</td></tr>
-
-
-
-<tr><td>
-
-</td><td>
-
-Thus, a three-base double-stranded DNA CG stretch could be indicated  <b>C(G)C(G)C(G)</b>. 
-An empty branch, <b>C()</b>, indicates "not cross-linked" -- in this case 
-a cysteine without a disulphide bond or a cytidine that is not base-paired. For bioSMILES, which shows all cross-linking explicitly,
-the empty parentheses may be omitted.
-
-Ring notation can also be used: C:1CC(GGG:1) ensures that
-the hybridization is as a true set of CG pairs. 
-
-In order to allow for more than 99 branches (or base pairs), we extend the ring % notation by enclosing the number in parentheses. 
-For example, a section of the large ribosomal unit for PDB code 1FFK reads using
-<b>load 1FFK;calculate hbonds; print {*}.find("SEQUENCE","H")</b>:
-<pre>
-...
-//* chain 9 RNA 1 *// ~r~UUAG:%(792)G:%(793)C:%(794)G:%(795)G:%(796)C:%(797)C
-  ACAG:%(798)C:%(799)G:%(800)G:%(801)U:%(802)G:%(803)G:%(804)G:%(805)GUUGCC
-  UC:%(806)C:%(807)C:%(808)G:%(809)U:%(810)ACCC:%(811)AUCCCG:%(811)AACA:%(810)
-  C:%(809)G:%(808)G:%(807)AAG:%(806)AU:%(812)AA:%(812)GC:%(805)C:%(804)C:%(803)
-  A:%(802)C:%(801)C:%(800)AG:%(799)C:%(798)GUUC:%(813)C:%(814)G:%(815)G:%(816)
-  G:%(817)GAGUAC:%(818)U:%(819)G:%(820)G:%(821)A:%(822)G:%(823)UG:%(824)C:%(825)
-  GCGAG:%(825)C:%(824)C:%(823)U:%(822)C:%(821)U:%(820)G:%(819)G:%(818)GAAAC:%(817)
-  C:%(816)C:%(815)G:%(814)G:%(813)UUCG:%(797)C:%(796)C:%(795)G:%(794)C:%(793)
-  C:%(792)ACC //* 122 *//.
-...
-</pre>
-
-
-</td></tr>
-
-
-
+indicating a branched manose hexamer. No indication is given for exact atom-atom connectivity in the Jmol bioSEQUENCE; all connectivity is at the level of residues.
+</td></tr> 
 
 
 </table>  
 <br>
 <br>
-
 
 
  <h3>Comparision to <a target="_blank" href="http://www.daylight.com/dayhtml/doc/theory/theory.smarts.html">Daylight SMARTS</a></h3>
@@ -330,7 +282,7 @@ All Daylight SMARTS primitives are implemented. These include:
 Jmol SMARTS adds the following primitives:
 <br>
 <br>
-<table border="1" cellpadding="5" width="500">
+<table border="1" cellpadding="5" width="800">
 <tr><td>d</td><td>non-hydrogen degree -- number of non-hydrogen connections</td></tr>
 <tr><td>=</td><td>Jmol atom index, for example: [=23]</td></tr>
 <tr><td>"xxx"</td><td>atom type, in double quotes, for example: ["39"r5] (After <b>calculate partialcharge</b> this will be the MMFF94 atom type. [Jmol 12.3.24]</td></tr>
@@ -361,7 +313,7 @@ Jmol SMARTS adds the following in-line options:
 <br>
 <br>
 <table border="1" cellpadding="5" width="500">
-<tr><td>
+<tr><td valign=top>
 /..../</td><td>
 <b>processing directives</b> Jmol recognizes <b>/..../</b> at the beginning of a pattern as processing directives.
 These directives can be introduced individually or as groups. They are not case-sensitive. 
@@ -378,13 +330,34 @@ dramatically improve processing speed when no check for aromaticity is necessary
 All atoms are then considered NOT aromatic.
 </li></ul>
 </td></tr>
+<tr><td>{...}</td>
+<td>
+
+<br><br>
+<b>Jmol atom selection</b>
+
+Then general way within Jmol to select atoms based on SMARTS searches is to use <b>select search("...")</b>. 
+To assign variables to the results of a search, one can use the find() command.
+
+However, to select one or more atoms within the found pattern, simply enclose the desired atoms in { }: 
+ <b>select search("{C}C=O")</b>, for example, returns all alpha carbons, 
+ and <b>select search("~d~G{C}A")</b> returns all DNA cytidines that are in GCA sequences.
+
+<br><br>No valence calculation is done to add any additional hydrogens to unbracketed 
+atoms. "CCC" is the same as "[C][C][C]". only unbracketed or bracketed hydrogen atoms such as H[C]C or [H] 
+or [2H] are selected; connected hydrogen atoms as in [CH3] are not selected.
+
+</td></tr>
+
+
 <tr><td valign="top">(.measure)</td><td>The extension capitalizes on the fact that in a standard SMARTS string, period "." cannot
 ever appear immediately following an open parenthesis "(". Using this fact, the format involves the following:
 <pre>
-  "(." [single character type - "d" (distance), "a" (angle), or "t" (torsion)] [optional numeric identifier] 
-           ":" [optional "!" (not)] [range] ")" one or more ranges in the form 
-              [minimum value] { "," | "-" } [maximum value] separated by commas
+  "(." [single character type - "d" (distance), "a" (angle), or "t" (torsion)] 
+         [optional numeric identifier] ":" [optional "!" (not)] [ranges] ")" 
 </pre>
+where      
+       [ranges] is one or more ranges in the form  <b>[minimum value], [maximum value]</b> separated by commas.
 That is, one or more 
 This extension must appear immediately following an element symbol or a bracketed atom expression.  
 The separators "," or "-" between minimum and maximum values are equivalent.
@@ -443,47 +416,46 @@ in this case being equivalent to (and slightly slower than) <b>select search("c{
 </table>  
 <br>
 <br>
-Jmol bioSMARTS adds the following primitives:
+Jmol bioSMARTS adds the following pattern options to Jmol SMARTS:
 <br>
 <br>
 <table border="1" cellpadding="5" width="500">
-<tr><td>[residue.atomName]</td><td>residue and atom name, with optional atomic number, for example [CYS.SG#16] or [ALA.CA]. 
-"0" for atomName indicates the "lead" atom -- for nucleic acids the phosphorus atom (or in some cases a terminal oxygen or hydrogen atom),
-and for proteins the alpha carbon. 
-and  .</td></tr>
+<tr><td>
+<b>"~"</b> 
+</td><td>Any biopolymer.
+</td></tr>
+<tr><td>
+<b>"~n~"</b> 
+</td><td>DNA or RNA
+</td></tr>
+<tr><td valign="top">
+<b>"+"</b> 
+</td><td>
+Jmol bioSMARTS adds the "+" bond type to indicate standard sequence. The Jmol bioSMARTS 
+pattern "~p~C+C+C" is the same as "~p~CCC". In conjunction with the cross-linking 
+type ":", one can do searches for double-stranded nucleic acids quite easily. 
+<b>~d~CCC:GGG</b> would be three CG base-pairs (because the two strands are going in opposite direction). 
+Note that Jmol atom selection can be specified by For example,  <b>select search("[CYS.CA][PRO.CB]")</b> 
+would select just the alpha carbon of cysteine and the beta carbon of an adjacent proline.
+
+
+</td></tr>
+<tr><td valign=top>branching</td><td>Branching (cross-linking) can also be indicated using the standard 
+SMILES (...) notation. So, for example, <b>~d~C(G)C(G)C(G)</b> indicates three CG base pairs.
+Ring notation can also be used: <b>C:1CC(GGG:1)</b> is the same three CG base pairs.  
+
+<br><br>An empty branch, <b>~C()</b>, indicates "not cross-linked" -- in this case 
+a cysteine without a disulphide bond or a cytidine that is not base-paired. 
+
+
+</td></tr>
+
+
+
+
 </table>  
-Jmol bioSMARTS adds the following primitives and options:
-<br>
-<br>
-<table border="1" cellpadding="5" width="500">
-<tr><td>[*.ATOMNAME], [RESIDUE.*], [*.*]</td><td>Wildcards for residues and atom names</td></tr>
-<tr><td>[RES.ATOMNAME]+[RES.ATOMNAME]</td><td>atoms in adjacent residues, for example [ALA.CA]+[GLY.N]</td></tr>
-<tr><td>[RES.ATOMNAME]:[RES.ATOMNAME]</td><td>atoms in cross-linked residues, for example [CYS.CA]:[CYS.CA]</td></tr>
-<tr><td>~...~...</td><td>bioSEQUENCE notation using single-letter or [RES] codes, including logic: <b>select search("~A:[C,T]")</b></td></tr>
-</table>  
 <br>
 
-<br><br>
-<b>Jmol atom selection</b>
-
-<ul>
-<li>Then general way within Jmol to select atoms based on SMARTS searches is to use <b>select search("...")</b>. 
-To assign variables to the results of a search, use the find() command.
-</li><li>To select one or more atoms within the found pattern, simply enclose the desired atoms in { }: 
- <b>select search("{C}C=O")</b>, for example, returns all alpha carbons, 
- and <b>select search("~d~G{C}A")</b> returns all DNA cytidines that are in GCA sequences.
-
-</li<li>For SMILES searches, all hydrogen atoms -- as in HCCC or [CH2] -- are selected. This includes all hydrogens needed to complete the
-"normal" valence of an unbracketed atom such that "CCC" is the same as "[CH3][CH2][CH2]".
-
-</li><li>For SMARTS searches, no valence calculation is done to add any additional hydrogens to unbracketed 
-atoms. "CCC" is the same as "[C][C][C]". only unbracketed or bracketed hydrogen atoms such as H[C]C or [H] 
-or [2H] are selected; connected hydrogen atoms as in [CH3] are not selected.
-
-</li><li>For bioSMARTS searches, bioSEQUENCE single-letter codes match the lead atom only for each residue,
-thus giving a count of the groups found. If it is desired to select all atoms in the selected groups, use <b>select within("group",search("..."))</b>.
-
-</li></ul>
 
 <b>implicit hydrogen count</b>
 

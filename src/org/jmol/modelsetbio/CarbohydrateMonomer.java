@@ -95,7 +95,7 @@ public class CarbohydrateMonomer extends Monomer {
     if (monomerIndex <= 0)
       return false;
     for (int i = firstAtomIndex; i <= lastAtomIndex; i++)
-      if (getCrossLinkGroup(i, null, null, true, false))
+      if (getCrossLinkGroup(i, null, null, true, false, false))
         return true;
     return false;
   }

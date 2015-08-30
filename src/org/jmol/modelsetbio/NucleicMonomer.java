@@ -511,7 +511,6 @@ public boolean isCrossLinked(Group g) {
     Bond[] bonds = N.bonds;
     if (bonds == null)
       return false;
-    boolean haveCrossLinks = false;
     for (int i = 0; i < bonds.length; i++) {
       //System.out.println(bonds[i].getOtherAtom(N).getInfo());
       if (bonds[i].isHydrogen()) {
@@ -526,11 +525,10 @@ public boolean isCrossLinked(Group g) {
           vReturn.addLast(Integer.valueOf(N.i));
           vReturn.addLast(Integer.valueOf(N2.i));
           vReturn.addLast(Integer.valueOf(m.leadAtomIndex));
-          haveCrossLinks = true;
         }
       }
     }
-    return haveCrossLinks;
+    return vReturn != null && vReturn.size() > 0;
   }
 
   public boolean getEdgePoints(P3[] pts) {

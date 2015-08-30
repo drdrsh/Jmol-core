@@ -752,13 +752,17 @@ public class SmilesAtom extends P3 implements BNode {
 
   @Override
   public boolean getCrossLinkVector(Lst<Integer> vLinks, boolean crosslinkCovalent, boolean crosslinkHBond) {
+    boolean haveCrossLinks = false;
     for (int k = 0; k < bonds.length; k++)
       if (bonds[k].order == SmilesBond.TYPE_BIO_CROSSLINK) {
+        if (vLinks == null)
+          return true;
         vLinks.addLast(Integer.valueOf(this.index));
         vLinks.addLast(Integer.valueOf(bonds[k].getOtherAtom(this).index));
         vLinks.addLast(Integer.valueOf(bonds[k].getOtherAtom(this).index));
+        haveCrossLinks = true;
       }
-    return true;
+    return haveCrossLinks;
   }
 
   @Override

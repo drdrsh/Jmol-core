@@ -402,7 +402,7 @@ public abstract class Monomer extends Group {
   public boolean isCrossLinked(Group g) {
     // SMILES search only; overridden in NucleicMonomer
     for (int i = firstAtomIndex; i <= lastAtomIndex; i++)
-      if (getCrossLinkGroup(i, null, g, true, true))
+      if (getCrossLinkGroup(i, null, g, true, true, false))
           return true;
     return false;
   }
@@ -412,11 +412,12 @@ public abstract class Monomer extends Group {
                                   boolean crosslinkCovalent,
                                   boolean crosslinkHBond) {
     // SMILES search only; overridden in NucleicMonomer
+    boolean isNotCheck = (vReturn == null);
     for (int i = firstAtomIndex; i <= lastAtomIndex; i++)
-      if (getCrossLinkGroup(i, vReturn, null, crosslinkCovalent, crosslinkHBond)
-          && vReturn == null)
+      if (getCrossLinkGroup(i, vReturn, null, crosslinkCovalent, crosslinkHBond, isNotCheck)
+          && isNotCheck)
         return true;
-    return false;
+    return !isNotCheck && vReturn.size() > 0;
   }  
 
   /**
@@ -426,9 +427,10 @@ public abstract class Monomer extends Group {
    * @param group  specific group to check or null to indicate just PREVIOUS group (carbohydrates)
    * @param crosslinkCovalent   (S-S)
    * @param crosslinkHBond      (hbond) 
+   * @param isNotCheck TODO
    * @return true if there is a cross-link of the allowed type
    */
-  protected boolean getCrossLinkGroup(int i, Lst<Integer> vReturn, Group group, boolean crosslinkCovalent, boolean crosslinkHBond) {
+  protected boolean getCrossLinkGroup(int i, Lst<Integer> vReturn, Group group, boolean crosslinkCovalent, boolean crosslinkHBond, boolean isNotCheck) {
     // not obvious from PDB file for carbohydrates
     // CarbohydrateMonomer.isConnectedPrevious() calls this with null, null
     Atom atom = chain.model.ms.at[i];
@@ -437,7 +439,7 @@ public abstract class Monomer extends Group {
     if (ibp < 0 || bonds == null)
       return false;
     boolean haveCrossLink = false;
-    boolean checkPrevious = (vReturn == null && group == null); // carbohydrate only
+    boolean checkPrevious = (!isNotCheck && vReturn == null && group == null); // carbohydrate only
     for (int j = 0; j < bonds.length; j++) {
       Bond b = bonds[j];
       if (b.isCovalent() ? !crosslinkCovalent : !crosslinkHBond)
@@ -455,7 +457,7 @@ public abstract class Monomer extends Group {
           && igroup >= 0
           && (iPolymer != ibp || igroup < monomerIndex - 1 || igroup > monomerIndex + 1)) {
         haveCrossLink = true;
-        if (group != null)
+        if (group != null || vReturn == null)
           break;
         vReturn.addLast(Integer.valueOf(i));
         vReturn.addLast(Integer.valueOf(a.i));

@@ -883,7 +883,7 @@ public class SmilesSearch extends JmolMolecule {
             isOK = true;
             break;
           case 'N':
-            isOK = (atype == 'r' || atype == 'c');
+            isOK = isNucleic ? (atype == 'r' || atype == 'c') : isOK;
             break;
           case 'R': // arginine purine
             isOK = isNucleic ? a.isPurine() : isOK;
