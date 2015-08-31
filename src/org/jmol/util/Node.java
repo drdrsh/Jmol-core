@@ -51,5 +51,6 @@ public interface Node {
   public int getModelIndex();
   public int getImplicitHydrogenCount();
   public int getBondCount();
+  public int getAtomNumber();
 
 }

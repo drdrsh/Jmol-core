@@ -1042,6 +1042,7 @@ public final class JC {
   public static final int SMILES_EXPLICIT_H                = 0x00100;
   public static final int SMILES_TOPOLOGY                  = 0x00200;
   public static final int SMILES_NOAROMATIC                = 0x00400;
+  public static final int SMILES_NOSTEREO                  = 0x00800;
   public static final int SMILES_BIO                       = 0x10000;
   public static final int SMILES_BIO_ALLOW_UNMATCHED_RINGS = 0x11000;
   public static final int SMILES_BIO_COV_CROSSLINK         = 0x12000;
@@ -1049,7 +1050,8 @@ public final class JC {
   public static final int SMILES_BIO_COMMENT               = 0x30000;
   public static final int SMILES_BIO_NOCOMMENTS            = 0x50000;
   public static final int SMILES_ATOM_COMMENT              = 0x80000;
-  
+
+ 
   public static final int JSV_NOT = -1;
   public static final int JSV_SEND_JDXMOL = 0;
   public static final int JSV_SETPEAKS = 7;
@@ -1062,7 +1064,7 @@ public final class JC {
   public static final int NBO_SEARCH = 56;
   public static final int NBO_CONFIG = 63;
 
-
+ 
   public static int getServiceCommand(String script) {
     return (script.length() < 7 ? -1 : ("" +
         "JSPECVI" +

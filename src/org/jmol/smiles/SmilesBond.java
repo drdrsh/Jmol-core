@@ -69,12 +69,13 @@ public class SmilesBond extends Edge {
   boolean isNot;
   Edge matchingBond;
 
-  public SmilesBond[] primitives;
-  public int nPrimitives;
-  public SmilesBond[] bondsOr;
-  public int nBondsOr;
+  SmilesBond[] primitives;
+  int nPrimitives;
+  SmilesBond[] bondsOr;
+  int nBondsOr;
+  boolean isRingBond;
 
-  public void set(SmilesBond bond) {
+  void set(SmilesBond bond) {
     // not the atoms.
     order = bond.order;
     isNot = bond.isNot;
@@ -84,7 +85,7 @@ public class SmilesBond extends Edge {
     nBondsOr = bond.nBondsOr;
   }
 
-  public SmilesBond addBondOr() {
+  SmilesBond addBondOr() {
     if (bondsOr == null)
       bondsOr = new SmilesBond[2];
     if (nBondsOr >= bondsOr.length) {
@@ -98,7 +99,7 @@ public class SmilesBond extends Edge {
     return sBond;
   }
 
-  public SmilesBond addPrimitive() {
+  SmilesBond addPrimitive() {
     if (primitives == null)
       primitives = new SmilesBond[2];
     if (nPrimitives >= primitives.length) {
@@ -125,7 +126,7 @@ public class SmilesBond extends Edge {
    * @param bondType Bond type
    * @param isNot 
    */
-  public SmilesBond(SmilesAtom atom1, SmilesAtom atom2, int bondType,
+  SmilesBond(SmilesAtom atom1, SmilesAtom atom2, int bondType,
       boolean isNot) {
     set2(bondType, isNot);
     set2a(atom1, atom2);
@@ -148,6 +149,19 @@ public class SmilesBond extends Edge {
     }
   }
 
+  /**
+   * from parse ring
+   * @param atom
+   */
+  void setAtom2(SmilesAtom atom) {
+    this.atom2 = atom;
+    if (atom2 != null) {
+      // NO! could be after . as in .[C@H]12      atom2.isFirst = false;
+      atom.addBond(this);
+      isRingBond = true;
+    }
+  }
+
   static boolean isBondType(char ch, boolean isSearch, boolean isBioSequence)
       throws InvalidSmilesException {
     if ("-=#:/\\.+!,&;@~^'".indexOf(ch) < 0)
@@ -164,7 +178,7 @@ public class SmilesBond extends Edge {
    * @param code Bond code
    * @return Bond type
    */
-  public static int getBondTypeFromCode(char code) {
+  static int getBondTypeFromCode(char code) {
     switch (code) {
     case '.':
       return TYPE_NONE;
@@ -194,19 +208,15 @@ public class SmilesBond extends Edge {
     return TYPE_UNKNOWN;
   }
 
-  void setAtom2(SmilesAtom atom) {
-    this.atom2 = atom;
-    if (atom2 != null) {
-      // NO! could be after . as in .[C@H]12      atom2.isFirst = false;
-      atom.addBond(this);
-    }
-  }
-
-  public int getBondType() {
+  int getBondType() {
     return order;
   }
 
-  public SmilesAtom getOtherAtom(SmilesAtom a) {
+  int getValence() {
+    return (order & 7);
+  }
+
+  SmilesAtom getOtherAtom(SmilesAtom a) {
     return (atom1 == a ? atom2 : atom1);
   }
 
@@ -233,10 +243,6 @@ public class SmilesBond extends Edge {
   @Override
   public boolean isCovalent() {
     return order != TYPE_BIO_CROSSLINK;
-  }
-
-  public int getValence() {
-    return (order & 7);
   }
 
   @Override

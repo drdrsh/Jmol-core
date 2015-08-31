@@ -662,10 +662,11 @@ public class CmdExt extends ScriptExt {
       case T.symmetry:
       case T.pointgroup:
         if (!chk) {
-          if (eval.tokAt(2) == T.polyhedra)
-            setShapeProperty(JC.SHAPE_POLYHEDRA, "symmetry", null);
-          else
+          if (eval.tokAt(2) == T.polyhedra) {
+            showString((String) getShapePropertyIndex(JC.SHAPE_POLYHEDRA, "symmetry", 0));
+          } else {
             showString(vwr.ms.calculatePointGroup(vwr.bsA()));
+          }
         }
         return;
       case T.straightness:
@@ -3270,8 +3271,8 @@ public class CmdExt extends ScriptExt {
       case T.facecenteroffset:
       case T.planarparam:
       case T.distancefactor:
-        if (nAtomSets == 0)
-          error(ScriptError.ERROR_insufficientArguments);
+//        if (nAtomSets == 0)
+//          error(ScriptError.ERROR_insufficientArguments);
         decimalPropertyName = T.nameOf(eval.theTok);
         isDesignParameter = true;
         continue;

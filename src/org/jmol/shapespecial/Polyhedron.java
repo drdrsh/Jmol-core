@@ -14,7 +14,6 @@ import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
-import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.C;
@@ -22,6 +21,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.Node;
 import org.jmol.util.Normix;
 import org.jmol.util.Point3fi;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public class Polyhedron {
@@ -36,7 +36,7 @@ public class Polyhedron {
   
   private V3[] normals;
   private short[] normixes;
-  public String smiles, smarts;
+  public String smiles, smarts, stereoSmiles;
   private SymmetryInterface pointGroup;
   private Float volume;
 
@@ -45,12 +45,14 @@ public class Polyhedron {
   public boolean isValid = true;
   public short colixEdge = C.INHERIT_ALL;
   public int visibilityFlags = 0;
+  private float distanceRef;
 
   Polyhedron() {  
   }
   
   Polyhedron set(Atom centralAtom, int nVertices, int nPoints, int planeCount,
-      P3[] otherAtoms, V3[] normals, BS bsFlat, int[][] planes, boolean collapsed) {
+      P3[] otherAtoms, V3[] normals, BS bsFlat, int[][] planes, boolean collapsed, float distanceRef) {
+    this.distanceRef = distanceRef;
     this.centralAtom = centralAtom;
     modelIndex = centralAtom.mi;
     this.nVertices = nVertices;
@@ -90,6 +92,8 @@ public class Polyhedron {
         info.put("smarts", smarts);
       if (smiles != null)
         info.put("smiles", smiles);
+      if (stereoSmiles != null)
+        info.put("stereoSmiles", stereoSmiles);
       if (pointGroup != null)
         info.put("pointGroup", pointGroup.getPointGroupName());
       Object energy = vwr.ms.getInfo(centralAtom.mi, "Energy");
@@ -156,13 +160,15 @@ public class Polyhedron {
     return this;
   }
 
-  void getSymmetry(Viewer vwr, boolean withPointGroup) {
+  String getSymmetry(Viewer vwr, boolean withPointGroup) {
     info = null;
     SmilesMatcherInterface sm = vwr.getSmilesMatcher();
     try {
+      String details = (distanceRef <= 0 ? null : "" + distanceRef);
       if (smarts == null) {
-        smarts = sm.polyhedronToSmiles(faces, nVertices, null);
-        smiles = sm.polyhedronToSmiles(faces, nVertices, vertices);
+        smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null, JC.SMILES_TOPOLOGY | JC.SMILES_NOSTEREO, null);
+        smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_NOSTEREO, null);
+        stereoSmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices,  JC.SMILES_TYPE_SMILES | JC.SMILES_ATOM_COMMENT, details);
       }
     } catch (Exception e) {
     }
@@ -170,6 +176,7 @@ public class Polyhedron {
       pointGroup = vwr.ms.getSymTemp(true).setPointGroup(null, vertices, null,
           false, vwr.getFloat(T.pointgroupdistancetolerance),
           vwr.getFloat(T.pointgrouplineartolerance), true);
+    return centralAtom + " " + pointGroup.getPointGroupName();
 
   }
 

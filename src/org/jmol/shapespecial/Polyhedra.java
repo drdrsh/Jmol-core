@@ -102,6 +102,8 @@ public class Polyhedra extends AtomShape {
   private int nPoints;
   private float planarParam;
   private Map<String, SV> info;
+  private float distanceRef;
+  private int nBondsRef;
 
   @SuppressWarnings("unchecked")
   @Override
@@ -207,7 +209,7 @@ public class Polyhedra extends AtomShape {
 
     if ("info" == propertyName) {
       info = (Map<String, SV>) value;
-      centers = BSUtil.newAndSetBit(((SV) info.get("atomIndex")).intValue);
+      centers = BSUtil.newAndSetBit(info.get("atomIndex").intValue);
       iHaveCenterBitSet = true;
       return;
     }
@@ -283,12 +285,6 @@ public class Polyhedra extends AtomShape {
       return;
     }
 
-    if (propertyName == "symmetry") {
-      for (int i = polyhedronCount; --i >= 0;)
-        polyhedrons[i].getSymmetry(vwr, true);
-      return;
-    }
-
     if (propertyName == "deleteModelAtoms") {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       for (int i = polyhedronCount; --i >= 0;) {
@@ -306,6 +302,17 @@ public class Polyhedra extends AtomShape {
     setPropAS(propertyName, value, bs);
   }
 
+  @Override
+  public Object getProperty(String propertyName, int index) {
+    if (propertyName == "symmetry") {
+      String s = "";
+      for (int i = polyhedronCount; --i >= 0;)
+        s += polyhedrons[i].getSymmetry(vwr, true) + "\n";
+      return s;
+    }
+    return null;  
+  }
+  
   @Override
   public boolean getPropertyData(String property, Object[] data) {
     int iatom;
@@ -529,6 +536,8 @@ public class Polyhedra extends AtomShape {
           break;
       }
     }
+    nBondsRef = bondCount;
+    distanceRef = 0;
     return (bondCount < 3 || bondCount >= MAX_VERTICES || nVertices > 0
         && !bsVertexCount.get(bondCount) ? null : validatePolyhedron(atom,
         bondCount, otherAtoms));
@@ -536,6 +545,8 @@ public class Polyhedra extends AtomShape {
 
   private Polyhedron constructBitSetPolyhedron(Atom atom) {
     int otherAtomCount = 0;
+    nBondsRef = bsVertices.cardinality();
+    distanceRef = 0;
     for (int i = bsVertices.nextSetBit(0); i >= 0; i = bsVertices
         .nextSetBit(i + 1))
       otherAtoms[otherAtomCount++] = atoms[i];
@@ -544,6 +555,8 @@ public class Polyhedra extends AtomShape {
 
   private Polyhedron constructRadiusPolyhedron(Atom atom, AtomIndexIterator iter) {
     int otherAtomCount = 0;
+    nBondsRef = 0;
+    distanceRef = radius;
     while (iter.hasNext()) {
       Atom other = atoms[iter.next()];
       P3 pt = iter.getPosition();
@@ -767,7 +780,7 @@ public class Polyhedra extends AtomShape {
         Logger.info("Polyhedron " + getKey(p[i], i));
     }
     return new Polyhedron().set(centralAtom, iCenter, nPoints, planeCount,
-        otherAtoms, normals, bsFlat, p, collapsed);
+        otherAtoms, normals, bsFlat, p, collapsed, distanceRef);
   }
 
   /**
@@ -827,7 +840,8 @@ public class Polyhedra extends AtomShape {
     // See if all vertices are OUTSIDE the the plane we are considering.      
     for (int j = 0; j < ptCenter; j++) {
       vAB.sub2(points[p1[0]], points[j]);
-      if (vAB.dot(vNorm) < -0.1) {
+      float v = vAB.dot(vNorm);
+      if (v < -0.1) {
         //System.out.println("$draw ID p" + index + "_" + j + points[j]); 
         return false;
       }

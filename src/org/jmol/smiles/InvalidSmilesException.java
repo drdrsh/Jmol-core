@@ -39,6 +39,10 @@ public class InvalidSmilesException extends Exception {
     lastError = null;
   }
   
+  @Override
+  public String getMessage() {
+    return lastError;
+  }
   /**
    * Constructs a <code>InvalidSmilesException</code> with a detail message.
    * 
@@ -46,7 +50,7 @@ public class InvalidSmilesException extends Exception {
    */
   public InvalidSmilesException(String message) {
     super(message);
-    lastError = message;
+    lastError = (message.startsWith("Jmol SMILES") ? message : "Jmol SMILES Exception: " +  message);
   }
 
 }

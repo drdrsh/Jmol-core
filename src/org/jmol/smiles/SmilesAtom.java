@@ -29,10 +29,9 @@ import javajs.util.Lst;
 import javajs.util.P3;
 
 import org.jmol.java.BS;
-
-import org.jmol.util.Elements;
-import org.jmol.util.Edge;
 import org.jmol.util.BNode;
+import org.jmol.util.Edge;
+import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
 
@@ -43,19 +42,7 @@ import org.jmol.util.Node;
  */
 public class SmilesAtom extends P3 implements BNode {
 
-  final static int STEREOCHEMISTRY_DEFAULT = 0;
-  final static int STEREOCHEMISTRY_ALLENE = 2;
-  //  final static int STEREOCHEMISTRY_DOUBLE_BOND = 3;
-  final static int STEREOCHEMISTRY_TETRAHEDRAL = 4;
-  final static int STEREOCHEMISTRY_TRIGONAL_BIPYRAMIDAL = 5;
-  final static int STEREOCHEMISTRY_OCTAHEDRAL = 6;
-  final static int STEREOCHEMISTRY_SQUARE_PLANAR = 8;
-
-  static int getChiralityClass(String xx) {
-    return ("0;11;AL;33;TH;TP;OH;77;SP;".indexOf(xx) + 1) / 3;
-  }
-
-//Jmol allows * in SMILES as a wild card
+  //Jmol allows * in SMILES as a wild card
   static final String UNBRACKETED_SET = "B, C, N, O, P, S, F, Cl, Br, I, *,"; 
   
 
@@ -78,7 +65,7 @@ public class SmilesAtom extends P3 implements BNode {
   String residueChar;
   boolean isBioAtom;
   boolean isBioResidue;
-  char bioType = '\0'; //* p n r d 
+  char bioType = '\0'; //* p n r d c
   boolean isLeadAtom;
   int notBondedIndex = -1;
   boolean notCrossLinked;
@@ -107,8 +94,7 @@ public class SmilesAtom extends P3 implements BNode {
   private int atomicMass = Integer.MIN_VALUE;
   private int charge = Integer.MIN_VALUE;
   private int matchingIndex = -1;
-  private int chiralClass = Integer.MIN_VALUE;
-  private int chiralOrder = Integer.MIN_VALUE;
+  SmilesStereo stereo;
   private boolean isAromatic;
 
   public boolean isDefined() {
@@ -171,24 +157,6 @@ public class SmilesAtom extends P3 implements BNode {
     return sAtom;
   }
 
-  @Override
-  public String toString() {
-    String s = (residueChar != null || residueName != null ? (residueChar == null ? residueName
-        : residueChar)
-        + "." + atomName
-        : elementNumber == -1 ? "A" : elementNumber == -2 ? "*" : Elements
-            .elementSymbolFromNumber(elementNumber));
-    if (isAromatic)
-      s = s.toLowerCase();
-    return "[" + s + '.' + index
-        + (matchingIndex >= 0 ? "(" + matchingNode + ")" : "")
-        //    + " ch:" + charge 
-        //    + " ar:" + isAromatic 
-        //    + " H:" + explicitHydrogenCount
-        //    + " h:" + implicitHydrogenCount
-        + "]";
-  }
-
   /**
    * Constructs a <code>SmilesAtom</code>.
    * 
@@ -213,12 +181,11 @@ public class SmilesAtom extends P3 implements BNode {
   public boolean hasSubpattern;
   public int mapIndex = -1; // in  CCC we have atoms 0, 1, and 2
 
-  public SmilesAtom setAll(int iComponent, int ptAtom, int flags, int atomicNumber,
+  public SmilesAtom setAll(int iComponent, int ptAtom, int atomicNumber,
       int charge) {
     component = iComponent;
     index = ptAtom;
-    this.atomSite = flags;
-    this.elementNumber = atomicNumber;
+    elementNumber = atomicNumber;
     this.charge = charge;
     return this;
   }
@@ -441,44 +408,6 @@ public class SmilesAtom extends P3 implements BNode {
   public void setMatchingAtom(Node jmolAtom, int index) {
     matchingNode = jmolAtom;
     matchingIndex = index;
-  }
-
-  /**
-   * Returns the chiral class of the atom.
-   * (see <code>CHIRALITY_...</code> constants)
-   * 
-   * @return Chiral class.
-   */
-  public int getChiralClass() {
-    return chiralClass;
-  }
-
-  /**
-   * Sets the chiral class of the atom.
-   * (see <code>CHIRALITY_...</code> constants)
-   * 
-   * @param chiralClass Chiral class.
-   */
-  public void setChiralClass(int chiralClass) {
-    this.chiralClass = chiralClass;
-  }
-
-  /**
-   * Returns the chiral order of the atom.
-   * 
-   * @return Chiral order.
-   */
-  public int getChiralOrder() {
-    return chiralOrder;
-  }
-
-  /**
-   * Sets the chiral order of the atom.
-   * 
-   * @param chiralOrder Chiral order.
-   */
-  public void setChiralOrder(int chiralOrder) {
-    this.chiralOrder = chiralOrder;
   }
 
   /**
@@ -785,6 +714,17 @@ public class SmilesAtom extends P3 implements BNode {
     return "";
   }
 
+  /**
+   * 
+   * @param atomicNumber
+   * @param isotopeNumber
+   * @param valence set -1 to force brackets
+   * @param charge
+   * @param nH
+   * @param isAromatic
+   * @param stereo
+   * @return label
+   */
   static String getAtomLabel(int atomicNumber, int isotopeNumber, int valence,
                              int charge, int nH, boolean isAromatic,
                              String stereo) {
@@ -794,13 +734,16 @@ public class SmilesAtom extends P3 implements BNode {
       if (atomicNumber != 6)
         valence = Integer.MAX_VALUE; // force [n]
     }
-    int count = (stereo.length() > 0 || isotopeNumber != 0 || charge != 0 ? -1
+    int count = (stereo == null || stereo.length() > 0 || isotopeNumber != 0 || charge != 0 ? -1
         : getDefaultCount(atomicNumber, false));
-    return (count == valence ? sym : "["
+    return (count == valence ? sym : 
+      "["
         + (isotopeNumber <= 0 ? "" : "" + isotopeNumber) + sym
         + (charge < 0 && charge != Integer.MIN_VALUE ? "" + charge 
-            : charge > 0 ? "+" + charge : "") + stereo
-        + (nH > 1 ? "H" + nH : nH == 1 ? "H" : "") + "]");
+            : charge > 0 ? "+" + charge : "") 
+        + (stereo == null ? "" : stereo)
+        + (nH > 1 ? "H" + nH : nH == 1 ? "H" : "") 
+        + "]");
   }
 
   @Override
@@ -841,6 +784,30 @@ public class SmilesAtom extends P3 implements BNode {
   public BS findAtomsLike(String substring) {
     // n/a
     return null;
+  }
+
+  @Override
+  public String toString() {
+    String s = (residueChar != null || residueName != null ? (residueChar == null ? residueName
+        : residueChar)
+        + "." + atomName
+        : (atomName != null && atomNumber != Integer.MIN_VALUE ? null : elementNumber == -1 ? "A" : elementNumber == -2 ? "*" : Elements
+            .elementSymbolFromNumber(elementNumber)));
+    if (s == null)
+      return atomName + " #" + atomNumber;
+    if (isAromatic)
+      s = s.toLowerCase();
+    return "[" + s + '.' + index
+        + (matchingIndex >= 0 ? "(" + matchingNode + ")" : "")
+        //    + " ch:" + charge 
+        //    + " ar:" + isAromatic 
+        //    + " H:" + explicitHydrogenCount
+        //    + " h:" + implicitHydrogenCount
+        + "]";
+  }
+
+  public int getChiralClass() {
+    return (stereo == null ? 0 : stereo.chiralClass);
   }
 
 }

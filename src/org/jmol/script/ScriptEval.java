@@ -1560,12 +1560,15 @@ public class ScriptEval extends ScriptExpr {
         getScriptContext("setException"), null, true).toString();
     while (thisContext != null && !thisContext.isTryCatch)
       popContext(false, false);
-    sx.message += s;
-    sx.untranslated += s;
+    if (sx.message.indexOf(s) < 0) {
+      sx.message += s;
+      sx.untranslated += s;
+    }
     resumeViewer(isThrown ? "throw context" : "scriptException");
-    if (isThrown || thisContext != null || chk || msg.indexOf(JC.NOTE_SCRIPT_FILE) >= 0)
+    if (isThrown || thisContext != null || chk
+        || msg.indexOf(JC.NOTE_SCRIPT_FILE) >= 0)
       return;
-    Logger.error("eval ERROR: " + toString());
+    Logger.error("eval ERROR: " + s + toString());
     if (vwr.autoExit)
       vwr.exitJmol();
   }
@@ -1611,7 +1614,7 @@ public class ScriptEval extends ScriptExpr {
         }
       }
       if (iTok == i && token.tok != T.expressionEnd)
-        sb.append(">> ");
+        sb.append("<<<<");
       switch (token.tok) {
       case T.expressionBegin:
         if (useBraces)
@@ -1756,8 +1759,8 @@ public class ScriptEval extends ScriptExpr {
       if (token.value != null)
         sb.append(token.value.toString());
     }
-    if (iTok >= len - 1 && iTok != 9999)
-      sb.append(" <<");
+//    if (iTok >= len - 1 && iTok != 9999)
+//      sb.append(" <<");
     return sb.toString();
   }
 

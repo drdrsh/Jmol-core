@@ -33,6 +33,7 @@ import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.java.BS;
 import org.jmol.util.BNode;
 import org.jmol.util.BSUtil;
+import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
 import org.jmol.util.Point3fi;
@@ -345,52 +346,73 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   
   /**
    * Generate a topological SMILES string from a set of faces
+   * 
    * @param faces
    * @param atomCount
+   * 
    * @return topological SMILES string
-   * @throws Exception 
+   * @throws Exception
    */
   @Override
-  public String polyhedronToSmiles(int[][] faces, int atomCount, P3[] points) throws Exception {
+  public String polyhedronToSmiles(Node center, int[][] faces, int atomCount,
+                                   P3[] points, int flags, String details)
+      throws Exception {
     SmilesAtom[] atoms = new SmilesAtom[atomCount];
     for (int i = 0; i < atomCount; i++) {
       atoms[i] = new SmilesAtom();
       P3 pt = (points == null ? null : points[i]);
-      atoms[i].elementNumber = (pt == null ? -2 : 
-        pt instanceof Node ? ((Node) pt).getElementNumber() : 
-          pt instanceof Point3fi ? ((Point3fi) pt).sD
-              : -2);
+      if (pt instanceof Node) {
+        atoms[i].elementNumber = ((Node) pt).getElementNumber();
+        atoms[i].atomName = ((Node) pt).getAtomName();
+        atoms[i].atomNumber = ((Node) pt).getAtomNumber();
+        atoms[i].setT(pt);
+      } else {
+        atoms[i].elementNumber = (pt instanceof Point3fi ? ((Point3fi) pt).sD
+            : -2);
+      }
       atoms[i].index = i;
     }
     int nBonds = 0;
     for (int i = faces.length; --i >= 0;) {
       int[] face = faces[i];
       int n = face.length;
+      int mask = face[n - 1];
+      if (mask < 0) {
+        mask = -mask;
+        n--;
+      } else {
+        mask = -1;
+      }
+      int iatom, iatom2;
       for (int j = n; --j >= 0;) {
-        int iatom = face[j];
-        if (iatom < 0 || iatom >= atomCount)
+        if ((iatom = face[j]) >= atomCount
+            || (iatom2 = face[(j + 1) % n]) >= atomCount)
           continue;
-        int iatom2 = face[(j + 1) %n];
-        if (iatom2 < 0 || iatom2 >= atomCount)
-          iatom2 = face[(j + 2) %n];
-        if (iatom2 < 0 || iatom2 >= atomCount)
-          continue;
-        if (atoms[iatom].getBondTo(atoms[iatom2]) == null) {
-          SmilesBond b = new SmilesBond(atoms[iatom], atoms[iatom2], SmilesBond.TYPE_SINGLE,  false);
+        if ((mask & (1 << j)) != 0
+            && atoms[iatom].getBondTo(atoms[iatom2]) == null) {
+          SmilesBond b = new SmilesBond(atoms[iatom], atoms[iatom2],
+              SmilesBond.TYPE_SINGLE, false);
           b.index = nBonds++;
         }
       }
     }
     for (int i = 0; i < atomCount; i++) {
-      int n = atoms[i].bondCount; 
+      int n = atoms[i].bondCount;
       if (n == 0 || n != atoms[i].bonds.length)
         atoms[i].bonds = (SmilesBond[]) AU.arrayCopyObject(atoms[i].bonds, n);
     }
-    boolean debug = Logger.debugging;
-    Logger.debugging = false;
-    String s = getSmiles(atoms, atomCount, BSUtil.newBitSet2(0,  atomCount), null, 
-        JC.SMILES_EXPLICIT_H | JC.SMILES_NOAROMATIC | (points == null ? JC.SMILES_TOPOLOGY : JC.SMILES_TYPE_SMILES));
-    Logger.debugging = debug;
+    SmilesGenerator g = new SmilesGenerator();
+    if (points != null)
+      g.stereoReference = (P3) center;
+    InvalidSmilesException.clear();
+    String s = g.getSmiles(atoms, atomCount, BSUtil.newBitSet2(0, atomCount),
+        null, flags | JC.SMILES_EXPLICIT_H | JC.SMILES_NOAROMATIC
+            | JC.SMILES_NOSTEREO);
+    if (!JC.checkFlag(flags, JC.SMILES_NOSTEREO)) {
+      s = "//* " + center + " *//\t["
+          + Elements.elementSymbolFromNumber(center.getElementNumber()) + "@PH"
+          + atomCount + (details == null ? "" : "(" + details + ")") + "]." + s;
+    }
     return s;
   }
 

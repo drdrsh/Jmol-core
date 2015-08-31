@@ -49,6 +49,7 @@ class SpartanArchive {
   // It's not a reader, but it needs the capabilities of BasisFunctionReader
   
 
+  private int modelCount = 0;
   private int ac = 0;
   private String bondData; // not in archive; may or may not have
   private int moCount = 0;
@@ -76,20 +77,27 @@ class SpartanArchive {
     modelAtomCount = setInfo(infoLine);
     line = (haveGeometryLine ? "GEOMETRY" : "");
     boolean haveMOData = false;
+    boolean skipping = false;
     while (line != null) {
       if (line.equals("GEOMETRY")) {
+        if (!r.doGetModel(++modelCount, null)) {
+          readLine();
+          skipping = true;
+          continue;
+        }
+        skipping = false;  
         readAtoms(ac0, doAddAtoms);
         if (doAddAtoms && bondData.length() > 0)
           addBonds(bondData, ac0);
       } else if (line.indexOf("BASIS") == 0) {
         readBasis();
       } else if (line.indexOf("WAVEFUNC") == 0 || line.indexOf("BETA") == 0) {
-        if (r.doReadMolecularOrbitals) {
+        if (r.doReadMolecularOrbitals && !skipping) {
           readMolecularOrbital();
           haveMOData = true;
         }
         
-      } else if (line.indexOf("ENERGY") == 0) {
+      } else if (line.indexOf("ENERGY") == 0 && !skipping) {
         readEnergy();
       } else if (line.equals("ENDARCHIVE")
           || endCheck != null && line.indexOf(endCheck) == 0) {
