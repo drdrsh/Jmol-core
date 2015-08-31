@@ -53,7 +53,6 @@ public class SmilesStereo {
   private SmilesSearch search;
   private Node[] jmolAtoms;
   private String directives;
-  final static int STEREOCHEMISTRY_MASK = 0xF;
   final static int STEREOCHEMISTRY_SQUARE_PLANAR = 8;
   final static int STEREOCHEMISTRY_OCTAHEDRAL = 6;
   final static int STEREOCHEMISTRY_TRIGONAL_BIPYRAMIDAL = 5;
@@ -84,6 +83,7 @@ public class SmilesStereo {
   }
 
   private int[][] polyhedralOrders;
+  private boolean isNot;
   static PolyhedronStereoSorter polyhedronStereoSorter;
   
   private void getPolyhedralOrders() throws InvalidSmilesException {
@@ -102,10 +102,14 @@ public class SmilesStereo {
     do {
       char ch = s.charAt(index);
       switch (ch) {
+      case '!':
+        isNot = true;
+        index++;
+        break;
       case '/':
       case '.':
         if ((pt = atomPt) >= atomCount) {
-          msg = "Too many descriptors.";
+          msg = "Too many descriptors";
           break;
         }
         int[] a = po[atomPt] = new int[n];
@@ -123,13 +127,17 @@ public class SmilesStereo {
       default:
         index = SmilesParser.getRingNumber(s, index, ch, ret);
         pt = temp[n++] = ret[0] - 1;
-        if (pt < 0 || pt >= atomCount)
+        if (pt == atomPt) 
+          msg = "Atom cannot connect to itself"; 
+        else if (pt < 0 || pt >= atomCount)
           msg = "Connection number outside of range (1-" + atomCount + ")";
         else if (n >= atomCount)
           msg = "Too many connections indicated";
       }
-      if (msg != null)
+      if (msg != null) {
+        msg += ": " + s.substring(0, index) + "<<";
         throw new InvalidSmilesException(msg);
+      }
     } while (index < len);
   }
 
@@ -452,38 +460,63 @@ public class SmilesStereo {
       int nH = Math.max(sAtom.missingHydrogenCount, 0);
       int order = sAtom.stereo.chiralOrder;
       int chiralClass = sAtom.stereo.chiralClass;
-      if (isSmilesFind && ((SmilesAtom) atom0).getChiralClass() != chiralClass)
+      // SMILES string must match pattern for chiral class.
+      // but we could do something about changing those if desired.
+      if (isSmilesFind && sAtom0.getChiralClass() != chiralClass)
         return false;
       if (Logger.debugging)
         Logger.debug("...type " + chiralClass + " for pattern atom " + sAtom
             + " " + atom0);
       switch (chiralClass) {
       case STEREOCHEMISTRY_POLYHEDRAL:
+        if (sAtom.stereo.isNot)
+          isNot = !isNot;
         if (nH > 1)
-          continue;
-        if (nH == 1) {
-          // must create this atom temporarily
-          // TODO
-          continue;
-        }
+          continue; // no chirality for [CH2@]
         if (isSmilesFind) {
           // TODO
           continue;
         }
-        int[][] po = sAtom.stereo.polyhedralOrders;
         SmilesBond[] bonds = sAtom.bonds;
+        int jHpt = -1;
+        if (nH == 1) {
+          jHpt = (sAtom.isFirst ? 0 : 1);
+          // can't process this unless it is tetrahedral or perhaps square planar
+          if (sAtom.getBondCount() != 3)
+            return false;
+          v.vA.set(0,  0,  0);
+          for (int j = 0; j < 3; j++)
+            v.vA.add((T3)bonds[j].getOtherAtom(sAtom0).getMatchingAtom());
+          v.vA.scale(0.3333f);
+          v.vA.sub2((T3) atom0, v.vA);
+          v.vA.add((T3) atom0);
+        }
+        int[][] po = sAtom.stereo.polyhedralOrders;
+        int pt;
         for (int j = po.length; --j >= 0;) {
           int[] orders = po[j];
           if (orders == null || orders.length < 2)
             continue;
-          sAtom1 = bonds[j - nH].getOtherAtom(sAtom);
-          atom1 = sAtom1.getMatchingAtom(); // the atom we are looking down
-          sAtom2 = bonds[orders[0] - nH].getOtherAtom(sAtom);
-          atom2 = sAtom2.getMatchingAtom();
+          // the atom we are looking down
+          pt = (j > jHpt ? j - nH: j);
+          T3 ta1 = (j == jHpt ? v.vA : (T3) bonds[pt].getOtherAtom(sAtom).getMatchingAtom()); 
           float flast = (isNot ? Float.MAX_VALUE : 0);
-          for (int k = 1; k < orders.length; k++) {
-            atom3 = bonds[orders[k] - nH].getOtherAtom(sAtom).getMatchingAtom();
-            float f = Measure.computeTorsion((T3) atom3, (T3)atom1, (T3) atom0, (T3) atom2, true);
+          T3 ta2 = null;
+          for (int k = 0; k < orders.length; k++) {
+            pt = orders[k];
+            T3 ta3;
+            if (pt == jHpt) { // attached H
+              ta3 = v.vA;
+            } else {
+              if (pt > jHpt)
+                pt--;
+              ta3 = (T3) bonds[pt].getOtherAtom(sAtom).getMatchingAtom();
+            }
+            if (k == 0) {
+              ta2 = ta3;
+              continue;
+            }
+            float f = Measure.computeTorsion(ta3, ta1, (T3) atom0, ta2, true);
             if (Float.isNaN(f))
               f = 180; // directly across the center from the previous atom
             if (orders.length == 2)

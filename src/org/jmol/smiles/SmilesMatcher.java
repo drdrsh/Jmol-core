@@ -224,8 +224,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       return "none";
     boolean check;
     // note: find smiles1 IN smiles2 here
-    int n1 = countStereo(smiles1);
-    int n2 = countStereo(smiles2);
+    int n1 = PT.countChar(PT.rep(smiles1, "@@", "@"), '@');
+    int n2 = PT.countChar(PT.rep(smiles2, "@@", "@"), '@');
     check = (n1 == n2 && areEqual(smiles2, smiles1) > 0);
     if (!check) {
       // MF matched, but didn't match SMILES
@@ -250,15 +250,18 @@ public class SmilesMatcher implements SmilesMatcherInterface {
 
   /**
    * Note, this may be incompatible with [$(select(..))]
+   * 
+   * THIS IS NOT DEPENDABLE. USE /invertStereo/ INSTEAD
    */
   @Override
   public String reverseChirality(String smiles) {
     smiles = PT.rep(smiles, "@@", "!@");
     smiles = PT.rep(smiles, "@", "@@");
     smiles = PT.rep(smiles, "!@@", "@");
-    smiles = PT.rep(smiles, "@@SP", "@SP");
-    smiles = PT.rep(smiles, "@@OH", "@OH");
-    smiles = PT.rep(smiles, "@@TB", "@TB");
+    // note -- @@SP does not exist
+//    smiles = PT.rep(smiles, "@@SP", "@SP");
+//    smiles = PT.rep(smiles, "@@OH", "@OH");
+//    smiles = PT.rep(smiles, "@@TP", "@TP");
     return smiles;
   }
 
@@ -492,16 +495,6 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       throw new InvalidSmilesException(InvalidSmilesException.getLastError());
     }
     return null;
-  }
-
-  private static int countStereo(String s) {
-    s = PT.rep(s, "@@", "@");
-    int i = s.lastIndexOf('@') + 1;
-    int n = 0;
-    for (; --i >= 0;)
-      if (s.charAt(i) == '@')
-        n++;
-    return n;
   }
 
   @Override

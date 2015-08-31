@@ -367,11 +367,11 @@ public class PT {
   }
 
   public static int countChar(String line, char c) {
-    int tokenCount = 0;
-    int pt = -1;
-    while ((pt = line.indexOf(c, pt + 1)) >= 0)
-      tokenCount++;
-    return  tokenCount;
+    int n = 0;
+    for (int i = line.lastIndexOf(c) + 1; --i >= 0;)
+      if (line.charAt(i) == '@')
+        n++;
+    return n;
   }
   
   public static int countTokens(String line, int ich) {
