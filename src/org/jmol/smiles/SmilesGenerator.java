@@ -24,17 +24,14 @@
 
 package org.jmol.smiles;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.Lst;
-import javajs.util.Measure;
 import javajs.util.SB;
 import javajs.util.P3;
-import javajs.util.T3;
 
 import org.jmol.java.BS;
 
@@ -42,7 +39,6 @@ import org.jmol.java.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Edge;
-import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.BNode;
 import org.jmol.util.Node;
@@ -514,7 +510,7 @@ public class SmilesGenerator {
     Edge[] bonds = atom.getEdges();
     if (stereoReference != null) {
       allowBranches = false;
-      sortBondsByStereo(atom, prevAtom, stereoReference, bonds, aTemp);
+      SmilesStereo.sortBondsByStereo(atom, prevAtom, stereoReference, bonds, aTemp);
     }
     Node aH = null;
     int stereoFlag = (isAromatic ? 10 : 0);
@@ -750,47 +746,6 @@ public class SmilesGenerator {
 
   private Object[] aTemp;
 
-  private static PolyhedronStereoSorter polyhedronStereoSorter;
-  /**
-   * Sort bond array as ccw rotation around the axis connecting the 
-   * atom and the reference point (polyhedron center) as seen from 
-   * outside the polyhedron looking in.
-   * 
-   * Since we are allowing no branching, all atoms will appear as separate
-   * components with only numbers after them. These numbers will be processed
-   * and listed in this order. 
-   * 
-   * @param atom
-   * @param atomPrev
-   * @param ref
-   * @param bonds
-   * @param aTemp
-   */
-  static void sortBondsByStereo(Node atom, Node atomPrev, T3 ref, Edge[] bonds, Object[] aTemp) {
-    if (bonds.length < 2 || !(atom instanceof T3))
-      return;
-    if (atomPrev == null)
-      atomPrev = bonds[0].getOtherAtomNode(atom);
-    if (aTemp == null || aTemp.length != bonds.length)
-      aTemp = new Object[bonds.length];
-    for (int i = bonds.length; --i >= 0;) {
-      Node a = bonds[i].getOtherAtomNode(atom);
-      float f = (a == atomPrev ? 0 : Measure.computeTorsion((T3) atom, (T3)atomPrev, ref, (T3) a, true));
-      if (Float.isNaN(f))
-        f = 180; // directly across the center from the previous atom
-      if (bonds.length > 2)
-        f += 360;
-      aTemp[i] = new Object[] {bonds[i], Float.valueOf(f) };
-    }
-    if (polyhedronStereoSorter == null)
-      polyhedronStereoSorter = new SmilesGenerator().new PolyhedronStereoSorter();
-    Arrays.sort(aTemp, polyhedronStereoSorter);
-    if (Logger.debugging)
-      Logger.info(Escape.e(aTemp)) ;
-    for (int i = bonds.length; --i >= 0;)
-      bonds[i] = (Edge) ((Object[]) aTemp[i])[0];    
-  }
-  
   /**
    * We must sort the bond vector such that a diaxial pair is
    * first and last. Then we assign stereochemistry based on what
@@ -873,7 +828,7 @@ public class SmilesGenerator {
     
     // now deterimine the stereochemistry
     
-    return getStereoFlag(atom, stereo, n, vTemp);
+    return SmilesStereo.getStereoFlag(atom, stereo, n, vTemp);
   }
 
   private String checkStereoPairs(Node atom, int atomIndex,
@@ -889,50 +844,8 @@ public class SmilesGenerator {
           break;
         }
     }
-    return (stereoFlag > 6 ? "" : getStereoFlag(atom, stereo,
+    return (stereoFlag > 6 ? "" : SmilesStereo.getStereoFlag(atom, stereo,
         stereoFlag, vTemp));
-  }
-
-  /**
-   * 
-   * @param atom0
-   * @param atoms
-   * @param nAtoms
-   * @param v
-   * @return        String
-   */
-  private static String getStereoFlag(Node atom0, Node[] atoms, int nAtoms, VTemp v) {
-    Node atom1 = atoms[0];
-    Node atom2 = atoms[1];
-    Node atom3 = atoms[2];
-    Node atom4 = atoms[3];
-    Node atom5 = atoms[4];
-    Node atom6 = atoms[5];
-    int chiralClass = SmilesStereo.STEREOCHEMISTRY_TETRAHEDRAL;
-    switch (nAtoms) {
-    default:
-    case 5:
-    case 6:
-      // like tetrahedral
-      return (SmilesStereo.checkStereochemistryAll(false, atom0, chiralClass, 1, atom1, atom2, atom3, atom4, atom5, atom6, v)? "@" : "@@");
-    case 2: // allene
-    case 4: // tetrahedral, square planar
-      if (atom3 == null || atom4 == null)
-        return "";
-      float d = SmilesAromatic.getNormalThroughPoints(atom1, atom2, atom3, v.vTemp, v.vA, v.vB);
-      if (Math.abs(SmilesStereo.distanceToPlane(v.vTemp, d, (P3) atom4)) < 0.2f) {
-        chiralClass = SmilesStereo.STEREOCHEMISTRY_SQUARE_PLANAR;
-        if (SmilesStereo.checkStereochemistryAll(false, atom0, chiralClass, 1, atom1, atom2, atom3, atom4, atom5, atom6, v))
-          return "@SP1";
-        if (SmilesStereo.checkStereochemistryAll(false, atom0, chiralClass, 2, atom1, atom2, atom3, atom4, atom5, atom6, v))
-          return "@SP2";
-        if (SmilesStereo.checkStereochemistryAll(false, atom0, chiralClass, 3, atom1, atom2, atom3, atom4, atom5, atom6, v))
-          return "@SP3";       
-      } else {
-        return (SmilesStereo.checkStereochemistryAll(false, atom0, chiralClass, 1, atom1, atom2, atom3, atom4, atom5, atom6, v)? "@" : "@@");
-      }       
-    }
-    return "";
   }
 
   /**
@@ -1016,7 +929,7 @@ public class SmilesGenerator {
     return Math.min(i0, i1) + "_" + Math.max(i0, i1);
   }
 
-  private class PolyhedronStereoSorter implements Comparator<Object> {
+  class PolyhedronStereoSorter implements Comparator<Object> {
 
     protected PolyhedronStereoSorter() { } 
 

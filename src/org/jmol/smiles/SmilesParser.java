@@ -496,31 +496,8 @@ public class SmilesParser {
         boolean isAtom = (!isRing && (ch == '_' || ch == '[' || ch == '*' || PT
             .isLetter(ch)));
         if (isRing) {
-          int ringNumber;
-          switch (ch) {
-          case '%':
-            // [ringPoint]
-            if (getChar(pattern, index + 1) == '(') { // %(nnn)
-              String subPattern = getSubPattern(pattern, index + 1, '(');
-              getDigits(subPattern, 0, ret);
-              index += subPattern.length() + 3;
-              if (ret[0] < 0)
-                throw new InvalidSmilesException("Invalid ring designation: "
-                    + subPattern);
-            } else {
-              if (index + 3 <= pattern.length())
-                index = getDigits(pattern.substring(0, index + 3), index + 1,
-                    ret);
-              if (ret[0] < 10)
-                throw new InvalidSmilesException(
-                    "Two digits must follow the % sign");
-            }
-            ringNumber = ret[0];
-            break;
-          default:
-            ringNumber = ch - '0';
-            index++;
-          }
+          index = getRingNumber(pattern, index, ch, ret);
+          int ringNumber = ret[0];
           parseRing(molecule, ringNumber, currentAtom, bond);
           bond = null;
         } else if (isAtom) {
@@ -581,6 +558,36 @@ public class SmilesParser {
       pattern = pattern.substring(index);
       isBranchAtom = false;
     }
+  }
+
+  static int getRingNumber(String pattern, int index, char ch, int[] ret) throws InvalidSmilesException {
+    int ringNumber;
+    switch (ch) {
+    case '%':
+      // [ringPoint]
+      if (getChar(pattern, index + 1) == '(') { // %(nnn)
+        String subPattern = getSubPattern(pattern, index + 1, '(');
+        getDigits(subPattern, 0, ret);
+        index += subPattern.length() + 3;
+        if (ret[0] < 0)
+          throw new InvalidSmilesException("Invalid number designation: "
+              + subPattern);
+      } else {
+        if (index + 3 <= pattern.length())
+          index = getDigits(pattern.substring(0, index + 3), index + 1,
+              ret);
+        if (ret[0] < 10)
+          throw new InvalidSmilesException(
+              "Two digits must follow the % sign");
+      }
+      ringNumber = ret[0];
+      break;
+    default:
+      ringNumber = ch - '0';
+      index++;
+    }
+    ret[0] = ringNumber;
+    return index;
   }
 
   private int checkBioType(String pattern, int index) {
@@ -811,7 +818,8 @@ public class SmilesParser {
 
       int hydrogenCount = Integer.MIN_VALUE;
       int biopt = pattern.indexOf('.');
-      if (biopt >= 0) {
+      int chiralpt = pattern.indexOf('@');
+      if (biopt >= 0 && (chiralpt < 0 || biopt < chiralpt)) {
         newAtom.isBioResidue = true;
         String name = pattern.substring(index, biopt);
         pattern = pattern.substring(biopt + 1).toUpperCase();
@@ -890,7 +898,7 @@ public class SmilesParser {
             break;
           case '@':
             if (molecule.stereo == null)
-              molecule.stereo = new SmilesStereo(0, 0, 0, null);
+              molecule.stereo = new SmilesStereo(0, 0, 0, null, null);
             index = SmilesStereo.checkChirality(pattern, index, molecule.patternAtoms[newAtom.index]);
             break;
           default:
@@ -1332,7 +1340,7 @@ public class SmilesParser {
    * @param ret
    * @return  pointer to the character AFTER the digits
    */
-  private static int getDigits(String pattern, int index, int[] ret) {
+  static int getDigits(String pattern, int index, int[] ret) {
     int pt = index;
     int len = pattern.length();
     while (pt < len && PT.isDigit(pattern.charAt(pt)))

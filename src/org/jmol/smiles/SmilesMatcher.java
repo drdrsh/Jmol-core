@@ -409,9 +409,9 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         null, flags | JC.SMILES_EXPLICIT_H | JC.SMILES_NOAROMATIC
             | JC.SMILES_NOSTEREO);
     if (!JC.checkFlag(flags, JC.SMILES_NOSTEREO)) {
-      s = "//* " + center + " *//\t["
+      s = "//* " + center + " ["
           + Elements.elementSymbolFromNumber(center.getElementNumber()) + "@PH"
-          + atomCount + (details == null ? "" : "(" + details + ")") + "]." + s;
+          + atomCount + (details == null ? "" : "/" + details + "/") + "] *//" + s;
     }
     return s;
   }

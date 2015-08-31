@@ -246,13 +246,12 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomC4);
     checkMolecule("C/C=C/C", molecule);
   }
-  public void testChapter1_16() {    // Test N[C@@H](C)C(=O)O
+  public void testChapter1_16() throws InvalidSmilesException {    // Test N[C@@H](C)C(=O)O
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomN = molecule.addAtom();
     atomN.setSymbol("N");
     SmilesAtom atomC1 = molecule.addAtom();
-    atomC1.setChiralClass(SmilesAtom.STEREOCHEMISTRY_TETRAHEDRAL);
-    atomC1.setChiralOrder(2);
+    atomC1.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_TETRAHEDRAL, 2, 0, null, null);
     atomC1.setSymbol("C");
     createBond(atomN, atomC1, SmilesBond.TYPE_SINGLE, true);
     SmilesAtom atomC2 = molecule.addAtom();
@@ -276,14 +275,13 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomO2);
     checkMolecule("N[C@@H](C)C(=O)O", molecule);
   }
-  public void testChapter1_17() {    // Test O[C@H]1CCCC[C@H]1O
+  public void testChapter1_17() throws InvalidSmilesException {    // Test O[C@H]1CCCC[C@H]1O
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomO1 = molecule.addAtom();
     atomO1.setSymbol("O");
     addHydrogen(molecule, atomO1);
     SmilesAtom atomC1 = molecule.addAtom();
-    atomC1.setChiralClass(SmilesAtom.STEREOCHEMISTRY_TETRAHEDRAL);
-    atomC1.setChiralOrder(1);
+    atomC1.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_TETRAHEDRAL, 1, 0, null, null);
     atomC1.setSymbol("C");
     addHydrogen(molecule, atomC1);
     SmilesAtom atomC2 = molecule.addAtom();
@@ -303,8 +301,7 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomC5);
     addHydrogen(molecule, atomC5);
     SmilesAtom atomC6 = molecule.addAtom();
-    atomC6.setChiralClass(SmilesAtom.STEREOCHEMISTRY_TETRAHEDRAL);
-    atomC6.setChiralOrder(1);
+    atomC6.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_TETRAHEDRAL, 1, 0, null, null);
     atomC6.setSymbol("C");
     addHydrogen(molecule, atomC6);
     SmilesAtom atomO2 = molecule.addAtom();
@@ -1016,16 +1013,15 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomC5);
     checkMolecule("F/C=C/C=CC", molecule);
   }
-  public void testChapter7_12() {    // Test N[C@@H](C)C(=O)O
+  public void testChapter7_12() throws InvalidSmilesException {    // Test N[C@@H](C)C(=O)O
     testChapter1_16();
   }
-  public void testChapter7_13() {    // Test N[C@H](C)C(=O)O
+  public void testChapter7_13() throws InvalidSmilesException {    // Test N[C@H](C)C(=O)O
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomN = molecule.addAtom();
     atomN.setSymbol("N");
     SmilesAtom atomC1 = molecule.addAtom();
-    atomC1.setChiralClass(SmilesAtom.STEREOCHEMISTRY_TETRAHEDRAL);
-    atomC1.setChiralOrder(1);
+    atomC1.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_TETRAHEDRAL, 1, 0, null, null);
     atomC1.setSymbol("C");
     createBond(atomN, atomC1, SmilesBond.TYPE_SINGLE, true);
     SmilesAtom atomC2 = molecule.addAtom();
@@ -1049,10 +1045,10 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomO2);
     checkMolecule("N[C@H](C)C(=O)O", molecule);
   }
-  public void testChapter7_14() {    // Test O[C@H]1CCCC[C@H]1O
+  public void testChapter7_14() throws InvalidSmilesException {    // Test O[C@H]1CCCC[C@H]1O
     testChapter1_17();
   }
-  public void testChapter7_15() {    // Test C1C[C@H]2CCCC[C@H]2CC1
+  public void testChapter7_15() throws InvalidSmilesException {    // Test C1C[C@H]2CCCC[C@H]2CC1
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomC1 = molecule.addAtom();
     atomC1.setSymbol("C");
@@ -1063,8 +1059,7 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomC2);
     addHydrogen(molecule, atomC2);
     SmilesAtom atomC3 = molecule.addAtom();
-    atomC3.setChiralClass(SmilesAtom.STEREOCHEMISTRY_TETRAHEDRAL);
-    atomC3.setChiralOrder(1);
+    atomC3.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_TETRAHEDRAL, 1, 0, null, null);
     atomC3.setSymbol("C");
     addHydrogen(molecule, atomC3);
     SmilesAtom atomC4 = molecule.addAtom();
@@ -1084,8 +1079,7 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomC7);
     addHydrogen(molecule, atomC7);
     SmilesAtom atomC8 = molecule.addAtom();
-    atomC8.setChiralClass(SmilesAtom.STEREOCHEMISTRY_TETRAHEDRAL);
-    atomC8.setChiralOrder(1);
+    atomC8.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_TETRAHEDRAL, 1, 0, null, null);
     addHydrogen(molecule, atomC8);
     atomC8.setSymbol("C");
     SmilesAtom atomC9 = molecule.addAtom();
@@ -1110,7 +1104,7 @@ public class TestSmilesParser extends TestCase {
     createBond(atomC9, atomC0, SmilesBond.TYPE_SINGLE, true);
     checkMolecule("C1C[C@H]2CCCC[C@H]2CC1", molecule);
   }
-  public void testChapter7_16() {    // Test OC(Cl)=[C@]=C(C)F
+  public void testChapter7_16() throws InvalidSmilesException {    // Test OC(Cl)=[C@]=C(C)F
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
@@ -1121,8 +1115,7 @@ public class TestSmilesParser extends TestCase {
     atomCl.setSymbol("Cl");
     createBond(atomC1, atomCl, SmilesBond.TYPE_SINGLE, true);
     SmilesAtom atomC2 = molecule.addAtom();
-    atomC2.setChiralClass(SmilesAtom.STEREOCHEMISTRY_ALLENE);
-    atomC2.setChiralOrder(1);
+    atomC2.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_ALLENE, 1, 0, null, null);
     atomC2.setSymbol("C");
     createBond(atomC1, atomC2, SmilesBond.TYPE_DOUBLE, true);
     SmilesAtom atomC3 = molecule.addAtom();
@@ -1140,7 +1133,7 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomC4);
     checkMolecule("OC(Cl)=[C@]=C(C)F", molecule);
   }
-  public void testChapter7_17() {    // Test OC(Cl)=[C@AL1]=C(C)F
+  public void testChapter7_17() throws InvalidSmilesException {    // Test OC(Cl)=[C@AL1]=C(C)F
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
@@ -1151,8 +1144,7 @@ public class TestSmilesParser extends TestCase {
     atomCl.setSymbol("Cl");
     createBond(atomC1, atomCl, SmilesBond.TYPE_SINGLE, true);
     SmilesAtom atomC2 = molecule.addAtom();
-    atomC2.setChiralClass(SmilesAtom.STEREOCHEMISTRY_ALLENE);
-    atomC2.setChiralOrder(1);
+    atomC2.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_ALLENE, 1, 0, null, null);
     atomC2.setSymbol("C");
     createBond(atomC1, atomC2, SmilesBond.TYPE_DOUBLE, true);
     SmilesAtom atomC3 = molecule.addAtom();
@@ -1170,13 +1162,12 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomC4);
     checkMolecule("OC(Cl)=[C@AL1]=C(C)F", molecule);
   }
-  public void testChapter7_18() {    // Test F[Po@SP1](Cl)(Br)I
+  public void testChapter7_18() throws InvalidSmilesException {    // Test F[Po@SP1](Cl)(Br)I
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomF = molecule.addAtom();
     atomF.setSymbol("F");
     SmilesAtom atomPo = molecule.addAtom();
-    atomPo.setChiralClass(SmilesAtom.STEREOCHEMISTRY_SQUARE_PLANAR);
-    atomPo.setChiralOrder(1);
+    atomPo.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_SQUARE_PLANAR, 1, 0, null, null);
     atomPo.setSymbol("Po");
     createBond(atomF, atomPo, SmilesBond.TYPE_SINGLE, true);
     SmilesAtom atomCl = molecule.addAtom();
@@ -1190,7 +1181,7 @@ public class TestSmilesParser extends TestCase {
     createBond(atomPo, atomI, SmilesBond.TYPE_SINGLE, true);
     checkMolecule("F[Po@SP1](Cl)(Br)I", molecule);
   }
-  public void testChapter7_19() {    // Test O=C[As@](F)(Cl)(Br)S
+  public void testChapter7_19() throws InvalidSmilesException {    // Test O=C[As@](F)(Cl)(Br)S
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
@@ -1198,8 +1189,7 @@ public class TestSmilesParser extends TestCase {
     atomC.setSymbol("C");
     createBond(atomO, atomC, SmilesBond.TYPE_DOUBLE, true);
     SmilesAtom atomAs = molecule.addAtom();
-    atomAs.setChiralClass(SmilesAtom.STEREOCHEMISTRY_TRIGONAL_BIPYRAMIDAL);
-    atomAs.setChiralOrder(1);
+    atomAs.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_TRIGONAL_BIPYRAMIDAL, 1, 0, null, null);
     atomAs.setSymbol("As");
     createBond(atomC, atomAs, SmilesBond.TYPE_SINGLE, true);
     SmilesAtom atomF = molecule.addAtom();
@@ -1218,7 +1208,7 @@ public class TestSmilesParser extends TestCase {
     addHydrogen(molecule, atomS);
     checkMolecule("O=C[As@](F)(Cl)(Br)S", molecule);
   }
-  public void testChapter7_20() {    // Test O=C[Co@](F)(Cl)(Br)(I)S
+  public void testChapter7_20() throws InvalidSmilesException {    // Test O=C[Co@](F)(Cl)(Br)(I)S
     SmilesSearch molecule = new SmilesSearch();
     SmilesAtom atomO = molecule.addAtom();
     atomO.setSymbol("O");
@@ -1226,8 +1216,7 @@ public class TestSmilesParser extends TestCase {
     atomC.setSymbol("C");
     createBond(atomO, atomC, SmilesBond.TYPE_DOUBLE, true);
     SmilesAtom atomCo = molecule.addAtom();
-    atomCo.setChiralClass(SmilesAtom.STEREOCHEMISTRY_OCTAHEDRAL);
-    atomCo.setChiralOrder(1);
+    atomCo.stereo = new SmilesStereo(SmilesStereo.STEREOCHEMISTRY_OCTAHEDRAL, 1, 0, null, null);
     atomCo.setSymbol("Co");
     createBond(atomC, atomCo, SmilesBond.TYPE_SINGLE, true);
     SmilesAtom atomF = molecule.addAtom();
