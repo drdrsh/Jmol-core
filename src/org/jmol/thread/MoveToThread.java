@@ -138,12 +138,12 @@ public class MoveToThread extends JmolThread {
    */
   private int setManagerMove(Object[] options) {
     //  { dRot, dTrans,
-    //    { 
+    //    [ 
     //      dZoom,
     //      dSlab,
     //      floatSecondsTotal,
     //      fps
-    //    }
+    //    ]
     //  }
 
     dRot = (V3) options[0];
@@ -251,10 +251,11 @@ public class MoveToThread extends JmolThread {
         mode = MAIN;
         break;
       case MAIN:
-        if (stopped || ++iStep >= totalSteps) {
+        if (stopped || iStep >= totalSteps) {
           mode = FINISH;
           break;
         }
+        iStep++;
         if (dRot.x != 0)
           transformManager.rotateXRadians(radiansXStep, null);
         if (dRot.y != 0)
@@ -271,11 +272,15 @@ public class MoveToThread extends JmolThread {
           transformManager.translateToPercent('y', transY + dTrans.y * iStep
               / totalSteps);
         if (dTrans.z != 0)
-          transformManager.translateToPercent('z', /*transZ + */dTrans.z * iStep
-              / totalSteps);
+          transformManager.translateToPercent('z', /*transZ + */dTrans.z
+              * iStep / totalSteps);
         if (dSlab != 0)
           transformManager.slabToPercent((int) Math.floor(slab + dSlab * iStep
               / totalSteps));
+        if (iStep == totalSteps) {
+          mode = FINISH;
+          break;
+        }
         int timeSpent = (int) (System.currentTimeMillis() - startTime);
         int timeAllowed = iStep * timePerStep;
         if (timeSpent < timeAllowed) {
