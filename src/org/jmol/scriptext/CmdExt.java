@@ -2890,6 +2890,9 @@ public class CmdExt extends ScriptExt {
           propToks[i] = tokAt(eval.iToken);
           break;
         case T.nada:
+          if (i == 0)
+            invArg();
+          //$FALL-THROUGH$
         case T.format:
         case T.min:
         case T.max:
