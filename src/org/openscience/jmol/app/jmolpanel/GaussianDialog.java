@@ -572,7 +572,7 @@ public class GaussianDialog extends JDialog implements ActionListener,
       s = PT.split(s, "<pre>")[1];
       s = PT.split(s, "</pre>")[0];
     }
-    return s.trim();
+    return s.trim() + "\n";
   }
 
   @Override

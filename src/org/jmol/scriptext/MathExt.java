@@ -1396,10 +1396,10 @@ public class MathExt {
     // format("array", x)
     SV x1 = (args.length < 2 || intValue == T.format ? mp.getX() : null);
     String format = (args.length == 0 ? "%U" : args[0].tok == T.varray ? null : SV.sValue(args[0]));
-    if (!isLabel && args.length > 0 && x1 != null && format != null) {
+    if (!isLabel && args.length > 0 && x1 != null && x1.tok != T.bitset && format != null) {
       // x1.format(["energy", "pointGroup"]);
       // x1.format("%5.3f %5s", ["energy", "pointGroup"])
-      // but not x1.format()
+      // but not x1.format() or {*}.format(....)
       if (args.length == 2) {
         Lst<SV> listIn = x1.getList();
         Lst<SV> formatList = args[1].getList();

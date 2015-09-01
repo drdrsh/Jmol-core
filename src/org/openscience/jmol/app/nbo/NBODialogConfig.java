@@ -344,7 +344,11 @@ abstract class NBODialogConfig extends JDialog {
       return;
     if (line.length() > 1)
       jpNboOutput.setText(jpNboOutput.getText() + line + "\n");
+    try {
     jpNboOutput.setCaretPosition(jpNboOutput.getText().length());
+    } catch (Exception e) {
+      System.out.println(e + " in appendOutputWithCaret");
+    }
   }
   
   protected void appendOutput(String cmd) {
