@@ -308,11 +308,13 @@ class Mouse implements MouseWheelListener, MouseListener,
 
   private void mouseEntered(long time, int x, int y) {
     wheeling = false;
+    isMouseDown = false;
     manager.mouseEnterExit(time, x, y, false);
   }
 
   private void mouseExited(long time, int x, int y) {
     wheeling = false;
+    isMouseDown = false;
     manager.mouseEnterExit(time, x, y, true);
   }
 
@@ -333,11 +335,12 @@ class Mouse implements MouseWheelListener, MouseListener,
 
   private boolean isMouseDown; // Macintosh may not recognize CTRL-SHIFT-LEFT as drag, only move
   private boolean wheeling;
+  private int modifiersDown;
   
   private void mouseMoved(long time, int x, int y, int modifiers) {
     clearKeyBuffer();
     if (isMouseDown)
-      manager.mouseAction(Event.DRAGGED, time, x, y, 0, applyLeftMouse(modifiers));
+      manager.mouseAction(Event.DRAGGED, time, x, y, 0, modifiersDown);
     else
       manager.mouseAction(Event.MOVED, time, x, y, 0, modifiers);
   }
@@ -361,12 +364,14 @@ class Mouse implements MouseWheelListener, MouseListener,
                     boolean isPopupTrigger) {
     clearKeyBuffer();
     isMouseDown = true;
+    modifiersDown = modifiers; // Mac does not transmit these during drag
     wheeling = false;
     manager.mouseAction(Event.PRESSED, time, x, y, 0, modifiers);
   }
 
   private void mouseReleased(long time, int x, int y, int modifiers) {
     isMouseDown = false;
+    modifiersDown = 0;
     wheeling = false;
     manager.mouseAction(Event.RELEASED, time, x, y, 0, modifiers);
   }

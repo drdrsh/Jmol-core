@@ -45,6 +45,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
   private P3i scrVib;
   private boolean vibs;
   private BS bsSelected;
+  private boolean showNumbers;
 
   @Override
   protected boolean render() {
@@ -54,6 +55,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
     bsSelected = (vwr.getSelectionHalosEnabled() ? vwr.bsA() : null);
     g3d.addRenderer(T.triangles);
     vibs = (ms.vibrations != null && tm.vibrationOn);
+    showNumbers = vwr.getTestFlag(3);
     boolean needTranslucent = false;
     for (int i = polyhedra.polyhedronCount; --i >= 0;) 
       if (polyhedrons[i].isValid && render1(polyhedrons[i]))
@@ -95,28 +97,34 @@ public class PolyhedraRenderer extends ShapeRenderer {
       } else {
         tm.transformPt3f(atom, sc[i]);
       }
+      if (showNumbers) {
+        g3d.setC(C.BLACK);
+        g3d.drawStringNoSlab("" + i, null, (int) sc[i].x, (int) sc[i].y,
+            (int) sc[i].z - 30, (short) 0);
+        g3d.setC(colix);
+      }
     }
 
     isAll = (drawEdges == Polyhedra.EDGES_ALL || bsSelected != null);
     frontOnly = (drawEdges == Polyhedra.EDGES_FRONT);
 
     // no edges to new points when not collapsed
-   //int m = (int) ( Math.random() * 24);
+    //int m = (int) ( Math.random() * 24);
     short[] normixes = p.getNormixes();
     if (!needTranslucent || g3d.setC(colix))
       for (int i = planes.length; --i >= 0;) {
         int[] pl = planes[i];
         //if (i != m)continue;
         try {
-        g3d.fillTriangleTwoSided(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]]);
-        } catch (Exception e){
+          g3d.fillTriangleTwoSided(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]]);
+        } catch (Exception e) {
           System.out.println("heorhe");
         }
         if (pl[3] >= 0)
-          g3d.fillTriangleTwoSided(normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);          
+          g3d.fillTriangleTwoSided(normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);
       }
     // edges are not drawn translucently ever
-    if (bsSelected != null && bsSelected.get(iAtom)) 
+    if (bsSelected != null && bsSelected.get(iAtom))
       colix = C.GOLD;
     else if (p.colixEdge != C.INHERIT_ALL)
       colix = p.colixEdge;
@@ -127,9 +135,9 @@ public class PolyhedraRenderer extends ShapeRenderer {
           drawFace(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], -pl[3]);
         } else {
           drawFace(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], 3);
-          drawFace(normixes[i], sc[pl[0]], sc[pl[2]], sc[pl[3]], 6);          
+          drawFace(normixes[i], sc[pl[0]], sc[pl[2]], sc[pl[3]], 6);
         }
-          
+
       }
     return needTranslucent;
   }

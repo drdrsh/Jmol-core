@@ -6639,6 +6639,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return g.testFlag2;
     case 3:
       // isosurface numbers
+      // polyhedra numbers
       return g.testFlag3;
     case 4:
       // isosurface normals

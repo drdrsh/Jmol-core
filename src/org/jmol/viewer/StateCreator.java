@@ -373,8 +373,8 @@ public class StateCreator extends JmolStateCreator {
       }
       commands.append("  set fontScaling " + vwr.getBoolean(T.fontscaling)
           + ";\n");
-      if (vwr.getBoolean(T.modelkitmode))
-        commands.append("  set modelKitMode true;\n");
+//      if (vwr.getBoolean(T.modelkitmode))
+  //      commands.append("  set modelKitMode true;\n");
     }
     if (sfunc != null)
       commands.append("\n}\n\n");
