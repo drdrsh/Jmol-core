@@ -309,12 +309,14 @@ class Mouse implements MouseWheelListener, MouseListener,
   private void mouseEntered(long time, int x, int y) {
     wheeling = false;
     isMouseDown = false;
+    modifiersDown = 0;
     manager.mouseEnterExit(time, x, y, false);
   }
 
   private void mouseExited(long time, int x, int y) {
     wheeling = false;
     isMouseDown = false;
+    modifiersDown = 0;
     manager.mouseEnterExit(time, x, y, true);
   }
 
@@ -381,7 +383,6 @@ class Mouse implements MouseWheelListener, MouseListener,
       return;
     if ((modifiersDown & Event.MAC_COMMAND) == Event.MAC_COMMAND)
       modifiersDown = modifiersDown & ~Event.MOUSE_RIGHT | Event.CTRL_MASK; 
-    System.out.println(modifiers  + " " + modifiersDown);    
     manager.mouseAction(Event.DRAGGED, time, x, y, 0, modifiersDown);
   }
 

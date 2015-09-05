@@ -330,6 +330,8 @@ public class Mouse implements GenericMouseInterface {
 
   private void entry(long time, int x, int y, boolean isExit) {
     wheeling = false;
+    isMouseDown = false;
+    modifiersDown = 0;
     manager.mouseEnterExit(time, x, y, isExit);
   }
 
@@ -350,11 +352,12 @@ public class Mouse implements GenericMouseInterface {
 
   private boolean isMouseDown; // Macintosh may not recognize CTRL-SHIFT-LEFT as drag, only move
   private boolean wheeling;
+  private int modifiersDown;
   
   private void moved(long time, int x, int y, int modifiers) {
     clearKeyBuffer();
     if (isMouseDown)
-      manager.mouseAction(Event.DRAGGED, time, x, y, 0, applyLeftMouse(modifiers));
+      manager.mouseAction(Event.DRAGGED, time, x, y, 0, modifiersDown);
     else
       manager.mouseAction(Event.MOVED, time, x, y, 0, modifiers);
   }
@@ -378,12 +381,14 @@ public class Mouse implements GenericMouseInterface {
                     boolean isPopupTrigger) {
     clearKeyBuffer();
     isMouseDown = true;
+    modifiersDown = modifiers;
     wheeling = false;
     manager.mouseAction(Event.PRESSED, time, x, y, 0, modifiers);
   }
 
   private void released(long time, int x, int y, int modifiers) {
     isMouseDown = false;
+    modifiersDown = 0;
     wheeling = false;
     manager.mouseAction(Event.RELEASED, time, x, y, 0, modifiers);
   }
@@ -391,9 +396,9 @@ public class Mouse implements GenericMouseInterface {
   private void dragged(long time, int x, int y, int modifiers) {
     if (wheeling)
       return;
-    if ((modifiers & Event.MAC_COMMAND) == Event.MAC_COMMAND)
-      modifiers = modifiers & ~Event.MOUSE_RIGHT | Event.CTRL_MASK; 
-    manager.mouseAction(Event.DRAGGED, time, x, y, 0, modifiers);
+    if ((modifiersDown & Event.MAC_COMMAND) == Event.MAC_COMMAND)
+      modifiersDown = modifiersDown & ~Event.MOUSE_RIGHT | Event.CTRL_MASK; 
+    manager.mouseAction(Event.DRAGGED, time, x, y, 0, modifiersDown);
   }
 
   private static int applyLeftMouse(int modifiers) {
