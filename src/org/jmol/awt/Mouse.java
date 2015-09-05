@@ -379,9 +379,10 @@ class Mouse implements MouseWheelListener, MouseListener,
   private void mouseDragged(long time, int x, int y, int modifiers) {
     if (wheeling)
       return;
-    if ((modifiers & Event.MAC_COMMAND) == Event.MAC_COMMAND)
-      modifiers = modifiers & ~Event.MOUSE_RIGHT | Event.CTRL_MASK; 
-    manager.mouseAction(Event.DRAGGED, time, x, y, 0, modifiers);
+    if ((modifiersDown & Event.MAC_COMMAND) == Event.MAC_COMMAND)
+      modifiersDown = modifiersDown & ~Event.MOUSE_RIGHT | Event.CTRL_MASK; 
+    System.out.println(modifiers  + " " + modifiersDown);    
+    manager.mouseAction(Event.DRAGGED, time, x, y, 0, modifiersDown);
   }
 
   private static int applyLeftMouse(int modifiers) {
