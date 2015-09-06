@@ -3217,13 +3217,8 @@ public class CmdExt extends ScriptExt {
         propertyName = "nVertices";
         propertyValue = Integer.valueOf(intParameter(i));
         needsGenerating = true;
-        switch (tokAt(i + 1)) {
-        // wish I had not done this. Inconsistent with general syntax; only used here
-        case T.opEQ:
-        case T.comma:
+        if (tokAt(i + 1) == T.comma) 
           i++;
-          break;
-        }
         break;
       case T.bonds:
         if (nAtomSets > 0)
