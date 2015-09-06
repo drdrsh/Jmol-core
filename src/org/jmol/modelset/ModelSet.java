@@ -3047,6 +3047,7 @@ public class ModelSet extends BondCollection {
       am[i].dssrCache = null;
     }
     deleteBonds(bsBonds, false);
+    validateBspf(false);
   }
 
   // atom addition //

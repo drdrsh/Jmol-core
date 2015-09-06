@@ -86,7 +86,7 @@ public class Polyhedra extends AtomShape {
   private int nVertices;
 
   float faceCenterOffset;
-  float distanceFactor = Float.NaN;
+//  float distanceFactor = Float.NaN;
   boolean isCollapsed;
 
   private boolean iHaveCenterBitSet;
@@ -109,7 +109,8 @@ public class Polyhedra extends AtomShape {
 
     if ("init" == propertyName) {
       faceCenterOffset = DEFAULT_FACECENTEROFFSET;
-      distanceFactor = planarParam = Float.NaN;
+      //distanceFactor = 
+      planarParam = Float.NaN;
       radius = 0.0f;
       nVertices = 0;
       nPoints = 0;
@@ -190,7 +191,8 @@ public class Polyhedra extends AtomShape {
 
     if ("distanceFactor" == propertyName) {
       // not a general user option
-      distanceFactor = ((Float) value).floatValue();
+      // ignore 
+      //distanceFactor = ((Float) value).floatValue();
       return;
     }
 
@@ -588,9 +590,9 @@ public class Polyhedra extends AtomShape {
     int nj = vertexCount - 1;
     float planarParam = (Float.isNaN(this.planarParam) ? DEFAULT_PLANAR_PARAM
         : this.planarParam);
-    float factor = (!Float.isNaN(distanceFactor) ? distanceFactor
-        : DEFAULT_DISTANCE_FACTOR);
-    BS bs = BS.newN(vertexCount);
+//    float factor = (!Float.isNaN(distanceFactor) ? distanceFactor
+//        : DEFAULT_DISTANCE_FACTOR);
+//    BS bs = BS.newN(vertexCount);
 
     // here we are assuring that at least ONE face is drawn to 
     // all matching vertices -- skip this for BOND polyhedra
@@ -600,43 +602,43 @@ public class Polyhedra extends AtomShape {
     for (int i = 0; i < vertexCount; i++)
       ptAve.add(points[i]);
     ptAve.scale(1f / vertexCount);
-    float distMax = 0;
-    if (checkDist) {
-      float dAverage = 0;
-      for (int i = 0; i < vertexCount; i++)
-        dAverage += points[vertexCount].distance(points[i]);
-      dAverage /= vertexCount;
-      boolean isOK = (dAverage == 0);
-      while (!isOK && factor < 10.0f) {
-        distMax = dAverage * factor;
-        bs.setBits(0, vertexCount);
-        for (int i = 0; i < ni; i++)
-          for (int j = i + 1; j < nj; j++) {
-            if (points[i].distance(points[j]) > distMax)
-              continue;
-            for (int k = j + 1; k < vertexCount; k++) {
-              if (points[i].distance(points[k]) > distMax
-                  || points[j].distance(points[k]) > distMax)
-                continue;
-              bs.clear(i);
-              bs.clear(j);
-              bs.clear(k);
-            }
-          }
-        isOK = true;
-        for (int i = 0; i < vertexCount; i++)
-          if (bs.get(i)) {
-            isOK = false;
-            factor *= 1.05f;
-            if (Logger.debugging) {
-              Logger.debug("Polyhedra distanceFactor for " + vertexCount
-                  + " atoms increased to " + factor + " in order to include "
-                  + points[i]);
-            }
-            break;
-          }
-      }
-    }
+//    float distMax = 0;
+//    if (checkDist) {
+//      float dAverage = 0;
+//      for (int i = 0; i < vertexCount; i++)
+//        dAverage += points[vertexCount].distance(points[i]);
+//      dAverage /= vertexCount;
+//      boolean isOK = (dAverage == 0);
+//      while (!isOK && factor < 10.0f) {
+//        distMax = dAverage * factor;
+//        bs.setBits(0, vertexCount);
+//        for (int i = 0; i < ni; i++)
+//          for (int j = i + 1; j < nj; j++) {
+//            if (points[i].distance(points[j]) > distMax)
+//              continue;
+//            for (int k = j + 1; k < vertexCount; k++) {
+//              if (points[i].distance(points[k]) > distMax
+//                  || points[j].distance(points[k]) > distMax)
+//                continue;
+//              bs.clear(i);
+//              bs.clear(j);
+//              bs.clear(k);
+//            }
+//          }
+//        isOK = true;
+//        for (int i = 0; i < vertexCount; i++)
+//          if (bs.get(i)) {
+//            isOK = false;
+//            factor *= 1.05f;
+//            if (Logger.debugging) {
+//              Logger.debug("Polyhedra distanceFactor for " + vertexCount
+//                  + " atoms increased to " + factor + " in order to include "
+//                  + points[i]);
+//            }
+//            break;
+//          }
+//      }
+//    }
     /*  Start by defining a face to be when all three distances
      *  are < distanceFactor * (longest central) but if a vertex is missed, 
      *  then expand the range. The collapsed trick is to introduce 
@@ -676,15 +678,15 @@ public class Polyhedra extends AtomShape {
     V3 vTemp = vAC;
     for (int i = 0, pt = 0; i < ni; i++)
       for (int j = i + 1; j < nj; j++) {
-        if (checkDist && points[i].distance(points[j]) > distMax) {
-          pt += vertexCount - j - 1;
-          continue;
-        }
+//        if (checkDist && points[i].distance(points[j]) > distMax) {
+//          pt += vertexCount - j - 1;
+//          continue;
+//        }
         for (int k = j + 1; k < vertexCount; k++, pt++) {
-          if (checkDist
-              && (points[i].distance(points[k]) > distMax || points[j]
-                  .distance(points[k]) > distMax))
-            continue;
+//          if (checkDist
+//              && (points[i].distance(points[k]) > distMax || points[j]
+//                  .distance(points[k]) > distMax))
+//            continue;
           if (planeCount >= fmax) {
             Logger.error("Polyhedron error: maximum face(" + fmax
                 + ") -- reduce RADIUS");

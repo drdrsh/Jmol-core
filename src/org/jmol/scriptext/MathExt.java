@@ -193,7 +193,7 @@ public class MathExt {
     case T.search:
     case T.smiles:
     case T.substructure:
-      return evaluateSubstructure(mp, args, tok);
+      return evaluateSubstructure(mp, args, tok, op.tok == T.propselector);
     case T.sort:
     case T.count:
       return evaluateSort(mp, args, tok);
@@ -2624,19 +2624,21 @@ public class MathExt {
   }
 
   private boolean evaluateSubstructure(ScriptMathProcessor mp, SV[] args,
-                                       int tok) throws ScriptException {
+                                       int tok, boolean isSelector)
+      throws ScriptException {
     // select substucture(....) legacy - was same as smiles(), now search()
     // select smiles(...)
     // select search(...)  now same as substructure
-    if (args.length == 0)
+    // print {*}.search(...)
+    if (args.length == 0 || isSelector && args.length != 1)
       return false;
     BS bs = new BS();
     String pattern = SV.sValue(args[0]);
     if (pattern.length() > 0)
       try {
-        BS bsSelected = (args.length == 2 && args[1].tok == T.bitset ? SV
-            .bsSelectVar(args[1]) : null);
-        //         BS bsSelected, boolean isSmarts,        boolean firstMatchOnly
+        BS bsSelected = (isSelector ? SV.bsSelectVar(mp.getX())
+            : args.length == 2 && args[1].tok == T.bitset ? SV
+                .bsSelectVar(args[1]) : null);
         bs = vwr.getSmilesMatcher().getSubstructureSet(pattern, vwr.ms.at,
             vwr.ms.ac, bsSelected,
             (tok == T.smiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));

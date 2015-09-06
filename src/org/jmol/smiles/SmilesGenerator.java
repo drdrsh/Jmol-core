@@ -24,25 +24,22 @@
 
 package org.jmol.smiles;
 
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 
 import javajs.util.Lst;
-import javajs.util.SB;
 import javajs.util.P3;
+import javajs.util.SB;
 
 import org.jmol.java.BS;
-
-
-import org.jmol.util.BSUtil;
-import org.jmol.util.Elements;
-import org.jmol.util.Edge;
-import org.jmol.util.JmolMolecule;
 import org.jmol.util.BNode;
-import org.jmol.util.Node;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Edge;
+import org.jmol.util.Elements;
+import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
+import org.jmol.util.Node;
 import org.jmol.viewer.JC;
 
 /**
@@ -90,6 +87,7 @@ public class SmilesGenerator {
   private boolean noBioComment;
   private boolean noStereo;
   public P3 stereoReference;
+  private SmilesStereo smilesStereo;
 
   // generation of SMILES strings
 
@@ -510,7 +508,13 @@ public class SmilesGenerator {
     Edge[] bonds = atom.getEdges();
     if (stereoReference != null) {
       allowBranches = false;
-      SmilesStereo.sortBondsByStereo(atom, prevAtom, stereoReference, bonds, aTemp);
+      if (smilesStereo == null)
+        try {
+          smilesStereo = SmilesStereo.newStereo(null);
+        } catch (InvalidSmilesException e) {
+          // not possible
+        }
+      smilesStereo.sortBondsByStereo(atom, prevAtom, stereoReference, bonds, vTemp.vA);
     }
     Node aH = null;
     int stereoFlag = (isAromatic ? 10 : 0);
@@ -663,7 +667,7 @@ public class SmilesGenerator {
 
     String atat = null;
     if (!allowBranches && !noStereo && stereoReference == null && (v.size() == 5 || v.size() == 6))
-      atat = sortInorganic(atom, v);
+      atat = sortInorganic(atom, v, vTemp);
     for (int i = 0; i < v.size(); i++) {
       Edge bond = v.get(i);
       if (bond == bond0)
@@ -744,8 +748,6 @@ public class SmilesGenerator {
     return atomNext;
   }
 
-  private Object[] aTemp;
-
   /**
    * We must sort the bond vector such that a diaxial pair is
    * first and last. Then we assign stereochemistry based on what
@@ -755,9 +757,10 @@ public class SmilesGenerator {
    * 
    * @param atom
    * @param v
+   * @param vTemp 
    * @return  "@" or "@@" or ""
    */
-  private String sortInorganic(Node atom, Lst<Edge> v) {
+  private String sortInorganic(Node atom, Lst<Edge> v, VTemp vTemp) {
     int atomIndex = atom.getIndex();
     int n = v.size();
     Lst<Edge[]> axialPairs = new  Lst<Edge[]>();
@@ -927,18 +930,6 @@ public class SmilesGenerator {
 
   protected static String getRingKey(int i0, int i1) {
     return Math.min(i0, i1) + "_" + Math.max(i0, i1);
-  }
-
-  class PolyhedronStereoSorter implements Comparator<Object> {
-
-    protected PolyhedronStereoSorter() { } 
-
-    @Override
-    public int compare(Object a, Object b) {
-      float torA = ((Float) ((Object[]) a)[1]).floatValue();
-      float torB = ((Float) ((Object[]) b)[1]).floatValue();
-      return (torA < torB ? 1 : torA > torB ? -1 : 0);
-    }
   }
 
 //static {

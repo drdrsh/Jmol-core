@@ -898,7 +898,7 @@ public class SmilesParser {
             break;
           case '@':
             if (molecule.stereo == null)
-              molecule.stereo = new SmilesStereo(0, 0, 0, null, null);
+              molecule.stereo = SmilesStereo.newStereo(null);
             index = SmilesStereo.checkChirality(pattern, index, molecule.patternAtoms[newAtom.index]);
             break;
           default:
