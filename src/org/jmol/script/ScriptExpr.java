@@ -2342,6 +2342,7 @@ abstract class ScriptExpr extends ScriptParam {
    * these, because they must be integrated with the statement dynamically.
    * 
    * @param st0  aaToken[i]
+   * @param pt0 
    * @return a fixed token set -- with possible overrun of unused null tokens
    * 
    * @throws ScriptException

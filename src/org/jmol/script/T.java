@@ -1200,7 +1200,7 @@ public class T {
   public final static int filter         = misc  | 116;
   public final static int first   = misc  | 118;
   public final static int fixedtemp      = misc  | 122;
-  public final static int flat           = misc  | 124;
+//  public final static int flat           = misc  | 124; was only in Polyhedra; never documented
   public final static int fps            = misc  | 126 | expression;
   public final static int from           = misc  | 128;
   public final static int front   = misc  | 130;
@@ -1209,7 +1209,7 @@ public class T {
   public final static int frontonly = misc  | 136;
   public final static int full            = misc  | 137;
   public final static int fullplane       = misc  | 138;
-  public final static int fullylit = misc  | 140;
+  public final static int fullylit        = misc  | 140;
   public final static int functionxy     = misc  | 142;
   public final static int functionxyz    = misc  | 144;
   public final static int gridpoints     = misc  | 146;
@@ -2226,7 +2226,7 @@ public class T {
        "first",
        "fixed",
        "fix",
-       "flat",
+//       "flat",
        "fps",
        "from",
        "frontEdges",
@@ -3259,7 +3259,7 @@ public class T {
         first,                              //        "first"
         fixed,                              //        "fixed"
         -1,                                 //        "fix"
-        flat,                               //        "flat"
+//        flat,                               //        "flat"
         fps,                                //        "fps"
         from,                               //        "from"
         frontedges,                         //        "frontEdges"

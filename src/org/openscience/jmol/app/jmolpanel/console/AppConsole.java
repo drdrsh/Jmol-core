@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.Window;
@@ -777,7 +778,16 @@ public class AppConsole extends JmolConsole implements EnterListener {
                   : 1) : vwr.getSetHistory(up ? -1
           : 1));
       if (cmd == null) {
-        hBar.setValue(0);
+        EventQueue.invokeLater(new Runnable() {
+          @Override
+          public void run() {
+            try {
+              hBar.setValue(0);
+            } catch (Throwable e) {
+              //
+            }
+          }
+        });
         return;
       }
       boolean isError = false;
@@ -914,16 +924,20 @@ public class AppConsole extends JmolConsole implements EnterListener {
 
         pt = caretPosition.getOffset();
         consoleTextPane.setCaretPosition(pt);
-        try {
-          vBar.setValue(vBar.getMaximum());
-        } catch (Throwable e) {
-          //
-        }
-        
       } catch (Exception e) {
         e.printStackTrace();
         consoleTextPane.setCaretPosition(getLength());
       }
+      EventQueue.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            vBar.setValue(vBar.getMaximum());
+          } catch (Throwable e) {
+            //
+          }
+        }
+      });
     }
 
     void outputError(String strError) {

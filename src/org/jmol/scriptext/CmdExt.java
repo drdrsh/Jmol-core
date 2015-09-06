@@ -3156,6 +3156,15 @@ public class CmdExt extends ScriptExt {
 
   private boolean polyhedra() throws ScriptException {
     ScriptEval eval = e;
+    // polyhedra
+    // polyhedra on/off/delete
+    // polyhedra [type]
+    // where [type] is one of
+    //   n [opt. BONDS]
+    //   n-m [opt. BONDS]
+    //   [opt. RADIUS] x.y 
+    // polyhedra [type] [
+
     /*
      * needsGenerating:
      * 
@@ -3166,17 +3175,15 @@ public class CmdExt extends ScriptExt {
      * 
      * polyhedra [at most one selection set] [type-and/or-edge or on/off/delete]
      */
-    boolean needsGenerating = false;
+    boolean haveBonds = (slen == 1);
+    boolean needsGenerating = haveBonds;
     boolean onOffDelete = false;
     boolean typeSeen = false;
     boolean edgeParameterSeen = false;
-    boolean isDesignParameter = false;
-    int lighting = 0;
+    //    int lighting = T.nada; // never implemented; fullyLit does nothing
     int nAtomSets = 0;
     e.sm.loadShape(JC.SHAPE_POLYHEDRA);
     setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.TRUE);
-    String setPropertyName = "centers";
-    String decimalPropertyName = "radius_";
     float translucentLevel = Float.MAX_VALUE;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     for (int i = 1; i < slen; ++i) {
@@ -3191,6 +3198,7 @@ public class CmdExt extends ScriptExt {
       case T.unitcell:
         propertyName = "unitCell";
         propertyValue = Boolean.TRUE;
+        needsGenerating = true;
         break;
       case T.only:
         e.restrictSelected(false, false);
@@ -3199,116 +3207,132 @@ public class CmdExt extends ScriptExt {
       case T.on:
       case T.delete:
       case T.off:
-        if (i + 1 != slen || needsGenerating || nAtomSets > 1 || nAtomSets == 0
-            && "to".equals(setPropertyName))
+        if (i + 1 != slen || needsGenerating || nAtomSets > 1)
           error(ScriptError.ERROR_incompatibleArguments);
         propertyName = (eval.theTok == T.off ? "off"
             : eval.theTok == T.on ? "on" : "delete");
         onOffDelete = true;
         break;
-      case T.opEQ:
-      case T.comma:
-        continue;
+      case T.integer:
+        propertyName = "nVertices";
+        propertyValue = Integer.valueOf(intParameter(i));
+        needsGenerating = true;
+        switch (tokAt(i + 1)) {
+        // wish I had not done this. Inconsistent with general syntax; only used here
+        case T.opEQ:
+        case T.comma:
+          i++;
+          break;
+        }
+        break;
       case T.bonds:
         if (nAtomSets > 0)
           invPO();
         needsGenerating = true;
         propertyName = "bonds";
+        haveBonds = true;
         break;
       case T.radius:
-        decimalPropertyName = "radius";
-        continue;
-      case T.integer:
+        i++;
+        //$FALL-THROUGH$
       case T.decimal:
-        if (nAtomSets > 0 && !isDesignParameter)
+        if (nAtomSets > 0)
           invPO();
-        if (eval.theTok == T.integer) {
-          if (decimalPropertyName == "radius_") {
-            propertyName = "nVertices";
-            propertyValue = Integer.valueOf(intParameter(i));
-            needsGenerating = true;
-            break;
-          }
-        }
-        propertyName = (decimalPropertyName == "radius_" ? "radius"
-            : decimalPropertyName);
+        propertyName = "radius";
         propertyValue = Float.valueOf(floatParameter(i));
-        decimalPropertyName = "radius_";
-        isDesignParameter = false;
+        needsGenerating = true;
+        break;
+      case T.offset:
+        eval.theTok = T.facecenteroffset;
+        //$FALL-THROUGH$
+      case T.facecenteroffset:
+        setShapeProperty(JC.SHAPE_POLYHEDRA, "collapsed", Boolean.TRUE);
+        //$FALL-THROUGH$
+      case T.planarparam:
+      case T.distancefactor:
+        propertyName = T.nameOf(eval.theTok);
+        switch (tokAt(i + 1)) {
+        // wish I had not done this. Inconsistent with general syntax; only used here
+        case T.opEQ:
+        case T.comma:
+          i++;
+          break;
+        }
+        propertyValue = Float.valueOf(floatParameter(++i));
+        break;
+      case T.to:
+        if (nAtomSets > 1)
+          invPO();
+        if ((tokAt(++i) == T.bitset || tokAt(i) == T.expressionBegin)
+            && !needsGenerating) {
+          // select... polyhedron .... to ....
+          propertyName = "toBitSet";
+          propertyValue = atomExpressionAt(i);
+        } else if (eval.isArrayParameter(i)) {
+          // select... polyhedron .... to [...]
+          // polyhedron {...} to [...]
+          propertyName = "toVertices";
+          propertyValue = eval.getPointArray(i, -1, false);
+        } else {
+          error(ScriptError.ERROR_insufficientArguments);
+        }
+        i = eval.iToken;
         needsGenerating = true;
         break;
       case T.bitset:
       case T.expressionBegin:
         if (typeSeen)
           invPO();
-        if (++nAtomSets > 2)
-          eval.bad();
-        if ("to".equals(setPropertyName))
+        switch (++nAtomSets) {
+        case 1:
+          propertyName = "centers";
+          break;
+        case 2:
+          propertyName = "to";
           needsGenerating = true;
-        propertyName = setPropertyName;
-        setPropertyName = "to";
+          break;
+        default:
+          eval.bad();
+        }
         propertyValue = atomExpressionAt(i);
         i = eval.iToken;
+        if (i + 1 == slen)
+          needsGenerating = true;
         break;
-      case T.to:
-        if (nAtomSets > 1)
-          invPO();
-        if (tokAt(i + 1) == T.bitset || tokAt(i + 1) == T.expressionBegin
-            && !needsGenerating) {
-          propertyName = "toBitSet";
-          propertyValue = atomExpressionAt(++i);
-          i = eval.iToken;
-          needsGenerating = true;
-          break;
-        } else if (eval.isArrayParameter(i + 1)) {
-          propertyName = "toVertices";
-          propertyValue = eval.getPointArray(i + 1, -1, false);
-          i = eval.iToken;
-          needsGenerating = true;
-          break;
-        } else if (!needsGenerating) {
-          error(ScriptError.ERROR_insufficientArguments);
-        }
-        setPropertyName = "to";
-        continue;
-      case T.facecenteroffset:
-      case T.planarparam:
-      case T.distancefactor:
-//        if (nAtomSets == 0)
-//          error(ScriptError.ERROR_insufficientArguments);
-        decimalPropertyName = T.nameOf(eval.theTok);
-        isDesignParameter = true;
-        continue;
       case T.color:
       case T.translucent:
       case T.opaque:
         translucentLevel = getColorTrans(eval, i, true, colorArgb);
         i = eval.iToken;
         continue;
+        //      case T.flat: // removed in Jmol 14.4 -- never documented
       case T.collapsed:
-      case T.flat:
-        propertyName = "collapsed";
-        propertyValue = (eval.theTok == T.collapsed ? Boolean.TRUE
-            : Boolean.FALSE);
+        // COLLAPSED
+        // COLLAPSED [faceCenterOffset]
         if (typeSeen)
           error(ScriptError.ERROR_incompatibleArguments);
         typeSeen = true;
-        break;
-      case T.triangles:
-      case T.notriangles:
-        propertyName = "token";
-        propertyValue = Integer.valueOf(e.theTok);
+        if (isFloatParameter(i + 1))
+          setShapeProperty(JC.SHAPE_POLYHEDRA, "faceCenterOffset",
+              Float.valueOf(floatParameter(++i)));
+        propertyName = "collapsed";
+        propertyValue = Boolean.TRUE;
         break;
       case T.noedges:
       case T.edges:
       case T.frontedges:
         if (edgeParameterSeen)
           error(ScriptError.ERROR_incompatibleArguments);
-        propertyName = paramAsStr(i);
         edgeParameterSeen = true;
+        propertyName = T.nameOf(eval.iToken);
         break;
+      case T.triangles:
+      case T.notriangles:
+      case T.backlit:
+      case T.frontlit:
       case T.fullylit:
-        lighting = eval.theTok;
+        // never implemented or 
+        //        lighting = eval.theTok;
         continue;
       default:
         if (eval.isColorParam(i)) {
@@ -3322,18 +3346,21 @@ public class CmdExt extends ScriptExt {
       if (onOffDelete)
         return false;
     }
-    if (!needsGenerating && !typeSeen && !edgeParameterSeen && lighting == 0)
-      error(ScriptError.ERROR_insufficientArguments);
-    if (needsGenerating)
+    if (needsGenerating) {
+      if (!typeSeen && haveBonds)
+        setShapeProperty(JC.SHAPE_POLYHEDRA, "bonds", null);
       setShapeProperty(JC.SHAPE_POLYHEDRA, "generate", null);
+    } else if (!edgeParameterSeen) {// && lighting == T.nada)
+      error(ScriptError.ERROR_insufficientArguments);
+    }
     if (colorArgb[0] != Integer.MIN_VALUE)
       setShapeProperty(JC.SHAPE_POLYHEDRA, "colorThis",
           Integer.valueOf(colorArgb[0]));
     if (translucentLevel != Float.MAX_VALUE)
       eval.setShapeTranslucency(JC.SHAPE_POLYHEDRA, "", "translucentThis",
           translucentLevel, null);
-    if (lighting != 0)
-      setShapeProperty(JC.SHAPE_POLYHEDRA, "token", Integer.valueOf(lighting));
+    //    if (lighting != T.nada)
+    //      setShapeProperty(JC.SHAPE_POLYHEDRA, "token", Integer.valueOf(lighting));
     setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.FALSE);
     return true;
   }

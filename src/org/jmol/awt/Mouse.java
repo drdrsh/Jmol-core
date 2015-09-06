@@ -102,7 +102,7 @@ class Mouse implements MouseWheelListener, MouseListener,
       mousePressed(time, x, y, modifiers, false);
       break;
     case Event.MOUSE_DRAG:
-      mouseDragged(time, x, y, modifiers);
+      mouseDragged(time, x, y);
       break;
     case Event.MOUSE_ENTER:
       mouseEntered(time, x, y);
@@ -157,16 +157,7 @@ class Mouse implements MouseWheelListener, MouseListener,
 
   @Override
   public void mouseDragged(MouseEvent e) {
-    int modifiers = e.getModifiers();
-    /****************************************************************
-     * Netscape 4.* Win32 has a problem with mouseDragged if you left-drag then
-     * none of the modifiers are selected we will try to fix that here
-     ****************************************************************/
-    if ((modifiers & Event.BUTTON_MASK) == 0)
-      modifiers |= Event.MOUSE_LEFT;
-    
-    /****************************************************************/
-    mouseDragged(e.getWhen(), e.getX(), e.getY(), modifiers);
+    mouseDragged(e.getWhen(), e.getX(), e.getY());
   }
 
   @Override
@@ -308,15 +299,11 @@ class Mouse implements MouseWheelListener, MouseListener,
 
   private void mouseEntered(long time, int x, int y) {
     wheeling = false;
-    isMouseDown = false;
-    modifiersDown = 0;
     manager.mouseEnterExit(time, x, y, false);
   }
 
   private void mouseExited(long time, int x, int y) {
     wheeling = false;
-    isMouseDown = false;
-    modifiersDown = 0;
     manager.mouseEnterExit(time, x, y, true);
   }
 
@@ -378,7 +365,7 @@ class Mouse implements MouseWheelListener, MouseListener,
     manager.mouseAction(Event.RELEASED, time, x, y, 0, modifiers);
   }
 
-  private void mouseDragged(long time, int x, int y, int modifiers) {
+  private void mouseDragged(long time, int x, int y) {
     if (wheeling)
       return;
     if ((modifiersDown & Event.MAC_COMMAND) == Event.MAC_COMMAND)
