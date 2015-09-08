@@ -2380,11 +2380,14 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         g.dsspCalcHydrogen, setStructure);
   }
 
-  private JmolAnnotationParser annotationParser;
+  private JmolAnnotationParser annotationParser, dssrParser;
 
-  public JmolAnnotationParser getAnnotationParser() {
-    return (annotationParser == null ? (annotationParser = (JmolAnnotationParser) Interface
-        .getOption("dssx.AnnotationParser", this, "script")) : annotationParser);
+  public JmolAnnotationParser getAnnotationParser(boolean isDSSR) {
+    return (isDSSR ? (dssrParser == null ? (dssrParser = (JmolAnnotationParser) Interface
+        .getOption("dssx.DSSR0", this, "script")) : dssrParser)
+        : (annotationParser == null ? (annotationParser = (JmolAnnotationParser) Interface
+            .getOption("dssx.AnnotationParser", this, "script"))
+            : annotationParser));
   }
 
   @Override
@@ -3925,6 +3928,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       } else if (name.startsWith("*dssr/")) {
         f = name.substring(pt + 1);
         return g.resolveDataBase("dssr", f);
+      } else if (name.startsWith("*dssr1/")) {
+        f = name.substring(pt + 1);
+        return g.resolveDataBase("dssr1", f);
       }
       // these are processed in SmarterJmolAdapter
       String pdbe = "pdbe";
@@ -9289,12 +9295,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public String getAnnotationInfo(SV d, String match, int type) {
-    return getAnnotationParser()
+    return getAnnotationParser(type == T.dssr)
         .getAnnotationInfo(this, d, match, type, am.cmi);
   }
 
   public Lst<Float> getAtomValidation(String type, Atom atom) {
-    return getAnnotationParser().getAtomValidation(this, type, atom);
+    return getAnnotationParser(false).getAtomValidation(this, type, atom);
   }
 
   private GenericZipTools jzt;

@@ -179,6 +179,7 @@ abstract class ScriptExpr extends ScriptParam {
     if (ptMax < pt)
       ptMax = slen;
     int ptEq = (isSpecialAssignment ? 0 : 1);
+    int ptWithin = -1;
     ScriptMathProcessor rpn = new ScriptMathProcessor(this,
         isSpecialAssignment, isArrayItem, asVector, false, false, key);
     Object v, res;
@@ -516,7 +517,8 @@ abstract class ScriptExpr extends ScriptParam {
       case T.smiles:
       case T.substructure:
       case T.structure:
-        if (!isWhere) {
+        // these are "within" phrases ?
+        if (!isWhere && i == ptWithin && tokAt(i + 1) == T.comma) {
           rpn.addX(SV.newT(theToken));
           break;
         }//$FALL-THROUGH$
@@ -536,6 +538,9 @@ abstract class ScriptExpr extends ScriptParam {
             invArg();
           }
           switch (theTok) {
+          case T.within:
+            ptWithin = i + 2;
+            break;
           case T.opEQ:
             if (topLevel)
               ptEq = i;

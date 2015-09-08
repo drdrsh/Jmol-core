@@ -15,7 +15,7 @@ import javajs.util.Lst;
 public interface JmolAnnotationParser {
 
   String processDSSR(Map<String, Object> info, GenericLineReader reader, 
-                 String line0, Map<String, String> htGroup1) throws Exception;
+                 String line0, Map<String, String> htGroup1, Map<String, Integer> modelMap) throws Exception;
 
   BS getAtomBits(Viewer vwr, String key, Object dssr, Map<String, Object> cache, int type, int modelIndex, BS bsModel);
 

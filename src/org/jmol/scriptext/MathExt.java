@@ -2798,6 +2798,12 @@ public class MathExt {
     boolean isDistance = (isVdw || tok == T.decimal || tok == T.integer);
     RadiusData rd = null;
     switch (tok) {
+    case T.varray:
+      if (i == 1) {
+        withinSpec = args[0].asString(); // units ids8
+        tok = T.nada;
+      }
+      break;
     case T.branch:
       return (i == 3 && args[1].value instanceof BS
           && args[2].value instanceof BS && mp.addXBs(vwr.getBranchBitSet(
@@ -2892,6 +2898,7 @@ public class MathExt {
       case T.spec_seqcode:
         tok = T.sequence;
         break;
+      case T.identifier:
       case T.atomname:
       case T.atomtype:
       case T.basepair:
@@ -2952,7 +2959,7 @@ public class MathExt {
       return mp.addXBs(vwr.getAtomsNearPt(distance, pt));
 
     if (tok == T.sequence)
-      return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs));
+      return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs, new BS()));
     if (bs == null)
       bs = new BS();
     if (!isDistance)

@@ -3874,9 +3874,9 @@ public class ModelSet extends BondCollection {
 
   ///// bio-only methods /////
 
-  public BS getSequenceBits(String specInfo, BS bs) {
-    return (haveBioModels ? bioModelset.getAllSequenceBits(specInfo, bs)
-        : new BS());
+  public BS getSequenceBits(String specInfo, BS bsAtoms, BS bsResult) {
+    return (haveBioModels ? bioModelset.getAllSequenceBits(specInfo, bsAtoms, bsResult)
+        : bsResult);
   }
 
   public int getBioPolymerCountInModel(int modelIndex) {

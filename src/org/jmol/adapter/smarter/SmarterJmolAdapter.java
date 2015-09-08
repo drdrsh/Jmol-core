@@ -205,7 +205,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
         if (i > 0 && size <= 3 && f.startsWith("{")) {
           // JSON domains and validations; could have both
           // hack to determine type:
-          String type = (f.contains("/outliers/") ? "validation" : "domains");
+          String type = (f.contains("version\":\"DSSR") ? "dssr" : f
+              .contains("/outliers/") ? "validation" : "domains");
           SV x = vwr.evaluateExpressionAsVariable(f);
           if (x != null && x.getMap() != null)
             htParams.put(type, x);
@@ -213,13 +214,15 @@ public class SmarterJmolAdapter extends JmolAdapter {
         }
         if (name.indexOf("|") >= 0)
           name = PT.rep(name, "_", "/");
-        if (name.indexOf("/rna3dhub/") >= 0) {
-          s += "\n_rna3d \n;" + f + "\n;\n";
-          continue;
-        }
-        if (name.indexOf("/dssr/") >= 0) {
-          s += "\n_dssr \n;" + f + "\n;\n";
-          continue;
+        if (i == 1) {
+          if (name.indexOf("/rna3dhub/") >= 0) {
+            s += "\n_rna3d \n;" + f + "\n;\n";
+            continue;
+          }
+          if (name.indexOf("/dssr/") >= 0) {
+            s += "\n_dssr \n;" + f + "\n;\n";
+            continue;
+          }
         }
         s += f;
         if (!s.endsWith("\n"))

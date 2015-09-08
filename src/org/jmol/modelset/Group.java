@@ -343,6 +343,10 @@ public class Group implements Structure {
     return (seqcode == Integer.MIN_VALUE ? '\0' :(char)(seqcode & INSERTION_CODE_MASK));
   }
   
+  public final int getInsCode() {
+    return (seqcode & INSERTION_CODE_MASK); 
+  }
+
   public static int getInsertionCodeFor(int seqcode) {
     return (seqcode & INSERTION_CODE_MASK);
   }

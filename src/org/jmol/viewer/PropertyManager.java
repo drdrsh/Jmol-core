@@ -1731,7 +1731,7 @@ public class PropertyManager implements JmolPropertyManager {
         : "validation");
     if (objAnn == null || objAnn.tok != T.hash)
       return null;
-    vwr.getAnnotationParser().initializeAnnotation(objAnn, type, iModel);
+    vwr.getAnnotationParser(false).initializeAnnotation(objAnn, type, iModel);
     return objAnn.mapGet("_list");    
   }
 

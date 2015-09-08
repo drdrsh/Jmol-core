@@ -174,17 +174,18 @@ public class MMCifReader extends CifReader {
     if (!isCourseGrained && asc.ac == nAtoms) {
       asc.removeCurrentAtomSet();
     } else {
-      if ((validation != null || addedData != null) && !isCourseGrained) {
+      if ((dssr != null || validation != null || addedData != null) && !isCourseGrained) {
         MMCifValidationParser vs = ((MMCifValidationParser) getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser"))
             .set(this);
         String note = null;
         if (addedData == null) {
-          note = vs.finalizeValidations(modelMap);
+          if (validation != null || dssr != null)
+            note = vs.finalizeValidations(modelMap);
         } else if (addedDataKey.equals("_rna3d")) {
           note = vs.finalizeRna3d(modelMap);
-        } else {
+        } else if (addedDataKey.equals("_dssr")) {
           reader = Rdr.getBR(addedData);
-          processDSSR(this, htGroup1);
+          processDSSR(this, htGroup1, null);
         }
         if (note != null)
           appendLoadNote(note);

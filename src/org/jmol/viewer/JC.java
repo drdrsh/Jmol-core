@@ -48,11 +48,12 @@ public final class JC {
   // callback constants --> org.jmol.constant.EnumCallback
   // draw constants --> org.jmol.shapespecial.draw.EnumCallback
   
-  public static final String PDB_ANNOTATIONS = ";dssr;rna3d;dom;val;";
+  public static final String PDB_ANNOTATIONS = ";dssr;dssr1;rna3d;dom;val;";
 
   public static String[] databases = { 
+    "dssr1", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--more%20--json=ebi-no-str-id",
     "dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--jmol%20--more",
-    "dssrModel", "http://x3dna.bio.columbia.edu/dssr/report.php?POST?opts=--jmol --more&model=",  
+    "dssr1Model", "http://x3dna.bio.columbia.edu/dssr/report.php?POST?opts=--jmol --more --json=ebi&model=", // called in DSSR1.java  
     "ligand", "http://www.rcsb.org/pdb/files/ligand/%FILE.cif",
     "mp", "http://www.materialsproject.org/materials/%FILE/cif",
     "nci", "http://cactus.nci.nih.gov/chemical/structure/%FILE",

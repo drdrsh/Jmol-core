@@ -2200,6 +2200,11 @@ abstract public class AtomCollection {
       return bs;
     case T.spec_seqcode:
       return BSUtil.copy(getSeqcodeBits(iSpec, true));
+    case T.inscode:
+      for (int i = ac; --i >= 0;)
+        if (at[i].group.getInsCode() == iSpec)
+          bs.set(i);
+      return bs;
     case T.symop:
       for (int i = ac; --i >= 0;)
         if (at[i].getSymOp() == iSpec)

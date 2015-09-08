@@ -46,7 +46,7 @@ public interface JmolBioModelSet {
                                             boolean isTraceAlpha,
                                             float sheetSmoothing);
 
-  BS getAllSequenceBits(String specInfo, BS bs);
+  BS getAllSequenceBits(String specInfo, BS bsAtoms, BS bsResult);
 
   BS getAtomBitsBS(int tokType, BS bsInfo, BS bs);
 

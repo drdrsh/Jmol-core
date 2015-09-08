@@ -775,12 +775,9 @@ abstract class ScriptTokenParser {
       case T.vanderwaals:
         key = (String) theValue;
         break;
-      case T.identifier:
+      default:
         key = ((String) theValue).toLowerCase();
         break;
-      default:
-        return errorIntStr2(ERROR_unrecognizedParameter, "WITHIN", ": "
-            + theToken.value);
       }
     if (key == null)
       addTokenToPostfix(T.decimal, Float.valueOf(distance));

@@ -368,7 +368,7 @@ public class PdbReader extends AtomSetCollectionReader {
 
   private void checkDSSR() throws Exception {
     if (line.trim().startsWith("DSSR:") && asc.ac > 0)
-      processDSSR(this, htGroup1);
+      processDSSR(this, htGroup1, null);
   }
 
   /*
@@ -403,6 +403,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
 
   Map<String, String> htGroup1;
   private int maxLength = 80;
+  private String pdbID;
   
   private String readHeader(boolean getLine) throws Exception {
     if (getLine) {
@@ -526,7 +527,7 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
     appendLoadNote(line.substring(7).trim());
     if (lineLength == 80)
       maxLength = 72; // old style
-    String pdbID = (lineLength >= 66 ? line.substring(62, 66).trim() : "");
+    pdbID = (lineLength >= 66 ? line.substring(62, 66).trim() : "");
     if (pdbID.length() == 4) {
       asc.setCollectionName(pdbID);
       asc.setInfo("havePDBHeaderName", Boolean.TRUE);
@@ -1329,6 +1330,8 @@ REMARK 290 REMARK: NULL
     setModelPDB(isPDB);
     nUNK = nRes = 0;
     currentGroup3 = null;
+    if (pdbID != null)
+      asc.setAtomSetName(pdbID);
   }
 
   private float cryst1;

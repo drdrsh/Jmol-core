@@ -685,7 +685,7 @@ public class CmdExt extends ScriptExt {
         case T.dssr:
           if (chk)
             return;
-          eval.showString(vwr.getAnnotationParser().calculateDSSRStructure(vwr, bs1));
+          eval.showString(vwr.getAnnotationParser(true).calculateDSSRStructure(vwr, bs1));
           return;
         case T.dssp:
           asDSSP = true;

@@ -144,7 +144,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Map<String, Object> htParams;
   public Lst<P3[]> trajectorySteps;
   private Object domains;
-  public Object validation;
+  public Object validation, dssr;
   protected boolean isConcatenated;
   public String addedData, addedDataKey;
   public boolean fixJavaFloat = true;
@@ -409,6 +409,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
             info.put("validation", validation);
           }
         }
+        if (dssr != null) {
+          info.put("dssrJSON", Boolean.TRUE);
+          for (int i = asc.atomSetCount; --i >= 0;) {
+            info = asc.getAtomSetAuxiliaryInfo(i);
+            info.put("dssr", dssr);
+          }
+        }
       }
     }
     if (!fixJavaFloat)
@@ -638,6 +645,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     domains = htParams.get("domains");
     validation = htParams.get("validation");
+    dssr = htParams.get("dssr");
     isConcatenated = htParams.containsKey("concatenate");
   }
 
@@ -1695,9 +1703,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   protected void processDSSR(GenericLineReader reader,
-                             Map<String, String> htGroup1) throws Exception {
-    String s = vwr.getAnnotationParser().processDSSR(
-        asc.getAtomSetAuxiliaryInfo(Integer.MAX_VALUE), reader, line, htGroup1);
+                             Map<String, String> htGroup1, Map<String, Integer> modelMap) throws Exception {
+    String s = vwr.getAnnotationParser(modelMap == null).processDSSR(
+        asc.getAtomSetAuxiliaryInfo(Integer.MAX_VALUE), reader, line, htGroup1, modelMap);
     appendLoadNote(s);
   }
 

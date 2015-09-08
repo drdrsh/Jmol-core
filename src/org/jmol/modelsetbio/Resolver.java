@@ -602,7 +602,7 @@ public final class Resolver implements JmolBioResolver, Comparator<String[]> {
     if (o != null) {
       Object dbObj = ((BioModel)ml.ms.bioModelset).getCachedAnnotationMap(name, o);
       if (dbObj != null)
-        vwr.getAnnotationParser().fixAtoms(i, (SV) dbObj, bsAddedMask, type, 20);
+        vwr.getAnnotationParser(false).fixAtoms(i, (SV) dbObj, bsAddedMask, type, 20);
     }
   }
 

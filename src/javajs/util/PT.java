@@ -369,7 +369,7 @@ public class PT {
   public static int countChar(String line, char c) {
     int n = 0;
     for (int i = line.lastIndexOf(c) + 1; --i >= 0;)
-      if (line.charAt(i) == '@')
+      if (line.charAt(i) == c)
         n++;
     return n;
   }

@@ -26,6 +26,7 @@ package org.jmol.modelsetbio;
 import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Chain;
+import org.jmol.modelset.Structure;
 
 public class CarbohydrateMonomer extends Monomer {
 

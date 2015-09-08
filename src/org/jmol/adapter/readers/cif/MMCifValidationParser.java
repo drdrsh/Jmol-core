@@ -2,6 +2,7 @@ package org.jmol.adapter.readers.cif;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javajs.util.Lst;
 import javajs.util.PT;
@@ -9,6 +10,7 @@ import javajs.util.PT;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.script.SV;
+import org.jmol.script.T;
 import org.jmol.util.Logger;
 
 public class MMCifValidationParser {
@@ -37,13 +39,17 @@ public class MMCifValidationParser {
    */
   public String finalizeValidations(Map<String, Integer> modelMap) {
 
+    SV svMap = (SV) reader.dssr;
+    if (svMap != null)
+      return fixDSSRJSONMap(svMap.getMap());
+
     mapAtomResIDs(modelMap);
 
     // Returns a Lst<Object> of property data in the form 
     // name(String), data(float[]), modelIndex (Integer), isGroup (Boolean);
 
-    SV svMap = (SV) reader.validation;
-    Lst<Object> retProps = reader.vwr.getAnnotationParser().catalogValidations(
+    svMap = (SV) reader.validation;
+    Lst<Object> retProps = reader.vwr.getAnnotationParser(false).catalogValidations(
         reader.vwr, svMap, getModelAtomIndices(), resMap,
         (asResidues ? null : atomMap), modelMap);
 
@@ -53,11 +59,54 @@ public class MMCifValidationParser {
     return note;
   }
 
+  /**
+   * The JSON structure coming from 3DNA is very very good. It just needs a
+   * tweak to fill in the kissing loops.
+   * 
+   * @param map
+   * @return msg
+   */
+  private String fixDSSRJSONMap(Map<String, SV> map) {
+    String s = "";
+    SV m = map.get("_metadata");
+    Map<String, SV> metadata = (m == null ? map : m.getMap());
+    SV kloops = map.get("kissingLoops");
+    try {
+      if (kloops != null) {
+        SV hairpins = map.get("hairpins");
+        Lst<SV> hpins = hairpins.getList();
+        Lst<SV> loops = kloops.getList();
+        for (int i = loops.size(); --i >= 0;) {
+          Lst<SV> hlist = loops.get(i).getMap().get("hairpin_indices").getList();
+          for (int j = hlist.size(); --j >= 0;) {
+            // mutate integer pointer to actual array using a pointer
+            SV item = hlist.get(j);
+            item.tok = T.hash;
+            item.value = hpins.get(item.intValue - 1).value;
+          }
+        }
+      }
+      String dbn = null;
+      for (Entry<String, SV> e : metadata.entrySet()) {
+        String key = e.getKey();
+        if (key.startsWith("num_"))
+          s += key.substring(4) + ": " + e.getValue().asString() + "\n";
+        else if (key.equals("dbn"))
+          dbn = e.getValue().asString();
+      }
+      s += dbn;
+    } catch (Exception e) {
+      // ignore??
+    }
+
+    return s;
+  }
+
   public String finalizeRna3d(Map<String, Integer> modelMap) {
     mapAtomResIDs(modelMap);
     SV svMap = getRna3dMap(reader.addedData);
     
-    String note = reader.vwr.getAnnotationParser().catalogStructureUnits(
+    String note = reader.vwr.getAnnotationParser(false).catalogStructureUnits(
         reader.vwr, svMap, getModelAtomIndices(), resMap, null, modelMap);
     svMap.mapPut("_note", SV.newS(note));
     for (int i = reader.asc.atomSetCount; --i >= 0;) {
@@ -66,6 +115,7 @@ public class MMCifValidationParser {
     }
     return note;
   }
+  
   private SV getRna3dMap(String addedData) {
     Map<String, Lst<Map<String, Object>>> map = new Hashtable<String, Lst<Map<String, Object>>>();
     int[] next = new int[1];
@@ -187,7 +237,6 @@ public class MMCifValidationParser {
     }
     return note;
   }
-
 
 
 }
