@@ -258,6 +258,26 @@ final public class Measure {
     ptProj.add2(pt, vNorm);
   }
 
+  /**
+   * 
+   * @param ptCenter
+   * @param ptA
+   * @param ptB
+   * @param ptC
+   * @param isOutward
+   * @param normal set to be opposite to direction of ptCenter from ABC
+   * @param vTemp
+   * @return true if winding is CCW; false if CW
+   */
+  public static boolean getNormalFromCenter(P3 ptCenter, P3 ptA, P3 ptB, P3 ptC,
+                                      boolean isOutward, V3 normal, V3 vTemp) {
+    float d = getNormalThroughPoints(ptA, ptB, ptC, normal, vTemp);
+    boolean isReversed = (distanceToPlaneV(normal, d, ptCenter) > 0);
+    if (isReversed == isOutward)
+      normal.scale(-1f);
+    return !isReversed;
+  }
+
   public final static V3 axisY = V3.new3(0, 1, 0);
   
   public static void getNormalToLine(P3 pointA, P3 pointB,

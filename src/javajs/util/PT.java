@@ -1122,7 +1122,7 @@ public class PT {
             ++ich;
           }
           if (isExponential)
-            precision = -precision - 1;
+            precision = -precision;
         }
         String st = strFormat.substring(ich, ich + len);
         if (!st.equals(key)) {
