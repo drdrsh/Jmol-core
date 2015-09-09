@@ -1324,7 +1324,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     Object annotv = cache.get(key);
     if (annotv == null && ann != null) {
       annotv = (ann instanceof SV || ann instanceof Hashtable ? ann
-              : vwr.evaluateExpressionAsVariable(ann));
+              : vwr.parseJSON((String) ann));
       cache.put(key, annotv);
     }
     return (annotv instanceof SV || annotv instanceof Hashtable ? annotv : null);

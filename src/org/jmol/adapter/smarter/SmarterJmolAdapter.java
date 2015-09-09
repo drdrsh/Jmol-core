@@ -31,10 +31,13 @@ import org.jmol.api.JmolAdapterStructureIterator;
 import org.jmol.api.JmolFilesReaderInterface;
 
 import javajs.api.GenericBinaryDocument;
+import javajs.api.Interface;
 import javajs.util.Lst;
 
 import org.jmol.script.SV;
 import org.jmol.util.Logger;
+
+import javajs.util.JSJSONParser;
 import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Rdr;
@@ -45,7 +48,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 import java.util.Map;
-
 
 public class SmarterJmolAdapter extends JmolAdapter {
 
@@ -207,7 +209,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
           // hack to determine type:
           String type = (f.contains("version\":\"DSSR") ? "dssr" : f
               .contains("/outliers/") ? "validation" : "domains");
-          SV x = vwr.evaluateExpressionAsVariable(f);
+          SV x = vwr.parseJSON(f);
           if (x != null && x.getMap() != null)
             htParams.put(type, x);
           continue;

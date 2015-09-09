@@ -45,6 +45,7 @@ import javajs.awt.Dimension;
 import javajs.awt.Font;
 import javajs.util.CU;
 import javajs.util.DF;
+import javajs.util.JSJSONParser;
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -9345,7 +9346,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       jmolpopup.jpiUpdateComputedMenus();
   }
 
-  JmolChimeMessenger jcm;
+  private JmolChimeMessenger jcm;
 
   public JmolChimeMessenger getChimeMessenger() {
     return (jcm == null ? jcm = ((JmolChimeMessenger) Interface.getInterface(
@@ -9357,4 +9358,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         false));
   }
 
+  private JSJSONParser jsonParser;
+  
+  public SV parseJSON(String ann) {
+    if (jsonParser == null)
+      jsonParser = ((JSJSONParser) Interface.getInterface("javajs.util.JSJSONParser", this, "script"));
+    return SV.getVariable(jsonParser.parseMap(ann));
+  }
 }
