@@ -15,6 +15,7 @@ import java.util.Map;
  *  
  *  -- does not allow /xxx/ objects
  *  
+ *  @author Bob Hanson
  *  
  */
 public class JSJSONParser {
