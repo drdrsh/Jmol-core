@@ -205,7 +205,9 @@ public class SmilesStereo {
         sAtom.stereo = null;
       break;
     case STEREOCHEMISTRY_POLYHEDRAL:
-      if (nBonds != atomCount)
+      // we allow no bonds here, indicating that the next N atoms are associated (but not connected)
+      // with this atom
+      if (nBonds != 0 && nBonds != atomCount)
         sAtom.stereo = null;
       break;
     case STEREOCHEMISTRY_ALLENE:
@@ -473,8 +475,8 @@ public class SmilesStereo {
       case STEREOCHEMISTRY_POLYHEDRAL:
         if (sAtom.stereo.isNot)
           isNot = !isNot;
-        if (nH > 1)
-          continue; // no chirality for [CH2@]
+        if (nH > 1 || sAtom.bondCount == 0)
+          continue; // no chirality for [CH2@]; skip if just an indicator
         if (isSmilesFind) {
           // TODO
           continue;
@@ -842,10 +844,13 @@ public class SmilesStereo {
             int n = Integer.parseInt(pattern.substring(index, pt));
             if (isPoly) {
               atomCount = n;
-              // we may have more to get? Distance?
               if (pt < len && pattern.charAt(pt) == '(') {
                 details = SmilesParser.getSubPattern(pattern, pt, '(');
                 pt += details.length() + 2;
+              }
+              if (pt < len && pattern.charAt(pt) == '/') {
+                directives = SmilesParser.getSubPattern(pattern, pt, '/');
+                pt += directives.length() + 2;
               }
             } else {
               order = n;

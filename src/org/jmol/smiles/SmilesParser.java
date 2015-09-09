@@ -1305,6 +1305,7 @@ public class SmilesParser {
       break;
     case '"':
     case '%':
+    case '/':
       ch2 = ch;
       break;
     case '(':

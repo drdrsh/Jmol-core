@@ -36,7 +36,7 @@ public class Polyhedron {
   private V3[] normals;
   private short[] normixes;
 
-  public String smiles, smarts, stereoSmiles;
+  public String smiles, smarts, polySmiles;
   private SymmetryInterface pointGroup;
   private Float volume;
 
@@ -89,8 +89,8 @@ public class Polyhedron {
         info.put("smarts", smarts);
       if (smiles != null)
         info.put("smiles", smiles);
-      if (stereoSmiles != null)
-        info.put("stereoSmiles", stereoSmiles);
+      if (polySmiles != null)
+        info.put("polySmiles", polySmiles);
       if (pointGroup != null)
         info.put("pointGroup", pointGroup.getPointGroupName());
       Object energy = vwr.ms.getInfo(centralAtom.mi, "Energy");
@@ -181,7 +181,7 @@ public class Polyhedron {
       if (smarts == null) {
         smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null, JC.SMILES_TOPOLOGY | JC.SMILES_NOSTEREO, null);
         smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_NOSTEREO, null);
-        stereoSmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices,  JC.SMILES_TYPE_SMILES | JC.SMILES_ATOM_COMMENT, details);
+        polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices,  JC.SMILES_TYPE_SMILES | JC.SMILES_ATOM_COMMENT, details);
       }
     } catch (Exception e) {
     }
