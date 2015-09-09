@@ -47,7 +47,7 @@ public class JSJSONParser {
   }
   
   /**
-   * Could return Integer, Double, Boolean, String, Map<String, Object>, Lst<Object>, or null
+   * Could return Integer, Float, Boolean, String, Map<String, Object>, Lst<Object>, or null
    * 
    * @param str
    * @return a object equivalent to the JSON string str
@@ -92,7 +92,7 @@ public class JSJSONParser {
    * 
    * Integer
    * 
-   * Double
+   * Float
    * 
    * "quoted string"
    * 
@@ -159,7 +159,8 @@ public class JSJSONParser {
             && string.indexOf('E') < 0)
           return new Integer(string);
         // not allowing infinity or NaN
-        Double d = Double.valueOf(string);
+        // using float here because Jmol does not use Double
+        Float d = Float.valueOf(string);
         if (!d.isInfinite() && !d.isNaN())
           return d;
       } catch (Exception e) {
