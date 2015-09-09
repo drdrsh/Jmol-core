@@ -700,8 +700,8 @@ public class Polyhedra extends AtomShape {
           boolean isThroughCenter = bsThroughCenter.get(pt);
           P3 rpt = (isThroughCenter ? randomPoint : ptAve);
           V3 normal = new V3();
-          boolean isWindingOK = getNormalFromCenter(rpt, points[i], points[j],
-              points[k], !isThroughCenter, normal);
+          boolean isWindingOK = Measure.getNormalFromCenter(rpt, points[i], points[j],
+              points[k], !isThroughCenter, normal, vTemp);
           // the standard face:
           normals[planeCount] = normal;
           faces[planeCount] = new int[] { isWindingOK ? i : j, isWindingOK ? j : i,
@@ -715,11 +715,11 @@ public class Polyhedra extends AtomShape {
             ptRef.setT(points[nPoints] = new P3());
             points[nPoints].scaleAdd2(offset, normal, centralAtom);
             addFacet(i, j, k, ptRef, points, normals, faces, planeCount++, nPoints,
-                isWindingOK);
+                isWindingOK, vTemp);
             addFacet(k, i, j, ptRef, points, normals, faces, planeCount++, nPoints,
-                isWindingOK);
+                isWindingOK, vTemp);
             addFacet(j, k, i, ptRef, points, normals, faces, planeCount++, nPoints,
-                isWindingOK);
+                isWindingOK, vTemp);
             nPoints++;
           } else {
             planeCount++;
@@ -751,39 +751,19 @@ public class Polyhedra extends AtomShape {
    * @param planeCount
    * @param nRef
    * @param isWindingOK
+   * @param vTemp 
    */
   private void addFacet(int i, int j, int k, P3 ptRef, P3[] points,
                         V3[] normals, int[][] faces, int planeCount, int nRef,
-                        boolean isWindingOK) {
+                        boolean isWindingOK, V3 vTemp) {
     V3 normal = new V3();
-    getNormalFromCenter(points[k], ptRef, points[i], points[j], false, normal);
+    Measure.getNormalFromCenter(points[k], ptRef, points[i], points[j], false, normal, vTemp);
     normals[planeCount] = normal;
     faces[planeCount] = new int[] { nRef, isWindingOK ? i : j, isWindingOK ? j : i,
         -2 };
     //            System.out.println("draw ID \"d" + faceId(i, j, k) + "\" VECTOR "
     //              + ptRef + " " + normal + " color blue \">" + faceId(i, j, k) + isWindingOK
     //            + "\"");
-  }
-
-  /**
-   * 
-   * @param ptCenter
-   * @param ptA
-   * @param ptB
-   * @param ptC
-   * @param isOutward
-   * @param normal
-   * @return true if winding is proper; false if not
-   */
-  private boolean getNormalFromCenter(P3 ptCenter, P3 ptA, P3 ptB, P3 ptC,
-                                      boolean isOutward, V3 normal) {
-    V3 vAB = new V3();
-    float d = Measure.getNormalThroughPoints(ptA, ptB, ptC, normal, vAB);
-    boolean isReversed = (Measure.distanceToPlaneV(normal, d, ptCenter) > 0);
-    if (isReversed == isOutward)
-      normal.scale(-1f);
-    //System.out.println("Draw v vector scale 2.0 " + Escape.escape(ptCenter) + Escape.escape(normal));
-    return !isReversed;
   }
 
   /**
