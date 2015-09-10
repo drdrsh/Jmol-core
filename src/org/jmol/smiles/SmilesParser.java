@@ -793,14 +793,12 @@ public class SmilesParser {
     if (pattern == null || pattern.length() == 0)
       throw new InvalidSmilesException("Empty atom definition");
 
-    SmilesAtom newAtom = (atomSet == null ? molecule.addAtom()
-        : isPrimitive ? atomSet.addPrimitive() : atomSet.addAtomOr());
-    if (braceCount > 0)
-      newAtom.selected = true;
-
+    SmilesAtom newAtom = new SmilesAtom();
+    if (atomSet == null)
+      molecule.appendAtom(newAtom);
+    boolean isNewAtom = true;
     if (!checkLogic(molecule, pattern, newAtom, null, currentAtom, isPrimitive,
         isBranchAtom)) {
-
       int[] ret = new int[1];
 
       if (isBioSequence && pattern.length() == 1)
@@ -816,7 +814,6 @@ public class SmilesParser {
         newAtom.not = isNot = true;
       }
 
-      int hydrogenCount = Integer.MIN_VALUE;
       int biopt = pattern.indexOf('.');
       int chiralpt = pattern.indexOf('@');
       if (biopt >= 0 && (chiralpt < 0 || biopt < chiralpt)) {
@@ -849,7 +846,8 @@ public class SmilesParser {
         ch = '\0';
       }
       newAtom.setBioAtom(bioType);
-      while (ch != '\0') {
+      int hydrogenCount = Integer.MIN_VALUE;
+      while (ch != '\0' && isNewAtom) {
         newAtom.setAtomName(isBioSequence ? "\0" : "");
         if (PT.isDigit(ch)) {
           index = getDigits(pattern, index, ret);
@@ -892,6 +890,18 @@ public class SmilesParser {
             else
               newAtom.elementNumber = ret[0];
             break;
+          case '(':
+            // JmolSMARTS, JmolSMILES reference to atom
+            String name = getSubPattern(pattern, index, '(');
+            index += 2 + name.length();
+            newAtom = checkReference(newAtom, name, ret);
+            isNewAtom = (ret[0] == 1); // we are done here
+            if (!isNewAtom) {
+              if (isNot)
+                index = 0; // triggers an error
+              isNot = true; // flags that this must be the end
+            }
+            break;
           case '-':
           case '+':
             index = checkCharge(pattern, index, newAtom);
@@ -899,7 +909,8 @@ public class SmilesParser {
           case '@':
             if (molecule.stereo == null)
               molecule.stereo = SmilesStereo.newStereo(null);
-            index = SmilesStereo.checkChirality(pattern, index, molecule.patternAtoms[newAtom.index]);
+            index = SmilesStereo.checkChirality(pattern, index,
+                molecule.patternAtoms[newAtom.index]);
             break;
           default:
             // SMARTS has ambiguities in terms of chaining without &.
@@ -1044,6 +1055,16 @@ public class SmilesParser {
       molecule.patternAtoms[newAtom.index]
           .setExplicitHydrogenCount(hydrogenCount);
     }
+    if (braceCount > 0)
+      newAtom.selected = true;
+    if (isNewAtom) {
+      if (atomSet != null) {
+        if (isPrimitive)
+          atomSet.appendPrimitive(newAtom);
+        else
+          atomSet.appendAtomOr(newAtom);
+      }
+    }
 
     // Final check
 
@@ -1066,6 +1087,30 @@ public class SmilesParser {
     if (branchLevel == 0)
       molecule.lastChainAtom = newAtom;
     return newAtom;
+  }
+
+  private Map<String, SmilesAtom> atomRefs;
+  
+  /**
+   * allow for [(...)] to indicate a specific pattern atom
+   * 
+   * @param newAtom
+   * @param name
+   * @param ret set [0] to 1 for new atom; 0 otherwise
+   * @return new or old atom
+   */
+  private SmilesAtom checkReference(SmilesAtom newAtom, String name, int[] ret) {
+    if (atomRefs == null)
+      atomRefs = new Hashtable<String, SmilesAtom>();
+    SmilesAtom ref = atomRefs.get(name);
+    if (ref == null) {
+      // this is a new atom
+      atomRefs.put(newAtom.referance = name, ref = newAtom);
+      ret[0] = 1;
+    } else {
+      ret[0] = 0;      
+    }
+    return ref;
   }
 
   /**

@@ -414,7 +414,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     if (!JC.checkFlag(flags, JC.SMILES_NOSTEREO)) {
       s = "//* " + center + " *//\t["
           + Elements.elementSymbolFromNumber(center.getElementNumber()) + "@PH"
-          + atomCount + (details == null ? "" : "/" + details + "/") + "]" + s;
+          + atomCount + (details == null ? "" : "/" + details + "/") + "]." + s;
     }
     return s;
   }

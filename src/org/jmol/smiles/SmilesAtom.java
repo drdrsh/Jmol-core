@@ -61,6 +61,7 @@ public class SmilesAtom extends P3 implements BNode {
 
   int index;
   String atomName;
+  String referance;
   String residueName;
   String residueChar;
   boolean isBioAtom;
@@ -95,6 +96,11 @@ public class SmilesAtom extends P3 implements BNode {
   private int charge = Integer.MIN_VALUE;
   private int matchingIndex = -1;
   SmilesStereo stereo;
+  
+  public int getChiralClass() {
+    return (stereo == null ? 0 : stereo.chiralClass);
+  }
+
   private boolean isAromatic;
 
   public boolean isDefined() {
@@ -128,35 +134,29 @@ public class SmilesAtom extends P3 implements BNode {
     this.bonds = bonds;
   }
 
-  public SmilesAtom addAtomOr() {
+  public SmilesAtom appendAtomOr(SmilesAtom sAtom) {
     if (atomsOr == null)
       atomsOr = new SmilesAtom[2];
     if (nAtomsOr >= atomsOr.length)
       atomsOr = (SmilesAtom[]) AU.doubleLength(atomsOr);
-    SmilesAtom sAtom = new SmilesAtom().setIndex(index);
+    sAtom.setIndex(index);
     sAtom.parent = this;
-    atomsOr[nAtomsOr] = sAtom;
-    nAtomsOr++;
+    atomsOr[nAtomsOr++] = sAtom;
     return sAtom;
   }
 
-  public SmilesAtom addPrimitive() {
+  public SmilesAtom appendPrimitive(SmilesAtom sAtom) {
     if (primitives == null)
       primitives = new SmilesAtom[2];
-    if (nPrimitives >= primitives.length) {
-      SmilesAtom[] tmp = new SmilesAtom[primitives.length * 2];
-      System.arraycopy(primitives, 0, tmp, 0, primitives.length);
-      primitives = tmp;
-    }
-    SmilesAtom sAtom = new SmilesAtom().setIndex(index);
+    if (nPrimitives >= primitives.length)
+      primitives = (SmilesAtom[]) AU.doubleLength(primitives);
+    sAtom.setIndex(index);
     sAtom.parent = this;
-    primitives[nPrimitives] = sAtom;
+    primitives[nPrimitives++] = sAtom;
     setSymbol("*");
     hasSymbol = false;
-    nPrimitives++;
     return sAtom;
   }
-
   /**
    * Constructs a <code>SmilesAtom</code>.
    * 
@@ -804,10 +804,6 @@ public class SmilesAtom extends P3 implements BNode {
         //    + " H:" + explicitHydrogenCount
         //    + " h:" + implicitHydrogenCount
         + "]";
-  }
-
-  public int getChiralClass() {
-    return (stereo == null ? 0 : stereo.chiralClass);
   }
 
 }

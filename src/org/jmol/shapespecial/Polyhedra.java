@@ -360,7 +360,7 @@ public class Polyhedra extends AtomShape {
           bs.set(polyhedrons[i].centralAtom.i);
         } else if (sm != null) {
           polyhedrons[i].getSymmetry(vwr, false);
-          String smiles0 = polyhedrons[i].smiles;
+          String smiles0 = polyhedrons[i].polySmiles;
           try {
             if (sm.areEqual(smiles, smiles0) > 0)
               bs.set(polyhedrons[i].centralAtom.i);

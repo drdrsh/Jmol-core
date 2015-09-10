@@ -139,12 +139,13 @@ public class SmilesSearch extends JmolMolecule {
   }
 
   SmilesAtom addAtom() {
+    return appendAtom(new SmilesAtom());
+  }
+
+  SmilesAtom appendAtom(SmilesAtom sAtom) {
     if (ac >= patternAtoms.length)
       patternAtoms = (SmilesAtom[]) AU.doubleLength(patternAtoms);
-    SmilesAtom sAtom = new SmilesAtom().setIndex(ac);
-    patternAtoms[ac] = sAtom;
-    ac++;
-    return sAtom;
+    return patternAtoms[ac] = sAtom.setIndex(ac++);
   }
 
   int addNested(String pattern) {
