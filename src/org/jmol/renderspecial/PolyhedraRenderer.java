@@ -84,7 +84,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
         screens3f[i] = new P3();
     }
     P3[] sc = this.screens3f;
-    int[][] planes = p.faces;
+    int[][] planes = p.triangles;
     for (int i = vertices.length; --i >= 0;) {
       Atom atom = (vertices[i] instanceof Atom ? (Atom) vertices[i] : null);
       if (atom == null) {

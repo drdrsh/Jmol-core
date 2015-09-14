@@ -379,20 +379,12 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     for (int i = faces.length; --i >= 0;) {
       int[] face = faces[i];
       int n = face.length;
-      int mask = face[n - 1];
-      if (mask < 0) {
-        mask = -mask;
-        n--;
-      } else {
-        mask = -1;
-      }
       int iatom, iatom2;
       for (int j = n; --j >= 0;) {
         if ((iatom = face[j]) >= atomCount
             || (iatom2 = face[(j + 1) % n]) >= atomCount)
           continue;
-        if ((mask & (1 << j)) != 0
-            && atoms[iatom].getBondTo(atoms[iatom2]) == null) {
+        if (atoms[iatom].getBondTo(atoms[iatom2]) == null) {
           SmilesBond b = new SmilesBond(atoms[iatom], atoms[iatom2],
               SmilesBond.TYPE_SINGLE, false);
           b.index = nBonds++;
@@ -404,18 +396,20 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       if (n == 0 || n != atoms[i].bonds.length)
         atoms[i].bonds = (SmilesBond[]) AU.arrayCopyObject(atoms[i].bonds, n);
     }
+    String s = null;
     SmilesGenerator g = new SmilesGenerator();
     if (points != null)
       g.stereoReference = (P3) center;
     InvalidSmilesException.clear();
-    String s = g.getSmiles(atoms, atomCount, BSUtil.newBitSet2(0, atomCount),
+    s = g.getSmiles(atoms, atomCount, BSUtil.newBitSet2(0, atomCount),
         null, flags | JC.SMILES_EXPLICIT_H | JC.SMILES_NOAROMATIC
             | JC.SMILES_NOSTEREO);
-    if (!JC.checkFlag(flags, JC.SMILES_NOSTEREO)) {
+    if (JC.checkFlag(flags, JC.SMILES_POLYHEDRAL)) {
       s = "//* " + center + " *//\t["
           + Elements.elementSymbolFromNumber(center.getElementNumber()) + "@PH"
           + atomCount + (details == null ? "" : "/" + details + "/") + "]." + s;
     }
+
     return s;
   }
 

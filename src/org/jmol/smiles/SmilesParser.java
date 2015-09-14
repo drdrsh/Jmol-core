@@ -1096,7 +1096,8 @@ public class SmilesParser {
    * 
    * @param newAtom
    * @param name
-   * @param ret set [0] to 1 for new atom; 0 otherwise
+   * @param ret
+   *        set [0] to 1 for new atom; 0 otherwise
    * @return new or old atom
    */
   private SmilesAtom checkReference(SmilesAtom newAtom, String name, int[] ret) {
@@ -1106,9 +1107,20 @@ public class SmilesParser {
     if (ref == null) {
       // this is a new atom
       atomRefs.put(newAtom.referance = name, ref = newAtom);
+      if (!newAtom.hasSymbol) {
+        if (name.length() > 0) {
+          String s = null;
+          if (name.length() >= 2
+              && (Elements.elementNumberFromSymbol(s = name.substring(0, 2),
+                  true) > 0 || Elements.elementNumberFromSymbol(
+                  s = name.substring(0, 1), true) > 0)) {
+            newAtom.setSymbol(s);
+          }
+        }
+      }
       ret[0] = 1;
     } else {
-      ret[0] = 0;      
+      ret[0] = 0;
     }
     return ref;
   }

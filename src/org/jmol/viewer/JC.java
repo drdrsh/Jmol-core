@@ -1044,6 +1044,7 @@ public final class JC {
   public static final int SMILES_TOPOLOGY                  = 0x00200;
   public static final int SMILES_NOAROMATIC                = 0x00400;
   public static final int SMILES_NOSTEREO                  = 0x00800;
+  public static final int SMILES_POLYHEDRAL                = 0x01000;
   public static final int SMILES_BIO                       = 0x10000;
   public static final int SMILES_BIO_ALLOW_UNMATCHED_RINGS = 0x11000;
   public static final int SMILES_BIO_COV_CROSSLINK         = 0x12000;

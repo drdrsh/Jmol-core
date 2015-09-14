@@ -17,7 +17,9 @@ import org.jmol.modelset.Atom;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.C;
+import org.jmol.util.Elements;
 import org.jmol.util.Escape;
+import org.jmol.util.Logger;
 import org.jmol.util.Node;
 import org.jmol.util.Normix;
 import org.jmol.util.Point3fi;
@@ -28,6 +30,7 @@ public class Polyhedron {
 
   public Atom centralAtom;
   public P3[] vertices;
+  public int[][] triangles;
   public int[][] faces;
   int nVertices;
   boolean collapsed;
@@ -50,74 +53,24 @@ public class Polyhedron {
   }
   
   Polyhedron set(Atom centralAtom, P3[] points, int nPoints, int vertexCount,
-      int[][] planes, int planeCount, V3[] normals, BS bsFlat, boolean collapsed, float distanceRef) {
+      int[][] triangles, int triangleCount, int[][] faces, V3[] normals, BS bsFlat, boolean collapsed, float distanceRef) {
     this.distanceRef = distanceRef;
     this.centralAtom = centralAtom;
     this.nVertices = vertexCount;
     this.vertices = new P3[nPoints + 1];
-    this.normals = new V3[planeCount];
+    this.normals = new V3[triangleCount];
+    this.faces = faces;
     this.bsFlat = bsFlat;
-    this.faces = AU.newInt2(planeCount);
+    this.triangles = AU.newInt2(triangleCount);
     for (int i = nPoints + 1; --i >= 0;)
       // includes central atom as last atom or possibly reference point
       vertices[i] = points[i];
-    for (int i = planeCount; --i >= 0;)
+    for (int i = triangleCount; --i >= 0;)
       this.normals[i] = V3.newV(normals[i]);
-    for (int i = planeCount; --i >= 0;)
-      this.faces[i] = planes[i];
+    for (int i = triangleCount; --i >= 0;)
+      this.triangles[i] = triangles[i];
     this.collapsed = collapsed;
     return this;
-  }
-
-  Map<String, Object> info;
-  
-  Map<String, Object> getInfo(Viewer vwr, boolean isAll) {
-    if (isAll && this.info != null)
-      return this.info;
-    Map<String, Object> info = new Hashtable<String, Object>();
-    if (isAll) {
-      this.info = info;
-      info.put("modelIndex", Integer.valueOf(centralAtom.mi));
-      info.put("modelNumber", Integer.valueOf(centralAtom.getModelNumber()));
-      info.put("center", P3.newP(centralAtom));
-      info.put("atomNumber", Integer.valueOf(centralAtom.getAtomNumber()));
-      info.put("atomName", centralAtom.getInfo());
-      info.put("element", centralAtom.getElementSymbol());
-      info.put("faceCount", Integer.valueOf(faces.length));
-      info.put("volume", getVolume());
-      if (smarts != null)
-        info.put("smarts", smarts);
-      if (smiles != null)
-        info.put("smiles", smiles);
-      if (polySmiles != null)
-        info.put("polySmiles", polySmiles);
-      if (pointGroup != null)
-        info.put("pointGroup", pointGroup.getPointGroupName());
-      Object energy = vwr.ms.getInfo(centralAtom.mi, "Energy");
-      if (energy != null)
-        info.put("energy", energy);
-    } else {
-      info.put("bsFlat", bsFlat);
-      if (collapsed)
-        info.put("collapsed", Boolean.valueOf(collapsed));
-      info.put("distanceRef", Float.valueOf(distanceRef));
-    }
-    info.put("vertexCount", Integer.valueOf(nVertices));
-    info.put("atomIndex", Integer.valueOf(centralAtom.i));
-    info.put("vertices", AU.arrayCopyPt(vertices, (isAll ? nVertices : vertices.length)));
-    P3[] n = new P3[normals.length];
-    for (int i = n.length; --i >= 0;)
-      n[i] = P3.newP(normals[i]);
-    info.put("normals", n);
-    info.put("faces", AU.arrayCopyII(faces, faces.length));
-    int[] elemNos = new int[nVertices];
-    for (int i = 0; i < nVertices; i++) {
-      P3 pt = vertices[i];
-      elemNos[i] = (pt instanceof Node ? ((Node) pt).getElementNumber()
-          : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
-    }
-    info.put("elemNos", elemNos);
-    return info;
   }
 
   Polyhedron setInfo(Map<String, SV> info, Atom[] at) {
@@ -134,7 +87,7 @@ public class Polyhedron {
       } else {
         nVertices = vc.intValue;
         vertices = new P3[lst.size()];
-        vc = info.get("distanceRef");
+        vc = info.get("r");
         if (vc != null)
           distanceRef = vc.asFloat();
       }
@@ -152,17 +105,19 @@ public class Polyhedron {
           vertices[i] = p;
         }
       }
-      lst = info.get("faces").getList();
-      faces = AU.newInt2(lst.size());
-      normals = new V3[faces.length];
+      SV faces = info.get("faces");
+      SV o = info.get("triangles");
+      if (o == null) { // formerly
+        o = faces;
+      } else {
+        this.faces = toInt2(faces);
+      }
+      triangles = toInt2(o);
+      normals = new V3[triangles.length];
       V3 vAB = new V3();
-      for (int i = faces.length; --i >= 0;) {
-        Lst<SV> lst2 = lst.get(i).getList();
-        int[] a = new int[lst2.size()];
-        for (int j = a.length; --j >= 0;)
-          a[j] = lst2.get(j).intValue;
-        faces[i] = a;
+      for (int i = triangles.length; --i >= 0;) {
         normals[i] = new V3();
+        int[] a = triangles[i];
         Measure.getNormalThroughPoints(vertices[a[0]], vertices[a[1]],
             vertices[a[2]], normals[i], vAB);
       }
@@ -173,15 +128,93 @@ public class Polyhedron {
     return this;
   }
 
+  private int[][] toInt2(SV o) {
+    Lst<SV> lst = o.getList();
+    int[][] ai = AU.newInt2(lst.size());
+    for (int i = ai.length; --i >= 0;) {
+      Lst<SV> lst2 = lst.get(i).getList();
+      int[] a = ai[i] = new int[lst2.size()];
+      for (int j = a.length; --j >= 0;)
+        a[j] = lst2.get(j).intValue;
+    }
+    return ai;
+  }
+
+  Map<String, Object> info;
+  
+  Map<String, Object> getInfo(Viewer vwr, boolean isAll) {
+    if (isAll && this.info != null && !Logger.debugging)
+      return this.info;
+    Map<String, Object> info = new Hashtable<String, Object>();
+    if (isAll) {
+      this.info = info;
+      info.put("modelIndex", Integer.valueOf(centralAtom.mi));
+      info.put("modelNumber", Integer.valueOf(centralAtom.getModelNumber()));
+      info.put("center", P3.newP(centralAtom));
+      info.put("atomNumber", Integer.valueOf(centralAtom.getAtomNumber()));
+      info.put("atomName", centralAtom.getInfo());
+      info.put("element", centralAtom.getElementSymbol());
+      info.put("triangleCount", Integer.valueOf(triangles.length));
+      info.put("volume", getVolume());
+      String[] names = new String[nVertices];
+      for (int i = nVertices; --i >= 0;) {
+        P3 pt = vertices[i];
+        names[i] = (pt instanceof Node ? ((Node) pt).getAtomName()
+            : pt instanceof Point3fi ? Elements
+                .elementSymbolFromNumber(((Point3fi) pt).sD) : "");
+      }
+      if (faces != null)
+        info.put("faceCount", Integer.valueOf(faces.length));
+      info.put("atomNames", names);
+      if (smarts != null)
+        info.put("smarts", smarts);
+      if (smiles != null)
+        info.put("smiles", smiles);
+      if (polySmiles != null)
+        info.put("polySmiles", polySmiles);
+      if (pointGroup != null)
+        info.put("pointGroup", pointGroup.getPointGroupName());
+      Object energy = vwr.ms.getInfo(centralAtom.mi, "Energy");
+      if (energy != null)
+        info.put("energy", energy);
+    }
+    if (faces != null)
+      info.put("faces", faces);
+    if (!isAll || Logger.debugging) {
+      info.put("bsFlat", bsFlat);
+      if (collapsed)
+        info.put("collapsed", Boolean.valueOf(collapsed));
+      if (distanceRef != 0)
+        info.put("r", Float.valueOf(distanceRef));
+      P3[] n = new P3[normals.length];
+      for (int i = n.length; --i >= 0;)
+        n[i] = P3.newP(normals[i]);
+      info.put("normals", n);
+      info.put("triangles", AU.arrayCopyII(triangles, triangles.length));
+    }
+    info.put("vertexCount", Integer.valueOf(nVertices));
+    info.put("atomIndex", Integer.valueOf(centralAtom.i));
+    info.put("vertices",
+        AU.arrayCopyPt(vertices, (isAll ? nVertices : vertices.length)));
+    int[] elemNos = new int[nVertices];
+    for (int i = 0; i < nVertices; i++) {
+      P3 pt = vertices[i];
+      elemNos[i] = (pt instanceof Node ? ((Node) pt).getElementNumber()
+          : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
+    }
+    info.put("elemNos", elemNos);
+    return info;
+  }
+
   String getSymmetry(Viewer vwr, boolean withPointGroup) {
     info = null;
     SmilesMatcherInterface sm = vwr.getSmilesMatcher();
     try {
-      String details = (distanceRef <= 0 ? null : "" + distanceRef);
+      String details = (distanceRef <= 0 ? null : "r=" + distanceRef);
       if (smarts == null) {
-        smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null, JC.SMILES_TOPOLOGY | JC.SMILES_NOSTEREO, null);
-        smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_NOSTEREO, null);
-        polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices,  JC.SMILES_TYPE_SMILES | JC.SMILES_ATOM_COMMENT, details);
+        smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null, JC.SMILES_TOPOLOGY, null);
+        smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices, JC.SMILES_TYPE_SMILES, null);
+        polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices,  JC.SMILES_TYPE_SMILES | JC.SMILES_POLYHEDRAL | JC.SMILES_ATOM_COMMENT, details);
       }
     } catch (Exception e) {
     }
@@ -207,9 +240,9 @@ public class Polyhedron {
     V3 vAC = new V3();
     V3 vTemp = new V3();
     float v = 0;
-    if (bsFlat.cardinality() < faces.length)
-      for (int i = faces.length; --i >= 0;) {
-        int[] face = faces[i];
+    if (bsFlat.cardinality() < triangles.length)
+      for (int i = triangles.length; --i >= 0;) {
+        int[] face = triangles[i];
         for (int j = face.length - 2; --j >= 0;)
           if (face[j + 2] >= 0)
             v += triangleVolume(face[j], face[j + 1], face[j + 2], vAB, vAC,
@@ -228,7 +261,7 @@ public class Polyhedron {
   }
 
   String getState(Viewer vwr) {
-    return "polyhedron @" + Escape.e(getInfo(vwr, false)) 
+    return "  polyhedron @{" + Escape.e(getInfo(vwr, false)) + "} " 
         + (isFullyLit ? " fullyLit" : "") + ";"
         + (visible ? "" : "polyhedra ({"+centralAtom.i+"}) off;") + "\n";
   }

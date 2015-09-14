@@ -628,8 +628,9 @@ abstract class ScriptTokenParser {
     } else if (isImplicitExpression) {
       addTokenToPostfixToken(T.tokenExpressionEnd);
       tokenNext();
-    } else if (isEmbeddedExpression && !isHash) {
-      tokenNext();
+    } else if (isEmbeddedExpression) {
+      if (!isHash)
+        tokenNext();
     } else {
       addNextToken();
     }

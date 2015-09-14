@@ -88,6 +88,7 @@ public class SmilesGenerator {
   private boolean noStereo;
   public P3 stereoReference;
   private SmilesStereo smilesStereo;
+  private boolean isPolyhedral;
 
   // generation of SMILES strings
 
@@ -109,6 +110,7 @@ public class SmilesGenerator {
     topologyOnly = JC.checkFlag(flags, JC.SMILES_TOPOLOGY);
     getAromatic = !JC.checkFlag(flags, JC.SMILES_NOAROMATIC);
     noStereo = JC.checkFlag(flags, JC.SMILES_NOSTEREO);
+    isPolyhedral = JC.checkFlag(flags, JC.SMILES_POLYHEDRAL);
     return getSmilesComponent(atoms[ipt], bsSelected, true, false, false);
   }
 
@@ -265,17 +267,19 @@ public class SmilesGenerator {
    * 
    * @param atom
    * @param bs
-   * @param allowBioResidues 
+   * @param allowBioResidues
    * @param allowConnectionsToOutsideWorld
-   * @param forceBrackets 
+   * @param forceBrackets
    * @return SMILES
    * @throws InvalidSmilesException
    */
   private String getSmilesComponent(Node atom, BS bs, boolean allowBioResidues,
-                                    boolean allowConnectionsToOutsideWorld, boolean forceBrackets)
+                                    boolean allowConnectionsToOutsideWorld,
+                                    boolean forceBrackets)
       throws InvalidSmilesException {
 
-    if (!explicitH && atom.getElementNumber() == 1 && atom.getEdges().length > 0)
+    if (!explicitH && atom.getElementNumber() == 1
+        && atom.getEdges().length > 0)
       atom = atoms[atom.getBondedAtomIndex(0)]; // don't start with H
     bsSelected = JmolMolecule.getBranchBitSet(atoms, atom.getIndex(),
         BSUtil.copy(bs), null, -1, true, allowBioResidues);
@@ -307,19 +311,18 @@ public class SmilesGenerator {
     bsToDo = BSUtil.copy(bsSelected);
     SB sb = new SB();
 
-    
     // The idea hear is to allow a hypervalent atom to be listed first
-    for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1))
-      if (atoms[i].getCovalentBondCount() > 4) {
-        if (atom == null)
-          sb.append(".");
-        getSmilesAt(sb, atoms[i], allowConnectionsToOutsideWorld, false,
-            explicitH, forceBrackets);
-        atom = null;
-      }
+      for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1))
+        if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral) {
+          if (atom == null)
+            sb.append(".");
+          getSmilesAt(sb, atoms[i], allowConnectionsToOutsideWorld, false,
+              explicitH, forceBrackets);
+          atom = null;
+        }
     if (atom != null)
-      while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld, true,
-          explicitH, forceBrackets)) != null) {
+      while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld,
+          true, explicitH, forceBrackets)) != null) {
       }
     while (bsToDo.cardinality() > 0 || !htRings.isEmpty()) {
       Iterator<Object[]> e = htRings.values().iterator();
@@ -333,8 +336,8 @@ public class SmilesGenerator {
       sb.append(".");
       prevSp2Atoms = null;
       prevAtom = null;
-      while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld, true,
-          explicitH, forceBrackets)) != null) {
+      while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld,
+          true, explicitH, forceBrackets)) != null) {
       }
     }
     if (!htRings.isEmpty()) {
@@ -508,13 +511,7 @@ public class SmilesGenerator {
     Edge[] bonds = atom.getEdges();
     if (stereoReference != null) {
       allowBranches = false;
-      if (smilesStereo == null)
-        try {
-          smilesStereo = SmilesStereo.newStereo(null);
-        } catch (InvalidSmilesException e) {
-          // not possible
-        }
-      smilesStereo.sortBondsByStereo(atom, prevAtom, stereoReference, bonds, vTemp.vA);
+      sortBonds(atom, prevAtom, stereoReference);
     }
     Node aH = null;
     int stereoFlag = (isAromatic ? 10 : 0);
@@ -746,6 +743,16 @@ public class SmilesGenerator {
     prevSp2Atoms = sp2Atoms;
     prevAtom = atom;
     return atomNext;
+  }
+
+  void sortBonds(Node atom, Node refAtom, P3 center) {
+    if (smilesStereo == null)
+      try {
+        smilesStereo = SmilesStereo.newStereo(null);
+      } catch (InvalidSmilesException e) {
+        // not possible
+      }
+    smilesStereo.sortBondsByStereo(atom, refAtom, center, atom.getEdges(), vTemp.vA);
   }
 
   /**

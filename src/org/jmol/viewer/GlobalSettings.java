@@ -898,14 +898,13 @@ public class GlobalSettings {
       else if (database.equals("nci"))
         id += "/file?format=sdf&get3d=True";
     }
-    while (format.indexOf("%c") >= 0) {
-      try {
+    try {
+      while (format.indexOf("%c") >= 0)
         for (int i = 1; i < 10; i++) {
           format = PT.rep(format, "%c" + i, id.substring(i - 1, i));
         }
-      } catch (Exception e) {
-        // too bad.
-      }
+    } catch (Exception e) {
+      // too bad.
     }
     return (format.indexOf("%FILE") < 0 ? format + id : PT.formatStringS(
         format, "FILE", id));

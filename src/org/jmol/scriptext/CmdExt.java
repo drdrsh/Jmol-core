@@ -4079,6 +4079,13 @@ public class CmdExt extends ScriptExt {
       if (!chk)
         msg = vwr.fm.getPathForAllFiles();
       break;
+    case T.polyhedra:
+      if (!chk) {
+        Object[] info = new Object[2];
+        vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "allInfo", info);
+        msg = SV.getVariable(info[1]).asString();
+      }
+      break;
     case T.nmr:
       if (eval.optParameterAsString(2).equalsIgnoreCase("1H")) {
         len = 3;

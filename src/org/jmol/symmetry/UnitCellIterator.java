@@ -191,6 +191,8 @@ public class UnitCellIterator implements AtomIndexIterator {
     Atom a = getAtom();
     if (Logger.debugging)
       Logger.info("draw ID p_" + nFound  + " " + p + " //" + a + " " + t);
+    if (this.p.distanceSquared(a) < 0.0001f)
+      return a;
     Point3fi p = new Point3fi();
     p.setT(this.p);
     p.i = a.i;
