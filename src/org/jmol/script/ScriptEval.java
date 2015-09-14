@@ -4621,6 +4621,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.setBooleanProperty("legacyJavaFloat", false);
     if (isMutate)
       htParams.put("isMutate", Boolean.TRUE);
+    htParams.put("eval", this);
     errMsg = vwr.loadModelFromFile(null, filename, filenames, null, isAppend,
         htParams, loadScript, sOptions, tokType, isConcat);
     if (timeMsg)

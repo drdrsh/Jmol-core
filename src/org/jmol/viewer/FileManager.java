@@ -1207,9 +1207,9 @@ public class FileManager implements BytePoster {
   void cacheClear() {
     Logger.info("cache cleared");
     cache.clear();
-    String fileName = null;
-    fileName = fileName == null ? null : getCanonicalName(Rdr.getZipRoot(fileName));
-    if (pngjCache == null || fileName != null && !pngjCache.containsKey(fileName))
+    //String fileName = null;
+    //fileName = fileName == null ? null : getCanonicalName(Rdr.getZipRoot(fileName));
+    if (pngjCache == null)// || fileName != null && !pngjCache.containsKey(fileName))
       return;
     pngjCache = null;
     Logger.info("PNGJ cache cleared");
@@ -1296,6 +1296,7 @@ public class FileManager implements BytePoster {
         ? vwr.vwrOptions.get("codePath") + classPath + resourceName
             : url.getFile());
     if (vwr.async) {
+      // if we are running asynchronously, this will be a problem. 
       Object bytes = vwr.fm.cacheGet(resourceName, false);
       if (bytes == null)
         throw new JmolAsyncException(resourceName);

@@ -1971,7 +1971,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     // loadInline
     if (arrayModels == null || arrayModels.length == 0)
       return null;
-    String ret = openStringsInlineParamsAppend(arrayModels, null, isAppend);
+    String ret = openStringsInlineParamsAppend(arrayModels, new Hashtable<String, Object>(), isAppend);
     refresh(1, "loadInline String[]");
     return ret;
   }
@@ -1999,7 +1999,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     Object atomSetCollection = fm.createAtomSeCollectionFromArrayData(list,
         setLoadParameters(null, isAppend), isAppend);
     String ret = createModelSetAndReturnError(atomSetCollection, isAppend,
-        null, null);
+        null, new Hashtable<String, Object>());
     refresh(1, "loadInline");
     return ret;
   }
@@ -2109,7 +2109,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     Object atomSetCollection = fm.createAtomSetCollectionFromString(strModel,
         htParams, isAppend);
     return createModelSetAndReturnError(atomSetCollection, isAppend,
-        loadScript, null);
+        loadScript, htParams);
   }
 
   /**
@@ -2131,7 +2131,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         arrayModels, loadScript, setLoadParameters(htParams, isAppend),
         isAppend);
     return createModelSetAndReturnError(atomSetCollection, isAppend,
-        loadScript, null);
+        loadScript, htParams);
   }
 
   public char getInlineChar() {
@@ -2194,7 +2194,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         String jmolScript = (String) ms.getInfoM("jmolscript");
         if (ms.getMSInfoB("doMinimize"))
           try {
-            minimize((JmolScriptEvaluator) htParams.get("eval"),
+            JmolScriptEvaluator eval = (JmolScriptEvaluator) htParams.get("eval");
+            minimize(eval,
                 Integer.MAX_VALUE, 0, bsNew, null, 0, true, true, true, true);
           } catch (Exception e) {
             // TODO
@@ -2222,7 +2223,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     errMsg = getErrorMessage();
 
     setFileLoadStatus(FIL.CREATED, fullPathName, fileName, ms.modelSetName,
-        errMsg, htParams == null ? null : (Boolean) htParams.get("async"));
+        errMsg, (Boolean) htParams.get("async"));
     if (isAppend) {
       selectAll();
       setTainted(true);
@@ -8427,7 +8428,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed,
           haveFixed, isSilent, ff);
     } catch (JmolAsyncException e) {
-      eval.loadFileResourceAsync(e.getFileName());
+      if (eval != null)
+        eval.loadFileResourceAsync(e.getFileName());
     } catch (Exception e) {
       Logger.error("Minimization error: " + e.toString());
       if (!isJS)
