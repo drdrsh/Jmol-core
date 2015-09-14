@@ -104,30 +104,29 @@ public class Atom extends P3 implements Cloneable {
   }
 
   public String getElementSymbol() {
-    if (elementSymbol == null)
-      if (atomName != null) {
-        int len = atomName.length();
-        int ichFirst = 0;
-        char chFirst = 0;
-        while (ichFirst < len &&
-               !isValidSymChar1(chFirst = atomName.charAt(ichFirst)))
-          ++ichFirst;
-        switch(len - ichFirst) {
-        case 0:
-          break;
-        default:
-          char chSecond = atomName.charAt(ichFirst + 1);
-          if (isValidSymNoCase(chFirst, chSecond)) {
-            elementSymbol = "" + chFirst + chSecond;
-            break;
-          }
-          //$FALL-THROUGH$
-        case 1:
-          if (isValidSym1(chFirst))
-            elementSymbol = "" + chFirst;
+    if (elementSymbol == null && atomName != null) {
+      int len = atomName.length();
+      int ichFirst = 0;
+      char chFirst = 0;
+      while (ichFirst < len
+          && !isValidSymChar1(chFirst = atomName.charAt(ichFirst)))
+        ++ichFirst;
+      switch (len - ichFirst) {
+      case 0:
+        break;
+      default:
+        char chSecond = atomName.charAt(ichFirst + 1);
+        if (isValidSymNoCase(chFirst, chSecond)) {
+          elementSymbol = "" + chFirst + chSecond;
           break;
         }
+        //$FALL-THROUGH$
+      case 1:
+        if (isValidSym1(chFirst))
+          elementSymbol = "" + chFirst;
+        break;
       }
+    }
     return elementSymbol;
   }
 

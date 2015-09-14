@@ -316,9 +316,8 @@ public class CifReader extends AtomSetCollectionReader {
   private void readSingleAtom() {
     Atom atom = new Atom();
     atom.set(0, 0, 0);
-    String s = atom.atomName = parser.fullTrim(data);
-    atom.elementSymbol = s.length() == 1 ? s : s.substring(0, 1)
-        + s.substring(1, 2).toLowerCase();
+    atom.atomName = parser.fullTrim(data);
+    atom.getElementSymbol();
     asc.addAtom(atom);
   }
 
@@ -1246,13 +1245,8 @@ public class CifReader extends AtomSetCollectionReader {
             + " has invalid/unknown coordinates");
         continue;
       }
-      if (atom.elementSymbol == null && atom.atomName != null) {
-        String sym = atom.atomName;
-        int pt = 0;
-        while (pt < sym.length() && PT.isLetter(sym.charAt(pt)))
-          pt++;
-        atom.elementSymbol = (pt == 0 || pt > 2 ? "Xx" : sym.substring(0, pt));
-      }
+      if (atom.elementSymbol == null && atom.atomName != null)
+        atom.getElementSymbol();
       if (!filterCIFAtom(atom, assemblyId))
         continue;
       setAtomCoord(atom);

@@ -76,11 +76,9 @@ public class SpartanReader extends BasisFunctionReader {
   private void readAtoms() throws Exception {
     discardLinesUntilBlank();
     while (rd() != null && (/* atomNum = */parseIntRange(line, 0, 3)) > 0) {
-      String elementSymbol = parseTokenRange(line, 4, 6);
-      String atomName = parseTokenRange(line, 7, 13);
       Atom atom = asc.addNewAtom();
-      atom.elementSymbol = elementSymbol;
-      atom.atomName = atomName;
+      atom.elementSymbol = parseTokenRange(line, 4, 6);
+      atom.atomName = parseTokenRange(line, 7, 13);
       setAtomCoordXYZ(atom, parseFloatRange(line, 17, 30), parseFloatRange(line, 31, 44), parseFloatRange(
           line, 45, 58));
     }

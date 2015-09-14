@@ -75,7 +75,7 @@ public class MopacGraphfReader extends MopacSlaterReader {
           parseFloatRange(line, 29, 41));
       if (line.length() > 41)
         atom.partialCharge = parseFloatStr(line.substring(41));
-      atom.elementSymbol = AtomSetCollectionReader.getElementSymbol(atomicNumbers[i]);
+      atom.elementSymbol = getElementSymbol(atomicNumbers[i]);
       //System.out.println(atom.elementSymbol + " " + atom.x + " " + atom.y + " " + atom.z);
     }
   }
