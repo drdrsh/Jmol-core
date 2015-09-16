@@ -77,12 +77,17 @@ public class MMCifValidationParser {
         Lst<SV> hpins = hairpins.getList();
         Lst<SV> loops = kloops.getList();
         for (int i = loops.size(); --i >= 0;) {
-          Lst<SV> hlist = loops.get(i).getMap().get("hairpin_indices").getList();
-          for (int j = hlist.size(); --j >= 0;) {
-            // mutate integer pointer to actual array using a pointer
-            SV item = hlist.get(j);
-            item.tok = T.hash;
-            item.value = hpins.get(item.intValue - 1).value;
+          Map<String, SV> kmap = loops.get(i).getMap();
+          Lst<SV> khlist = kmap.get("hairpin_indices")
+              .getList();
+          int n = khlist.size();
+          if (n > 0) {
+            Lst<SV> khpins = new Lst<SV>();
+            kmap.put("hairpins", SV.newV(T.varray, khpins));
+            for (int j = n; --j >= 0;)
+              khpins.addLast(SV.newV(T.hash,
+                  hpins.get(khlist.get(j).intValue - 1).value));
+
           }
         }
       }

@@ -117,6 +117,9 @@ public abstract class GenericApplet implements JmolAppletInterface,
     vwrOptions.put("applet", Boolean.TRUE);
     if (getJmolParameter("statusListener") == null)
       vwrOptions.put("statusListener", this);
+    language = getJmolParameter("language");
+    if (language != null)
+      vwrOptions.put("language", language);
     viewer = new Viewer(vwrOptions);
     viewer.pushHoldRepaint();
     String emulate = getValueLowerCase("emulate", "jmol");
@@ -128,8 +131,6 @@ public abstract class GenericApplet implements JmolAppletInterface,
     for (CBK item : CBK.values())
       setValue(item.name() + "Callback", null);
     loading = false;
-    language = getJmolParameter("language");
-    new GT(viewer, language);
     if (language != null)
       System.out.print("requested language=" + language + "; ");
     doTranslate = (!"none".equals(language) && getBooleanValue("doTranslate",

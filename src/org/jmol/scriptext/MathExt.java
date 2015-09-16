@@ -161,8 +161,9 @@ public class MathExt {
       return evaluateUserFunction(mp, (String) op.value, args, op.intValue,
           op.tok == T.propselector);
     case T._:
+    case T.select:
     case T.getproperty:
-      return evaluateGetProperty(mp, args, tok == T._, op.tok == T.propselector);
+      return evaluateGetProperty(mp, args, tok, op.tok == T.propselector);
     case T.helix:
       return evaluateHelix(mp, args);
     case T.hkl:
@@ -1263,44 +1264,44 @@ public class MathExt {
   }
 
   /**
-   * _ by itself, not as a function, is shorthand for getProperty("auxiliaryInfo")
+   * _ by itself, not as a function, is shorthand for
+   * getProperty("auxiliaryInfo")
    * 
    * $ print _.keys
    * 
-   * boundbox
-   * group3Counts
-   * group3Lists
-   * modelLoadNote
-   * models
-   * properties
-   * someModelsHaveFractionalCoordinates
-   * someModelsHaveSymmetry
-   * someModelsHaveUnitcells
-   * symmetryRange
+   * boundbox group3Counts group3Lists modelLoadNote models properties
+   * someModelsHaveFractionalCoordinates someModelsHaveSymmetry
+   * someModelsHaveUnitcells symmetryRange
    * 
    * 
-   * _m by itself, not as a function, is shorthand for getProperty("auxiliaryInfo.models")[_currentFrame]
+   * _m by itself, not as a function, is shorthand for
+   * getProperty("auxiliaryInfo.models")[_currentFrame]
    * 
    * $ print format("json",_m.unitCellParams)
-   *  
-   *  [ 0.0,0.0,0.0,0.0,0.0,0.0,0.0,-2.1660376,-2.1660376,0.0,-2.1660376,2.1660376,-4.10273,0.0,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN ]
-   *  
-   *  
-   * {atomset}._  by itself delivers a subset array of auxiliaryInfo.models  for all models in {atomset}
-   *  
+   * 
+   * [ 0.0,0.0,0.0,0.0,0.0,0.0,0.0,-2.1660376,-2.1660376,0.0,-2.1660376,
+   * 2.1660376,-4.10273,0.0,0.0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN ]
+   * 
+   * 
+   * {atomset}._ by itself delivers a subset array of auxiliaryInfo.models for
+   * all models in {atomset}
+   * 
    * $ print {*}._..1..aflowInfo
    * 
    * (first model's aflowInfo)
    * 
    * 
-   * _(key) prepends "auxiliaryInfo.models", delivering a modelCount-length array of information
+   * _(key) prepends "auxiliaryInfo.models", delivering a modelCount-length
+   * array of information
    * 
    * $ print _("aflowInfo[SELECT auid WHERE H__eV___VASP_ < 0]")
    * 
    * 
-   * {atomset}._(key) selects for model Auxiliary info related to models of the specified atoms
+   * {atomset}._(key) selects for model Auxiliary info related to models of the
+   * specified atoms
    * 
-   * {atomset}.getProperty(key) defaults to atomInfo, but also allows key to start with "bondInfo" 
+   * {atomset}.getProperty(key) defaults to atomInfo, but also allows key to
+   * start with "bondInfo"
    * 
    * Examples:
    * 
@@ -1316,12 +1317,16 @@ public class MathExt {
    * @throws ScriptException
    */
   private boolean evaluateGetProperty(ScriptMathProcessor mp, SV[] args,
-                                      boolean isAuxiliary, boolean isAtomProperty)
+                                      int tok0, boolean isAtomProperty)
       throws ScriptException {
+    boolean isSelect = (isAtomProperty && tok0 == T.select);
+    boolean isAuxiliary = (tok0 == T._);
     int pt = 0;
     int tok = (args.length == 0 ? T.nada : args[0].tok);
-    if (args.length == 2 && (tok == T.varray || tok == T.hash || tok == T.context)) {
-      return mp.addXObj(vwr.extractProperty(args[0].value, args[1].value.toString(), -1));
+    if (args.length == 2
+        && (tok == T.varray || tok == T.hash || tok == T.context)) {
+      return mp.addXObj(vwr.extractProperty(args[0].value,
+          args[1].value.toString(), -1));
     }
     String propertyName = (args.length > 0 ? SV.sValue(args[pt++]) : "");
     String lc = propertyName.toLowerCase();
@@ -1335,10 +1340,14 @@ public class MathExt {
     SV x = null;
     if (isAtomProperty) {
       x = mp.getX();
-      if (x.tok != T.bitset)
-          return mp.addXObj(vwr.extractProperty(x, propertyName, -1));
+      if (x.tok != T.bitset) {
+        if (isSelect)
+          propertyName = "[SELECT " + propertyName + "]"; 
+        return mp.addXObj(vwr.extractProperty(x, propertyName, -1));
+      }
     }
-    if (isAtomProperty && !lc.startsWith("bondinfo") && !lc.startsWith("atominfo"))
+    if (isAtomProperty && !lc.startsWith("bondinfo")
+        && !lc.startsWith("atominfo"))
       propertyName = "atomInfo." + propertyName;
     Object propertyValue = "";
     if (propertyName.equalsIgnoreCase("fileContents") && args.length > 2) {
@@ -1372,7 +1381,7 @@ public class MathExt {
     }
     if (isAuxiliary && !isAtomProperty)
       propertyName = "auxiliaryInfo.models." + propertyName;
-    propertyName = PT.rep(propertyName, ".[", "[");  
+    propertyName = PT.rep(propertyName, ".[", "[");
     Object property = vwr.getProperty(null, propertyName, propertyValue);
     if (pt < args.length)
       property = vwr.extractProperty(property, args, pt);

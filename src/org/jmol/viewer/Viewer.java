@@ -515,6 +515,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     tm = TransformManager.getTransformManager(this, Integer.MAX_VALUE, 0, is4D);
     slm = new SelectionManager(this);
     if (haveDisplay) {
+      // must have language by now, as ActionManager uses GT._()
       acm = (multiTouch ? (ActionManager) Interface.getOption(
           "multitouch.ActionManagerMT", null, null) : new ActionManager());
       acm.setViewer(this,
@@ -573,6 +574,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       } else if (!isJS) {
         logFilePath = null;
       }
+      new GT(this, (String) info.get("language"));
+      // deferred here so that language is set
+      if (isJS)
+        acm.createActions();
     } else {
       // not an applet -- used to pass along command line options
       gdata

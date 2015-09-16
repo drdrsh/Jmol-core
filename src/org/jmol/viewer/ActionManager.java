@@ -75,6 +75,8 @@ public class ActionManager implements EventManager {
    */
   public void setViewer(Viewer vwr, String commandOptions) {
     this.vwr = vwr;
+    if (!vwr.isJS)
+      createActions();
     setBinding(jmolBinding = new JmolBinding());
     LEFT_CLICKED = Binding.getMouseAction(1, Binding.LEFT, Event.CLICKED);
     LEFT_DRAGGED = Binding.getMouseAction(1, Binding.LEFT, Event.DRAGGED);
@@ -221,7 +223,9 @@ public class ActionManager implements EventManager {
     actionNames[i] = name;
   }
 
-  static {
+  void createActions() {
+    if (actionInfo[ACTION_assignNew] != null)
+      return;
     // OK for J2S because actionInfo and actionNames are both private
     newAction(ACTION_assignNew, "_assignNew", GT.o(GT._(
         "assign/new atom or bond (requires {0})"),
@@ -343,7 +347,6 @@ public class ActionManager implements EventManager {
             ._("spin model (swipe and release button and stop motion simultaneously)"));
     newAction(ACTION_translate, "_translate", GT._("translate"));
     newAction(ACTION_wheelZoom, "_wheelZoom", GT._("zoom"));
-
   }
 
   public static String getActionName(int i) {

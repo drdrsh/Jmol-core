@@ -157,7 +157,9 @@ public class SmilesParser {
     flags = 0;
     while (pattern.startsWith("/")) {
       String strFlags = getSubPattern(pattern, 0, '/').toUpperCase();
-      pattern = pattern.substring(strFlags.length());
+      pattern = pattern.substring(strFlags.length() + 2);
+      if (strFlags.indexOf("NONCANONICAL") >= 0)
+        flags |= Edge.FLAG_AROMATIC_NONCANONICAL;
       if (strFlags.indexOf("NOAROMATIC") >= 0)
         flags |= Edge.FLAG_NO_AROMATIC;
       if (strFlags.indexOf("AROMATICSTRICT") >= 0)

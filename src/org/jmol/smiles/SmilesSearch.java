@@ -130,6 +130,7 @@ public class SmilesSearch extends JmolMolecule {
   boolean invertStereochemistry;
   private boolean noAromatic;
   private boolean aromaticDouble;
+  private boolean noncanonical;
     
 
   void setAtomArray() {
@@ -398,6 +399,7 @@ public class SmilesSearch extends JmolMolecule {
     ignoreStereochemistry = ((flags & Edge.FLAG_IGNORE_STEREOCHEMISTRY) != 0);
     invertStereochemistry = ((flags & Edge.FLAG_INVERT_STEREOCHEMISTRY) != 0);
     noAromatic = ((flags & Edge.FLAG_NO_AROMATIC) != 0);
+    noncanonical = ((flags & Edge.FLAG_AROMATIC_NONCANONICAL) != 0);
     aromaticDouble = ((flags & Edge.FLAG_AROMATIC_DOUBLE) != 0);
     
     if (Logger.debugging && !isSilent)
@@ -857,7 +859,8 @@ public class SmilesSearch extends JmolMolecule {
         if (patternAtom.residueChar != null || patternAtom.elementNumber == -2) {
           char atype = a.getBioSmilesType();
           char ptype = patternAtom.getBioSmilesType();
-          char resChar = (patternAtom.residueChar == null ? '*' : patternAtom.residueChar.charAt(0));
+          char resChar = (patternAtom.residueChar == null ? '*'
+              : patternAtom.residueChar.charAt(0));
           boolean ok = true;
           boolean isNucleic = false;
           switch (ptype) {
@@ -900,7 +903,8 @@ public class SmilesSearch extends JmolMolecule {
         if (patternAtom.isBioAtom) {
           // BIOSMARTS
           // cross linking, residueChar, 
-          if (patternAtom.notCrossLinked && a.getCrossLinkVector(null, true, true))
+          if (patternAtom.notCrossLinked
+              && a.getCrossLinkVector(null, true, true))
             break;
         }
       } else {
@@ -911,8 +915,12 @@ public class SmilesSearch extends JmolMolecule {
         // Check aromatic
         boolean isAromatic = patternAtom.isAromatic();
         if (!noAromatic && !patternAtom.aromaticAmbiguous
-            && isAromatic != bsAromatic.get(iAtom))
-          break;
+            && isAromatic != bsAromatic.get(iAtom)) {
+          if (!noncanonical
+              || patternAtom.getExplicitHydrogenCount() != 
+                        atom.getCovalentHydrogenCount())
+            break;
+        }
 
         // <n> Check isotope
         if ((n = patternAtom.getAtomicMass()) != Integer.MIN_VALUE) {

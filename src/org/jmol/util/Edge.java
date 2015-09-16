@@ -104,6 +104,7 @@ public abstract class Edge {
 
   public int index = -1;
   public int order;
+  final public static int FLAG_AROMATIC_NONCANONICAL = 64;
   final public static int FLAG_AROMATIC_DOUBLE = 32;
   final public static int FLAG_AROMATIC_DEFINED = 16;
   final public static int FLAG_AROMATIC_STRICT = 8;

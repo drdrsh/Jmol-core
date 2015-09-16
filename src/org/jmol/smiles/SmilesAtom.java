@@ -238,7 +238,7 @@ public class SmilesAtom extends P3 implements BNode {
       }
     }
 
-    if (count > 0)
+    if (count >= 0)
       missingHydrogenCount = count;
     return true;
   }
@@ -474,6 +474,7 @@ public class SmilesAtom extends P3 implements BNode {
   }
 
   public int getExplicitHydrogenCount() {
+    System.out.println(this + " " + missingHydrogenCount);
     return missingHydrogenCount;
   }
 

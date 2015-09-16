@@ -172,14 +172,16 @@ public class SmilesExt {
                                  boolean firstMatchOnly) throws ScriptException {
 
     // just retrieving the SMILES or bioSMILES string
-    if (pattern.length() == 0 || pattern.equals("H") || pattern.equals("*")) {
+    if (pattern.length() == 0 || pattern.equals("H") || pattern.equals("*") 
+        || (firstMatchOnly = pattern.equalsIgnoreCase("NOAROMATIC"))) {
       try {
         return e.vwr.getSmilesOpt(
             bsSelected,
             0,
             0,
             flags | (pattern.equals("H") ? JC.SMILES_EXPLICIT_H : 0)
-                | (pattern.equals("*") ? JC.SMILES_TOPOLOGY : 0));
+                | (pattern.equals("*") ? JC.SMILES_TOPOLOGY : 0)
+                | (firstMatchOnly ? JC.SMILES_NOAROMATIC : 0));
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }

@@ -433,23 +433,39 @@ public class PropertyManager implements JmolPropertyManager {
         boolean asMap = false;
         if (arg.tok == T.select) {
           key = arg.myName;
-          if (key.equals("**")) {
-            key = "";
+          if (key.contains("**")) {
+            boolean isAll = key.equals("**");
+            key = PT.rep(key, "**", "*");
+            String newKey = "";
             for (Entry<?, ?> e : h.entrySet()) {
               String k = (String) e.getKey();
+              if (!isAll && !PT.isLike(k, key))
+                continue;
               Object o = e.getValue();
               if ((o instanceof SV)) {
                 o = ((SV) o).getMap();
-              } else if (!(o instanceof Map<?,?>)){
+              } else if (!(o instanceof Map<?, ?>)) {
                 o = null;
               }
-              if (o != null && vwr.checkSelect((Map<String, SV>) o, (T[]) arg.value))
-                key += "," + k;
+              /*
+Token[string(4/0x4) value="[select bond** where outliers.value<-7.2]"]
+Token[keyword(17/0x10100011) value=")"]
+
+END
+
+checkSelect invalid argument
+----
+          e_x_p_r_e_s_s_i_o_n = outliers . value <<<<< << -7.2               */
+              if (o != null
+                  && vwr.checkSelect((Map<String, SV>) o, (T[]) arg.value))
+                newKey += "," + k;
             }
-            if (key.length() == 0)
+            if (newKey.length() == 0)
               return "";
+            key = newKey;
             asMap = true;
-          } else if (!vwr.checkSelect((Map<String, SV>) property, (T[]) arg.value))
+          } else if (!vwr.checkSelect((Map<String, SV>) property,
+              (T[]) arg.value))
             return "";
         } else {
           key = arg.asString();
@@ -460,16 +476,21 @@ public class PropertyManager implements JmolPropertyManager {
             return extractProperty(keys, args, ptr, null, true);
           }
         }
-        boolean isWild = (key.startsWith("*") || key.endsWith("*") || key.indexOf(",") >= 0);
-        if (isWild && v2 == null)
-          v2 = new Lst<Object>();
-        if (isWild && key.length() == 1) {
-          if (ptr == ((SV[]) args).length) {
-            v2.addLast(property);
-            return v2;
-          } 
-          return extractProperty(property, args, ptr, v2, true);
+        boolean isWild = (key.startsWith("*") || key.endsWith("*") || key
+            .indexOf(",") >= 0);
+        if (isWild) {
+          if (v2 == null)
+            v2 = new Lst<Object>();
+          if (key.length() == 1) {
+            if (ptr == ((SV[]) args).length) {
+              v2.addLast(property);
+              return v2;
+            }
+            return extractProperty(property, args, ptr, v2, true);
+          }
         }
+        if (key.contains("**"))
+          key = PT.rep(key, "**", "*") + ",";
         if (key.contains(",")) {
           if (asMap)
             key = key.substring(1);
