@@ -71,7 +71,7 @@ public class FilesReader implements JmolFilesReaderInterface {
     if (!isAppend && !vwr.displayLoadErrors)
       vwr.zap(false, true, false);
 
-    fm.setFileInfo(new String[] { dataReaders == null ? "file[]" : "String[]" });
+    fm.setFileInfo(new String[] { dataReaders == null ? fullPathNamesIn[0] : "String[]" });
   }
 
   /**

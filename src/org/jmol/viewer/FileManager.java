@@ -199,8 +199,9 @@ public class FileManager implements BytePoster {
     String name0 = name;
     name = vwr.resolveDatabaseFormat(name);
     if (!name0.equals(name) && name0.indexOf("/") < 0 
-        && (name0.startsWith("$") || name0.startsWith(":") || name0.startsWith("==")))
+        && Viewer.hasDatabasePrefix(name0)) {
       htParams.put("dbName", name0);
+    }
     int pt = name.indexOf("::");
     String nameAsGiven = (pt >= 0 ? name.substring(pt + 2) : name);
     String fileType = (pt >= 0 ? name.substring(0, pt) : null);
@@ -232,6 +233,8 @@ public class FileManager implements BytePoster {
       int pt = fileNames[i].indexOf("::");
       String nameAsGiven = (pt >= 0 ? fileNames[i].substring(pt + 2)
           : fileNames[i]);
+      
+      System.out.println(i + " FM " + nameAsGiven);
       String fileType = (pt >= 0 ? fileNames[i].substring(0, pt) : null);
       String[] names = getClassifiedName(nameAsGiven, true);
       if (names.length == 1)

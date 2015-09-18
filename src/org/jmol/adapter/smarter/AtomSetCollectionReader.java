@@ -1702,13 +1702,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return line;
   }
 
-  protected void processDSSR(GenericLineReader reader,
-                             Map<String, String> htGroup1, Map<String, Integer> modelMap) throws Exception {
-    String s = vwr.getAnnotationParser(modelMap == null).processDSSR(
-        asc.getAtomSetAuxiliaryInfo(Integer.MAX_VALUE), reader, line, htGroup1, modelMap);
-    appendLoadNote(s);
-  }
-
   public void appendUunitCellInfo(String info) {
     if (moreUnitCellInfo == null) 
       moreUnitCellInfo = new Lst<String>();

@@ -23,15 +23,22 @@
  */
 package org.jmol.script;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import java.util.Arrays;
-
 import java.util.Hashtable;
-import java.util.Map.Entry;
-
 import java.util.Map;
 
+import javajs.util.A4;
+import javajs.util.AU;
+import javajs.util.CU;
+import javajs.util.DF;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.T3;
+import javajs.util.V3;
 
 import org.jmol.java.BS;
 import org.jmol.modelset.BondSet;
@@ -39,19 +46,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-
-import javajs.util.A4;
-import javajs.util.CU;
-import javajs.util.DF;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.PT;
-import javajs.util.Quat;
-
-import javajs.util.T3;
-import javajs.util.V3;
 import org.jmol.viewer.Viewer;
 
 public class ScriptMathProcessor {
@@ -1001,7 +995,8 @@ public class ScriptMathProcessor {
       case T.type:
         return addXStr(typeOf(x2));
       case T.keys:
-        return getKeys(x2, (op.intValue & T.minmaxmask) == T.minmaxmask);
+        String[] keys = x2.getKeys((op.intValue & T.minmaxmask) == T.minmaxmask);
+        return (keys == null ? addXStr("") : addXAS(keys));
       case T.length:
       case T.count:
       case T.size:
@@ -1062,46 +1057,6 @@ public class ScriptMathProcessor {
     }
 
     return binaryOp(op, x1, x2);
-  }
-
-  private boolean getKeys(SV x2, boolean isAll) {
-    switch (x2.tok) {
-    case T.hash:
-    case T.context:
-    case T.varray:
-      break;
-    default:
-      return addXStr("");
-    }
-    Lst<String> keys = new Lst<String>();
-    getKeyList(x2, isAll, keys, "");
-    String[] skeys = keys.toArray(new String[keys.size()]);
-    Arrays.sort(skeys);
-    return addXAS(skeys);
-  }
-
-  private void getKeyList(SV x2, boolean isAll, Lst<String> keys, String prefix) {
-    Map<String, SV> map = x2.getMap();
-    if (map == null) {
-      if (isAll) {
-        Lst<SV> lst;
-        int n;
-        if ((lst = x2.getList()) != null && (n = lst.size()) > 0)
-          getKeyList(lst.get(n - 1), true, keys, prefix + n + ".");
-      }
-      return;
-    }
-    for(Entry<String, SV> e: map.entrySet()) {
-      String k = e.getKey();
-      if (isAll && (k.length() == 0 || !PT.isLetter(k.charAt(0)))) {
-        if (prefix.endsWith("."))
-          prefix = prefix.substring(0, prefix.length() - 1);
-        k = "[" + PT.esc(k) + "]";
-      }
-      keys.addLast(prefix + k);
-      if (isAll)
-        getKeyList(e.getValue(), true, keys, prefix + k + ".");
-    }
   }
 
   private static final String qMods = " w:0 x:1 y:2 z:3 normal:4 eulerzxz:5 eulerzyz:6 vector:-1 theta:-2 axisx:-3 axisy:-4 axisz:-5 axisangle:-6 matrix:-9";

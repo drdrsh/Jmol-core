@@ -1645,6 +1645,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       htParams.put("concatenate", Boolean.TRUE);
     Object atomSetCollection;
     String[] saveInfo = fm.getFileInfo();
+    
     if (fileNames != null) {
 
       // 1) a set of file names
@@ -2391,7 +2392,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public JmolAnnotationParser getAnnotationParser(boolean isDSSR) {
     return (isDSSR ? (dssrParser == null ? (dssrParser = (JmolAnnotationParser) Interface
-        .getOption("dssx.DSSR0", this, "script")) : dssrParser)
+        .getOption("dssx.DSSR1", this, "script")) : dssrParser)
         : (annotationParser == null ? (annotationParser = (JmolAnnotationParser) Interface
             .getOption("dssx.AnnotationParser", this, "script"))
             : annotationParser));
@@ -3866,16 +3867,16 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return fileName;
   }
 
+  public static boolean hasDatabasePrefix(String fileName) {
+    return (fileName.length() != 0 && isDatabaseCode(fileName.charAt(0)));
+  }
+
   public static boolean isDatabaseCode(char ch) {
     return (ch == '*' // PDBE
         || ch == '$' // NCI resolver
         || ch == '=' // RCSB model or ligand
     || ch == ':' // PubChem
     );
-  }
-
-  public static boolean hasDatabasePrefix(String fileName) {
-    return (fileName.length() != 0 && isDatabaseCode(fileName.charAt(0)));
   }
 
   /**
@@ -3918,7 +3919,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       // European Bioinformatics Institute
       int pt = name.lastIndexOf("/");
       if (name.startsWith("*dom/")) {
-        //  *ann/.../.../.../xxxx
+        //  *dom/.../.../.../xxxx
         f = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "mappings");
         return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
@@ -3928,7 +3929,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         format = (pt > 4 ? name.substring(5) : "validation/outliers/all");
         return PT.rep(g.resolveDataBase("map", f), "%TYPE", format);
       } else if (name.startsWith("*rna3d/")) {
-        //  *val/.../.../.../xxxx
+        //  *rna3d/.../.../.../xxxx
         f = name.substring(pt + 1);
         format = (pt > 6 ? name.substring(6) : "loops");
         return PT.rep(g.resolveDataBase("rna3d", f), "%TYPE", format);
@@ -9367,9 +9368,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   private JSJSONParser jsonParser;
   
-  public SV parseJSON(String ann) {
+  public Map<String, Object> parseJSON(String ann) {
     if (jsonParser == null)
       jsonParser = ((JSJSONParser) Interface.getInterface("javajs.util.JSJSONParser", this, "script"));
-    return SV.getVariable(jsonParser.parseMap(ann));
+    return jsonParser.parseMap(ann, true);
   }
 }

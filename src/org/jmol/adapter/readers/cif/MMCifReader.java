@@ -180,12 +180,9 @@ public class MMCifReader extends CifReader {
         String note = null;
         if (addedData == null) {
           if (validation != null || dssr != null)
-            note = vs.finalizeValidations(modelMap);
+            note = vs.finalizeValidations(vwr, modelMap);
         } else if (addedDataKey.equals("_rna3d")) {
           note = vs.finalizeRna3d(modelMap);
-        } else if (addedDataKey.equals("_dssr")) {
-          reader = Rdr.getBR(addedData);
-          processDSSR(this, htGroup1, null);
         }
         if (note != null)
           appendLoadNote(note);
@@ -1003,7 +1000,7 @@ public class MMCifReader extends CifReader {
       String key2 = vwr.getChainID(getField(STRUCT_CONN_ASYM2), true) + getField(STRUCT_CONN_COMP2)
           + parseFloatStr(getField(STRUCT_CONN_SEQ2))
           + getField(STRUCT_CONN_ATOM2) + getField(STRUCT_CONN_ALT2);
-      System.out.println(type + "\t" + key1 + " " + key2);
+      //System.out.println(type + "\t" + key1 + " " + key2);
       int order = getBondOrder(getField(STRUCT_CONN_ORDER));
       if (structConnMap == null)
         structConnMap = new Lst<Object[]>();

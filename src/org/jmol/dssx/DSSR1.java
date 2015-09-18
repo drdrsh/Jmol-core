@@ -23,17 +23,13 @@
  */
 package org.jmol.dssx;
 
-import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.api.GenericLineReader;
 import javajs.util.Lst;
-import javajs.util.P3;
 import javajs.util.PT;
-import javajs.util.Rdr;
-import javajs.util.SB;
 
 import org.jmol.java.BS;
+import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.HBond;
 import org.jmol.modelset.ModelSet;
@@ -45,6 +41,7 @@ import org.jmol.modelsetbio.NucleicPolymer;
 import org.jmol.script.T;
 import org.jmol.util.C;
 import org.jmol.util.Edge;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
@@ -78,6 +75,282 @@ public class DSSR1 extends AnnotationParser {
     // for reflection
   }
 
-// TODO
+  @Override
+  public String calculateDSSRStructure(Viewer vwr, BS bsAtoms) {
+    BS bs = vwr.ms.getModelBS(bsAtoms == null ? vwr.bsA() : bsAtoms, true);
+    String s = "";
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      s += getDSSRForModel(vwr, i);
+    return s;
+  }
+
+  @SuppressWarnings("unchecked")
+  private String getDSSRForModel(Viewer vwr, int modelIndex) {
+    Map<String, Object> info = null;
+    String out = null;
+    while (true) {
+      if (!vwr.ms.am[modelIndex].isBioModel)
+        break;
+      info = vwr.ms.getModelAuxiliaryInfo(modelIndex);
+      if (info.containsKey("dssr"))
+        break;
+      BS bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+      bs.and(vwr.ms.getAtoms(T.nucleic, null));
+      if (bs.nextClearBit(0) < 0) {
+        info = null;
+        break;
+      }
+      try {
+        String name = (String) vwr.setLoadFormat("=dssrModel/", '=', false);
+        name = PT.rep(name, "%20", " ");
+        Logger.info("fetching " + name + "[pdb data]");
+        String data = vwr.getPdbAtomData(bs, null, false, false);
+        data = vwr.getFileAsString3(name + data, false, null);
+        Map<String, Object> x = vwr.parseJSON(data);
+        if (x != null) {
+          info.put("dssr", x);
+          setGroup1(vwr.ms, modelIndex);
+        }
+        fixDSSRJSONMap(x);
+
+      } catch (Exception e) {
+        info = null;
+        out = "" + e;
+      }
+      break;
+    }
+    return (info != null ? PT.rep(Escape.escapeMap((Map<String, Object>) ((Map<String, Object>) info.get("dssr"))
+        .get("counts")),",",",\n") : out == null ? "model has no nucleotides" : out);
+  }
+
+  /**
+   * kissingLoops and coaxStacks use index arrays intead of duplication
+   * 
+   * @param map
+   * @return msg
+   */
+  @SuppressWarnings("unchecked")
+  @Override
+  public String fixDSSRJSONMap(Map<String, Object> map) {
+    String s = "";
+    try {
+      Lst<Object>kloops = (Lst<Object>) map.get("kissingLoops");
+      if (kloops != null) {
+        Lst<Object>  hpins = (Lst<Object>) map.get("hairpins");
+        for (int i = kloops.size(); --i >= 0;) {
+          Map<String, Object> kmap = (Map<String, Object>) kloops.get(i);
+          Lst<Object> khlist = (Lst<Object>) kmap.get("hairpin_indices");
+          int n = khlist.size();
+          if (n > 0) {
+            Lst<Object> khpins = new Lst<Object>();
+            kmap.put("hairpins", khpins);
+            for (int j = n; --j >= 0;)
+              khpins.addLast(hpins.get(((Integer) khlist.get(j)).intValue() - 1));
+          }
+        }
+      }
+      
+      
+      Lst<Object>stacks = (Lst<Object>) map.get("coaxStacks");
+      if (stacks != null) {
+        Lst<Object>  stems = (Lst<Object>) map.get("stems");
+        for (int i = stacks.size(); --i >= 0;) {
+          Map<String, Object> smap = (Map<String, Object>) stacks.get(i);
+          Lst<Object> slist = (Lst<Object>) smap.get("stem_indices");
+          int n =slist.size();
+          if (n > 0) {
+            Lst<Object> spins = new Lst<Object>();
+            smap.put("stems", spins);
+            for (int j = n; --j >= 0;)
+              spins.addLast(stems.get(((Integer) slist.get(j)).intValue() - 1));
+          }
+        }
+      }
+      
+      if (map.containsKey("counts"))
+        s += "_M.dssr.counts = " + map.get("counts").toString() + "\n";
+      if (map.containsKey("dbn"))
+        s += "_M.dssr.dbn = " + map.get("dbn").toString();
+    } catch (Exception e) {
+      // ignore??
+    }
+
+    return s;
+  }
+
+  ////////////////////  DSSR ///////////////
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public void getBasePairs(Viewer vwr, int modelIndex) {
+    ModelSet ms = vwr.ms;
+    Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex,
+        "dssr");
+    Lst<Map<String, Object>> pairs = (info == null ? null
+        : (Lst<Map<String, Object>>) info.get("pairs"));
+    Lst<Map<String, Object>> singles = (info == null ? null
+        : (Lst<Map<String, Object>>) info.get("ssSegments"));
+    if (pairs == null && singles == null) {
+      BioModel m = (BioModel) vwr.ms.am[modelIndex];
+      int n = m.getBioPolymerCount();
+      for (int i = n; --i >= 0;) {
+        BioPolymer bp = m.bioPolymers[i];
+        if (bp.isNucleic())
+          ((NucleicPolymer) bp).isDssrSet = true;
+      }
+      return;
+    }
+    BS bsAtoms = ms.am[modelIndex].bsAtoms;
+    try {
+      BS bs = new BS();
+      Atom[] atoms = ms.at;
+      if (pairs != null)
+        for (int i = pairs.size(); --i >= 0;) {
+          Map<String, Object> map = pairs.get(i);
+          String unit1 = (String) map.get("nt1");
+          String unit2 = (String) map.get("nt2");
+          int a1 = ms.getSequenceBits(unit1, bsAtoms, bs).nextSetBit(0);
+          bs.clearAll();
+          int a2 = ms.getSequenceBits(unit2, bsAtoms, bs).nextSetBit(0);
+          bs.clearAll();
+          BasePair.add(map, setRes(atoms[a1]), setRes(atoms[a2]));
+        }
+      if (singles != null)
+        for (int i = singles.size(); --i >= 0;) {
+          Map<String, Object> map = singles.get(i);
+          String units = (String) map.get("nts_long");
+          ms.getSequenceBits(units, bsAtoms, bs);
+          for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1))
+            setRes(atoms[j]);
+        }
+    } catch (Exception e) {
+      Logger.error("Exception " + e + " in DSSRParser.getBasePairs");
+    }
+
+  }
+
+  private NucleicMonomer setRes(Atom atom) {
+    NucleicMonomer m = (NucleicMonomer) atom.group;
+    ((NucleicPolymer) m.bioPolymer).isDssrSet = true;
+    return m;
+  }
+
+
+  @Override
+  /**
+   * 
+   * Retrieve a set of atoms using vwr.extractProperty with 
+   * and for other annotations
+   * 
+   */
+  public BS getAtomBits(Viewer vwr, String key, Object dbObj,
+                        Map<String, Object> annotationCache, int type,
+                        int modelIndex, BS bsModel) {
+    if (dbObj == null)
+      return new BS();
+    //boolean isStruc = (type == T.rna3d);
+    //boolean isDomains = (type == T.domains);
+    //boolean isValidation = (type == T.validation);
+    boolean doCache = !key.contains("NOCACHE");
+    if (!doCache) {
+      key = PT.rep(key, "NOCACHE", "").trim();
+    }
+//    key = fixKeyDSSR(key);
+    BS bs = (doCache ? (BS) annotationCache.get(key) : null);
+    if (bs != null)
+      return bs;
+    bs = new BS();
+    if (doCache)
+      annotationCache.put(key, bs);
+    try {
+      // drilling
+      key = key.toLowerCase();
+      int pt = DSSR_PATHS.indexOf(key);
+      while (pt >= 0) {
+        dbObj = vwr.extractProperty(dbObj, key, -1);
+        pt =  pt + key.length() + 1;
+        int pt1 = DSSR_PATHS.indexOf(".", pt);
+        if (pt1 == pt)
+          break;
+        key = DSSR_PATHS.substring(pt, pt1);
+      }
+      bs = vwr.ms.getAtoms(T.sequence, dbObj.toString());
+      bs.and(bsModel);
+    } catch (Exception e) {
+      System.out.println(e.toString() + " in AnnotationParser");
+      bs.clearAll();
+    }
+    return bs;
+  }
   
+  private final static String DSSR_PATHS = 
+       ".pairs.nt*."
+      +".stems.pairs.nt*."
+      +".coaxstacks.stems.pairs.nt*."
+      +".helices.pairs.nt*."
+      +".isocanonpairs.nt*."
+      +".multiplets.nts_long."
+      +".stacks.nts_long."
+      +".nonstacks.nts_long."
+      +".sssegments.nts_long."
+      +".junctions.nts_long."
+      +".bulges.nts_long."
+      +".hairpins.nts_long."
+      +".kissingloops.hairpins.nts_long..";
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public String getHBonds(ModelSet ms, int modelIndex, Lst<Bond> vHBonds,
+                          boolean doReport) {
+    Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex, "dssr");
+    Lst<Object> list;
+    if (info == null || (list = (Lst<Object>) info.get("hbonds")) == null)
+      return "no DSSR hydrogen-bond data";
+    BS bsAtoms = ms.am[modelIndex].bsAtoms; 
+    try {
+      BS bs = new BS();
+      for (int i = list.size(); --i >= 0;) {
+        Map<String, Object> map = (Map<String, Object>) list.get(i); 
+        String unit1 = (String) map.get("atom1_id");    
+        String unit2 = (String) map.get("atom2_id");    
+        bs = ms.getSequenceBits(unit1, bsAtoms, bs);
+        bs = ms.getSequenceBits(unit2, bsAtoms, bs);
+        int a1 = bs.nextSetBit(0);
+        int a2 = bs.nextSetBit(a1 + 1);
+        bs.clearAll();
+        float energy = 0;
+        vHBonds.addLast(new HBond(ms.at[a1], ms.at[a2], Edge.BOND_H_REGULAR,
+            (short) 1, C.INHERIT_ALL, energy));
+      }
+    } catch (Exception e) {
+      Logger.error("Exception " + e + " in DSSRParser.getHBonds");
+    }
+    return "DSSR reports " + list.size() + " hydrogen bonds";
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public void setGroup1(ModelSet ms, int modelIndex) {
+    Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex,
+        "dssr");
+    Lst<Map<String, Object>> list;
+    if (info == null
+        || (list = (Lst<Map<String, Object>>) info.get("nts")) == null)
+      return;
+    BioModel m = (BioModel) ms.am[modelIndex];
+    BS bsAtoms = m.bsAtoms;
+    Atom[] atoms = ms.at;
+    BS bs = new BS();
+    for (int i = list.size(); --i >= 0;) {
+      Map<String, Object> map = list.get(i);
+      char ch = ((String) map.get("nt_code")).charAt(0);
+      if (!Character.isLowerCase(ch))
+        continue;
+      String unit1 = (String) map.get("nt_id");
+      m.getAllSequenceBits(unit1, bsAtoms, bs);
+      Logger.info("" + ch + " " + unit1 + " " + bs);
+      atoms[bsAtoms.nextSetBit(0)].group.group1 = ch;
+      bs.clearAll();
+    }
+  }
 }

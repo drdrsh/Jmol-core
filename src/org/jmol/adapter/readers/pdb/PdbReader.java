@@ -276,8 +276,6 @@ public class PdbReader extends AtomSetCollectionReader {
      * can CIF files. --Bob Hanson 8/30/06
      */
     if (isMultiModel && !doProcessLines) {
-      if (isConcatenated)
-        checkDSSR();
       return true;
     }
     if (isAtom) {
@@ -356,8 +354,6 @@ public class PdbReader extends AtomSetCollectionReader {
     case 22:
       seqAdv();
       return true;
-    default:
-      checkDSSR();
     }
     return true;
   }
@@ -366,10 +362,6 @@ public class PdbReader extends AtomSetCollectionReader {
     checkCurrentLineForScript();
   }
 
-  private void checkDSSR() throws Exception {
-    if (line.trim().startsWith("DSSR:") && asc.ac > 0)
-      processDSSR(this, htGroup1, null);
-  }
 
   /*
 SEQADV 1EHZ 2MG A   10  GB   M10263      G    10 TRNA                           

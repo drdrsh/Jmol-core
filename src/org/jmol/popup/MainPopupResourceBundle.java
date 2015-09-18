@@ -94,7 +94,7 @@ public class MainPopupResourceBundle extends PopupResource {
 
       {   "PDBnucleicMenu",
           "PDBnucleicResiduesComputedMenu - allNucleic nucleicBackbone nucleicBases - DNA RNA - "
-              + "atPairs auPairs gcPairs" },
+              + "atPairs auPairs gcPairs - aaStructureMenu" },
               
       {   "PDBheteroMenu",
           "PDBheteroComputedMenu - allHetero Solvent Water - "
@@ -344,6 +344,7 @@ public class MainPopupResourceBundle extends PopupResource {
         "atPairs", GT._("AT pairs"),
         "gcPairs", GT._("GC pairs"),
         "auPairs", GT._("AU pairs"),
+        "aaStructureMenu", GT._("Secondary Structure"),
         "PDBheteroMenu", GT._("Hetero"),
         "allHetero", GT._("All PDB \"HETATM\""),
         "Solvent", GT._("All Solvent"),

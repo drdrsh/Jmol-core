@@ -23,6 +23,15 @@
  */
 package org.jmol.popup;
 
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Properties;
+
+import javajs.api.SC;
+import javajs.util.Lst;
+import javajs.util.PT;
+
 import org.jmol.i18n.GT;
 import org.jmol.i18n.Language;
 import org.jmol.java.BS;
@@ -31,14 +40,6 @@ import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-
-import java.util.Map;
-import java.util.Properties;
-import java.util.Hashtable;
-
-import javajs.api.SC;
-import javajs.util.PT;
-import javajs.util.Lst;
 
 /**
  * A generic popup class that is then instantiated for a given platform and
@@ -668,10 +669,28 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     nItems = augmentGroup3List(menu1, "n>", false);
     menuEnable(menu1, nItems > 0);
     menuEnable(htMenus.get("PDBnucleicMenu"), (nItems > 0));
-
+    @SuppressWarnings("unchecked")
+    Map<String, Object> dssr = (nItems > 0 && modelIndex >= 0 ? (Map<String, Object>) vwr.ms.getInfo(modelIndex, "dssr") : null);
+    setSecStrucMenu(htMenus.get("aaStructureMenu"), dssr);
     nItems = augmentGroup3List(menu2, "c>", false);
     menuEnable(menu2, nItems > 0);
     menuEnable(htMenus.get("PDBcarboMenu"), (nItems > 0));
+  }
+
+  @SuppressWarnings("unchecked")
+  private boolean setSecStrucMenu(SC menu, Map<String, Object> dssr) {
+     Map<String, Object> counts = (Map<String, Object>) dssr.get("counts");
+    if (counts == null)
+      return false;
+    String[] keys = new String[counts.size()];
+    counts.keySet().toArray(keys);
+    Arrays.sort(keys);
+    if (keys.length == 0)
+      return false;
+    menu.removeAll();
+    for (int i = 0; i < keys.length; i++)
+      menuCreateItem(menu, keys[i] + " (" +counts.get(keys[i]) +")", "select modelIndex=" + modelIndex + " && within('dssr', '"+keys[i]+"');", null);
+    return true;
   }
 
   private int updateGroup3List(SC menu, String name) {

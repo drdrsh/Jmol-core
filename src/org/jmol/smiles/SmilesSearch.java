@@ -400,7 +400,7 @@ public class SmilesSearch extends JmolMolecule {
     invertStereochemistry = ((flags & Edge.FLAG_INVERT_STEREOCHEMISTRY) != 0);
     noAromatic = ((flags & Edge.FLAG_NO_AROMATIC) != 0);
     noncanonical = ((flags & Edge.FLAG_AROMATIC_NONCANONICAL) != 0);
-    aromaticDouble = ((flags & Edge.FLAG_AROMATIC_DOUBLE) != 0);
+      aromaticDouble = ((flags & Edge.FLAG_AROMATIC_DOUBLE) != 0);
     
     if (Logger.debugging && !isSilent)
       Logger.debug("SmilesSearch processing " + pattern);

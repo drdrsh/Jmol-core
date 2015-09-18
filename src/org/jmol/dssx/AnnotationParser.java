@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javajs.api.GenericLineReader;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
@@ -39,14 +38,11 @@ import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Group;
-import org.jmol.modelset.HBond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelsetbio.Resolver;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
-import org.jmol.util.C;
-import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
@@ -667,27 +663,8 @@ public class AnnotationParser implements JmolAnnotationParser {
     return isRes;
   }
 
-  private String fixKeyDSSR(String key) {
-    String s = key.toLowerCase();
-    int pt;
-    // lonePair is now isoslatedPair
-    while((pt = s.indexOf("lonepair")) >= 0)
-      s = (key = key.substring(0, pt) + "isolatedPair" + key.substring(pt + 8)).toLowerCase();
-    // Check to see if we have already asked for pairs or the data type
-    // does not have the "basePairs" key
-    if (s.indexOf("pairs") < 0 && s.indexOf("kissingloops") < 0
-        && s.indexOf("linkedby") < 0 && s.indexOf("multiplets") < 0
-        && s.indexOf("singlestrand") < 0)
-      key += ".basePairs";
-    if (s.indexOf(".nt") < 0 && s.indexOf(".res") < 0
-        && s.indexOf("[select res") < 0 && s.indexOf("[select nt") < 0)
-      key += ".res*";
-    return key;
-  }
-
   ///////////////////// general post-load processing ////////////////
 
-  @SuppressWarnings("unchecked")
   @Override
   /**
    * 
@@ -703,16 +680,10 @@ public class AnnotationParser implements JmolAnnotationParser {
     //boolean isStruc = (type == T.rna3d);
     //boolean isDomains = (type == T.domains);
     //boolean isValidation = (type == T.validation);
-    boolean isDSSR = (type == T.dssr);
-    Map<String, SV> map = null;
-    boolean isDSSRNew = (isDSSR && ((map = ((SV) dbObj).getMap()).containsKey("_metaData") 
-        || map.containsKey("str_id")));
     boolean doCache = !key.contains("NOCACHE");
     if (!doCache) {
       key = PT.rep(key, "NOCACHE", "").trim();
     }
-    if (isDSSR && !isDSSRNew)
-      key = fixKeyDSSR(key);
     BS bs = (doCache ? (BS) annotationCache.get(key) : null);
     if (bs != null)
       return bs;
@@ -720,21 +691,6 @@ public class AnnotationParser implements JmolAnnotationParser {
     if (doCache)
       annotationCache.put(key, bs);
     try {
-      if (isDSSR) {
-        Object data = vwr.extractProperty(dbObj, key, -1);
-        if (isDSSRNew) {
-          BS bsnew =  vwr.ms.getAtoms(T.sequence, ((SV)data).asString());
-          bsnew.and(bsModel);
-          return bsnew;
-        }
-
-        
-        if (data instanceof Lst<?>) {
-          Map<String, BS> htChains = new Hashtable<String, BS>();
-          getDSSRAtoms(vwr, null, (Lst<SV>) data, bs, htChains);
-        }
-        return bs;
-      }
       Lst<SV> list = initializeAnnotation((SV) dbObj, type, modelIndex);
       // select within(domains,"InterPro where identifier like '*-like'")
       int pt = key.toLowerCase().indexOf(" where ");
@@ -919,110 +875,30 @@ public class AnnotationParser implements JmolAnnotationParser {
     }
   }
 
-  /**
-   * parsing a residue designation for tokens in DSSR.
-   * 
-   * @param vwr
-   * @param res
-   * @param lst
-   * @param bs
-   * @param htChains
-   */
-  protected void getDSSRAtoms(Viewer vwr, String res, Lst<?> lst, BS bs,
-                            Map<String, BS> htChains) {
-    String[] tokens;
-    if (lst == null) {
-      tokens = PT
-          .getTokens(PT.replaceAllCharacters(res.toString(), "=[,]", " "));
-    } else if (lst.size() == 0) {
-      return;
-    } else {
-      tokens = new String[lst.size()];
-      for (int i = lst.size(); --i >= 0;) {
-        Object o = lst.get(i);
-        if (o instanceof SV)
-          o = ((SV) o).value;
-        if (o instanceof Lst<?>) {
-          getDSSRAtoms(vwr, null, (Lst<?>) o, bs, htChains);
-        } else {
-          String s = (o instanceof SV ? ((SV) o).asString() : o.toString());
-          tokens[i] = (s.startsWith("[") ? s.substring(s.indexOf("]") + 1) : s);
-        }
-      }
-    }
-    for (int j = tokens.length; --j >= 0;) {
-      String t = tokens[j];
-      if (t == null)
-        continue;
-      int pt = t.indexOf(":");
-      if (pt < 0 || pt + 1 == t.length())
-        continue;
-      String chain = t.substring(pt + 1);
-      BS bsChain = htChains.get(chain);
-      try {
-        if (bsChain == null)
-          htChains.put(
-              chain,
-              bsChain = vwr.ms.getAtoms(T.spec_chain,
-                  Integer.valueOf(vwr.getChainID(chain, true))));
-        BS bsRes = vwr.ms
-            .getAtoms(T.resno, Integer.valueOf(t.substring(0, pt)));
-        bsRes.and(bsChain);
-        bs.or(bsRes);
-      } catch (Exception e) {
-        // ignore
-      }
-    }
+  // DSSR stuff
+  
+  @Override
+  public void getBasePairs(Viewer vwr, int modelIndex) {
   }
 
   @Override
-  public void setAllDSSRParametersForModel(Viewer vwr, int modelIndex) {
-    // TODO
-    System.out.println("AnnotationParser.setAllDSSRParameters");
+  public String calculateDSSRStructure(Viewer vwr, BS bsAtoms) {
+    return null;
+  }
+
+  @Override
+  public String fixDSSRJSONMap(Map<String, Object> map) {
+    return null;
   }
 
   @Override
   public String getHBonds(ModelSet ms, int modelIndex, Lst<Bond> vHBonds,
                           boolean doReport) {
-    SV info = (SV) ms.getInfo(modelIndex, "dssr");
-    if (info != null)
-      info = info.getMap().get("hbonds");
-    if (info == null)
-      return "no DSSR hydrogen-bond data";
-    Lst<SV> list = info.getList();
-    BS bsAtoms = ms.am[modelIndex].bsAtoms; 
-    try {
-      BS bs = new BS();
-      for (int i = list.size(); --i >= 0;) {
-        Map<String, SV> map = list.get(i).getMap(); 
-        String unit1 = map.get("atom1_id").asString();    
-        String unit2 = map.get("atom2_id").asString();    
-        bs = ms.getSequenceBits(unit1, bsAtoms, bs);
-        bs = ms.getSequenceBits(unit2, bsAtoms, bs);
-        int a1 = bs.nextSetBit(0);
-        int a2 = bs.nextSetBit(a1 + 1);
-        bs.clearAll();
-        float energy = 0;
-        vHBonds.addLast(new HBond(ms.at[a1], ms.at[a2], Edge.BOND_H_REGULAR,
-            (short) 1, C.INHERIT_ALL, energy));
-      }
-    } catch (Exception e) {
-      Logger.error("Exception " + e + " in DSSRParser.getHBonds");
-    }
-    return "DSSR reports " + list.size() + " hydrogen bonds";
-  }
-
-  @Override
-  public String calculateDSSRStructure(Viewer vwr, BS bsAtoms) {
-    // TODO
     return null;
   }
 
   @Override
-  public String processDSSR(Map<String, Object> info, GenericLineReader reader,
-                            String line0, Map<String, String> htGroup1,
-                            Map<String, Integer> modelMap) throws Exception {
-    return null;
+  public void setGroup1(ModelSet ms, int modelIndex) {
   }
 
 }

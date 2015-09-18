@@ -24,30 +24,25 @@
 
 package org.jmol.adapter.smarter;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Map;
+
+import javajs.api.GenericBinaryDocument;
+import javajs.util.Lst;
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.Rdr;
+import javajs.util.V3;
+
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterBondIterator;
 import org.jmol.api.JmolAdapterStructureIterator;
 import org.jmol.api.JmolFilesReaderInterface;
-
-import javajs.api.GenericBinaryDocument;
-import javajs.api.Interface;
-import javajs.util.Lst;
-
 import org.jmol.script.SV;
 import org.jmol.util.Logger;
-
-import javajs.util.JSJSONParser;
-import javajs.util.P3;
-import javajs.util.PT;
-import javajs.util.Rdr;
-import javajs.util.V3;
 import org.jmol.viewer.Viewer;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-
-import java.util.Map;
 
 public class SmarterJmolAdapter extends JmolAdapter {
 
@@ -209,9 +204,9 @@ public class SmarterJmolAdapter extends JmolAdapter {
           // hack to determine type:
           String type = (f.contains("version\":\"DSSR") ? "dssr" : f
               .contains("/outliers/") ? "validation" : "domains");
-          SV x = vwr.parseJSON(f);
-          if (x != null && x.getMap() != null)
-            htParams.put(type, x);
+          Map<String, Object> x = vwr.parseJSON(f);
+          if (x != null)
+            htParams.put(type, (type.equals("dssr") ? x : SV.getVariableMap(x)));
           continue;
         }
         if (name.indexOf("|") >= 0)

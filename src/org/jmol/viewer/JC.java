@@ -48,12 +48,12 @@ public final class JC {
   // callback constants --> org.jmol.constant.EnumCallback
   // draw constants --> org.jmol.shapespecial.draw.EnumCallback
   
-  public static final String PDB_ANNOTATIONS = ";dssr;dssr1;rna3d;dom;val;";
+  public static final String PDB_ANNOTATIONS = ";dssr;rna3d;dom;val;";
 
   public static String[] databases = { 
-    "dssr1", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--more%20--json=ebi-no-str-id",
-    "dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--jmol%20--more",
-    "dssr1Model", "http://x3dna.bio.columbia.edu/dssr/report.php?POST?opts=--jmol --more --json=ebi&model=", // called in DSSR1.java  
+    "dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--json=ebi-no-str-id",
+    //"dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--jmol%20--more",
+    "dssrModel", "http://x3dna.bio.columbia.edu/dssr/report.php?POST?opts=--json=ebi-no-str-id&model=", // called in DSSR1.java  
     "ligand", "http://www.rcsb.org/pdb/files/ligand/%FILE.cif",
     "mp", "http://www.materialsproject.org/materials/%FILE/cif",
     "nci", "http://cactus.nci.nih.gov/chemical/structure/%FILE",
@@ -533,13 +533,29 @@ public final class JC {
     "@solvent water, (_g>=" + GROUPID_SOLVENT_MIN + " & _g<" + GROUPID_ION_MAX + ")", // water, other solvent or ions
     "@ligand _g=0|!(_g<"+ GROUPID_ION_MIN + ",protein,nucleic,water)", // includes UNL
 
-    // structure
+    // protein structure
     "@turn structure=1",
     "@sheet structure=2",
     "@helix structure=3",
     "@helix310 substructure=7",
     "@helixalpha substructure=8",
     "@helixpi substructure=9",
+
+    // nucleic acid structures
+    "@multiplets within(dssr,'multiplets')",
+    "@stems within(dssr,'stems')",
+    "@helices within(dssr,'helices')",
+    "@pairs within(dssr,'pairs')",
+    "@isoCanonPairs within(dssr,'isoCanonPairs')",
+    "@coaxStacks within(dssr,'coaxStacks')",
+    "@stacks within(dssr,'stacks')",
+    "@ssSegments within(dssr,'ssSegments')",
+    "@hairpins within(dssr,'hairpins')",
+    "@bulges within(dssr,'bulges')",
+    "@iloops within(dssr,'iloops')",
+    "@junctions within(dssr,'junctions')",
+    "@kissingLoops within(dssr,'kissingLoops')",
+    "@naChains within(dssr,'naChains')",
   };
   
   // these are only updated once per file load or file append

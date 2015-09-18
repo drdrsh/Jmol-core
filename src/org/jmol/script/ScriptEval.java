@@ -4365,9 +4365,16 @@ public class ScriptEval extends ScriptExpr {
     // LOAD ... "xxxx" AS "yyyy"
 
     int filePt = i;
+    int ptAs = i + 1;
     String localName = null;
-    if (tokAt(filePt + 1) == T.as) {
-      localName = stringParameter(i = i + 2);
+    String annotation = null;
+    if (tokAt(filePt + 1) == T.divide) {
+      annotation = optParameterAsString(filePt + 2);
+      ptAs += 2;
+      i += 2;
+    }
+    if (tokAt(ptAs) == T.as) {
+      localName = stringParameter(i = ptAs + 1);
       if (vwr.fm.getPathForAllFiles() != "") {
         // we use the LOCAL name when reading from a local path only (in the case of JMOL files)
         localName = null;
@@ -4564,7 +4571,6 @@ public class ScriptEval extends ScriptExpr {
       if (isVariable || isInline) {
         loadScript.append(PT.esc(filename));
       } else if (!isData) {
-        // check for AS
         if (localName != null)
           localName = vwr.fm.getFilePath(localName, false, false);
         if (!filename.equals("string") && !filename.equals("string[]"))
@@ -4572,7 +4578,7 @@ public class ScriptEval extends ScriptExpr {
               (localName != null ? PT.esc(localName) : "$FILENAME$"));
       }
       if (!isConcat && (filename.startsWith("=") || filename.startsWith("*"))
-          && filename.indexOf("/") > 1) {
+          && filename.indexOf("/") > 0) {
 
         // EBI domains and validations, also rna3 and dssr
 
@@ -4584,7 +4590,15 @@ public class ScriptEval extends ScriptExpr {
 
         isConcat = true;
         int pt = filename.indexOf("/");
-        String id = filename.substring(1, pt);
+        String id;
+        if (pt == 1 && vwr.ms.getInfo(vwr.am.cmi, "isPDB") == Boolean.TRUE) {
+          //  load 
+          id = (String) vwr.ms.getInfo(vwr.am.cmi, "modelName");
+          filename = filename.substring(0, 1) + id + filename.substring(1);
+          pt = filename.indexOf("/");
+        } else {
+          id = filename.substring(1, pt);
+        }
         String ext = filename.substring(pt + 1);
         filename = filename.substring(0, pt);
         if ((pt = filename.indexOf(".")) >= 0)

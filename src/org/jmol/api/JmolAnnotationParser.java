@@ -2,6 +2,8 @@ package org.jmol.api;
 
 import java.util.Map;
 
+import javajs.util.Lst;
+
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
@@ -9,17 +11,13 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
 import org.jmol.viewer.Viewer;
 
-import javajs.api.GenericLineReader;
-import javajs.util.Lst;
-
 public interface JmolAnnotationParser {
 
-  String processDSSR(Map<String, Object> info, GenericLineReader reader, 
-                 String line0, Map<String, String> htGroup1, Map<String, Integer> modelMap) throws Exception;
-
+  String fixDSSRJSONMap(Map<String, Object> map);
+  
   BS getAtomBits(Viewer vwr, String key, Object dssr, Map<String, Object> cache, int type, int modelIndex, BS bsModel);
 
-  void setAllDSSRParametersForModel(Viewer vwr, int modelIndex);
+  void getBasePairs(Viewer vwr, int modelIndex);
 
   String getHBonds(ModelSet ms, int modelIndex, Lst<Bond> vHBonds, boolean doReport);
 
@@ -40,5 +38,7 @@ public interface JmolAnnotationParser {
   String catalogStructureUnits(Viewer vwr, SV svMap, int[] modelAtomIndices,
                                Map<String, int[]> resMap, Object object,
                                Map<String, Integer> modelMap);
-  
+
+  void setGroup1(ModelSet ms, int modelIndex);
+
 }

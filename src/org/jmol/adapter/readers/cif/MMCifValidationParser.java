@@ -2,7 +2,6 @@ package org.jmol.adapter.readers.cif;
 
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javajs.util.Lst;
 import javajs.util.PT;
@@ -10,8 +9,8 @@ import javajs.util.PT;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.script.SV;
-import org.jmol.script.T;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 public class MMCifValidationParser {
 
@@ -33,22 +32,24 @@ public class MMCifValidationParser {
 
   /**
    * Create property_xxxx for each validation category.
+   * @param vwr 
    * @param modelMap 
    * @return loading note
    * 
    */
-  public String finalizeValidations(Map<String, Integer> modelMap) {
+  public String finalizeValidations(Viewer vwr, Map<String, Integer> modelMap) {
 
-    SV svMap = (SV) reader.dssr;
-    if (svMap != null)
-      return fixDSSRJSONMap(svMap.getMap());
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = (Map<String, Object>) reader.dssr;
+    if (map != null)
+      return vwr.getAnnotationParser(true).fixDSSRJSONMap(map);
 
     mapAtomResIDs(modelMap);
 
     // Returns a Lst<Object> of property data in the form 
     // name(String), data(float[]), modelIndex (Integer), isGroup (Boolean);
 
-    svMap = (SV) reader.validation;
+    SV svMap = (SV) reader.validation;
     Lst<Object> retProps = reader.vwr.getAnnotationParser(false).catalogValidations(
         reader.vwr, svMap, getModelAtomIndices(), resMap,
         (asResidues ? null : atomMap), modelMap);
@@ -57,54 +58,6 @@ public class MMCifValidationParser {
         : setProperties(retProps));
     svMap.mapPut("_note", SV.newS(note));
     return note;
-  }
-
-  /**
-   * The JSON structure coming from 3DNA is very very good. It just needs a
-   * tweak to fill in the kissing loops.
-   * 
-   * @param map
-   * @return msg
-   */
-  private String fixDSSRJSONMap(Map<String, SV> map) {
-    String s = "";
-    SV m = map.get("_metadata");
-    Map<String, SV> metadata = (m == null ? map : m.getMap());
-    SV kloops = map.get("kissingLoops");
-    try {
-      if (kloops != null) {
-        SV hairpins = map.get("hairpins");
-        Lst<SV> hpins = hairpins.getList();
-        Lst<SV> loops = kloops.getList();
-        for (int i = loops.size(); --i >= 0;) {
-          Map<String, SV> kmap = loops.get(i).getMap();
-          Lst<SV> khlist = kmap.get("hairpin_indices")
-              .getList();
-          int n = khlist.size();
-          if (n > 0) {
-            Lst<SV> khpins = new Lst<SV>();
-            kmap.put("hairpins", SV.newV(T.varray, khpins));
-            for (int j = n; --j >= 0;)
-              khpins.addLast(SV.newV(T.hash,
-                  hpins.get(khlist.get(j).intValue - 1).value));
-
-          }
-        }
-      }
-      String dbn = null;
-      for (Entry<String, SV> e : metadata.entrySet()) {
-        String key = e.getKey();
-        if (key.startsWith("num_"))
-          s += key.substring(4) + ": " + e.getValue().asString() + "\n";
-        else if (key.equals("dbn"))
-          dbn = e.getValue().asString();
-      }
-      s += dbn;
-    } catch (Exception e) {
-      // ignore??
-    }
-
-    return s;
   }
 
   public String finalizeRna3d(Map<String, Integer> modelMap) {

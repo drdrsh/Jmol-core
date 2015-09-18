@@ -771,6 +771,11 @@ abstract class ScriptExpr extends ScriptParam {
       case T.define:
         rpn.addXBs(getAtomBitSet(value));
         break;
+      case T.hash:
+      case T.varray:
+        // unit ids
+        rpn.addXBs(vwr.ms.getAtoms(T.sequence, ((SV) instruction).asString()));
+        break;
       case T.hkl:
         rpn.addX(SV.newT(instruction));
         rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2)));

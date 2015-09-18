@@ -267,7 +267,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       vwrOptions.put("codePath", JmolResourceHandler.codePath);
     if (modelAdapter != null)
       vwrOptions.put("modelAdapter", modelAdapter);
-    vwr = new Viewer(this.vwrOptions = vwrOptions);
+    this.vwrOptions = vwrOptions;
+    vwr = new Viewer(vwrOptions);
     display.setViewer(vwr);
     myStatusListener.setViewer(vwr);
 

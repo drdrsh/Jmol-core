@@ -908,9 +908,11 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
       String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
     vwr = modelSet.vwr;
     set(modelSet, modelIndex, trajectoryBaseIndex, jmolData, properties, auxiliaryInfo);
+    
     isBioModel = true;
     modelSet.bioModelset = this;
     clearBioPolymers();
+    modelSet.am[modelIndex] = this;
   }
 
   private void clearBioPolymers() {
@@ -988,7 +990,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
         .calculateDssp(bioPolymers, bioPolymerCount, vHBonds, doReport,
             dsspIgnoreHydrogen, setStructure);
     if (haveNucl && auxiliaryInfo.containsKey("dssr") && vHBonds != null)
-      s += vwr.getAnnotationParser(!auxiliaryInfo.containsKey("dssrJSON")).getHBonds(ms, modelIndex, vHBonds, doReport);
+      s += vwr.getAnnotationParser(true).getHBonds(ms, modelIndex, vHBonds, doReport);
     return s;
   }
 
@@ -1306,7 +1308,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
 
   private BS getAnnotationBits(String name, int tok, String specInfo) {
     BS bs = new BS();
-    JmolAnnotationParser pa = vwr.getAnnotationParser(false);
+    JmolAnnotationParser pa = vwr.getAnnotationParser(name.equals("dssr"));
     Object ann;
     for (int i = ms.mc; --i >= 0;)
       if ((ann = ms.getInfo(i, name)) != null)

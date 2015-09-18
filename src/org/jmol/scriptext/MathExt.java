@@ -1311,7 +1311,7 @@ public class MathExt {
    * 
    * @param mp
    * @param args
-   * @param isAuxiliary
+   * @param tok0 
    * @param isAtomProperty
    * @return true if no syntax problems
    * @throws ScriptException

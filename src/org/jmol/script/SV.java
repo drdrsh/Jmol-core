@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 
 import org.jmol.java.BS;
@@ -1627,6 +1628,46 @@ public class SV extends T implements JSONEncodable {
   @Override
   public String toString() {
     return toString2() + "[" + myName + " index =" + index + " intValue=" + intValue + "]";
+  }
+
+  public String[] getKeys(boolean isAll) {
+    switch (tok) {
+    case T.hash:
+    case T.context:
+    case T.varray:
+      break;
+    default:
+      return null;
+    }
+    Lst<String> keys = new Lst<String>();
+    getKeyList(isAll, keys, "");
+    String[] skeys = keys.toArray(new String[keys.size()]);
+    Arrays.sort(skeys);
+    return skeys;
+  }
+
+  private void getKeyList(boolean isAll, Lst<String> keys, String prefix) {
+    Map<String, SV> map = getMap();
+    if (map == null) {
+      if (isAll) {
+        Lst<SV> lst;
+        int n;
+        if ((lst = getList()) != null && (n = lst.size()) > 0)
+          lst.get(n - 1).getKeyList(true, keys, prefix + n + ".");
+      }
+      return;
+    }
+    for(Entry<String, SV> e: map.entrySet()) {
+      String k = e.getKey();
+      if (isAll && (k.length() == 0 || !PT.isLetter(k.charAt(0)))) {
+        if (prefix.endsWith("."))
+          prefix = prefix.substring(0, prefix.length() - 1);
+        k = "[" + PT.esc(k) + "]";
+      }
+      keys.addLast(prefix + k);
+      if (isAll)
+        e.getValue().getKeyList(true, keys, prefix + k + ".");
+    }
   }
 
 }
