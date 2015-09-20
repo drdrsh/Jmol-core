@@ -34,7 +34,7 @@ abstract public class ScriptParam extends ScriptError {
   abstract public BS atomExpressionAt(int i) throws ScriptException;
   abstract public BS atomExpression(T[] code, int pcStart, int pcStop,
                                     boolean allowRefresh, boolean allowUnderflow,
-                                    boolean mustBeBitSet, boolean andNotDeleted)
+                                    Object[] ret, boolean andNotDeleted)
                throws ScriptException;
   abstract protected P3 getObjectCenter(String id, int index, int modelIndex);
   abstract protected P4 getPlaneForObject(String id, V3 vAB);
@@ -56,7 +56,6 @@ abstract public class ScriptParam extends ScriptError {
   public P3 fractionalPoint;
   public boolean coordinatesAreFractional;
   public boolean isBondSet;
-  public Object expressionResult;
 
 
   public T getToken(int i) throws ScriptException {
@@ -192,21 +191,23 @@ abstract public class ScriptParam extends ScriptError {
   /**
    * 
    * @param i
+   * @param ret return P3 or BS
    * @return point -- ORIGINAL, non-copied atom, if a single atom
    * 
    * @throws ScriptException
    */
-  protected P3 atomCenterOrCoordinateParameter(int i) throws ScriptException {
+  protected P3 atomCenterOrCoordinateParameter(int i, Object[] ret) throws ScriptException {
     switch (getToken(i).tok) {
     case T.bitset:
     case T.expressionBegin:
-      BS bs = atomExpression(st, i, 0, true, false, false, true);
-      if (bs != null && bs.cardinality() == 1)
-        return vwr.ms.at[bs.nextSetBit(0)];
-      if (bs != null)
-        return vwr.ms.getAtomSetCenter(bs);
-      if (expressionResult instanceof P3)
-        return (P3) expressionResult;
+      BS bs = atomExpression(st, i, 0, true, false, ret, true);
+      if (bs != null) {
+        if (ret != null)
+          ret[0] = bs;
+        return (bs.cardinality() == 1 ? vwr.ms.at[bs.nextSetBit(0)] : vwr.ms.getAtomSetCenter(bs));
+      }
+      if (ret != null && ret[0] instanceof P3)
+        return (P3) ret[0];
       invArg();
       break;
     case T.leftbrace:
@@ -224,14 +225,13 @@ abstract public class ScriptParam extends ScriptError {
         || tok == T.expressionBegin || tok == T.point3f || tok == T.bitset);
   }
 
-  public P3 centerParameter(int i) throws ScriptException {
-    return centerParameterForModel(i, Integer.MIN_VALUE);
+  public P3 centerParameter(int i, Object[] ret) throws ScriptException {
+    return centerParameterForModel(i, Integer.MIN_VALUE, ret);
   }
 
-  protected P3 centerParameterForModel(int i, int modelIndex)
+  protected P3 centerParameterForModel(int i, int modelIndex, Object[] ret)
       throws ScriptException {
     P3 center = null;
-    expressionResult = null;
     if (checkToken(i)) {
       switch (getToken(i).tok) {
       case T.dollarsign:
@@ -257,7 +257,9 @@ abstract public class ScriptParam extends ScriptError {
       case T.expressionBegin:
       case T.leftbrace:
       case T.point3f:
-        center = atomCenterOrCoordinateParameter(i);
+        if (ret == null)
+          ret = new Object[1];
+        center = atomCenterOrCoordinateParameter(i, ret);
         break;
       }
     }
@@ -320,10 +322,10 @@ abstract public class ScriptParam extends ScriptError {
         //$FALL-THROUGH$
       case T.bitset:
       case T.expressionBegin:
-        P3 pt1 = atomCenterOrCoordinateParameter(i);
+        P3 pt1 = atomCenterOrCoordinateParameter(i, null);
         if (getToken(++iToken).tok == T.comma)
           ++iToken;
-        P3 pt2 = atomCenterOrCoordinateParameter(iToken);
+        P3 pt2 = atomCenterOrCoordinateParameter(iToken, null);
         if (getToken(++iToken).tok == T.comma)
           ++iToken;
         if (isFloatParameter(iToken)) {
@@ -333,7 +335,7 @@ abstract public class ScriptParam extends ScriptError {
           vTemp.scale(frac * 2);
           Measure.getBisectingPlane(pt1, vTemp, vTemp2, vTemp, plane);
         } else {
-          P3 pt3 = atomCenterOrCoordinateParameter(iToken);
+          P3 pt3 = atomCenterOrCoordinateParameter(iToken, null);
           i = iToken;
           V3 norm = new V3();
           float w = Measure.getNormalThroughPoints(pt1, pt2, pt3, norm, vTemp);
@@ -639,7 +641,7 @@ abstract public class ScriptParam extends ScriptError {
           tok = T.nada;
           break;
         }
-        P3 pt = centerParameter(i);//getPoint3f(i, true);
+        P3 pt = centerParameter(i, null);
         if (points == null)
           vp.addLast(pt);
         else
@@ -689,7 +691,7 @@ abstract public class ScriptParam extends ScriptError {
         break;
       default:
         if (isCenterParameter(i)) {
-          P3 pt = centerParameter(i);
+          P3 pt = centerParameter(i, null);
           i = iToken;
           v.addLast(Float.valueOf(pt.x));
           v.addLast(Float.valueOf(pt.y));

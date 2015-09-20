@@ -60,6 +60,7 @@ import org.jmol.util.Logger;
 import javajs.util.P3;
 
 
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 
@@ -913,6 +914,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     modelSet.bioModelset = this;
     clearBioPolymers();
     modelSet.am[modelIndex] = this;
+    pdbID = (String) auxiliaryInfo.get("name");
   }
 
   private void clearBioPolymers() {
@@ -1378,6 +1380,49 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     // old school; not supported for multi-character chains
     bs.and(ms.getChainBits(identifier.charAt(pt)));
     return bs;
+  }
+
+  
+
+  /**
+   * Get a unitID. Note that we MUST go through the | after InsCode, because
+   * if we do not do that we cannot match residues only using string matching.
+   * 
+   * @param atom
+   * @param flags 
+   * @return a unitID
+   */
+  public String getUnitID(Atom atom, int flags) {
+    
+    //  type: (ID)|model|chain|resid|resno|(atomName)|(altID)|(InsCode)|(symmetry)
+    //  res:  ID|model|chain|resid|resno|atomName|altID|InsCode|symmetry  
+    SB sb = new SB();
+    Group m = atom.group;
+    boolean noTrim = !JC.checkFlag(flags, JC.UNITID_TRIM); 
+    char ch = (JC.checkFlag(flags, JC.UNITID_INSCODE) ? m.getInsertionCode() : '\0');
+    boolean isAll = (ch != '\0');
+    if (JC.checkFlag(flags, JC.UNITID_MODEL) && (pdbID != null))
+      sb.append(pdbID);      
+    sb.append("|").appendO(ms.getInfo(modelIndex, "modelNumber"))
+      .append("|").append(vwr.getChainIDStr(m.chain.chainID))
+      .append("|").append(m.getGroup3())
+      .append("|").appendI(m.getResno());
+    if (JC.checkFlag(flags, JC.UNITID_ATOM)) {
+      sb.append("|").append(atom.getAtomName());
+      if (atom.altloc != '\0')
+        sb.append("|").appendC(atom.altloc);
+      else if (noTrim || isAll)
+        sb.append("|");
+    } else if (noTrim || isAll) {
+      sb.append("||");
+    }
+    if (isAll)
+      sb.append("|").appendC(ch);
+    else if (noTrim)
+      sb.append("|");
+    if (noTrim)
+      sb.append("|");
+    return sb.toString();
   }
 
 }

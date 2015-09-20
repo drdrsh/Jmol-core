@@ -25,7 +25,6 @@
 package org.jmol.script;
 
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -1296,21 +1295,25 @@ public class SV extends T implements JSONEncodable {
     return sb.toString();
   }
   
-  @SuppressWarnings("unchecked")
   public static BS getBitSet(SV x, boolean allowNull) {
     switch (x.tok) {
     case bitset:
       return bsSelectVar(x);
     case varray:
-      BS bs = new BS();
-      Lst<SV> sv = (Lst<SV>) x.value;
-      for (int i = 0; i < sv.size(); i++)
-        if (!sv.get(i).unEscapeBitSetArray(bs) && allowNull)
-          return null;
-      return bs;
+      return unEscapeBitSetArray(x.getList(), allowNull);
+    default:
+      return (allowNull ? null : new BS());
     }
-    return (allowNull ? null : new BS());
   }
+
+  static BS unEscapeBitSetArray(Lst<SV> x, boolean allowNull) {
+    BS bs = new BS();
+    for (int i = 0; i < x.size(); i++)
+      if (!unEscapeBitSet(x.get(i), bs))
+        return (allowNull ? null : bs);
+    return bs;
+  }
+
 
   /**
    * For legacy reasons, "x" == "X" but see isLike()
@@ -1453,27 +1456,25 @@ public class SV extends T implements JSONEncodable {
     return this;
   }
 
-  boolean unEscapeBitSetArray(BS bs) {
-    switch(tok) {
+  /**
+   * Turn the string "({3:5})" into a bitset
+   * 
+   * @param bs
+   * @return a bitset or a string converted to one
+   */
+  private static boolean unEscapeBitSet(SV x, BS bs) {
+    switch(x.tok) {
     case string:
-      BS bs1 = BS.unescape((String) value);
+      BS bs1 = BS.unescape((String) x.value);
       if (bs1 == null)
         return false;
       bs.or(bs1);
       return true;
     case bitset:
-      bs.or((BS) value);
+      bs.or((BS) x.value);
       return true;
     }
     return false;   
-  }
-
-  static BS unEscapeBitSetArray(ArrayList<SV> x, boolean allowNull) {
-    BS bs = new BS();
-    for (int i = 0; i < x.size(); i++)
-      if (!x.get(i).unEscapeBitSetArray(bs) && allowNull)
-        return null;
-    return bs;
   }
 
   public static String[] strListValue(T x) {

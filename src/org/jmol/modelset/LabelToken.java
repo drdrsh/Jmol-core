@@ -41,6 +41,7 @@ import org.jmol.api.JmolDataManager;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.Edge;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 
@@ -413,6 +414,9 @@ public class LabelToken {
         } else if (propertyName.startsWith("validation.")) {
           lt.tok = T.validation;
           lt.data = vwr.getDataObj("property_" + propertyName.substring(11), null, JmolDataManager.DATA_TYPE_AF);
+        } else if (propertyName.startsWith("unitid")) {
+           lt.tok = T.id;
+           lt.data = Integer.valueOf(JC.getUnitIDFlags(propertyName.substring(6)));
         } else {
           T token = T.getTokenFromName(propertyName);
           if (token != null && isLabelPropertyTok(token.tok))
@@ -490,6 +494,9 @@ public class LabelToken {
         break;
       case T.color:
         ptT = atom.atomPropertyTuple(vwr, t.tok, ptTemp);
+        break;
+      case T.id:
+        strT = atom.getUnitID(((Integer) t.data).intValue());
         break;
       case T.data:
       case T.validation:

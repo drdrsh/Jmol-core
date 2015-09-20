@@ -40,6 +40,7 @@ import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.PAL;
 import org.jmol.c.VDW;
 import org.jmol.java.BS;
+import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.T;
 import org.jmol.util.C;
 import org.jmol.util.Elements;
@@ -891,7 +892,7 @@ public class Atom extends Point3fi implements BNode {
       info.append(" ");
       info.appendI(getAtomNumber());
     }
-    if (altloc != 0) {
+    if (altloc != '\0') {
       info.append("%");
       info.appendC(altloc);
     }
@@ -1410,6 +1411,11 @@ public class Atom extends Point3fi implements BNode {
   public BS findAtomsLike(String atomExpression) {
     // for SMARTS searching
     return group.chain.model.ms.vwr.getAtomBitSet(atomExpression);
+  }
+
+  public String getUnitID(int flags) {
+    Model m = group.getModel();
+    return (m.isBioModel ? ((BioModel) m).getUnitID(this, flags) : "");
   }
 
 }

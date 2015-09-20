@@ -3,16 +3,13 @@ package org.jmol.api;
 
 import java.util.Map;
 
-import org.jmol.java.BS;
-import org.jmol.script.ScriptException;
-
-import org.jmol.script.ScriptContext;
-import org.jmol.script.SV;
-import org.jmol.script.T;
-
-import javajs.util.Lst;
 import javajs.util.SB;
 
+import org.jmol.java.BS;
+import org.jmol.script.SV;
+import org.jmol.script.ScriptContext;
+import org.jmol.script.ScriptException;
+import org.jmol.script.T;
 import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.Viewer;
 
@@ -35,8 +32,6 @@ public interface JmolScriptEvaluator {
   boolean isStopped();
 
   void notifyResumeStatus();
-
-  Lst<Integer> getAtomBitSetVector(int ac, Object atomExpression);
 
   boolean isPaused();
 

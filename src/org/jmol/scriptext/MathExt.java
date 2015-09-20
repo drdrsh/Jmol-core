@@ -1330,7 +1330,7 @@ public class MathExt {
     }
     String propertyName = (args.length > 0 ? SV.sValue(args[pt++]) : "");
     String lc = propertyName.toLowerCase();
-    if (lc.indexOf("[select ") < 0)
+    if (!isSelect && lc.indexOf("[select ") < 0)
       propertyName = lc;
     boolean isJSON = false;
     if (propertyName.equals("json") && args.length > pt) {
@@ -2788,6 +2788,8 @@ public class MathExt {
     if (args.length < 1 || args.length > 5)
       return false;
     int i = args.length;
+    if (i == 1 && args[0].tok == T.bitset)
+      return mp.addX(args[0]);
     float distance = 0;
     Object withinSpec = args[0].value;
     String withinStr = "" + withinSpec;

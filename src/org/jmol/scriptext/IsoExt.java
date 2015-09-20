@@ -1238,8 +1238,8 @@ public class IsoExt extends ScriptExt {
         break;
       case T.rotate:
         propertyName = "rotate";
-        propertyValue = (tokAt(eval.iToken = ++i) == T.none ? null
-            : eval.getPoint4f(i));
+        propertyValue = (tokAt(eval.iToken = ++i) == T.none ? null : eval
+            .getPoint4f(i));
         i = eval.iToken;
         break;
       case T.scale3d:
@@ -1348,42 +1348,37 @@ public class IsoExt extends ScriptExt {
         float distance;
         P3 ptc = null;
         bs = null;
-        boolean havePt = false;
+        Object[] ret = new Object[1];
         if (tokAt(i + 1) == T.expressionBegin) {
           // within ( x.x , .... )
           distance = floatParameter(i + 3);
           if (eval.isPoint3f(i + 4)) {
-            ptc = centerParameter(i + 4);
-            havePt = true;
-            eval.iToken = eval.iToken + 2;
+            ptc = eval.centerParameter(i + 4, null);
+            eval.iToken += 2;
           } else if (eval.isPoint3f(i + 5)) {
-            ptc = centerParameter(i + 5);
-            havePt = true;
-            eval.iToken = eval.iToken + 2;
+            ptc = eval.centerParameter(i + 5, null);
+            eval.iToken += 2;
           } else {
-            bs = eval.atomExpression(st, i + 5, slen, true, false, false, true);
+            bs = eval.atomExpression(st, i + 5, slen, true, false, ret, true);
             if (bs == null)
               invArg();
           }
         } else {
           distance = floatParameter(++i);
-          ptc = centerParameter(++i);
+          ptc = eval.centerParameter(++i, ret);
+          bs = (ret[0] instanceof BS ? (BS) ret[0] : null);
         }
         if (isDisplay)
           eval.checkLast(eval.iToken);
         i = eval.iToken;
         if (eval.fullCommand.indexOf("# WITHIN=") >= 0)
           bs = BS.unescape(PT.getQuotedAttribute(eval.fullCommand, "# WITHIN"));
-        else if (!havePt)
-          bs = (eval.expressionResult instanceof BS ? (BS) eval.expressionResult
-              : null);
         if (!chk) {
           if (bs != null && modelIndex >= 0) {
             bs.and(vwr.getModelUndeletedAtomsBitSet(modelIndex));
           }
           if (ptc == null)
             ptc = (bs == null ? new P3() : vwr.ms.getAtomSetCenter(bs));
-
           getWithinDistanceVector(propertyList, distance, ptc, bs, isDisplay);
           sbCommand.append(" within ").appendF(distance).append(" ")
               .append(bs == null ? Escape.eP(ptc) : Escape.eBS(bs));
@@ -1439,7 +1434,8 @@ public class IsoExt extends ScriptExt {
           data = new float[vwr.ms.ac];
           if (chk)
             continue;
-          data = (float[]) vwr.getDataObj(str, null, JmolDataManager.DATA_TYPE_AF);
+          data = (float[]) vwr.getDataObj(str, null,
+              JmolDataManager.DATA_TYPE_AF);
           if (data == null)
             invArg();
           addShapeProperty(propertyList, propertyName, data);
@@ -1746,8 +1742,8 @@ public class IsoExt extends ScriptExt {
           modelIndex = vwr.ms.at[atomIndex].mi;
           addShapeProperty(propertyList, "modelIndex",
               Integer.valueOf(modelIndex));
-          V3[] axes = { new V3(), new V3(),
-              V3.newV(vwr.ms.at[atomIndex]), new V3() };
+          V3[] axes = { new V3(), new V3(), V3.newV(vwr.ms.at[atomIndex]),
+              new V3() };
           if (!lcaoType.equalsIgnoreCase("s")
               && vwr.getHybridizationAndAxes(atomIndex, axes[0], axes[1],
                   lcaoType) == null)
@@ -2135,7 +2131,8 @@ public class IsoExt extends ScriptExt {
               nZ = Math.abs(nZ);
               xyzdata = floatArraySetXYZ(++eval.iToken, nX, nY, nZ);
             } else if (isXYZV) {
-              xyzdata = (float[][][]) vwr.getDataObj(name, null, JmolDataManager.DATA_TYPE_AFFF);
+              xyzdata = (float[][][]) vwr.getDataObj(name, null,
+                  JmolDataManager.DATA_TYPE_AFFF);
             } else {
               xyzdata = vwr.functionXYZ(name, nX, nY, nZ);
             }
@@ -2162,7 +2159,8 @@ public class IsoExt extends ScriptExt {
               nY = Math.abs(nY);
               fdata = floatArraySet(++eval.iToken, nX, nY);
             } else if (isXYZ) {
-              fdata = (float[][]) vwr.getDataObj(name, null, JmolDataManager.DATA_TYPE_AFF);
+              fdata = (float[][]) vwr.getDataObj(name, null,
+                  JmolDataManager.DATA_TYPE_AFF);
               nX = (fdata == null ? 0 : fdata.length);
               nY = 3;
             } else {
@@ -2467,8 +2465,7 @@ public class IsoExt extends ScriptExt {
           if (modelIndex < 0)
             modelIndex = vwr.am.cmi;
           filename = eval.getFullPathName();
-          propertyValue = vwr.ms.getInfo(modelIndex,
-              "jmolSurfaceInfo"); // not implemented?
+          propertyValue = vwr.ms.getInfo(modelIndex, "jmolSurfaceInfo"); // not implemented?
         }
         int fileIndex = -1;
         if (propertyValue == null && tokAt(i + 1) == T.integer)
@@ -2485,7 +2482,8 @@ public class IsoExt extends ScriptExt {
         if (propertyValue == null) {
           if (eval.fullCommand.indexOf("# FILE" + nFiles + "=") >= 0) {
             // old way, abandoned
-            filename = PT.getQuotedAttribute(eval.fullCommand, "# FILE" + nFiles);
+            filename = PT.getQuotedAttribute(eval.fullCommand, "# FILE"
+                + nFiles);
             if (tokAt(i + 1) == T.as)
               i += 2; // skip that
           } else if (tokAt(i + 1) == T.as) {
@@ -2770,7 +2768,7 @@ public class IsoExt extends ScriptExt {
       setShapeProperty(iShape, "cache", null);
     if (iShape != JC.SHAPE_LCAOCARTOON)
       listIsosurface(iShape);
- }
+  }
 
   private void lcaoCartoon() throws ScriptException {
     ScriptEval eval = e;
@@ -3362,12 +3360,13 @@ public class IsoExt extends ScriptExt {
         // isosurface SLAB WITHIN distance {atomExpression}|[point array]
         d = floatParameter(i);
         if (eval.isCenterParameter(++i)) {
-          P3 pt = centerParameter(i);
-          if (chk || !(eval.expressionResult instanceof BS)) {
+          Object[] ret = new Object[1];
+          P3 pt = eval.centerParameter(i, ret);
+          if (chk || !(ret[0] instanceof BS)) {
             pts = new P3[] { pt };
           } else {
             Atom[] atoms = vwr.ms.at;
-            bs = (BS) eval.expressionResult;
+            bs = (BS) ret[0];
             pts = new P3[bs.cardinality()];
             for (int k = 0, j = bs.nextSetBit(0); j >= 0; j = bs
                 .nextSetBit(j + 1), k++)

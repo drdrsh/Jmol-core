@@ -71,6 +71,31 @@ import org.jmol.viewer.Viewer;
  */
 public class DSSR1 extends AnnotationParser {
 
+  /**
+   * The paths to the unit id data within the structure.
+   * 
+   * This is one long string; all lowercase, each surrounded by double periods.
+   * 
+   */
+  
+  private final static String DSSR_PATHS = 
+      "..bulges.nts_long" +
+      "..coaxstacks.stems.pairs.nt*" +
+      "..hairpins.nts_long" +
+      "..hbonds.atom1_id;atom2_id" +
+      "..helices.pairs.nt*" +
+      "..kissingloops.hairpins.nts_long" +
+      "..isocanonpairs.nt*" +
+      "..junctions.nts_long" +
+      "..multiplets.nts_long" +
+      "..nonstacks.nts_long" +
+      "..nts.nt_id" +
+      "..pairs.nt*" +
+      "..sssegments.nts_long" +
+      "..stacks.nts_long" +
+      "..stems.pairs.nt*" +
+      "..";
+
   public DSSR1() {
     // for reflection
   }
@@ -124,7 +149,8 @@ public class DSSR1 extends AnnotationParser {
   }
 
   /**
-   * kissingLoops and coaxStacks use index arrays intead of duplication
+   * kissingLoops and coaxStacks use index arrays instead of duplication;
+   * hbonds need nt_ids residue unitIDs as well
    * 
    * @param map
    * @return msg
@@ -134,11 +160,11 @@ public class DSSR1 extends AnnotationParser {
   public String fixDSSRJSONMap(Map<String, Object> map) {
     String s = "";
     try {
-      Lst<Object>kloops = (Lst<Object>) map.get("kissingLoops");
-      if (kloops != null) {
+      Lst<Object>lst = (Lst<Object>) map.get("kissingLoops");
+      if (lst != null) {
         Lst<Object>  hpins = (Lst<Object>) map.get("hairpins");
-        for (int i = kloops.size(); --i >= 0;) {
-          Map<String, Object> kmap = (Map<String, Object>) kloops.get(i);
+        for (int i = lst.size(); --i >= 0;) {
+          Map<String, Object> kmap = (Map<String, Object>) lst.get(i);
           Lst<Object> khlist = (Lst<Object>) kmap.get("hairpin_indices");
           int n = khlist.size();
           if (n > 0) {
@@ -151,11 +177,11 @@ public class DSSR1 extends AnnotationParser {
       }
       
       
-      Lst<Object>stacks = (Lst<Object>) map.get("coaxStacks");
-      if (stacks != null) {
+      lst = (Lst<Object>) map.get("coaxStacks");
+      if (lst != null) {
         Lst<Object>  stems = (Lst<Object>) map.get("stems");
-        for (int i = stacks.size(); --i >= 0;) {
-          Map<String, Object> smap = (Map<String, Object>) stacks.get(i);
+        for (int i = lst.size(); --i >= 0;) {
+          Map<String, Object> smap = (Map<String, Object>) lst.get(i);
           Lst<Object> slist = (Lst<Object>) smap.get("stem_indices");
           int n =slist.size();
           if (n > 0) {
@@ -167,6 +193,15 @@ public class DSSR1 extends AnnotationParser {
         }
       }
       
+      lst = (Lst<Object>) map.get("hbonds");
+      if (lst != null) {
+        for (int i = lst.size(); --i >= 0;) {
+          Map<String, Object> smap = (Map<String, Object>) lst.get(i);
+          smap.put("nts_long", removeUnitAtom((String) smap.get("atom1_id"))
+              + "," + removeUnitAtom((String) smap.get("atom2_id")));
+        }
+      }
+
       if (map.containsKey("counts"))
         s += "_M.dssr.counts = " + map.get("counts").toString() + "\n";
       if (map.containsKey("dbn"))
@@ -178,7 +213,22 @@ public class DSSR1 extends AnnotationParser {
     return s;
   }
 
-  ////////////////////  DSSR ///////////////
+  private static String removeUnitAtom(String unitID) {
+    int pt1 = 0;
+    int pt2 = unitID.length();
+    for (int i = 0, pt = -1; i < 7 && (pt = unitID.indexOf("|", pt + 1)) >= 0;i++) {
+      switch (i) {
+      case 4:
+        pt1 = pt + 1;
+        break;
+      case 6:
+        pt2 = pt;
+        break;
+      }
+    }
+    unitID = unitID.substring(0, pt1) + "|" + unitID.substring(pt2);
+    return unitID;
+  }
 
   @SuppressWarnings("unchecked")
   @Override
@@ -265,16 +315,18 @@ public class DSSR1 extends AnnotationParser {
     try {
       // drilling
       key = key.toLowerCase();
-      int pt = DSSR_PATHS.indexOf(key);
-      while (pt >= 0) {
+      int pt = DSSR_PATHS.indexOf(".." + key) + 2;
+      int len = key.length();
+      while (pt >= 2 && len > 0) {
         dbObj = vwr.extractProperty(dbObj, key, -1);
-        pt =  pt + key.length() + 1;
+        pt += len + 1;
         int pt1 = DSSR_PATHS.indexOf(".", pt);
-        if (pt1 == pt)
-          break;
         key = DSSR_PATHS.substring(pt, pt1);
+        len = key.length();
+        if (key.indexOf(";") >= 0)
+          key = "[select " + key + "]";
       }
-      bs = vwr.ms.getAtoms(T.sequence, dbObj.toString());
+      bs.or(vwr.ms.getAtoms(T.sequence, dbObj.toString()));
       bs.and(bsModel);
     } catch (Exception e) {
       System.out.println(e.toString() + " in AnnotationParser");
@@ -283,21 +335,6 @@ public class DSSR1 extends AnnotationParser {
     return bs;
   }
   
-  private final static String DSSR_PATHS = 
-       ".pairs.nt*."
-      +".stems.pairs.nt*."
-      +".coaxstacks.stems.pairs.nt*."
-      +".helices.pairs.nt*."
-      +".isocanonpairs.nt*."
-      +".multiplets.nts_long."
-      +".stacks.nts_long."
-      +".nonstacks.nts_long."
-      +".sssegments.nts_long."
-      +".junctions.nts_long."
-      +".bulges.nts_long."
-      +".hairpins.nts_long."
-      +".kissingloops.hairpins.nts_long..";
-
   @SuppressWarnings("unchecked")
   @Override
   public String getHBonds(ModelSet ms, int modelIndex, Lst<Bond> vHBonds,

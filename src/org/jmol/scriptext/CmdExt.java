@@ -1275,7 +1275,7 @@ public class CmdExt extends ScriptExt {
         if (chk)
           return;
         n = intParameter(e.checkLast(e.iToken + 1));
-        vwr.addStateScript("configuration " + bsAtoms + " " + n + ";", true, false);
+        vwr.addStateScript("configuration " + Escape.eBS(bsAtoms) + " " + n + ";", true, false);
         bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1, true, bsAtoms);
       }
     }
@@ -1519,10 +1519,10 @@ public class CmdExt extends ScriptExt {
           nBitSets++;
         if (atomIndex >= 0)
           invArg();
-        eval.expressionResult = Boolean.FALSE;
-        value = centerParameter(i);
-        if (eval.expressionResult instanceof BS) {
-          value = bs = (BS) eval.expressionResult;
+        Object[] ret = new Object[1];
+        value = eval.centerParameter(i, ret);
+        if (ret[0] instanceof BS) {
+          value = bs = (BS) ret[0];
           if (!chk && bs.length() == 0)
             return;
         }
@@ -3513,7 +3513,7 @@ public class CmdExt extends ScriptExt {
         BS bsAtoms;
         if (pt + 1 < argCount && args[++pt].tok == T.expressionBegin
             || args[pt].tok == T.bitset) {
-          bsAtoms = eval.atomExpression(args, pt, 0, true, false, true, true);
+          bsAtoms = eval.atomExpression(args, pt, 0, true, false, null, true);
           pt = eval.iToken + 1;
         } else {
           bsAtoms = vwr.getAllAtoms();

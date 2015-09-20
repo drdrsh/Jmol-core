@@ -9077,11 +9077,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return getAtomBitSetEval(eval, atomExpression);
   }
 
-  Lst<Integer> getAtomBitSetVector(Object atomExpression) {
-    return (getScriptManager() == null ? null : eval.getAtomBitSetVector(ms.ac,
-        atomExpression));
-  }
-
   public ScriptContext getScriptContext(String why) {
     return (getScriptManager() == null ? null : eval.getScriptContext(why));
   }

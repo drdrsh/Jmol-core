@@ -1833,62 +1833,61 @@ public class ScriptCompiler extends ScriptTokenParser {
       if (theTok == T.as)
         iHaveQuotedString = false;
       break;
-    case T.display:
-    case T.hide:
-    case T.restrict:
-    case T.select:
-    case T.delete:
     case T.define:
-      if (tokCommand == T.define) {
-        if (nTokens == 1) {
-          // we are looking at the variable name
-          if (theTok != T.identifier) {
-            if (preDefining) {
-              if (!T.tokAttr(theTok, T.predefinedset)) {
-                errorStr2(
-                    "ERROR IN Token.java or JmolConstants.java -- the following term was used in JmolConstants.java but not listed as predefinedset in Token.java: "
-                        + ident, null);
-                return ERROR;
-              }
-            } else if (T.tokAttr(theTok, T.predefinedset)) {
-              Logger
-                  .warn("WARNING: predefined term '"
-                      + ident
-                      + "' has been redefined by the user until the next file load.");
-            } else if (!isCheckOnly && ident.length() > 1) {
-              Logger
-                  .warn("WARNING: redefining "
-                      + ident
-                      + "; was "
-                      + theToken
-                      + "not all commands may continue to be functional for the life of the applet!");
-              theTok = theToken.tok = T.identifier;
-              T.addToken(ident, theToken);
+      if (nTokens == 1) {
+        // we are looking at the variable name
+        if (theTok != T.identifier) {
+          if (preDefining) {
+            if (!T.tokAttr(theTok, T.predefinedset)) {
+              errorStr2(
+                  "ERROR IN Token.java or JmolConstants.java -- the following term was used in JmolConstants.java but not listed as predefinedset in Token.java: "
+                      + ident, null);
+              return ERROR;
             }
+          } else if (T.tokAttr(theTok, T.predefinedset)) {
+            Logger
+                .warn("WARNING: predefined term '"
+                    + ident
+                    + "' has been redefined by the user until the next file load.");
+          } else if (!isCheckOnly && ident.length() > 1) {
+            Logger
+                .warn("WARNING: redefining "
+                    + ident
+                    + "; was "
+                    + theToken
+                    + "not all commands may continue to be functional for the life of the applet!");
+            theTok = theToken.tok = T.identifier;
+            T.addToken(ident, theToken);
           }
-          addTokenToPrefix(theToken);
-          lastToken = T.tokenComma;
+        }
+        addTokenToPrefix(theToken);
+        lastToken = T.tokenComma;
+        return CONTINUE;
+      }
+      if (nTokens == 2) {
+        if (theTok == T.opEQ) {
+          // we are looking at @x =.... just insert a SET command
+          // and ignore the =. It's the same as set @x ...
+          ltoken.add(0, T.tokenSet);
           return CONTINUE;
         }
-        if (nTokens == 2) {
-          if (theTok == T.opEQ) {
-            // we are looking at @x =.... just insert a SET command
-            // and ignore the =. It's the same as set @x ...
-            ltoken.add(0, T.tokenSet);
-            return CONTINUE;
-          }
-        }
       }
-      if (bracketCount == 0 && theTok != T.identifier
-          && !T.tokAttr(theTok, T.expression) && !T.tokAttr(theTok, T.misc)
-          && (theTok & T.minmaxmask) != theTok)
-        return ERROR(ERROR_invalidExpressionToken, ident);
+      //$FALL-THROUGH$
+//    case T.display:
+//    case T.hide:
+//    case T.restrict:
+//    case T.select:
+//    case T.delete:
+//      if (bracketCount == 0 && theTok != T.identifier
+//          && !T.tokAttr(theTok, T.expression) && !T.tokAttr(theTok, T.misc)
+//          && (theTok & T.minmaxmask) != theTok)
+//        return ERROR(ERROR_invalidExpressionToken, ident);
       break;
-    case T.center:
-      if (theTok != T.identifier && theTok != T.dollarsign
-          && !T.tokAttr(theTok, T.expression))
-        return ERROR(ERROR_invalidExpressionToken, ident);
-      break;
+//    case T.center:
+//      if (theTok != T.identifier && theTok != T.dollarsign
+//          && !T.tokAttr(theTok, T.expression))
+//        return ERROR(ERROR_invalidExpressionToken, ident);
+//      break;
     case T.plot3d:
     case T.pmesh:
     case T.isosurface:

@@ -385,7 +385,7 @@ abstract class ScriptExpr extends ScriptParam {
         ignoreError = true;
         P3 ptc;
         try {
-          ptc = centerParameter(i);
+          ptc = centerParameter(i, null);
           rpn.addX(SV.newV(T.point3f, ptc));
         } catch (Exception e) {
           rpn.addXStr("");
@@ -420,7 +420,7 @@ abstract class ScriptExpr extends ScriptParam {
         if (tok == T.all)
           v = vwr.getAllAtoms();
         else
-          v = atomExpression(st, i, 0, true, true, true, true);
+          v = atomExpression(st, i, 0, true, true, null, true);
         i = iToken;
         if (nParen == 0 && isOneExpressionOnly) {
           iToken++;
@@ -679,7 +679,7 @@ abstract class ScriptExpr extends ScriptParam {
       iToken = index;
       bad();
     }
-    return atomExpression(st, index, 0, true, false, true, true);
+    return atomExpression(st, index, 0, true, false, null, true);
   }
 
   /**
@@ -688,17 +688,16 @@ abstract class ScriptExpr extends ScriptParam {
    * @param pcStop
    * @param allowRefresh
    * @param allowUnderflow
-   * @param mustBeBitSet
+   * @param ret -- true return value; may not be a BS
    * @param andNotDeleted
    *        IGNORED
    * @return atom bitset
    * @throws ScriptException
    */
   @Override
-  @SuppressWarnings("unchecked")
   public BS atomExpression(T[] code, int pcStart, int pcStop,
                            boolean allowRefresh, boolean allowUnderflow,
-                           boolean mustBeBitSet, boolean andNotDeleted)
+                           Object[] ret, boolean andNotDeleted)
       throws ScriptException {
     // note that this is general -- NOT just statement[]
     // errors reported would improperly access statement/line context
@@ -712,7 +711,7 @@ abstract class ScriptExpr extends ScriptParam {
       st = code;
     }
     ScriptMathProcessor rpn = new ScriptMathProcessor(this, false, false,
-        false, mustBeBitSet, allowUnderflow, null);
+        false, ret == null, allowUnderflow, null);
     Object val;
     boolean refreshed = false;
     iToken = 1000;
@@ -799,6 +798,9 @@ abstract class ScriptExpr extends ScriptParam {
             rpn.addXBs(bs);
             break;
           }
+        } else if (s.indexOf("|") >= 0) {
+          rpn.addXBs(vwr.ms.getAtoms(T.sequence, s));
+          break;
         }
         rpn.addX(SV.newT(instruction));
         // note that the compiler has changed all within() types to strings.
@@ -1008,13 +1010,9 @@ abstract class ScriptExpr extends ScriptParam {
           break;
         }
         // check for string-version of bitsets ({....})
-        if (val instanceof String)
-          val = getStringObjectAsVariable((String) val, null);
         // or maybe a list of bitsets
-        if (val instanceof Lst<?>) {
-          BS bs = SV.unEscapeBitSetArray((Lst<SV>) val, true);
-          val = (bs == null ? "" : val);
-        }
+        if (val instanceof String || val instanceof Lst<?>)
+          val = getStringObjectAsVariable(val);
         // otherwise, this is a new atom expression
         if (val instanceof String)
           val = lookupIdentifierValue((String) value);
@@ -1022,7 +1020,7 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       }
     }
-    expressionResult = rpn.getResult();
+    SV expressionResult = rpn.getResult();
     if (expressionResult == null) {
       if (allowUnderflow)
         return null;
@@ -1030,16 +1028,18 @@ abstract class ScriptExpr extends ScriptParam {
         rpn.dumpStacks("after getResult");
       error(ERROR_endOfStatementUnexpected);
     }
-    expressionResult = ((SV) expressionResult).value;
-    if (expressionResult instanceof String
-        && (mustBeBitSet || ((String) expressionResult).startsWith("({"))) {
+    Object exp = expressionResult.value;
+    if (exp instanceof String
+        && (ret == null || ((String) exp).startsWith("({"))) {
       // allow for select @{x} where x is a string that can evaluate to a bitset
-      expressionResult = (chk ? new BS() : getAtomBitSet(expressionResult));
+      exp = (chk ? new BS() : getAtomBitSet(exp));
     }
-    if (!mustBeBitSet && !(expressionResult instanceof BS))
-      return null; // because result is in expressionResult in that case
-    BS bs = (expressionResult instanceof BS ? (BS) expressionResult : new BS());
-    isBondSet = (expressionResult instanceof BondSet);
+    if (ret != null && !(exp instanceof BS)) {
+      ret[0] = exp;
+      return null;
+    }
+    BS bs = (exp instanceof BS ? (BS) exp : new BS());
+    isBondSet = (exp instanceof BondSet);
     if (!isBondSet
         && (bs = vwr.slm.excludeAtoms(bs, ignoreSubset)).length() > vwr.ms.ac)
       bs.clearAll();
@@ -2009,12 +2009,23 @@ abstract class ScriptExpr extends ScriptParam {
     return bs;
   }
 
-  private Object getStringObjectAsVariable(String s, String key) {
-    if (s == null || s.length() == 0)
-      return s;
-    Object v = SV.unescapePointOrBitsetAsVariable(s);
-    return (v instanceof String && key != null ? vwr.g.setUserVariable(key,
-        SV.newS((String) v)) : v);
+  private Object getStringObjectAsVariable(Object obj) {
+    if (obj == null)
+      return  obj;
+    if (obj instanceof String) {
+      String s = (String) obj;
+      if (s.length() == 0)
+        return s;
+      return SV.unescapePointOrBitsetAsVariable(s);
+    }
+    @SuppressWarnings("unchecked")
+    Lst<SV> lst = (Lst<SV>) obj;
+    if (lst.size() == 0)
+      return "";
+    if (lst.get(0).asString().contains("|"))
+      return vwr.ms.getAtoms(T.sequence, SV.newV(T.varray, lst).asString());
+    BS bs = SV.unEscapeBitSetArray(lst, true);
+    return (bs == null ? "" : bs);
   }
 
   protected BS getAtomBits(int tokType, Object specInfo) {
@@ -2351,8 +2362,9 @@ abstract class ScriptExpr extends ScriptParam {
    * provides support for @x and @{....} in statements. The compiler passes on
    * these, because they must be integrated with the statement dynamically.
    * 
-   * @param st0  aaToken[i]
-   * @param pt0 
+   * @param st0
+   *        aaToken[i]
+   * @param pt0
    * @return a fixed token set -- with possible overrun of unused null tokens
    * 
    * @throws ScriptException
@@ -2414,7 +2426,26 @@ abstract class ScriptExpr extends ScriptParam {
         boolean isSetAt = (pt0 == 1 && j == 1 && st[0] == T.tokenSetCmd);
         if (isClauseDefine) {
           SV vt = parameterExpressionToken(++i);
-          v = (vt.tok == T.varray ? vt : SV.oValue(vt));
+          // For select @{x} where x is an array, we leave it as SV.
+          // This will for an evaluation of each member of the array.
+          // I suppose this allowed for select @{["ala", "leu",...]}.
+          // Otherwise we get its object. Q: Why?
+          if (vt.tok != T.varray) {
+            v = SV.oValue(vt);
+          } else if (!isExpression) {
+            v = vt;
+          } else {
+            // select @{x} where x is an array 
+            BS bs = SV.getBitSet(vt, true);
+            // I can't remember why we have to be checking list variables
+            // for atom expressions in select @{x} but not select x
+            if (bs == null) {
+              String sv = SV.sValue(vt);
+              v = (sv.indexOf("|") < 0 ? getAtomBitSet(sv) : sv);
+            } else {
+              v = bs;
+            }
+          }
           i = iToken;
         } else {
           if (tokAt(i) == T.integer) {
@@ -2432,13 +2463,6 @@ abstract class ScriptExpr extends ScriptParam {
         if (v instanceof SV) {
           // select @{...}
           fixed[j] = (T) v;
-          if (isExpression && fixed[j].tok == T.varray) {
-            BS bs = SV.getBitSet((SV) v, true);
-            // I can't remember why we have to be checking list variables
-            // for atom names. 
-            fixed[j] = SV.newV(T.bitset,
-                bs == null ? getAtomBitSet(SV.sValue(fixed[j])) : bs);
-          }
         } else if (v instanceof Boolean) {
           fixed[j] = (((Boolean) v).booleanValue() ? T.tokenOn : T.tokenOff);
         } else if (v instanceof Integer) {
@@ -2447,7 +2471,6 @@ abstract class ScriptExpr extends ScriptParam {
           // fixed[j] = new Token(Token.define, "" + var_set);
           // else
           fixed[j] = T.tv(T.integer, ((Integer) v).intValue(), v);
-
         } else if (v instanceof Float) {
           fixed[j] = T.tv(T.decimal, getFloatEncodedInt("" + v), v);
         } else if (v instanceof String) {
@@ -2457,7 +2480,7 @@ abstract class ScriptExpr extends ScriptParam {
               v = getParameter((String) v, T.variable, true);
             }
             if (v instanceof String) {
-              v = getStringObjectAsVariable((String) v, null);
+              v = getStringObjectAsVariable(v);
             }
           }
           if (v instanceof SV) {
@@ -2468,8 +2491,9 @@ abstract class ScriptExpr extends ScriptParam {
             if (isExpression && !forceString) {
               // select @x  where x is "arg", for example
               // but not chain=@x  -- in that case we need a literal value
-              
-              fixed[j] = (T.tokAttr(fixed[j - 1].tok, T.comparator) ? T.o(T.string, s) : T.o(T.bitset, getAtomBitSet(s)));
+
+              fixed[j] = (s.indexOf("|") >= 0 || T.tokAttr(fixed[j - 1].tok, T.comparator) ? T.o(
+                  T.string, s) : T.o(T.bitset, getAtomBitSet(s)));
             } else {
 
               // bit of a hack here....
@@ -2508,8 +2532,10 @@ abstract class ScriptExpr extends ScriptParam {
         } else if (v instanceof Map<?, ?>) {
           fixed[j] = SV.newV(T.hash, v);
         } else if (v instanceof ScriptContext) {
-          fixed[j] = SV.newV(T.hash, ((ScriptContext)v).getFullMap());
+          fixed[j] = SV.newV(T.hash, ((ScriptContext) v).getFullMap());
         } else if (v instanceof Lst<?>) {
+          // if v is a list, we check to to see if it is an array of 
+          // bitsets, and it if is, we OR all those.
           Lst<SV> sv = (Lst<SV>) v;
           BS bs = null;
           for (int k = 0; k < sv.size(); k++) {

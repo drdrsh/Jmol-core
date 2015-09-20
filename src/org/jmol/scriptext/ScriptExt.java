@@ -54,7 +54,7 @@ public abstract class ScriptExt {
   }
 
   protected P3 centerParameter(int i) throws ScriptException {
-    return e.centerParameter(i);
+    return e.centerParameter(i, null);
   }
 
   protected float floatParameter(int i) throws ScriptException {

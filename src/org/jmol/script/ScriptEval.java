@@ -826,7 +826,7 @@ public class ScriptEval extends ScriptExpr {
               : parameterExpressionString(2, 0));
         }
       } else if (expr instanceof T[]) {
-        BS bs = atomExpression((T[]) expr, 0, 0, true, false, true, false);
+        BS bs = atomExpression((T[]) expr, 0, 0, true, false, null, false);
         return (asVariable ? SV.newV(T.bitset, bs) : bs);
 
       }
@@ -854,7 +854,10 @@ public class ScriptEval extends ScriptExpr {
   }
 
   /**
-   * a general method to evaluate a string representing an atom set.
+   * A general method to evaluate a string representing an atom set.
+   * Excepts one atom expression or one per line as "OR".
+   * Excepts "()" as "none".
+   * 
    * 
    * @param atomExpression
    * @return is a bitset indicating the selected atoms
@@ -876,30 +879,13 @@ public class ScriptEval extends ScriptExpr {
       if (compileScript(null, scr, false)) {
         st = aatoken[0];
         setStatement(st, 0);
-        bs = atomExpression(st, 1, 0, false, false, true, true);
+        bs = atomExpression(st, 1, 0, false, false, null, true);
       }
       popContext(false, false);
     } catch (Exception ex) {
       Logger.error("getAtomBitSet " + atomExpression + "\n" + ex);
     }
     return bs;
-  }
-
-  /**
-   * just provides a vector list of atoms in a string-based expression
-   * 
-   * @param ac
-   * @param atomExpression
-   * @return vector list of selected atoms
-   */
-  @Override
-  public Lst<Integer> getAtomBitSetVector(int ac, Object atomExpression) {
-    Lst<Integer> V = new Lst<Integer>();
-    BS bs = getAtomBitSet(atomExpression);
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      V.addLast(Integer.valueOf(i));
-    }
-    return V;
   }
 
 
@@ -1327,7 +1313,7 @@ public class ScriptEval extends ScriptExpr {
       return (BS) value;
     if (value instanceof T[]) { // j2s OK -- any Array here
       pushContext(null, "lookupValue");
-      BS bs = atomExpression((T[]) value, -2, 0, true, false, true, true);
+      BS bs = atomExpression((T[]) value, -2, 0, true, false, null, true);
       popContext(false, false);
       if (!isDynamic)
         vwr.definedAtomSets.put(setName, bs);
@@ -2842,7 +2828,7 @@ public class ScriptEval extends ScriptExpr {
     }
     switch (tok) {
     case T.center:
-      P3 center = centerParameter(index + 1);
+      P3 center = centerParameter(index + 1, null);
       setShapeProperty(JC.SHAPE_AXES, "origin", center);
       checkLast(iToken);
       return;
@@ -2998,22 +2984,22 @@ public class ScriptEval extends ScriptExpr {
     if (byCorner)
       index++;
     if (isCenterParameter(index)) {
-      expressionResult = null;
+      Object[] ret = new Object[1];
       int index0 = index;
-      P3 pt1 = centerParameter(index);
+      P3 pt1 = centerParameter(index, ret);
       index = iToken + 1;
       if (byCorner || isCenterParameter(index)) {
         // boundbox CORNERS {expressionOrPoint1} {expressionOrPoint2}
         // boundbox {expressionOrPoint1} {vector}
-        P3 pt2 = (byCorner ? centerParameter(index) : getPoint3f(index, true));
+        P3 pt2 = (byCorner ? centerParameter(index, ret) : getPoint3f(index, true));
         index = iToken + 1;
         if (!chk)
           vwr.ms.setBoundBox(pt1, pt2, byCorner, scale);
-      } else if (expressionResult != null && expressionResult instanceof BS) {
+      } else if (ret[0] != null && ret[0] instanceof BS) {
         // boundbox {expression}
         if (!chk)
-          vwr.calcBoundBoxDimensions((BS) expressionResult, scale);
-      } else if (expressionResult == null && tokAt(index0) == T.dollarsign) {
+          vwr.calcBoundBoxDimensions((BS) ret[0], scale);
+      } else if (ret[0] == null && tokAt(index0) == T.dollarsign) {
         if (chk)
           return;
         P3[] bbox = getObjectBoundingBox(objectNameParameter(++index0));
@@ -3049,7 +3035,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.setNewRotationCenter(null);
       return;
     }
-    P3 center = centerParameter(i);
+    P3 center = centerParameter(i, null);
     if (center == null)
       invArg();
     if (!chk)
@@ -3270,7 +3256,7 @@ public class ScriptEval extends ScriptExpr {
       setObjectProperty();
       return;
     }
-    BS bs = (slen == 1 ? null : atomExpression(st, 1, 0, true, false, true,
+    BS bs = (slen == 1 ? null : atomExpression(st, 1, 0, true, false, null,
         false));
     if (chk)
       return;
@@ -4076,7 +4062,7 @@ public class ScriptEval extends ScriptExpr {
       bs = atomExpressionAt(iToken + 1);
       break;
     case T.point:
-      pt = centerParameter(2);
+      pt = centerParameter(2, null);
       break;
     case T.plane:
       plane = planeParameter(1);
@@ -4367,12 +4353,12 @@ public class ScriptEval extends ScriptExpr {
     int filePt = i;
     int ptAs = i + 1;
     String localName = null;
-    String annotation = null;
-    if (tokAt(filePt + 1) == T.divide) {
-      annotation = optParameterAsString(filePt + 2);
-      ptAs += 2;
-      i += 2;
-    }
+//    String annotation = null;
+//    if (tokAt(filePt + 1) == T.divide) {
+//      annotation = optParameterAsString(filePt + 2);
+//      ptAs += 2;
+//      i += 2;
+//    }
     if (tokAt(ptAs) == T.as) {
       localName = stringParameter(i = ptAs + 1);
       if (vwr.fm.getPathForAllFiles() != "") {
@@ -5029,7 +5015,7 @@ public class ScriptEval extends ScriptExpr {
           // model 2.3 align {0 0 0}  // from state 
           if (i != 2)
             invArg();
-          frameAlign = centerParameter(3);
+          frameAlign = centerParameter(3, null);
           checkLength(i = iToken + 1);
           break;
         case T.all:
@@ -5287,10 +5273,11 @@ public class ScriptEval extends ScriptExpr {
       }
       if (tokAt(i) == T.bitset || tokAt(i) == T.expressionBegin) {
         isMolecular = true;
-        center = centerParameter(i);
-        if (!(expressionResult instanceof BS))
+        Object[] ret = new Object[1];
+        center = centerParameter(i, ret);
+        if (!(ret[0] instanceof BS))
           invArg();
-        bsCenter = (BS) expressionResult;
+        bsCenter = (BS) ret[0];
         q = (chk ? new Quat() : vwr.ms.getQuaternion(bsCenter.nextSetBit(0),
             vwr.getQuaternionFrame()));
       } else {
@@ -5412,9 +5399,10 @@ public class ScriptEval extends ScriptExpr {
     }
     if (bsCenter == null && i != slen) {
       // if any more, required (center)
-      center = centerParameter(i);
-      if (expressionResult instanceof BS)
-        bsCenter = (BS) expressionResult;
+      Object[] ret = new Object[1];
+      center = centerParameter(i, ret);
+      if (ret[0] instanceof BS)
+        bsCenter = (BS) ret[0];
       i = iToken + 1;
     }
     if (center != null) {
@@ -5447,7 +5435,7 @@ public class ScriptEval extends ScriptExpr {
       // (navCenter) xNav yNav navDepth
 
       if (i != slen) {
-        navCenter = centerParameter(i);
+        navCenter = centerParameter(i, null);
         i = iToken + 1;
         if (i != slen) {
           xNav = floatParameter(i++);
@@ -5734,7 +5722,7 @@ public class ScriptEval extends ScriptExpr {
           nPoints = 0;
         // {X, Y, Z}
         // $drawObject[n]
-        P3 pt1 = centerParameterForModel(i, vwr.am.cmi);
+        P3 pt1 = centerParameterForModel(i, vwr.am.cmi, null);
         if (!chk && tok == T.dollarsign && tokAt(i + 2) != T.leftsquare) {
           // rotation about an axis such as $line1
           isMolecular = true;
@@ -5839,7 +5827,7 @@ public class ScriptEval extends ScriptExpr {
         } else {
           pts = new P3[3];
           for (int j = 0; j < 3; j++) {
-            pts[j] = centerParameter(++i);
+            pts[j] = centerParameter(++i, null);
             i = iToken;
           }
         }
@@ -5854,7 +5842,7 @@ public class ScriptEval extends ScriptExpr {
       case T.axisangle:
         haveRotation = true;
         if (isPoint3f(++i)) {
-          rotAxis.setT(centerParameter(i));
+          rotAxis.setT(centerParameter(i, null));
           break;
         }
         P4 p4 = getPoint4f(i);
@@ -5884,7 +5872,7 @@ public class ScriptEval extends ScriptExpr {
       // 12.0 options
 
       case T.translate:
-        translation = V3.newV(centerParameter(++i));
+        translation = V3.newV(centerParameter(++i, null));
         isMolecular = isSelected = true;
         break;
       case T.helix:
@@ -6772,7 +6760,7 @@ public class ScriptEval extends ScriptExpr {
       } else {
         if (!isCenterParameter(2))
           invArg();
-        pt = centerParameter(2);
+        pt = centerParameter(2, null);
         checkLength(iToken + 1);
       }
       if (!chk)
@@ -7193,13 +7181,13 @@ public class ScriptEval extends ScriptExpr {
         return;
       case T.point:
         propertyName = "point";
-        propertyValue = (isCenterParameter(pt) ? centerParameter(pt) : null);
+        propertyValue = (isCenterParameter(pt) ? centerParameter(pt, null) : null);
         pt = iToken + 1;
         break;
       default:
         if (isCenterParameter(pt - 1)) {
           propertyName = "xyz";
-          propertyValue = centerParameter(pt - 1);
+          propertyValue = centerParameter(pt - 1, null);
           pt = iToken + 1;
           break;
         }
@@ -7972,9 +7960,10 @@ public class ScriptEval extends ScriptExpr {
     BS bsCenter = null;
     if (isCenterParameter(i)) {
       ptCenter = i;
-      center = centerParameter(i);
-      if (expressionResult instanceof BS)
-        bsCenter = (BS) expressionResult;
+      Object[] ret = new Object[1];
+      center = centerParameter(i, ret);
+      if (ret[0] instanceof BS)
+        bsCenter = (BS) ret[0];
       i = iToken + 1;
     } else if (tokAt(i) == T.integer && getToken(i).intValue == 0) {
       bsCenter = vwr.getAtomBitSet("visible");

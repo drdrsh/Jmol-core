@@ -542,20 +542,23 @@ public final class JC {
     "@helixpi substructure=9",
 
     // nucleic acid structures
-    "@multiplets within(dssr,'multiplets')",
-    "@stems within(dssr,'stems')",
-    "@helices within(dssr,'helices')",
-    "@pairs within(dssr,'pairs')",
-    "@isoCanonPairs within(dssr,'isoCanonPairs')",
-    "@coaxStacks within(dssr,'coaxStacks')",
-    "@stacks within(dssr,'stacks')",
-    "@ssSegments within(dssr,'ssSegments')",
-    "@hairpins within(dssr,'hairpins')",
     "@bulges within(dssr,'bulges')",
+    "@coaxStacks within(dssr,'coaxStacks')",
+    "@hairpins within(dssr,'hairpins')",
+    "@hbonds within(dssr,'hbonds')",
+    "@helices within(dssr,'helices')",
     "@iloops within(dssr,'iloops')",
+    "@isoCanonPairs within(dssr,'isoCanonPairs')",
     "@junctions within(dssr,'junctions')",
     "@kissingLoops within(dssr,'kissingLoops')",
+    "@multiplets within(dssr,'multiplets')",
+    "@nonStack within(dssr,'nonStack')",
+    "@nts within(dssr,'nts')",
     "@naChains within(dssr,'naChains')",
+    "@pairs within(dssr,'pairs')",
+    "@ssSegments within(dssr,'ssSegments')",
+    "@stacks within(dssr,'stacks')",
+    "@stems within(dssr,'stems')",
   };
   
   // these are only updated once per file load or file append
@@ -1103,6 +1106,37 @@ public final class JC {
 
   public static boolean checkFlag(int flags, int flag) {
     return (flags & flag) == flag;
+  }
+
+
+  public final static int UNITID_MODEL = 1;
+  public final static int UNITID_RESIDUE = 2;
+  public final static int UNITID_ATOM = 4;
+  public final static int UNITID_INSCODE = 8;
+  public final static int UNITID_TRIM = 16;
+  
+  /**
+   * Get a unitID type
+   * 
+   * @param type -mra (model name, residue, atom, and ins code), 
+   *             -mr (model and residue; no atom)
+   *             -ra default
+   *             - or -r  just residue 
+   *             -t right-trim
+   *             
+   * @return coded type
+   */
+  public static int getUnitIDFlags(String type) {
+    int i = UNITID_RESIDUE | UNITID_ATOM | UNITID_INSCODE;
+    if (type.indexOf("-") == 0) {
+      if (type.indexOf("m") > 0)
+        i |= UNITID_MODEL;
+      if (type.indexOf("a") < 0)
+        i ^= UNITID_ATOM;
+      if (type.indexOf("t") > 0)
+        i |= UNITID_TRIM;
+    }
+    return i;
   }
 
 }

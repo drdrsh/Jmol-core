@@ -97,8 +97,9 @@ public class PropertyManager implements JmolPropertyManager {
   @Override
   public void setViewer(Viewer vwr) {
     this.vwr = vwr;
-    for (int i = 0, p = 0; i < propertyTypes.length; i += 3)
-      map.put(propertyTypes[i].toLowerCase(), Integer.valueOf(p++));
+    for (int i = 0, p = 0; i < propertyTypes.length; i += 3, p++)
+      if (propertyTypes[i].length() > 0)
+        map.put(propertyTypes[i].toLowerCase(), Integer.valueOf(p));
   }
 
   @Override
@@ -137,7 +138,7 @@ public class PropertyManager implements JmolPropertyManager {
     "centerInfo"      , "", "",
     "orientationInfo" , "", "",
     "transformInfo"   , "", "",
-    "atomList"        , atomExpression, "(visible)",
+    ""                , "", "", //was prior to 14.3.17 "atomList"        , atomExpression, "(visible)",
     "atomInfo"        , atomExpression, "(visible)",
     
     "bondInfo"        , atomExpression, "(visible)",
@@ -191,8 +192,7 @@ public class PropertyManager implements JmolPropertyManager {
   private final static int PROP_CENTER_INFO = 10;
   private final static int PROP_ORIENTATION_INFO = 11;
   private final static int PROP_TRANSFORM_INFO = 12;
-  private final static int PROP_ATOM_LIST = 13;
-  private final static int PROP_ATOM_INFO = 14;
+  private final static int PROP_ATOM_INFO = 13;
 
   private final static int PROP_BOND_INFO = 15;
   private final static int PROP_CHAIN_INFO = 16;
@@ -431,9 +431,13 @@ public class PropertyManager implements JmolPropertyManager {
         Map<String, ?> h = (Map<String, ?>) property;
         String key;
         boolean asMap = false;
+        boolean asArray = false;
         if (arg.tok == T.select) {
           key = arg.myName;
           if (key.contains("**")) {
+            asArray = key.endsWith(";");
+            if (asArray)
+              key = key.substring(0, key.length() - 1);
             boolean isAll = key.equals("**");
             key = PT.rep(key, "**", "*");
             String newKey = "";
@@ -447,23 +451,14 @@ public class PropertyManager implements JmolPropertyManager {
               } else if (!(o instanceof Map<?, ?>)) {
                 o = null;
               }
-              /*
-Token[string(4/0x4) value="[select bond** where outliers.value<-7.2]"]
-Token[keyword(17/0x10100011) value=")"]
-
-END
-
-checkSelect invalid argument
-----
-          e_x_p_r_e_s_s_i_o_n = outliers . value <<<<< << -7.2               */
               if (o != null
                   && vwr.checkSelect((Map<String, SV>) o, (T[]) arg.value))
                 newKey += "," + k;
             }
             if (newKey.length() == 0)
               return "";
-            key = newKey;
-            asMap = true;
+            key = newKey.substring(1);
+            asMap = !asArray;
           } else if (!vwr.checkSelect((Map<String, SV>) property,
               (T[]) arg.value))
             return "";
@@ -476,12 +471,12 @@ checkSelect invalid argument
             return extractProperty(keys, args, ptr, null, true);
           }
         }
-        boolean isWild = (key.startsWith("*") || key.endsWith("*") || key
-            .indexOf(",") >= 0);
+        boolean isWild = (asArray || key.startsWith("*") || key.endsWith("*") 
+            || key.indexOf(",") >= 0 || key.indexOf(";") >= 0);
         if (isWild) {
           if (v2 == null)
             v2 = new Lst<Object>();
-          if (key.length() == 1) {
+          if (!asArray && key.length() == 1) {
             if (ptr == ((SV[]) args).length) {
               v2.addLast(property);
               return v2;
@@ -491,9 +486,7 @@ checkSelect invalid argument
         }
         if (key.contains("**"))
           key = PT.rep(key, "**", "*") + ",";
-        if (key.contains(",")) {
-          if (asMap)
-            key = key.substring(1);
+        if (asMap || asArray || key.contains(",")) {
           Map<String, Object> mapNew = new Hashtable<String, Object>();
           String[] tokens = PT.split(key, ",");
           for (int i = tokens.length; --i >= 0;)
@@ -578,14 +571,18 @@ checkSelect invalid argument
                           Lst<Object> v2, Object args, int ptr) {
     boolean isOK = (v2 == null && h.containsKey(key));
     if (!isOK) {
+      boolean hasSemi = key.contains(";");
+      if (hasSemi)
+        key = ";" + key + ";";
       String lckey = (isWild ? key.toLowerCase() : null);
       for (String k : h.keySet()) {
-        if (k.equalsIgnoreCase(key) || lckey != null
+        if (hasSemi ? key.contains(";" + k + ";") 
+            : k.equalsIgnoreCase(key) || lckey != null
             && PT.isLike(k.toLowerCase(), lckey)) {
           if (v2 == null)
             return k;
           v2.addLast(extractProperty(h.get(k), args, ptr, null, true));
-          if (!isWild)
+          if (!isWild && !hasSemi)
             return null;
         }
       }
@@ -628,8 +625,6 @@ checkSelect invalid argument
       return getAppletInfo();
     case PROP_ANIMATION_INFO:
       return getAnimationInfo();
-    case PROP_ATOM_LIST:
-      return vwr.getAtomBitSetVector(myParam);
     case PROP_ATOM_INFO:
       return getAllAtomInfo(vwr.getAtomBitSet(myParam));
     case PROP_AUXILIARY_INFO:

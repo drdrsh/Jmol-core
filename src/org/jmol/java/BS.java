@@ -953,13 +953,13 @@ public class BS implements Cloneable, JSONEncodable {
    * drPepper.set(10);
    * </pre>
    * 
-   * Now {@code drPepper.toString()} returns "{2, 4, 10}".
+   * Now {@code drPepper.toString()} returns "({2, 4, 10})".
    * 
    * @return a string representation of this bit set
    */
   @Override
   public String toString() {
-    return escape(this, '{', '}');
+    return escape(this, '(', ')');
   }
   
 

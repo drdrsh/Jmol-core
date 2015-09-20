@@ -195,7 +195,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       }
       boolean isSimple = isLeft
           && (imageFontScaling == 1 && scalePixelsPerMicron == 0
-              && label.indexOf("|") < 0 && label.indexOf("<su") < 0 && label
+              && label.indexOf("|") < 0 && label.indexOf("\n") < 0 && label.indexOf("<su") < 0 && label
               .indexOf("<co") < 0);
       if (isSimple) {
         boolean doPointer = ((pointer & JC.LABEL_POINTER_ON) != 0);

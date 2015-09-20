@@ -135,6 +135,8 @@ public class Model {
   String jmolData; // from a PDB remark "Jmol PDB-encoded data"
   String jmolFrameType;
 
+  public String pdbID;
+
   public Model() {
     
   }
