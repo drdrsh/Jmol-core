@@ -84,8 +84,9 @@ public class DSSR1 extends AnnotationParser {
       "..hairpins.nts_long" +
       "..hbonds.atom1_id;atom2_id" +
       "..helices.pairs.nt*" +
-      "..kissingloops.hairpins.nts_long" +
+      "..iloops.nts_long" +
       "..isocanonpairs.nt*" +
+      "..kissingloops.hairpins.nts_long" +
       "..junctions.nts_long" +
       "..multiplets.nts_long" +
       "..nonstacks.nts_long" +
@@ -105,7 +106,7 @@ public class DSSR1 extends AnnotationParser {
     BS bs = vwr.ms.getModelBS(bsAtoms == null ? vwr.bsA() : bsAtoms, true);
     String s = "";
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-      s += getDSSRForModel(vwr, i);
+      s += getDSSRForModel(vwr, i) + "\n";
     return s;
   }
 
@@ -344,23 +345,31 @@ public class DSSR1 extends AnnotationParser {
     if (info == null || (list = (Lst<Object>) info.get("hbonds")) == null)
       return "no DSSR hydrogen-bond data";
     BS bsAtoms = ms.am[modelIndex].bsAtoms; 
+    String unit1 = null, unit2 = null;
+    int a1 = 0, a2 = 0;
     try {
       BS bs = new BS();
       for (int i = list.size(); --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) list.get(i); 
-        String unit1 = (String) map.get("atom1_id");    
-        String unit2 = (String) map.get("atom2_id");    
-        bs = ms.getSequenceBits(unit1, bsAtoms, bs);
-        bs = ms.getSequenceBits(unit2, bsAtoms, bs);
-        int a1 = bs.nextSetBit(0);
-        int a2 = bs.nextSetBit(a1 + 1);
+        unit1 = (String) map.get("atom1_id");    
+        a1 = ms.getSequenceBits(unit1, bsAtoms, bs).nextSetBit(0);
+        if (a1 < 0) {
+          Logger.error("Atom " + unit1 + " was not found");
+          continue;
+        }
+        unit2 = (String) map.get("atom2_id");
+        bs.clearAll();
+        a2 = ms.getSequenceBits(unit1, bsAtoms, bs).nextSetBit(0);
+        if (a2 < 0) {
+          Logger.error("Atom " + unit2 + " was not found");
+          continue;
+        }
         bs.clearAll();
         float energy = 0;
         vHBonds.addLast(new HBond(ms.at[a1], ms.at[a2], Edge.BOND_H_REGULAR,
             (short) 1, C.INHERIT_ALL, energy));
       }
     } catch (Exception e) {
-      Logger.error("Exception " + e + " in DSSRParser.getHBonds");
     }
     return "DSSR reports " + list.size() + " hydrogen bonds";
   }

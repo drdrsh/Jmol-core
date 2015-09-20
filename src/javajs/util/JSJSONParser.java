@@ -170,6 +170,7 @@ public class JSJSONParser {
       } catch (Exception e) {
       }
     // not a valid number
+    System.out.println("JSON parser cannot parse " + string);
     throw new JSONException("invalid value");
   }
 
