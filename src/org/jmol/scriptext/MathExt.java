@@ -2805,7 +2805,6 @@ public class MathExt {
     ModelSet ms = vwr.ms;
     boolean isWithinModelSet = false;
     boolean isWithinGroup = false;
-    boolean isWithinUnitcell = false;
     boolean isDistance = (isVdw || tok == T.decimal || tok == T.integer);
     RadiusData rd = null;
     switch (tok) {
@@ -2845,6 +2844,8 @@ public class MathExt {
           tok == T.search ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
           mp.asBitSet, false));
     }
+    
+    
     if (withinSpec instanceof String) {
       if (tok == T.nada) {
         tok = T.spec_seqcode;
@@ -2869,22 +2870,26 @@ public class MathExt {
         String s = SV.sValue(args[1]);
         if (s.startsWith("$"))
           return mp.addXBs(getAtomsNearSurface(distance, s.substring(1)));
-        isWithinGroup = (s.equalsIgnoreCase("group"));
-        isVdw = (!isWithinGroup && s.equalsIgnoreCase("vanderwaals"));
-        isWithinUnitcell = (!isWithinGroup && s.equalsIgnoreCase("unitcell"));
-        if (isVdw) {
+        if (s.equalsIgnoreCase("group")) {
+          isWithinGroup = true;
+          tok = T.group;
+        } else
+        if (s.equalsIgnoreCase("vanderwaals") || s.equalsIgnoreCase("vdw")) {
           withinSpec = null;
+          isVdw = true;
           tok = T.vanderwaals;
-        } else if (isWithinUnitcell) {
+        } else if (s.equalsIgnoreCase("unitcell")) {
           tok = T.unitcell;
         } else {
-          tok = T.group;
+          return false;
         }
         break;
       }
     } else {
       return false;
     }
+    
+    
     P3 pt = null;
     P4 plane = null;
     switch (i) {
@@ -2977,9 +2982,12 @@ public class MathExt {
       return mp.addXBs(vwr.ms.getAtoms(tok, bs));
     if (isWithinGroup)
       return mp.addXBs(vwr.getGroupsWithin((int) distance, bs));
-    if (isVdw)
+    if (isVdw) {
       rd = new RadiusData(null, (distance > 10 ? distance / 100 : distance),
           (distance > 10 ? EnumType.FACTOR : EnumType.OFFSET), VDW.AUTO);
+      if (distance < 0)
+        distance = 0; // not used, but this prevents a diversion
+    }
     return mp.addXBs(vwr.ms.getAtomsWithinRadius(distance, bs,
         isWithinModelSet, rd));
   }

@@ -86,8 +86,8 @@ public class DSSR1 extends AnnotationParser {
       "..helices.pairs.nt*" +
       "..iloops.nts_long" +
       "..isocanonpairs.nt*" +
-      "..kissingloops.hairpins.nts_long" +
       "..junctions.nts_long" +
+      "..kissingloops.hairpins.nts_long" +
       "..multiplets.nts_long" +
       "..nonstacks.nts_long" +
       "..nts.nt_id" +
