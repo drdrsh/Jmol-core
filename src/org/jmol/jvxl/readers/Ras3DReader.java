@@ -34,7 +34,12 @@ import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.util.Logger;
 
 /*
- *
+ * Raster3D file reader -- see http://skuld.bmsc.washington.edu/raster3d/html/render.html
+ * 
+ * just triangles; implemented specifically for DSSR cartoon-block representation
+ * 
+ * experimental only
+ * 
  */
 
 
@@ -115,7 +120,6 @@ class Ras3DReader extends PolygonFileReader {
       nTriangles++;
       c0 = CU.colorTriadToFFRGB(parseFloatStr(tokens[9]),
           parseFloatStr(tokens[10]), parseFloatStr(tokens[11]));
-      System.out.println(CU.colorPtFromInt(c0, new P3()));
       if (asQuads) {
         if (nTriangles % 2 == 1) {
           v2 = v1;
