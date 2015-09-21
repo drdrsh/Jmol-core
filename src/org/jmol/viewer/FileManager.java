@@ -1387,6 +1387,8 @@ public class FileManager implements BytePoster {
       return "Nff";
     if (line.indexOf("BEGIN_DATAGRID_3D") >= 0 || line.indexOf("BEGIN_BANDGRID_3D") >= 0)
       return "Xsf";
+    if (line.indexOf("tiles in x, y") >= 0)
+      return "Ras3D";
     // binary formats: problem here is that the buffered reader
     // may be translating byte sequences into unicode
     // and thus shifting the offset

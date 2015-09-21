@@ -290,11 +290,11 @@ class PmeshReader extends PolygonFileReader {
       //             2
       if (vertexCount == 4) {
         nTriangles += 2;
-        addTriangleCheck(vertices[0], vertices[1], vertices[3], 5, color, false, -1);
-        addTriangleCheck(vertices[1], vertices[2], vertices[3], 3, color, false, -1);
+        addTriangleCheck(vertices[0], vertices[1], vertices[3], 5, 0, false, color);
+        addTriangleCheck(vertices[1], vertices[2], vertices[3], 3, 0, false, color);
       } else {
         nTriangles++;
-        addTriangleCheck(vertices[0], vertices[1], vertices[2], 7, color, false, -1);
+        addTriangleCheck(vertices[0], vertices[1], vertices[2], 7, 0, false, color);
       }
     }
     if (isBinary)

@@ -136,9 +136,9 @@ public class DSSR1 extends AnnotationParser {
         if (x != null) {
           info.put("dssr", x);
           setGroup1(vwr.ms, modelIndex);
+          fixDSSRJSONMap(x);
+          setBioPolymers((BioModel) vwr.ms.am[modelIndex], false);
         }
-        fixDSSRJSONMap(x);
-
       } catch (Exception e) {
         info = null;
         out = "" + e;
@@ -240,13 +240,7 @@ public class DSSR1 extends AnnotationParser {
     Lst<Map<String, Object>> singles = (info == null ? null
         : (Lst<Map<String, Object>>) info.get("ssSegments"));
     if (pairs == null && singles == null) {
-      BioModel m = (BioModel) vwr.ms.am[modelIndex];
-      int n = m.getBioPolymerCount();
-      for (int i = n; --i >= 0;) {
-        BioPolymer bp = m.bioPolymers[i];
-        if (bp.isNucleic())
-          ((NucleicPolymer) bp).isDssrSet = true;
-      }
+      setBioPolymers((BioModel) vwr.ms.am[modelIndex], true);
       return;
     }
     BS bsAtoms = ms.am[modelIndex].bsAtoms;
@@ -276,6 +270,15 @@ public class DSSR1 extends AnnotationParser {
       Logger.error("Exception " + e + " in DSSRParser.getBasePairs");
     }
 
+  }
+
+  private void setBioPolymers(BioModel m, boolean b) {
+    int n = m.getBioPolymerCount();
+    for (int i = n; --i >= 0;) {
+      BioPolymer bp = m.bioPolymers[i];
+      if (bp.isNucleic())
+        ((NucleicPolymer) bp).isDssrSet = b;
+    }
   }
 
   private NucleicMonomer setRes(Atom atom) {
