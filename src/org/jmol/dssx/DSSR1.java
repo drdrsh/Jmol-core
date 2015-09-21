@@ -89,7 +89,7 @@ public class DSSR1 extends AnnotationParser {
       "..junctions.nts_long" +
       "..kissingloops.hairpins.nts_long" +
       "..multiplets.nts_long" +
-      "..nonstacks.nts_long" +
+      "..nonstack.nts_long" +
       "..nts.nt_id" +
       "..pairs.nt*" +
       "..sssegments.nts_long" +
@@ -151,57 +151,27 @@ public class DSSR1 extends AnnotationParser {
 
   /**
    * kissingLoops and coaxStacks use index arrays instead of duplication;
-   * hbonds need nt_ids residue unitIDs as well
    * 
    * @param map
    * @return msg
    */
-  @SuppressWarnings("unchecked")
   @Override
   public String fixDSSRJSONMap(Map<String, Object> map) {
     String s = "";
+    
     try {
-      Lst<Object>lst = (Lst<Object>) map.get("kissingLoops");
-      if (lst != null) {
-        Lst<Object>  hpins = (Lst<Object>) map.get("hairpins");
-        for (int i = lst.size(); --i >= 0;) {
-          Map<String, Object> kmap = (Map<String, Object>) lst.get(i);
-          Lst<Object> khlist = (Lst<Object>) kmap.get("hairpin_indices");
-          int n = khlist.size();
-          if (n > 0) {
-            Lst<Object> khpins = new Lst<Object>();
-            kmap.put("hairpins", khpins);
-            for (int j = n; --j >= 0;)
-              khpins.addLast(hpins.get(((Integer) khlist.get(j)).intValue() - 1));
-          }
-        }
-      }
+
+      fixIndices(map, "kissingLoops", "hairpin");
+      fixIndices(map, "coaxStacks", "stem");
       
-      
-      lst = (Lst<Object>) map.get("coaxStacks");
-      if (lst != null) {
-        Lst<Object>  stems = (Lst<Object>) map.get("stems");
-        for (int i = lst.size(); --i >= 0;) {
-          Map<String, Object> smap = (Map<String, Object>) lst.get(i);
-          Lst<Object> slist = (Lst<Object>) smap.get("stem_indices");
-          int n =slist.size();
-          if (n > 0) {
-            Lst<Object> spins = new Lst<Object>();
-            smap.put("stems", spins);
-            for (int j = n; --j >= 0;)
-              spins.addLast(stems.get(((Integer) slist.get(j)).intValue() - 1));
-          }
-        }
-      }
-      
-      lst = (Lst<Object>) map.get("hbonds");
-      if (lst != null) {
-        for (int i = lst.size(); --i >= 0;) {
-          Map<String, Object> smap = (Map<String, Object>) lst.get(i);
-          smap.put("nts_long", removeUnitAtom((String) smap.get("atom1_id"))
-              + "," + removeUnitAtom((String) smap.get("atom2_id")));
-        }
-      }
+//      lst = (Lst<Object>) map.get("hbonds");
+//      if (lst != null) {
+//        for (int i = lst.size(); --i >= 0;) {
+//          Map<String, Object> smap = (Map<String, Object>) lst.get(i);
+//          smap.put("res_long", removeUnitAtom((String) smap.get("atom1_id"))
+//              + "," + removeUnitAtom((String) smap.get("atom2_id")));
+//        }
+//      }
 
       if (map.containsKey("counts"))
         s += "_M.dssr.counts = " + map.get("counts").toString() + "\n";
@@ -214,24 +184,52 @@ public class DSSR1 extends AnnotationParser {
     return s;
   }
 
-  private static String removeUnitAtom(String unitID) {
-    int pt1 = 0;
-    int pt2 = unitID.length();
-    for (int i = 0, pt = -1; i < 7 && (pt = unitID.indexOf("|", pt + 1)) >= 0;i++) {
-      switch (i) {
-      case 4:
-        pt1 = pt + 1;
-        break;
-      case 6:
-        pt2 = pt;
-        break;
+  /**
+   * create a key/value pair root+"s" for all indices of root+"_indices"
+   * @param map
+   * @param key
+   * @param root
+   */
+  @SuppressWarnings("unchecked")
+  private void fixIndices(Map<String, Object> map, String key,
+                          String root) {
+    String indices = root + "_indices";
+    String original = root + "s";
+    Lst<Object>lst = (Lst<Object>) map.get(key);
+    if (lst != null) {
+      Lst<Object>  hpins = (Lst<Object>) map.get(original);
+      for (int i = lst.size(); --i >= 0;) {
+        Map<String, Object> kmap = (Map<String, Object>) lst.get(i);
+        Lst<Object> khlist = (Lst<Object>) kmap.get(indices);
+        int n = khlist.size();
+        if (n > 0) {
+          Lst<Object> khpins = new Lst<Object>();
+          kmap.put(original, khpins);
+          for (int j = n; --j >= 0;)
+            khpins.addLast(hpins.get(((Integer) khlist.get(j)).intValue() - 1));
+        }
       }
     }
-    unitID = unitID.substring(0, pt1) + "|" + unitID.substring(pt2);
-    return unitID;
   }
 
-  @SuppressWarnings("unchecked")
+//  private static String removeUnitAtom(String unitID) {
+//    int pt1 = 0;
+//    int pt2 = unitID.length();
+//    for (int i = 0, pt = -1; i < 7 && (pt = unitID.indexOf("|", pt + 1)) >= 0;i++) {
+//      switch (i) {
+//      case 4:
+//        pt1 = pt + 1;
+//        break;
+//      case 6:
+//        pt2 = pt;
+//        break;
+//      }
+//    }
+//    unitID = unitID.substring(0, pt1) + "|" + unitID.substring(pt2);
+//    return unitID;
+//  }
+
+   @SuppressWarnings("unchecked")
   @Override
   public void getBasePairs(Viewer vwr, int modelIndex) {
     ModelSet ms = vwr.ms;
