@@ -431,7 +431,7 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   private boolean isLineContinuation(int ichT, boolean checkMathop) {
     boolean isEscaped = (ichT + 2 < cchScript && script.charAt(ichT) == '\\'
-        && nCharNewLine(ichT + 1) > 0 || checkMathop
+        && nCharNewLine(ichT + 1) > 0 || !isShowScriptOutput && checkMathop
         && lookingAtMathContinuation(ichT));
     if (isEscaped)
       lineCurrent++;

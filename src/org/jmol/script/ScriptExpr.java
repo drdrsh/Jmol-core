@@ -590,7 +590,7 @@ abstract class ScriptExpr extends ScriptParam {
                    : null);
               }
               if (v == null)
-                 v = getContextVariableAsVariable(name);
+                 v = getContextVariableAsVariable(name, false);
               else if (ptEq == 0)
                 invArg();
             }
@@ -2060,7 +2060,7 @@ abstract class ScriptExpr extends ScriptParam {
     boolean settingData = key.startsWith("property_");
     boolean isThrown = key.equals("thrown_value");
     boolean isExpression = (tokAt(1) == T.expressionBegin || tokAt(1) == T.leftparen);
-    SV t = (settingData ? null : key.length() == 0 ? new SV() : getContextVariableAsVariable(key));
+    SV t = (settingData ? null : key.length() == 0 ? new SV() : getContextVariableAsVariable(key, false));
     // determine whether this is some sort of 
     // special assignment of a known variable
 

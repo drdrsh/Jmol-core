@@ -77,7 +77,7 @@ abstract public class ScriptParam extends ScriptError {
 
   @SuppressWarnings("unchecked")
   public Object getParameter(String key, int tokType, boolean nullAsString) {
-    Object v = getContextVariableAsVariable(key);
+    Object v = getContextVariableAsVariable(key, false);
     if (v == null) {
       if (nullAsString)
         v = vwr.getP(key);
@@ -100,14 +100,14 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   protected Object getVarParameter(String var, boolean orReturnName) {
-    SV v = getContextVariableAsVariable(var);
+    SV v = getContextVariableAsVariable(var, false);
     if (v != null)
       return (orReturnName ? v.asString() : SV.oValue(v));
     Object val = vwr.getP(var);    
     return (orReturnName  && ("" + val).length() == 0 ? var : val);
   }
 
-  public SV getContextVariableAsVariable(String var) {
+  public SV getContextVariableAsVariable(String var, boolean isLocal) {
     if (var.equals("expressionBegin"))
       return null;
     if (var.equalsIgnoreCase("_caller")) {
@@ -121,7 +121,7 @@ abstract public class ScriptParam extends ScriptError {
     }
     var = var.toLowerCase();
     return (contextVariables != null && contextVariables.containsKey(var) ? contextVariables
-        .get(var) : thisContext == null ? null : thisContext.getVariable(var));
+        .get(var) : isLocal || thisContext == null ? null : thisContext.getVariable(var));
   }
   
   public String paramAsStr(int i) throws ScriptException {

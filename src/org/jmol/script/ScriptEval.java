@@ -1078,7 +1078,7 @@ public class ScriptEval extends ScriptExpr {
       dispatchCommands(false, true, false);
       //JavaScript will not return here after DELAY or after what???
     }
-    SV v = (getReturn ? getContextVariableAsVariable("_retval") : null);
+    SV v = (getReturn ? getContextVariableAsVariable("_retval", false) : null);
     popContext(false, false);
     return v;
   }
@@ -1119,7 +1119,7 @@ public class ScriptEval extends ScriptExpr {
     if (pt < 0) {
       // if pt is a backward reference
       // this is a break within a try{...} block
-      getContextVariableAsVariable("_breakval").intValue = -pt;
+      getContextVariableAsVariable("_breakval", false).intValue = -pt;
       pcEnd = pc;
       return;
     }
@@ -3454,8 +3454,12 @@ public class ScriptEval extends ScriptExpr {
       // for (;;;);
       // for (var x in {...}) { xxxxx }
       // for (var x in y) { xxxx }
+      boolean isLocal = false;
       for (int i = 1, nSkip = 0; i < slen && j < 2; i++) {
         switch (tok = tokAt(i)) {
+        case T.var:
+          isLocal = true;
+          break;
         case T.semicolon:
           if (nSkip > 0)
             nSkip--;
@@ -3539,7 +3543,17 @@ public class ScriptEval extends ScriptExpr {
       if (isOK)
         if (tok == T.in) {
           // start of FOR (i in x) block or FOR (i from x)
-          forVar = getForVar(key);
+          forVar = getContextVariableAsVariable(key, isLocal);
+          if (forVar == null && !isLocal)
+            forVar = vwr.g.getOrSetNewVariable(key, false);
+          if (forVar == null) {
+            if (key.startsWith("_"))
+              invArg();
+            if (isLocal)
+              contextVariables.put(key.toLowerCase(), forVar = SV.newI(0));
+            else
+              forVar = vwr.g.getOrSetNewVariable(key, true);
+          }
           if (inTok == T.integer) {
             // for (i from [0 31])
             forVar.tok = T.integer;
@@ -3563,7 +3577,7 @@ public class ScriptEval extends ScriptExpr {
           forVars[1] = forVal;
         } else {
           if (T.tokAttr(tokAt(j), T.misc)
-              || (forVal = getContextVariableAsVariable(key)) != null) {
+              || (forVal = getContextVariableAsVariable(key, false)) != null) {
             if (!isMinusMinus && getToken(++j).tok != T.opEQ)
               invArg();
             if (isMinusMinus)
@@ -5599,7 +5613,7 @@ public class ScriptEval extends ScriptExpr {
   private void cmdReturn(SV tv) throws ScriptException {
     if (chk)
       return;
-    SV t = getContextVariableAsVariable("_retval");
+    SV t = getContextVariableAsVariable("_retval", false);
     if (t != null) {
       SV v = (tv != null || slen == 1 ? null : parameterExpressionToken(1));
       if (tv == null)
@@ -6911,7 +6925,7 @@ public class ScriptEval extends ScriptExpr {
 
     // var xxxx = xxx can supercede set xxxx
 
-    boolean isContextVariable = (!justShow && !isJmolSet && getContextVariableAsVariable(key) != null);
+    boolean isContextVariable = (!justShow && !isJmolSet && getContextVariableAsVariable(key, false) != null);
 
     if (!justShow && !isContextVariable) {
 
@@ -8507,19 +8521,6 @@ public class ScriptEval extends ScriptExpr {
     int nColors = (tokAt(iToken + 1) == T.integer ? intParameter(++iToken) : 0);
     return ColorEncoder.getColorSchemeList(ColorEncoder.getPaletteAtoB(color1,
         color2, nColors));
-  }
-
-  private SV getForVar(String key) throws ScriptException {
-    SV t = getContextVariableAsVariable(key);
-    if (t == null) {
-      if (key.startsWith("_"))
-        invArg();
-      if (key.indexOf("/") >= 0)
-        contextVariables.put(key.toLowerCase(), t = SV.newI(0));
-      else
-        t = vwr.g.getOrSetNewVariable(key, true);
-    }
-    return t;
   }
 
   public String getFullPathName() throws ScriptException {
