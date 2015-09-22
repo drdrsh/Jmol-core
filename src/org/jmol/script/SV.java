@@ -1458,6 +1458,7 @@ public class SV extends T implements JSONEncodable {
 
   /**
    * Turn the string "({3:5})" into a bitset
+   * @param x 
    * 
    * @param bs
    * @return a bitset or a string converted to one
@@ -1669,6 +1670,38 @@ public class SV extends T implements JSONEncodable {
       if (isAll)
         e.getValue().getKeyList(true, keys, prefix + k + ".");
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Object deepCopy(Object v, boolean isHash) {
+    if (isHash) {
+      Map<String, SV> vnew = new Hashtable<String, SV>();
+      Map<String, SV> vold = (Map<String, SV>) v;
+      for (Entry<String, SV> e : vold.entrySet()) {
+        SV vm = e.getValue();
+        switch (vm.tok) {
+        case hash:
+        case varray:
+          vm = newV(vm.tok, deepCopy(vm.value, vm.tok == hash));
+          break;
+        }
+        vnew.put(e.getKey(), vm);
+      }
+      return vnew;
+    }
+    Lst<SV> vnew2 = new Lst<SV>();
+    Lst<SV> vold2 = (Lst<SV>) v;
+    for (int i = 0, n = vold2.size(); i < n; i++) {
+      SV vm = vold2.get(i);
+      switch (vm.tok) {
+      case hash:
+      case varray:
+        vm = newV(vm.tok, deepCopy(vm.value, vm.tok == hash));
+        break;
+      }
+      vnew2.addLast(vm);
+    }
+    return vnew2;
   }
 
 }

@@ -2530,12 +2530,16 @@ abstract class ScriptExpr extends ScriptParam {
         } else if (v instanceof M34) {
           fixed[j] = SV.newV(v instanceof M4 ? T.matrix4f : T.matrix3f, v);
         } else if (v instanceof Map<?, ?>) {
-          fixed[j] = SV.newV(T.hash, v);
+          fixed[j] = SV.newV(T.hash, (isExpression ? v : SV.deepCopy(v, true)));
         } else if (v instanceof ScriptContext) {
           fixed[j] = SV.newV(T.hash, ((ScriptContext) v).getFullMap());
         } else if (v instanceof Lst<?>) {
           // if v is a list, we check to to see if it is an array of 
           // bitsets, and it if is, we OR all those.
+          if (!isExpression) {
+            fixed[j] = SV.newV(T.varray, SV.deepCopy(v, false));
+            break;
+          }
           Lst<SV> sv = (Lst<SV>) v;
           BS bs = null;
           for (int k = 0; k < sv.size(); k++) {
