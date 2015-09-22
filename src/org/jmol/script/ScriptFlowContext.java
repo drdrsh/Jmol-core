@@ -149,6 +149,7 @@ class ScriptFlowContext {
   int ptCommand;
   boolean forceEndIf = true;
   String ident;
+  public int addLine;
   
   ScriptFlowContext(ScriptCompiler compiler, ContextToken token, int pt0, ScriptFlowContext parent) {
     this.compiler = compiler;
@@ -171,7 +172,7 @@ class ScriptFlowContext {
   boolean checkForceEndIf() {
     boolean test = forceEndIf 
         && ptCommand < this.compiler.iCommand 
-        && ptLine == this.compiler.lineCurrent;
+        && ptLine + addLine == this.compiler.lineCurrent;
     //System.out.println("checking" + pt + " " + test + " " + ident + " " + forceEndIf + " " + ptCommand + " " + iCommand + "/" + ptLine + " " + lineCurrent);
     if (test) // only once!
       forceEndIf = false;

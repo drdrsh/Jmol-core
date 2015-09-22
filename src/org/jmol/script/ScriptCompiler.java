@@ -444,9 +444,20 @@ public class ScriptCompiler extends ScriptTokenParser {
       return false;
     if (parenCount > 0 || bracketCount > 0)
       return true;
-    if ((tokCommand != T.set || !isNewSet) && tokCommand != T.print
-        && tokCommand != T.log)
+    switch (tokCommand) {
+    case T.forcmd:
+      flowContext.addLine = 1;
       return false;
+    case T.set:
+      if (isNewSet)
+        break;
+      //$FALL-THROUGH$
+    case T.print:
+    case T.log:
+      break;
+    default:
+      return false;
+    }
     if (lastToken.tok == tokLastMath)
       return true;
     ichT += n;
