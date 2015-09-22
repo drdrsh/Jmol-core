@@ -2217,7 +2217,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (key.startsWith("_")
           || (t = vwr.g.getOrSetNewVariable(key, true)) == null)
         errorStr(ERROR_invalidArgument, key);
-    }
+    }depp
     if (t != null)
       return t.setv(tv);
 
@@ -2430,12 +2430,12 @@ abstract class ScriptExpr extends ScriptParam {
           // This will for an evaluation of each member of the array.
           // I suppose this allowed for select @{["ala", "leu",...]}.
           // Otherwise we get its object. Q: Why?
-          if (vt.tok != T.varray) {
+          if (chk) {
+            v = null;
+          } else if (vt.tok != T.varray) {
             v = SV.oValue(vt);
           } else if (!isExpression) {
             v = vt;
-          } else if (chk) {
-            v = null;
           } else {
             // select @{x} where x is an array 
             BS bs = SV.getBitSet(vt, true);
@@ -2539,7 +2539,7 @@ abstract class ScriptExpr extends ScriptParam {
           fixed[j] = SV.newV(v instanceof M4 ? T.matrix4f : T.matrix3f, v);
         } else if (v instanceof Map<?, ?> || v instanceof ScriptContext
             && (v = ((ScriptContext) v).getFullMap()) != null) {
-          // do a deep copy -- Jmol 14.3.16
+          // x = @y -- do a deep copy -- Jmol 14.3.16
           fixed[j] = SV.newV(T.hash, (isExpression ? v : SV.deepCopy(v, true)));
         } else if (v instanceof Lst<?>) {
           if (!isExpression) {
