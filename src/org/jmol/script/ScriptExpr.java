@@ -2434,6 +2434,8 @@ abstract class ScriptExpr extends ScriptParam {
             v = SV.oValue(vt);
           } else if (!isExpression) {
             v = vt;
+          } else if (chk) {
+            v = null;
           } else {
             // select @{x} where x is an array 
             BS bs = SV.getBitSet(vt, true);
@@ -2447,6 +2449,8 @@ abstract class ScriptExpr extends ScriptParam {
             }
           }
           i = iToken;
+        } else if (chk) {
+          v = null;
         } else {
           if (tokAt(i) == T.integer) {
             v = vwr.ms.getAtoms(T.atomno, Integer.valueOf(st[i].intValue));
@@ -2460,7 +2464,10 @@ abstract class ScriptExpr extends ScriptParam {
         }
         tok = tokAt(0);
         forceString |= (T.tokAttr(tok, T.implicitStringCommand) || tok == T.script); // for the file names
-        if (v instanceof SV) {
+        if (v == null) {
+          // 
+          fixed[j] = T.tokenAll;
+        } else if (v instanceof SV) {
           // select @{...}
           fixed[j] = (T) v;
         } else if (v instanceof Boolean) {
@@ -2492,8 +2499,9 @@ abstract class ScriptExpr extends ScriptParam {
               // select @x  where x is "arg", for example
               // but not chain=@x  -- in that case we need a literal value
 
-              fixed[j] = (s.indexOf("|") >= 0 || T.tokAttr(fixed[j - 1].tok, T.comparator) ? T.o(
-                  T.string, s) : T.o(T.bitset, getAtomBitSet(s)));
+              fixed[j] = (s.indexOf("|") >= 0
+                  || T.tokAttr(fixed[j - 1].tok, T.comparator) ? T.o(T.string,
+                  s) : T.o(T.bitset, getAtomBitSet(s)));
             } else {
 
               // bit of a hack here....
@@ -2529,17 +2537,18 @@ abstract class ScriptExpr extends ScriptParam {
           fixed[j] = SV.newV(T.point4f, v);
         } else if (v instanceof M34) {
           fixed[j] = SV.newV(v instanceof M4 ? T.matrix4f : T.matrix3f, v);
-        } else if (v instanceof Map<?, ?>) {
+        } else if (v instanceof Map<?, ?> || v instanceof ScriptContext
+            && (v = ((ScriptContext) v).getFullMap()) != null) {
+          // do a deep copy -- Jmol 14.3.16
           fixed[j] = SV.newV(T.hash, (isExpression ? v : SV.deepCopy(v, true)));
-        } else if (v instanceof ScriptContext) {
-          fixed[j] = SV.newV(T.hash, ((ScriptContext) v).getFullMap());
         } else if (v instanceof Lst<?>) {
-          // if v is a list, we check to to see if it is an array of 
-          // bitsets, and it if is, we OR all those.
           if (!isExpression) {
+            // do a deep copy -- Jmol 14.3.16
             fixed[j] = SV.newV(T.varray, SV.deepCopy(v, false));
             break;
           }
+          // if v is a list, we check to to see if it is an array of 
+          // bitsets, and it if is, we OR all those.
           Lst<SV> sv = (Lst<SV>) v;
           BS bs = null;
           for (int k = 0; k < sv.size(); k++) {
@@ -2554,6 +2563,7 @@ abstract class ScriptExpr extends ScriptParam {
           }
           fixed[j] = (bs == null ? SV.getVariable(v) : T.o(T.bitset, bs));
         } else {
+          // assume we want a center
           P3 center = getObjectCenter(var, Integer.MIN_VALUE, Integer.MIN_VALUE);
           if (center == null)
             invArg();
