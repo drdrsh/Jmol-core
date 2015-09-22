@@ -2217,7 +2217,7 @@ abstract class ScriptExpr extends ScriptParam {
       if (key.startsWith("_")
           || (t = vwr.g.getOrSetNewVariable(key, true)) == null)
         errorStr(ERROR_invalidArgument, key);
-    }depp
+    }
     if (t != null)
       return t.setv(tv);
 
