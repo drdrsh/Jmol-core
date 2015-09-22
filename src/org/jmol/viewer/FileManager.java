@@ -433,7 +433,7 @@ public class FileManager implements BytePoster {
             return null;
           name = url.toString();
           if (showMsg && name.toLowerCase().indexOf("password") < 0)
-            Logger.info("FileManager opening 1 " + name);
+            Logger.info("FileManager opening url " + name);
           // note that in the case of JS, this is a javajs.util.SB.
           ret = vwr.apiPlatform.getURLContents(url, outputBytes, post, false);
           //          if ((ret instanceof SB && ((SB) ret).length() < 3
@@ -462,7 +462,7 @@ public class FileManager implements BytePoster {
         } else if (!allowCached
             || (cacheBytes = (byte[]) cacheGet(name, true)) == null) {
           if (showMsg)
-            Logger.info("FileManager opening 2 " + name);
+            Logger.info("FileManager opening file " + name);
           ret = vwr.apiPlatform.getBufferedFileInputStream(name);
         }
         if (ret instanceof String)
@@ -600,7 +600,7 @@ public class FileManager implements BytePoster {
     if (name.indexOf("|") >= 0) {
       subFileList = PT.split(name.replace('\\', '/'), "|");
       if (bytes == null)
-        Logger.info("FileManager opening 3 " + name);
+        Logger.info("FileManager opening zip " + name);
       name = subFileList[0];
     }
     Object t = (bytes == null ? getBufferedInputStreamOrErrorMessageFromName(
