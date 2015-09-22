@@ -55,6 +55,7 @@ public class ScriptContext {
   public boolean isJSThread;
   boolean isStateScript;
   boolean isTryCatch;
+  SV[] forVars;
   int iToken;
   int lineEnd = Integer.MAX_VALUE;
   public int[][] lineIndices;

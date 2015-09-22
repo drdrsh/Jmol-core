@@ -3406,7 +3406,7 @@ public class ScriptEval extends ScriptExpr {
   private boolean cmdFor(int tok, boolean isForCheck) throws ScriptException {
     ContextToken cmdToken = (ContextToken) theToken;
     int pt = st[0].intValue;  
-    SV[] loopVars = cmdToken.loopVars;
+    SV[] forVars = cmdToken.forVars;
     pt = st[0].intValue;
     int[] pts = new int[2];
     Object bsOrList = null;
@@ -3417,15 +3417,15 @@ public class ScriptEval extends ScriptExpr {
     boolean isMinusMinus = false;
     int j = 0;
     String key = null;
-    if (isForCheck && loopVars != null) {
+    if (isForCheck && forVars != null) {
       
       // for xx IN [...] or for xx FROM [...]
       
       tok = T.in;
       // i in x, already initialized
-      forVar = loopVars[0];
-      forVal = loopVars[1];
-      bsOrList = loopVars[1].value;
+      forVar = forVars[0];
+      forVal = forVars[1];
+      bsOrList = forVars[1].value;
       // nth time through
       j = ++forVal.intValue;
       if (forVal.tok == T.integer) {
@@ -3518,8 +3518,11 @@ public class ScriptEval extends ScriptExpr {
           break;
         }
       }
-      if (!isForCheck)
-        pushContext(cmdToken, "FOR");        
+      if (!isForCheck) {
+        pushContext(cmdToken, "FOR");
+        thisContext.forVars = forVars;
+        forVars = null;
+      }
       if (key == null) {
         if (isForCheck) {
           j = (bsOrList == null ? pts[1] + 1 : 2);
@@ -3554,10 +3557,10 @@ public class ScriptEval extends ScriptExpr {
               j = -1;
             }
           }
-          if (loopVars == null)
-            loopVars = cmdToken.loopVars = new SV[2];
-          loopVars[0] = forVar;
-          loopVars[1] = forVal;
+          if (forVars == null)
+            forVars = cmdToken.forVars = new SV[2];
+          forVars[0] = forVar;
+          forVars[1] = forVal;
         } else {
           if (T.tokAttr(tokAt(j), T.misc)
               || (forVal = getContextVariableAsVariable(key)) != null) {
@@ -3581,8 +3584,10 @@ public class ScriptEval extends ScriptExpr {
       }
     }
     pt++;
-    if (!isOK)
+    if (!isOK) {
+      cmdToken.forVars = thisContext.forVars;
       popContext(true, false);
+    }
     isForCheck = false;
     if (!isOK && !chk)
       pc = Math.abs(pt) - 1;

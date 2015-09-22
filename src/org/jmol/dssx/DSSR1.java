@@ -171,7 +171,7 @@ public class DSSR1 extends AnnotationParser {
 //          smap.put("res_long", removeUnitAtom((String) smap.get("atom1_id"))
 //              + "," + removeUnitAtom((String) smap.get("atom2_id")));
 //        }
-//      }
+//      }  
 
       if (map.containsKey("counts"))
         s += "_M.dssr.counts = " + map.get("counts").toString() + "\n";
@@ -360,7 +360,7 @@ public class DSSR1 extends AnnotationParser {
         }
         unit2 = (String) map.get("atom2_id");
         bs.clearAll();
-        a2 = ms.getSequenceBits(unit1, bsAtoms, bs).nextSetBit(0);
+        a2 = ms.getSequenceBits(unit2, bsAtoms, bs).nextSetBit(0);
         if (a2 < 0) {
           Logger.error("Atom " + unit2 + " was not found");
           continue;

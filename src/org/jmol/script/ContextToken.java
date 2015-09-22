@@ -28,7 +28,7 @@ import java.util.Map;
 
 class ContextToken extends T {
   Map<String, SV> contextVariables;
-  SV[] loopVars;
+  SV[] forVars;
   static ContextToken newContext(boolean isOpen) {
     ContextToken ct = (isOpen ? newCmd(T.push, "{") : newCmd(T.pop, "}"));
     ct.intValue = 0;

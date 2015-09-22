@@ -671,7 +671,8 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     menuEnable(htMenus.get("PDBnucleicMenu"), (nItems > 0));
     @SuppressWarnings("unchecked")
     Map<String, Object> dssr = (nItems > 0 && modelIndex >= 0 ? (Map<String, Object>) vwr.ms.getInfo(modelIndex, "dssr") : null);
-    setSecStrucMenu(htMenus.get("aaStructureMenu"), dssr);
+    if (dssr != null)
+      setSecStrucMenu(htMenus.get("aaStructureMenu"), dssr);
     nItems = augmentGroup3List(menu2, "c>", false);
     menuEnable(menu2, nItems > 0);
     menuEnable(htMenus.get("PDBcarboMenu"), (nItems > 0));
