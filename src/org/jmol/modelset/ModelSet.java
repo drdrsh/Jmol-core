@@ -2306,7 +2306,7 @@ public class ModelSet extends BondCollection {
     AtomIndexIterator iter = getSelectedAtomIterator(null, false, false, false,
         false);
     for (int iModel = mc; --iModel >= 0;) {
-      if (!bsCheck.get(iModel))
+      if (!bsCheck.get(iModel) || am[iModel].bsAtoms.isEmpty())
         continue;
       setIteratorForAtom(iter, -1, am[iModel].firstAtomIndex, -1, null);
       iter.setCenter(coord, distance);

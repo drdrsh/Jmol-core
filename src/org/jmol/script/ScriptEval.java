@@ -3545,14 +3545,14 @@ public class ScriptEval extends ScriptExpr {
           // start of FOR (i in x) block or FOR (i from x)
           forVar = getContextVariableAsVariable(key, isLocal);
           if (forVar == null && !isLocal)
-            forVar = vwr.g.getOrSetNewVariable(key, false);
-          if (forVar == null) {
+            forVar = vwr.g.getAndSetNewVariable(key, false);
+          if (forVar == null || forVar.myName == null) {
             if (key.startsWith("_"))
               invArg();
             if (isLocal)
               contextVariables.put(key.toLowerCase(), forVar = SV.newI(0));
             else
-              forVar = vwr.g.getOrSetNewVariable(key, true);
+              forVar = vwr.g.getAndSetNewVariable(key, true);
           }
           if (inTok == T.integer) {
             // for (i from [0 31])

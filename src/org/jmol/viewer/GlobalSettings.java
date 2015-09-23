@@ -810,7 +810,7 @@ public class GlobalSettings {
      * @return     a new variable if possible, but null if "_xxx"
      * 
      */
-    public SV getOrSetNewVariable(String name, boolean doSet) {
+    public SV getAndSetNewVariable(String name, boolean doSet) {
       if (name == null || name.length() == 0)
         name = "x";
       Object v = getParam(name, true);

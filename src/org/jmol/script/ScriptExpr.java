@@ -604,7 +604,7 @@ abstract class ScriptExpr extends ScriptParam {
                 rpn.addOp(T.tokenRightParen);
               }
             } else {
-              var = vwr.g.getOrSetNewVariable(name, false);
+              var = vwr.g.getAndSetNewVariable(name, false);
               switch (var.tok) {
               case T.integer:
               case T.decimal:
@@ -2215,7 +2215,7 @@ abstract class ScriptExpr extends ScriptParam {
 
     if (needVariable && key != null) {
       if (key.startsWith("_")
-          || (t = vwr.g.getOrSetNewVariable(key, true)) == null)
+          || (t = vwr.g.getAndSetNewVariable(key, true)) == null)
         errorStr(ERROR_invalidArgument, key);
     }
     if (t != null)
