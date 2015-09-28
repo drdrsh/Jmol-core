@@ -192,8 +192,9 @@ public class PropertyManager implements JmolPropertyManager {
   private final static int PROP_CENTER_INFO = 10;
   private final static int PROP_ORIENTATION_INFO = 11;
   private final static int PROP_TRANSFORM_INFO = 12;
-  private final static int PROP_ATOM_INFO = 13;
-
+  
+  private final static int PROP_ATOM_INFO = 14;
+  
   private final static int PROP_BOND_INFO = 15;
   private final static int PROP_CHAIN_INFO = 16;
   private final static int PROP_POLYMER_INFO = 17;
