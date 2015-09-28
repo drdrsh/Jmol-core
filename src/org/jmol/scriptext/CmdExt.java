@@ -2801,7 +2801,7 @@ public class CmdExt extends ScriptExt {
       vwr.tm.navigateList(eval, list);
   }
 
-  protected String plot(T[] args) throws ScriptException {
+  private String plot(T[] args) throws ScriptException {
     ScriptEval eval = this.e;
     // also used for draw [quaternion, helix, ramachandran] 
     // and write quaternion, ramachandran, plot, ....

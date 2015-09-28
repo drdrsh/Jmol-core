@@ -273,7 +273,7 @@ public class IsoExt extends ScriptExt {
     case T.helix:
     case T.quaternion:
     case T.ramachandran:
-      e.getCmdExt().plot(st);
+      e.getCmdExt().dispatch(T.plot, false, st);
       return false;
     }
     boolean havePoints = false;
