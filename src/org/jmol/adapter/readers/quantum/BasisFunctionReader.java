@@ -54,7 +54,9 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
   protected int[][] dfCoefMaps;
   
   private String[] filterTokens;
-  private boolean filterIsNot; 
+  private boolean filterIsNot;
+
+  private String spin; 
 
   /**
    * check line for filter options
@@ -65,29 +67,31 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
     boolean isHeader = (line.indexOf('\n') == 0);
     if (!isHeader && !doReadMolecularOrbitals)
       return false;
-    if (filter == null)
-      return true;
     boolean isOK = true;
-    int nOK = 0;
     line += " " + alphaBeta;
     String ucline = line.toUpperCase();
-    if (filterTokens == null) {
-      filterIsNot = (filter.indexOf("!") >= 0);
-      filterTokens = PT.getTokens(filter.replace('!', ' ').replace(',', ' ')
-          .replace(';', ' '));
-    }
-    for (int i = 0; i < filterTokens.length; i++)
-      if (ucline.indexOf(filterTokens[i]) >= 0) {
-        if (!filterIsNot) {
-          nOK = filterTokens.length;
-          break;
-        }
-      } else if (filterIsNot) {
-        nOK++;
+    if (filter != null) {
+      int nOK = 0;
+      if (filterTokens == null) {
+        filterIsNot = (filter.indexOf("!") >= 0);
+        filterTokens = PT.getTokens(filter.replace('!', ' ').replace(',', ' ')
+            .replace(';', ' '));
       }
-    isOK = (nOK == filterTokens.length);
-    if (!isHeader)
-      Logger.info("filter MOs: " + isOK + " for \"" + line + "\"");
+      for (int i = 0; i < filterTokens.length; i++)
+        if (ucline.indexOf(filterTokens[i]) >= 0) {
+          if (!filterIsNot) {
+            nOK = filterTokens.length;
+            break;
+          }
+        } else if (filterIsNot) {
+          nOK++;
+        }
+      isOK = (nOK == filterTokens.length);
+      if (!isHeader)
+        Logger.info("filter MOs: " + isOK + " for \"" + line + "\"");
+    }
+    spin = (ucline.indexOf("ALPHA") >= 0 ? "alpha"
+        : ucline.indexOf("BETA") >= 0 ? "beta" : null);
     return isOK;
   }
 
@@ -95,6 +99,9 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
     if (dfCoefMaps != null)
       mo.put("dfCoefMaps", dfCoefMaps);
     orbitals.addLast(mo);
+    mo.put("index", Integer.valueOf(orbitals.size()));
+    if (spin != null)
+      mo.put("spin", spin);
   }
   
   public class MOEnergySorter implements Comparator<Object>{

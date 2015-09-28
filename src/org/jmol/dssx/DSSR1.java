@@ -320,13 +320,13 @@ public class DSSR1 extends AnnotationParser {
       int pt = DSSR_PATHS.indexOf(".." + key) + 2;
       int len = key.length();
       while (pt >= 2 && len > 0) {
+        if (DSSR_PATHS.substring(pt + len, pt + len + 2).equals(".."))
+          key = "[select (" + key + ")]";
         dbObj = vwr.extractProperty(dbObj, key, -1);
         pt += len + 1;
         int pt1 = DSSR_PATHS.indexOf(".", pt);
         key = DSSR_PATHS.substring(pt, pt1);
         len = key.length();
-        if (key.indexOf(";") >= 0)
-          key = "[select " + key + "]";
       }
       bs.or(vwr.ms.getAtoms(T.sequence, dbObj.toString()));
       bs.and(bsModel);

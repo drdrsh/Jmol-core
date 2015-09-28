@@ -179,7 +179,7 @@ public class ScriptMathProcessor {
       try {
         addOp(T.tokenComma);
       } catch (ScriptException e) {
-        System.out.println("Error adding comma");
+       // System.out.println("Error adding comma");
       }      
     }
     if (++xPt == xStack.length)

@@ -502,12 +502,11 @@ public class SV extends T implements JSONEncodable {
   }
 
   // there are reasons to use Token here rather than ScriptVariable
-  // some of these functions, in particular iValue, fValue, and sValue
+  // for some of these functions, in particular iValue, fValue, and sValue
   
   public static boolean bValue(T x) {
     switch (x == null ? nada : x.tok) {
     case on:
-    case hash:
     case context:
       return true;
     case off:
@@ -526,6 +525,8 @@ public class SV extends T implements JSONEncodable {
     case matrix3f:
     case matrix4f:
       return Math.abs(fValue(x)) > 0.0001f;
+    case hash:
+      return !((SV) x).getMap().isEmpty();
     default:
       return false;
     }
@@ -1369,16 +1370,18 @@ public class SV extends T implements JSONEncodable {
 
   protected class Sort implements Comparator<SV> {
     private int arrayPt;
+    private String myKey;
     
-    protected Sort(int arrayPt) {
+    protected Sort(int arrayPt, String myKey) {
       this.arrayPt = arrayPt;
+      this.myKey = myKey;
     }
     
     @Override
     public int compare(SV x, SV y) {
       if (x.tok != y.tok) {
-        if (x.tok == decimal || x.tok == integer
-            || y.tok == decimal || y.tok == integer) {
+        if (x.tok == decimal || x.tok == integer || y.tok == decimal
+            || y.tok == integer) {
           float fx = fValue(x);
           float fy = fValue(y);
           return (fx < fy ? -1 : fx > fy ? 1 : 0);
@@ -1400,6 +1403,11 @@ public class SV extends T implements JSONEncodable {
         if (iPt < 0 || iPt >= sx.size())
           return 0;
         return compare(sx.get(iPt), sy.get(iPt));
+      case hash:
+        if (myKey != null) {
+          return compare(x.getMap().get(myKey), y.getMap().get(myKey));
+        }
+        //$FALL-THROUGH$
       default:
         float fx = fValue(x);
         float fy = fValue(y);
@@ -1426,7 +1434,7 @@ public class SV extends T implements JSONEncodable {
           x.set(n, v);
         }
       } else {
-        Collections.sort(getList(), new Sort(--arrayPt));
+        Collections.sort(getList(), new Sort(--arrayPt, null));
       }
     }
     return this;
@@ -1733,5 +1741,13 @@ public class SV extends T implements JSONEncodable {
       break;
     }
     return vm;
+  }
+
+  public SV sortMapArray(String key) {
+    Lst<SV> lst = getList();
+    if (lst != null) {      
+      Collections.sort(getList(), new Sort(0, key));
+    }
+    return this;
   }
 }

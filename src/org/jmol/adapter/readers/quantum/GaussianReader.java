@@ -506,6 +506,12 @@ public class GaussianReader extends MOReader {
     boolean isNOtype = line.contains("Natural Orbital"); //gfprint pop(full,NO)
     while (rd() != null && line.toUpperCase().indexOf("DENS") < 0) {
       String[] tokens;
+      if (line.indexOf("eta Molecular Orbital Coefficients") >= 0) {
+        addMOData(nThisLine, data, mos);
+        nThisLine = 0;
+        if (!filterMO())
+          break;
+      }
       if (line.indexOf("                    ") == 0) {
         addMOData(nThisLine, data, mos);
         if (isNOtype) {
@@ -518,7 +524,7 @@ public class GaussianReader extends MOReader {
         }
         for (int i = 0; i < nThisLine; i++) {
           mos[i] = new Hashtable<String, Object>();
-          data[i] = new  Lst<String>();
+          data[i] = new Lst<String>();
           String sym;
           if (isNOtype) {
             mos[i]
@@ -570,7 +576,7 @@ public class GaussianReader extends MOReader {
       }
     }
     addMOData(nThisLine, data, mos);
-    setMOData(moModelSet  != asc.atomSetCount); 
+    setMOData(moModelSet != asc.atomSetCount);
     moModelSet = asc.atomSetCount;
   }
 

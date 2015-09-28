@@ -114,8 +114,10 @@ public class MathExt {
     case T.push:
     case T.pop:
       return evaluateList(mp, op.intValue, args);
-    case T.array:
     case T.leftsquare:
+      if (args.length == 0)
+        mp.wasX = false;
+    case T.array:
       return evaluateArray(mp, args);
     case T.axisangle:
     case T.quaternion:
@@ -2526,6 +2528,9 @@ public class MathExt {
     if (args.length > 1)
       return false;
     if (tok == T.sort) {
+      if (args.length == 1 && args[0].tok == T.string) {
+        return mp.addX(mp.getX().sortMapArray(args[0].asString()));
+      }
       int n = (args.length == 0 ? 0 : args[0].asInt());
       return mp.addX(mp.getX().sortOrReverse(n));
     }
