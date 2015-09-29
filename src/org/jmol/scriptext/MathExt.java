@@ -117,8 +117,9 @@ public class MathExt {
     case T.leftsquare:
       if (args.length == 0)
         mp.wasX = false;
+      //$FALL-THROUGH$
     case T.array:
-      return evaluateArray(mp, args);
+      return evaluateArray(mp, args, tok == T.array && op.tok == T.propselector);
     case T.axisangle:
     case T.quaternion:
       return evaluateQuaternion(mp, args, tok);
@@ -214,7 +215,49 @@ public class MathExt {
     return false;
   }
 
-  private boolean evaluateArray(ScriptMathProcessor mp, SV[] args) {
+  @SuppressWarnings("unchecked")
+  private boolean evaluateArray(ScriptMathProcessor mp, SV[] args, boolean isSelector) throws ScriptException {
+    if (isSelector) {
+      SV x1 = mp.getX();
+      switch (args.length == 1 ? x1.tok : T.nada) {
+      case T.hash:
+        // map of maps to lst of maps
+        Lst<SV> lst = new Lst<SV>();
+        String id = args[0].asString();
+        Map<String, SV> map = x1.getMap();
+        String[] keys = x1.getKeys(false);
+        // values must all be maps
+        for (int i = 0, n = keys.length; i < n; i++)
+          if (map.get(keys[i]).getMap() == null)
+            return false;
+        for (int i = 0, n = keys.length; i < n; i++) {
+          SV m = map.get(keys[i]);
+          Map<String, SV> m1 = m.getMap();
+          Map<String, SV> m2 = (Map<String, SV>) SV.deepCopy(m1, true, false);
+          m2.put(id, SV.newS(keys[i]));
+          lst.addLast(SV.newV(T.hash, m2));
+        }
+        return mp.addXList(lst);
+      case T.varray:
+        Map<String, SV> map1 = new Hashtable<String, SV>();
+        Lst<SV> lst1 = x1.getList();
+        String id1 = args[0].asString();
+        // values must all be maps
+        for (int i = 0, n = lst1.size(); i < n; i++) {
+          Map<String, SV> m0 = lst1.get(i).getMap(); 
+          if (m0 == null || m0.get(id1) == null)
+            return false;
+        }
+        for (int i = 0, n = lst1.size(); i < n; i++){
+          SV m = lst1.get(i);
+          Map<String, SV> m1 = (Map<String, SV>) SV.deepCopy(m.getMap(), true, false);
+          SV mid = m1.remove(id1);
+          map1.put(mid.asString(), SV.newV(T.hash, m1));
+        }
+        return mp.addXObj(map1);
+      }
+      return  false;
+    }
     SV[] a = new SV[args.length];    
     for (int i = a.length; --i >= 0;)
       a[i] = SV.newT(args[i]);

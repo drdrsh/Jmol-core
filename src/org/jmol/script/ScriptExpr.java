@@ -2540,11 +2540,11 @@ abstract class ScriptExpr extends ScriptParam {
         } else if (v instanceof Map<?, ?> || v instanceof ScriptContext
             && (v = ((ScriptContext) v).getFullMap()) != null) {
           // x = @y -- do a deep copy -- Jmol 14.3.16
-          fixed[j] = SV.newV(T.hash, (isExpression ? v : SV.deepCopy(v, true)));
+          fixed[j] = SV.newV(T.hash, (isExpression ? v : SV.deepCopy(v, true, true)));
         } else if (v instanceof Lst<?>) {
           if (!isExpression) {
             // do a deep copy -- Jmol 14.3.16
-            fixed[j] = SV.newV(T.varray, SV.deepCopy(v, false));
+            fixed[j] = SV.newV(T.varray, SV.deepCopy(v, false, true));
             break;
           }
           // if v is a list, we check to to see if it is an array of 

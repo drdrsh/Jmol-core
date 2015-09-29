@@ -1707,21 +1707,26 @@ public class SV extends T implements JSONEncodable {
    * 
    * @param v hash or array
    * @param isHash
+   * @param isDeep TODO
    * @return deeply copied variable
    */
   @SuppressWarnings("unchecked")
-  public static Object deepCopy(Object v, boolean isHash) {
+  public static Object deepCopy(Object v, boolean isHash, boolean isDeep) {
     if (isHash) {
       Map<String, SV> vold = (Map<String, SV>) v;
       Map<String, SV> vnew = new Hashtable<String, SV>();
-      for (Entry<String, SV> e : vold.entrySet())
-        vnew.put(e.getKey(), deepCopySV(e.getValue()));
-      return vnew;
+      for (Entry<String, SV> e : vold.entrySet()) {
+        SV v1 = e.getValue();
+        vnew.put(e.getKey(), isDeep ? deepCopySV(v1) : v1);
+      }
+      return vnew; 
     }
     Lst<SV> vold2 = (Lst<SV>) v;
     Lst<SV> vnew2 = new Lst<SV>();
-    for (int i = 0, n = vold2.size(); i < n; i++)
-      vnew2.addLast(deepCopySV(vold2.get(i)));
+    for (int i = 0, n = vold2.size(); i < n; i++) {
+      SV vm = vold2.get(i);
+      vnew2.addLast(isDeep ? deepCopySV(vm) : vm);
+    }
     return vnew2;
   }
 
@@ -1735,7 +1740,7 @@ public class SV extends T implements JSONEncodable {
       } else {
         vm.myName = "recursing";
         SV vm0 = vm;
-        vm = newV(vm.tok, deepCopy(vm.value, vm.tok == hash));
+        vm = newV(vm.tok, deepCopy(vm.value, vm.tok == hash, true));
         vm0.myName = null;
       }
       break;
