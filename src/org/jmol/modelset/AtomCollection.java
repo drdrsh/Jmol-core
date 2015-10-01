@@ -1301,7 +1301,8 @@ abstract public class AtomCollection {
             // 2 bonds needed R2C or R-N or R2C=C or O
             //                    or RC=C or C=C
             boolean isEne = (hybridization == 2 || atomicNumber == 5 || nBonds == 1
-                && targetValence == 4 || atomicNumber == 7 && isAdjacentSp2(atom));
+                && targetValence == 4 
+                || atomicNumber == 7 && isAdjacentSp2(atom));
             getHybridizationAndAxes(i, atomicNumber, z, x, (isEne ? "sp2b"
                 : targetValence == 3 ? "sp3c" : "lpa"), false, true);
             pt = P3.newP(z);
@@ -1332,7 +1333,8 @@ abstract public class AtomCollection {
                 continue;
               }
               if (getHybridizationAndAxes(i, atomicNumber, z, x, (hybridization == 2 || atomicNumber == 5 
-                  || atomicNumber == 7 && isAdjacentSp2(atom) 
+                  || atomicNumber == 7 
+                  && (atom.group.getNitrogenAtom() == atom || isAdjacentSp2(atom))
                   ? "sp2c"
                   : "sp3d"), true, false) != null) {
                 pt = P3.newP(z);

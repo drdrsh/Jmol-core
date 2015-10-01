@@ -2404,6 +2404,7 @@ public class ModelSet extends BondCollection {
     Atom atomB = null;
     char altloc = '\0';
     short newOrder = (short) (order | Edge.BOND_NEW);
+    boolean isAromatic = ((order & Edge.BOND_AROMATIC_MASK) != 0);
     try {
       for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1)) {
         if (isBonds) {
@@ -2434,7 +2435,11 @@ public class ModelSet extends BondCollection {
           if ((bondAB == null ? idOrModifyOnly : createOnly)
               || checkDistance
               && !isInRange(atomA, atomB, minD, maxD, minDIsFrac, maxDIsFrac,
-                  isFractional))
+                  isFractional)
+              || isAromatic 
+              && (atomA.getElementNumber() == 1 || atomA.getCovalentBondCount() > 3
+                   || atomB.getElementNumber() == 1 || atomB.getCovalentBondCount() > 3)    
+              )
             continue;
           if (bondAB == null) {
             bsBonds.set(bondAtoms(atomA, atomB, order, mad, bsBonds, energy,

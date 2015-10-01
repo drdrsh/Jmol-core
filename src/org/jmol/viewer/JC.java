@@ -620,7 +620,8 @@ public final class JC {
     // structure related
     //
     "@alpha _a=2", // rasmol doc says "approximately *.CA" - whatever?
-    "@backbone protein&(_a>=1&_a<6|_a>=64&_a<72)|nucleic&(_a>=6&_a<14|_a>=72)",    
+    "@bbone0 protein&(_a>=1&_a<6|_a>=64&_a<72)|nucleic&(_a>=6&_a<14|_a>=72)", // may or may not include H    
+    "@backbone back_bone | _H && connected(single, bbone0)",    
     "@spine protein&_a>=1&_a<4|nucleic&_a>=6&_a<14&_a!=12",
     "@sidechain (protein,nucleic) & !backbone",
     "@base nucleic & !backbone",

@@ -478,15 +478,26 @@ abstract public class BondCollection extends AtomCollection {
     Bond bond;
     isAll = (bsBonds == null);
     i0 = (isAll ? bondCount - 1 : bsBonds.nextSetBit(0));
+    BS bsTest = new BS();
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {
         bond = bo[i];
         if (!bond.is(Edge.BOND_AROMATIC)
             || bsAromaticDouble.get(i) || bsAromaticSingle.get(i))
           continue;
-        if (!assignAromaticDouble(bond))
-          assignAromaticSingle(bond);
-        System.out.println(bond + " "+ bond.order);
+        bsTest.set(i);
+        if (bond.atom1.getElementNumber() == 8 || bond.atom2.getElementNumber() == 8) {
+          if (!assignAromaticDouble(bond))
+            assignAromaticSingle(bond);
+        } else {
+          bsTest.set(i);
+        }
       }
+    // now test non-O atoms
+    for (int i = bsTest.nextSetBit(0); i >= 0; i = bsTest.nextSetBit(i + 1)) {
+      bond = bo[i];
+      if (!assignAromaticDouble(bond))
+        assignAromaticSingle(bond);
+    }
     // all done: do the actual assignments and clear arrays.
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {
         bond = bo[i];
@@ -642,10 +653,11 @@ abstract public class BondCollection extends AtomCollection {
     case 6: // C
       return (nAtoms == 4);
     case 7: // N
+      return (atom.group.getNitrogenAtom() == atom || nAtoms == 3 && atom.getFormalCharge() < 1);
     case 8: // O
-      return (nAtoms == 10 - n && atom.getFormalCharge() < 1);
+      return (atom.group.getCarbonylOxygenAtom() != atom && nAtoms == 2 && atom.getFormalCharge() < 1);
     case 16: // S
-      return (nAtoms == 18 - n && atom.getFormalCharge() < 1);
+      return (atom.group.groupID == JC.GROUPID_CYSTEINE || nAtoms == 2 && atom.getFormalCharge() < 1);
     }
     return false;
   }

@@ -643,10 +643,21 @@ public class CmdExt extends ScriptExt {
           eval.report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)));
         return;
       case T.hydrogen:
-        bs1 = (slen == 2 ? null : atomExpressionAt(2));
+        boolean andBond = (tokAt(2) == T.on);
+        if (andBond)
+          eval.iToken++;
+        bs1 = (slen == (andBond ? 3 : 2) ? null : atomExpressionAt(andBond ? 3  : 2));
         eval.checkLast(eval.iToken);
-        if (!chk)
+        if (!chk) {
           vwr.addHydrogens(bs1, false, false);
+          if (andBond) {
+            if (bs1 == null)
+              bs1 = vwr.bsA();
+            vwr.makeConnections(0.1f, 1e8f, Edge.BOND_AROMATIC,
+                T.modify, bs1, bs1, null, false, false, 0);
+            vwr.ms.assignAromaticBondsBs(true, null);            
+          }
+        }
         return;
       case T.partialcharge:
         eval.iToken = 1;
