@@ -444,6 +444,9 @@ public class Atom extends Point3fi implements BNode {
       valence = (byte) (nBonds < 0 ? 0 : nBonds < 0xEF ? nBonds : 0xEF);
   }
 
+  /**
+   * return the total bond order for this atom
+   */
   @Override
   public int getValence() {
     if (isDeleted())

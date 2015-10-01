@@ -1236,12 +1236,14 @@ abstract public class AtomCollection {
         int targetValence = aaRet[0];
         int hybridization = aaRet[2];
         int nBonds = aaRet[3];
-
+        if (nBonds == 0 && atom.isHetero())
+          continue; // no adding to water
         hAtoms[i] = new P3[n];
         int hPt = 0;
         if (nBonds == 0) {
           switch (n) {
           case 4:
+            // methane
             z.set(0.635f, 0.635f, 0.635f);
             pt = P3.newP(z);
             pt.add(atom);
@@ -1250,6 +1252,7 @@ abstract public class AtomCollection {
               vConnect.addLast(atom);
             //$FALL-THROUGH$
           case 3:
+            // nitrogen
             z.set(-0.635f, -0.635f, 0.635f);
             pt = P3.newP(z);
             pt.add(atom);
@@ -1258,6 +1261,7 @@ abstract public class AtomCollection {
               vConnect.addLast(atom);
             //$FALL-THROUGH$
           case 2:
+            // oxygen
             z.set(-0.635f, 0.635f, -0.635f);
             pt = P3.newP(z);
             pt.add(atom);

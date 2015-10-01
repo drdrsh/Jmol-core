@@ -586,7 +586,7 @@ abstract public class BondCollection extends AtomCollection {
    */
   private boolean assignAromaticSingleForAtom(Atom atom, int notBondIndex) {
     Bond[] bonds = atom.bonds;
-    if (bonds == null || assignAromaticSingleHetero(atom))
+    if (bonds == null)// || assignAromaticMustBeSingle(atom))
       return false;
     for (int i = bonds.length; --i >= 0;) {
       Bond bond = bonds[i];
@@ -613,7 +613,7 @@ abstract public class BondCollection extends AtomCollection {
     Bond[] bonds = atom.bonds;
     if (bonds == null)
       return false;
-    boolean haveDouble = assignAromaticSingleHetero(atom);
+    boolean haveDouble = false;//assignAromaticMustBeSingle(atom);
     int lastBond = -1;
     for (int i = bonds.length; --i >= 0;) {
       if (bsAromaticDouble.get(bonds[i].index))
@@ -636,7 +636,20 @@ abstract public class BondCollection extends AtomCollection {
     return haveDouble;
   } 
   
-  private boolean assignAromaticSingleHetero(Atom atom) {
+  protected boolean allowAromaticBond(Bond b) {
+    if (assignAromaticMustBeSingle(b.atom1)
+        || assignAromaticMustBeSingle(b.atom2))
+      return false;
+    switch (b.getCovalentOrder()) {
+    case Edge.BOND_COVALENT_SINGLE:
+    case Edge.BOND_COVALENT_DOUBLE:
+      return b.atom1.getCovalentBondCount() <= 3 && b.atom2.getCovalentBondCount() <= 3;
+    default:
+      return false;
+    }
+  }
+  
+  private boolean assignAromaticMustBeSingle(Atom atom) {
     // only C N O S may be a problematic:
     int n = atom.getElementNumber();
     switch (n) {

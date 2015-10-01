@@ -2436,9 +2436,7 @@ public class ModelSet extends BondCollection {
               || checkDistance
               && !isInRange(atomA, atomB, minD, maxD, minDIsFrac, maxDIsFrac,
                   isFractional)
-              || isAromatic 
-              && (atomA.getElementNumber() == 1 || atomA.getCovalentBondCount() > 3
-                   || atomB.getElementNumber() == 1 || atomB.getCovalentBondCount() > 3)    
+              || isAromatic && !allowAromaticBond(bondAB)
               )
             continue;
           if (bondAB == null) {
