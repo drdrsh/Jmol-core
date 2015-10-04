@@ -2255,7 +2255,7 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   private void fixFlowAddLine(ScriptFlowContext flowContext) {
     while (flowContext != null) {
-      if (flowContext.addLine > 0) {
+      if (flowContext.addLine > 0 || flowContext.forceEndIf) {
         flowContext.addLine = lineCurrent - flowContext.ptLine;
         flowContext.forceEndIf = true;
       }
