@@ -1387,6 +1387,7 @@ public class T {
   public final static T tokenArraySquare = o(array, "[");        // special operator stack flag
   public final static T tokenArrayOpen = o(leftsquare, "[");     // used also as special operand stack flag
   public final static T tokenArrayClose = o(rightsquare, "]");   
+  public final static T tokenLeftBrace = o(leftbrace, "{");
  
   public final static T tokenExpressionBegin = o(expressionBegin, "expressionBegin");
   public final static T tokenExpressionEnd   = o(expressionEnd, "expressionEnd");

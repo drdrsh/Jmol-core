@@ -2144,7 +2144,7 @@ public class ScriptEval extends ScriptExpr {
       }
       if (!chk && !checkContinue())
         break;
-      if (lineNumbers[pc] > lineEnd)
+      if (pc >= lineNumbers.length || lineNumbers[pc] > lineEnd)
         break;
       if (debugHigh) {
         long timeBegin = 0;
@@ -3449,7 +3449,7 @@ public class ScriptEval extends ScriptExpr {
         isOK = (j >= 0);
       }
     } else {
-
+      // for (i = 1; i < 3; i = i + 1);
       // for (i = 1; i < 3; i = i + 1);
       // for (var i = 1; i < 3; i = i + 1);
       // for (;;;);
@@ -3577,15 +3577,16 @@ public class ScriptEval extends ScriptExpr {
           forVars[0] = forVar;
           forVars[1] = forVal;
         } else {
-          if (T.tokAttr(tokAt(j), T.misc)
-              || (forVal = getContextVariableAsVariable(key, false)) != null) {
+          int vtok = tokAt(j);
+          if (vtok != T.semicolon && (T.tokAttr(vtok, T.misc)
+              || (forVal = getContextVariableAsVariable(key, false)) != null)) {
             if (!isMinusMinus && getToken(++j).tok != T.opEQ)
               invArg();
             if (isMinusMinus)
               j -= 2;
             setVariable(++j, slen - 1, key, false);
           }
-          isOK = parameterExpressionBoolean(pts[0] + 1, pts[1]);
+          isOK = (pts[0] + 1 == pts[1] || parameterExpressionBoolean(pts[0] + 1, pts[1]));
         }
     }
     if (isOK && tok == T.in && j >= 0) {

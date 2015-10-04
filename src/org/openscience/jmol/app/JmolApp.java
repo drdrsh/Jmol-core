@@ -130,9 +130,8 @@ public class JmolApp implements JmolAppAPI {
     
     args = line.getArgs();
     if (args.length > 0) {
-      modelFilename = args[0];
+        modelFilename = args[0];
     }
-
     checkOptions(line, options);
 
   }

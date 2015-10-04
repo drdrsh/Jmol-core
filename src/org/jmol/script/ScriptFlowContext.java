@@ -142,14 +142,14 @@ class ScriptFlowContext {
   int ptDefault;
   ScriptFunction function;
   SV var;
-  private ScriptFlowContext parent;
+  ScriptFlowContext parent;
   int lineStart;
   int commandStart;
   int ptLine;
   int ptCommand;
   boolean forceEndIf = true;
   String ident;
-  public int addLine;
+  int addLine;
   
   ScriptFlowContext(ScriptCompiler compiler, ContextToken token, int pt0, ScriptFlowContext parent) {
     this.compiler = compiler;
@@ -165,15 +165,16 @@ class ScriptFlowContext {
   ScriptFlowContext getBreakableContext(int nLevelsUp) {
     ScriptFlowContext f = this;
     while (f != null && (!ScriptCompiler.isBreakableContext(f.token.tok) || nLevelsUp-- > 0))
-      f = f.getParent();
+      f = f.parent;
     return f;
   }
   
-  boolean checkForceEndIf() {
+  boolean checkForceEndIf(int offset) {
+    if (ptCommand == compiler.iCommand && addLine > 0)
+      addLine++;
     boolean test = forceEndIf 
-        && ptCommand < this.compiler.iCommand 
-        && ptLine + addLine == this.compiler.lineCurrent;
-    //System.out.println("checking" + pt + " " + test + " " + ident + " " + forceEndIf + " " + ptCommand + " " + iCommand + "/" + ptLine + " " + lineCurrent);
+        && ptCommand < compiler.iCommand 
+        && ptLine + (addLine == 0 ? 0 : addLine + offset) == compiler.lineCurrent;
     if (test) // only once!
       forceEndIf = false;
     return test;
@@ -188,8 +189,8 @@ class ScriptFlowContext {
   }
 
   void setLine() {
-    ptLine = this.compiler.lineCurrent;
-    ptCommand = this.compiler.iCommand + 1;
+    ptLine = compiler.lineCurrent;
+    ptCommand = compiler.iCommand + 1;
   }
   
   @Override
@@ -197,11 +198,6 @@ class ScriptFlowContext {
     return "ident " + ident
         + " line " + lineStart 
         + " command " + commandStart;  
-  }
-  
-  ScriptFlowContext getParent() {
-    //System.out.println("FlowContext end " + path() + " on line/command " + lineCurrent + " " + iCommand);
-    return parent;
   }
   
   String path() {
