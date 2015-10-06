@@ -3565,6 +3565,7 @@ public class ScriptEval extends ScriptExpr {
             forVal = SV.getVariable(bsOrList);
             if (inTok == T.bitset) {
               j = ((BS) bsOrList).nextSetBit(0);
+              forVal.intValue = 0;
             } else {
               forVal.intValue = 1;
               forVar.setv(SV.selectItemVar(forVal));
