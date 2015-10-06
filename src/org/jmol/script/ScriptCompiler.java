@@ -366,22 +366,25 @@ public class ScriptCompiler extends ScriptTokenParser {
         if (ichToken < cchScript)
           continue;
         if (flowContext != null) {
-          ichCurrentCommand = cchScript;
+          ichCurrentCommand = ichToken = cchScript;
           while (flowContext != null) {
             fixFlowAddLine(flowContext);
             if (flowContext.checkForceEndIf(0)) {
               forceFlowEnd(flowContext.token);
-              ichCurrentCommand = cchScript;
               processTokenList(iLine, isFull);
             } else {
-              flowContext = flowContext.parent;
-            }
+              lineCurrent = (short) flowContext.lineStart; 
+              iCommand = flowContext.pt0;
+              ichCurrentCommand = lineIndices[iCommand][0];
+              ichToken = ichEnd = lineIndices[iCommand][1];
+              return errorStr(ERROR_missingEnd,
+                      (flowContext.function == null ? T.nameOf(flowContext.token.tok)
+                          : flowContext.function.getSignature()));            }
           }
           lltoken.addLast(new T[]{T.o(T.nada, "// end of script")});
         }
         setAaTokenCompiled();
-        return (flowContext == null || errorStr(ERROR_missingEnd,
-            T.nameOf(flowContext.token.tok)));
+        return true;
       }
 
       if (nTokens > 0 && !isDotDot) {
@@ -758,7 +761,7 @@ public class ScriptCompiler extends ScriptTokenParser {
             lineIndices = lnI;
             lnLength *= 2;
           }
-          lineNumbers[iCommand] = iLine;
+          lineNumbers[iCommand] = lineNumbers[lineNumbers.length - 1] = iLine;
           lineIndices[iCommand][0] = ichCurrentCommand;
           lineIndices[iCommand][1] = Math.max(ichCurrentCommand, Math.min(
               cchScript, ichEnd == ichCurrentCommand ? ichToken : ichEnd));
@@ -798,8 +801,8 @@ public class ScriptCompiler extends ScriptTokenParser {
         isEndOfCommand = true;
         cchToken = 0;
         ichCurrentCommand = ichToken;
-        if (n > 0 || isOneLine)
-          lineCurrent--;
+//        if (n > 0 || isOneLine)
+  //        lineCurrent--;
         return CONTINUE;
       }
       isComment = false;
@@ -2914,7 +2917,7 @@ public class ScriptCompiler extends ScriptTokenParser {
   private boolean handleError() {
     errorType = errorMessage;
     errorLine = script.substring(ichCurrentCommand,
-        ichEnd <= ichCurrentCommand ? ichToken : ichEnd);
+        ichEnd <= ichCurrentCommand ? ichToken + cchToken : ichEnd);
     String lineInfo = (ichToken < ichEnd ? errorLine.substring(0, ichToken
         - ichCurrentCommand)
         + " >>>> " + errorLine.substring(ichToken - ichCurrentCommand)

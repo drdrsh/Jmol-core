@@ -182,6 +182,8 @@ public class ScriptFunction implements JmolScriptFunction {
 
   @Override
   public String getSignature() {
+    if (typeName == null)
+      return T.nameOf(tok);
     SB s = new SB().append(typeName)
       .append(" ").append(name).append(" (");
     for (int i = 0; i < nParameters; i++) {
