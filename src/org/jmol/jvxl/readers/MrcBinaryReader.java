@@ -170,6 +170,13 @@ class MrcBinaryReader extends MapFileReader {
     alpha = binarydoc.readFloat();
     beta = binarydoc.readFloat();
     gamma = binarydoc.readFloat();
+    if (alpha == 0) {
+      alpha = beta = gamma = 90;
+      Logger.info("MRC header: alpha,beta,gamma 0 changed to 90,90,90");
+      Logger.info("MRC header: alpha,beta,gamma 0 reversing insideOut sense");
+      if (params.thePlane == null)
+        params.insideOut = !params.insideOut;
+    }
 
     mapc = binarydoc.readInt(); // CCP4 "crs2xyz[0-2]
     mapr = binarydoc.readInt();
