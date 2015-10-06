@@ -2008,6 +2008,15 @@ public class MathExt {
         (type + "D").toUpperCase().charAt(0), t456));
   }
 
+  /**
+   * plane() or intersection()  
+   * 
+   * @param mp
+   * @param args
+   * @param tok
+   * @return
+   * @throws ScriptException
+   */
   private boolean evaluatePlane(ScriptMathProcessor mp, SV[] args, int tok)
       throws ScriptException {
     if (tok == T.hkl && args.length != 3 || tok == T.intersection
@@ -2127,7 +2136,7 @@ public class MathExt {
         norm = V3.newV(pt2);
         if (pt3 == null) {
           plane = new P4();
-          if (args.length == 2 || !args[2].asBoolean()) {
+          if (args.length == 2 || args[2].tok != T.integer && args[2].tok != T.decimal && !args[2].asBoolean()) {
             // plane(<point1>,<point2>) or 
             // plane(<point1>,<point2>,false)
             pt3 = P3.newP(pt1);

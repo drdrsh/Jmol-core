@@ -3408,7 +3408,6 @@ public class ScriptEval extends ScriptExpr {
     ContextToken cmdToken = (ContextToken) theToken;
     int pt = st[0].intValue;  
     SV[] forVars = cmdToken.forVars;
-    pt = st[0].intValue;
     int[] pts = new int[2];
     Object bsOrList = null;
     SV forVal = null;

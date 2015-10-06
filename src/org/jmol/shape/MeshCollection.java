@@ -457,10 +457,11 @@ public abstract class MeshCollection extends Shape {
     if (property == "ID")
       return (currentMesh == null ? null : currentMesh.thisID);
     if (property.startsWith("list")) {
-      clean();
-      SB sb = new SB();
+          clean();
+          SB sb = new SB();
       int k = 0;
-      String id = (property.equals("list") ? null : property.substring(5));
+      boolean isNamed = property.length() > 5;
+      String id = (property.equals("list") ? null : isNamed ? property.substring(5) : currentMesh == null ? null : currentMesh.thisID);
       for (int i = 0; i < meshCount; i++) {
         m = meshes[i];
         if (id != null && !id.equalsIgnoreCase(m.thisID))
@@ -482,7 +483,7 @@ public abstract class MeshCollection extends Shape {
           sb.append(s);
         }
         sb.appendC('\n');
-        if (id != null) {
+        if (isNamed) {
           Object info = getProperty("jvxlFileInfo", 0);
           if (info != null)
             sb.append((String) info).appendC('\n');

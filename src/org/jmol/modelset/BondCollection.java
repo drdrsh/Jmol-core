@@ -753,9 +753,8 @@ abstract public class BondCollection extends AtomCollection {
       break;
     case 'p':
     case 'm':
-      bondOrder = Edge.getBondOrderNumberFromOrder(
-          bond.getCovalentOrder()).charAt(0)
-          - '0' + (type == 'p' ? 1 : -1);
+      bondOrder = Edge.getBondOrderNumberFromOrder(bond.getCovalentOrder())
+          .charAt(0) - '0' + (type == 'p' ? 1 : -1);
       if (bondOrder > 3)
         bondOrder = 1;
       else if (bondOrder < 0)
@@ -775,8 +774,11 @@ abstract public class BondCollection extends AtomCollection {
         return bsAtoms;
       }
       bond.setOrder(bondOrder | Edge.BOND_NEW);
-      removeUnnecessaryBonds(bond.atom1, false);
-      removeUnnecessaryBonds(bond.atom2, false);
+      if (bond.atom1.getElementNumber() != 1
+          && bond.atom2.getElementNumber() != 1) {
+        removeUnnecessaryBonds(bond.atom1, false);
+        removeUnnecessaryBonds(bond.atom2, false);
+      }
       bsAtoms.set(bond.atom1.i);
       bsAtoms.set(bond.atom2.i);
     } catch (Exception e) {

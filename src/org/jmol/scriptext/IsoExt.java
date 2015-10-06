@@ -1120,6 +1120,7 @@ public class IsoExt extends ScriptExt {
     if (tokAt(1) == T.list && listIsosurface(iShape))
       return;
     int iptDisplayProperty = 0;
+    boolean isDisplay = false;
     boolean isIsosurface = (iShape == JC.SHAPE_ISOSURFACE);
     boolean isPmesh = (iShape == JC.SHAPE_PMESH);
     boolean isPlot3d = (iShape == JC.SHAPE_PLOT3D);
@@ -1319,7 +1320,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.display:
       case T.within:
-        boolean isDisplay = (eval.theTok == T.display);
+        isDisplay = (eval.theTok == T.display);
         if (isDisplay) {
           sbCommand.append(" display");
           iptDisplayProperty = i;
@@ -2766,7 +2767,7 @@ public class IsoExt extends ScriptExt {
     setShapeProperty(iShape, "clear", null);
     if (toCache)
       setShapeProperty(iShape, "cache", null);
-    if (iShape != JC.SHAPE_LCAOCARTOON)
+    if (iShape != JC.SHAPE_LCAOCARTOON && !isDisplay && !haveSlab)
       listIsosurface(iShape);
   }
 

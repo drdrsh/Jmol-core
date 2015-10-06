@@ -65,7 +65,8 @@ public final class JC {
     "pdbe2", "http://www.ebi.ac.uk/pdbe/static/entry/%FILE_updated.cif",
     "pubchem", "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
     "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
-    "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE" 
+    "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
+    "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary"
   };
   
   public static String[] macros = {
