@@ -169,7 +169,7 @@ public class CubeIterator {
   }
 
   /**
-   * checks one Point3f for distance
+   * checks one Point3f for box-based distance
    * @param t
    * @return boolean
    */

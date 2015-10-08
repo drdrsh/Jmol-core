@@ -37,6 +37,8 @@ import org.jmol.api.JmolNMRInterface;
 import org.jmol.api.JmolPatternMatcher;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
+import org.jmol.bspt.Bspt;
+import org.jmol.bspt.CubeIterator;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
 import org.jmol.java.BS;
@@ -2844,8 +2846,8 @@ public class MathExt {
       throws ScriptException {
     if (args.length < 1 || args.length > 5)
       return false;
-    int i = args.length;
-    if (i == 1 && args[0].tok == T.bitset)
+    int len = args.length;
+    if (len == 1 && args[0].tok == T.bitset)
       return mp.addX(args[0]);
     float distance = 0;
     Object withinSpec = args[0].value;
@@ -2866,13 +2868,13 @@ public class MathExt {
     RadiusData rd = null;
     switch (tok) {
     case T.varray:
-      if (i == 1) {
+      if (len == 1) {
         withinSpec = args[0].asString(); // units ids8
         tok = T.nada;
       }
       break;
     case T.branch:
-      return (i == 3 && args[1].value instanceof BS
+      return (len == 3 && args[1].value instanceof BS
           && args[2].value instanceof BS && mp.addXBs(vwr.getBranchBitSet(
           ((BS) args[2].value).nextSetBit(0),
           ((BS) args[1].value).nextSetBit(0), true)));
@@ -2883,7 +2885,7 @@ public class MathExt {
       // within("smiles", "...", {bitset})
       BS bsSelected = null;
       boolean isOK = true;
-      switch (i) {
+      switch (len) {
       case 2:
         break;
       case 3:
@@ -2901,25 +2903,24 @@ public class MathExt {
           tok == T.search ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
           mp.asBitSet, false));
     }
-    
-    
+
     if (withinSpec instanceof String) {
       if (tok == T.nada) {
         tok = T.spec_seqcode;
-        if (i > 2)
+        if (len > 2)
           return false;
-        i = 2;
+        len = 2;
       }
     } else if (isDistance) {
       if (!isVdw)
         distance = SV.fValue(args[0]);
-      if (i < 2)
+      if (len < 2)
         return false;
       switch (tok = args[1].tok) {
       case T.on:
       case T.off:
         isWithinModelSet = args[1].asBoolean();
-        i = 0;
+        len = 0;
         if (args.length > 2 && SV.sValue(args[2]).equalsIgnoreCase("unitcell"))
           tok = T.unitcell;
         break;
@@ -2930,8 +2931,8 @@ public class MathExt {
         if (s.equalsIgnoreCase("group")) {
           isWithinGroup = true;
           tok = T.group;
-        } else
-        if (s.equalsIgnoreCase("vanderwaals") || s.equalsIgnoreCase("vdw")) {
+        } else if (s.equalsIgnoreCase("vanderwaals")
+            || s.equalsIgnoreCase("vdw")) {
           withinSpec = null;
           isVdw = true;
           tok = T.vanderwaals;
@@ -2945,11 +2946,10 @@ public class MathExt {
     } else {
       return false;
     }
-    
-    
+
     P3 pt = null;
     P4 plane = null;
-    switch (i) {
+    switch (len) {
     case 1:
       // within (sheet)
       // within (helix)
@@ -2994,6 +2994,7 @@ public class MathExt {
       case T.plane:
       case T.hkl:
       case T.coord:
+      case T.point3f:
         break;
       case T.sequence:
         // within ("sequence", "CII", *.ca)
@@ -3008,28 +3009,56 @@ public class MathExt {
       // within (distance, coord, [point or atom center] )
       break;
     }
-    i = args.length - 1;
-    if (args[i].value instanceof P4) {
-      plane = (P4) args[i].value;
-    } else if (args[i].value instanceof P3) {
-      pt = (P3) args[i].value;
+    int last = args.length - 1;
+    switch (args[last].tok) {
+    case T.point4f:
+      plane = (P4) args[last].value;
+      break;
+    case T.point3f:
+      pt = (P3) args[last].value;
       if (SV.sValue(args[1]).equalsIgnoreCase("hkl"))
         plane = e.getHklPlane(pt);
+      break;
+    case T.varray:
+      if (last != 2)
+        return false;
+      pt = SV.ptValue(args[1]);
+      break;
     }
-    if (i > 0 && plane == null && pt == null && !(args[i].value instanceof BS))
+    if (last > 0 && plane == null && pt == null
+        && !(args[last].value instanceof BS))
       return false;
-    // if we have anythink, it must have a point or a plane or a bitset from here on out    
+    // if we have anything, it must have a point or a plane or a bitset from here on out    
     if (plane != null)
       return mp.addXBs(ms.getAtomsNearPlane(distance, plane));
 
-    bs = (args[i].tok == T.bitset ? SV.bsSelectVar(args[i]) : null);
+    bs = (args[last].tok == T.bitset ? SV.bsSelectVar(args[last]) : null);
     if (tok == T.unitcell) {
       boolean asMap = isWithinModelSet;
       return mp
           .addXObj(vwr.ms.getUnitCellPointsWithin(distance, bs, pt, asMap));
     }
-    if (pt != null)
+    if (pt != null) {
+      if (args[last].tok == T.varray) {
+        // within(dist, pt, [pt1, pt2, pt3...])
+        Lst<SV> sv = args[2].getList();
+        Lst<T3> pts = new Lst<T3>();
+        Bspt bspt = new Bspt(3, 0);
+        for (int i = sv.size(); --i >= 0;) {
+          bspt.addTuple(SV.ptValue(sv.get(i)));
+        }
+        CubeIterator iter = bspt.allocateCubeIterator();
+        iter.initialize(pt, distance, false);
+        float d2 = distance * distance;
+        while (iter.hasMoreElements()) {
+          T3 pt2 = iter.nextElement();
+          if (pt2.distanceSquared(pt) <= d2)
+            pts.addLast(pt2);
+        }
+        return mp.addXList(pts);
+      }
       return mp.addXBs(vwr.getAtomsNearPt(distance, pt));
+    }
 
     if (tok == T.sequence)
       return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs, new BS()));
