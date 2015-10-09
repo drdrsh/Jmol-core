@@ -203,9 +203,32 @@ public class GaussianReader extends MOReader {
       // avoid next calculation to set the last title string
       return true;
     }
+    if (line.startsWith(" Mulliken atomic spin densities:")) {
+      getSpinDensities(11);
+      return true;
+    }
+    if (line.startsWith(" Mulliken charges and spin densities:")) {
+      getSpinDensities(21);
+      return true;
+    }
     return checkNboLine();
   }
   
+//   Mulliken atomic spin densities:
+//     1
+// 1  O    1.086438
+// 2  H    -.043219
+// 3  H    -.043219
+  
+  private void getSpinDensities(int pt) throws Exception {
+    rd();
+    float[] data = new float[asc.getLastAtomSetAtomCount()];
+    for (int i = 0; i < data.length; i++)
+      data[i] = parseFloatStr(rd().substring(pt, pt + 10));
+    asc.setAtomProperties("spin", data, -1, false);
+    appendLoadNote(data.length + " spin densities loaded into model " + (asc.iSet + 1));
+  }
+
   /**
    * Interprets the SCF Done: section.
    * 

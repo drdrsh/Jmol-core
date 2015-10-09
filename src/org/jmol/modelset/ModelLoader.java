@@ -447,7 +447,7 @@ public final class ModelLoader {
           "groupPropertyList");
       if (ms.am[i].isBioModel && ms.getInfo(i, "dssr") != null)
         vwr.getAnnotationParser(true).setGroup1(ms, i);
-        if (atomProperties == null)
+      if (atomProperties == null)
         continue;
       for (Map.Entry<String, Object> entry : atomProperties.entrySet()) {
         String key = entry.getKey();
