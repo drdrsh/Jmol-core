@@ -1144,7 +1144,7 @@ public class MathExt {
         switch (x1.tok) {
         case T.string:
           String smiles = SV.sValue(x1);
-          if (bs2 != null)
+          if (bs2 != null || isSmiles && args.length == 1)
             return false;
           if (flags.equalsIgnoreCase("mf")) {
             ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSMARTS);
