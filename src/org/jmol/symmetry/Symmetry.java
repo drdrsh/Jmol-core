@@ -521,7 +521,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public V3[] getUnitCellVectors() {
+  public P3[] getUnitCellVectors() {
     return unitCell.getUnitCellVectors();
   }
 

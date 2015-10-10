@@ -5,11 +5,13 @@ import java.util.Map.Entry;
 import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.Matrix;
+import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.SymmetryInterface;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
 
 
 class Subsystem {
@@ -72,8 +74,8 @@ class Subsystem {
     // Part 2: Get the new unit cell and symmetry operators
 
     SymmetryInterface s0 = msRdr.cr.asc.getSymmetry();
-    V3[] vu43 = s0.getUnitCellVectors();
-    V3[] vr43 = reciprocalsOf(vu43);
+    T3[] vu43 = s0.getUnitCellVectors();
+    T3[] vr43 = SimpleUnitCell.getReciprocal(vu43);
 
     // using full matrix math here:
     //
@@ -96,11 +98,11 @@ class Subsystem {
     
     // back to vector notation and direct lattice
     
-    V3[] uc_nu = new V3[4];
+    T3[] uc_nu = new T3[4];
     uc_nu[0] = vu43[0]; // origin
     for (int i = 0; i < 3; i++)
       uc_nu[i + 1] = V3.new3((float) a[i][0], (float) a[i][1], (float) a[i][2]);    
-    uc_nu = reciprocalsOf(uc_nu);
+    uc_nu = SimpleUnitCell.getReciprocal(uc_nu);
     symmetry = ((Symmetry) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCell(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)
@@ -160,17 +162,6 @@ class Subsystem {
     return false;
   }
 
-  private V3[] reciprocalsOf(V3[] abc) {
-    V3[] rabc = new V3[4];
-    rabc[0] = abc[0]; // origin
-    for (int i = 0; i < 3; i++) {
-      rabc[i + 1] = new V3();
-      rabc[i + 1].cross(abc[((i + 1) % 3) + 1], abc[((i + 2) % 3) + 1]);
-      rabc[i + 1].scale(1/abc[i + 1].dot(rabc[i + 1]));
-    }
-    return rabc;
-  }
-  
   @Override
   public String toString() {
     return "Subsystem " + code + "\n" + w;

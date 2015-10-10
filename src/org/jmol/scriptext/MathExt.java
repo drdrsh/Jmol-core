@@ -35,6 +35,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolNMRInterface;
 import org.jmol.api.JmolPatternMatcher;
+import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.bspt.Bspt;
@@ -58,6 +59,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.Edge;
 import org.jmol.util.Parser;
 import org.jmol.util.Point3fi;
+import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.AU;
 import javajs.util.Lst;
@@ -140,6 +142,8 @@ public class MathExt {
     case T.connected:
     case T.polyhedra:
       return evaluateConnected(mp, args, tok);
+    case T.unitcell:
+      return evaluateUnitCell(mp, args);
     case T.contact:
       return evaluateContact(mp, args);
     case T.data:
@@ -215,6 +219,93 @@ public class MathExt {
       return evaluateWrite(mp, args);
     }
     return false;
+  }
+
+  private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args) {
+    // optional last parameter: scale
+    // unitcell()
+    // unitcell(uc)
+    // unitcell(uc, "reciprocal")
+    // unitcell(ucconv, "primitive","BCC"|"FCC")
+    // unitcell(ucprim, "conventional","BCC"|"FCC"|...?) //not yet implemented
+    // unitcell(origin, [va, vb, vc])
+    // unitcell(origin, pta, ptb, ptc)
+    int lastParam = args.length - 1;
+    float scale = 1;
+    switch (lastParam < 0 ? T.nada : args[lastParam].tok) {
+    case T.integer:
+    case T.decimal:
+      scale = args[lastParam].asFloat();
+      lastParam--;
+      break;
+    }
+    int tok0 = (lastParam < 0 ? T.nada : args[0].tok);
+    Lst<SV> uc = (tok0 == T.varray ? args[0].getList() : null);
+    SymmetryInterface u = null;
+    boolean haveUC = (uc != null);
+    if (haveUC && uc.size() < 4)
+      return false;
+    int ptParam = (haveUC ? 1 : 0);
+    T3[] ucnew = null;
+    if (!haveUC && tok0 != T.point3f) {
+      u = vwr.getCurrentUnitCell();
+      ucnew = (u == null ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
+          P3.new3(0, 1, 0), P3.new3(0, 0, 1) } : u.getUnitCellVectors());
+    }
+    if (ucnew == null) {
+      ucnew = new P3[4];
+      if (haveUC) {
+        ucnew[0] = P3.newP(SV.ptValue(uc.get(0)));
+        for (int i = 1; i < 4; i++)
+          ucnew[i] = P3.newP(SV.ptValue(uc.get(i)));
+      } else {
+        ucnew[0] = SV.ptValue(args[0]);
+        switch (lastParam) {
+        case 3:
+          // unitcell(origin, pa, pb, pc)
+          for (int i = 1; i < 4; i++)
+            (ucnew[i] = P3.newP(SV.ptValue(args[i]))).sub(ucnew[0]);
+          break;
+        case 1:
+          // unitcell(origin, [va, vb, vc])
+          Lst<SV> l = args[1].getList();
+          if (l != null && l.size() == 3) {
+            for (int i = 0; i < 3; i++)
+              ucnew[i + 1] = SV.ptValue(l.get(i));
+            break;
+          }
+          //$FALL-THROUGH$
+        default:
+          return false;
+        }
+      }
+    }
+    String op = (ptParam <= lastParam ? args[ptParam++].asString() : null);
+    if ("reciprocal".equalsIgnoreCase(op)) {
+      ucnew = SimpleUnitCell.getReciprocal(ucnew);
+    } else if ("primitive".equalsIgnoreCase(op)) {
+      String type = args[ptParam].asString();
+      float[] f = null;
+      if (type.equalsIgnoreCase("BCC"))
+        f = new float[] { .5f, .5f, -.5f, -.5f, .5f, .5f, .5f, -.5f, .5f };
+      else if (type.equalsIgnoreCase("FCC"))
+        f = new float[] { .5f, .5f, 0, 0, .5f, .5f, .5f, 0, .5f };
+      if (f == null)
+        return false;
+      P3[] b = new P3[3];
+      for (int i = 0, p = 0; i < 3; i++) {
+        b[i] = new P3();
+        for (int j = 1; j < 4; j++)
+          b[i].scaleAdd2(f[p++], ucnew[j], b[i]);
+      }
+      for (int i = 0; i < 3; i++)
+        ucnew[i + 1] = b[i];
+
+    }
+    if (scale != 1)
+      for (int i = 1; i < 4; i++)
+        ucnew[i].scale(scale);
+    return mp.addXObj(ucnew);
   }
 
   @SuppressWarnings("unchecked")

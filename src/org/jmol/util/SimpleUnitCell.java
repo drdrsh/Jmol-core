@@ -388,4 +388,16 @@ public class SimpleUnitCell {
       f /= 2;
     return f;
   }
+  
+  public static P3[] getReciprocal(T3[] abc) {
+    P3[] rabc = new P3[4];
+    int off = (abc.length == 4 ? 1 : 0);
+    rabc[0] = (off == 1 ? P3.newP(abc[0]) : new P3()); // origin
+    for (int i = 0; i < 3; i++) {
+      rabc[i + 1] = new P3();
+      rabc[i + 1].cross(abc[((i + off) % 3) + off], abc[((i + off + 1) % 3) + off]);
+      rabc[i + 1].scale(1/abc[i + off].dot(rabc[i + 1]));
+    }
+    return rabc;
+  }
 }

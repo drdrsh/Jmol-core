@@ -478,13 +478,13 @@ class UnitCell extends SimpleUnitCell {
     return unitCellMultiplier;
   }
 
-  public V3[] getUnitCellVectors() {
+  public P3[] getUnitCellVectors() {
     M4 m = matrixFractionalToCartesian;
-    return new V3[] { 
-        V3.newV(cartesianOffset),
-        V3.new3(fix(m.m00), fix(m.m10), fix(m.m20)), 
-        V3.new3(fix(m.m01), fix(m.m11), fix(m.m21)), 
-        V3.new3(fix(m.m02), fix(m.m12), fix(m.m22)) };
+    return new P3[] { 
+        P3.newP(cartesianOffset),
+        P3.new3(fix(m.m00), fix(m.m10), fix(m.m20)), 
+        P3.new3(fix(m.m01), fix(m.m11), fix(m.m21)), 
+        P3.new3(fix(m.m02), fix(m.m12), fix(m.m22)) };
   }
 
   private float fix(float x) {

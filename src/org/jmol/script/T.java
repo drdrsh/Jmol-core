@@ -271,13 +271,13 @@ public class T {
   public final static int throwcmd     = 6 | mathExpressionCommand;
   //public final static int prompt     see mathfunc
   
-  public final static int echo  = 1 /* must be odd */ | implicitStringCommand | shapeCommand | setparam;
+  public final static int echo         = 1 /* must be odd */ | implicitStringCommand | shapeCommand | setparam;
   public final static int help         = 2 /* must be even */ | implicitStringCommand;
-  public final static int hover = 3 /* must be odd */ | implicitStringCommand | defaultON;
+  public final static int hover        = 3 /* must be odd */ | implicitStringCommand | defaultON;
 //public final static int javascript   see mathfunc
 //public final static int label        see mathfunc
   public final static int message      = 5 /* must be odd */ | implicitStringCommand;
-  public final static int pause = 7 /* must be odd */ | implicitStringCommand;
+  public final static int pause        = 7 /* must be odd */ | implicitStringCommand;
 
   //these commands control flow
   //sorry about GOTO!
@@ -389,10 +389,10 @@ public class T {
   public final static int nbo          = shapeCommand | 19 | misc;
   public final static int pmesh        = shapeCommand | 20;
   public final static int plot3d       = shapeCommand | 22;
-//  public final static int polyhedra    = shapeCommand | 24 | predefinedset;
-  //public final static int spacefill see floatproperty
+  // public final static int polyhedra see mathfunc 
+  // public final static int spacefill see floatproperty
   public final static int struts       = shapeCommand | 26 | defaultON;
-  public final static int unitcell     = shapeCommand | 28 | deprecatedparam | predefinedset | defaultON;
+  // public final static int unitcell see mathfunc
   public final static int vector       = shapeCommand | 30;
   public final static int wireframe    = shapeCommand | 32 | defaultON;
 
@@ -657,7 +657,8 @@ public class T {
   // 
   // maximum number of parameters is set by the << 9 shift
   // the min/max mask requires that the first number here must not exceed 63
-  // the only other requirement is that these numbers be unique
+  // the only other requirement is that these numbers be unique, so the initial 
+  // number can be duplicated if necessary, as long as other flags are different
 
 
   static int getMaxMathParams(int tokCommand) {
@@ -669,39 +670,38 @@ public class T {
 
   // xxx(a,b,c,d,e,...)
   
-  public final static int in                = 1 | 0 << 9 | mathfunc | mathproperty;
   public final static int angle            = 1 | 0 << 9 | mathfunc;
   public final static int array            = 2 | 0 << 9 | mathfunc | mathproperty;
   public final static int axisangle        = 3 | 0 << 9 | mathfunc;
-  public final static int bin              = 3 | 0 << 9 | mathfunc | mathproperty;
-  public final static int color            = 4 | 0 << 9 | mathfunc | intproperty | scriptCommand | deprecatedparam | settable;
-  public final static int compare          = 5 | 0 << 9 | mathfunc | scriptCommand;
-  public final static int connected        = 6 | 0 << 9 | mathfunc;
-  public final static int polyhedra        = 7 | 0 << 9 | mathfunc | mathproperty | shapeCommand;
-
-  public final static int data             = 8 | 0 << 9 | mathfunc | scriptCommand;
-  public final static int format           = 7 | 0 << 9 | mathfunc | mathproperty | strproperty | settable;
-  public final static int function         = 9 | 0 << 9 | mathfunc | flowCommand;
-  public final static int getproperty      = 10 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
-  public final static int helix            = 11 | 0 << 9 | mathfunc | predefinedset;
-  public final static int label            = 12 /* must NOT be odd */| 0 << 9 | mathfunc | mathproperty | strproperty | settable | implicitStringCommand | shapeCommand | defaultON | deprecatedparam; 
-  public final static int measure          = 13 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
-  public final static int now              = 14 | 0 << 9 | mathfunc;
-  public final static int plane            = 15 | 0 << 9 | mathfunc;
-  public final static int point            = 16 | 0 << 9 | mathfunc;
-  public final static int pop              = 17 | 0 << 9 | mathfunc | mathproperty | scriptCommand | noArgs; //internal only;
-  public final static int quaternion       = 18 | 0 << 9 | mathfunc | scriptCommand;
-  public final static int sort             = 19 | 0 << 9 | mathfunc | mathproperty;
-  public final static int count            = 20 | 0 << 9 | mathfunc | mathproperty;
-  public final static int within           = 21 | 0 << 9 | mathfunc;
-  public final static int write            = 22 | 0 << 9 | mathfunc | scriptCommand;
-  public final static int cache            = 23 | 0 << 9 | mathfunc | scriptCommand; // new in Jmol 13.1.2
-  public final static int tensor           = 24 | 0 << 9 | mathfunc | mathproperty;
-  public final static int modulation       = 25 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
-  public final static int _                = 26 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
-
-  public final static int find         = 27 | 0 << 9 | mathfunc | mathproperty;
-  public final static int replace      = 28 | 0 << 9 | mathfunc | mathproperty;
+  public final static int bin              = 4 | 0 << 9 | mathfunc | mathproperty;
+  public final static int cache            = 5 | 0 << 9 | mathfunc | scriptCommand; // new in Jmol 13.1.2
+  public final static int color            = 6 | 0 << 9 | mathfunc | intproperty | scriptCommand | deprecatedparam | settable;
+  public final static int compare          = 7 | 0 << 9 | mathfunc | scriptCommand;
+  public final static int connected        = 8 | 0 << 9 | mathfunc;
+  public final static int count            = 9 | 0 << 9 | mathfunc | mathproperty;
+  public final static int data             = 10 | 0 << 9 | mathfunc | scriptCommand;
+  public final static int find             = 11 | 0 << 9 | mathfunc | mathproperty;
+  public final static int format           = 12 | 0 << 9 | mathfunc | mathproperty | strproperty | settable;
+  public final static int function         = 13 | 0 << 9 | mathfunc | flowCommand;
+  public final static int getproperty      = 14 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
+  public final static int helix            = 15 | 0 << 9 | mathfunc | predefinedset;
+  public final static int in               = 16 | 0 << 9 | mathfunc | mathproperty;
+  public final static int label            = 18 /* must NOT be odd */| 0 << 9 | mathfunc | mathproperty | strproperty | settable | implicitStringCommand | shapeCommand | defaultON | deprecatedparam; 
+  public final static int measure          = 19 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
+  public final static int modulation       = 20 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
+  public final static int now              = 21 | 0 << 9 | mathfunc;
+  public final static int plane            = 22 | 0 << 9 | mathfunc;
+  public final static int point            = 23 | 0 << 9 | mathfunc;
+  public final static int polyhedra        = 24 | 0 << 9 | mathfunc | mathproperty | shapeCommand;
+  public final static int pop              = 25 | 0 << 9 | mathfunc | mathproperty | scriptCommand | noArgs; //internal only;
+  public final static int quaternion       = 26 | 0 << 9 | mathfunc | scriptCommand;
+  public final static int replace          = 27 | 0 << 9 | mathfunc | mathproperty;
+  public final static int sort             = 28 | 0 << 9 | mathfunc | mathproperty;
+  public final static int tensor           = 29 | 0 << 9 | mathfunc | mathproperty;
+  public final static int unitcell         = 30 | 0 << 9 | mathfunc | shapeCommand | deprecatedparam | predefinedset | defaultON;
+  public final static int within           = 31 | 0 << 9 | mathfunc;
+  public final static int write            = 32 | 0 << 9 | mathfunc | scriptCommand;
+  public final static int _                = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
 
 
   // xxx(a)
@@ -725,22 +725,22 @@ public class T {
   // two parameters and it CAN be a dot-function (but not both together)
   
   public final static int div          = 0 | 1 << 9 | mathfunc | mathproperty;
-  public final static int mul          = 3 | 1 << 9 | mathfunc | mathproperty;
-  public final static int mul3         = 4 | 1 << 9 | mathfunc | mathproperty;
-  public final static int sub          = 7 | 1 << 9 | mathfunc | mathproperty;
-  public final static int trim         = 8 | 1 << 9 | mathfunc | mathproperty;  
-  public final static int volume       = 9 | 1 << 9 | mathfunc | mathproperty | floatproperty;  
-  public final static int col         = 10 | 1 << 9 | mathfunc | mathproperty;
-  public final static int row         = 11 | 1 << 9 | mathfunc | mathproperty;
+  public final static int mul          = 1 | 1 << 9 | mathfunc | mathproperty;
+  public final static int mul3         = 2 | 1 << 9 | mathfunc | mathproperty;
+  public final static int sub          = 3 | 1 << 9 | mathfunc | mathproperty;
+  public final static int trim         = 4 | 1 << 9 | mathfunc | mathproperty;  
+  public final static int volume       = 5 | 1 << 9 | mathfunc | mathproperty | floatproperty;  
+  public final static int col          = 6 | 1 << 9 | mathfunc | mathproperty;
+  public final static int row          = 7 | 1 << 9 | mathfunc | mathproperty;
 
   // xxx(a,b)
   
-  public final static int load         = 3 | 2 << 9 | mathfunc | scriptCommand;
-  public final static int script       = 5 | 2 << 9 | mathfunc | scriptCommand;
-  public final static int substructure = 6 | 2 << 9 | mathfunc | intproperty | strproperty;
-  public final static int search       = 7 | 2 << 9 | mathfunc;
-  public final static int smiles       = 8 | 2 << 9 | mathfunc;
-  public final static int contact = 9 | 2 << 9 | mathfunc | shapeCommand;
+  public final static int load         = 1 | 2 << 9 | mathfunc | scriptCommand;
+  public final static int script       = 2 | 2 << 9 | mathfunc | scriptCommand;
+  public final static int substructure = 3 | 2 << 9 | mathfunc | intproperty | strproperty;
+  public final static int search       = 4 | 2 << 9 | mathfunc;
+  public final static int smiles       = 5 | 2 << 9 | mathfunc;
+  public final static int contact      = 6 | 2 << 9 | mathfunc | shapeCommand;
 
 
   // ___.xxx(a,b)
