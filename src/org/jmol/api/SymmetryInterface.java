@@ -38,7 +38,7 @@ public interface SymmetryInterface {
 
   public boolean createSpaceGroup(int desiredSpaceGroupIndex,
                                            String name,
-                                           Object object);
+                                           Object data);
 
   public String fcoord(T3 p);
 

@@ -227,7 +227,7 @@ public class MathExt {
     // unitcell(uc)
     // unitcell(uc, "reciprocal")
     // unitcell(ucconv, "primitive","BCC"|"FCC")
-    // unitcell(ucprim, "conventional","BCC"|"FCC"|...?) //not yet implemented
+    // unitcell(ucprim, "conventional","BCC"|"FCC")
     // unitcell(origin, [va, vb, vc])
     // unitcell(origin, pta, ptb, ptc)
     int lastParam = args.length - 1;
@@ -280,27 +280,13 @@ public class MathExt {
         }
       }
     }
-    String op = (ptParam <= lastParam ? args[ptParam++].asString() : null);
-    if ("reciprocal".equalsIgnoreCase(op)) {
-      ucnew = SimpleUnitCell.getReciprocal(ucnew);
-    } else if ("primitive".equalsIgnoreCase(op)) {
-      String type = args[ptParam].asString();
-      float[] f = null;
-      if (type.equalsIgnoreCase("BCC"))
-        f = new float[] { .5f, .5f, -.5f, -.5f, .5f, .5f, .5f, -.5f, .5f };
-      else if (type.equalsIgnoreCase("FCC"))
-        f = new float[] { .5f, .5f, 0, 0, .5f, .5f, .5f, 0, .5f };
-      if (f == null)
+    String op = (ptParam <= lastParam ? args[ptParam].asString() : null);
+    boolean isPrimitive = "primitive".equalsIgnoreCase(op);
+    if (isPrimitive || "conventional".equalsIgnoreCase(op)) {
+      if (!SimpleUnitCell.transformCubic(isPrimitive, args[++ptParam].asString(), ucnew))
         return false;
-      P3[] b = new P3[3];
-      for (int i = 0, p = 0; i < 3; i++) {
-        b[i] = new P3();
-        for (int j = 1; j < 4; j++)
-          b[i].scaleAdd2(f[p++], ucnew[j], b[i]);
-      }
-      for (int i = 0; i < 3; i++)
-        ucnew[i + 1] = b[i];
-
+    } else if ("reciprocal".equalsIgnoreCase(op)) {
+      ucnew = SimpleUnitCell.getReciprocal(ucnew);
     }
     if (scale != 1)
       for (int i = 1; i < 4; i++)
@@ -2268,6 +2254,12 @@ public class MathExt {
   }
 
   private boolean evaluatePoint(ScriptMathProcessor mp, SV[] args) {
+    // point(1.3)  // rounds toward 0
+    // point(pt, true) // to screen coord 
+    // point(pt, false) // from screen coord
+    // point(x, y, z)
+    // point(x, y, z, w)
+    
     switch (args.length) {
     default:
       return false;
@@ -2281,15 +2273,33 @@ public class MathExt {
       return (pt instanceof P3 ? mp.addXPt((P3) pt) : mp.addXStr("" + pt));
     case 2:
       // to/from screen coordinates
-      P3 pt3 = SV.ptValue(args[0]);
-      if (pt3 == null)
-        return false;
-      if (args[1].tok == T.off) {
+      P3 pt3;
+      switch (args[1].tok) {
+      case T.off:
+        if ((pt3 = SV.ptValue(args[0])) == null)
+          return false;
         // these are screen coordinates
         vwr.tm.unTransformPoint(pt3, pt3);
-      } else {
+        break;
+      case T.on:
+        if ((pt3 = SV.ptValue(args[0])) == null)
+          return false;
         // this is TO screen coordinates
         vwr.tm.transformPt3f(pt3, pt3);
+        break;
+      case T.point3f:
+        // unitcell transform
+        Lst<SV> sv = args[0].getList();
+        if (sv == null || sv.size() != 4)
+          return false;
+        P3 pt1 = SV.ptValue(args[1]);
+        pt3 = P3.newP(SV.ptValue(sv.get(0)));
+        pt3.scaleAdd2(pt1.x, SV.ptValue(sv.get(1)), pt3);
+        pt3.scaleAdd2(pt1.y, SV.ptValue(sv.get(2)), pt3);
+        pt3.scaleAdd2(pt1.z, SV.ptValue(sv.get(3)), pt3);
+        break;
+      default:
+        return false;
       }
       return mp.addXPt(pt3);      
     case 3:

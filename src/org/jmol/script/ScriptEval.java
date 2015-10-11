@@ -8626,7 +8626,8 @@ public class ScriptEval extends ScriptExpr {
       float angstroms = floatParameterRange(index, 0, 2);
       return (Float.isNaN(angstroms) ? Integer.MAX_VALUE : (int) Math.floor(angstroms * 1000 * 2));
     }
-    errorStr(ERROR_booleanOrWhateverExpected, "\"DOTTED\"");
+    if (!chk)
+      errorStr(ERROR_booleanOrWhateverExpected, "\"DOTTED\"");
     return 0;
   }
 

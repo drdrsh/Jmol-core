@@ -1007,7 +1007,7 @@ public class SymmetryDesc {
       } else {
         isStandard = !isBio;
         if (isBio)
-          sym.spaceGroup = (SpaceGroup.getNull(false)).set(false);
+          sym.spaceGroup = SpaceGroup.getNull(false, false, false);
         else
           sym.setSpaceGroup(false);
         strOperations = "\n" + ops.length + " symmetry operations:";

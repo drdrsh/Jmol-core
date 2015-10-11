@@ -400,4 +400,31 @@ public class SimpleUnitCell {
     }
     return rabc;
   }
+
+  /**
+   * 
+   * @param isPrimitive  or assumed conventional
+   * @param type FCC or BCC
+   * @param uc either [origin, va, vb, vc] or just [va, vb, vc]
+   * @return true if successful
+   */
+  public static boolean transformCubic(boolean isPrimitive, String type,
+                                       T3[] uc) {
+    int offset = uc.length - 3;
+    float[] f = (type.equalsIgnoreCase("BCC") ?  (isPrimitive ? new float[] { .5f, .5f, -.5f, -.5f, .5f, .5f, .5f, -.5f, .5f }
+    : new float[] { 1, 0, 1, 1, 1, 0, 0, 1, 1 })
+    : type.equalsIgnoreCase("FCC") ? (isPrimitive ? new float[] { .5f, .5f, 0, 0, .5f, .5f, .5f, 0, .5f }
+    : new float[] { 1, -1, 1, 1, 1, -1, -1, 1, 1 }) : null);
+    if (f == null)
+      return false;
+    P3[] b = new P3[3];
+    for (int i = 0, p = 0; i < 3; i++) {
+      b[i] = new P3();
+      for (int j = offset; j < 3 + offset; j++)
+        b[i].scaleAdd2(f[p++], uc[j], b[i]);
+    }
+    for (int i = 0; i < 3; i++)
+      uc[i + offset] = b[i];
+    return true;
+  }
 }

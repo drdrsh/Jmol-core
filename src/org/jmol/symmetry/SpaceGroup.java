@@ -116,9 +116,13 @@ class SpaceGroup {
 
   boolean isBilbao;
 
-  static SpaceGroup getNull(boolean doInit) {
+  static SpaceGroup getNull(boolean doInit, boolean doNormalize, boolean doFinalize) {
       getSpaceGroups();
-    return new SpaceGroup(null, doInit);
+    SpaceGroup sg = new SpaceGroup(null, doInit);
+    sg.doNormalize = doNormalize;
+    if (doFinalize)
+      sg.setFinalOperations(null, 0, 0, false);
+    return sg;
   }
   
   private SpaceGroup(String cifLine, boolean doInit) {
@@ -128,11 +132,6 @@ class SpaceGroup {
       buildSpaceGroup(cifLine);
   }
 
-  SpaceGroup set(boolean doNormalize) {
-    this.doNormalize = doNormalize;
-    return this;
-  }
-  
   private void init(boolean addXYZ) {
     xyzList = new Hashtable<String, Integer>();
     operationCount = 0;
@@ -159,6 +158,12 @@ class SpaceGroup {
     return sg;
   }
 
+  /**
+   * 
+   * @param name
+   * @param data Lst<SymmetryOperation> or Lst<M4>
+   * @return a new SpaceGroup if successful or null
+   */
   private static SpaceGroup createSGFromList(String name, Lst<?> data) {
     // try unconventional Hall symbol
     SpaceGroup sg = new SpaceGroup("0;--;--;--", true);
@@ -352,7 +357,7 @@ class SpaceGroup {
   
   /**
    * 
-   * @return valid space group or null
+   * @return a known space group or null
    */
   SpaceGroup getDerivedSpaceGroup() {
     if (index >= 0 && index < SG.length   
