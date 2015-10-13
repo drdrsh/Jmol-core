@@ -17,8 +17,8 @@
   <property name="src.dir"         value="src" />
   <property name="temp.dir"        value="build/release" />
   <property name="web.dir"         value="/home/frs/project/j/jm/jmol" />
-  <property name="web.host"        value="frs.sourceforge.net" />
-  <property name="path.release"    value="Jmol-beta/Jmol 14.3" />
+  <property name="web.host"        value="frs.sourceforge.net" /> 
+  <property name="path.release"    value="Jmol-beta/Jmol 14.5" />
   <property name="prefix.release"  value="Jmol " />
 
 	<echo message="${dist.dir}" />
