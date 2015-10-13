@@ -150,13 +150,19 @@ class ScriptFlowContext {
   boolean forceEndIf = true;
   String ident;
   int addLine;
+  int tok0;
+  public int ichCommand;
+  short line0;
   
-  ScriptFlowContext(ScriptCompiler compiler, ContextToken token, int pt0, ScriptFlowContext parent) {
+  ScriptFlowContext(ScriptCompiler compiler, ContextToken token, int pt0, ScriptFlowContext parent, int ich, short line0) {
     this.compiler = compiler;
     this.token = token;
+    tok0 = token.tok;
     this.ident = (String)token.value;
     this.pt0 = pt0;
+    this.line0 = line0;
     this.parent = parent;
+    ichCommand = ich;
     lineStart = ptLine = this.compiler.lineCurrent;
     commandStart = ptCommand = this.compiler.iCommand;
     //System.out.println ("FlowContext: init " + this);  

@@ -612,14 +612,16 @@ public class FileManager implements BytePoster {
       BufferedInputStream bis = (BufferedInputStream) t;
       if (Rdr.isGzipS(bis))
         bis = Rdr.getUnzippedInputStream(vwr.getJzt(), bis);
-      if (forceInputStream)
-        return  bis;
+      // if we have a subFileList, we don't want to return the stream for the zip file itself
+      if (forceInputStream && subFileList == null)
+        return bis;
       if (Rdr.isCompoundDocumentS(bis)) {
         // very specialized reader; assuming we have a Spartan document here
         GenericBinaryDocument doc = (GenericBinaryDocument) Interface
             .getInterface("javajs.util.CompoundDocument", vwr, "file");
         doc.setStream(vwr.getJzt(), bis, true);
-        return Rdr.getBR(doc.getAllDataFiles("Molecule", "Input").toString());
+        String s = doc.getAllDataFiles("Molecule", "Input").toString();
+        return (forceInputStream ? Rdr.getBIS(s.getBytes()) : Rdr.getBR(s));
       }
       if (Rdr.isPickleS(bis))
         return bis;
@@ -631,7 +633,7 @@ public class FileManager implements BytePoster {
             forceInputStream);
         return (o instanceof String ? Rdr.getBR((String) o) : o);
       }
-      return Rdr.getBufferedReader(bis, null);
+      return (forceInputStream ? bis : Rdr.getBufferedReader(bis, null));
     } catch (Exception ioe) {
       return ioe.toString();
     }

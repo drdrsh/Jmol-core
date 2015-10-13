@@ -833,12 +833,12 @@ class IsoSolventReader extends AtomDataReader {
           if ((f = validateFace(ia, ib, ic, edge, ptS1)) != null) {
             vFaces.addLast(f);
             isOK = true;
-            f.dump();
+            //f.dump();
           }
           if ((f = validateFace(ia, ib, ic, edge, ptS2)) != null) {
             vFaces.addLast(f);
-            if (!isOK)
-              f.dump();
+            //if (!isOK)
+              //f.dump();
             isOK = true;
           }
           if (isOK) {

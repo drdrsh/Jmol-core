@@ -40,4 +40,6 @@ public interface JmolDataManager {
                int matchField, int matchFieldColumnCount, int dataField,
                int dataFieldColumnCount);
 
+  Object[] createFileData(String strModel);
+
 }

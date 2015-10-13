@@ -121,7 +121,6 @@ public class DrawRenderer extends MeshRenderer {
     int nPoints = vertexCount;
     boolean isCurved = ((drawType == EnumDrawType.CURVE
         || drawType == EnumDrawType.ARROW || drawType == EnumDrawType.ARC) && vertexCount > 2);
-    boolean isSegments = (drawType == EnumDrawType.LINE_SEGMENT);
     if (width > 0 && isCurved || drawType == EnumDrawType.ARROW) {
       pt1f.set(0, 0, 0);
       int n = (drawType == EnumDrawType.ARC ? 2 : vertexCount);
@@ -154,12 +153,12 @@ public class DrawRenderer extends MeshRenderer {
     switch (drawType) {
     default:
       render2b(false);
-      break;
+      return;
     case CIRCULARPLANE:
       if (dmesh.scale > 0)
         width *= dmesh.scale;
       render2b(false);
-      break;
+      return;
     case CIRCLE:
       tm.transformPtScr(vertices[0], pt1i);
       if (diameter == 0 && width == 0)
@@ -174,10 +173,13 @@ public class DrawRenderer extends MeshRenderer {
         g3d.drawFilledCircle(colix, mesh.fillTriangles ? colix : 0, diameter,
             pt1i.x, pt1i.y, pt1i.z);
       }
-      break;
-    case CURVE:
+      return;
     case LINE_SEGMENT:
-      //unnecessary
+      for (int i = 0; i < nPoints - 1; i++)
+        drawEdge(i, i + 1, true, vertices[i], vertices[i + 1], screens[i],
+            screens[i + 1]);
+      return;
+    case CURVE:
       break;
     case ARC:
       //renderArrowHead(controlHermites[nHermites - 2], controlHermites[nHermites - 1], false);
@@ -199,9 +201,9 @@ public class DrawRenderer extends MeshRenderer {
       pt1f.setT(pt2);
       break;
     case ARROW:
-      if (vertexCount == 2) {
+      if (!isCurved) {
         renderArrowHead(vertices[0], vertices[1], 0, false, true, dmesh.isBarb);
-        break;
+        return;
       }
       int nHermites = 5;
       if (controlHermites == null || controlHermites.length < nHermites + 1) {
@@ -215,6 +217,7 @@ public class DrawRenderer extends MeshRenderer {
           controlHermites[nHermites - 1], 0, false, false, dmesh.isBarb);
       break;
     }
+    // CURVE ARC ARROW only
     if (diameter == 0)
       diameter = 3;
     if (isCurved) {
@@ -225,10 +228,8 @@ public class DrawRenderer extends MeshRenderer {
                 + (i == nPoints - 2 ? 1 : 2)]);
         i0 = i;
       }
-    } else if (isSegments) {
-      for (int i = 0; i < nPoints - 1; i++)
-        drawEdge(i, i + 1, true, vertices[i], vertices[i + 1], screens[i],
-            screens[i + 1]);
+    } else {
+      render2b(false);
     }
 
   }

@@ -347,4 +347,13 @@ public class DataManager implements JmolDataManager {
     return haveData;
   }
 
+  @Override
+  public Object[] createFileData(String strModel) {
+    Object[] o = new Object[4];
+    o[JmolDataManager.DATA_LABEL] = "model";
+    o[JmolDataManager.DATA_VALUE] = strModel;
+    o[JmolDataManager.DATA_TYPE] = Integer.valueOf(DATA_TYPE_STRING);
+    return o;
+  }
+
 }

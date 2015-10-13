@@ -1447,7 +1447,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public BufferedInputStream getBufferedInputStream(String fullPathName) {
-    // used by some JVXL readers
+    // used by some JVXL readers, also OutputManager.writeZipFile and ScriptManager.openFileAsync
     return fm.getBufferedInputStream(fullPathName);
   }
 
@@ -1869,7 +1869,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (haveFileData) {
       strModel = (String) htParams.get("fileData");
       if (htParams.containsKey("isData")) {
-        return loadInlineScript(strModel, '\0', isAppend, htParams);
+        Object o = loadInlineScript(strModel, '\0', isAppend, htParams);
+        lastData = (g.preserveState ? getDataManager().createFileData(strModel) : null);
+        return o;
       }
     } else if (isString) {
       strModel = ms.getInlineData(-1);
