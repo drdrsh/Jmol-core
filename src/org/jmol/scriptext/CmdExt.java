@@ -5067,10 +5067,13 @@ public class CmdExt extends ScriptExt {
                                         float min, float max)
       throws ScriptException {
 
-    float[] data = (float[]) (property == null ?
+    Object odata = (property == null ?
       e.getBitsetProperty(bs, tok, null, null, null, null,
           false, Integer.MAX_VALUE, false) 
           : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AF));
+    if (odata == null || !AU.isAF(odata))
+      return new float[bs.cardinality()];
+    float[] data = (float[]) odata;
     if (!Float.isNaN(min))
       for (int i = 0; i < data.length; i++)
         if (data[i] < min)
