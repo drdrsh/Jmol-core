@@ -529,17 +529,15 @@ public class IsosurfaceRenderer extends MeshRenderer {
     for (int i = vertexCount; --i >= 0;) {
       if (vertexValues != null && Float.isNaN(vertexValues[i]))
         continue;
-      if (i > 100)
-        continue;
       pt1f.setT(vertices[i]);
       short n = mesh.normixes[i];
       // -n is an intensity2sided and does not correspond to a true normal
       // index
       if (n >= 0) {
-        pt1f.scaleAdd2(3, vertexVectors[n], pt1f);
-        tm.transformPtScrT3(pt1f, pt1f);
+        pt2f.scaleAdd2(0.3f, vertexVectors[n], pt1f);
+        tm.transformPtScrT3(pt2f, pt2f);
         pt1f.set(screens[i].x, screens[i].y, screens[i].z);
-        g3d.drawLineAB(pt1f, pt1f);
+        g3d.drawLineAB(pt1f, pt2f);
       }
     }
   }

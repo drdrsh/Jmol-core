@@ -1419,7 +1419,7 @@ public final class Resolver implements JmolBioResolver, Comparator<String[]> {
     "C5'", //  7 - sugar 5' carbon       SPINE
     "C4'", //  8 - sugar ring 4' carbon  SPINE
     "C3'", //  9 - sugar ring 3' carbon  SPINE
-    "O3'", // 10 - sugar 3' oxygen
+    "O3'", // 10 - sugar 3' oxygen       SPINE
     "C2'", // 11 - sugar ring 2' carbon
     "C1'", // 12 - sugar ring 1' carbon
     // Phosphorus is not required for a nucleic group because
@@ -1541,8 +1541,8 @@ public final class Resolver implements JmolBioResolver, Comparator<String[]> {
     "H2''",
     "HO2'",
   
-    "O3P", //    - third equivalent oxygen on phosphorus of phosphate    
-    "OP3", //    - third equivalent oxygen on phosphorus of phosphate -- new designation
+    "O3P", // 99    - third equivalent oxygen on phosphorus of phosphate    
+    "OP3", //100    - third equivalent oxygen on phosphorus of phosphate -- new designation
         
   };
   

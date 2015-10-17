@@ -871,7 +871,14 @@ public class Polyhedra extends AtomShape {
       p10[3] = -((-p10[3]) ^ (1 << i0));
       p1[3] = -((-p1[3]) ^ (1 << i));
       b = (int[])((Object[]) o)[2];
-      faceList.removeObj(b);
+      for (int j = faceList.size(); --j >= 0;) {
+        int[] f = faceList.get(j);
+        if (f[0] == b[0] && f[1] == b[1]) {
+          faceList.remove(j);
+          break;
+        }
+      }
+      // not supported for JavaScript faceList.removeObj(b);
     }
     return true;
   }

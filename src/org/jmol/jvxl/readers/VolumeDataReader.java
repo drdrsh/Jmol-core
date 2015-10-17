@@ -203,6 +203,8 @@ class VolumeDataReader extends SurfaceReader {
         nGrid = gridMax;
       }
     }
+    if (nGrid == 1)
+      nGrid = 2;
     ptsPerAngstrom = (nGrid - 1) / range;
     if (ptsPerAngstrom < minPointsPerAngstrom) {
       ptsPerAngstrom = minPointsPerAngstrom;

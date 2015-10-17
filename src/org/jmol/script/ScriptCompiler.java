@@ -721,11 +721,10 @@ public class ScriptCompiler extends ScriptTokenParser {
         if (lastFlowCommand == null) {
           parenCount = setBraceCount = braceCount = 0;
           ltoken.remove(0);
-          iBrace++;
           T t = ContextToken.newContext(true);
           addTokenToPrefix(setCommand(t));
           pushContext(t);
-          vBraces.addLast(tokenCommand);
+          addBrace(tokenCommand);
         } else {
           parenCount = setBraceCount = 0;
           setCommand(lastFlowCommand);
@@ -813,7 +812,8 @@ public class ScriptCompiler extends ScriptTokenParser {
 
     }
     if (endOfLine) {
-      if (!haveENDIF && flowContext != null && flowContext.checkForceEndIf(-1)) {
+      if (!haveENDIF && flowContext != null 
+          && flowContext.checkForceEndIf(-1)) {
         boolean isOneLine = (flowContext.addLine == 0); // if (....) xxxxx;
         if (isComment) {
           if (!isOneLine) {
@@ -855,6 +855,14 @@ public class ScriptCompiler extends ScriptTokenParser {
     return OK;
   }
 
+  /**
+   * @param t could be { or } or a command such as FOR or WHILE
+   */
+  private void addBrace(T t) {    
+    vBraces.addLast(t);
+    iBrace++;
+  }
+
   private void pushContext(T t) {
     pushCount++;
     vPush.addLast(t);
@@ -869,16 +877,16 @@ public class ScriptCompiler extends ScriptTokenParser {
    * 
    * more than two tokens:
    * 
-   * not a script function xxxx.spt(3,4,5)
+   * xxxx.spt(3,4,5)
    * 
    * @return true if found
    */
   private boolean wasImpliedScript() {
-    if (nTokens >= 2 && (tokCommand == T.script || tokCommand == T.macro) && checkImpliedScriptCmd) {
+    if (checkImpliedScriptCmd && nTokens >= 2 && (tokCommand == T.script || tokCommand == T.macro)) {
       String s = (nTokens == 2 ? lastToken.value.toString().toUpperCase()
           : null);
-      if (nTokens > 2 ? !(tokAt(2) == T.leftparen && ltoken.get(1).value
-          .toString().endsWith(".spt")) : s.endsWith(".SORT")
+      if (nTokens > 2 ? !(tokAt(2) == T.leftparen && ltoken.get(1).value.toString().endsWith(".spt")) 
+          : s.endsWith(".SORT")
           || s.endsWith(".REVERSE") || s.endsWith(".POP")
           || s.indexOf(".SORT(") >= 0 || s.indexOf(".REVERSE(") >= 0
           || s.indexOf(".POP(") >= 0 || s.indexOf(".PUSH(") >= 0
@@ -983,7 +991,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     ltoken.add(0, setCommand(token));
   }
 
-  private void getPrefixToken() {
+  private int getPrefixToken() {
     ident = script.substring(ichToken, ichToken + cchToken);
     identLC = ident.toLowerCase();
     boolean isUserVar = lastToken.tok != T.per && !isDotDot && isContextVariable(identLC);
@@ -1033,7 +1041,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       // myName is just in case this is being used as a key to a hash
       theToken = SV.newSV((identLC.indexOf("property_") == 0 ? T.property : T.identifier), Integer.MAX_VALUE, ident).setName(myName);
     }
-    theTok = theToken.tok;
+    return theTok = theToken.tok;
   }
 
   /**
@@ -1381,14 +1389,14 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   private int parseKnownToken() {
 
-    getPrefixToken();
+    int tok = getPrefixToken();
 
     // specific token-based issues depend upon where we are in the command
 
     T token;
 
     if (isDotDot) {
-      if (theTok == T.leftsquare) {
+      if (tok == T.leftsquare) {
         bracketCount++;
       } else {
         addTokenToPrefix(T.o(T.string, ident));
@@ -1398,16 +1406,16 @@ public class ScriptCompiler extends ScriptTokenParser {
       return CONTINUE;
     }
     if (tokLastMath != 0)
-      tokLastMath = theTok;
+      tokLastMath = tok;
     if (flowContext != null && flowContext.token.tok == T.switchcmd
-        && flowContext.var != null && theTok != T.casecmd
-        && theTok != T.defaultcmd && lastToken.tok != T.switchcmd)
+        && flowContext.var != null && tok != T.casecmd
+        && tok != T.defaultcmd && lastToken.tok != T.switchcmd)
       return ERROR(ERROR_badContext, ident);
-    if (lastToken.tok == T.define && theTok != T.leftbrace && nTokens != 1) {
-      addTokenToPrefix(theTok == T.define ? lastToken : T.o(T.string, ident));
+    if (lastToken.tok == T.define && tok != T.leftbrace && nTokens != 1) {
+      addTokenToPrefix(tok == T.define ? lastToken : T.o(T.string, ident));
       return CONTINUE;
     }
-    switch (theTok) {
+    switch (tok) {
     case T.identifier:
       if (nTokens == 0 && !checkImpliedScriptCmd) {
         if (ident.charAt(0) == '\'') {
@@ -1500,13 +1508,13 @@ public class ScriptCompiler extends ScriptTokenParser {
         checkNewSetCommand();
       if (isNewSet && parenCount == 0 && bracketCount == 0
           && ichToken <= setEqualPt) {
-        tokenizePlusPlus(theTok, false);
+        tokenizePlusPlus(tok, false);
         return CONTINUE;
       } else if (nSemiSkip == forPoint3 && nTokens == ptSemi + 2) {
         token = lastToken;
         addTokenToPrefix(T.tokenEquals);
         addTokenToPrefix(token);
-        addTokenToPrefix(theTok == T.minusMinus ? T.tokenMinus : T.tokenPlus);
+        addTokenToPrefix(tok == T.minusMinus ? T.tokenMinus : T.tokenPlus);
         addTokenToPrefix(T.i(1));
         return CONTINUE;
       }
@@ -1562,10 +1570,10 @@ public class ScriptCompiler extends ScriptTokenParser {
           if (!wasImpliedScript()) {
             // because if we need to repeat due to a.xxx = ....
             // then we don't want to force the end yet
+            //  for (a in {selected}) { wrap(a, vnm, f) }
+
             braceCount = parenCount = nSemiSkip = 0;
-            if (theToken.tok != T.casecmd && theToken.tok != T.defaultcmd)
-              vBraces.addLast(theToken);
-            iBrace++;
+            addBrace(theToken);
             isEndOfCommand = true;
             ichEnd = ichToken;
           }
@@ -1677,13 +1685,13 @@ public class ScriptCompiler extends ScriptTokenParser {
         if (lltoken.get(iCommand - 1)[0].tok == T.end
             && lastFlowContext != null && lastFlowContext.forceEndIf
             && lastFlowContext.addLine > 0
-            && isFlowIfContextOK(lastFlowContext, tokCommand)) {
+            && isFlowIfContextOK(lastFlowContext)) {
           flowContext = lastFlowContext;
           flowContext.forceEndIf = true;
           lltoken.remove(--iCommand);
         } else if (flowContext != null && flowContext.addLine > 0) {
           while (flowContext != null
-              && !isFlowIfContextOK(flowContext, tokCommand)) {
+              && !isFlowIfContextOK(flowContext)) {
             if (flowContext.checkForceEndIf(0)) {
               forceFlowEnd(flowContext.token);
               processTokenList(iLine, isFull);
@@ -1736,8 +1744,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         }
         if (theTok == T.rightbrace) {
           // if }, just push onto vBrace, but NOT onto ltoken
-          vBraces.addLast(tokenCommand);
-          iBrace++;
+          addBrace(tokenCommand);
           tokCommand = T.nada;
           return CONTINUE;
         }
@@ -2075,19 +2082,36 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   private boolean checkFlowStartBrace(boolean atEnd) {
     int tok = tokCommand;
-    if ((!T.tokAttr(tok, T.flowCommand) || tok == T.breakcmd || tok == T.continuecmd))
-      return false;
-    if (atEnd) {
-      if (tokenCommand.tok != T.casecmd && tokenCommand.tok != T.defaultcmd) {
-        iBrace++;
-        vBraces.addLast(tokenCommand);
-        lastFlowCommand = null;
+    switch (tok) {
+    default:
+      if (T.tokAttr(tok, T.flowCommand)) {
+        if (atEnd) {
+          switch (tok) {
+          case T.casecmd:
+          case T.defaultcmd:
+            break;
+          default:
+            flowContext.addLine = 0;
+            addBrace(tokenCommand);
+            lastFlowCommand = null;
+            break;
+          }
+          parenCount = braceCount = 0;
+        }
+        return true;
       }
-      parenCount = braceCount = 0;
+      //$FALL-THROUGH$
+    case T.breakcmd:
+    case T.continuecmd:
+      return false;
     }
-    return true;
   }
 
+  /**
+   * process a pending explicit right brace }
+   * 
+   * @return continuation status
+   */
   private int checkFlowEndBrace() {
 
     if (iBrace <= 0 || vBraces.get(iBrace - 1).tok != T.rightbrace)
@@ -2096,6 +2120,10 @@ public class ScriptCompiler extends ScriptTokenParser {
     vBraces.remove(--iBrace);
     T token = vBraces.remove(--iBrace);
     if (theTok == T.leftbrace) {
+      //
+      // }
+      // {
+      //
       braceCount--;
       parenCount--;
     }
@@ -2163,7 +2191,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     int pt = lltoken.size();
     switch (tokCommand) {
     case T.endifcmd:
-      if (!isFlowIfContextOK(flowContext, tokCommand)){
+      if (!isFlowIfContextOK(flowContext)){
         if (!haveENDIF)
           return RESTART;
         errorStr(ERROR_badContext, ident);
@@ -2206,10 +2234,10 @@ public class ScriptCompiler extends ScriptTokenParser {
       break;
     case T.elseif:
     case T.elsecmd:
-      if (flowContext != null && !isFlowIfContextOK(flowContext, tokCommand)) {
+      if (flowContext != null && !isFlowIfContextOK(flowContext)) {
         flowContext = flowContext.parent;
       }
-      if (!isFlowIfContextOK(flowContext, tokCommand)) {
+      if (!isFlowIfContextOK(flowContext)) {
         if (!haveENDIF)
           return RESTART;
         errorStr(ERROR_badContext, ident);
@@ -2269,23 +2297,42 @@ public class ScriptCompiler extends ScriptTokenParser {
     return OK;
   }
 
+  /**
+   * generate a new end token with pointer to the start or to default as the intValue
+   * and set it as the command token
+   * 
+   * @param tokCommand end or endif
+   * @param ident  "end" or "endif"
+   */
   private void setFlowEnd(int tokCommand, String ident) {
     setCommand(T.tv(tokCommand,
         (flowContext.ptDefault > 0 ? flowContext.ptDefault
             : -flowContext.pt0), ident)); //copy
   }
-
-  private boolean isFlowIfContextOK(ScriptFlowContext f, int tokCommand) {
+  /**
+   * check for proper sequence: if...[any number of elseif]...[zero or one else]...[endif]
+   * @param f
+   * @return true if OK
+   */
+  private boolean isFlowIfContextOK(ScriptFlowContext f) {
     switch (f == null ? T.nada : f.token.tok) {
-    case T.elsecmd:
-      return tokCommand != T.elsecmd;
     case T.ifcmd:
     case T.elseif:
       return true;
+    case T.elsecmd:
+      return tokCommand != T.elsecmd;
     }
     return false;
   }  
 
+  /**
+   * 
+   * @param tok the XXX in END XXX
+   * @param ident
+   * @param pt1
+   * @param isExplicitEnd actual END IF or END FOR, etc.
+   * @return true if no error
+   */
   private boolean checkFlowEnd(int tok, String ident, int pt1,
                                boolean isExplicitEnd) {
     if (isExplicitEnd) {
@@ -2296,8 +2343,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         switch (flowContext.token.tok) {
         case T.function:
         case T.parallel:
-        case T.trycmd:
-          
+        case T.trycmd:          
           break;
         default:
           setFlowEnd(T.end, "end");

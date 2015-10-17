@@ -3558,7 +3558,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   private boolean updateWindow(int width, int height) {
     //System.out.println("Viewer updateWindow " + width + " " + height);
     if (!refreshing || creatingImage)
-      return false;
+      return (refreshing ? false : !isJS);
     if (isTainted || tm.slabEnabled)
       setModelVisibility();
     isTainted = false;

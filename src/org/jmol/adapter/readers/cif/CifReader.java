@@ -356,7 +356,10 @@ public class CifReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    if (!isMMCIF || !finalizeSubclass())
+    // added check for final data_global
+    if (asc.iSet > 0 && asc.getAtomSetAtomCount(asc.iSet) == 0)
+      asc.atomSetCount--;
+    else if (!isMMCIF || !finalizeSubclass())
       applySymmetryAndSetTrajectory();
     int n = asc.atomSetCount;
     if (n > 1)
