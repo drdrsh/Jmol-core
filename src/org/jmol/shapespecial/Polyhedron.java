@@ -48,14 +48,19 @@ public class Polyhedron {
   public boolean isValid = true;
   public short colixEdge = C.INHERIT_ALL;
   public int visibilityFlags = 0;
+  P3 center;
+  public String id;
 
   Polyhedron() {  
   }
   
-  Polyhedron set(Atom centralAtom, P3[] points, int nPoints, int vertexCount,
+  Polyhedron set(String id, P3 atomOrPt, P3[] points, int nPoints, int vertexCount,
       int[][] triangles, int triangleCount, int[][] faces, V3[] normals, BS bsFlat, boolean collapsed, float distanceRef) {
+    
     this.distanceRef = distanceRef;
-    this.centralAtom = centralAtom;
+    centralAtom = (id == null  ? (Atom) atomOrPt : null);
+    center = (centralAtom == null ? (P3) atomOrPt : null);
+    this.id = id;
     this.nVertices = vertexCount;
     this.vertices = new P3[nPoints + 1];
     this.normals = new V3[triangleCount];
@@ -76,7 +81,11 @@ public class Polyhedron {
   Polyhedron setInfo(Map<String, SV> info, Atom[] at) {
     try {
       collapsed = info.containsKey("collapsed");
-      centralAtom = at[info.get("atomIndex").intValue];
+      center = (info.containsKey("center") ? P3.newP(SV.ptValue(info
+          .get("center"))) : null);
+      if (center == null) {
+        centralAtom = at[info.get("atomIndex").intValue];
+      }
       Lst<SV> lst = info.get("vertices").getList();
       SV vc = info.get("vertexCount");
       if (vc == null) {
@@ -141,6 +150,7 @@ public class Polyhedron {
   }
 
   Map<String, Object> info;
+  public short colix;
   
   Map<String, Object> getInfo(Viewer vwr, boolean isAll) {
     if (isAll && this.info != null && !Logger.debugging)
@@ -151,8 +161,10 @@ public class Polyhedron {
       info.put("modelIndex", Integer.valueOf(centralAtom.mi));
       info.put("modelNumber", Integer.valueOf(centralAtom.getModelNumber()));
       info.put("center", P3.newP(centralAtom));
-      info.put("atomNumber", Integer.valueOf(centralAtom.getAtomNumber()));
-      info.put("atomName", centralAtom.getInfo());
+      if (center == null) {
+        info.put("atomNumber", Integer.valueOf(centralAtom.getAtomNumber()));
+        info.put("atomName", centralAtom.getInfo());
+      }
       info.put("element", centralAtom.getElementSymbol());
       info.put("triangleCount", Integer.valueOf(triangles.length));
       info.put("volume", getVolume());
@@ -193,7 +205,12 @@ public class Polyhedron {
       info.put("triangles", AU.arrayCopyII(triangles, triangles.length));
     }
     info.put("vertexCount", Integer.valueOf(nVertices));
-    info.put("atomIndex", Integer.valueOf(centralAtom.i));
+    if (center == null) {
+      info.put("atomIndex", Integer.valueOf(centralAtom.i));
+    } else {
+      info.put("id", id);
+      info.put("center", P3.newP(center));
+    }
     info.put("vertices",
         AU.arrayCopyPt(vertices, (isAll ? nVertices : vertices.length)));
     int[] elemNos = new int[nVertices];
@@ -207,6 +224,8 @@ public class Polyhedron {
   }
 
   String getSymmetry(Viewer vwr, boolean withPointGroup) {
+    if (id != null)
+      return "";
     info = null;
     SmilesMatcherInterface sm = vwr.getSmilesMatcher();
     try {
@@ -261,9 +280,10 @@ public class Polyhedron {
   }
 
   String getState(Viewer vwr) {
+    String ident = (id == null ? "({"+centralAtom.i+"})" : "ID " + Escape.e(id));
     return "  polyhedron @{" + Escape.e(getInfo(vwr, false)) + "} " 
         + (isFullyLit ? " fullyLit" : "") + ";"
-        + (visible ? "" : "polyhedra ({"+centralAtom.i+"}) off;") + "\n";
+        + (visible ? "" : "polyhedra " + ident + " off;") + "\n";
   }
 
   public void move(M4 mat) {
@@ -289,4 +309,5 @@ public class Polyhedron {
     }
     return normixes;
   }
+
 }

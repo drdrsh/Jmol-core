@@ -379,6 +379,13 @@ public abstract class MeshCollection extends Shape {
 
   @SuppressWarnings("unchecked")
   protected boolean getPropDataMC(String property, Object[] data) {
+    if (property == "keys") {
+      Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1] : new Lst<String>());
+      data[1] = keys;
+      keys.addLast("count");
+      keys.addLast("getCenter");
+      // will continue on to getPropertyIndex
+    }
     if (property == "getNames") {
       Map<String, T> map = (Map<String, T>) data[0];
       boolean withDollar = ((Boolean) data[1]).booleanValue();
@@ -404,6 +411,11 @@ public abstract class MeshCollection extends Shape {
       data[1] = list.get(0).thisID;
       return true;
     }
+    if (property == "index") {
+      Mesh m = getMesh((String) data[0]);
+      data[1] = Integer.valueOf(m == null ? -1 : m.index);
+      return true;
+    }    
     if (property == "getCenter") {
       String id = (String) data[0];
       int index = ((Integer) data[1]).intValue();
@@ -416,7 +428,7 @@ public abstract class MeshCollection extends Shape {
         data[2] = m.vs[m.getVertexIndexFromNumber(index)];
       return true;
     }
-    return false;
+    return getPropShape(property, data);
   }
 
   /**
@@ -445,8 +457,11 @@ public abstract class MeshCollection extends Shape {
     return list;
   }
 
-  protected Object getPropMC(String property) {
-    Mesh m;
+  protected Object getPropMC(String property, int index) {
+    Mesh m = currentMesh;
+    if (index >= 0
+        && (index >= meshCount || (m = meshes[index]) == null))
+      return null;
     if (property == "count") {
       int n = 0;
       for (int i = 0; i < meshCount; i++)
@@ -454,26 +469,34 @@ public abstract class MeshCollection extends Shape {
           n++;
       return Integer.valueOf(n);
     }
+    if (property == "bsVertices") {
+      if (m == null)
+        return null;
+      Lst<Object> lst = new Lst<Object>();
+      lst.addLast(m.vs);
+      lst.addLast(m.getVisibleVBS());
+      return lst;
+    }
     if (property == "ID")
-      return (currentMesh == null ? null : currentMesh.thisID);
+      return (m == null ? null : m.thisID);
     if (property.startsWith("list")) {
-          clean();
-          SB sb = new SB();
+      clean();
+      SB sb = new SB();
       int k = 0;
       boolean isNamed = property.length() > 5;
-      String id = (property.equals("list") ? null : isNamed ? property.substring(5) : currentMesh == null ? null : currentMesh.thisID);
+      String id = (property.equals("list") ? null : isNamed ? property
+          .substring(5) : m == null ? null : m.thisID);
       for (int i = 0; i < meshCount; i++) {
         m = meshes[i];
         if (id != null && !id.equalsIgnoreCase(m.thisID))
           continue;
-        sb.appendI((++k)).append(" id:" + m.thisID).append(
-            "; model:" + vwr.getModelNumberDotted(m.modelIndex)).append(
-            "; vertices:" + m.vc).append(
-            "; polygons:" + m.pc)
+        sb.appendI((++k)).append(" id:" + m.thisID)
+            .append("; model:" + vwr.getModelNumberDotted(m.modelIndex))
+            .append("; vertices:" + m.vc).append("; polygons:" + m.pc)
             .append("; visible:" + m.visible);
         float[] range = (float[]) getProperty("dataRange", 0);
         if (range != null)
-            sb.append("; dataRange:").append(Escape.eAF(range));
+          sb.append("; dataRange:").append(Escape.eAF(range));
         if (m.title != null) {
           String s = "";
           for (int j = 0; j < m.title.length; j++)
@@ -492,11 +515,11 @@ public abstract class MeshCollection extends Shape {
       return sb.toString();
     }
     if (property == "vertices")
-      return getVertices(currentMesh);
-    if (property == "getInfo")
-      return (currentMesh == null ? null : currentMesh.getInfo(false));
-    if (property == "getData")
-      return (currentMesh == null ? null : currentMesh.getInfo(true));
+      return getVertices(m);
+    if (property == "info")
+      return (m == null ? null : m.getInfo(false));
+    if (property == "data")
+      return (m == null ? null : m.getInfo(true));
 
     return null;
   }

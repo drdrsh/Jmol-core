@@ -95,6 +95,8 @@ public class Polyhedra extends AtomShape {
   private boolean haveBitSetVertices;
 
   private BS centers;
+  private String thisID;
+  private P3 center;
   private BS bsVertices;
   private BS bsVertexCount;
 
@@ -116,6 +118,8 @@ public class Polyhedra extends AtomShape {
       nVertices = 0;
       nPoints = 0;
       bsVertices = null;
+      thisID = null;
+      center = null;
       useUnitCell = false;
       centers = null;
       info = null;
@@ -134,6 +138,16 @@ public class Polyhedra extends AtomShape {
       }
       deletePolyhedra();
       buildPolyhedra();
+      return;
+    }
+
+    if ("center" == propertyName) {
+      center = (P3) value;
+      return;
+    }
+
+    if ("id" == propertyName) {
+      thisID = (String) value;
       return;
     }
 
@@ -250,14 +264,28 @@ public class Polyhedra extends AtomShape {
       // but from Color we need to identify the centers.
       bs = ("colorThis" == propertyName && iHaveCenterBitSet ? centers
           : andBitSet(bs));
+      Object cvalue = ("colorPhase" == propertyName ? ((Object[]) value)[1]
+          : value);
       short colixEdge = ("colorPhase" == propertyName ? C
           .getColix(((Integer) ((Object[]) value)[0]).intValue())
           : C.INHERIT_ALL);
-      for (int i = polyhedronCount; --i >= 0;)
-        if (bs.get(polyhedrons[i].centralAtom.i))
-          polyhedrons[i].colixEdge = colixEdge;
-      if ("colorPhase" == propertyName)
-        value = ((Object[]) value)[1];
+      for (int i = polyhedronCount; --i >= 0;) {
+        Polyhedron p = polyhedrons[i];
+        if (thisID != null) {
+          if (thisID == p.id) {
+            p.colixEdge = colixEdge;
+            isActive = true;
+            p.colix = C.getColixO(value);
+            return;
+          }
+        } else {
+          if (bs.get(p.centralAtom.i))
+            p.colixEdge = colixEdge;
+        }
+      }
+      if (thisID != null)
+        return;
+      value = cvalue;
       propertyName = "color";
       //allow super
     }
@@ -272,15 +300,15 @@ public class Polyhedra extends AtomShape {
       //allow super
     }
 
-//    if ("token" == propertyName) {
-//      int tok = ((Integer) value).intValue();
-//      Swit
-//      if (tok == T.triangles && tok == T.notriangles) {
-//      } else {
-//        setLighting(tok == T.fullylit, bs);
-//      }
-//      return;
-//    }
+    //    if ("token" == propertyName) {
+    //      int tok = ((Integer) value).intValue();
+    //      Swit
+    //      if (tok == T.triangles && tok == T.notriangles) {
+    //      } else {
+    //        setLighting(tok == T.fullylit, bs);
+    //      }
+    //      return;
+    //    }
 
     if ("radius" == propertyName) {
       radius = ((Float) value).floatValue();
@@ -390,7 +418,7 @@ public class Polyhedra extends AtomShape {
       }
       return false;
     }
-    return false;
+    return getPropShape(property, data);
   }
 
   @Override
@@ -445,49 +473,57 @@ public class Polyhedra extends AtomShape {
     }
   }
 
-  private int buildMode;
-
   private void buildPolyhedra() {
-    boolean useBondAlgorithm = radius == 0 || bondedOnly;
-    buildMode = (info != null ? MODE_INFO : nPoints > 0 ? MODE_POINTS
-        : haveBitSetVertices ? MODE_BITSET : useUnitCell ? MODE_UNITCELL
-            : useBondAlgorithm ? MODE_BONDING : MODE_RADIUS);
-    AtomIndexIterator iter = (buildMode == MODE_RADIUS ? ms
-        .getSelectedAtomIterator(null, false, false, false, false) : null);
-    for (int i = centers.nextSetBit(0); i >= 0; i = centers.nextSetBit(i + 1)) {
-      Atom atom = atoms[i];
-      Polyhedron p = null;
-      switch (buildMode) {
-      case MODE_BITSET:
-        p = constructBitSetPolyhedron(atom);
-        break;
-      case MODE_UNITCELL:
-        p = constructUnitCellPolygon(atom, useBondAlgorithm);
-        break;
-      case MODE_BONDING:
-        p = constructBondsPolyhedron(atom, 0);
-        break;
-      case MODE_RADIUS:
-        vwr.setIteratorForAtom(iter, i, radius);
-        p = constructRadiusPolyhedron(atom, iter);
-        break;
-      case MODE_INFO:
-        p = new Polyhedron().setInfo(info, vwr.ms.at);
-        break;
-      case MODE_POINTS:
-        p = validatePolyhedron(atom, nPoints);
-        break;
+    Polyhedron p = null;
+    if (center != null) {
+      p = validatePolyhedron(center, nPoints);
+      if (p != null)
+        addPolyhedron(p);
+    } else {
+      boolean useBondAlgorithm = radius == 0 || bondedOnly;
+      int buildMode = (info != null ? MODE_INFO : nPoints > 0 ? MODE_POINTS
+          : haveBitSetVertices ? MODE_BITSET : useUnitCell ? MODE_UNITCELL
+              : useBondAlgorithm ? MODE_BONDING : MODE_RADIUS);
+      AtomIndexIterator iter = (buildMode == MODE_RADIUS ? ms
+          .getSelectedAtomIterator(null, false, false, false, false) : null);
+      for (int i = centers.nextSetBit(0); i >= 0; i = centers.nextSetBit(i + 1)) {
+        Atom atom = atoms[i];
+        p = null;
+        switch (buildMode) {
+        case MODE_BITSET:
+          p = constructBitSetPolyhedron(atom);
+          break;
+        case MODE_UNITCELL:
+          p = constructUnitCellPolygon(atom, useBondAlgorithm);
+          break;
+        case MODE_BONDING:
+          p = constructBondsPolyhedron(atom, 0);
+          break;
+        case MODE_RADIUS:
+          vwr.setIteratorForAtom(iter, i, radius);
+          p = constructRadiusPolyhedron(atom, iter);
+          break;
+        case MODE_INFO:
+          p = new Polyhedron().setInfo(info, vwr.ms.at);
+          break;
+        case MODE_POINTS:
+          p = validatePolyhedron(atom, nPoints);
+          break;
+        }
+        if (p != null)
+          addPolyhedron(p);
+        if (haveBitSetVertices)
+          break;
       }
-      if (p != null) {
-        if (polyhedronCount == polyhedrons.length)
-          polyhedrons = (Polyhedron[]) AU.doubleLength(polyhedrons);
-        polyhedrons[polyhedronCount++] = p;
-      }
-      if (haveBitSetVertices)
-        break;
+      if (iter != null)
+        iter.release();
     }
-    if (iter != null)
-      iter.release();
+  }
+
+  private void addPolyhedron(Polyhedron p) {
+    if (polyhedronCount == polyhedrons.length)
+      polyhedrons = (Polyhedron[]) AU.doubleLength(polyhedrons);
+    polyhedrons[polyhedronCount++] = p;
   }
 
   private Polyhedron constructBondsPolyhedron(Atom atom, int otherAtomCount) {
@@ -593,7 +629,7 @@ public class Polyhedra extends AtomShape {
         otherAtomCount));
   }
 
-  private Polyhedron validatePolyhedron(Atom centralAtom, int vertexCount) {
+  private Polyhedron validatePolyhedron(P3 atomOrPt, int vertexCount) {
     P3[] points = otherAtoms;
     boolean collapsed = isCollapsed;
     int triangleCount = 0;
@@ -603,8 +639,8 @@ public class Polyhedra extends AtomShape {
     float planarParam = (Float.isNaN(this.planarParam) ? DEFAULT_PLANAR_PARAM
         : this.planarParam);
 
-    points[vertexCount] = centralAtom;
-    P3 ptAve = P3.newP(centralAtom);
+    points[vertexCount] = atomOrPt;
+    P3 ptAve = P3.newP(atomOrPt);
     for (int i = 0; i < vertexCount; i++)
       ptAve.add(points[i]);
     ptAve.scale(1f / (vertexCount + 1));
@@ -674,7 +710,7 @@ public class Polyhedra extends AtomShape {
             bsCenterPlanes.set(triangleCount++);
           } else if (collapsed) {
             ptRef.setT(points[nPoints] = new P3());
-            points[nPoints].scaleAdd2(offset, normal, centralAtom);
+            points[nPoints].scaleAdd2(offset, normal, atomOrPt);
             addFacet(i, j, k, ptRef, points, normals, triangles, triangleCount++, nPoints,
                 isWindingOK, vAC);
             addFacet(k, i, j, ptRef, points, normals, triangles, triangleCount++, nPoints,
@@ -695,7 +731,7 @@ public class Polyhedra extends AtomShape {
         Logger.info("Polyhedron " + PT.toJSON("face[" +i + "]", triangles[i]));
     }
     //System.out.println(PT.toJSON(null, htEdgeMap));
-    return new Polyhedron().set(centralAtom, points, nPoints, vertexCount,
+    return new Polyhedron().set(thisID, atomOrPt, points, nPoints, vertexCount,
         triangles, triangleCount, getFaces(triangles, triangleCount, htNormMap), normals, bsCenterPlanes, collapsed, distanceRef);
   }
   
@@ -777,6 +813,8 @@ public class Polyhedra extends AtomShape {
     }
     V3 norm = normals[index];
     Integer normix = Integer.valueOf(Normix.getNormixV(norm, bsTemp));
+    //if (normix != 629)
+      //return  false;
     Object[] o = htNormMap.get(normix);
     //System.out.println(PT.toJSON(null, p1) + " " + normix);
     if (o == null) {
@@ -837,6 +875,7 @@ public class Polyhedra extends AtomShape {
     String edge = normix + s + s1;
     if (htEdgeMap.containsKey(edge))
       return false;
+    //    System.out.println(edge);
     //reverse maps are in
     String edge0 = normix + s1 + s;
     Object o = htEdgeMap.get(edge0);
@@ -867,6 +906,8 @@ public class Polyhedra extends AtomShape {
     } else {
       // set mask to exclude both of these.
       int[] p10 = (int[]) ((Object[]) o)[0];
+      if (p10 == null)
+        return false; // already seen
       int i0 = ((Integer) ((Object[]) o)[1]).intValue();
       p10[3] = -((-p10[3]) ^ (1 << i0));
       p1[3] = -((-p1[3]) ^ (1 << i));
@@ -879,6 +920,8 @@ public class Polyhedra extends AtomShape {
         }
       }
       // not supported for JavaScript faceList.removeObj(b);
+      htEdgeMap.put(edge, new Object[] {null});
+      htEdgeMap.put(edge0, new Object[] {null});
     }
     return true;
   }
@@ -952,13 +995,17 @@ public class Polyhedra extends AtomShape {
     */
     for (int i = polyhedronCount; --i >= 0;) {
       Polyhedron p = polyhedrons[i];
-      if (ms.at[p.centralAtom.i].isDeleted())
-        p.isValid = false;
-      p.visibilityFlags = (p.visible && bsModels.get(p.centralAtom.mi)
-          && !ms.isAtomHidden(p.centralAtom.i)
-          && !ms.at[p.centralAtom.i].isDeleted() ? vf : 0);
-      if (p.visibilityFlags != 0)
-        setShapeVisibility(atoms[p.centralAtom.i], true);
+      if (p.id != null) {
+        p.visibilityFlags = (p.visible ? vf : 0);
+      } else {
+        if (ms.at[p.centralAtom.i].isDeleted())
+          p.isValid = false;
+        p.visibilityFlags = (p.visible && bsModels.get(p.centralAtom.mi)
+            && !ms.isAtomHidden(p.centralAtom.i)
+            && !ms.at[p.centralAtom.i].isDeleted() ? vf : 0);
+        if (p.visibilityFlags != 0)
+          setShapeVisibility(atoms[p.centralAtom.i], true);
+      }
     }
   }
 
@@ -977,7 +1024,7 @@ public class Polyhedra extends AtomShape {
     s.append(vwr.getAtomShapeState(this));
     for (int i = 0; i < polyhedronCount; i++) {
       Polyhedron p = polyhedrons[i];
-      if (p.isValid && p.colixEdge != C.INHERIT_ALL
+      if (p.isValid && p.id == null && p.colixEdge != C.INHERIT_ALL
           && bsColixSet.get(p.centralAtom.i))
         appendCmd(
             s,

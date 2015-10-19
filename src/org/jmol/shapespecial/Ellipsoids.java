@@ -117,7 +117,7 @@ public class Ellipsoids extends Shape {
     if (property == "checkID") {
       return (checkID((String) data[0]));
     }
-    return false;
+    return getPropShape(property, data);
   }
 
 

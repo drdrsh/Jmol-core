@@ -85,6 +85,8 @@ public class MeshCapper {
 
   private Lst<int[]> lstTriangles;
 
+  private int nPoints;
+
   /////////////// initialization //////////////////
 
   /**
@@ -107,21 +109,22 @@ public class MeshCapper {
    * generic entry for a polygon
    * 
    * @param points
-   * @return int[][i j k 7]
+   * @return int[][i j k mask]
    */
   public int[][] triangulatePolygon(P3[] points) {
     clear();
-    
-    int n = points.length;
+    // this is winding backward 
+    nPoints = points.length;
     CapVertex v0 = null;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < nPoints; i++) {
       CapVertex v = new CapVertex(points[i], i);
       vertices.addLast(v);
-      if (v0 != null)
-        v.link(v0);
+      if (v0 != null) {
+        v0.link(v);
+      }
       v0 = v;
     }
-    vertices.get(0).link(v0);
+    v0.link(vertices.get(0));
     lstTriangles = new Lst<int[]>();
     createCap(null);
     int[][] a = AU.newInt2(lstTriangles.size());
@@ -188,10 +191,22 @@ public class MeshCapper {
    * @param ipt3
    */
   private void outputTriangle(int ipt1, int ipt2, int ipt3) {
-    if (slicer == null)
-      lstTriangles.addLast(new int[] { ipt1, ipt2, ipt3, 7 });
-    else
+    if (slicer == null) {
+      int mask = 0;
+      if (isEdge(ipt1, ipt2))
+        mask |= 1;
+      if (isEdge(ipt2, ipt3))
+        mask |= 2;
+      if (isEdge(ipt3, ipt1))
+        mask |= 4;
+      lstTriangles.addLast(new int[] { ipt1, ipt2, ipt3, mask });
+    } else {
       slicer.addTriangle(ipt1, ipt2, ipt3);
+    }
+  }
+
+  private boolean isEdge(int i, int j) {
+    return (j == (i + 1) % nPoints);
   }
 
   private CapVertex[] test(CapVertex[] vs) {
@@ -242,7 +257,7 @@ public class MeshCapper {
     V3 vab = V3.newVsub(vertices.get(0), vertices.get(1));
     V3 vac;
     if (norm == null) {
-      vac = V3.newVsub(vertices.get(vertices.size() - 1), vertices.get(0));
+      vac = V3.newVsub(vertices.get(0), vertices.get(vertices.size() - 1));
     } else {
       vac = V3.newV(norm);
       vac.cross(vac, vab);

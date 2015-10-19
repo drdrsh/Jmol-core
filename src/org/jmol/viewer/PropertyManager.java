@@ -779,9 +779,9 @@ public class PropertyManager implements JmolPropertyManager {
           params.indexOf("g64") < 0 && params.indexOf("base64") < 0
               && (returnType == null || returnType.equalsIgnoreCase("java")));
     case PROP_ISOSURFACE_INFO:
-      return vwr.getShapeProperty(JC.SHAPE_ISOSURFACE, "getInfo");
+      return vwr.getShapeProperty(JC.SHAPE_ISOSURFACE, "info");
     case PROP_ISOSURFACE_DATA:
-      return vwr.getShapeProperty(JC.SHAPE_ISOSURFACE, "getData");
+      return vwr.getShapeProperty(JC.SHAPE_ISOSURFACE, "data");
     case PROP_NMR_INFO:
       return vwr.getNMRCalculation().getInfo(myParam.toString());
     case PROP_VAR_INFO:

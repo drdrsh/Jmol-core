@@ -1003,4 +1003,15 @@ public class IsosurfaceMesh extends Mesh {
     recalcAltVertices = true;
   }
 
+  float[] getDataRange() {
+    return (jvxlData.jvxlPlane != null
+        && colorEncoder == null ? null : new float[] {
+        jvxlData.mappedDataMin,
+        jvxlData.mappedDataMax,
+        (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue
+            : jvxlData.valueMappedToRed),
+        (jvxlData.isColorReversed ? jvxlData.valueMappedToRed
+            : jvxlData.valueMappedToBlue) });
+  }
+
 }

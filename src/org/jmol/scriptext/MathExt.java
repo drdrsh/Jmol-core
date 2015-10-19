@@ -1435,7 +1435,7 @@ public class MathExt {
    * 
    * @param mp
    * @param args
-   * @param tok0 
+   * @param tok0
    * @param isAtomProperty
    * @return true if no syntax problems
    * @throws ScriptException
@@ -1452,7 +1452,9 @@ public class MathExt {
       return mp.addXObj(vwr.extractProperty(args[0].value,
           args[1].value.toString(), -1));
     }
-    String propertyName = (args.length > 0 ? SV.sValue(args[pt++]) : "");
+    BS bsSelect = (isAtomProperty && args.length == 1 && args[0].tok == T.bitset ? SV.bsSelectVar(args[0]) : null);
+    String pname = (bsSelect == null && args.length > 0 ? SV.sValue(args[pt++]) : "");
+    String propertyName = pname;
     String lc = propertyName.toLowerCase();
     if (!isSelect && lc.indexOf("[select ") < 0)
       propertyName = lc;
@@ -1464,9 +1466,48 @@ public class MathExt {
     SV x = null;
     if (isAtomProperty) {
       x = mp.getX();
-      if (x.tok != T.bitset) {
+      switch (x.tok) {
+      case T.bitset:
+        break;
+      case T.string:
+        String name = (String) x.value;
+        Object[] data = new Object[3];
+        int shapeID;
+        if (name.startsWith("$")) {
+          // "P4".getProperty....
+          name = name.substring(1);
+          shapeID = vwr.shm.getShapeIdFromObjectName(name);
+          if (shapeID >= 0) {
+            data[0] = name;
+            vwr.shm.getShapePropertyData(shapeID, "index", data);
+            if (data[1] != null && !pname.equals("index")) {
+              int index = ((Integer) data[1]).intValue();
+                data[1] = vwr.shm.getShapePropertyIndex(shapeID,
+                    pname.intern(), index);
+            }
+          }
+        } else {
+          shapeID = JC.shapeTokenIndex(T.getTokFromName(name));
+          if (shapeID >= 0) {
+            // "isosurface".getProperty...
+            data[0] = pname;
+            data[1] = Integer.valueOf(-1);
+            vwr.shm.getShapePropertyData(shapeID, pname.intern(), data);
+          }
+        }
+        return (data[1] == null ? mp.addXStr("") : mp.addXObj(data[1]));
+      case T.varray:
+        if (bsSelect != null) {
+          Lst<SV> l0 = x.getList();
+          Lst<SV> lst = new Lst<SV>();
+          for (int i = bsSelect.nextSetBit(0); i >= 0; i = bsSelect.nextSetBit(i + 1))
+            lst.addLast(l0.get(i));
+          return mp.addXList(lst);
+        }
+        //$FALL-THROUGH$
+      default:
         if (isSelect)
-          propertyName = "[SELECT " + propertyName + "]"; 
+          propertyName = "[SELECT " + propertyName + "]";
         return mp.addXObj(vwr.extractProperty(x, propertyName, -1));
       }
     }
@@ -3121,9 +3162,9 @@ public class MathExt {
         plane = e.getHklPlane(pt);
       break;
     case T.varray:
-      if (last != 2)
+      pt = (last == 2 ? SV.ptValue(args[1]) : last == 1 ? P3.new3(Float.NaN, 0, 0) : null);
+      if (pt == null)
         return false;
-      pt = SV.ptValue(args[1]);
       break;
     }
     if (last > 0 && plane == null && pt == null
@@ -3142,13 +3183,42 @@ public class MathExt {
     if (pt != null) {
       if (args[last].tok == T.varray) {
         // within(dist, pt, [pt1, pt2, pt3...])
-        Lst<SV> sv = args[2].getList();
+        Lst<SV> sv = args[last].getList();
         Lst<T3> pts = new Lst<T3>();
         Bspt bspt = new Bspt(3, 0);
-        for (int i = sv.size(); --i >= 0;) {
-          bspt.addTuple(SV.ptValue(sv.get(i)));
+        CubeIterator iter;
+        if (Float.isNaN(pt.x)) {
+          // internal comparison
+          Point3fi  p;
+          Point3fi[] pt3 = new Point3fi[sv.size()]; 
+          for (int i = pt3.length; --i >= 0;) {
+            p = new Point3fi();
+            p.setT(SV.ptValue(sv.get(i)));
+            p.i = i;
+            pt3[i] = p;
+            bspt.addTuple(p);
+          }
+          iter = bspt.allocateCubeIterator();
+          BS bsp = BSUtil.newBitSet2(0, sv.size());
+          for (int i = pt3.length; --i >= 0;) {
+            iter.initialize(p = pt3[i], distance, false);
+            float d2 = distance * distance;
+            int n = 0;
+            while (iter.hasMoreElements()) {
+              Point3fi pt2 = (Point3fi) iter.nextElement();
+              if (bsp.get(pt2.i) && pt2.distanceSquared(p) <= d2
+                  && (++n > 1))
+                bsp.clear(pt2.i);
+            }
+          }
+          for (int i = bsp.nextSetBit(0); i >= 0; i = bsp.nextSetBit(i + 1))  
+            pts.addLast(P3.newP(pt3[i]));
+          return mp.addXList(pts);
+        
         }
-        CubeIterator iter = bspt.allocateCubeIterator();
+        for (int i = sv.size(); --i >= 0;)
+          bspt.addTuple(SV.ptValue(sv.get(i)));
+        iter = bspt.allocateCubeIterator();
         iter.initialize(pt, distance, false);
         float d2 = distance * distance;
         while (iter.hasMoreElements()) {

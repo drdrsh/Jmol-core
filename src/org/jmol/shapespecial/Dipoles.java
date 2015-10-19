@@ -423,7 +423,7 @@ public class Dipoles extends Shape {
       }
       return false;
     }
-    return false;
+    return getPropShape(property, data);
   }
   
   @Override

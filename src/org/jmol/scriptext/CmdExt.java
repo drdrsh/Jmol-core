@@ -3197,6 +3197,7 @@ public class CmdExt extends ScriptExt {
     setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.TRUE);
     float translucentLevel = Float.MAX_VALUE;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
+    String id = null;
     for (int i = 1; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
@@ -3266,6 +3267,15 @@ public class CmdExt extends ScriptExt {
         }
         propertyValue = Float.valueOf(floatParameter(++i));
         break;
+      case T.id:
+        if (i != 1)
+          invPO();
+        setShapeProperty(JC.SHAPE_POLYHEDRA, "id", stringParameter(++i));
+        setShapeProperty(JC.SHAPE_POLYHEDRA, "center", centerParameter(++i));
+        i = eval.iToken;
+        if (tokAt(++i) != T.to)
+          invPO();
+        //$FALL-THROUGH$
       case T.to:
         if (nAtomSets > 1)
           invPO();

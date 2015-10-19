@@ -67,10 +67,11 @@ public class PolyhedraRenderer extends ShapeRenderer {
     if (p.visibilityFlags == 0)
       return false;
     short[] colixes = ((Polyhedra) shape).colixes;
-    int iAtom = p.centralAtom.i;
-    short colix = (colixes == null || iAtom >= colixes.length ? C.INHERIT_ALL
+    int iAtom = (p.id == null ? p.centralAtom.i : -1);
+    short colix = (p.id != null ? p.colix : colixes == null || iAtom >= colixes.length ? C.INHERIT_ALL
         : colixes[iAtom]);
-    colix = C.getColixInherited(colix, p.centralAtom.colixAtom);
+    if (p.centralAtom != null)
+      colix =  C.getColixInherited(colix, p.centralAtom.colixAtom);
     boolean needTranslucent = false;
     if (C.renderPass2(colix)) {
       needTranslucent = true;

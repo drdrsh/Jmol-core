@@ -222,7 +222,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         return;
       String id = currentMesh.thisID;
       int imodel = currentMesh.modelIndex;
-      vwr.cachePut("cache://isosurface_" + id, getPropI("jvxlDataXml"));
+      vwr.cachePut("cache://isosurface_" + id, getPropI("jvxlDataXml", -1));
       deleteMeshI(currentMesh.index);
       setPropI("init", null, null);
       setPropI("thisID", id, null);
@@ -782,18 +782,24 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       sg.setJvxlData(jvxlData);
   }
 
+  
   @SuppressWarnings("unchecked")
   @Override
   public boolean getPropertyData(String property, Object[] data) {
+    if (property == "keys") {
+      Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1] : new Lst<String>());
+      data[1] = keys;
+      keys.addLast("info");
+      keys.addLast("data");
+      // will continue on to super
+    }
     if (property == "colorEncoder") {
       IsosurfaceMesh mesh = (IsosurfaceMesh) getMesh((String) data[0]);
-      if (mesh == null || (data[1] = mesh.colorEncoder) == null)
-        return false;
-      return true;
+      return (mesh != null && (data[1] = mesh.colorEncoder) != null);
     }
     if (property == "intersectPlane") {
       IsosurfaceMesh mesh = (IsosurfaceMesh) getMesh((String) data[0]);
-      if (mesh == null)
+      if (mesh == null || data.length < 4)
         return false;
       data[3] = Integer.valueOf(mesh.modelIndex);
       mesh.getMeshSlicer().getIntersection(0, (P4) data[1], null, (Lst<P3[]>) data[2], null, null, null, false, false, T.plane, false);
@@ -847,13 +853,16 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
   @Override
   public Object getProperty(String property, int index) {
-    return getPropI(property);
+    return getPropI(property, index);
   }
 
-  protected Object getPropI(String property) {
-    Object ret = getPropMC(property);
+  protected Object getPropI(String property, int index) {
+    IsosurfaceMesh thisMesh = this.thisMesh;
+    if (index >= 0 && (index >= meshCount || (thisMesh = isomeshes[index]) == null))
+      return null;
+    Object ret = getPropMC(property, index);
     if (ret != null)
-      return ret;
+      return ret;      
     if (property == "message") {
       String s = "";
       if (shapeID == JC.SHAPE_ISOSURFACE)
@@ -861,13 +870,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (jvxlData.dataMin != Float.MAX_VALUE)
         s += " min=" + jvxlData.dataMin + " max=" + jvxlData.dataMax;
       s += "; " + JC.shapeClassBases[shapeID].toLowerCase() + " count: "
-          + getPropMC("count");
-      return s + getPropI("dataRangeStr") + jvxlData.msg;
+          + getPropMC("count", index);
+      return s + getPropI("dataRangeStr", index) + jvxlData.msg;
     }
     if (property == "dataRange")
-      return getDataRange();
+      return getDataRange(thisMesh);
     if (property == "dataRangeStr") {
-      float[] dataRange = getDataRange();
+      float[] dataRange = getDataRange(thisMesh);
       return (dataRange != null && dataRange[0] != Float.MAX_VALUE
           && dataRange[0] != dataRange[1] ? "\nisosurface"
           + " full data range " + dataRange[0] + " to " + dataRange[1]
@@ -881,9 +890,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if (property == "nSets")
       return Integer.valueOf(thisMesh == null ? 0 : thisMesh.nSets);
     if (property == "area") // could be Float or double[]
-      return (thisMesh == null ? Float.valueOf(Float.NaN) : calculateVolumeOrArea(true));
+      return (thisMesh == null ? Float.valueOf(Float.NaN) : calculateVolumeOrArea(thisMesh, true));
     if (property == "volume") // could be Float or double[]
-      return (thisMesh == null ? Float.valueOf(Float.NaN) : calculateVolumeOrArea(false));
+      return (thisMesh == null ? Float.valueOf(Float.NaN) : calculateVolumeOrArea(thisMesh, false));
     if (thisMesh == null)
       return null;//"no current isosurface";
     if (property == "cutoff")
@@ -899,7 +908,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       jvxlData.slabInfo = null;
       if (property == "jvxlMeshXml" || jvxlData.vertexDataOnly || thisMesh.bsSlabDisplay != null && thisMesh.bsSlabGhost == null) {
         meshData = new MeshData();
-        fillMeshData(meshData, MeshData.MODE_GET_VERTICES, null);
+        fillMeshData(meshData, MeshData.MODE_GET_VERTICES, thisMesh);
         meshData.polygonColorData = getPolygonColorData(meshData.pc, meshData.pcs, (meshData.colorsExplicit ? meshData.pis : null), meshData.bsSlabDisplay);
       } else if (thisMesh.bsSlabGhost != null) {
         jvxlData.slabInfo = thisMesh.slabOptions.toString();
@@ -915,7 +924,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
     if (property == "command") {
       SB sb = new SB();
-      Lst<Mesh> list = getMeshList(previousMeshID, false);
+      Lst<Mesh> list = getMeshList((index < 0 ? previousMeshID : thisMesh.thisID), false);
       for (int i = list.size(); --i >= 0;)
          getMeshCommand(sb, i);
       return sb.toString();
@@ -923,41 +932,34 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     return null;
   }
 
-  private float[] getDataRange() {
-    return (thisMesh == null || jvxlData.jvxlPlane != null
-        && thisMesh.colorEncoder == null ? null : new float[] {
-        jvxlData.mappedDataMin,
-        jvxlData.mappedDataMax,
-        (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue
-            : jvxlData.valueMappedToRed),
-        (jvxlData.isColorReversed ? jvxlData.valueMappedToRed
-            : jvxlData.valueMappedToBlue) });
+  private float[] getDataRange(IsosurfaceMesh mesh) {
+    return (mesh == null ? null : mesh.getDataRange());
   }
 
-  private Object calculateVolumeOrArea(boolean isArea) {
+  private Object calculateVolumeOrArea(IsosurfaceMesh mesh, boolean isArea) {
     if (isArea) {
-      if (thisMesh.calculatedArea != null)
-        return thisMesh.calculatedArea;
+      if (mesh.calculatedArea != null)
+        return mesh.calculatedArea;
     } else {
-      if (thisMesh.calculatedVolume != null)
-        return thisMesh.calculatedVolume;
+      if (mesh.calculatedVolume != null)
+        return mesh.calculatedVolume;
     }
     MeshData meshData = new MeshData();
-    fillMeshData(meshData, MeshData.MODE_GET_VERTICES, null);
-    meshData.nSets = thisMesh.nSets;
-    meshData.vertexSets = thisMesh.vertexSets;
-    if (!isArea && thisMesh.jvxlData.colorDensity) {
-      float f = thisMesh.jvxlData.voxelVolume;
-      f *= (thisMesh.bsSlabDisplay == null ? thisMesh.vc : thisMesh.bsSlabDisplay.cardinality());
-      return  thisMesh.calculatedVolume = Float.valueOf(f); 
+    fillMeshData(meshData, MeshData.MODE_GET_VERTICES, mesh);
+    meshData.nSets = mesh.nSets;
+    meshData.vertexSets = mesh.vertexSets;
+    if (!isArea && mesh.jvxlData.colorDensity) {
+      float f = mesh.jvxlData.voxelVolume;
+      f *= (mesh.bsSlabDisplay == null ? mesh.vc : mesh.bsSlabDisplay.cardinality());
+      return  mesh.calculatedVolume = Float.valueOf(f); 
     }
-    Object ret = MeshData.calculateVolumeOrArea(meshData, thisMesh.jvxlData.thisSet, isArea, false);
-    if (thisMesh.nSets <= 0)
-      thisMesh.nSets = -meshData.nSets;
+    Object ret = MeshData.calculateVolumeOrArea(meshData, mesh.jvxlData.thisSet, isArea, false);
+    if (mesh.nSets <= 0)
+      mesh.nSets = -meshData.nSets;
     if (isArea)
-      thisMesh.calculatedArea = ret;
+      mesh.calculatedArea = ret;
     else
-      thisMesh.calculatedVolume = ret;
+      mesh.calculatedVolume = ret;
     return ret;
   }
 

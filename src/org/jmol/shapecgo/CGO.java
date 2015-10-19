@@ -108,7 +108,14 @@ public class CGO extends Draw {
   }
   
   @Override
+  @SuppressWarnings("unchecked")
   public boolean getPropertyData(String property, Object[] data) {
+    if (property == "keys") {
+      Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1] : new Lst<String>());
+      data[1] = keys;
+      keys.addLast("data");
+      // will continue on to getPropertyIndex
+    }
     if (property == "data")
       return CGOMesh.getData(data);
     return getPropDataMC(property, data);

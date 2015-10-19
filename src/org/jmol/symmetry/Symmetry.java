@@ -318,12 +318,12 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public int[] getCellRange() {
-    return symmetryInfo.cellRange;
+    return symmetryInfo == null ? null : symmetryInfo.cellRange;
   }
 
   @Override
   public String getSymmetryInfoStr() {
-    return symmetryInfo.infoStr;
+    return (symmetryInfo == null ? "" : symmetryInfo.infoStr);
   }
 
   @Override

@@ -190,7 +190,7 @@ public class Echo extends TextShape {
       }
       return false;
     }
-    return false;
+    return getPropShape(property, data);
   }
 
   @Override

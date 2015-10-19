@@ -478,8 +478,15 @@ protected void resetObjects() {
     }    
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean getPropertyData(String property, Object[] data) {
+    if (property == "keys") {
+      Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1] : new Lst<String>());
+      data[1] = keys;
+      keys.addLast("getSpinAxis");
+      // will continue on to super
+    }
     if (property == "getCenter") {
       String id = (String) data[0];
       int index = ((Integer) data[1]).intValue();
@@ -498,11 +505,14 @@ protected void resetObjects() {
 
   @Override
   public Object getProperty(String property, int index) {
+    DrawMesh m = this.thisMesh;
+    if (index >= 0 && (index >= meshCount || (m = (DrawMesh) meshes[index]) == null))
+      return null;
     if (property == "command")
-      return getCommand(thisMesh);
+      return getCommand(m);
     if (property == "type")
-      return Integer.valueOf(thisMesh == null ? EnumDrawType.NONE.id : thisMesh.drawType.id);
-    return getPropMC(property);
+      return Integer.valueOf(m == null ? EnumDrawType.NONE.id : m.drawType.id);
+    return getPropMC(property, index);
   }
 
   private T3 getSpinCenter(String axisID, int vertexIndex, int modelIndex) {

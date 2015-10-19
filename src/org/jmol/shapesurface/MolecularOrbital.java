@@ -315,11 +315,11 @@ public class MolecularOrbital extends Isosurface {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Object getProperty(String propertyName, int param) {
+  public Object getProperty(String propertyName, int index) {
     if (propertyName.startsWith("list")) {
       String s = "";
       if (propertyName.equals("list")) {
-        s = (String) getPropI("list");
+        s = (String) getPropI("list", index);
         if (s.length() > 1)
           s += "cutoff = " + jvxlData.cutoff + "\n";
         s = "\n" + s;
@@ -335,7 +335,7 @@ public class MolecularOrbital extends Isosurface {
       Lst<Map<String, Object>> mos = (Lst<Map<String, Object>>) (sg.params.moData
           .get("mos"));
       int nOrb = (mos == null ? 0 : mos.size());
-      int thisMO = param;
+      int thisMO = index;
       int currentMO = moNumber;
       boolean isShowCurrent = (thisMO == Integer.MIN_VALUE);
       if (thisMO == Integer.MAX_VALUE) {
@@ -374,7 +374,7 @@ public class MolecularOrbital extends Isosurface {
           true, 0, null, null));
       return str.toString();
     }
-    return getPropI(propertyName);
+    return getPropI(propertyName, index);
   }
 
   @SuppressWarnings("unchecked")

@@ -503,12 +503,20 @@ public class Mesh extends MeshSurface {
     info.put("polygonCount", Integer.valueOf(pc));
     info.put("haveQuads", Boolean.valueOf(haveQuads));
     info.put("haveValues", Boolean.valueOf(vvs != null));
-    if (vc > 0 && isAll)
-      info.put("vertices", AU.arrayCopyPt(vs, vc));
-    if (vvs != null && isAll)
-      info.put("vertexValues", AU.arrayCopyF(vvs, vc));
-    if (pc > 0 && isAll)
-      info.put("polygons", AU.arrayCopyII(pis, pc));
+    if (isAll) {
+      if (vc > 0) {
+        info.put("vertices", AU.arrayCopyPt(vs, vc));
+        if (bsSlabDisplay != null)
+          info.put("bsVertices", getVisibleVBS());
+      }
+      if (vvs != null)
+        info.put("vertexValues", AU.arrayCopyF(vvs, vc));
+      if (pc > 0) {
+        info.put("polygons", AU.arrayCopyII(pis, pc));
+        if (bsSlabDisplay != null)
+          info.put("bsPolygons", bsSlabDisplay);
+      }
+    }
     return info;
   }
 
