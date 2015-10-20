@@ -290,7 +290,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected void renderPoints() {
     if (!mesh.isTriangleSet || mesh.pc < 0) {
       for (int i = vertexCount; --i >= 0;)
-        if (!frontOnly || normixes == null || transformedVectors[normixes[i]].z >= 0)
+        if (!frontOnly || normixes == null || isVisibleNormix(normixes[i]))
           drawPoint(i, false);
       return;
     }
@@ -304,7 +304,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       if (!isPolygonDisplayable(i))
         continue;
       int[] p = polygonIndexes[i];
-      if (frontOnly && transformedVectors[normixes[i]].z < 0)
+      if (frontOnly && !isVisibleNormix(normixes[i]))
         continue;
       for (int j = p.length - 1; --j >= 0;) {
         int pt = p[j];
@@ -370,7 +370,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       int check;
       if (mesh.isTriangleSet) {
         short normix = normixes[i];
-        if (!vwr.gdata.isDirectedTowardsCamera(normix))
+        if (frontOnly && !isVisibleNormix(normix))
           continue;
         if (fill) {
           if (isPrecision)
@@ -456,6 +456,10 @@ public abstract class MeshRenderer extends ShapeRenderer {
     }
     if (generateSet)
       exportSurface(colix);
+  }
+
+  private boolean isVisibleNormix(short normix) {
+    return (normix < 0 || transformedVectors[normix].z > 0);
   }
 
   private void drawTriangleBits(P3 screenA, short colixA, P3 screenB, short colixB,

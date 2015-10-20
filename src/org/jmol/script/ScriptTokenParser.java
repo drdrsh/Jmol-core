@@ -422,7 +422,7 @@ abstract class ScriptTokenParser {
   
   boolean haveString;
   
-  private boolean clauseOr(boolean allowComma) {
+  private boolean clauseOr(boolean allowCommaAsOr) {
     haveString = false;
     if (!clauseAnd())
       return false;
@@ -433,14 +433,14 @@ abstract class ScriptTokenParser {
     //OrNot: First OR, but if that makes no change, then NOT (special toggle)
     int tok;
     while ((tok = tokPeek())== T.opOr || tok == T.opXor
-        || tok==T.opToggle|| allowComma && tok == T.comma) {
+        || tok==T.opToggle|| allowCommaAsOr && tok == T.comma) {
       if (tok == T.comma && !haveString)
         addSubstituteTokenIf(T.comma, T.tokenOr);
       else
         addNextToken();
       if (!clauseAnd())
         return false;
-      if (allowComma && (lastToken.tok == T.rightbrace || lastToken.tok == T.bitset))
+      if (allowCommaAsOr && (lastToken.tok == T.rightbrace || lastToken.tok == T.bitset))
         haveString = true;
     }
     return true;
@@ -596,7 +596,7 @@ abstract class ScriptTokenParser {
           if (isExpressionNext()) {
             addTokenToPostfixToken(T.o(T.expressionBegin,
                 "implicitExpressionBegin"));
-            if (!clauseOr(true))
+            if (!clauseOr(false)) // changed to FALSE 10/20 because  @({"center":{0.0 0.0 0.0}, "xxx"...}} failed
               return false;
             if (lastToken != T.tokenCoordinateEnd) {
               addTokenToPostfixToken(T.tokenExpressionEnd);

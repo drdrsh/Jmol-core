@@ -3187,13 +3187,14 @@ public class CmdExt extends ScriptExt {
      * polyhedra [at most one selection set] [type-and/or-edge or on/off/delete]
      */
     boolean haveBonds = (slen == 1);
+    boolean haveCenter = false;
     boolean needsGenerating = haveBonds;
     boolean onOffDelete = false;
     boolean typeSeen = false;
     boolean edgeParameterSeen = false;
     //    int lighting = T.nada; // never implemented; fullyLit does nothing
     int nAtomSets = 0;
-    e.sm.loadShape(JC.SHAPE_POLYHEDRA);
+    eval.sm.loadShape(JC.SHAPE_POLYHEDRA);
     setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.TRUE);
     float translucentLevel = Float.MAX_VALUE;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
@@ -3208,6 +3209,8 @@ public class CmdExt extends ScriptExt {
         needsGenerating = true;
         break;
       case T.unitcell:
+        if (id != null)
+          invArg();
         propertyName = "unitCell";
         propertyValue = Boolean.TRUE;
         needsGenerating = true;
@@ -3226,13 +3229,17 @@ public class CmdExt extends ScriptExt {
         onOffDelete = true;
         break;
       case T.integer:
+        if (id != null)
+          invArg();
         propertyName = "nVertices";
         propertyValue = Integer.valueOf(intParameter(i));
         needsGenerating = true;
-        if (tokAt(i + 1) == T.comma) 
+        if (tokAt(i + 1) == T.comma)
           i++;
         break;
       case T.bonds:
+        if (id != null)
+          invArg();
         if (nAtomSets > 0)
           invPO();
         needsGenerating = true;
@@ -3243,6 +3250,8 @@ public class CmdExt extends ScriptExt {
         i++;
         //$FALL-THROUGH$
       case T.decimal:
+        if (id != null)
+          invArg();
         if (nAtomSets > 0)
           invPO();
         propertyName = "radius";
@@ -3267,17 +3276,14 @@ public class CmdExt extends ScriptExt {
         }
         propertyValue = Float.valueOf(floatParameter(++i));
         break;
-      case T.id:
-        if (i != 1)
-          invPO();
-        setShapeProperty(JC.SHAPE_POLYHEDRA, "id", stringParameter(++i));
-        setShapeProperty(JC.SHAPE_POLYHEDRA, "center", centerParameter(++i));
-        i = eval.iToken;
-        if (tokAt(++i) != T.to)
-          invPO();
-        //$FALL-THROUGH$
+      case T.model:
+        if (id == null)
+          invArg();
+        propertyName = "model";
+        propertyValue = Integer.valueOf(intParameter(++i));
+        break;
       case T.to:
-        if (nAtomSets > 1)
+        if (nAtomSets > 1 || id != null && !haveCenter)
           invPO();
         if ((tokAt(++i) == T.bitset || tokAt(i) == T.expressionBegin)
             && !needsGenerating) {
@@ -3301,6 +3307,8 @@ public class CmdExt extends ScriptExt {
           invPO();
         switch (++nAtomSets) {
         case 1:
+          if (id != null)
+            invArg();
           propertyName = "centers";
           break;
         case 2:
@@ -3340,7 +3348,7 @@ public class CmdExt extends ScriptExt {
         if (edgeParameterSeen)
           error(ScriptError.ERROR_incompatibleArguments);
         edgeParameterSeen = true;
-        propertyName = T.nameOf(eval.iToken);
+        propertyName = T.nameOf(eval.theTok);
         break;
       case T.triangles:
       case T.notriangles:
@@ -3350,6 +3358,28 @@ public class CmdExt extends ScriptExt {
         // never implemented or 
         //        lighting = eval.theTok;
         continue;
+      case T.id:
+      case T.times:
+      case T.identifier:
+        if (!eval.isColorParam(i)) {
+          if (i != 1)
+            invPO();
+          setShapeProperty(
+              JC.SHAPE_POLYHEDRA,
+              "thisID",
+              id = (eval.theTok == T.id ? stringParameter(++i) : eval
+                  .optParameterAsString(i)));
+          setShapeProperty(JC.SHAPE_POLYHEDRA, "model",
+              Integer.valueOf(vwr.am.cmi));
+          if (!eval.isCenterParameter(i + 1))
+            continue;
+          propertyName = "center";
+          propertyValue = centerParameter(++i);
+          i = eval.iToken;
+          haveCenter = true;
+          break;
+        }
+        //$FALL-THROUGH$
       default:
         if (eval.isColorParam(i)) {
           colorArgb[0] = eval.getArgbParam(i);
@@ -3358,7 +3388,8 @@ public class CmdExt extends ScriptExt {
         }
         invArg();
       }
-      setShapeProperty(JC.SHAPE_POLYHEDRA, propertyName, propertyValue);
+      if (propertyName != null)
+        setShapeProperty(JC.SHAPE_POLYHEDRA, propertyName, propertyValue);
       if (onOffDelete)
         return false;
     }

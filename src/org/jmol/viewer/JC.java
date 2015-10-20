@@ -689,11 +689,10 @@ public final class JC {
 
   public final static int SHAPE_MAX_SIZE_ZERO_ON_RESTRICT = 21; //////////
   
-  public final static int SHAPE_POLYHEDRA  = 21;  // for restrict, uses setProperty(), not setSize()
+  public final static int SHAPE_MIN_HAS_ID  = 21; //////////
 
-  public final static int SHAPE_MIN_HAS_ID          = 22; //////////
-  public final static int SHAPE_MIN_MESH_COLLECTION = 22; //////////
-  
+  public final static int SHAPE_POLYHEDRA   = 21;  // for restrict, uses setProperty(), not setSize()
+
   public final static int SHAPE_DRAW        = 22;
   
   public final static int SHAPE_MAX_SPECIAL = 23; //////////

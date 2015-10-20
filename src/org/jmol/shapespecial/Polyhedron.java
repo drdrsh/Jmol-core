@@ -28,6 +28,11 @@ import org.jmol.viewer.Viewer;
 
 public class Polyhedron {
 
+  Map<String, Object> info;
+
+  public String id;
+  P3 center;
+
   public Atom centralAtom;
   public P3[] vertices;
   public int[][] triangles;
@@ -48,18 +53,21 @@ public class Polyhedron {
   public boolean isValid = true;
   public short colixEdge = C.INHERIT_ALL;
   public int visibilityFlags = 0;
-  P3 center;
-  public String id;
+
+  public short colix = C.GOLD;
+  public int modelIndex = Integer.MIN_VALUE;
+  
 
   Polyhedron() {  
   }
   
-  Polyhedron set(String id, P3 atomOrPt, P3[] points, int nPoints, int vertexCount,
+  Polyhedron set(String id, int modelIndex, P3 atomOrPt, P3[] points, int nPoints, int vertexCount,
       int[][] triangles, int triangleCount, int[][] faces, V3[] normals, BS bsFlat, boolean collapsed, float distanceRef) {
     
     this.distanceRef = distanceRef;
     centralAtom = (id == null  ? (Atom) atomOrPt : null);
     center = (centralAtom == null ? (P3) atomOrPt : null);
+    this.modelIndex = (centralAtom == null ? modelIndex : centralAtom.mi);
     this.id = id;
     this.nVertices = vertexCount;
     this.vertices = new P3[nPoints + 1];
@@ -81,10 +89,14 @@ public class Polyhedron {
   Polyhedron setInfo(Map<String, SV> info, Atom[] at) {
     try {
       collapsed = info.containsKey("collapsed");
-      center = (info.containsKey("center") ? P3.newP(SV.ptValue(info
-          .get("center"))) : null);
-      if (center == null) {
+      id = info.get("id").asString();
+      if (id == null) {
         centralAtom = at[info.get("atomIndex").intValue];
+      } else {
+        center = P3.newP(SV.ptValue(info.get("center")));
+        modelIndex = info.get("modelIndex").intValue;
+        colix = C.getColixS(info.get("color").asString());
+        colixEdge = C.getColixS(info.get("colorEdge").asString());
       }
       Lst<SV> lst = info.get("vertices").getList();
       SV vc = info.get("vertexCount");
@@ -149,23 +161,20 @@ public class Polyhedron {
     return ai;
   }
 
-  Map<String, Object> info;
-  public short colix;
-  
   Map<String, Object> getInfo(Viewer vwr, boolean isAll) {
     if (isAll && this.info != null && !Logger.debugging)
       return this.info;
     Map<String, Object> info = new Hashtable<String, Object>();
+    int mi = (id == null ? centralAtom.mi : modelIndex);
     if (isAll) {
       this.info = info;
-      info.put("modelIndex", Integer.valueOf(centralAtom.mi));
-      info.put("modelNumber", Integer.valueOf(centralAtom.getModelNumber()));
-      info.put("center", P3.newP(centralAtom));
-      if (center == null) {
+      if (id == null) {
+        info.put("center", P3.newP(centralAtom));
+        info.put("modelNumber", Integer.valueOf(centralAtom.getModelNumber()));
         info.put("atomNumber", Integer.valueOf(centralAtom.getAtomNumber()));
         info.put("atomName", centralAtom.getInfo());
+        info.put("element", centralAtom.getElementSymbol());
       }
-      info.put("element", centralAtom.getElementSymbol());
       info.put("triangleCount", Integer.valueOf(triangles.length));
       info.put("volume", getVolume());
       String[] names = new String[nVertices];
@@ -189,6 +198,12 @@ public class Polyhedron {
       Object energy = vwr.ms.getInfo(centralAtom.mi, "Energy");
       if (energy != null)
         info.put("energy", energy);
+    }
+    if (id != null) {
+      info.put("id", id);
+      info.put("modelIndex", Integer.valueOf(mi));
+      info.put("color", C.getHexCode(colix));
+      info.put("colorEdge", C.getHexCode(colixEdge == 0 ? colix : colixEdge));
     }
     if (faces != null)
       info.put("faces", faces);
@@ -281,7 +296,7 @@ public class Polyhedron {
 
   String getState(Viewer vwr) {
     String ident = (id == null ? "({"+centralAtom.i+"})" : "ID " + Escape.e(id));
-    return "  polyhedron @{" + Escape.e(getInfo(vwr, false)) + "} " 
+    return "  polyhedron" + " @{" + Escape.e(getInfo(vwr, false)) + "} " 
         + (isFullyLit ? " fullyLit" : "") + ";"
         + (visible ? "" : "polyhedra " + ident + " off;") + "\n";
   }
