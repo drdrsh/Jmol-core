@@ -1258,14 +1258,15 @@ public class ScriptCompiler extends ScriptTokenParser {
           return OK;
         }
         if (lookingAtImpliedString(true, true, true)) {
-          int pt = cchToken;
           String str = script.substring(ichToken, ichToken + cchToken);
+          int pt = str.indexOf(" as ");          
+          if (pt > 0)
+            str = str.substring(0, cchToken = pt);
           if (str.indexOf(" ") < 0 && str.indexOf(".") >= 0) {
             addTokenToPrefix(T.o(T.string, str));
             iHaveQuotedString = true;
             return CONTINUE;
           }
-          cchToken = pt;
         }
       }
       break;

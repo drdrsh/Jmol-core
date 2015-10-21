@@ -429,7 +429,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
         // simple quad -- DRAW only (isPrecision)
         int iD = polygon[3];
         short nD = normixes[iD];
-        if (frontOnly && (check != 7 || transformedVectors[nD].z < 0))
+        if (frontOnly && (check != 7 || !isVisibleNormix(nD)))
           continue;
         if (fill) {
           if (generateSet) {
@@ -458,8 +458,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
       exportSurface(colix);
   }
 
-  private boolean isVisibleNormix(short normix) {
-    return (normix < 0 || transformedVectors[normix].z > 0);
+  protected boolean isVisibleNormix(short normix) {
+    return (normix < 0 || transformedVectors[normix].z >= 0);
   }
 
   private void drawTriangleBits(P3 screenA, short colixA, P3 screenB, short colixB,

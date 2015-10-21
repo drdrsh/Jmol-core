@@ -306,7 +306,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       for (int i = (!imesh.hasGridPoints || imesh.firstRealVertex < 0 ? 0
           : imesh.firstRealVertex); i < vertexCount; i += incr) {
         if (vertexValues != null && Float.isNaN(vertexValues[i]) || frontOnly
-            && transformedVectors[normixes[i]].z < 0 || imesh.jvxlData.thisSet >= 0
+            && !isVisibleNormix(normixes[i]) || imesh.jvxlData.thisSet >= 0
             && mesh.vertexSets[i] != imesh.jvxlData.thisSet || !mesh.isColorSolid
             && mesh.vcs != null && !setColix(mesh.vcs[i])
             || haveBsDisplay && !mesh.bsDisplay.get(i)

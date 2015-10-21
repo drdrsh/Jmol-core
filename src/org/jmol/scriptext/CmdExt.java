@@ -3698,11 +3698,12 @@ public class CmdExt extends ScriptExt {
       fileName = SV.sValue(tokenAt(pt, args));
       if (fileName.equalsIgnoreCase("clipboard") || !vwr.haveAccess(ACCESS.ALL))
         fileName = null;
-      else if (isCommand && argCount != slen && tokAt(pt + 1) == T.per
-          && pt + 3 == argCount) {
-        pt += 2;
-        fileName += "." + SV.sValue(tokenAt(pt, args));
-      }
+//      else if (isCommand && argCount != slen 
+//          && (tokAt(pt + 1) == T.per || tokAt(pt + 1) == T.colon)) {
+//        fileName = "";
+//        while (pt < argCount)
+//          fileName += SV.sValue(tokenAt(pt++, args));
+//      }
       break;
     default:
       invArg();
