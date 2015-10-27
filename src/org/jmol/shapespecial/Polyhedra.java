@@ -358,7 +358,7 @@ public class Polyhedra extends AtomShape {
   public Object getProperty(String propertyName, int index) {
     if (propertyName == "symmetry") {
       String s = "";
-      for (int i = polyhedronCount; --i >= 0;)
+      for (int i = 0; i < polyhedronCount; i++)
         s += polyhedrons[i].getSymmetry(vwr, true) + "\n";
       return s;
     }

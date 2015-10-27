@@ -674,7 +674,7 @@ public class CmdExt extends ScriptExt {
       case T.pointgroup:
         if (!chk) {
           if (eval.tokAt(2) == T.polyhedra) {
-            showString((String) getShapePropertyIndex(JC.SHAPE_POLYHEDRA, "symmetry", 0));
+            showString((String) getShapePropertyIndex(JC.SHAPE_POLYHEDRA, "symmetry", tokAt(3) == T.off ? 0 : 1));
           } else {
             showString(vwr.ms.calculatePointGroup(vwr.bsA()));
           }

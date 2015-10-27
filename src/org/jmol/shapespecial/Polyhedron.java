@@ -8,6 +8,7 @@ import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.P3;
+import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.SmilesMatcherInterface;
@@ -45,7 +46,14 @@ public class Polyhedron {
   private short[] normixes;
 
   public String smiles, smarts, polySmiles;
+  /**
+   * includes vertices as atoms, with atomic numbers
+   */
   private SymmetryInterface pointGroup;
+  /**
+   * includes vertices as generic points
+   */
+  private SymmetryInterface pointGroupFamily;
   private Float volume;
 
   boolean visible = true;
@@ -89,7 +97,7 @@ public class Polyhedron {
   Polyhedron setInfo(Map<String, SV> info, Atom[] at) {
     try {
       collapsed = info.containsKey("collapsed");
-      id = info.get("id").asString();
+      id = (info.containsKey("id") ? info.get("id").asString() : null);
       if (id == null) {
         centralAtom = at[info.get("atomIndex").intValue];
       } else {
@@ -174,6 +182,9 @@ public class Polyhedron {
         info.put("atomNumber", Integer.valueOf(centralAtom.getAtomNumber()));
         info.put("atomName", centralAtom.getInfo());
         info.put("element", centralAtom.getElementSymbol());
+        Object energy = vwr.ms.getInfo(centralAtom.mi, "Energy");
+        if (energy != null)
+          info.put("energy", energy);
       }
       info.put("triangleCount", Integer.valueOf(triangles.length));
       info.put("volume", getVolume());
@@ -195,9 +206,8 @@ public class Polyhedron {
         info.put("polySmiles", polySmiles);
       if (pointGroup != null)
         info.put("pointGroup", pointGroup.getPointGroupName());
-      Object energy = vwr.ms.getInfo(centralAtom.mi, "Energy");
-      if (energy != null)
-        info.put("energy", energy);
+      if (pointGroupFamily != null)
+        info.put("pointGroupFamily", pointGroupFamily.getPointGroupName());
     }
     if (id != null) {
       info.put("id", id);
@@ -239,25 +249,40 @@ public class Polyhedron {
   }
 
   String getSymmetry(Viewer vwr, boolean withPointGroup) {
-    if (id != null)
-      return "";
-    info = null;
-    SmilesMatcherInterface sm = vwr.getSmilesMatcher();
-    try {
-      String details = (distanceRef <= 0 ? null : "r=" + distanceRef);
-      if (smarts == null) {
-        smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null, JC.SMILES_TOPOLOGY, null);
-        smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices, JC.SMILES_TYPE_SMILES, null);
-        polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices, vertices,  JC.SMILES_TYPE_SMILES | JC.SMILES_POLYHEDRAL | JC.SMILES_ATOM_COMMENT, details);
+    if (id == null) {
+      info = null;
+      SmilesMatcherInterface sm = vwr.getSmilesMatcher();
+      try {
+        String details = (distanceRef <= 0 ? null : "r=" + distanceRef);
+        if (smarts == null) {
+          smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null,
+              JC.SMILES_TOPOLOGY, null);
+          smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
+              vertices, JC.SMILES_TYPE_SMILES, null);
+          polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
+              vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_POLYHEDRAL
+                  | JC.SMILES_ATOM_COMMENT, details);
+        }
+      } catch (Exception e) {
       }
-    } catch (Exception e) {
     }
-    if (pointGroup == null && withPointGroup)
-      pointGroup = vwr.ms.getSymTemp(true).setPointGroup(null, vertices, null,
+    if (pointGroup == null && withPointGroup) {
+      T3[] pts = new T3[nVertices];
+      // first time through includes all atoms as atoms
+      for (int i = pts.length; --i >= 0;)
+        pts[i] = vertices[i];
+      pointGroup = vwr.ms.getSymTemp(true).setPointGroup(null, pts, null,
           false, vwr.getFloat(T.pointgroupdistancetolerance),
           vwr.getFloat(T.pointgrouplineartolerance), true);
-    return centralAtom + " " + pointGroup.getPointGroupName();
-
+      // second time through includes all atoms as points only
+      for (int i = pts.length; --i >= 0;)
+        pts[i] = P3.newP(vertices[i]);
+      pointGroupFamily = vwr.ms.getSymTemp(true).setPointGroup(null, pts, null,
+          false, vwr.getFloat(T.pointgroupdistancetolerance),
+          vwr.getFloat(T.pointgrouplineartolerance), true);
+    }
+    return (center == null ? centralAtom : center) + " " + pointGroup.getPointGroupName() + " "
+        + "("+pointGroupFamily.getPointGroupName()+")";
   }
 
   /**

@@ -315,32 +315,34 @@ public class StateCreator extends JmolStateCreator {
           needOrientations = true;
           break;
         }
+      SB sb = new SB();
       for (int i = 0; i < modelCount; i++) {
-        String fcmd = "  frame " + ms.getModelNumberDotted(i);
+        sb.setLength(0);
         String s = (String) ms.getInfo(i, "modelID");
         if (s != null
             && !s.equals(ms.getInfo(i, "modelID0")))
-          commands.append(fcmd).append("; frame ID ").append(PT.esc(s))
+          sb.append("  frame ID ").append(PT.esc(s))
               .append(";\n");
         String t = ms.frameTitles[i];
         if (t != null && t.length() > 0)
-          commands.append(fcmd).append("; frame title ").append(PT.esc(t))
+          sb.append("  frame title ").append(PT.esc(t))
               .append(";\n");
         if (needOrientations && models[i].orientation != null
             && !ms.isTrajectorySubFrame(i))
-          commands.append(fcmd).append("; ").append(
+          sb.append("  ").append(
               models[i].orientation.getMoveToText(false)).append(";\n");
         if (models[i].frameDelay != 0 && !ms.isTrajectorySubFrame(i))
-          commands.append(fcmd).append("; frame delay ").appendF(
+          sb.append("  frame delay ").appendF(
               models[i].frameDelay / 1000f).append(";\n");
         if (models[i].simpleCage != null) {
-          commands.append(fcmd).append("; unitcell ").append(
+          sb.append("  unitcell ").append(
               Escape.eAP(models[i].simpleCage.getUnitCellVectors())).append(
               ";\n");
-          getShapeState(commands, isAll, JC.SHAPE_UCCAGE);
+          getShapeState(sb, isAll, JC.SHAPE_UCCAGE);
         }
+        if (sb.length() > 0)
+          commands.append("  frame " + ms.getModelNumberDotted(i) + ";\n").appendSB(sb);
       }
-
       boolean loadUC = false;
       if (ms.unitCells != null) {
         boolean haveModulation = false;
@@ -348,10 +350,13 @@ public class StateCreator extends JmolStateCreator {
           SymmetryInterface symmetry = ms.getUnitCell(i);
           if (symmetry == null)
             continue;
-          commands.append("  frame ").append(ms.getModelNumberDotted(i));
-          if (symmetry.getState(commands))
+          sb.setLength(0);
+          if (symmetry.getState(sb)) {
             loadUC = true;
-          commands.append(";\n");
+            commands.append("  frame ")
+              .append(ms.getModelNumberDotted(i))
+              .appendSB(sb).append(";\n");
+          }
           haveModulation |= (vwr.ms.getLastVibrationVector(i, T.modulation) >= 0);
         }
         if (loadUC)

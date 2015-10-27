@@ -726,9 +726,8 @@ public class MathExt {
      * 
      * 
      */
-
-    boolean isBondCount = (tok == T.bondcount);
-    if (args.length > 5 || isBondCount && args.length != 1)
+    
+    if (args.length > 5)
       return false;
     float min = Integer.MIN_VALUE, max = Integer.MAX_VALUE;
     float fmin = 0, fmax = Float.MAX_VALUE;
@@ -740,6 +739,9 @@ public class MathExt {
     boolean isBonds = false;
     switch (tok) {
     case T.polyhedra:
+      // polyhedra()
+      // polyhedra(3)
+      // polyhedra(smilesString)
       int nv = Integer.MIN_VALUE;
       String smiles = null;
       if (args.length > 0) {
@@ -756,8 +758,9 @@ public class MathExt {
       vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "centers", data);
       return mp.addXBs(data[2] == null ? new BS() : (BS) data[2]);
     case T.bondcount:
+      // {atoms1}.bondCount({atoms2})
       SV x1 = mp.getX();
-      if (x1.tok != T.bitset)
+      if (x1.tok != T.bitset || args.length != 1 || args[0].tok != T.bitset)
         return false;
       atoms1 = SV.bsSelectVar(x1);
       atoms2 = SV.bsSelectVar(args[0]);
@@ -773,6 +776,8 @@ public class MathExt {
       }
       return mp.addXList(list);
     }
+    
+    // connected(
     for (int i = 0; i < args.length; i++) {
       SV var = args[i];
       switch (var.tok) {
@@ -2134,7 +2139,7 @@ public class MathExt {
    * @param mp
    * @param args
    * @param tok
-   * @return
+   * @return true
    * @throws ScriptException
    */
   private boolean evaluatePlane(ScriptMathProcessor mp, SV[] args, int tok)
@@ -3303,6 +3308,8 @@ public class MathExt {
     Map<String, Integer> htPivot = null;
     while (true) {
       if (AU.isAF(floatOrSVArray)) {
+        if (tok == T.pivot)
+          return "NaN";
         data = (float[]) floatOrSVArray;
         ndata = data.length;
         if (ndata == 0)
@@ -3315,6 +3322,8 @@ public class MathExt {
             break;
         } else {
           SV sv0 = sv.get(0);
+          if (sv0.tok == T.point3f)
+            return getMinMaxPoint(sv, tok);
           if (sv0.tok == T.string && ((String) sv0.value).startsWith("{")) {
             Object pt = SV.ptValue(sv0);
             if (pt instanceof P3)
@@ -3352,7 +3361,7 @@ public class MathExt {
       boolean isInt = true;
       boolean isPivot = (tok == T.pivot);
       for (int i = ndata; --i >= 0;) {
-        SV svi = sv.get(i);
+        SV svi = (sv == null ? SV.vF : sv.get(i));
         float v = (isPivot ? 1 : data == null ? SV.fValue(svi) : data[i]);
         if (Float.isNaN(v))
           continue;
@@ -3433,52 +3442,44 @@ public class MathExt {
       sv = (Lst<SV>) pointOrSVArray;
       ndata = sv.size();
     }
-    if (sv != null || data != null) {
-      P3 result = new P3();
-      float[] fdata = new float[ndata];
-      boolean ok = true;
-      for (int xyz = 0; xyz < 3 && ok; xyz++) {
-        for (int i = 0; i < ndata; i++) {
-          P3 pt = (data == null ? SV.ptValue(sv.get(i)) : data[i]);
-          if (pt == null) {
-            ok = false;
-            break;
-          }
-          switch (xyz) {
-          case 0:
-            fdata[i] = pt.x;
-            break;
-          case 1:
-            fdata[i] = pt.y;
-            break;
-          case 2:
-            fdata[i] = pt.z;
-            break;
-          }
-        }
-        if (!ok)
+    if (sv == null && data == null)
+      return "NaN";
+    P3 result = new P3();
+    float[] fdata = new float[ndata];
+    for (int xyz = 0; xyz < 3; xyz++) {
+      for (int i = 0; i < ndata; i++) {
+        P3 pt = (data == null ? SV.ptValue(sv.get(i)) : data[i]);
+        if (pt == null)
+          return "NaN";
+        switch (xyz) {
+        case 0:
+          fdata[i] = pt.x;
           break;
-        Object f = getMinMax(fdata, tok);
-        if (f instanceof Number) {
-          float value = ((Number) f).floatValue();
-          switch (xyz) {
-          case 0:
-            result.x = value;
-            break;
-          case 1:
-            result.y = value;
-            break;
-          case 2:
-            result.z = value;
-            break;
-          }
-        } else {
+        case 1:
+          fdata[i] = pt.y;
+          break;
+        case 2:
+          fdata[i] = pt.z;
           break;
         }
       }
-      return result;
+      Object f = getMinMax(fdata, tok);
+      if (!(f instanceof Number))
+        return "NaN";
+      float value = ((Number) f).floatValue();
+      switch (xyz) {
+      case 0:
+        result.x = value;
+        break;
+      case 1:
+        result.y = value;
+        break;
+      case 2:
+        result.z = value;
+        break;
+      }
     }
-    return "NaN";
+    return result;
   }
 
   private Object getMinMaxQuaternion(Lst<SV> svData, int tok) {
