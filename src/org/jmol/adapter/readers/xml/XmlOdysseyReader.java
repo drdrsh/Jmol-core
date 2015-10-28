@@ -43,8 +43,11 @@ public class XmlOdysseyReader extends XmlReader {
   private String[] myAttributes = { "id", "label", //general 
       "xyz", "element", "hybrid", //atoms
       "a", "b", "order", //bond
+      "charge", // group 
+      "entity", // member
       "box" // boundary
   };
+  private int formalCharge = Integer.MIN_VALUE;
 
   public XmlOdysseyReader() {
   }
@@ -63,11 +66,11 @@ public class XmlOdysseyReader extends XmlReader {
     }
 
     if ("atom".equals(localName)) {
-      atom = new Atom();
-      if (atts.containsKey("label"))
-        atom.atomName = atts.get("label");
-      else
-        atom.atomName = atts.get("id");
+      String id = atts.get("id");
+      (atom = new Atom()).atomName = atts
+          .get(atts.containsKey("label") ? "label" : "id");
+      if (id != null && stateScriptVersionInt >= 140400)
+        asc.atomSymbolicMap.put(id, atom);
       if (atts.containsKey("xyz")) {
         String xyz = atts.get("xyz");
         String[] tokens = PT.getTokens(xyz);
@@ -77,7 +80,6 @@ public class XmlOdysseyReader extends XmlReader {
       if (atts.containsKey("element")) {
         atom.elementSymbol = atts.get("element");
       }
-
       return;
     }
     if ("bond".equals(localName)) {
@@ -89,7 +91,19 @@ public class XmlOdysseyReader extends XmlReader {
       asc.addNewBondFromNames(atom1, atom2, order);
       return;
     }
-
+    if ("group".equals(localName)) {
+      String charge = atts.get("charge");
+      if (charge != null && charge.indexOf(".") < 0) {
+        formalCharge = PT.parseInt(charge);
+      }
+      return;
+    }
+    if ("member".equals(localName) && formalCharge != Integer.MIN_VALUE) {
+      Atom atom = asc.getAtomFromName(atts.get("entity"));
+      if (atom != null)
+        atom.formalCharge = formalCharge;
+      return;
+    }
     if ("boundary".equals(localName)) {
       String[] boxDim = PT.getTokens(atts.get("box"));
       float x = parseFloatStr(boxDim[0]);
@@ -115,7 +129,6 @@ public class XmlOdysseyReader extends XmlReader {
       parent.applySymmetryAndSetTrajectory();
       return;
     }
-
     if ("odyssey_simulation".equals(localName)) {
       if (modelName != null && phase != null)
         modelName += " - " + phase;
@@ -155,13 +168,13 @@ public class XmlOdysseyReader extends XmlReader {
       atom = null;
       return;
     }
-    if ("title".equals(localName)) {
+    if ("group".equals(localName)) {
+      formalCharge = Integer.MIN_VALUE;
+    } else if ("title".equals(localName)) {
       modelName = chars;
-    }
-    if ("formula".equals(localName)) {
+    } else if ("formula".equals(localName)) {
       formula = chars;
-    }
-    if ("phase".equals(localName)) {
+    } else if ("phase".equals(localName)) {
       phase = chars;
     }
     keepChars = false;
