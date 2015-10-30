@@ -156,6 +156,12 @@ public class Polyhedra extends AtomShape {
       return;
     }
 
+    if ("offset" == propertyName) {
+      if (thisID != null)
+        offsetPolyhedra((P3) value);
+      return;
+    }
+
     if ("model" == propertyName) {
       modelIndex = ((Integer) value).intValue();
       return;
@@ -285,7 +291,7 @@ public class Polyhedra extends AtomShape {
       for (int i = bs1.nextSetBit(0); i >= 0; i = bs1.nextSetBit(i + 1)) {
         p = polyhedrons[i];
         if (p.id == null) {
-          p.colixEdge = colixEdge;          
+          p.colixEdge = colixEdge;
         } else {
           p.colixEdge = colixEdge;
           p.colix = colix;
@@ -352,6 +358,12 @@ public class Polyhedra extends AtomShape {
     }
 
     setPropAS(propertyName, value, bs);
+  }
+
+  private void offsetPolyhedra(P3 value) {
+    BS bs = findPolyBS(null);
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      polyhedrons[i].setOffset(P3.newP(value));
   }
 
   @Override

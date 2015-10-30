@@ -64,6 +64,8 @@ public class Polyhedron {
 
   public short colix = C.GOLD;
   public int modelIndex = Integer.MIN_VALUE;
+
+  private P3 offset;
   
 
   Polyhedron() {  
@@ -105,6 +107,8 @@ public class Polyhedron {
         modelIndex = info.get("modelIndex").intValue;
         colix = C.getColixS(info.get("color").asString());
         colixEdge = C.getColixS(info.get("colorEdge").asString());
+        if (info.containsKey("offset"))
+          offset = P3.newP(SV.ptValue(info.get("offset")));
       }
       Lst<SV> lst = info.get("vertices").getList();
       SV vc = info.get("vertexCount");
@@ -214,6 +218,8 @@ public class Polyhedron {
       info.put("modelIndex", Integer.valueOf(mi));
       info.put("color", C.getHexCode(colix));
       info.put("colorEdge", C.getHexCode(colixEdge == 0 ? colix : colixEdge));
+      if (offset != null)
+        info.put("offset", offset);
     }
     if (faces != null)
       info.put("faces", faces);
@@ -302,10 +308,7 @@ public class Polyhedron {
     if (bsFlat.cardinality() < triangles.length)
       for (int i = triangles.length; --i >= 0;) {
         int[] face = triangles[i];
-        for (int j = face.length - 2; --j >= 0;)
-          if (face[j + 2] >= 0)
-            v += triangleVolume(face[j], face[j + 1], face[j + 2], vAB, vAC,
-                vTemp);
+        v += triangleVolume(face[0], face[1], face[2], vAB, vAC, vTemp);
       }
     return Float.valueOf(v / 6);
   }
@@ -316,7 +319,7 @@ public class Polyhedron {
     vAC.setT(vertices[j]);
     vTemp.cross(vAB, vAC);
     vAC.setT(vertices[k]);
-    return vAC.dot(vTemp);
+    return  vAC.dot(vTemp);
   }
 
   String getState(Viewer vwr) {
@@ -348,6 +351,18 @@ public class Polyhedron {
             bsTemp) : Normix.getNormixV(normals[i], bsTemp));
     }
     return normixes;
+  }
+
+  void setOffset(P3 value) {
+    if (center == null)
+      return; // ID  polyhedra only
+    P3 v = P3.newP(value);
+    if (offset != null)
+      value.sub(offset);
+    offset = v;
+    center.add(value);
+    for (int i = vertices.length; --i >= 0;)
+      vertices[i].add(value);
   }
 
 }

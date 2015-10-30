@@ -143,7 +143,7 @@ public class ScriptCompiler extends ScriptTokenParser {
   private String ident, identLC;
   private Lst<T> vPush = new Lst<T>();
   private int pushCount;
-  private ScriptFlowContext lastFlowContext;
+  private ScriptFlowContext forceFlowContext;
 
   synchronized ScriptContext compile(String filename, String script,
                                      boolean isPredefining, boolean isSilent,
@@ -333,7 +333,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       isEndOfCommand = false;
       needRightParen = false;
       lastFlowCommand = null;
-      lastFlowContext = null;
+      forceFlowContext = null;
 
       theTok = T.nada;
       short iLine = 1;
@@ -731,7 +731,7 @@ public class ScriptCompiler extends ScriptTokenParser {
           if (lastFlowCommand.tok != T.process && (tokAt(0) == T.leftbrace))
             ltoken.remove(0);
           lastFlowCommand = null;
-          lastFlowContext = flowContext;
+          forceFlowContext = flowContext;
 //          lastFlowImplicitEnd = flowContext.nextFlowImplicitEnd;
         }
       }
@@ -823,7 +823,7 @@ public class ScriptCompiler extends ScriptTokenParser {
         } else if (n > 0 && !haveENDIF || isOneLine) {
           forceFlowEnd(flowContext.token);
           if (!isOneLine) {
-            lastFlowContext.forceEndIf = true;
+            forceFlowContext.forceEndIf = true;
           }
         }
         isEndOfCommand = true;
@@ -1542,12 +1542,12 @@ public class ScriptCompiler extends ScriptTokenParser {
         // specifically for else {  but not elseIf ( ) {
         isEndOfCommand = true;
         ScriptFlowContext f = (flowContext != null && flowContext.addLine == 0 
-            || lastFlowContext == null ? flowContext : lastFlowContext);
+            || forceFlowContext == null ? flowContext : forceFlowContext);
         if (f != null) {
           f.addLine = 0;
           f.forceEndIf = false;
           lastToken = T.tokenLeftBrace;
-          lastFlowContext = f;
+          forceFlowContext = f;
        }
         return CONTINUE;
       }
@@ -1684,10 +1684,10 @@ public class ScriptCompiler extends ScriptTokenParser {
         // unexpectedly allows if (x) { print x else print y}
         fixFlowAddLine(flowContext);
         if (lltoken.get(iCommand - 1)[0].tok == T.end
-            && lastFlowContext != null && lastFlowContext.forceEndIf
-            && lastFlowContext.addLine > 0
-            && isFlowIfContextOK(lastFlowContext)) {
-          flowContext = lastFlowContext;
+            && forceFlowContext != null && forceFlowContext.forceEndIf
+            && forceFlowContext.addLine > 0
+            && isFlowIfContextOK(forceFlowContext)) {
+          flowContext = forceFlowContext;
           flowContext.forceEndIf = true;
           lltoken.remove(--iCommand);
         } else if (flowContext != null && flowContext.addLine > 0) {
@@ -1745,6 +1745,8 @@ public class ScriptCompiler extends ScriptTokenParser {
         }
         if (theTok == T.rightbrace) {
           // if }, just push onto vBrace, but NOT onto ltoken
+          // no longer necessary to force end
+          forceFlowContext = null;
           addBrace(tokenCommand);
           tokCommand = T.nada;
           return CONTINUE;
@@ -2152,7 +2154,7 @@ public class ScriptCompiler extends ScriptTokenParser {
   }
   private int forceFlowEnd(T token) {
     T t0 = tokenCommand;
-    lastFlowContext = flowContext;
+    forceFlowContext = flowContext;
     token = flowStart(token);
     if (!checkFlowEnd(token.tok, (String) token.value, ichBrace, false))
       return ERROR;

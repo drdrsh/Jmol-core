@@ -75,8 +75,9 @@ public class GlobalSettings {
         getDataBaseList(JC.databases);
         getDataBaseList(userDatabases);
       }
-      loadFormat = databases.get("pdb");
-      loadLigandFormat = databases.get("ligand");
+      loadFormat = pdbLoadFormat = databases.get("pdb");
+      pdbLoadFormat0 = databases.get("pdb0");
+      pdbLoadLigandFormat = databases.get("ligand");
       nmrUrlFormat = databases.get("nmr");
       nmrPredictFormat = databases.get("nmrdb");
       smilesUrlFormat = databases.get("nci") + "/file?format=sdf&get3d=True";
@@ -283,7 +284,7 @@ public class GlobalSettings {
       setB("legacyJavaFloat", legacyJavaFloat);
       setF("loadAtomDataTolerance", loadAtomDataTolerance);
       setO("loadFormat", loadFormat);
-      setO("loadLigandFormat", loadLigandFormat);
+      setO("loadLigandFormat", pdbLoadLigandFormat);
       setB("logCommands", logCommands);
       setB("logGestures", logGestures);
       setB("measureAllModels", measureAllModels);
@@ -440,7 +441,7 @@ public class GlobalSettings {
     boolean forceAutoBond = false;
     boolean fractionalRelative = true;// true: {1/2 1/2 1/2} relative to current (possibly offset) unit cell 
     char inlineNewlineChar = '|'; //pseudo static
-    String loadFormat, loadLigandFormat, nmrUrlFormat, nmrPredictFormat, smilesUrlFormat, nihResolverFormat, pubChemFormat;
+    String loadFormat, pdbLoadFormat, pdbLoadFormat0, pdbLoadLigandFormat, nmrUrlFormat, nmrPredictFormat, smilesUrlFormat, nihResolverFormat, pubChemFormat;
 
     String edsUrlFormat = "http://eds.bmc.uu.se/eds/dfs/%LC13/%LCFILE/%LCFILE.omap";
     String edsUrlFormatDiff = "http://eds.bmc.uu.se/eds/dfs/%LC13/%LCFILE/%LCFILE_diff.omap";
@@ -888,28 +889,33 @@ public class GlobalSettings {
       return structureList;
     }
 
-  String resolveDataBase(String database, String id) {
-    String format = databases.get(database.toLowerCase());
-    if (format == null)
-      return null;
-    if (id.indexOf("/") < 0) {
-      if (database.equals("pubchem"))
-        id = "name/" + id;
-      else if (database.equals("nci"))
-        id += "/file?format=sdf&get3d=True";
-    }
-    try {
-      while (format.indexOf("%c") >= 0)
-        for (int i = 1; i < 10; i++) {
-          format = PT.rep(format, "%c" + i, id.substring(i - 1, i));
+    String resolveDataBase(String database, String id, String format) {
+      if (format == null) {
+        if ((format = databases.get(database.toLowerCase())) == null)
+          return null;
+        if (id.indexOf("/") < 0) {
+          if (database.equals("pubchem"))
+            id = "name/" + id;
+          else if (database.equals("nci"))
+            id += "/file?format=sdf&get3d=True";
         }
-    } catch (Exception e) {
-      // too bad.
+      } else if (id.indexOf(".") >= 0 && format.indexOf("%FILE.") >= 0) {
+        // replace RCSB format extension when a file extension is made explicit 
+        format = format.substring(0, format.indexOf("%FILE"));
+      }
+      try {
+        while (format.indexOf("%c") >= 0)
+          for (int i = 1; i < 10; i++) {
+            format = PT.rep(format, "%c" + i, id.substring(i - 1, i));
+          }
+      } catch (Exception e) {
+        // too bad.
+      }
+      return (format.indexOf("%FILE") >= 0 ? PT.formatStringS(format, "FILE", id)
+          : format.indexOf("%file") >= 0 ? PT.formatStringS(format, "file",
+              id.toLowerCase()) : format + id);
     }
-    return (format.indexOf("%FILE") < 0 ? format + id : PT.formatStringS(
-        format, "FILE", id));
-  }
-
+  
     static boolean doReportProperty(String name) {
       return (name.charAt(0) != '_' && unreportedProperties.indexOf(";" + name
           + ";") < 0);
@@ -1018,7 +1024,7 @@ public class GlobalSettings {
       app(str, "set forceAutoBond " + forceAutoBond);
       app(str, "#set defaultDirectory " + PT.esc(defaultDirectory));
       app(str, "#set loadFormat " + PT.esc(loadFormat));
-      app(str, "#set loadLigandFormat " + PT.esc(loadLigandFormat));
+      app(str, "#set loadLigandFormat " + PT.esc(pdbLoadLigandFormat));
       app(str, "#set smilesUrlFormat " + PT.esc(smilesUrlFormat));
       app(str, "#set nihResolverFormat " + PT.esc(nihResolverFormat));
       app(str, "#set pubChemFormat " + PT.esc(pubChemFormat));

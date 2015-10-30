@@ -1224,13 +1224,14 @@ public class SV extends T implements JSONEncodable {
         .indexOf(";" + format.toLowerCase() + ";"));
   }
 
- /**
-   * Accepts arguments from the format() function First argument is a
-   * format string.
+  /**
+   * Accepts arguments from the format() function First argument is a format
+   * string.
    * 
    * @param args
-   * @param pt 0: to JSON, 5: to base64, 12: to bytearray, 22: to array
- * @param array2D 
+   * @param pt
+   *        0: to JSON, 5: to base64, 12: to bytearray, 22: to array
+   * @param array2D
    * @return formatted string
    */
   public static Object format(SV[] args, int pt, boolean array2D) {
@@ -1271,7 +1272,7 @@ public class SV extends T implements JSONEncodable {
           break;
         default:
           String s = args[1].asString();
-          if (s.startsWith(";base64,")){
+          if (s.startsWith(";base64,")) {
             if (pt == 5)
               return s;
             bytes = Base64.decodeBase64(s);
@@ -1279,19 +1280,20 @@ public class SV extends T implements JSONEncodable {
             bytes = s.getBytes();
           }
         }
-        return (pt == 22 ? getVariable(bytes) : pt == 12 ? new BArray(bytes) : ";base64,"
-            + javajs.util.Base64.getBase64(bytes).toString());
+        return (pt == 22 ? getVariable(bytes) : pt == 12 ? new BArray(bytes)
+            : ";base64," + javajs.util.Base64.getBase64(bytes).toString());
       }
     }
     // use values to replace codes in format string
-    SB sb = new SB();
     String[] format = PT.split(PT.rep(sValue(args[0]), "%%", "\1"), "%");
+    if (format.length == 0)
+      return "";
+    SB sb = new SB();
     sb.append(format[0]);
     for (int i = 1; i < format.length; i++) {
       Object ret = sprintf(PT.formatCheck("%" + format[i]),
-          (args[1].tok == hash ? args[1] 
-              : args[1].tok == varray ? args[1].getList().get(i - 1)
-                  : i < args.length ? args[i] :  null));
+          (args[1].tok == hash ? args[1] : args[1].tok == varray ? args[1]
+              .getList().get(i - 1) : i < args.length ? args[i] : null));
       if (AU.isAS(ret)) {
         String[] list = (String[]) ret;
         for (int j = 0; j < list.length; j++)

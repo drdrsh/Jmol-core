@@ -3165,7 +3165,7 @@ public class CmdExt extends ScriptExt {
     return "";
   }
 
-  private boolean polyhedra() throws ScriptException {
+  private void polyhedra() throws ScriptException {
     ScriptEval eval = e;
     // polyhedra
     // polyhedra on/off/delete
@@ -3198,6 +3198,7 @@ public class CmdExt extends ScriptExt {
     setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.TRUE);
     float translucentLevel = Float.MAX_VALUE;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
+    P3 offset = null;
     String id = null;
     for (int i = 1; i < slen; ++i) {
       String propertyName = null;
@@ -3259,7 +3260,11 @@ public class CmdExt extends ScriptExt {
         needsGenerating = true;
         break;
       case T.offset:
-        eval.theTok = T.facecenteroffset;
+        if (!isFloatParameter(i + 1)) {
+          offset = getPoint3f(++i, true);
+          i = eval.iToken;
+          continue;
+        }
         //$FALL-THROUGH$
       case T.facecenteroffset:
         setShapeProperty(JC.SHAPE_POLYHEDRA, "collapsed", Boolean.TRUE);
@@ -3361,14 +3366,13 @@ public class CmdExt extends ScriptExt {
       case T.id:
       case T.times:
       case T.identifier:
+      case T.string:
         if (!eval.isColorParam(i)) {
           if (i != 1)
             invPO();
-          setShapeProperty(
-              JC.SHAPE_POLYHEDRA,
-              "thisID",
-              id = (eval.theTok == T.id ? stringParameter(++i) : eval
-                  .optParameterAsString(i)));
+          id = (eval.theTok == T.id ? stringParameter(++i) : eval
+              .optParameterAsString(i));
+          setShapeProperty(JC.SHAPE_POLYHEDRA, "thisID", id);
           setShapeProperty(JC.SHAPE_POLYHEDRA, "model",
               Integer.valueOf(vwr.am.cmi));
           if (!eval.isCenterParameter(i + 1))
@@ -3391,15 +3395,17 @@ public class CmdExt extends ScriptExt {
       if (propertyName != null)
         setShapeProperty(JC.SHAPE_POLYHEDRA, propertyName, propertyValue);
       if (onOffDelete)
-        return false;
+        return;
     }
     if (needsGenerating) {
       if (!typeSeen && haveBonds)
         setShapeProperty(JC.SHAPE_POLYHEDRA, "bonds", null);
       setShapeProperty(JC.SHAPE_POLYHEDRA, "generate", null);
-    } else if (!edgeParameterSeen) {// && lighting == T.nada)
+    } else if (!edgeParameterSeen && offset == null) {// && lighting == T.nada)
       error(ScriptError.ERROR_insufficientArguments);
     }
+    if (offset != null) 
+      setShapeProperty(JC.SHAPE_POLYHEDRA, "offset", offset);
     if (colorArgb[0] != Integer.MIN_VALUE)
       setShapeProperty(JC.SHAPE_POLYHEDRA, "colorThis",
           Integer.valueOf(colorArgb[0]));
@@ -3409,7 +3415,6 @@ public class CmdExt extends ScriptExt {
     //    if (lighting != T.nada)
     //      setShapeProperty(JC.SHAPE_POLYHEDRA, "token", Integer.valueOf(lighting));
     setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.FALSE);
-    return true;
   }
 
   /**

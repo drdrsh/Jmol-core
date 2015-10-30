@@ -72,8 +72,8 @@ public class PolyhedraRenderer extends ShapeRenderer {
     if (p.id == null) {
       iAtom = p.centralAtom.i;
       colix = (colixes == null || iAtom >= colixes.length ? C.INHERIT_ALL
-        : colixes[iAtom]);
-      colix =  C.getColixInherited(colix, p.centralAtom.colixAtom);
+          : colixes[iAtom]);
+      colix = C.getColixInherited(colix, p.centralAtom.colixAtom);
     } else {
       colix = p.colix;
     }
@@ -121,12 +121,15 @@ public class PolyhedraRenderer extends ShapeRenderer {
       for (int i = planes.length; --i >= 0;) {
         int[] pl = planes[i];
         try {
-          g3d.fillTriangleTwoSided(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]]);
+          if (!showNumbers
+              || g3d.setC((short) (Math.round(Math.random() * 10) + 5)))
+            g3d.fillTriangleTwoSided(normixes[i], sc[pl[0]], sc[pl[1]],
+                sc[pl[2]]);
         } catch (Exception e) {
           System.out.println("PolyhedraRendererError");
         }
-//        if (pl[3] >= 0)
-  //        g3d.fillTriangleTwoSided(normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);
+        //        if (pl[3] >= 0)
+        //        g3d.fillTriangleTwoSided(normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);
       }
     // edges are not drawn translucently ever
     if (bsSelected != null && bsSelected.get(iAtom))
@@ -136,13 +139,13 @@ public class PolyhedraRenderer extends ShapeRenderer {
     if (g3d.setC(C.getColixTranslucent3(colix, false, 0)))
       for (int i = planes.length; --i >= 0;) {
         int[] pl = planes[i];
- //       if (pl[3] < 0) {
-         drawEdges(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], -pl[3]);
-//          break;
-//        } else {
-//          drawFace(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], 3);
-//          drawFace(normixes[i], sc[pl[0]], sc[pl[2]], sc[pl[3]], 6);
-//        }
+        //       if (pl[3] < 0) {
+        drawEdges(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], -pl[3]);
+        //          break;
+        //        } else {
+        //          drawFace(normixes[i], sc[pl[0]], sc[pl[1]], sc[pl[2]], 3);
+        //          drawFace(normixes[i], sc[pl[0]], sc[pl[2]], sc[pl[3]], 6);
+        //        }
 
       }
     return needTranslucent;

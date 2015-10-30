@@ -3197,8 +3197,11 @@ public class MathExt {
           Point3fi  p;
           Point3fi[] pt3 = new Point3fi[sv.size()]; 
           for (int i = pt3.length; --i >= 0;) {
+            P3 p3 = SV.ptValue(sv.get(i));
+            if (p3 == null)
+              return false; 
             p = new Point3fi();
-            p.setT(SV.ptValue(sv.get(i)));
+            p.setT(p3);
             p.i = i;
             pt3[i] = p;
             bspt.addTuple(p);

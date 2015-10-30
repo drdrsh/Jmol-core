@@ -493,17 +493,17 @@ abstract public class BondCollection extends AtomCollection {
         }
       }
     // now test non-O atoms
-    for (int i = bsTest.nextSetBit(0); i >= 0; i = bsTest.nextSetBit(i + 1)) {
-      bond = bo[i];
-      if (!assignAromaticDouble(bond))
+    for (int i = bsTest.nextSetBit(0); i >= 0; i = bsTest.nextSetBit(i + 1))
+      if (!assignAromaticDouble(bond = bo[i]))
         assignAromaticSingle(bond);
-    }
     // all done: do the actual assignments and clear arrays.
+    BS bsModels = new BS();
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {
         bond = bo[i];
         if (bsAromaticDouble.get(i)) {
           if (!bond.is(Edge.BOND_AROMATIC_DOUBLE)) {
             bsAromatic.set(i);
+            bsModels.set(bond.atom1.mi);
             bond.setOrder(Edge.BOND_AROMATIC_DOUBLE);
           }
         } else if (bsAromaticSingle.get(i) || bond.isAromatic()) {
@@ -513,7 +513,11 @@ abstract public class BondCollection extends AtomCollection {
           }
         }
       }
-
+    Model[] models = ((ModelSet) this).am;
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
+      if (models[i].isBioModel)
+        models[i].isPdbWithMultipleBonds = true;
+    
     assignAromaticNandO(bsBonds);
 
     bsAromaticSingle = null;
