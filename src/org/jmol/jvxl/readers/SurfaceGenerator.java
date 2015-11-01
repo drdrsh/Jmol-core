@@ -314,9 +314,10 @@ public class SurfaceGenerator {
         return true;
       } else if (AU.isAS(value)) {
         params.title = (String[]) value;
-        for (int i = 0; i < params.title.length; i++)
-          if (params.title[i].length() > 0)
-            Logger.info(params.title[i]);
+        if (Logger.debugging)
+         for (int i = 0; i < params.title.length; i++)
+           if (params.title[i].length() > 0)
+             Logger.info(params.title[i]);
       }
       return true;
     }

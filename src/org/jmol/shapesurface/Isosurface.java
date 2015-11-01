@@ -764,6 +764,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   }
 
   protected void slabPolygons(Object[] slabInfo) {
+    thisMesh.calculatedVolume = null;
+    thisMesh.calculatedArea = null;
     thisMesh.getMeshSlicer().slabPolygons(slabInfo, false);
     thisMesh.reinitializeLightingAndColor(vwr);
   }

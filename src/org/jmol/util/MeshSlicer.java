@@ -583,7 +583,7 @@ public class MeshSlicer {
     if (iD == i2 && iE == i3) {
       // cap but don't toss if tossing 23
       doClear = !toss23;
-      return false;
+      return !doClear; // was FALSE, but we need to recreate the edge
     }
     if (iD == i1 || iE == i1) {
       // other is i2 or i3 -- along an edge

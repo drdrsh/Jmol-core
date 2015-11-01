@@ -35,6 +35,8 @@ import org.jmol.util.GData;
 
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.T3;
+import javajs.util.V3;
 
 public class PolyhedraRenderer extends ShapeRenderer {
 
@@ -69,6 +71,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
     short[] colixes = ((Polyhedra) shape).colixes;
     int iAtom = -1;
     short colix;
+    float scale = 1;
     if (p.id == null) {
       iAtom = p.centralAtom.i;
       colix = (colixes == null || iAtom >= colixes.length ? C.INHERIT_ALL
@@ -76,6 +79,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
       colix = C.getColixInherited(colix, p.centralAtom.colixAtom);
     } else {
       colix = p.colix;
+      scale = p.scale;
     }
     boolean needTranslucent = false;
     if (C.renderPass2(colix)) {
@@ -83,7 +87,28 @@ public class PolyhedraRenderer extends ShapeRenderer {
     } else if (!g3d.setC(colix)) {
       return false;
     }
-    P3[] vertices = p.vertices;
+    T3[] vertices = p.vertices;
+    if (scale != 1) {
+      T3[] v = new T3[vertices.length];
+      if (scale < 0) {
+        // explode from {0 0 0}
+        V3 a = V3.newV(p.center);
+        a.scale(-scale - 1);
+        for (int i = v.length; --i >= 0;) {
+          V3 b = V3.newV(vertices[i]);
+          b.add(a);
+          v[i] = b;
+        }
+      } else {
+        // enlarge
+        for (int i = v.length; --i >= 0;) {
+          V3 a = V3.newVsub(vertices[i], p.center);
+          a.scaleAdd2(scale, a, p.center);
+          v[i] = a;
+        }
+      }
+      vertices = v;
+    }
     if (screens3f == null || screens3f.length < vertices.length) {
       screens3f = new P3[vertices.length];
       for (int i = vertices.length; --i >= 0;)

@@ -32,7 +32,7 @@ public class Polyhedron {
   Map<String, Object> info;
 
   public String id;
-  P3 center;
+  public P3 center;
 
   public Atom centralAtom;
   public P3[] vertices;
@@ -66,6 +66,8 @@ public class Polyhedron {
   public int modelIndex = Integer.MIN_VALUE;
 
   private P3 offset;
+
+  public float scale = 1;
   
 
   Polyhedron() {  
@@ -109,6 +111,8 @@ public class Polyhedron {
         colixEdge = C.getColixS(info.get("colorEdge").asString());
         if (info.containsKey("offset"))
           offset = P3.newP(SV.ptValue(info.get("offset")));
+        if (info.containsKey("scale"))
+          scale = SV.fValue(info.get("scale"));
       }
       Lst<SV> lst = info.get("vertices").getList();
       SV vc = info.get("vertexCount");
@@ -220,6 +224,8 @@ public class Polyhedron {
       info.put("colorEdge", C.getHexCode(colixEdge == 0 ? colix : colixEdge));
       if (offset != null)
         info.put("offset", offset);
+      if (scale != 1)
+        info.put("scale", Float.valueOf(scale));
     }
     if (faces != null)
       info.put("faces", faces);

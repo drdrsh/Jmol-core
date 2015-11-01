@@ -162,6 +162,13 @@ public class Polyhedra extends AtomShape {
       return;
     }
 
+    if ("scale" == propertyName) {
+      if (thisID != null)
+        scalePolyhedra(((Float) value).floatValue());
+      return;
+      
+    }
+
     if ("model" == propertyName) {
       modelIndex = ((Integer) value).intValue();
       return;
@@ -358,6 +365,12 @@ public class Polyhedra extends AtomShape {
     }
 
     setPropAS(propertyName, value, bs);
+  }
+
+  private void scalePolyhedra(float scale) {
+    BS bs = findPolyBS(null);
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      polyhedrons[i].scale = scale;
   }
 
   private void offsetPolyhedra(P3 value) {
@@ -723,15 +736,18 @@ public class Polyhedra extends AtomShape {
      *  catalog. This uses the Point3i().toString() method.
      *  
      *  For these special cases, then, we define a reference point just behind the plane
+     *  
+     *  Note that this is NOT AN OPTION for ID-named polyhedra (Jmol 14.5.0 10/31/2015)
      */
 
     P3 ptRef = P3.newP(ptAve);
     BS bsThroughCenter = new BS();
-    for (int pt = 0, i = 0; i < ni; i++)
-      for (int j = i + 1; j < nj; j++)
-        for (int k = j + 1; k < vertexCount; k++, pt++)
-          if (isPlanar(points[i], points[j], points[k], ptRef))
-            bsThroughCenter.set(pt);
+    if (thisID == null)
+      for (int pt = 0, i = 0; i < ni; i++)
+        for (int j = i + 1; j < nj; j++)
+          for (int k = j + 1; k < vertexCount; k++, pt++)
+            if (isPlanar(points[i], points[j], points[k], ptRef))
+              bsThroughCenter.set(pt);
     // this next check for distance allows for bond AND distance constraints
     int[][] triangles = planesT;
     P4 pTemp = new P4();
@@ -761,26 +777,27 @@ public class Polyhedra extends AtomShape {
           boolean isThroughCenter = bsThroughCenter.get(pt);
           P3 rpt = (isThroughCenter ? randomPoint : ptAve);
           V3 normal = new V3();
-          boolean isWindingOK = Measure.getNormalFromCenter(rpt, points[i], points[j],
-              points[k], !isThroughCenter, normal, vAC);
+          boolean isWindingOK = Measure.getNormalFromCenter(rpt, points[i],
+              points[j], points[k], !isThroughCenter, normal, vAC);
           // the standard face:
           normals[triangleCount] = normal;
-          triangles[triangleCount] = new int[] { isWindingOK ? i : j, isWindingOK ? j : i,
-              k, -7 };
-          if (!checkFace(points, vertexCount, triangles, normals, triangleCount, pTemp, nTemp,
-              vAC, htNormMap, htEdgeMap, planarParam, bsTemp))
+          triangles[triangleCount] = new int[] { isWindingOK ? i : j,
+              isWindingOK ? j : i, k, -7 };
+          if (!checkFace(points, vertexCount, triangles, normals,
+              triangleCount, pTemp, nTemp, vAC, htNormMap, htEdgeMap,
+              planarParam, bsTemp))
             continue;
           if (isThroughCenter) {
             bsCenterPlanes.set(triangleCount++);
           } else if (collapsed) {
             ptRef.setT(points[nPoints] = new P3());
             points[nPoints].scaleAdd2(offset, normal, atomOrPt);
-            addFacet(i, j, k, ptRef, points, normals, triangles, triangleCount++, nPoints,
-                isWindingOK, vAC);
-            addFacet(k, i, j, ptRef, points, normals, triangles, triangleCount++, nPoints,
-                isWindingOK, vAC);
-            addFacet(j, k, i, ptRef, points, normals, triangles, triangleCount++, nPoints,
-                isWindingOK, vAC);
+            addFacet(i, j, k, ptRef, points, normals, triangles,
+                triangleCount++, nPoints, isWindingOK, vAC);
+            addFacet(k, i, j, ptRef, points, normals, triangles,
+                triangleCount++, nPoints, isWindingOK, vAC);
+            addFacet(j, k, i, ptRef, points, normals, triangles,
+                triangleCount++, nPoints, isWindingOK, vAC);
             nPoints++;
           } else {
             triangleCount++;
@@ -789,14 +806,16 @@ public class Polyhedra extends AtomShape {
       }
     nPoints--;
     if (Logger.debugging) {
-      Logger
-          .info("Polyhedron planeCount=" + triangleCount + " nPoints=" + nPoints);
+      Logger.info("Polyhedron planeCount=" + triangleCount + " nPoints="
+          + nPoints);
       for (int i = 0; i < triangleCount; i++)
-        Logger.info("Polyhedron " + PT.toJSON("face[" +i + "]", triangles[i]));
+        Logger.info("Polyhedron " + PT.toJSON("face[" + i + "]", triangles[i]));
     }
     //System.out.println(PT.toJSON(null, htEdgeMap));
-    return new Polyhedron().set(thisID, modelIndex, atomOrPt, points, nPoints, vertexCount,
-        triangles, triangleCount, getFaces(triangles, triangleCount, htNormMap), normals, bsCenterPlanes, collapsed, distanceRef);
+    return new Polyhedron().set(thisID, modelIndex, atomOrPt, points, nPoints,
+        vertexCount, triangles, triangleCount,
+        getFaces(triangles, triangleCount, htNormMap), normals, bsCenterPlanes,
+        collapsed, distanceRef);
   }
   
   /**

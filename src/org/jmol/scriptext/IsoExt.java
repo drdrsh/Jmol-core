@@ -1125,6 +1125,7 @@ public class IsoExt extends ScriptExt {
     boolean isPmesh = (iShape == JC.SHAPE_PMESH);
     boolean isPlot3d = (iShape == JC.SHAPE_PLOT3D);
     boolean isLcaoCartoon = (iShape == JC.SHAPE_LCAOCARTOON);
+    boolean isSilent = (isLcaoCartoon || tokAt(1) == T.delete);
     boolean surfaceObjectSeen = false;
     boolean planeSeen = false;
     boolean isMapped = false;
@@ -1185,6 +1186,10 @@ public class IsoExt extends ScriptExt {
         str = paramAsStr(i);
       switch (eval.theTok) {
       // settings only
+      case T.silent:
+        isSilent = true;
+        sbCommand.append(" silent");
+        continue;
       case T.isosurfacepropertysmoothing:
         smoothing = (getToken(++i).tok == T.on ? Boolean.TRUE
             : eval.theTok == T.off ? Boolean.FALSE : null);
@@ -2732,7 +2737,7 @@ public class IsoExt extends ScriptExt {
                 + Escape.eBS(bsSelect) + " ")
                 + cmd);
         s = (String) getShapeProperty(iShape, "ID");
-        if (s != null && !eval.tQuiet) {
+        if (s != null && !eval.tQuiet && !isSilent) {
           cutoff = ((Float) getShapeProperty(iShape, "cutoff")).floatValue();
           if (Float.isNaN(cutoff) && !Float.isNaN(sigma))
             Logger.error("sigma not supported");
@@ -2759,7 +2764,7 @@ public class IsoExt extends ScriptExt {
             s += "\n" + svol;
         }
       }
-      if (s != null)
+      if (s != null && !isSilent)
         showString(s);
     }
     if (translucency != null)
@@ -2767,7 +2772,7 @@ public class IsoExt extends ScriptExt {
     setShapeProperty(iShape, "clear", null);
     if (toCache)
       setShapeProperty(iShape, "cache", null);
-    if (iShape != JC.SHAPE_LCAOCARTOON && !isDisplay && !haveSlab)
+    if (!isSilent && !isDisplay && !haveSlab && eval.theTok != T.delete)
       listIsosurface(iShape);
   }
 

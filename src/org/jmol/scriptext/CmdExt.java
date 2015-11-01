@@ -3192,6 +3192,7 @@ public class CmdExt extends ScriptExt {
     boolean onOffDelete = false;
     boolean typeSeen = false;
     boolean edgeParameterSeen = false;
+    float scale = Float.NaN;
     //    int lighting = T.nada; // never implemented; fullyLit does nothing
     int nAtomSets = 0;
     eval.sm.loadShape(JC.SHAPE_POLYHEDRA);
@@ -3209,6 +3210,9 @@ public class CmdExt extends ScriptExt {
         propertyValue = e.theToken.value;
         needsGenerating = true;
         break;
+      case T.scale:
+        scale = floatParameter(++i);
+        continue;
       case T.unitcell:
         if (id != null)
           invArg();
@@ -3401,11 +3405,13 @@ public class CmdExt extends ScriptExt {
       if (!typeSeen && haveBonds)
         setShapeProperty(JC.SHAPE_POLYHEDRA, "bonds", null);
       setShapeProperty(JC.SHAPE_POLYHEDRA, "generate", null);
-    } else if (!edgeParameterSeen && offset == null) {// && lighting == T.nada)
+    } else if (!edgeParameterSeen && offset == null && Float.isNaN(scale)) {// && lighting == T.nada)
       error(ScriptError.ERROR_insufficientArguments);
     }
     if (offset != null) 
       setShapeProperty(JC.SHAPE_POLYHEDRA, "offset", offset);
+    if (!Float.isNaN(scale))
+      setShapeProperty(JC.SHAPE_POLYHEDRA, "scale", Float.valueOf(scale));
     if (colorArgb[0] != Integer.MIN_VALUE)
       setShapeProperty(JC.SHAPE_POLYHEDRA, "colorThis",
           Integer.valueOf(colorArgb[0]));

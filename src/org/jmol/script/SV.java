@@ -1444,9 +1444,8 @@ public class SV extends T implements JSONEncodable {
 
   /**
    * 
-   * Script variables are pushed after cloning, because
-   * the name comes with them when we do otherwise
-   * they are not mutable anyway. We do want to have actual
+   * Script variables are pushed after cloning, because the name comes with them
+   * when we do otherwise they are not mutable anyway. We do want to have actual
    * references to points, lists, and associative arrays
    * 
    * @param value
@@ -1455,12 +1454,23 @@ public class SV extends T implements JSONEncodable {
    * @return array
    */
   public SV pushPop(SV value, SV mapKey) {
-    if (mapKey != null  ) {
+    if (mapKey != null) {
       Map<String, SV> m = getMap();
       if (value == null) {
-        SV v;
-        return (m == null || (v = m.remove(mapKey.asString())) == null ? 
-            newS("") : v);
+        SV v = null;
+        if (m == null) {
+          Lst<SV> lst = getList();
+          int len = lst.size();
+          int i = iValue(mapKey) - 1;
+          if (i < 0)
+              i += len;
+          if (i >= 0 && i < len) {
+            v = lst.remove(i);
+          }
+        } else {
+          v = m.remove(mapKey.asString());
+        }
+        return (v == null ? newS("") : v);
       }
       if (m != null)
         m.put(mapKey.asString(), newI(0).setv(value));
