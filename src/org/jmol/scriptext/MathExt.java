@@ -3167,7 +3167,8 @@ public class MathExt {
         plane = e.getHklPlane(pt);
       break;
     case T.varray:
-      pt = (last == 2 ? SV.ptValue(args[1]) : last == 1 ? P3.new3(Float.NaN, 0, 0) : null);
+      pt = (last == 2 ? SV.ptValue(args[1]) : last == 1 ? P3.new3(Float.NaN, 0,
+          0) : null);
       if (pt == null)
         return false;
       break;
@@ -3194,12 +3195,12 @@ public class MathExt {
         CubeIterator iter;
         if (Float.isNaN(pt.x)) {
           // internal comparison
-          Point3fi  p;
-          Point3fi[] pt3 = new Point3fi[sv.size()]; 
+          Point3fi p;
+          Point3fi[] pt3 = new Point3fi[sv.size()];
           for (int i = pt3.length; --i >= 0;) {
             P3 p3 = SV.ptValue(sv.get(i));
             if (p3 == null)
-              return false; 
+              return false;
             p = new Point3fi();
             p.setT(p3);
             p.i = i;
@@ -3214,26 +3215,41 @@ public class MathExt {
             int n = 0;
             while (iter.hasMoreElements()) {
               Point3fi pt2 = (Point3fi) iter.nextElement();
-              if (bsp.get(pt2.i) && pt2.distanceSquared(p) <= d2
-                  && (++n > 1))
+              if (bsp.get(pt2.i) && pt2.distanceSquared(p) <= d2 && (++n > 1))
                 bsp.clear(pt2.i);
             }
           }
-          for (int i = bsp.nextSetBit(0); i >= 0; i = bsp.nextSetBit(i + 1))  
+          for (int i = bsp.nextSetBit(0); i >= 0; i = bsp.nextSetBit(i + 1))
             pts.addLast(P3.newP(pt3[i]));
           return mp.addXList(pts);
-        
+
+        }
+        float d2;
+        if (distance == 0) {
+          // closest
+          P3 pt3 = null, pta;
+          d2 = Float.MAX_VALUE;
+          for (int i = sv.size(); --i >= 0;) {
+            pta = SV.ptValue(sv.get(i));
+            distance = pta.distanceSquared(pt);
+            if (distance < d2) {
+              pt3 = pta;
+              d2 = distance;
+            }
+          }
+          return (pt3 == null ? mp.addXStr("") : mp.addXPt(pt3));
         }
         for (int i = sv.size(); --i >= 0;)
           bspt.addTuple(SV.ptValue(sv.get(i)));
         iter = bspt.allocateCubeIterator();
         iter.initialize(pt, distance, false);
-        float d2 = distance * distance;
+        d2 = distance * distance;
         while (iter.hasMoreElements()) {
           T3 pt2 = iter.nextElement();
           if (pt2.distanceSquared(pt) <= d2)
             pts.addLast(pt2);
         }
+        iter.release();
         return mp.addXList(pts);
       }
       return mp.addXBs(vwr.getAtomsNearPt(distance, pt));
