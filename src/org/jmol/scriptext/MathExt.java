@@ -190,6 +190,8 @@ public class MathExt {
       return evaluateString(mp, op.intValue, args);
     case T.point:
       return evaluatePoint(mp, args);
+    case T.pointgroup:
+      return evaluatePointGroup(mp, args);
     case T.prompt:
       return evaluatePrompt(mp, args);
     case T.random:
@@ -219,6 +221,31 @@ public class MathExt {
       return evaluateWrite(mp, args);
     }
     return false;
+  }
+
+  @SuppressWarnings("unchecked")
+  private boolean evaluatePointGroup(ScriptMathProcessor mp, SV[] args) {
+    // pointGroup(points)
+    // pointGroup(points, center)
+    P3 center = null;
+    T3[] pts;
+    switch (args.length) {
+    case 2:
+      center = SV.ptValue(args[1]);
+      //$FALL-THROUGH$
+    case 1:
+      Lst<SV> points = args[0].getList();
+      pts = new T3[points.size()];
+      for (int i = pts.length; --i >= 0;)
+        pts[i] = SV.ptValue(points.get(i));
+      break;
+    default:
+      return false;    
+    }
+    SymmetryInterface pointGroup = vwr.ms.getSymTemp(true).setPointGroup(null, center, pts,
+        null, false,
+        vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance), true);
+    return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, false, true, null, 0, 1));
   }
 
   private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args) {

@@ -96,14 +96,14 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public SymmetryInterface setPointGroup(SymmetryInterface siLast,
-                                         T3[] atomset, BS bsAtoms,
+                                         T3 center, T3[] atomset,
+                                         BS bsAtoms,
                                          boolean haveVibration,
                                          float distanceTolerance,
-                                         float linearTolerance,
-                                         boolean localEnvOnly) {
+                                         float linearTolerance, boolean localEnvOnly) {
     pointGroup = PointGroup.getPointGroup(siLast == null ? null
-        : ((Symmetry) siLast).pointGroup, atomset, bsAtoms, haveVibration,
-        distanceTolerance, linearTolerance, localEnvOnly);
+        : ((Symmetry) siLast).pointGroup, center, atomset, bsAtoms,
+        haveVibration, distanceTolerance, linearTolerance, localEnvOnly);
     return this;
   }
 

@@ -3893,7 +3893,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * @return String or String[]
    */
   public Object setLoadFormat(String name, char type, boolean withPrefix) {
-    String format;
+    String format = null;
     String f = name.substring(1);
     switch (type) {
     case '=':
@@ -3910,16 +3910,19 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         } catch (Exception e) {
           return name;
         }
+      } else {
+        format = ( 
+            // following is temporary, until issues are resolved for AJAX asych
+            isJS && g.loadFormat.equals(g.pdbLoadFormat) ? g.pdbLoadFormat0 
+                : g.loadFormat);
       }
       //$FALL-THROUGH$
     case '#': // ligand
-      String s = (type != '=' ? g.pdbLoadLigandFormat
-          // following is temporary, until issues are resolved for AJAX asych
-          : isJS && g.loadFormat.equals(g.pdbLoadFormat) ? g.pdbLoadFormat0 
-          : g.loadFormat);
-      if (f.indexOf(".") >= 0 && s.equals(g.pdbLoadFormat))
-          s = g.pdbLoadFormat0; // older version for =1crn.cif or  =1crn.pdb
-      return g.resolveDataBase(null, f, s);
+      if (format == null)
+        format = g.pdbLoadLigandFormat;
+      if (f.indexOf(".") >= 0 && format.equals(g.pdbLoadFormat))
+          format = g.pdbLoadFormat0; // older version for =1crn.cif or  =1crn.pdb
+      return g.resolveDataBase(null, f, format);
     case '*':
       // European Bioinformatics Institute
       int pt = name.lastIndexOf("/");

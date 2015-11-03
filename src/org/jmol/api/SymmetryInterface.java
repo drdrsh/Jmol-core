@@ -156,10 +156,10 @@ public interface SymmetryInterface {
 
   public SymmetryInterface setPointGroup(
                                      SymmetryInterface pointGroupPrevious,
-                                     T3[] atomset, BS bsAtoms,
+                                     T3 center, T3[] atomset,
+                                     BS bsAtoms,
                                      boolean haveVibration,
-                                     float distanceTolerance,
-                                     float linearTolerance, boolean localEnvOnly);
+                                     float distanceTolerance, float linearTolerance, boolean localEnvOnly);
 
   public void setSpaceGroup(boolean doNormalize);
 

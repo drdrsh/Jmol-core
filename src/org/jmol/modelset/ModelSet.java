@@ -542,9 +542,9 @@ public class ModelSet extends BondCollection {
     }
     if (type != null && type.indexOf(":") >= 0)
       type = type.substring(0, type.indexOf(":"));
-    pointGroup = symmetry.setPointGroup(pointGroup, pts, bs, haveVibration,
-        vwr.getFloat(T.pointgroupdistancetolerance),
-        vwr.getFloat(T.pointgrouplineartolerance), localEnvOnly);
+    pointGroup = symmetry.setPointGroup(pointGroup, null, pts, bs,
+        haveVibration,
+        vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance), localEnvOnly);
     if (!isPolyhedron)
       this.pointGroup = pointGroup;
     if (!doAll && !asInfo)

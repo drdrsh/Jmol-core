@@ -702,6 +702,7 @@ public class T {
   public final static int within           = 31 | 0 << 9 | mathfunc;
   public final static int write            = 32 | 0 << 9 | mathfunc | scriptCommand;
   public final static int _                = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
+  public final static int pointgroup       = 34 | 0 << 9 | mathfunc;
 
 
   // xxx(a)
@@ -1267,7 +1268,6 @@ public class T {
   public final static int playrev = misc  | 274;
   public final static int planarparam    = misc  | 275;
   public final static int pocket         = misc  | 276;
-  public final static int pointgroup     = misc  | 278;
   public final static int pointsperangstrom = misc  | 280;
   public final static int polygon        = misc  | 282;
   public final static int prev    = misc  | 284;

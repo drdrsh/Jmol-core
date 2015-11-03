@@ -125,6 +125,7 @@ class PointGroup {
   private final static int c8 = firstProper + 8;
   private final static int maxAxis = axesMaxN.length;
 
+  private boolean isAtoms;
   String drawInfo;
   Map<String, Object> info;
   String textInfo;
@@ -143,6 +144,7 @@ class PointGroup {
   private Operation principalAxis;
   private Operation principalPlane;
 
+
   String getName() {
     return name;
   }
@@ -151,7 +153,7 @@ class PointGroup {
   private int centerAtomIndex = -1;
   private boolean haveInversionCenter;
   
-  final private P3 center = new P3();
+  private T3 center;
 
   private T3[] points;
   private int[] elements;
@@ -166,6 +168,7 @@ class PointGroup {
   /**
    * 
    * @param pgLast
+   * @param center TODO
    * @param atomset
    * @param bsAtoms
    * @param haveVibration
@@ -175,15 +178,17 @@ class PointGroup {
    * @return a PointGroup
    */
   
-  static PointGroup getPointGroup(PointGroup pgLast, T3[] atomset,
-                                         BS bsAtoms, boolean haveVibration,
-                                         float distanceTolerance,
-                                         float linearTolerance, boolean localEnvOnly) {
+  static PointGroup getPointGroup(PointGroup pgLast, T3 center,
+                                         T3[] atomset, BS bsAtoms,
+                                         boolean haveVibration,
+                                         float distanceTolerance, float linearTolerance, boolean localEnvOnly) {
     PointGroup pg = new PointGroup();
     pg.distanceTolerance = distanceTolerance;
     pg.linearTolerance = linearTolerance;
+    pg.isAtoms = (bsAtoms != null);
     pg.bsAtoms = (bsAtoms == null ? BSUtil.newBitSet2(0, atomset.length) : bsAtoms);
     pg.haveVibration = haveVibration;
+    pg.center = center;
     pg.localEnvOnly = localEnvOnly;
     return (pg.set(pgLast, atomset) ? pg : pgLast);
   }
@@ -388,13 +393,16 @@ class PointGroup {
 
   private boolean getPointsAndElements(T3[] atomset) {
     int ac = BSUtil.cardinalityOf(bsAtoms);
-    if (ac > ATOM_COUNT_MAX)
+    if (isAtoms && ac > ATOM_COUNT_MAX)
       return false;
     points = new P3[ac];
     elements = new int[ac];
     if (ac == 0)
       return true;
     nAtoms = 0;
+    boolean needCenter = (center == null);
+    if (needCenter)
+      center = new P3();
     // we optionally include bonding information
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1), nAtoms++) {
       T3 p = points[nAtoms] = atomset[i];
@@ -403,9 +411,11 @@ class PointGroup {
             ((Node) p).getCovalentBondCount()));
         elements[nAtoms] = ((Node) p).getElementNumber() * bondIndex;
       }
-      center.add(points[nAtoms]);
+      if (needCenter)
+        center.add(points[nAtoms]);
     }
-    center.scale(1f / nAtoms);
+    if (needCenter)
+      center.scale(1f / nAtoms);
     for (int i = nAtoms; --i >= 0;) {
       float r = center.distance(points[i]);
       if (r < distanceTolerance)
@@ -423,7 +433,7 @@ class PointGroup {
     }
   }
 
-  private boolean checkOperation(Quat q, P3 center, int iOrder) {
+  private boolean checkOperation(Quat q, T3 center, int iOrder) {
     P3 pt = new P3();
     int nFound = 0;
     boolean isInversion = (iOrder < firstProper);
@@ -682,7 +692,7 @@ class PointGroup {
     return n;
   }
 
-  private boolean checkAxisOrder(int iOrder, V3 v, P3 center) {
+  private boolean checkAxisOrder(int iOrder, V3 v, T3 center) {
     switch (iOrder) {
     case c8:
       if (nAxes[c3] > 0)
