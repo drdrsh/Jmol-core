@@ -811,16 +811,27 @@ public class ScriptCompiler extends ScriptTokenParser {
       setEqualPt = Integer.MAX_VALUE;
 
     }
+    boolean isOneLine = (flowContext != null && flowContext.addLine == 0); // if (....) xxxxx;
+    boolean isEndFlow = ((endOfLine || !isOneLine) && !haveENDIF && flowContext != null && flowContext.checkForceEndIf(-1));
     if (endOfLine) {
-      if (!haveENDIF && flowContext != null 
-          && flowContext.checkForceEndIf(-1)) {
-        boolean isOneLine = (flowContext.addLine == 0); // if (....) xxxxx;
+      if (isEndFlow) {
         if (isComment) {
           if (!isOneLine) {
             flowContext.addLine++;
             flowContext.forceEndIf = true;
           }
         } else if (n > 0 && !haveENDIF || isOneLine) {
+          // looking for 
+          // for (...) 
+          //  print ...
+          //
+          // but not empty line after for:
+          //
+          // for (...) 
+          //
+          //  print ...
+          //
+
           forceFlowEnd(flowContext.token);
           if (!isOneLine) {
             forceFlowContext.forceEndIf = true;
@@ -829,13 +840,19 @@ public class ScriptCompiler extends ScriptTokenParser {
         isEndOfCommand = true;
         cchToken = 0;
         ichCurrentCommand = ichToken;
-//        if (n > 0 || isOneLine)
-  //        lineCurrent--;
         return CONTINUE;
       }
       isComment = false;
       isShowCommand = false;
       ++lineCurrent;
+    } else if (isEndFlow) {
+      // looking at something like
+      //
+      // for (...) 
+      //  print ... ;
+      //
+      forceFlowEnd(flowContext.token);
+      forceFlowContext.forceEndIf = true;
     }
     if (ichToken >= cchScript) {
       // check for end of all brace work
