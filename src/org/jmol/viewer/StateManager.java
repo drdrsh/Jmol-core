@@ -458,8 +458,8 @@ class Connections {
       b.colix = c.colix;
       b.shapeVisibilityFlags = c.shapeVisibilityFlags;
     }
-    for (int i = bondCount; --i >= 0;)
-      modelSet.bo[i].index = i;
+    for (int i = modelSet.bondCount; --i >= 0;)
+        modelSet.bo[i].index = i;
     vwr.setShapeProperty(JC.SHAPE_STICKS, "reportAll", null);
     return true;
   }

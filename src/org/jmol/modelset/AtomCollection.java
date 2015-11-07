@@ -224,8 +224,9 @@ abstract public class AtomCollection {
   
   public Lst<P3> getAtomPointVector(BS bs) {
     Lst<P3> v = new  Lst<P3>();
+    int n = ac;
     if (bs != null) {
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
+      for (int i = bs.nextSetBit(0); i >= 0 && i < n; i = bs.nextSetBit(i+1)) {
         v.addLast(at[i]);
       }
     }

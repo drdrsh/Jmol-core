@@ -41,6 +41,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
+import org.jmol.util.Point3fi;
 
 import javajs.util.P3;
 import javajs.util.V3;
@@ -410,6 +411,8 @@ class PointGroup {
         int bondIndex = (localEnvOnly ? 1 : 1 + Math.max(3,
             ((Node) p).getCovalentBondCount()));
         elements[nAtoms] = ((Node) p).getElementNumber() * bondIndex;
+      } else if (p instanceof Point3fi) {
+        elements[nAtoms] = ((Point3fi) p).sD;
       }
       if (needCenter)
         center.add(points[nAtoms]);
@@ -418,7 +421,7 @@ class PointGroup {
       center.scale(1f / nAtoms);
     for (int i = nAtoms; --i >= 0;) {
       float r = center.distance(points[i]);
-      if (r < distanceTolerance)
+      if (isAtoms && r < distanceTolerance)
         centerAtomIndex = i;
       radius = Math.max(radius, r);
     }

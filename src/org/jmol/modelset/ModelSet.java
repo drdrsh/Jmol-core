@@ -530,7 +530,6 @@ public class ModelSet extends BondCollection {
     SymmetryInterface pointGroup = this.pointGroup;
     boolean isPolyhedron = (type != null && type.toUpperCase().indexOf(":POLY") >= 0);
     if (isPolyhedron) {
-
       Object[] data = new Object[] { Integer.valueOf(iAtom), null };
       vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "points", data);
       pts = (T3[]) data[1];

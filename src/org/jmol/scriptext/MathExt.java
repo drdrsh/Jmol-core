@@ -227,25 +227,69 @@ public class MathExt {
   private boolean evaluatePointGroup(ScriptMathProcessor mp, SV[] args) {
     // pointGroup(points)
     // pointGroup(points, center)
-    P3 center = null;
+    // pointGroup(points, center, distanceTolerance (def. 0.2 A), linearTolerance (def. 8 deg.)
+    // center can be non-point to ignore, such as 0 or ""
     T3[] pts;
+    P3 center = null;
+    float distanceTolerance = Float.NaN;
+    float linearTolerance = Float.NaN;
+    BS bsAtoms;
     switch (args.length) {
+    case 4:
+      linearTolerance = args[3].asFloat();
+      //$FALL-THROUGH$
+    case 3:
+      distanceTolerance = args[2].asFloat();
+      //$FALL-THROUGH$
     case 2:
-      center = SV.ptValue(args[1]);
+      switch  (args[1].tok) {
+      case T.point3f:
+        center = SV.ptValue(args[1]);
+        break;
+      case T.bitset:
+        bsAtoms = SV.getBitSet(args[0], false);
+        int iatom = bsAtoms.nextSetBit(0);
+        if (iatom < 0 || iatom >= vwr.ms.ac || bsAtoms.cardinality() != 1)
+          return false;
+        center = vwr.ms.at[iatom];
+        break;
+      }
       //$FALL-THROUGH$
     case 1:
+      switch (args[0].tok) {
+      case T.list:
       Lst<SV> points = args[0].getList();
       pts = new T3[points.size()];
       for (int i = pts.length; --i >= 0;)
         pts[i] = SV.ptValue(points.get(i));
       break;
+      case T.bitset:
+        bsAtoms = SV.getBitSet(args[0], false);
+        Lst<P3> atoms = vwr.ms.getAtomPointVector(bsAtoms);
+        pts = new T3[atoms.size()];
+        for (int i = pts.length; --i >= 0;)
+          pts[i] = atoms.get(i);
+        break;
+      default:
+        return false;
+      }
+      break;
     default:
-      return false;    
+      return false;
     }
-    SymmetryInterface pointGroup = vwr.ms.getSymTemp(true).setPointGroup(null, center, pts,
-        null, false,
-        vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance), true);
-    return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, false, true, null, 0, 1));
+    SymmetryInterface pointGroup = vwr.ms.getSymTemp(true).setPointGroup(
+        null,
+        center,
+        pts,
+        null,
+        false,
+        Float.isNaN(distanceTolerance) ? vwr
+            .getFloat(T.pointgroupdistancetolerance) : distanceTolerance,
+        Float.isNaN(linearTolerance) ? vwr
+            .getFloat(T.pointgrouplineartolerance)
+        : linearTolerance, true);
+    return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, false,
+        true, null, 0, 1));
   }
 
   private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args) {

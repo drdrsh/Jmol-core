@@ -270,6 +270,8 @@ public class Modulation {
 
     if (isSpin) {
       float[] f = ms.axesLengths;
+      if (f == null)
+        System.out.println("Modulation.java axis error");
       switch (axis) {
       case 'x':
         ms.mxyz.x += v / f[0];

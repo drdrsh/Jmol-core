@@ -3294,10 +3294,10 @@ public class CmdExt extends ScriptExt {
       case T.to:
         if (nAtomSets > 1 || id != null && !haveCenter)
           invPO();
-        if ((tokAt(++i) == T.bitset || tokAt(i) == T.expressionBegin)
-            && !needsGenerating) {
+        nAtomSets = 3; // don't allow two of these
+        if (tokAt(++i) == T.bitset || tokAt(i) == T.expressionBegin) {
           // select... polyhedron .... to ....
-          propertyName = "toBitSet";
+          propertyName = (needsGenerating ? "to" : "toBitSet");
           propertyValue = atomExpressionAt(i);
         } else if (eval.isArrayParameter(i)) {
           // select... polyhedron .... to [...]
@@ -3329,8 +3329,7 @@ public class CmdExt extends ScriptExt {
         }
         propertyValue = atomExpressionAt(i);
         i = eval.iToken;
-        if (i + 1 == slen)
-          needsGenerating = true;
+        needsGenerating |= (i + 1 == slen);
         break;
       case T.color:
       case T.translucent:
@@ -3408,7 +3407,7 @@ public class CmdExt extends ScriptExt {
     } else if (!edgeParameterSeen && offset == null && Float.isNaN(scale)) {// && lighting == T.nada)
       error(ScriptError.ERROR_insufficientArguments);
     }
-    if (offset != null) 
+    if (offset != null)
       setShapeProperty(JC.SHAPE_POLYHEDRA, "offset", offset);
     if (!Float.isNaN(scale))
       setShapeProperty(JC.SHAPE_POLYHEDRA, "scale", Float.valueOf(scale));
@@ -3914,7 +3913,8 @@ public class CmdExt extends ScriptExt {
       } else if (data == "ZIP" || data == "ZIPALL") {
         if (fileName != null) {
           params = new Hashtable<String, Object>();
-          params.put("data", scripts);
+          if (scripts != null)
+            params.put("data", scripts);
           if ((bytes = data = (String) vwr.createZip(fileName, type, params)) == null)
             eval.evalError("#CANCELED#", null);
         }

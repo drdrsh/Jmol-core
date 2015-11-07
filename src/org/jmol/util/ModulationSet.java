@@ -359,6 +359,9 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       vib.modScale = 1;
       mxyz = new V3(); // modulations of spin
       axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz
+      if (axesLengths == null)
+        axesLengths = symmetry.getUnitCellParams(); // required for calculating mxyz
+        
     }
     Matrix vR00 = Matrix.newT(r00, true);
     Matrix vR0 = Matrix.newT(r0, true);
@@ -575,24 +578,25 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
   private ModulationSet getModCalc() {
     if (modCalc == null) {
       modCalc = new ModulationSet();
-      modCalc.id = id;
-      modCalc.tau = tau;
-      modCalc.spinOp = spinOp;
-      modCalc.mods = mods;
-      modCalc.gammaE = gammaE;
-      modCalc.modDim = modDim;
-      modCalc.gammaIinv = gammaIinv;
-      modCalc.sigma = sigma;
-      modCalc.r0 = r0;
-      modCalc.v0 = v0;
-      modCalc.vib = vib;
-      modCalc.symmetry = symmetry;
-      modCalc.rI = rI;
+      modCalc.axesLengths = axesLengths;
+      modCalc.enabled = true;
       modCalc.fileOcc = fileOcc;
+      modCalc.gammaE = gammaE;
+      modCalc.gammaIinv = gammaIinv;
+      modCalc.id = id;
+      modCalc.modDim = modDim;
+      modCalc.mods = mods;
+      modCalc.nOps = nOps;
       modCalc.occParams = occParams;
       modCalc.occSiteMultiplicity = occSiteMultiplicity;
-      modCalc.nOps = nOps;
-      modCalc.enabled = true;
+      modCalc.r0 = r0;
+      modCalc.rI = rI;
+      modCalc.sigma = sigma;
+      modCalc.spinOp = spinOp;
+      modCalc.symmetry = symmetry;
+      modCalc.tau = tau;
+      modCalc.v0 = v0;
+      modCalc.vib = vib;
       if (mxyz != null)
         modCalc.mxyz = new V3();
     }
