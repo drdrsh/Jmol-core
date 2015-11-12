@@ -1255,7 +1255,7 @@ public class ScriptMathProcessor {
         return (isDecimal(x2) || isDecimal(x1) ? addXFloat(x1.asFloat()
             * x2.asFloat()) : addXInt(x1.asInt() * x2.asInt()));
       }
-      pt = (x1.tok == T.matrix3f ? ptValue(x2)
+      pt = (x1.tok == T.matrix3f || x1.tok == T.matrix4f ? ptValue(x2)
           : x2.tok == T.matrix3f ? ptValue(x1) : null);
       pt4 = (x1.tok == T.matrix4f ? planeValue(x2)
           : x2.tok == T.matrix4f ? planeValue(x1) : null);
@@ -1268,9 +1268,10 @@ public class ScriptMathProcessor {
           // pt * m
           M3 m3b = M3.newM3((M3) x2.value);
           m3b.transpose();
-          m3b.rotate(pt);
+          P3 pt1 = P3.newP(pt);
+          m3b.rotate(pt1);
           return (x1.tok == T.varray ? addX(SV.getVariableAF(new float[] {
-              pt.x, pt.y, pt.z })) : addXPt(pt));
+              pt1.x, pt1.y, pt1.z })) : addXPt(pt1));
         }
         if (pt4 != null)
           // q * m --> q
@@ -1283,9 +1284,10 @@ public class ScriptMathProcessor {
         if (pt4 != null) {
           M4 m4b = M4.newM4((M4) x2.value);
           m4b.transpose();
-          m4b.transform(pt4);
+          P4 pt41 = P4.newPt(pt4);
+          m4b.transform(pt41);
           return (x1.tok == T.varray ? addX(SV.getVariableAF(new float[] {
-              pt4.x, pt4.y, pt4.z, pt4.w })) : addXPt4(pt4));
+              pt41.x, pt41.y, pt41.z, pt41.w })) : addXPt4(pt41));
         }
         break;
       }
@@ -1293,9 +1295,10 @@ public class ScriptMathProcessor {
       case T.matrix3f:
         M3 m3 = (M3) x1.value;
         if (pt != null) {
-          m3.rotate(pt);
+          P3 pt1 = P3.newP(pt);
+          m3.rotate(pt1);
           return (x2.tok == T.varray ? addX(SV.getVariableAF(new float[] {
-              pt.x, pt.y, pt.z })) : addXPt(pt));
+              pt1.x, pt1.y, pt1.z })) : addXPt(pt1));
         }
         switch (x2.tok) {
         case T.matrix3f:
@@ -1315,9 +1318,10 @@ public class ScriptMathProcessor {
       case T.matrix4f:
         M4 m4 = (M4) x1.value;
         if (pt != null) {
-          m4.rotTrans(pt);
+          P3 pt1 = P3.newP(pt);
+          m4.rotTrans(pt1);
           return (x2.tok == T.varray ? addX(SV.getVariableAF(new float[] {
-              pt.x, pt.y, pt.z })) : addXPt(pt));
+              pt1.x, pt1.y, pt1.z })) : addXPt(pt1));
         }
         if (pt4 != null) {
           m4.transform(pt4);

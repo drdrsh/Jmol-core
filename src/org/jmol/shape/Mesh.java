@@ -378,9 +378,9 @@ public class Mesh extends MeshSurface {
     for (int i = 0; i < vc; i++) {
       if (vvs != null && Float.isNaN(val = vvs[i]))
         continue;
-      if (mat4 != null)
-        mat4.rotTrans(altVertices[i]);
       P3 pt = (P3) altVertices[i];
+      if (mat4 != null)
+        mat4.rotTrans(pt);
       if (normal != null && val != 0)
         pt.scaleAdd2(val, normal, pt);
     }
