@@ -1010,7 +1010,6 @@ public class XtalSymmetry {
     }
     int particleMode = (filter.indexOf("BYCHAIN") >= 0 ? PARTICLE_CHAIN
         : filter.indexOf("BYSYMOP") >= 0 ? PARTICLE_SYMOP : PARTICLE_NONE);
-
     doNormalize = false;
     Lst<M4> biomts = (Lst<M4>) thisBiomolecule.get("biomts");
     Lst<String> biomtchains = (Lst<String>) thisBiomolecule.get("chains");
@@ -1083,6 +1082,8 @@ public class XtalSymmetry {
       firstSymmetryAtom = atomMax++;
       break;
     }
+    Map<String, BS> assemblyIdAtoms = (Map<String, BS>) thisBiomolecule
+        .get("asemblyIdAtoms");
     if (filter.indexOf("#<") >= 0) {
       len = Math.min(len,
           PT.parseInt(filter.substring(filter.indexOf("#<") + 2)) - 1);
@@ -1090,6 +1091,7 @@ public class XtalSymmetry {
     }
     for (int iAtom = firstSymmetryAtom; iAtom < atomMax; iAtom++)
       atoms[iAtom].bsSymmetry = BSUtil.newAndSetBit(0);
+    BS bsAtoms = asc.bsAtoms;
     for (int i = (biomtchains == null ? 1 : 0); i < len; i++) {
       if (filter.indexOf("!#") >= 0) {
         if (filter.indexOf("!#" + (i + 1) + ";") >= 0)
@@ -1100,12 +1102,21 @@ public class XtalSymmetry {
       }
       M4 mat = biomts.get(i);
       String chains = (biomtchains == null ? null : biomtchains.get(i));
-
+      if (chains != null && assemblyIdAtoms != null) {
+        // must use label_asym_id, not auth_asym_id // bug fix 11/18/2015 
+        bsAtoms = new BS();
+        for (Entry<String, BS> e : assemblyIdAtoms.entrySet())
+          if (chains.indexOf(":" + e.getKey() + ";") >= 0)
+            bsAtoms.or(e.getValue());
+        if (asc.bsAtoms != null)
+          bsAtoms.and(asc.bsAtoms);
+        chains = null;
+      }
       for (int iAtom = firstSymmetryAtom; iAtom < atomMax; iAtom++) {
-        if (asc.bsAtoms != null && !asc.bsAtoms.get(iAtom))
-          continue;
-        if (chains != null
-            && chains.indexOf(":" + acr.vwr.getChainIDStr(atoms[iAtom].chainID)
+        if (bsAtoms != null
+            && !bsAtoms.get(iAtom)
+            || chains != null
+            && chains.indexOf(":" + acr.vwr.getChainIDStr(atoms[i].chainID)
                 + ";") < 0)
           continue;
         try {

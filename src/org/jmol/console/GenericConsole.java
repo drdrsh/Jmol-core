@@ -375,12 +375,18 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   }
 
   private void outputMsg(String message) {
-    if (message == null) {
+    int n = (message == null ? -1 : message.length());
+    switch (n) {
+    case -1:
       output.setText("");
       return;
-    }
-    if (message.charAt(message.length() - 1) != '\n')
+    default:
+      if (message.charAt(n - 1) == '\n')
+        break;
+      //$FALL-THROUGH$
+    case 0:
       message += "\n";
+    }
     output.append(message);
   }
 

@@ -30,7 +30,6 @@ import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.PT;
-import javajs.util.Rdr;
 import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
@@ -841,6 +840,7 @@ public class MMCifReader extends CifReader {
     M4 mident = M4.newM4(null);
     String[] ops = PT.split((String) biomolecule.get("operators"), ",");
     String assemblies = (String) biomolecule.get("assemblies");
+    biomolecule.put("asemblyIdAtoms", assemblyIdAtoms);
     P3 sum = new P3();
     int count = 0;
     int nAtoms = 0;
@@ -851,10 +851,8 @@ public class MMCifReader extends CifReader {
       chainlist += ":" + id + ";";
       if (assemblyIdAtoms != null) {
         BS bs = assemblyIdAtoms.get(id);
-        if (bs != null) {
-          //System.out.println(id + " " + bs.cardinality());
+        if (bs != null)
           bsAll.or(bs);
-        }
       } else if (isCourseGrained) {
         P3 asum = chainAtomMap.get(id);
         int c = chainAtomCounts.get(id)[0];
