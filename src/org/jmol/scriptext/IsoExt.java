@@ -294,6 +294,7 @@ public class IsoExt extends ScriptExt {
     boolean isWild = (idSeen && getShapeProperty(JC.SHAPE_DRAW, "ID") == null);
     int[] connections = null;
     int iConnect = 0;
+    int iArray = -1;
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
@@ -535,9 +536,9 @@ public class IsoExt extends ScriptExt {
         havePoints = true;
         break;
       case T.varray:
-        propertyName = "modelBasedPoints";
-        propertyValue = eval.theToken.value;
         havePoints = true;
+        propertyName = (iArray == i ? "coords" : "modelBasedPoints");
+        propertyValue = eval.theToken.value;
         break;
       case T.spacebeforesquare:
       case T.comma:
@@ -634,24 +635,29 @@ public class IsoExt extends ScriptExt {
       case T.line:
         propertyName = "line";
         propertyValue = Boolean.TRUE;
+        iArray = i + 1;
         break;
       case T.curve:
         propertyName = "curve";
+        iArray = i + 1;
         break;
       case T.arc:
         propertyName = "arc";
+        iArray = i + 1;
         break;
       case T.arrow:
         propertyName = "arrow";
+        iArray = i + 1;
+        break;
+      case T.vertices:
+        propertyName = "vertices";
+        iArray = i + 1;
         break;
       case T.circle:
         propertyName = "circle";
         break;
       case T.cylinder:
         propertyName = "cylinder";
-        break;
-      case T.vertices:
-        propertyName = "vertices";
         break;
       case T.nohead:
         propertyName = "nohead";

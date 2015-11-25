@@ -358,6 +358,13 @@ public void initShape() {
       return;
     }
 
+    if ("coords" == propertyName) {
+      Lst<SV> pts = (Lst<SV>) value;
+      for (int i = 0, n = pts.size(); i < n; i++)
+        vData.addLast(new Object[] { Integer.valueOf(PT_COORD), SV.ptValue(pts.get(i)) }); 
+      return;
+    }
+
     if ("offset" == propertyName) {
       offset = V3.newV((P3) value);
       if (thisMesh != null)
