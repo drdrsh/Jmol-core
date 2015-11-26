@@ -50,7 +50,7 @@ import javajs.util.P3;
 
 public abstract class MeshCollection extends Shape {
 
-  // Draw, Isosurface(LcaoCartoon MolecularOrbital Pmesh)
+  // CGO, Draw, Isosurface(Contact LcaoCartoon MolecularOrbital Pmesh)
     
   public int meshCount;
   public Mesh[] meshes = new Mesh[4];
@@ -122,12 +122,10 @@ public abstract class MeshCollection extends Shape {
   /**
    * called by ParallelProcessor at completion
    * 
-   * @param shape 
+   * @param mc 
    * 
    */
-  @Override
-  public void merge(Shape shape) {
-    MeshCollection mc = (MeshCollection) shape;
+  public void merge(MeshCollection mc) {
     for (int i = 0; i < mc.meshCount; i++) {
       if (mc.meshes[i] != null) {
         Mesh m = mc.meshes[i];
@@ -146,7 +144,6 @@ public abstract class MeshCollection extends Shape {
 
   @Override
   public void initShape() {
-    super.initShape();
     colix = C.ORANGE;
     color = 0xFFFFFFFF;
   }
@@ -571,6 +568,15 @@ public abstract class MeshCollection extends Shape {
     meshes[--meshCount] = null;
   }
   
+  protected void resetObjects() {
+    htObjects.clear();
+    for (int i = 0; i < meshCount; i++) {
+      Mesh m = meshes[i];
+      m.index = i;
+      htObjects.put(m.thisID.toUpperCase(), m);
+    }    
+  }
+
   public Mesh getMesh(String thisID) {
     int i = getIndexFromName(thisID);
     return (i < 0 ? null : meshes[i]);

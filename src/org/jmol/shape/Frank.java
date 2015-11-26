@@ -53,7 +53,6 @@ public class Frank extends Shape {
 
   @Override
   public void initShape() {
-    super.initShape();
     myType = "frank";
     baseFont3d = font3d = vwr.gdata.getFont3DFSS(defaultFontName, defaultFontStyle, defaultFontSize);
     calcMetrics();

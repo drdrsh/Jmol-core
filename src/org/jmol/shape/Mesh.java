@@ -94,7 +94,7 @@ public class Mesh extends MeshSurface {
 
   public int index;
   public int atomIndex = -1;
-  public int modelIndex = -1;  // for Isosurface and Draw
+  public int modelIndex = -1;  // for Isosurface and Draw and CGO
   public int visibilityFlags;
   public boolean insideOut;
   public int checkByteCount;

@@ -67,6 +67,11 @@ public abstract class BioShapeCollection extends Shape {
   public BioShape[] bioShapes;
   
   @Override
+  public void initShape() {
+    // nothing to do  
+  }
+  
+  @Override
   public final void initModelSet() {
     isBioShape = true;
     atoms = ms.at;

@@ -50,7 +50,6 @@ public class Hover extends TextShape {
 
   @Override
   public void initShape() {
-    super.initShape();
     isHover = true;
     Font font3d = vwr.gdata.getFont3DFSS(FONTFACE, FONTSTYLE, FONTSIZE);
     short bgcolix = C.getColixS("#FFFFC3"); // 255, 255, 195

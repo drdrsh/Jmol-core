@@ -66,7 +66,7 @@ public class Draw extends MeshCollection {
   }
 
   DrawMesh[] dmeshes = new DrawMesh[4];
-  protected DrawMesh thisMesh;
+  private DrawMesh thisMesh;
   
   @Override
   public void allocMesh(String thisID, Mesh m) {
@@ -82,7 +82,7 @@ public class Draw extends MeshCollection {
       htObjects.put(thisID.toUpperCase(), currentMesh);
   }
 
-  protected void setPropertySuper(String propertyName, Object value, BS bs) {
+  private void setPropertySuper(String propertyName, Object value, BS bs) {
     currentMesh = thisMesh;
     setPropMC(propertyName, value, bs);
     thisMesh = (DrawMesh)currentMesh;  
@@ -99,7 +99,7 @@ public void initShape() {
   private int nPoints;
   private int diameter;
   private float width;
-  protected float newScale;
+  private float newScale;
   private float length;
   private boolean isCurve;
   private boolean isArc;
@@ -419,7 +419,7 @@ public void initShape() {
     setPropertySuper(propertyName, value, bs);
   }
 
- protected void deleteModels(int modelIndex) {
+ private void deleteModels(int modelIndex) {
    //int firstAtomDeleted = ((int[])((Object[])value)[2])[1];
    //int nAtomsDeleted = ((int[])((Object[])value)[2])[2];
    for (int i = meshCount; --i >= 0;) {
@@ -443,7 +443,7 @@ public void initShape() {
    resetObjects();
   }
 
- protected void deleteMeshElement(int i) {
+ private void deleteMeshElement(int i) {
    if (meshes[i] == currentMesh)
      currentMesh = thisMesh = null;
    meshes = dmeshes = (DrawMesh[]) AU
@@ -476,19 +476,10 @@ private void initDraw() {
    setPropertySuper("thisID", MeshCollection.PREVIOUS_MESH_ID, null);
   }
 
-protected void resetObjects() {
-    htObjects.clear();
-    for (int i = 0; i < meshCount; i++) {
-      Mesh m = meshes[i];
-      m.index = i;
-      htObjects.put(m.thisID.toUpperCase(), m);
-    }    
-  }
-
-  @SuppressWarnings("unchecked")
   @Override
   public boolean getPropertyData(String property, Object[] data) {
     if (property == "keys") {
+      @SuppressWarnings("unchecked")
       Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1] : new Lst<String>());
       data[1] = keys;
       keys.addLast("getSpinAxis");
@@ -512,7 +503,7 @@ protected void resetObjects() {
 
   @Override
   public Object getProperty(String property, int index) {
-    DrawMesh m = this.thisMesh;
+    DrawMesh m = thisMesh;
     if (index >= 0 && (index >= meshCount || (m = (DrawMesh) meshes[index]) == null))
       return null;
     if (property == "command")

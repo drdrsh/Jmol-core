@@ -26,16 +26,16 @@
 package org.jmol.shapesurface;
 
 
-import org.jmol.java.BS;
-import org.jmol.shape.Mesh;
-import org.jmol.shape.Shape;
-import org.jmol.util.C;
-import org.jmol.util.Escape;
-
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3;
+
+import org.jmol.java.BS;
+import org.jmol.shape.Mesh;
+import org.jmol.shape.MeshCollection;
+import org.jmol.util.C;
+import org.jmol.util.Escape;
 
 public class LcaoCartoon extends Isosurface {
 
@@ -351,7 +351,7 @@ public class LcaoCartoon extends Isosurface {
   }
   
   @Override
-  public void merge(Shape shape) {
+  public void merge(MeshCollection shape) {
     LcaoCartoon lc = (LcaoCartoon) shape;
     lcaoScale = lc.lcaoScale;
     lcaoColorNeg = lc.lcaoColorNeg;

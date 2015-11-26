@@ -3210,6 +3210,7 @@ public class IsoExt extends ScriptExt {
     boolean idSeen = (thisId != null);
     boolean isWild = (idSeen && getShapeProperty(JC.SHAPE_CGO, "ID") == null);
     boolean isInitialized = false;
+    int modelIndex = -1;
     Lst<Object> data = null;
     float translucentLevel = Float.MAX_VALUE;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
@@ -3242,6 +3243,17 @@ public class IsoExt extends ScriptExt {
           continue;
         }
         error(ScriptError.ERROR_numberExpected);
+        break;
+      case T.fixed:
+        propertyName = "modelIndex";
+        propertyValue = Integer.valueOf(-1);
+        break;
+      case T.modelindex:
+      case T.model:
+        modelIndex = (eval.theTok == T.modelindex ? intParameter(++i) : eval
+            .modelNumberParameter(++i));
+        propertyName = "modelIndex";
+        propertyValue = Integer.valueOf(modelIndex);
         break;
       case T.color:
       case T.translucent:

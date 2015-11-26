@@ -78,7 +78,7 @@ public class CGORenderer extends DrawRenderer {
     diameter = cgoMesh.diameter;
     width = cgoMesh.width;
     cmds = cgoMesh.cmds;
-    if (cmds == null || !cgoMesh.visible)
+    if (cmds == null || !cgoMesh.visible || cgoMesh.visibilityFlags == 0)
       return;
     if (!g3d.setC(cgoMesh.colix)) {
       needTranslucent = true;

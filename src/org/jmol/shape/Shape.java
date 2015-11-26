@@ -125,9 +125,9 @@ public abstract class Shape {
     vf = JC.getShapeVisibilityFlag(shapeID);
     setModelSet(modelSet);
     initShape();
-    //System.out.println("Shape " + shapeID + " " + this + " initialized");
-
   }
+
+  public abstract void initShape();
 
   /**
    * @param bsModels  
@@ -176,17 +176,6 @@ public abstract class Shape {
     atom.setShapeVisibility(vf, isVisible);
   }
 
-  public void initShape() {
-  }
-
-  /**
-   * 
-   * @param shape
-   */
-  public void merge(Shape shape) {
-    // shape-dependent Jmol 12.0.RC6
-  }
-  
   public void setShapeSizeRD(int size, RadiusData rd, BS bsSelected) {
     if (rd == null)
       setSize(size, bsSelected);

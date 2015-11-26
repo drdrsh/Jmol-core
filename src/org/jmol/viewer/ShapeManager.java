@@ -51,7 +51,7 @@ import org.jmol.util.Vibration;
 public class ShapeManager {
 
   private ModelSet ms;
-  Shape[] shapes;
+  public Shape[] shapes;
   public Viewer vwr;
 
   public ShapeManager(Viewer vwr) {
@@ -78,10 +78,6 @@ public class ShapeManager {
           shapes[i].findNearestAtomIndex(x, y, closest, bsNot);
   }
 
-  public Shape[] getShapes() {
-    return shapes;
-  }
-  
   public Object getShapePropertyIndex(int shapeID, String propertyName, int index) {
     if (shapes == null || shapes[shapeID] == null)
       return null;
@@ -217,7 +213,6 @@ public class ShapeManager {
     JC.SHAPE_ECHO, 
     JC.SHAPE_CONTACT,
     JC.SHAPE_ISOSURFACE,
-    JC.SHAPE_PMESH,
     JC.SHAPE_DRAW,
     JC.SHAPE_FRANK,
   };
@@ -323,20 +318,6 @@ public class ShapeManager {
     return (shapes == null ? null : shapes[i]);
   }
   
-  public void mergeShapes(Shape[] newShapes) {
-    if (newShapes == null)
-      return;
-    if (shapes == null)
-      shapes = newShapes;
-    else
-      for (int i = 0; i < newShapes.length; ++i)
-        if (newShapes[i] != null) {
-          if (shapes[i] == null)
-            loadShape(i);
-          shapes[i].merge(newShapes[i]);
-        }
-  }
-
   public void resetBioshapes(BS bsAllAtoms) {
     if (shapes == null)
       return;

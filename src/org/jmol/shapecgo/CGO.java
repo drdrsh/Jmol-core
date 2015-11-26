@@ -24,31 +24,36 @@
 
 package org.jmol.shapecgo;
 
-import org.jmol.java.BS;
-import org.jmol.script.T;
-import org.jmol.shape.Mesh;
-import org.jmol.shape.MeshCollection;
-import org.jmol.shapespecial.Draw;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 
-public class CGO extends Draw {
+import org.jmol.java.BS;
+import org.jmol.script.T;
+import org.jmol.shape.Mesh;
+import org.jmol.shape.MeshCollection;
+
+public class CGO extends MeshCollection {
   
   CGOMesh[] cmeshes = new CGOMesh[4];
   private CGOMesh cgoMesh;
-  private boolean useColix;
+  private boolean useColix; // not implemented?
+  private float newScale; // not implemented
+  private int indicatedModelIndex = Integer.MIN_VALUE;
+
   
   public CGO() {
     // for reflection
-    super();
+    myType = "CGO";
+    htObjects = new Hashtable<String, Mesh>();
   }
-  
+
   private void initCGO() {
-    // TODO
-    
+    indicatedModelIndex = Integer.MIN_VALUE;
   }
 
   @Override
@@ -56,11 +61,12 @@ public class CGO extends Draw {
     int index = meshCount++;
     meshes = cmeshes = (CGOMesh[]) AU.ensureLength(cmeshes,
         meshCount * 2);
-    currentMesh = thisMesh = cgoMesh = cmeshes[index] = (m == null ? new CGOMesh(vwr, thisID,
+    currentMesh = cgoMesh = cmeshes[index] = (m == null ? new CGOMesh(vwr, thisID,
         colix, index) : (CGOMesh) m);
     currentMesh.color = color;
     currentMesh.index = index;
     currentMesh.useColix = useColix;
+    currentMesh.modelIndex = indicatedModelIndex;
     if (thisID != null && thisID != MeshCollection.PREVIOUS_MESH_ID
         && htObjects != null)
       htObjects.put(thisID.toUpperCase(), currentMesh);
@@ -86,6 +92,11 @@ public class CGO extends Draw {
       return;
     }
     
+    if ("modelIndex" == propertyName) {
+      indicatedModelIndex = Math.max(((Integer) value).intValue(), -1);
+      return;
+    }
+
     if ("set" == propertyName) {
       if (cgoMesh == null) {
         allocMesh(null, null);
@@ -93,9 +104,10 @@ public class CGO extends Draw {
         cgoMesh.color = color;
         cgoMesh.useColix = useColix;
       }
+      cgoMesh.modelIndex = (indicatedModelIndex == Integer.MIN_VALUE ? vwr.am.cmi : indicatedModelIndex);
       cgoMesh.isValid = setCGO((Lst<Object>) value);
       if (cgoMesh.isValid) {
-        scale(cgoMesh, newScale);
+        scale(cgoMesh, newScale );
         cgoMesh.initialize(T.fullylit, null, null);
         cgoMesh.title = title;
         cgoMesh.visible = true;
@@ -104,33 +116,55 @@ public class CGO extends Draw {
       return;
     }
     
+    if (propertyName == "deleteModelAtoms") {
+      deleteModels(((int[]) ((Object[]) value)[2])[0]);
+      return;
+    }
+
     setPropertySuper(propertyName, value, bs);
   }
   
-  @Override
-  @SuppressWarnings("unchecked")
-  public boolean getPropertyData(String property, Object[] data) {
-    if (property == "keys") {
-      Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1] : new Lst<String>());
-      data[1] = keys;
-      keys.addLast("data");
-      // will continue on to getPropertyIndex
+  protected void deleteModels(int modelIndex) {
+    //int firstAtomDeleted = ((int[])((Object[])value)[2])[1];
+    //int nAtomsDeleted = ((int[])((Object[])value)[2])[2];
+    for (int i = meshCount; --i >= 0;) {
+      CGOMesh m = (CGOMesh) meshes[i];
+      if (m == null)
+        continue;
+      boolean deleteMesh = (m.modelIndex == modelIndex);
+      if (deleteMesh) {
+        meshCount--;
+        deleteMeshElement(i);
+      } else if (meshes[i].modelIndex > modelIndex) {
+        meshes[i].modelIndex--;
+      }
     }
+    resetObjects(); 
+   }
+
+
+  @Override
+  public Object getProperty(String property, int index) {
+    if (property == "command")
+      return getCommand(cgoMesh);
+    return getPropMC(property, index);
+  }
+
+  @Override
+  public boolean getPropertyData(String property, Object[] data) {
     if (property == "data")
       return CGOMesh.getData(data);
     return getPropDataMC(property, data);
   }
 
-  @Override
-  protected void deleteMeshElement(int i) {
+  private void deleteMeshElement(int i) {
     if (meshes[i] == currentMesh)
       currentMesh = cgoMesh = null;
     meshes = cmeshes = (CGOMesh[]) AU
         .deleteElements(meshes, i, 1);
   }
 
-  @Override
-  protected void setPropertySuper(String propertyName, Object value, BS bs) {
+  private void setPropertySuper(String propertyName, Object value, BS bs) {
     currentMesh = cgoMesh;
     setPropMC(propertyName, value, bs);
     cgoMesh = (CGOMesh)currentMesh;  
@@ -150,36 +184,67 @@ public class CGO extends Draw {
     return cgoMesh.set(data);
   }
 
-  @Override
-  protected void scale(Mesh mesh, float newScale) {
+  private void scale(Mesh mesh, float newScale) {
     // TODO
     
   }
   
   @Override
-  public String getShapeState() {
-    SB s = new SB();
-    s.append("\n");
-    appendCmd(s, myType + " delete");
+  public Lst<Map<String, Object>> getShapeDetail() {
+    Lst<Map<String, Object>> V = new Lst<Map<String, Object>>();
     for (int i = 0; i < meshCount; i++) {
       CGOMesh mesh = cmeshes[i];
-      s.append(getCommand2(mesh, mesh.modelIndex));
-      if (!mesh.visible)
-        s.append(" " + myType + " ID " + PT.esc(mesh.thisID) + " off;\n");
+      Map<String, Object> info = new Hashtable<String, Object>();
+      info.put("visible", mesh.visible ? Boolean.TRUE : Boolean.FALSE);
+      info.put("ID", (mesh.thisID == null ? "<noid>" : mesh.thisID));
+      info.put("command", getCommand(mesh));
+      V.addLast(info);
     }
-    return s.toString();
+    return V;
   }
 
   @Override
-  protected String getCommand2(Mesh mesh, int iModel) {
+  public String getShapeState() {
+    SB sb = new SB();
+    int modelCount = vwr.ms.mc;
+    for (int i = 0; i < meshCount; i++) {
+      CGOMesh mesh = cmeshes[i];
+      if (mesh == null || mesh.cmds == null || mesh.modelIndex >= modelCount)
+        continue;
+      if (sb.length() == 0) {
+        sb.append("\n");
+        appendCmd(sb, myType + " delete");
+      }
+      sb.append(getCommand2(mesh, modelCount));
+      if (!mesh.visible)
+        sb.append(" " + myType + " ID " + PT.esc(mesh.thisID) + " off;\n");
+    }
+    return sb.toString();
+  }
+  
+  private String getCommand(Mesh mesh) {
+    if (mesh != null)
+      return getCommand2(mesh, mesh.modelIndex);
+
+    SB sb = new SB();
+    String key = (explicitID && previousMeshID != null
+        && PT.isWild(previousMeshID) ? previousMeshID : null);
+    Lst<Mesh> list = getMeshList(key, false);
+    // counting down on list will be up in order
+    for (int i = list.size(); --i >= 0;) {
+      Mesh m = list.get(i);
+      sb.append(getCommand2(m, m.modelIndex));
+    }
+    return sb.toString();
+  }
+
+  private String getCommand2(Mesh mesh, int modelCount) {
     CGOMesh cmesh = (CGOMesh) mesh;
     SB str = new SB();
-    int modelCount = vwr.ms.mc;
-    if (iModel >= 0 && modelCount > 1)
-      appendCmd(str, "frame " + vwr.getModelNumberDotted(iModel));
+    int iModel = mesh.modelIndex;
     str.append("  CGO ID ").append(PT.esc(mesh.thisID));
-    if (iModel < 0)
-      iModel = 0;
+    if (iModel >= -1 && modelCount > 1)
+      str.append(" modelIndex " + iModel);
     str.append(" [");
     int n = cmesh.cmds.size();
     for (int i = 0; i < n; i++)
@@ -191,4 +256,13 @@ public class CGO extends Draw {
     return str.toString();
   }
   
+  @Override
+  public void setModelVisibilityFlags(BS bsModels) {
+    for (int i = 0; i < meshCount; i++) {
+      CGOMesh m = cmeshes[i];
+      if (m != null)
+        m.visibilityFlags = (m.isValid && m.visible && (m.modelIndex < 0 || bsModels.get(m.modelIndex)) ? vf : 0);
+    }
+  }
+ 
 }

@@ -29,6 +29,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.jmol.api.JmolParallelProcessor;
+import org.jmol.shape.MeshCollection;
+import org.jmol.shape.Shape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.Viewer;
@@ -94,13 +96,28 @@ public class ScriptParallelProcessor extends ScriptFunction implements JmolParal
   void mergeResults(Lst<ShapeManager> vShapeManagers) {
     try {
       for (int i = 0; i < vShapeManagers.size(); i++)
-        vwr.shm.mergeShapes(vShapeManagers.get(i).getShapes());
+        mergeShapes(vShapeManagers.get(i));
     } catch (Error e) {
       throw e;
     } finally {
       counter = -1;
       vShapeManagers = null;
     }
+  }
+
+  private void mergeShapes(ShapeManager shapeManager) {
+    Shape[] newShapes = shapeManager.shapes;
+    if (newShapes == null)
+      return;
+    if (vwr.shm.shapes == null)
+      vwr.shm.shapes = newShapes;
+    else
+      for (int i = 0; i < newShapes.length; ++i)
+        if (newShapes[i] != null && newShapes[i] instanceof MeshCollection) {
+          if (vwr.shm.shapes[i] == null)
+            vwr.shm.loadShape(i);
+          ((MeshCollection) vwr.shm.shapes[i]).merge((MeshCollection) newShapes[i]);
+        }
   }
 
   void clearShapeManager(Error er) {

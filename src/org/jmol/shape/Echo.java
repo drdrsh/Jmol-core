@@ -52,7 +52,6 @@ public class Echo extends TextShape {
     
   @Override
   public void initShape() {
-    super.initShape();
     setProperty("target", "top", null);
   }
 

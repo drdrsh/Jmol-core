@@ -98,6 +98,24 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.api.GenericBinaryDocument;
+import javajs.util.A4;
+import javajs.util.AU;
+import javajs.util.CU;
+import javajs.util.Lst;
+import javajs.util.M3;
+import javajs.util.M4;
+import javajs.util.OC;
+import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.P4;
+import javajs.util.PT;
+import javajs.util.Quat;
+import javajs.util.Rdr;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.V3;
+
 import org.jmol.java.BS;
 import org.jmol.jvxl.api.MeshDataServer;
 import org.jmol.jvxl.data.JvxlCoder;
@@ -108,34 +126,12 @@ import org.jmol.jvxl.readers.SurfaceGenerator;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;
-import org.jmol.shape.Shape;
-import org.jmol.util.Escape;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
+import org.jmol.util.Escape;
+import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
 import org.jmol.util.TempArray;
-
-import javajs.api.GenericBinaryDocument;
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.SB;
-
-import org.jmol.util.Logger;
-import javajs.util.PT;
-
-import javajs.util.A4;
-import javajs.util.P3;
-import javajs.util.Rdr;
-import javajs.util.CU;
-import javajs.util.OC;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.T3;
-import javajs.util.P3i;
-import javajs.util.P4;
-import javajs.util.Quat;
-
-import javajs.util.V3;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -1996,11 +1992,6 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         + "[" + (pickedVertex + 1) + "] " + m.vs[pickedVertex] + ": "
         : m.thisID + ": ")
         + m.vvs[pickedVertex]);
-  }
-
-  @Override
-  public void merge(Shape shape) {
-    super.merge(shape);
   }
 
   public String getCmd(int index){

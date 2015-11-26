@@ -40,6 +40,7 @@ import javajs.util.P4;
 
 import org.jmol.quantum.QS;
 import org.jmol.script.T;
+import org.jmol.shape.MeshCollection;
 import org.jmol.shape.Shape;
 import org.jmol.java.BS;
 import org.jmol.jvxl.data.JvxlCoder;
@@ -579,7 +580,7 @@ public class MolecularOrbital extends Isosurface {
   }
 
   @Override
-  public void merge(Shape shape) {
+  public void merge(MeshCollection shape) {
   MolecularOrbital mo = (MolecularOrbital) shape;
   moColorNeg = mo.moColorNeg;
   moColorPos = mo.moColorPos;

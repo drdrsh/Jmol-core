@@ -58,6 +58,11 @@ public abstract class AtomShape extends Shape {
   }
 
   @Override
+  public void initShape() {
+    // nothing  to do  
+  }
+  
+  @Override
   protected void initModelSet() {
     atoms = ms.at;
     ac = ms.ac;

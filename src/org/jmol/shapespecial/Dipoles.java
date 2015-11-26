@@ -74,6 +74,11 @@ public class Dipoles extends Shape {
   private String wildID;  
 
   @Override
+  public void initShape() {
+    // nothing to do  
+  }
+  
+  @Override
   public void setProperty(String propertyName, Object value, BS bs) {
 
     if ("init" == propertyName) {

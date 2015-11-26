@@ -79,7 +79,6 @@ public class Labels extends AtomShape {
 
   @Override
   public void initShape() {
-    super.initShape();
     defaultFontId = zeroFontId = vwr.gdata.getFont3DFSS(JC.DEFAULT_FONTFACE,
         JC.DEFAULT_FONTSTYLE, JC.LABEL_DEFAULT_FONTSIZE).fid;
     defaultColix = 0; //"none" -- inherit from atom

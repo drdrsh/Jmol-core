@@ -53,7 +53,6 @@ public class Sticks extends Shape {
 
   @Override
   public void initShape() {
-    super.initShape();
     myMask = Edge.BOND_COVALENT_MASK;
     reportAll = false;
   }
