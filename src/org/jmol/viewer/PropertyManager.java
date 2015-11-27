@@ -976,8 +976,7 @@ public class PropertyManager implements JmolPropertyManager {
     if (m.modelSetProperties != null) {
       info.put("modelSetProperties", m.modelSetProperties);
     }
-    info.put("modelCountSelected", Integer.valueOf(BSUtil
-        .cardinalityOf(bsModels)));
+    info.put("modelCountSelected", Integer.valueOf(bsModels.cardinality()));
     info.put("modelsSelected", bsModels);
     Lst<Map<String, Object>> vModels = new  Lst<Map<String, Object>>();
     m.getMolecules();
@@ -1186,7 +1185,7 @@ public class PropertyManager implements JmolPropertyManager {
       if (doTransform && atoms[i].isDeleted())
         bsAtoms.clear(i);
     BS bsBonds = getCovalentBondsForAtoms(ms.bo, ms.bondCount, bsAtoms);
-    if (!asXYZVIB && bsAtoms.cardinality() == 0)
+    if (!asXYZVIB && bsAtoms.isEmpty())
       return "";
     boolean isOK = true;
     BS bsModels = vwr.ms.getModelBS(bsAtoms, true);
@@ -1217,7 +1216,7 @@ public class PropertyManager implements JmolPropertyManager {
           .nextSetBit(i + 1)) {
         BS bsTemp = BSUtil.copy(bsAtoms);
         bsTemp.and(ms.getModelAtomBitSetIncludingDeleted(i, false));
-        if (bsTemp.cardinality() == 0)
+        if (bsTemp.isEmpty())
           continue;
         mol.appendI(bsTemp.cardinality()).appendC('\n');
         Properties props = ms.am[i].properties;
@@ -2290,7 +2289,7 @@ public class PropertyManager implements JmolPropertyManager {
   public String getModelCml(BS bs, int atomsMax, boolean addBonds, boolean doTransform, boolean allTrajectories) {
     // not allowing full trajectory business here. 
     SB sb = new SB();
-    int nAtoms = BSUtil.cardinalityOf(bs);
+    int nAtoms = bs.cardinality();
     if (nAtoms == 0)
       return "";
     // creating an instance prevents pre-loading by JavaScript

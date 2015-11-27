@@ -298,7 +298,7 @@ abstract class ScriptExpr extends ScriptParam {
         // are there for now that require it; could go, though.
         BS bsSelect = new BS();
         BS bsX = new BS();
-        String[] sout = (isFor ? new String[BSUtil.cardinalityOf(bsAtoms)]
+        String[] sout = (isFor ? new String[bsAtoms.cardinality()]
             : null);
         if (localVars == null)
           localVars = new Hashtable<String, SV>();
@@ -2248,7 +2248,7 @@ abstract class ScriptExpr extends ScriptParam {
 
   private void setBitsetProperty(BS bs, int tok, int iValue, float fValue,
                                  T tokenValue) throws ScriptException {
-    if (chk || BSUtil.cardinalityOf(bs) == 0)
+    if (chk || bs.cardinality() == 0)
       return;
     String[] list = null;
     String sValue = null;

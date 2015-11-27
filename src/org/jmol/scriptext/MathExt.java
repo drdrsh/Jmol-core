@@ -2883,15 +2883,14 @@ public class MathExt {
     case T.split:
       if (x.tok == T.bitset) {
         BS bsSelected = SV.bsSelectVar(x);
-        sArg = "\n";
         int modelCount = vwr.ms.mc;
-        s = "";
+        Lst<SV> lst = new Lst<SV>();
         for (int i = 0; i < modelCount; i++) {
-          s += (i == 0 ? "" : "\n");
           BS bs = vwr.getModelUndeletedAtomsBitSet(i);
           bs.and(bsSelected);
-          s += Escape.eBS(bs);
+          lst.addLast(SV.getVariable(bs));
         }
+        return mp.addXList(lst);
       }      
       return mp.addXAS(PT.split(s, sArg));
     case T.join:
@@ -3372,7 +3371,7 @@ public class MathExt {
 
   private BS getAtomsNearPts(float distance, T3[] points, BS bsInclude) {
     BS bsResult = new BS();
-    if (points.length == 0 || bsInclude != null && bsInclude.cardinality() == 0)
+    if (points.length == 0 || bsInclude != null && bsInclude.isEmpty())
       return bsResult;
     if (bsInclude == null)
       bsInclude = BSUtil.setAll(points.length);

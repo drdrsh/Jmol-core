@@ -140,7 +140,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
 
     if ("select" == propertyName) {
       BS bs = (BS) value;
-      if (bs == null || BSUtil.cardinalityOf(bs) == 0) {
+      if (BSUtil.cardinalityOf(bs) == 0) {
         bsSelected = null;
       } else {
         bsSelected = new BS();

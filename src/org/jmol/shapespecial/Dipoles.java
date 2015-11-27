@@ -227,7 +227,7 @@ public class Dipoles extends Shape {
       endCoord = null;
       startCoord = ms.getAtomSetCenter(bsAtoms);
       tempDipole.set2Value(startCoord, P3.new3(0, 0, 0), dipoleValue);
-      if (BSUtil.cardinalityOf(bsAtoms) == 1)
+      if (bsAtoms.cardinality() == 1)
         atomIndex1 = bsAtoms.nextSetBit(0);
       return;
     }
@@ -248,7 +248,7 @@ public class Dipoles extends Shape {
     if ("endSet" == propertyName) {
       iHaveTwoEnds = true;
       BS atomset = (BS) value;
-      if (atomIndex1 >= 0 && BSUtil.cardinalityOf(atomset) == 1) {
+      if (atomIndex1 >= 0 && atomset.cardinality() == 1) {
         atomIndex2 = atomset.nextSetBit(0);
         tempDipole.set2AtomValue(ms.at[atomIndex1], ms.at[atomIndex2], 1);
         currentDipole = findDipoleFor(tempDipole.thisID, tempDipole.dipoleInfo);

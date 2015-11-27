@@ -7381,7 +7381,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public void setAtomCoords(BS bs, int tokType, Object xyzValues) {
-    if (bs.cardinality() == 0)
+    if (bs.isEmpty())
       return;
     ms.setAtomCoords(bs, tokType, xyzValues);
     checkMinimization();
@@ -7392,7 +7392,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     // Eval
     if (bs == null)
       bs = bsA();
-    if (bs.cardinality() == 0)
+    if (bs.isEmpty())
       return;
     ms.setAtomCoordsRelative(offset, bs);
     checkMinimization();
@@ -7415,7 +7415,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public void invertSelected(P3 pt, P4 plane, int iAtom, BS invAtoms) {
     // Eval
     BS bs = bsA();
-    if (bs.cardinality() == 0)
+    if (bs.isEmpty())
       return;
     ms.invertSelected(pt, plane, iAtom, invAtoms, bs);
     checkMinimization();
@@ -7425,7 +7425,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public void moveAtoms(M4 m4, M3 mNew, M3 rotation, V3 translation, P3 center,
                         boolean isInternal, BS bsAtoms, boolean translationOnly) {
     // from TransformManager exclusively
-    if (bsAtoms.cardinality() == 0)
+    if (bsAtoms.isEmpty())
       return;
     ms.moveAtoms(m4, mNew, rotation, translation, bsAtoms, center, isInternal,
         translationOnly);
@@ -7470,7 +7470,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       actionRotateBond(deltaX, deltaY, x, y);
     } else {
       bsSelected = setMovableBitSet(bsSelected, !asAtoms);
-      if (bsSelected.cardinality() != 0) {
+      if (!bsSelected.isEmpty()) {
         if (isTranslation) {
           P3 ptCenter = ms.getAtomSetCenter(bsSelected);
           tm.finalizeTransformParameters();
@@ -8872,7 +8872,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public void calculatePartialCharges(BS bsSelected) throws JmolAsyncException {
-    if (bsSelected == null || bsSelected.cardinality() == 0)
+    if (bsSelected == null || bsSelected.isEmpty())
       bsSelected = getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
     int pt = bsSelected.nextSetBit(0);
     if (pt < 0)
@@ -9009,7 +9009,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (bsAtoms == null)
       bsAtoms = getModelUndeletedAtomsBitSet(getVisibleFramesBitSet().length() - 1);
     BS bsB = new BS();
-    if (bsAtoms.cardinality() == 0)
+    if (bsAtoms.isEmpty())
       return bsB;
     int modelIndex = ms.at[bsAtoms.nextSetBit(0)].mi;
     if (modelIndex != ms.mc - 1)
@@ -9324,7 +9324,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   void dragMinimizeAtom(int iAtom) {
     stopMinimization();
-    BS bs = (getMotionFixedAtoms().cardinality() == 0 ? ms.getAtoms(
+    BS bs = (getMotionFixedAtoms().isEmpty() ? ms.getAtoms(
         (ms.isAtomPDB(iAtom) ? T.group : T.molecule),
         BSUtil.newAndSetBit(iAtom)) : BSUtil.setAll(ms.ac));
     try {

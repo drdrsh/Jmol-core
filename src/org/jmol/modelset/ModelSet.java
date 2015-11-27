@@ -667,7 +667,7 @@ public class ModelSet extends BondCollection {
     // full models are deleted for any model containing the specified atoms
     includeAllRelatedFrames(bsModels);
 
-    int nModelsDeleted = BSUtil.cardinalityOf(bsModels);
+    int nModelsDeleted = bsModels.cardinality();
     if (nModelsDeleted == 0)
       return null;
 
@@ -1309,14 +1309,14 @@ public class ModelSet extends BondCollection {
         ptCenter.add(at[i]);
       }
     }
-    if (nPoints > 0)
+    if (nPoints > 1)
       ptCenter.scale(1.0f / nPoints);
     return ptCenter;
   }
 
   public P3 getAverageAtomPoint() {
     if (averageAtomPoint == null)
-      (averageAtomPoint = new P3()).setT(getAtomSetCenter(vwr.getAllAtoms()));
+      averageAtomPoint = getAtomSetCenter(vwr.getAllAtoms());
     return averageAtomPoint;
   }
 
@@ -2709,7 +2709,7 @@ public class ModelSet extends BondCollection {
           + " pseudo-hbond calculation");
       calcRasmolHydrogenBonds(bsA, bsB, null, false, Integer.MAX_VALUE, false,
           bsHBonds);
-      return -BSUtil.cardinalityOf(bsHBonds);
+      return -bsHBonds.cardinality();
     }
     Logger.info(haveHAtoms ? "Standard Hbond calculation"
         : "Jmol pseudo-hbond calculation");

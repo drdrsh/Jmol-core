@@ -358,13 +358,6 @@ public void initShape() {
       return;
     }
 
-    if ("coords" == propertyName) {
-      Lst<SV> pts = (Lst<SV>) value;
-      for (int i = 0, n = pts.size(); i < n; i++)
-        vData.addLast(new Object[] { Integer.valueOf(PT_COORD), SV.ptValue(pts.get(i)) }); 
-      return;
-    }
-
     if ("offset" == propertyName) {
       offset = V3.newV((P3) value);
       if (thisMesh != null)
@@ -373,9 +366,9 @@ public void initShape() {
     }
 
     if ("atomSet" == propertyName) {
-      if (BSUtil.cardinalityOf((BS) value) == 0)
-        return;
       BS bsAtoms = (BS) value;
+      if (bsAtoms.isEmpty())
+        return;
       vData.addLast(new Object[] { Integer.valueOf(PT_BITSET), bsAtoms });
       //nbitsets++;
       if (isCircle && diameter == 0 && width == 0)
@@ -383,9 +376,13 @@ public void initShape() {
       return;
     }
 
+    if ("coords" == propertyName) {
+      addPoints(PT_COORD, value, false);
+      return;
+    }
+
     if ("modelBasedPoints" == propertyName) {
-      vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_BASED_POINTS),
-          value });
+      addPoints(PT_MODEL_BASED_POINTS, value, true);
       return;
     }
 
@@ -419,7 +416,27 @@ public void initShape() {
     setPropertySuper(propertyName, value, bs);
   }
 
- private void deleteModels(int modelIndex) {
+  private void addPoints(int type, Object value, boolean allowNull) {
+    @SuppressWarnings("unchecked")
+    Lst<SV> pts = (Lst<SV>) value;
+    Integer key = Integer.valueOf(type);
+    for (int i = 0, n = pts.size(); i < n; i++) {
+      SV v = pts.get(i);
+      P3 pt;
+      switch (v.tok) {
+      case T.bitset:
+        if (!allowNull && ((BS) v.value).isEmpty())
+          continue;
+        pt = vwr.ms.getAtomSetCenter((BS) v.value);
+        break;
+      default:
+        pt = SV.ptValue(v);
+      }
+      vData.addLast(new Object[] { key, pt });
+    }
+  }
+
+private void deleteModels(int modelIndex) {
    //int firstAtomDeleted = ((int[])((Object[])value)[2])[1];
    //int nAtomsDeleted = ((int[])((Object[])value)[2])[2];
    for (int i = meshCount; --i >= 0;) {
@@ -1034,7 +1051,7 @@ private void initDraw() {
     return;
   }
 
-  protected void scale(Mesh mesh, float newScale) {
+  private void scale(Mesh mesh, float newScale) {
     DrawMesh dmesh = (DrawMesh) mesh;
     /*
      * allows for Draw to scale object
@@ -1149,7 +1166,7 @@ private void initDraw() {
     T3 v = pickedMesh.vs[pickedMesh.pis[pickedModel][pickedVertex]];
     int modelIndex = pickedMesh.modelIndex;
     BS bs = ((DrawMesh) pickedMesh).modelFlags;
-    if (modelIndex < 0 && bs != null && BSUtil.cardinalityOf(bs) == 1)
+    if (modelIndex < 0 && BSUtil.cardinalityOf(bs) == 1)
       modelIndex = bs.nextSetBit(0);
     Map<String, Object> map = null;
     if (action != 0)
@@ -1323,7 +1340,7 @@ private void initDraw() {
     return (pickedMesh != null);
   }
 
-  protected String getCommand(Mesh mesh) {
+  private String getCommand(Mesh mesh) {
     if (mesh != null)
       return getCommand2(mesh, mesh.modelIndex);
 
@@ -1339,7 +1356,7 @@ private void initDraw() {
     return sb.toString();
   }
 
-  protected String getCommand2(Mesh mesh, int iModel) {
+  private String getCommand2(Mesh mesh, int iModel) {
     DrawMesh dmesh = (DrawMesh) mesh;
     if (!dmesh.isValid || 
         dmesh.drawType == EnumDrawType.NONE  

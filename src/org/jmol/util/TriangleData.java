@@ -357,7 +357,7 @@ public class TriangleData implements Triangulator {
           i++;
       }
       //System.out.println();
-      int nPoints = BSUtil.cardinalityOf(bsPoints);
+      int nPoints = bsPoints.cardinality();
       P3[] pts = new P3[nPoints];
       v.addLast(pts);
       int[]list = new int[12];

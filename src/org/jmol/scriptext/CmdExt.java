@@ -276,7 +276,7 @@ public class CmdExt extends ScriptExt {
     LabelToken[] tokens = (asIdentity ? null : isAtoms ? labeler.compile(
         vwr, label, '\0', null) : labeler.compile(vwr, label, '\1',
         htValues));
-    int nmax = (haveIndex ? 1 : BSUtil.cardinalityOf(bs));
+    int nmax = (haveIndex ? 1 : bs.cardinality());
     String[] sout = new String[nmax];
     P3 ptTemp = new P3();
     for (int j = (haveIndex ? index : bs.nextSetBit(0)); j >= 0; j = bs
@@ -4790,7 +4790,7 @@ public class CmdExt extends ScriptExt {
       switch (tokAt(++i)) {
       case T.bitset:
       case T.expressionBegin:
-        pt = P3.newP(vwr.ms.getAtomSetCenter(atomExpressionAt(i)));
+        pt = vwr.ms.getAtomSetCenter(atomExpressionAt(i));
         vwr.toFractional(pt, true);
         i = eval.iToken;
         break;

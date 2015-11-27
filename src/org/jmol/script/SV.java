@@ -122,7 +122,7 @@ public class SV extends T implements JSONEncodable {
   static int sizeOf(T x) {
     switch (x == null ? nada : x.tok) {
     case bitset:
-      return BSUtil.cardinalityOf(bsSelectToken(x));
+      return bsSelectToken(x).cardinality();
     case on:
     case off:
       return -1;
@@ -549,7 +549,7 @@ public class SV extends T implements JSONEncodable {
 //    case matrix4f:
       return (int) fValue(x);
     case bitset:
-      return BSUtil.cardinalityOf(bsSelectToken(x));
+      return bsSelectToken(x).cardinality();
     case barray:
       return ((BArray) x.value).data.length;
     default:
@@ -881,10 +881,10 @@ public class SV extends T implements JSONEncodable {
       if (tokenIn.value instanceof BondSet) {
         bs = BondSet.newBS((BS) tokenIn.value,
             ((BondSet) tokenIn.value).associatedAtoms);
-        len = BSUtil.cardinalityOf(bs);
+        len = bs.cardinality();
       } else {
         bs = BSUtil.copy((BS) tokenIn.value);
-        len = (isInputSelected ? 1 : BSUtil.cardinalityOf(bs));
+        len = (isInputSelected ? 1 : bs.cardinality());
       }
       break;
     case barray:

@@ -393,7 +393,7 @@ class PointGroup {
   private final static int ATOM_COUNT_MAX = 100;
 
   private boolean getPointsAndElements(T3[] atomset) {
-    int ac = BSUtil.cardinalityOf(bsAtoms);
+    int ac = bsAtoms.cardinality();
     if (isAtoms && ac > ATOM_COUNT_MAX)
       return false;
     points = new P3[ac];

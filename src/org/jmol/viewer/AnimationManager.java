@@ -173,7 +173,7 @@ public class AnimationManager {
   }
 
   void setDisplay(BS bs) {
-    bsDisplay = (bs == null || bs.cardinality() == 0? null : BSUtil.copy(bs));
+    bsDisplay = (bs == null || bs.isEmpty() ? null : BSUtil.copy(bs));
   }
 
   public void setMorphCount(int n) {
