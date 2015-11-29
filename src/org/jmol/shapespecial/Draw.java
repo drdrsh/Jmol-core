@@ -880,7 +880,8 @@ private void initDraw() {
       if (nVertices == 3 && isPlane)
         isPlane = false;
       length = Float.MAX_VALUE;
-      thisMesh.diameter = 0;
+      if (isVector)
+        thisMesh.diameter = 0;
     } else if (nVertices == 2 && isVector) {
       ptList[1].add(ptList[0]);
     }

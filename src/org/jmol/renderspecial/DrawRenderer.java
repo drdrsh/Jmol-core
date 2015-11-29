@@ -133,20 +133,24 @@ public class DrawRenderer extends MeshRenderer {
       if (diameter == 0)
         diameter = 1;
     }
-    if ((dmesh.isVector) && dmesh.haveXyPoints) {
-      int ptXY = 0;
-      // [x y] or [x,y] refers to an xy point on the screen
-      // just a Point3f with z = Float.MAX_VALUE
-      //  [x y %] or [x,y %] refers to an xy point on the screen
-      // as a percent 
-      // just a Point3f with z = -Float.MAX_VALUE
-      for (int i = 0; i < 2; i++)
-        if (vertices[i].z == Float.MAX_VALUE
-            || vertices[i].z == -Float.MAX_VALUE)
-          ptXY += i + 1;
-      if (--ptXY < 2) {
-        renderXyArrow(ptXY);
-        return;
+    if (dmesh.haveXyPoints) {
+      if (dmesh.isVector) {
+        int ptXY = 0;
+        // [x y] or [x,y] refers to an xy point on the screen
+        // just a Point3f with z = Float.MAX_VALUE
+        //  [x y %] or [x,y %] refers to an xy point on the screen
+        // as a percent 
+        // just a Point3f with z = -Float.MAX_VALUE
+        for (int i = 0; i < 2; i++)
+          if (vertices[i].z == Float.MAX_VALUE
+              || vertices[i].z == -Float.MAX_VALUE)
+            ptXY += i + 1;
+        if (--ptXY < 2) {
+          renderXyArrow(ptXY);
+          return;
+        }
+      } else if (drawType == Draw.EnumDrawType.POINT){
+        renderXyPoint();
       }
     }
     int tension = 5;
@@ -353,7 +357,26 @@ public class DrawRenderer extends MeshRenderer {
     }
   }
 
+  private void renderXyPoint() {
+    // new in Jmol 14.5
+    pt0.setT(vertices[0]);
+    if (diameter == 0)
+      diameter = (int) width;
+    if (pt0.z == -Float.MAX_VALUE) {
+      pt0.x *= vwr.tm.width / 100f;
+      pt0.y *= vwr.tm.height / 100f;
+      diameter = (int) (diameter * vwr.getScreenDim() / 100f);
+    }
+    if (g3d.isAntialiased())
+      diameter *= 2;
+    pt0.y = vwr.tm.height - pt0.y;
+    pt0.z = vwr.tm.cameraDistance;
+    pt1i.set((int) pt0.x, (int) pt0.y, (int) pt0.z);
+    g3d.fillSphereI(diameter, pt1i);
+  }
+
   private void renderXyArrow(int ptXY) {
+    // only 0 or 1 here; so ptXYZ is 1 or 0
     int ptXYZ = 1 - ptXY;
     P3[] arrowPt = new P3[2];
     arrowPt[ptXYZ] = pt1;

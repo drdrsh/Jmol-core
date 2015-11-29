@@ -44,10 +44,13 @@ public class UnitCellIterator implements AtomIndexIterator {
    * @param atom
    * @param atoms
    * @param bsAtoms
-   * @param distance <= 0 indicates that distance will be set later, probably from a point
+   * @param distance
+   *        <= 0 indicates that distance will be set later, probably from a
+   *        point
    * @return
    */
-  public UnitCellIterator set(SymmetryInterface unitCell, Atom atom, Atom[] atoms, BS bsAtoms, float distance) {
+  public UnitCellIterator set(SymmetryInterface unitCell, Atom atom,
+                              Atom[] atoms, BS bsAtoms, float distance) {
     this.unitCell = unitCell;
     this.atoms = atoms;
     addAtoms(bsAtoms);
@@ -95,13 +98,15 @@ public class UnitCellIterator implements AtomIndexIterator {
       if (max.z < p.z)
         max.z = p.z;
     }
-    minXYZ = P3i.new3((int)Math.floor(min.x), (int)Math.floor(min.y), (int)Math.floor(min.z));
-    maxXYZ = P3i.new3((int)Math.ceil(max.x), (int)Math.ceil(max.y), (int)Math.ceil(max.z));
+    minXYZ = P3i.new3((int) Math.floor(min.x), (int) Math.floor(min.y),
+        (int) Math.floor(min.z));
+    maxXYZ = P3i.new3((int) Math.ceil(max.x), (int) Math.ceil(max.y),
+        (int) Math.ceil(max.z));
     if (Logger.debugging)
       Logger.info("UnitCellIterator minxyz/maxxyz " + minXYZ + " " + maxXYZ);
     t = P3i.new3(minXYZ.x - 1, minXYZ.y, minXYZ.z);
     nextCell();
-   }
+  }
 
   @Override
   public void addAtoms(BS bsAtoms) {
@@ -109,7 +114,7 @@ public class UnitCellIterator implements AtomIndexIterator {
     if (done)
       return;
     unitList = new Lst<P3[]>();
-    String cat = "";  
+    String cat = "";
     M4[] ops = unitCell.getSymmetryOperations();
     int nOps = ops.length;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
@@ -123,7 +128,7 @@ public class UnitCellIterator implements AtomIndexIterator {
           unitCell.unitize(pt);
           unitCell.toCartesian(pt, false);
         } else {
-          unitCell.toUnitCell(pt, null);          
+          unitCell.toUnitCell(pt, null);
         }
         String key = "_" + (int) (pt.x * 100) + "_" + (int) (pt.y * 100) + "_"
             + (int) (pt.z * 100) + "_";
@@ -151,9 +156,9 @@ public class UnitCellIterator implements AtomIndexIterator {
     }
     return false;
   }
-        
+
   private boolean nextCell() {
-    if (done) 
+    if (done)
       return false;
     if (++t.x >= maxXYZ.x) {
       t.x = minXYZ.x;
@@ -176,7 +181,7 @@ public class UnitCellIterator implements AtomIndexIterator {
   public int next() {
     return (done || ipt < 0 ? -1 : getAtom().i);
   }
-  
+
   private Atom getAtom() {
     return ((Atom) unitList.get(listPt)[0]);
   }
@@ -190,7 +195,7 @@ public class UnitCellIterator implements AtomIndexIterator {
   public P3 getPosition() {
     Atom a = getAtom();
     if (Logger.debugging)
-      Logger.info("draw ID p_" + nFound  + " " + p + " //" + a + " " + t);
+      Logger.info("draw ID p_" + nFound + " " + p + " //" + a + " " + t);
     if (this.p.distanceSquared(a) < 0.0001f)
       return a;
     Point3fi p = new Point3fi();

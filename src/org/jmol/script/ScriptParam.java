@@ -553,6 +553,40 @@ abstract public class ScriptParam extends ScriptError {
     return pt;
   }
 
+  public P4 xyzpParameter(int index) throws ScriptException {
+    // [x y z] or [x,y,z] refers to an xy point on the screen
+    //     return a P4 with w = Float.MAX_VALUE
+    // [x y z%] or [x,y,z %] refers to an xyz point on the screen
+    // as a percent
+    //     return a P4 with w = -Float.MAX_VALUE
+
+    int tok = tokAt(index);
+    if (tok == T.spacebeforesquare)
+      tok = tokAt(++index);
+    if (tok != T.leftsquare || !isFloatParameter(++index))
+      return null;
+    P4 pt = new P4();
+    pt.x = floatParameter(index);
+    if (tokAt(++index) == T.comma)
+      index++;
+    if (!isFloatParameter(index))
+      return null;
+    pt.y = floatParameter(index);
+    if (tokAt(++index) == T.comma)
+      index++;
+    if (!isFloatParameter(index))
+      return null;
+    pt.z = floatParameter(index);
+    boolean isPercent = (tokAt(++index) == T.percent);
+    if (isPercent)
+      ++index;
+    if (tokAt(index) != T.rightsquare)
+      return null;
+    iToken = index;
+    pt.w = (isPercent ? -1 : 1) * Float.MAX_VALUE;
+    return pt;
+  }
+
   public String optParameterAsString(int i) throws ScriptException {
     if (i >= slen)
       return "";

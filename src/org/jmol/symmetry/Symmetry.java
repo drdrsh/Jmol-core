@@ -378,11 +378,10 @@ public class Symmetry implements SymmetryInterface {
   public boolean checkUnitCell(SymmetryInterface uc, P3 cell, P3 ptTemp,
                                boolean isAbsolute) {
     uc.toFractional(ptTemp, isAbsolute);
-    float slop = 0.02f;
     // {1 1 1} here is the original cell
-    return (ptTemp.x >= cell.x - 1f - slop && ptTemp.x <= cell.x + slop
-        && ptTemp.y >= cell.y - 1f - slop && ptTemp.y <= cell.y + slop
-        && ptTemp.z >= cell.z - 1f - slop && ptTemp.z <= cell.z + slop);
+    return (ptTemp.x >= cell.x - 1f - SimpleUnitCell.SLOP && ptTemp.x <= cell.x + SimpleUnitCell.SLOP
+        && ptTemp.y >= cell.y - 1f - SimpleUnitCell.SLOP && ptTemp.y <= cell.y + SimpleUnitCell.SLOP
+        && ptTemp.z >= cell.z - 1f - SimpleUnitCell.SLOP && ptTemp.z <= cell.z + SimpleUnitCell.SLOP);
   }
 
   @Override

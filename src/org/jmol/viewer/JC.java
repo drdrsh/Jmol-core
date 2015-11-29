@@ -67,7 +67,8 @@ public final class JC {
     "pubchem", "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
     "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
-    "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary"
+    "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
+    "am", "'http://rruff.geo.arizona.edu/AMS/CIF_text_files/'+load('http://rruff.geo.arizona.edu/AMS/minerals/%FILE').split(\"viewJmol('\")[%n].split(\"'\")[1]+'_cif.txt'"
   };
   
   public static String[] macros = {
@@ -561,6 +562,7 @@ public final class JC {
     "@ssSegments within(dssr,'ssSegments')",
     "@stacks within(dssr,'stacks')",
     "@stems within(dssr,'stems')",
+    
   };
   
   // these are only updated once per file load or file append
@@ -627,7 +629,18 @@ public final class JC {
     "@spine protein&_a>=1&_a<4|nucleic&(_a>=6&_a<11|_a=13)",
     "@sidechain (protein,nucleic) & !backbone",
     "@base nucleic & !backbone",
-    "@dynamic_flatring search('[a]')"
+    "@dynamic_flatring search('[a]')",
+
+    //periodic table
+    "@nonmetal _H,_He,_C,_N,_O,_F,_Ne,_S,_P,_Cl,_Ar,_Se,_Br,_Kr,_I,_Xe,_At,_Rn",
+    "@noblegas _He,_Ne,_Ar,_Kr,_Xe,_Rn",
+    "@metal !nonmetal",
+    "@alkaliMetal _Li,_Na,_K,_Rb,_Cs,_Fr",
+    "@alkalineEarth _Be,_Mg,_Ca,_Sr,_Ba,_Ra",
+    "@semimetal _B,_Si,_Ge,_As,_Sb,_Te,_Po",
+    "@transitionMetal elemno>=21&elemno<=30|elemno>=39&elemno<=48|elemno>=72&elemno<=80|elemno>=104&elemno<=112",
+    "@lanthanide elemno>=57&elemno<=71",
+    "@actinide elemno>=89&elemno<=103",
 
     //    "@hetero", handled specially
 

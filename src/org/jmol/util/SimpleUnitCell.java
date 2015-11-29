@@ -373,18 +373,22 @@ public class SimpleUnitCell {
     cell.z = (nnn % f) + offset;
   }
 
+  public final static float SLOP = 0.02f;
+  private final static float SLOP1 = 1 - SLOP;
+
   /**
    * calculate weighting of 1 (interior), 0.5 (face), 0.25 (edge), or 0.125 (vertex)
    * @param pt
+   * @param tolerance fractional allowance to consider this on an edge
    * @return weighting
    */
   public static float getCellWeight(P3 pt) {
     float f = 1;
-    if (pt.x == 0)
+    if (pt.x <= SLOP || pt.x >= SLOP1)
       f /= 2;
-    if (pt.y == 0)
+    if (pt.y <= SLOP || pt.y >= SLOP1)
       f /= 2;
-    if (pt.z == 0)
+    if (pt.z <= SLOP || pt.z >= SLOP1)
       f /= 2;
     return f;
   }

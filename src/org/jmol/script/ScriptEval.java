@@ -4407,7 +4407,7 @@ public class ScriptEval extends ScriptExpr {
         if (isSmiles) {
           filename = "$" + filename;
         } else {
-          if (filename.indexOf("[]") >= 0)
+          if (filename.equals("String[]"))
             return;
           if (filename.indexOf("[") == 0) {
             filenames = Escape.unescapeStringArray(filename);
@@ -4439,7 +4439,7 @@ public class ScriptEval extends ScriptExpr {
         i++;
 
       // for whatever reason, we don't allow a filename with [] in it.
-      if (filename.indexOf("[]") >= 0)
+      if (filename.equals("String[]"))
         return;
       // MANIFEST "..."
       if ((tok = tokAt(i)) == T.manifest) {
@@ -4580,7 +4580,7 @@ public class ScriptEval extends ScriptExpr {
       } else if (!isData) {
         if (localName != null)
           localName = vwr.fm.getFilePath(localName, false, false);
-        if (!filename.equals("string") && !filename.equals("string[]"))
+        if (!filename.equals("string") && !filename.equals("String[]"))
           loadScript.append("/*file*/").append(
               (localName != null ? PT.esc(localName) : "$FILENAME$"));
       }

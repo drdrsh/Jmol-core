@@ -362,8 +362,7 @@ abstract public class JmolGenericPopup extends GenericSwingPopup {
     int i = modelSetFileName.lastIndexOf(".");
     isZapped = (JC.ZAP_TITLE.equals(modelSetName));
     if (isZapped || "string".equals(modelSetFileName)
-        || "files".equals(modelSetFileName)
-        || "string[]".equals(modelSetFileName))
+        || "String[]".equals(modelSetFileName))
       modelSetFileName = "";
     modelSetRoot = modelSetFileName.substring(0,
         i < 0 ? modelSetFileName.length() : i);

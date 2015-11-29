@@ -889,32 +889,42 @@ public class GlobalSettings {
       return structureList;
     }
 
-    String resolveDataBase(String database, String id, String format) {
-      if (format == null) {
-        if ((format = databases.get(database.toLowerCase())) == null)
-          return null;
-        if (id.indexOf("/") < 0) {
-          if (database.equals("pubchem"))
-            id = "name/" + id;
-          else if (database.equals("nci"))
-            id += "/file?format=sdf&get3d=True";
-        }
-      } else if (id.indexOf(".") >= 0 && format.indexOf("%FILE.") >= 0) {
-        // replace RCSB format extension when a file extension is made explicit 
-        format = format.substring(0, format.indexOf("%FILE"));
+  String resolveDataBase(String database, String id, String format) {
+    if (format == null) {
+      if ((format = databases.get(database.toLowerCase())) == null)
+        return null;
+      int pt = id.indexOf("/");
+      if (pt < 0) {
+        if (database.equals("pubchem"))
+          id = "name/" + id;
+        else if (database.equals("nci"))
+          id += "/file?format=sdf&get3d=True";
       }
-      try {
-        while (format.indexOf("%c") >= 0)
-          for (int i = 1; i < 10; i++) {
-            format = PT.rep(format, "%c" + i, id.substring(i - 1, i));
-          }
-      } catch (Exception e) {
-        // too bad.
+      if (format.startsWith("'")) {
+        // needs evaluation
+        int n = (pt > 0 ? PT.parseInt(id.substring(pt + 1)) : 0);
+        if (n > 0)
+          n++;
+        if (pt > 0)
+          id = id.substring(0, pt);
+        format = PT.rep(format, "%n", "" + n);
       }
-      return (format.indexOf("%FILE") >= 0 ? PT.formatStringS(format, "FILE", id)
-          : format.indexOf("%file") >= 0 ? PT.formatStringS(format, "file",
-              id.toLowerCase()) : format + id);
+    } else if (id.indexOf(".") >= 0 && format.indexOf("%FILE.") >= 0) {
+      // replace RCSB format extension when a file extension is made explicit 
+      format = format.substring(0, format.indexOf("%FILE"));
     }
+    try {
+      while (format.indexOf("%c") >= 0)
+        for (int i = 1; i < 10; i++) {
+          format = PT.rep(format, "%c" + i, id.substring(i - 1, i));
+        }
+    } catch (Exception e) {
+      // too bad.
+    }
+    return (format.indexOf("%FILE") >= 0 ? PT.formatStringS(format, "FILE", id)
+        : format.indexOf("%file") >= 0 ? PT.formatStringS(format, "file",
+            id.toLowerCase()) : format + id);
+  }
   
     static boolean doReportProperty(String name) {
       return (name.charAt(0) != '_' && unreportedProperties.indexOf(";" + name

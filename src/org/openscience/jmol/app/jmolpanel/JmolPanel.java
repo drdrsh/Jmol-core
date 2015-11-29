@@ -1576,7 +1576,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   static final String chemFileProperty = "chemFile";
 
   void notifyFileOpen(String fullPathName, String title) {
-    if (fullPathName == null || !fullPathName.equals("file[]")) {
+    if (fullPathName == null || !fullPathName.equals("String[]")) {
       int pt = (fullPathName == null ? -1 : fullPathName.lastIndexOf("|"));
       if (pt > 0)
         fullPathName = fullPathName.substring(0, pt);

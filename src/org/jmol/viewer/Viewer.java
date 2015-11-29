@@ -139,7 +139,8 @@ import org.jmol.viewer.binding.Binding;
  * 
  * The JmolViewer runs on Java 1.5+ virtual machines. The 3d graphics rendering
  * package is a software implementation of a z-buffer. It does not use Java3D
- * and does not use Graphics2D from Java 1.2. 
+ * and does not use Graphics2D from Java 1.2. "
+ * 
  * 
  * public here is a test for applet-applet and JS-applet communication the idea
  * being that applet.getProperty("jmolViewer") returns this Viewer object,
@@ -1851,7 +1852,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
                               Map<String, Object> htParams, SB loadScript) {
     if (fileName == null)
       return null;
-    if (fileName.indexOf("[]") >= 0) {
+    if (fileName.equals("String[]")) {
       // no reloading of string[] or file[] data -- just too complicated
       return null;
     }
@@ -1863,7 +1864,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     boolean haveFileData = (htParams.containsKey("fileData"));
     if (fileName.indexOf('$') == 0)
       htParams.put("smilesString", fileName.substring(1));
-    boolean isString = (fileName.equalsIgnoreCase("string") || fileName
+    boolean isString = (fileName.equals("string") || fileName
         .equals(JC.MODELKIT_ZAP_TITLE));
     String strModel = null;
     if (haveFileData) {
@@ -2287,7 +2288,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     String filename = fm.getFullPathName(false);
     if (filename.equals("string") || filename.equals(JC.MODELKIT_ZAP_TITLE))
       return ms.getInlineData(am.cmi);
-    if (filename.indexOf("[]") >= 0)
+    if (filename.equals("String[]"))
       return filename;
     if (filename == "JSNode")
       return "<DOM NODE>";
@@ -3906,7 +3907,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
           int pt = f.indexOf("/");
           String database = f.substring(0, pt);
           f = g.resolveDataBase(database, f.substring(pt + 1), null);
-          return (f == null ? name : f);
+          if (f != null && f.startsWith("'"))
+            f = evaluateExpression(f).toString();
+          return (f == null || f.length() == 0 ? name : f);
         } catch (Exception e) {
           return name;
         }

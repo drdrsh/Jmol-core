@@ -565,7 +565,7 @@ abstract class OutputManager {
     fileName = fullPath[0];
     String pathName = (type.equals("FILE") ? vwr.fm.getFullPathName(false) : null);
     boolean getCurrentFile = (pathName != null && (pathName.equals("string")
-        || pathName.indexOf("[]") >= 0 || pathName.equals("JSNode")));
+        || pathName.equals("String[]") || pathName.equals("JSNode")));
     boolean asBytes = (pathName != null && !getCurrentFile);
     if (asBytes) {
       pathName = vwr.getModelSetPathName();
