@@ -902,9 +902,9 @@ public class GlobalSettings {
       }
       if (format.startsWith("'")) {
         // needs evaluation
+        // xxxx.n means "the nth item"
+        pt = id.indexOf(".");
         int n = (pt > 0 ? PT.parseInt(id.substring(pt + 1)) : 0);
-        if (n > 0)
-          n++;
         if (pt > 0)
           id = id.substring(0, pt);
         format = PT.rep(format, "%n", "" + n);

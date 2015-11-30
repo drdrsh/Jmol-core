@@ -698,6 +698,8 @@ public class CifReader extends AtomSetCollectionReader {
         || (isLigand = key.equals("_chem_comp_atom_comp_id"))) {
       if (!processAtomSiteLoopBlock(isLigand))
         return;
+      if (thisDataSetName.equals("global"))
+        asc.setCollectionName(thisDataSetName = chemicalName);
       asc.setAtomSetName(thisDataSetName);
       asc.setCurrentModelInfo("chemicalName", chemicalName);
       asc.setCurrentModelInfo("structuralFormula", thisStructuralFormula);

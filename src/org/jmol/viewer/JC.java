@@ -68,7 +68,7 @@ public final class JC {
     "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
     "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
-    "am", "'http://rruff.geo.arizona.edu/AMS/CIF_text_files/'+load('http://rruff.geo.arizona.edu/AMS/minerals/%FILE').split(\"viewJmol('\")[%n].split(\"'\")[1]+'_cif.txt'"
+    "am", "'http://rruff.geo.arizona.edu/AMS/CIF_text_files/'+load('http://rruff.geo.arizona.edu/AMS/minerals/%FILE').split(\"viewJmol('\")[(%n == 0 ? 0 : %n + 1)].split(\"'\")[1]+'_cif.txt'"
   };
   
   public static String[] macros = {
