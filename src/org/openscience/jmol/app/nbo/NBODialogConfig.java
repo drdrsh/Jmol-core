@@ -31,6 +31,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -43,17 +44,24 @@ import javajs.util.SB;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
+import javax.swing.plaf.metal.MetalComboBoxUI;
 
 import org.jmol.i18n.GT;
 import org.jmol.viewer.Viewer;
@@ -66,53 +74,39 @@ abstract class NBODialogConfig extends JDialog {
 
   protected static final String DEFAULT_PARAMS = "PLOT CMO DIPOLE STERIC";
 
-  protected static final int PANEL_RIGHT = -1;
-  protected static final int PANEL_CENTER = -2;
-  protected static final int PANEL_TOP = -3;
-  protected static final int PANEL_MODEL_SELECT = 1;
-  protected static final int PANEL_RUN_SELECT = 2;
-  protected static final int PANEL_VIEW_SELECT = 3;
-  protected static final int PANEL_SEARCH_SELECT = 4;
-  protected static final int PANEL_RUN_FILE = 5;
-  protected static final int PANEL_SEARCH_CENTER = 6;
-  protected static final int PANEL_STATUS = 7;
-  protected static final int PANEL_SEARCH_OUT = 0;
-
   abstract protected boolean connect();
-  abstract protected void goRunClicked(String defaultParams, File inputFile, Runnable load47Done);
-  abstract protected void showWorkpathDialogR(String st);
-  abstract protected void showWorkpathDialogM(String st, String type);
-  abstract protected void showWorkpathDialogV(String st);
-  abstract protected void showWorkpathDialogS(String st);
+  abstract protected void goRunClicked(String defaultParams, String ess, File inputFile, Runnable load47Done);
+  abstract protected boolean showWorkpathDialogM(String st, String type);
+  abstract protected void readInputFile(File f);
+  abstract protected void showWorkpathDialog(String s);
+  abstract protected void setBonds(String[] atoms, String key);
   
-  protected NBOPanel topPanel,statusPanel;
+  protected JPanel topPanel,statusPanel;
 
   protected NBOService nboService;
   protected boolean haveService;
   boolean isJmolNBO;
+  protected JLabel icon;
   
   protected Viewer vwr;
 
-  protected JButton nboPathButton, browse, helpBtn, modelButton,runButton,viewButton,searchButton;  
+  protected JButton browse, helpBtn, modelButton,runButton,viewButton,searchButton;  
   protected JButton[] mainButtons;
-  protected JTextField Field;
-  protected JTextField dataPathLabel;
   protected JTextField serverPathLabel;
+  protected JCheckBox jCheckAtomNum;
+  protected JCheckBox jCheckNboView;
   
-  protected JScrollPane editPane2;
   protected JLabel statusLab = new JLabel();
-
-  protected JComboBox<String> action, module;
-  protected JTextPane fileText;
-  protected JButton go;
+  protected Hashtable<String,String> lonePairs;
 
   protected String reqInfo;
 
   protected JTextPane jpNboOutput;
+  protected String bodyText = "";
 
   protected String jobStem;
-  JLabel icon;
   protected Font nboFont = new Font("Monospaced", Font.BOLD, 16);
+  protected boolean nboView = false;
 
   /**
    * Creates a dialog for getting info related to output frames in nbo format.
@@ -124,33 +118,29 @@ abstract class NBODialogConfig extends JDialog {
     super(f, GT._("NBO Server Interface"), false);
   }
 
-  protected void setComponents(Component comp){
-    if(comp.equals(topPanel)||comp.equals(statusPanel)){
-      setComponents2(comp);
-      return;
-    }
-    if(comp instanceof JTextField)
+  protected void setComponents(Component comp, Color forColor, Color backColor){
+    if(comp instanceof JTextField ||comp instanceof JTextPane || comp instanceof JButton)
       return;
     if(comp instanceof JComboBox)
-      return;
-    comp.setForeground(Color.BLACK);
+      comp.setBackground(new Color(248,248,248));
+    if(forColor!=null)comp.setForeground(forColor);
+    if(backColor!=null)comp.setBackground(backColor);
     if(comp instanceof Container){
-      comp.setBackground(Color.WHITE);
       for(Component c:((Container)comp).getComponents()){
-        setComponents(c);
+        setComponents(c, forColor, backColor);
       }
     }
   }
   
-  protected void setComponents2(Component comp){
-    comp.setForeground(Color.WHITE);
-    if(comp instanceof Container){
-      comp.setBackground(Color.BLACK);
-      for(Component c:((Container)comp).getComponents()){
-        setComponents2(c);
-      }
+  protected void enableComponentsR(Component c,boolean b){
+    c.setEnabled(b);
+    if(c instanceof Container){
+      if(!(c instanceof JComboBox)) c.setVisible(true);
+      if(c.equals(topPanel)) return;
+      for(Component c2:((Container) c).getComponents())
+        enableComponentsR(c2,b);
     }
-  }
+  }  
   
   protected void buildConfig(Container p) {
     p.removeAll();
@@ -159,7 +149,7 @@ abstract class NBODialogConfig extends JDialog {
     p.add(topPanel,BorderLayout.NORTH);
     p.add(statusPanel,BorderLayout.SOUTH);
     p.add(buildFilePanel(),BorderLayout.CENTER);
-    centerDialog(this);
+    placeNBODialog(this);
   }
   
   private JPanel buildFilePanel() {
@@ -175,7 +165,7 @@ abstract class NBODialogConfig extends JDialog {
     serverPathLabel.setText(nboService.serverPath);
     box.add(serverPathLabel);
     box.add(new JLabel("  "));
-    nboPathButton = new JButton("Browse...");
+    JButton nboPathButton = new JButton("Browse...");
     nboPathButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -193,6 +183,7 @@ abstract class NBODialogConfig extends JDialog {
     box.add(b);
     filePanel.add(box, BorderLayout.NORTH);
     (jpNboOutput = new JTextPane()).setFont(new Font("Arial",Font.PLAIN,16));
+    jpNboOutput.setContentType("text/html");
     JScrollPane p = new JScrollPane();
     p.getViewport().add(jpNboOutput);
     p.setBorder(BorderFactory.createTitledBorder(new TitledBorder("NBO Output:")));
@@ -204,16 +195,27 @@ abstract class NBODialogConfig extends JDialog {
    * Top panel with logo/modules/file choosing options
    * @return top panel
    */
-  protected NBOPanel buildTopPanel(){
-    NBOPanel p = new NBOPanel(this,PANEL_TOP);
-    Font f = new Font("Arial",Font.BOLD,20);
-    p.add(modelButton).setFont(f);
-    p.add(runButton).setFont(f);
-    p.add(viewButton).setFont(f);
-    p.add(searchButton).setFont(f);
-    p.add(Box.createRigidArea(new Dimension(15,0)));
-    p.add(icon=new JLabel());
+  protected JPanel buildTopPanel(){
+    JPanel p = new JPanel();
+    p.add(modelButton);
+    p.add(Box.createRigidArea(new Dimension(10,0)));
+    p.add(runButton);
+    p.add(Box.createRigidArea(new Dimension(10,0)));
+    p.add(viewButton);
+    p.add(Box.createRigidArea(new Dimension(10,0)));
+    p.add(searchButton);
+    p.add(Box.createRigidArea(new Dimension(10,0)));
+    p.add(Box.createRigidArea(new Dimension(100,0)));
+    JButton btn = new JButton("About");
+    btn.setFont(new Font("Arial",Font.PLAIN,14));
+    btn.setForeground(Color.WHITE);
+    btn.setBackground(Color.BLACK);
+    btn.setBorder(null);
+    p.add(btn);
+    icon = new JLabel();
+    p.add(icon);
     p.setBackground(Color.BLACK);
+    p.setPreferredSize(new Dimension(500,60));
     return p;
   }
 
@@ -223,17 +225,30 @@ abstract class NBODialogConfig extends JDialog {
     c.gridx=0;
     c.gridy=0;
     c.fill=GridBagConstraints.BOTH;
-    (tfFolder = new JTextField()).setPreferredSize(new Dimension(130,20));
+    if(tfFolder == null)
+      (tfFolder = new JTextField()).setPreferredSize(new Dimension(110,20));
     tfFolder.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        //browse.setSelected(true)
-        showWorkpathDialogM(tfFolder.getText()+"/new",null);
+        if(dialogMode == DIALOG_MODEL)
+          showWorkpathDialogM(null,null);
+        else
+          showWorkpathDialog(workingPath);
       }
     });
     p.add(tfFolder,c);
     c.gridx=1;
-    (tfName = new JTextField()).setPreferredSize(new Dimension(100,20));
+    if(tfName == null)
+      (tfName = new JTextField()).setPreferredSize(new Dimension(100,20));
+    tfName.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if(dialogMode == DIALOG_MODEL)
+          showWorkpathDialogM(null,null);
+        else
+          showWorkpathDialog(workingPath);
+      }
+    });
     p.add(tfName,c);
     c.gridx=0;
     c.gridy=1;
@@ -243,33 +258,26 @@ abstract class NBODialogConfig extends JDialog {
     c.gridx=2;
     c.gridy=0;
     (tfExt = new JTextField()).setPreferredSize(new Dimension(40,20));
+    tfExt.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if(dialogMode == DIALOG_MODEL)
+          showWorkpathDialogM(null,null);
+        else
+          showWorkpathDialog(workingPath);
+      }
+    });
+    if(this.dialogMode!=DIALOG_VIEW&&this.dialogMode!=DIALOG_SEARCH){
     p.add(tfExt,c);
     c.gridy=1;
     p.add(new JLabel("  ext"),c);
+    }
     c.gridx=3;
     c.gridy=0;
     c.gridheight=2;
     p.add(browse,c);
-    //p.setPreferredSize(new Dimension(350, 70));
     return p;
   }
-  
-  /*protected NBOPanel buildRightPanel() {
-
-    NBOPanel p = new NBOPanel(this, PANEL_SEARCH_OUT);
-    p.setLayout(new BorderLayout());
-
-    TitledBorder editTitle = BorderFactory.createTitledBorder("NBO Output");
-    p.setBorder(editTitle);
-    nboOutput = new JTextPane();
-    nboOutput.setContentType("text/plain");
-    nboOutput.setFont(nboFont);
-    editPane2 = new JScrollPane();
-    editPane2.getViewport().add(nboOutput);
-    p.add(editPane2, BorderLayout.CENTER);
-    return p;
-  }*/
-
 
   protected void rawCmd(String name, final String cmd, final int mode) {
     nboService.queueJob(name, null, new Runnable() {
@@ -307,6 +315,8 @@ abstract class NBODialogConfig extends JDialog {
   protected void showNBOPathDialog() {
     JFileChooser myChooser = new JFileChooser();
     String fname = serverPathLabel.getText();
+    myChooser.setFileFilter(new FileNameExtensionFilter("exe", "exe"));
+    myChooser.setFileHidingEnabled(true);
     myChooser.setSelectedFile(new File(fname));
     int button = myChooser.showDialog(this, GT._("Select"));
     if (button == JFileChooser.APPROVE_OPTION) {
@@ -317,7 +327,6 @@ abstract class NBODialogConfig extends JDialog {
       serverPathLabel.setText(path);
       nboService.serverPath = path;
       saveHistory();
-      pack();
     }
   }
 
@@ -325,30 +334,34 @@ abstract class NBODialogConfig extends JDialog {
    * Centers the dialog on the screen.
    * @param d 
    */
-  protected void centerDialog(JDialog d) {
+  protected void centerDialog(JDialog d){
+    int x = this.getWidth()/2  - d.getWidth()/2 + this.getX();
+    int y = this.getHeight()/2 - d.getHeight()/2;
+    d.setLocation(x,y);
+  }
+  
+  protected void placeNBODialog(JDialog d) {
     Dimension screenSize = d.getToolkit().getScreenSize();
     Dimension size = d.getSize();
-//    screenSize.height = screenSize.height / 2;
-//    screenSize.width = screenSize.width / 2;
-//    size.height = size.height / 2;
-//    size.width = size.width / 2;
-    int y = //screenSize.height - size.height;
-    d.getParent().getY();
+    int y = d.getParent().getY();
     int x = Math.min(screenSize.width - size.width,
     d.getParent().getX()+d.getParent().getWidth());
     d.setLocation(x, y);
   }
   
-  protected void appendOutputWithCaret(String line) {
+  protected void appendOutputWithCaret(String line, char format) {
+    if(line.trim().equals("")) return;
+    String fontFamily = jpNboOutput.getFont().getFamily();
     if (jpNboOutput == null)
       return;
-    if (line.length() > 1)
-      jpNboOutput.setText(jpNboOutput.getText() + line + "\n");
-    try {
-    jpNboOutput.setCaretPosition(jpNboOutput.getText().length());
-    } catch (Exception e) {
-      System.out.println(e + " in appendOutputWithCaret");
-    }
+    if (line.trim().length() >= 1)
+      if(format == 'p')
+        jpNboOutput.setText("<html><body style=\"font-family: " + fontFamily + "\"" +
+            (bodyText = bodyText + line + "<br>") + "</html>" );
+      else
+        jpNboOutput.setText("<html><body style=\"font-family: " + fontFamily + "\"" +
+            (bodyText = bodyText + "<"+format+">"+line + "</"+format+"><br>") + "</html>" );
+    jpNboOutput.setCaretPosition(jpNboOutput.getDocument().getLength());
   }
   
   protected void appendOutput(String cmd) {
@@ -356,39 +369,10 @@ abstract class NBODialogConfig extends JDialog {
   }
 
   protected void clearOutput(){
-    jpNboOutput.setText("");
-  }
-
-  /**
-   * builds the three panels
-   * 
-   * @param p
-   * @param type
-   * @return Dimension of this panel
-   */
-
-  protected Dimension setPreferredSPanelSize(NBOPanel p, int type) {
-    switch (type) {
-    case PANEL_TOP:
-      return new Dimension(p.getParent().getWidth(), 85);
-    case PANEL_MODEL_SELECT:
-      return new Dimension((int) (p.getParent().getWidth() * .6667), (int) (p
-          .getParent().getHeight()*.7));
-    case PANEL_SEARCH_CENTER:
-      return new Dimension((int) (p.getParent().getWidth() * .5), (int) (p
-          .getParent().getHeight()*.7));
-    case PANEL_SEARCH_SELECT:
-      return new Dimension((int) (p.getParent().getWidth() * (.25)), (int) (p
-          .getParent().getHeight()*.7));
-    case PANEL_SEARCH_OUT:
-      return new Dimension((int) (p.getParent().getWidth() * (.25)), (int) (p
-          .getParent().getHeight()*.7));
-    case PANEL_STATUS:
-      return new Dimension(p.getParent().getWidth(), (int) (p.getParent().getHeight()*.05));
-    default:
-      return new Dimension(p.getParent().getWidth() / 3, (int) (p.getParent()
-          .getHeight()*.7));
-    }
+    bodyText = "";
+    String fontFamily = jpNboOutput.getFont().getFamily();
+    jpNboOutput.setText("<html><body style=\"font-family: " + fontFamily +
+        bodyText + "</html>" );
   }
 
   protected void appendToFile(String s, SB sb) {
@@ -407,20 +391,65 @@ abstract class NBODialogConfig extends JDialog {
   protected Runnable showWorkPathDone = new Runnable() {
     @Override
     public void run() {
-      nboService.runScriptNow("load " + inputFile.toString());
-      nboService.runScriptNow("refresh");
+      nboService.runScriptQueued("load " + inputFile.toString() +";refresh");
+      //jmolAtomCount = ;
+      while(vwr.ms.ac==0){
+        try{
+          Thread.sleep(10);
+        }catch(Exception e){}
+      }
+      setBonds(null,null);
+      if(nboView){
+        String s = nboService.runScriptNow("print {*}.bonds");
+        nboService.runScriptQueued("select "+s+";color bonds lightgrey; wireframe 0.1");
+      }
+      if(jCheckAtomNum.isSelected())
+        showAtomNums();
     }
   };
   
+  /**
+   * Sets color scheme to emulate look of NBO view
+   */
+  protected void setNBOColorScheme(){
+    nboView = true;
+    String atomColors = "";
+    String fname = "org/openscience/jmol/app/nbo/help/atomColors.txt";
+    try {
+      atomColors = GuiMap.getResourceString(this, fname);
+    } catch (IOException e) {
+      // TODO
+    }
+    nboService.runScriptNow(atomColors);
+    String s = nboService.runScriptNow("print {*}.bonds");
+    nboService.runScriptQueued("select "+s+";color bonds lightgrey; wireframe 0.1");
+    nboService.runScriptQueued("nbo color yellow [134,254,253]; nbo fill nomesh translucent 0.3");
+    nboService.runScriptNow("refresh");
+  }
+  
+  /**
+   * Resets Jmol look and feel
+   */
+  protected void resetColorScheme(){
+    nboView = false;
+    nboService.runScriptNow("background black;set defaultcolors Jmol;refresh;nbo mesh translucent 1");
+  }
+  
   protected void setInputFile(File inputFile, String useExt, final Runnable whenDone){
+    clearInputFile();
     this.inputFile = inputFile;
     if (inputFile.getName().indexOf(".") > 0)
       jobStem = getJobStem(inputFile);
     tfFolder.setText(inputFile.getParent());
     tfName.setText(jobStem);
     tfExt.setText(useExt);
-    jmolAtomCount = nboService.evaluateJmol("{*}.count").asInt();
+    //jmolAtomCount = nboService.evaluateJmol("{*}.count").asInt();
     if (getExt(inputFile).equals("47")){
+      if((inputFile.getParent()+"/").equals(nboService.serverDir)){
+        JOptionPane.showMessageDialog(this, "Select a directory that does not contain the NBOServe executable," +
+        		"\nor select a new location for your NBOServe executable");
+        return;
+      }
       isJmolNBO = true;
       workingPath = inputFile.toString();
       saveWorkHistory();
@@ -432,18 +461,68 @@ abstract class NBODialogConfig extends JDialog {
             whenDone.run();
         }
       };
-      if (!newNBOFile(inputFile, "46").exists()) {
-        goRunClicked(DEFAULT_PARAMS, inputFile, load47Done);
+      readInputFile(inputFile);
+      File f = newNBOFile(inputFile, "46");
+      if (!f.exists()||f.length()==0) {
+        showConfirmationDialog("Plot files not found. Run now with PLOT keyword?", inputFile,"47",2);
         return;
       }
       load47Done.run();
     }
   }
   
+  protected abstract void showConfirmationDialog(String st, final File newFile, final String ext, final int mode);
+  
+  protected void showNboOutput(String f){
+    String data = nboService.getFileData(f);
+    JDialog d = new JDialog();
+    d.setLayout(new BorderLayout());
+    JTextPane p = new JTextPane();
+    JScrollPane sp = new JScrollPane();
+    sp.getViewport().add(p);
+    p.setEditable(false);
+    p.setText(data);
+    d.add(sp,BorderLayout.CENTER);
+    centerDialog(d);
+    d.setSize(new Dimension(500,500));
+    d.setVisible(true);
+  }
+  protected Runnable showRunDone;
+  
+  protected void showSelected(String[] s){
+    nboService.runScriptQueued("select remove {*}");
+    for(String x:s)
+      nboService.runScriptQueued("select add {*}["+x+"]");
+    nboService.runScriptQueued("select on");
+  } 
+  
+  protected void showAtomNums(){
+    if(!jCheckAtomNum.isSelected()){
+      nboService.runScriptQueued("select {*};label off; select remove {*}");
+      return;
+    }
+    nboService.runScriptQueued("select {*};label %a;");
+    if(lonePairs!=null){
+      for(String x: lonePairs.keySet()){
+        if(!lonePairs.get(x).equals("0"))
+          nboService.runScriptQueued("select (atomno=" + x + ");label (" + lonePairs.get(x) + ") %a");
+      }
+    }
+    if(nboView)
+    nboService.runScriptQueued("select {*};color labels white;select {H*};color labels black;" +
+    		"set labeloffset 0 0 {*}; select remove {*};");
+    else
+
+      nboService.runScriptQueued("select {*};color labels black;" +
+          "set labeloffset 0 0 {*}; select remove {*};");
+  }
+  
   // useful file manipulation methods
   
   protected File newNBOFile(File f, String ext) {
     String fname = f.toString();
+    if(fname.lastIndexOf(".")<0)
+      return new File(fname+"."+ext);
     return new File(fname.substring(0, fname.lastIndexOf(".")) + "." + ext);
   }
 
@@ -884,6 +963,30 @@ abstract class NBODialogConfig extends JDialog {
       htHelp.put(key, help);
     }
     return help;
+  }
+  
+
+  class StyledComboBoxUI extends MetalComboBoxUI {
+    int height;
+    int width;
+    StyledComboBoxUI(int h, int w){
+      super();
+      height = h;
+      width=w;
+    }
+    @Override
+    protected ComboPopup createPopup() {
+      BasicComboPopup popup = new BasicComboPopup(comboBox) {
+        @Override
+        protected Rectangle computePopupBounds(int px,int py,int pw,int ph) {
+          return super.computePopupBounds(
+              px,py,Math.max(width,pw),height
+          );
+        }
+      };
+      popup.getAccessibleContext().setAccessibleParent(comboBox);
+      return popup;
+    }
   }
 
 }

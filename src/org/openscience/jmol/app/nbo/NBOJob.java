@@ -23,6 +23,11 @@
  */
 package org.openscience.jmol.app.nbo;
 
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.JOptionPane;
+
 import org.jmol.util.Logger;
 
 /**
@@ -39,12 +44,14 @@ class NBOJob {
   String name;
   String statusInfo;
   String err;
+  String errFile;
   
   NBOJob(NBOService service, String name, String statusInfo, Runnable process) {
     this.service = service;
     this.name = name;
     this.statusInfo = statusInfo;
     this.process = process;
+    errFile = service.serverDir+"/nboerr$$.dat";
   }
 
   public void run() {
@@ -55,7 +62,18 @@ class NBOJob {
     process.run();
     if (service.nboDialog != null)
       service.nboDialog.setStatus(null);
-    Logger.info("NBO job " + name + " ended ms:" + (System.currentTimeMillis() - startTime));      
+    File f = new File(errFile);
+    if(f.length()>0){
+      String error = service.getFileData(errFile);
+      service.nboDialog.showErrorFile(errFile);
+      try {
+        service.writeToFile("", new File(errFile));
+      } catch (IOException e) {
+       // TODO
+      }
+    }
+    Logger.info("NBO job " + name + " ended ms:" + (System.currentTimeMillis() - startTime));  
+    
   }
 
 }

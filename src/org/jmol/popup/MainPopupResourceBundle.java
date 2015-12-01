@@ -1007,7 +1007,7 @@ public class MainPopupResourceBundle extends PopupResource {
           "isosurface delete resolution 0 vdw color range -0.1 0.1 map MEP translucent" },
       { "surfOpaque", "mo opaque;isosurface opaque" },
       { "surfTranslucent", "mo translucent;isosurface translucent" },
-      { "surfOff", "mo delete;isosurface delete;select *;dots off" },
+      { "surfOff", "mo delete;isosurface delete;var ~~sel = {selected};select *;dots off;select ~~sel" },
       { "FILEMOLload",
       "save orientation;load \"\";restore orientation;center" },
       { "FILEUNITone",

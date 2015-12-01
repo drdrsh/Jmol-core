@@ -1231,10 +1231,9 @@ public class SV extends T implements JSONEncodable {
    * @param args
    * @param pt
    *        0: to JSON, 5: to base64, 12: to bytearray, 22: to array
-   * @param array2D
    * @return formatted string
    */
-  public static Object format(SV[] args, int pt, boolean array2D) {
+  public static Object format(SV[] args, int pt) {
     switch (args.length) {
     case 0:
       return "";
@@ -1766,5 +1765,18 @@ public class SV extends T implements JSONEncodable {
       Collections.sort(getList(), new Sort(0, key));
     }
     return this;
+  }
+
+  /**
+   * Safely create a JSON key - object pair, allowing for already-named arrays
+   * 
+   * @param key
+   * @param property
+   * @return JSON object
+   */
+  public static Object safeJSON(String key, Object property) {
+    return "{"
+        + (property instanceof SV ? PT.esc(key) + " : " + format(new SV[] { null, (SV) property },
+            0) : PT.toJSON(key, property)) + "}";
   }
 }

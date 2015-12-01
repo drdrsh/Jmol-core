@@ -1626,7 +1626,7 @@ public class MathExt {
     Object property = vwr.getProperty(null, propertyName, propertyValue);
     if (pt < args.length)
       property = vwr.extractProperty(property, args, pt);
-    return mp.addXObj(isJSON ? "{" + PT.toJSON("value", property) + "}" : SV
+    return mp.addXObj(isJSON ? SV.safeJSON("value", property) : SV
         .isVariableType(property) ? property : Escape.toReadable(propertyName,
         property));
   }
@@ -1665,7 +1665,7 @@ public class MathExt {
       if (pt >= 0 && args.length != 2)
         return false;
       if (pt >= 0 || args.length < 2 || args[1].tok != T.varray) {
-        Object o = SV.format(args, pt, false); 
+        Object o = SV.format(args, pt); 
         return (format.equalsIgnoreCase("json") ? mp.addXStr((String)o) : mp.addXObj(o));
       }
       // fill an array with applied formats
@@ -1674,7 +1674,7 @@ public class MathExt {
       String[] sa = new String[a.size()];
       for (int i = sa.length; --i >= 0;) {
         args2[1] = a.get(i);
-        sa[i] = SV.format(args2, pt, true).toString();
+        sa[i] = SV.format(args2, pt).toString();
       }
       return mp.addXAS(sa);
     }
@@ -2389,20 +2389,34 @@ public class MathExt {
       Object pt = Escape.uP(s);
       return (pt instanceof P3 ? mp.addXPt((P3) pt) : mp.addXStr("" + pt));
     case 2:
-      // to/from screen coordinates
       P3 pt3;
       switch (args[1].tok) {
       case T.off:
-        if ((pt3 = SV.ptValue(args[0])) == null)
-          return false;
-        // these are screen coordinates
-        vwr.tm.unTransformPoint(pt3, pt3);
-        break;
       case T.on:
-        if ((pt3 = SV.ptValue(args[0])) == null)
+        // to/from screen coordinates
+        switch (args[0].tok) {
+        case T.point3f:
+          pt3 = P3.newP((T3) args[0].value);
+          break;
+        case T.bitset:
+          pt3 = vwr.ms.getAtomSetCenter(SV.bsSelectVar(args[0]));
+          break;
+        default:
           return false;
-        // this is TO screen coordinates
-        vwr.tm.transformPt3f(pt3, pt3);
+        }
+        if (args[1].tok == T.on) {
+          // this is TO screen coordinates, 0 at bottom left
+          vwr.tm.transformPt3f(pt3, pt3);
+          pt3.y = vwr.tm.height - pt3.y;
+          if (vwr.antialiased)
+            pt3.scale(0.5f);
+        } else {
+          // this is FROM screen coordinates
+          if (vwr.antialiased)
+            pt3.scale(2f);
+          pt3.y = vwr.tm.height - pt3.y;
+          vwr.tm.unTransformPoint(pt3, pt3);          
+        }
         break;
       case T.point3f:
         // unitcell transform

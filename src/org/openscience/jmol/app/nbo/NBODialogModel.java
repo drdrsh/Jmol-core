@@ -24,15 +24,19 @@
 package org.openscience.jmol.app.nbo;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -51,63 +55,69 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jmol.i18n.GT;
+import org.openscience.jmol.app.jmolpanel.GuiMap;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
 
 abstract class NBODialogModel extends NBODialogConfig {
 
   private static final String INPUT_FILE_EXTENSIONS = 
-      ";adf;cfi;gau;gms;jag;mm2;mnd;mp;nw;orc;pqs;qc;vfi;";
+      ";adf;cfi;gau;gms;jag;mm2;mnd;mp;nw;orc;pqs;qc;vfi;g09;com";
 
-  private static final String[] SAVE_OPTIONS = { 
-      "-Type-", 
-      "(.adf) ADF",
-      "(.cfi) Cartesian Coordinate", 
-      "(.gau) Gaussian", 
-      "(.gms) GAMESS",
-      "(.jag) Jaguar", 
-      "(.mm2) MM2-type", 
-      "(.mnd) MINDO/AM1", 
-      "(.mp) Molpro",
-      "(.nw) NWChem", 
-      "(.orc) Orca", 
-      "(.pqs) PQS", 
-      "(.qc) Q-Chem",
-      "(.vfi) Valence Coordinate" 
+  private static final String[] SAVE_OPTIONS = {
+    "",
+    "JMol Cartesian   [.cfi]",
+    "JMol Valence     [.vfi]",
+    "Gaussian Input   [.gau]",
+    "GAMESS Input     [.gms]",
+    "ADF Input        [.adf]", 
+    "Jaguar Input     [.jag]", 
+    "MM2-Input        [.mm2]",
+    "Dewar Type Input [.mnd]",
+    "Molpro Input     [.mp]", 
+    "NWChem Input     [.nw]",
+    "Orca Input       [.orc]", 
+    "PQS Input        [.pqs]", 
+    "Q-Chem Input     [.qc]"
   };
 
-  private final static int ALTER = 1, CLIP = 2, MUTATE = 3;
+  private final static int ALTER = 4, CLIP = 2, MUTATE = 1;
+  protected final static int VALUE = 5;
 
   private static final String LOAD_SCRIPT = ";set zoomlarge false;zoomTo 0.5 {*} 0;";
+  protected static final int CONFIRM_SAVE = 0, CONFIRM_VIEWOUTPUT = 1;
 
   protected abstract void nboResetV();
 
-  private int editMode;
-  private String savePath;
-  private String selected = "";
+  protected int editMode;
+  protected String savePath;
+  protected String selected = "";
   
   protected String usePath;
-  protected JComboBox<String> jComboUse, jComboSave;
   protected Box editBox;
-  protected JButton jbEdit, jbSym;
   protected JTextField jtSelectAtoms, tfFolderS, tfNameS, tfExtS;
-  protected JCheckBox jCheckAtomNum;
-  protected JRadioButton jrJmolIn, jrLineIn, jrFileIn;
   protected JTextField jtJmolInput, jtLineInput;
+  protected JButton jbEdit;
+  protected static final Color titleColor = new Color(0,128,255);
+  
+  final static protected Font titleFont = new Font("Arial",Font.BOLD,18);
 
 
   protected NBODialogModel(JFrame f) {
@@ -115,9 +125,6 @@ abstract class NBODialogModel extends NBODialogConfig {
   }
 
   protected void buildModel(Container p) {
-    java.util.Properties props = JmolPanel.historyFile.getProperties();
-    savePath = (props.getProperty("savePath", System.getProperty("user.home")));
-    usePath = (props.getProperty("usePath", System.getProperty("user.home")));
     p.removeAll();
     p.setLayout(new BorderLayout());
     if (topPanel == null)
@@ -126,49 +133,106 @@ abstract class NBODialogModel extends NBODialogConfig {
     JPanel leftPanel = new JPanel();
     leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
     leftPanel.add(useBox());
-    leftPanel.add(saveBox());
-    leftPanel.add(editBox());
+    leftPanel.add(editBox()).setVisible(false);
+    leftPanel.add(saveBox()).setVisible(false);
     JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel,
         modelOut());
-    sp.setDividerLocation(430);
+    sp.setDividerLocation(350);
     sp.setBorder(BorderFactory.createLoweredBevelBorder());
     p.add(sp, BorderLayout.CENTER);
     p.add(statusPanel, BorderLayout.PAGE_END);
     if (vwr.ms.ac != 0 && !isJmolNBO) {
       loadModel();
-      enableComps();
+      enableComponentsR(this,true);
+    }else if(isJmolNBO){
+      loadModel(inputFile.getParent(),jobStem,"47");
+      tfExt.setText("47");
+      enableComponentsR(this,true);
     }
   }
+  
+  protected String editAction;
 
   private Component editBox() {
     JPanel p = new JPanel();
-    p.setBorder(new TitledBorder("Edit"));
-    Box b2 = Box.createVerticalBox();
-    p.add(b2);
-    Box box = Box.createHorizontalBox();
-    //box.add(new JLabel("EDIT  ")).setFont(new Font("Arial", Font.BOLD, 25));
-    String[] actions = { "-Action-",
-        "alter - atomic charge, distance, angle, or dihedral angle", "clip - ",
-        "fuse - ", "link - ", "mutate - ", "rebond - ", "switch - ",
-        "twist - ", "unify - ", " 3chb - " };
-    (action = new JComboBox<String>(actions)).setEnabled(false);
-    box.add(action);
-    action.addActionListener(new ActionListener() {
+    p.setLayout(new BoxLayout(p,BoxLayout.X_AXIS));
+    JLabel title = new JLabel(" Edit Model ");
+    Box box = Box.createVerticalBox();
+    title.setBackground(titleColor);
+    title.setAlignmentX(0.0f);
+    title.setFont(titleFont);
+    title.setOpaque(true);
+    box.add(title);
+    title.setForeground(Color.WHITE);
+    box.add(p);
+    box.setAlignmentX(0.0f);
+    p.setAlignmentX(0.0f);
+    p.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+    Box b = Box.createVerticalBox();
+    final String[] actions = {"Alter","Clip","Fuse","Link", "Mutate", "Switch","Twist"};
+    JRadioButton[] btns = new JRadioButton[actions.length];
+    ButtonGroup rg = new ButtonGroup();
+    for(int i=0;i<actions.length;i++){
+      btns[i]=new JRadioButton(actions[i]);
+      b.add(btns[i]);
+      rg.add(btns[i]);
+      final int op = i;
+      btns[i].addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        actionSelected();
+        editAction = actions[op].toLowerCase();
+        actionSelected(editAction);
+        clearSelected();
       }
-    });
-    box.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 5));
-    b2.add(box).setMaximumSize(new Dimension(500, 60));
+      });
+    }
+
+    p.add(b);
+    b = Box.createVerticalBox();
     editBox = Box.createVerticalBox();
     editBox.setBorder(BorderFactory.createLoweredBevelBorder());
-    editBox.add(Box.createRigidArea(new Dimension(200, 60)));
+    editBox.setMaximumSize(new Dimension(275,200));
+    editBox.add(Box.createRigidArea(new Dimension(250, 75)));
+    editBox.setAlignmentX(0.5f);
+    JButton sym = new JButton("Symmetry?");
+    JButton getVal = new JButton("Current Value?");
+    getVal.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if(selected.trim().equals(""))
+          vwr.alert("Select atoms");
+        else {
+        String[] ats = selected.split(" ");
+        if(ats.length == 1){
+          vwr.alert("Atom number: " + nboService.runScriptNow("print {*}["+selected+"].elemno"));
+        }else{
+          String script = "print measure(";
+          for(String x:ats)
+            script += "{*}[" + x +"]";
+          script += ")";
+            vwr.alert(nboService.runScriptNow(script));
+        }}
+      }
+    });
+    sym.setAlignmentX(0.5f);
+    sym.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        getSymmetry();
+      }
+    });
+    Box box2 = Box.createHorizontalBox();
+    box2.add(getVal);
+    box2.add(sym);
+    b.add(box2);
+    b.add(editBox);
+    p.add(b);
     jtSelectAtoms = new JTextField("Select atoms...");
+    jtSelectAtoms.setMaximumSize(new Dimension(200,30));
     jtSelectAtoms.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        editModel();
+        editModel(editAction);
       }
     });
     jtSelectAtoms.getDocument().addDocumentListener(new DocumentListener() {
@@ -188,68 +252,48 @@ abstract class NBODialogModel extends NBODialogConfig {
           jbEdit.setEnabled(false);
       }
     });
-    (jbEdit = new JButton("Apply")).addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        editModel();
-      }
-    });
-    b2.add(editBox);
-    //modelPanel.add(new JSeparator());
-    jbSym = new JButton("Symmety");
-    box = Box.createVerticalBox();
-    box.setAlignmentX(0.5f);
-    box.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 5));
-    jbSym.setAlignmentX(0.5f);
-    box.add(jbSym).setEnabled(false);
-    jbSym.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        getSymmetry();
-      }
-    });
-    box.add(Box.createRigidArea(new Dimension(30, 30)));
-    jCheckAtomNum = new JCheckBox("View atom numbers");
-    jCheckAtomNum.setEnabled(false);
-    jCheckAtomNum.setAlignmentX(0.5f);
-    jCheckAtomNum.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if (!jCheckAtomNum.isSelected())
-          nboService.runScriptQueued("select {*};label off");
-        else
-          nboService.runScriptQueued("select {*};label %a");
-        nboService.runScriptQueued("color labels white;select remove {*}");
-      }
-    });
-    box.add(jCheckAtomNum);
-    b2.add(box);
-    return p;
+    return box;
   }
 
   private Component saveBox() {
     JPanel p = new JPanel();
-    p.setBorder(new TitledBorder("Save As"));
-    Box box = Box.createHorizontalBox();
+    p.setMaximumSize(new Dimension(350,150));
+    p.setLayout(new BoxLayout(p,BoxLayout.Y_AXIS));
+    Box b = Box.createVerticalBox();
+    b.setAlignmentX(0.0f);
+    JLabel title = new JLabel(" Save Model ");
+    title.setOpaque(true);
+    title.setBackground(titleColor);
+    title.setAlignmentX(0.0f);
+    title.setForeground(Color.white);
+    title.setFont(titleFont);
+    b.add(title);
+    b.add(p);
+    p.setAlignmentX(0.0f);
+    p.setBorder(BorderFactory.createLineBorder(Color.black));
 //    box.add(new JLabel("SAVE ")).setFont(new Font("Arial", Font.BOLD, 25));
-    (jComboSave = new JComboBox<String>(SAVE_OPTIONS)).setEnabled(false);
+    final JComboBox<String> jComboSave = new JComboBox<String>(SAVE_OPTIONS);
+    jComboSave.setEnabled(false);
+    jComboSave.setFont(nboFont);
     jComboSave.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         Object item = jComboSave.getSelectedItem();
-        if (!item.equals("-Type-")) {
+        if (jComboSave.getSelectedIndex()!=0) {
           String s = item.toString();
-          showSaveDialog(s.substring(s.indexOf("(") + 2, s.indexOf(")")));
+          String ext = s.substring(s.indexOf("[") + 2, s.indexOf("]"));
+          tfExtS.setText(ext);
+          //showSaveDialog(ext);
         }
       }
     });
-    Box b2 = Box.createVerticalBox();
-    b2.add(jComboSave);
-    b2.add(folderSaveBox());
-    box.add(b2);
-    box.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 5));
-    p.add(box);
-    return p;
+    p.add(jComboSave);
+    title = new JLabel("File type");
+    title.setAlignmentX(0.5f);
+    p.add(title);
+    p.add(folderSaveBox(jComboSave));
+    //p.setPreferredSize(new Dimension(430,50));
+    return b;
   }
 
   /**
@@ -259,54 +303,70 @@ abstract class NBODialogModel extends NBODialogConfig {
    */
   private Component useBox() {
     JPanel p = new JPanel();
-    p.setBorder(new TitledBorder("Structure"));
+    p.setMaximumSize(new Dimension(355,155));
+    p.setLayout(new BoxLayout(p,BoxLayout.Y_AXIS));
+    JLabel title = new JLabel(" Input Model ");
+    title.setAlignmentX(0.0f);
+    title.setBackground(titleColor);
+    title.setForeground(Color.white);
+    title.setFont(titleFont);
+    title.setOpaque(true);
+    Box box = Box.createVerticalBox();
+    box.add(title);
+    box.add(p);
+    p.setAlignmentX(0.0f);
+    box.setAlignmentX(0.0f);
+    p.setBorder(BorderFactory.createLineBorder(Color.black));
     Box b = Box.createHorizontalBox();
-    (jrJmolIn = new JRadioButton("Jmol Input")).setFont(nboFont);
+    final JRadioButton jrJmolIn = new JRadioButton("Jmol Input");
+    jrJmolIn.setFont(nboFont);
     jrJmolIn.setSelected(true);
-    jrJmolIn.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        browse.setEnabled(false);
-      }
-    });
-    (jrLineIn = new JRadioButton("Line Formula")).setFont(nboFont);
-    jrLineIn.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        browse.setEnabled(false);
-      }
-    });
-    (jrFileIn = new JRadioButton("File Input")).setFont(nboFont);
-    jrFileIn.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        browse.setEnabled(true);
-      }
-    });
+    final JRadioButton jrLineIn = new JRadioButton("Line Formula");
+    jrLineIn.setFont(nboFont);
+    final JRadioButton jrFileIn = new JRadioButton("File Input");
+    jrFileIn.setFont(nboFont);
     ButtonGroup rg = new ButtonGroup();
     rg.add(jrJmolIn);
     rg.add(jrLineIn);
     rg.add(jrFileIn);
     createInput(jtJmolInput = new JTextField(), jrJmolIn);
     createInput(jtLineInput = new JTextField(), jrLineIn);
-    String[] useOps = { "-Type-", "(.47) NBOarchive ", "(.adf) ADF ",
-        "(.cfi) Cartesian Coordinate", "(.gau) Gaussian", "(.gms) GAMESS",
-        "(.jag) Jaguar", "(.log) Gaussian log", "(.mp) Molpro", "(.nw) NWChem",
-        "(.orc) Orca", "(.pqs) PQS", "(.qc) Q-Chem",
-        "(.vfi) Valence Coordinate" };
-    (jComboUse = new JComboBox<String>(useOps))
-        .addActionListener(new ActionListener() {
+    jtLineInput.add(new JLabel("line formula"));
+    String[] useOps = {"-All File Types-",
+        "[.cfi]  JMol Cartesian",
+        "[.vfi]  JMol Valence",
+        "[.47]   NBO Archive",
+        "[.gau]  Gaussian Input",
+        "[.log]  Gaussian Output",
+        "[.gms]  GAMESS Input",
+        "[.adf]  ADF Input", 
+        "[.jag]  Jaguar Input", 
+        "[.mm2]  MM2-Input",
+        "[.mnd]  Dewar Type Input",
+        "[.mp]   Molpro Input", 
+        "[.nw]   NWChem Input",
+        "[.orc]  Orca Input", 
+        "[.pqs]  PQS Input", 
+        "[.qc]   Q-Chem Input"};
+    final JComboBox<String> jComboUse = new JComboBox<String>(useOps);
+    jComboUse.addActionListener(new ActionListener() {
           @Override
           public void actionPerformed(ActionEvent e) {
             Object item = jComboUse.getSelectedItem();
-            if (!item.equals("-Type-")) {
+            String tmp = tfExt.getText();
+            if (jComboUse.getSelectedIndex()!=0) {
               String s = item.toString();
-              showWorkpathDialogM(usePath,
-                  s.substring(s.indexOf("(") + 2, s.indexOf(")")));
+              s = s.substring(s.indexOf("[") + 2, s.indexOf("]"));
+              tfExt.setText(s);
+              if(!showWorkpathDialogM(usePath,s))
+                tfExt.setText(tmp);
+            }else{
+              tfExt.setText("");
+              if(!showWorkpathDialogM(null,null))
+                tfExt.setText(tmp);
             }
           }
         });
-    browse.setEnabled(false);
     JPanel p2 = new JPanel(new GridLayout(3, 2));
     p2.add(jrJmolIn);
     p2.add(jtJmolInput);
@@ -317,8 +377,9 @@ abstract class NBODialogModel extends NBODialogConfig {
     addListenersAndSize(jComboUse, jrFileIn);
     b.add(p2);
     p.add(b);
+    p.add(new JLabel("              file type"));
     p.add(folderBox());
-    return p;
+    return box;
   }
 
   private void createInput(final JTextField field, JRadioButton radio) {
@@ -373,11 +434,9 @@ abstract class NBODialogModel extends NBODialogConfig {
       }
 
     });
-    field.setMinimumSize(new Dimension(226, 25));
-    field.setMaximumSize(new Dimension(226, 25));
   }
 
-  private JPanel folderSaveBox() {
+  private JPanel folderSaveBox(final JComboBox<String> cBox) {
     JPanel b = new JPanel(new GridBagLayout());
     GridBagConstraints c = new GridBagConstraints();
     c.gridx = 0;
@@ -387,13 +446,19 @@ abstract class NBODialogModel extends NBODialogConfig {
     tfFolderS.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        //browse.setSelected(true)
-        showWorkpathDialogM(tfFolder.getText() + "/new", null);
+        showSaveDialog(tfExt.getText().equals("")?"cfi,vfi,47,gau,log,gms,adf,jag,mm2,mnd,mp,nw,orc,pqs,qc":tfExt.getText());
       }
     });
     b.add(tfFolderS, c);
+    tfFolderS.setText(savePath.substring(0,savePath.lastIndexOf("\\")));
     c.gridx = 1;
     (tfNameS = new JTextField()).setPreferredSize(new Dimension(100, 20));
+    tfNameS.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        showSaveDialog(tfExt.getText().equals("")?"cfi,vfi,47,gau,log,gms,adf,jag,mm2,mnd,mp,nw,orc,pqs,qc":tfExt.getText());
+      }
+    });
     b.add(tfNameS, c);
     c.gridx = 0;
     c.gridy = 1;
@@ -403,6 +468,12 @@ abstract class NBODialogModel extends NBODialogConfig {
     c.gridx = 2;
     c.gridy = 0;
     (tfExtS = new JTextField()).setPreferredSize(new Dimension(40, 20));
+    tfExtS.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        showSaveDialog(!tfExtS.getText().equals("")?tfExtS.getText():"cfi,vfi,47,gau,log,gms,adf,jag,mm2,mnd,mp,nw,orc,pqs,qc");
+      }
+    });
     b.add(tfExtS, c);
     c.gridy = 1;
     b.add(new JLabel("  ext"), c);
@@ -410,46 +481,137 @@ abstract class NBODialogModel extends NBODialogConfig {
     c.gridy = 0;
     c.gridheight = 2;
     JButton btn = new JButton("Save");
+    btn.setEnabled(jmolAtomCount>0);
     b.add(btn, c);
-    b.setPreferredSize(new Dimension(350, 50));
+    btn.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if(tfNameS.getText().trim().equals("")||tfExtS.getText().equals("")||cBox.getSelectedIndex()==0){
+          vwr.alert("Enter name and valid extension");
+          return;
+        }
+        showSaveDialog(!tfExtS.getText().equals("")?tfExtS.getText():"cfi,vfi,47,gau,log,gms,adf,jag,mm2,mnd,mp,nw,orc,pqs,qc");
+      }
+    });
+    //b.setPreferredSize(new Dimension(350, 50));
     return b;
   }
 
   /**
    * edit action selected
+   * @param selected 
    */
-  protected void actionSelected() {
-    nboService.runScriptQueued("select remove {*}; select on");
-    Object item = action.getSelectedItem().toString().split(" ")[0];
+  protected void actionSelected(String selected) {
+    //nboService.runScriptQueued("select remove {*}; select on");
+    String item = selected.split(" ")[0];
+    int cnt = selected.split(" ").length;
     if (item.equals("-Action-")) {
       return;
     } else if (item.equals("clip") || item.equals("fuse")
         || item.equals("link") || item.equals("switch")) {
       editMode = CLIP;
-      clip("Select two atoms:", null);
+      if(cnt > 2) selected = "";
+      clip(item,"Select two atoms:", null);
     } else if (item.equals("mutate")) {
+      if(cnt>1){
+        selected = "";
+        showSelected(selected.split(" "));
+      }
       editMode = MUTATE;
-      clip("Formula: ", jtSelectAtoms);
+      clip(item,"Formula: ", jtSelectAtoms);
     } else if (item.equals("rebond")) {
-      clip("Symtype: ", jtSelectAtoms);
-    } else if (item.equals("alter") || item.equals("twist")) {
+      if(cnt > 2) selected = "";
+      clip(item,"Symtype: ", jtSelectAtoms);
+    } else if (item.equals("alter") || item.equals("twist") || item.equals("value")) {
       editMode = ALTER;
-      clip("New Value: ", jtSelectAtoms);
+      clip(item,"New Value: ", jtSelectAtoms);
     }
-    setComponents(editBox);
   }
+  
+  protected JTextField currVal;
+  protected JTextField[] atomNumBox;
+  protected JLabel valLab;
 
-  protected void clip(String st, Component c) {
+  protected void clip(final String action, String st, Component c) {
     editBox.removeAll();
-    editBox.setMaximumSize(new Dimension(200, 60));
     Box box = Box.createHorizontalBox();
+    jbEdit = new JButton("Apply");
+    jbEdit.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        editModel(action);
+      }
+    });
     box.add(new JLabel(st));
+      Box b2 = Box.createHorizontalBox();
+      b2.add(new JLabel("Atoms: "));
+      atomNumBox = new JTextField[editMode];
+      //editMode encodes number of atoms that can be selected in each mode
+      for(int i=0;i<editMode;i++){
+        atomNumBox[i]=new JTextField();
+        final int num = i;
+        atomNumBox[i].addFocusListener(new FocusListener(){
+          @Override
+          public void focusGained(FocusEvent arg0) {
+            if(num==editMode-1){
+              jbEdit.setEnabled(true);
+            }
+          }
+          @Override
+          public void focusLost(FocusEvent arg0) {
+            int atnum = 0;
+            try{
+              atnum = Integer.parseInt(atomNumBox[num].getText());
+            }catch(Exception e){
+              return;
+            }
+            if(atnum>jmolAtomCount){
+              atomNumBox[num].setText("");
+            }
+            String[] tmp = new String[editMode];
+            selected = "";
+            for(int j = 0; j<atomNumBox.length;j++){
+              tmp[j] = atomNumBox[j].getText();
+              selected += (tmp[j].length()>0?tmp[j]+" ":"");
+            }
+            //getValue();
+            showSelected(selected.split(" "));
+            jtSelectAtoms.setText("");
+            jtSelectAtoms.setEnabled(true);
+          }
+        });
+        atomNumBox[i].addActionListener(new ActionListener(){
+        @Override
+        public void actionPerformed(ActionEvent e){
+          String[] tmp = new String[editMode];
+          selected = "";
+          for(int j = 0; j<atomNumBox.length;j++){
+            tmp[j] = atomNumBox[j].getText();
+            selected += (tmp[j].length()>0?tmp[j]+" ":"");
+          }
+          editModel(action);
+        }
+        });
+        b2.add(atomNumBox[i]).setMaximumSize(new Dimension(40,40));
+      }
+      editBox.add(b2);
+      if(selected.equals("")){
+        jtSelectAtoms.setText("Select atoms...");
+        jtSelectAtoms.setEnabled(false);
+      }else{
+        jtSelectAtoms.setText("");
+        jtSelectAtoms.setEnabled(true);
+      }
+    if (editMode == ALTER){
+      b2 = Box.createHorizontalBox();
+      b2.add(new JLabel("Current Value"));
+      b2.add(currVal = new JTextField()).setMaximumSize(new Dimension(200,40));
+      editBox.add(b2);
+      editBox.add(valLab = new JLabel(" "));
+    }
     if (c != null) {
-      jtSelectAtoms.setText("Select atoms...");
       box.add(c);
-      jtSelectAtoms.setEnabled(false);
-    } else
-      jtSelectAtoms.setText("");
+    } 
     editBox.add(box);
     box = Box.createHorizontalBox();
     JButton bu = new JButton("Clear Selected");
@@ -467,29 +629,37 @@ abstract class NBODialogModel extends NBODialogConfig {
   }
 
   protected void clearSelected() {
+    for(int i=0;i<editMode;i++)
+      atomNumBox[i].setText("");
+    if(currVal != null)
+      currVal.setText("");
+    if(valLab != null)
+      valLab.setText(" ");
     if (!jCheckAtomNum.isSelected())
       nboService.runScriptQueued("label off");
     nboService.runScriptQueued("measure off;select remove {selected};refresh");
     selected = "";
     jtSelectAtoms.setText("Select atoms...");
     jtSelectAtoms.setEnabled(false);
-    appendOutputWithCaret("Selection cleared");
+    jbEdit.setEnabled(false);
   }
 
   /**
    * apply edit to model
+   * @param item 
    */
-  protected void editModel() {
+  protected void editModel(String item) {
     SB sb = new SB();
-    String cmd = action.getSelectedItem().toString().split(" ")[0] + " "
+    String cmd = item + " "
         + selected;
-    selected = "";
     if (jtSelectAtoms != null)
-      cmd += " " + jtSelectAtoms.getText();
+      if(editMode == ALTER || editMode == MUTATE)
+        cmd += " " + jtSelectAtoms.getText();
     appendToFile("CMD " + cmd, sb);
-    appendOutput(cmd);
-    jbEdit.setEnabled(false);
+    appendOutputWithCaret(cmd,'i');
+    //jbEdit.setEnabled(false);
     modelCmd(sb);
+    clearSelected();
   }
 
   protected JPanel modelOut() {
@@ -499,11 +669,17 @@ abstract class NBODialogModel extends NBODialogConfig {
     lab.setFont(nboFont);
     s.add(lab, BorderLayout.PAGE_START);
     JScrollPane p1 = new JScrollPane();
+    if(jpNboOutput == null){
     jpNboOutput = new JTextPane();
     jpNboOutput.setEditable(false);
-    jpNboOutput.setFont(new Font("Arial", Font.PLAIN, 18));
+    jpNboOutput.setFont(new Font("Arial", Font.PLAIN, 16));
+    bodyText = "";
+    }
+    jpNboOutput.setContentType("text/html");
+    setComponents(s,Color.WHITE,Color.BLACK);
     p1.getViewport().add(jpNboOutput);
     s.add(p1, BorderLayout.CENTER);
+    JPanel box = new JPanel(new GridLayout(4,1));
     JButton b = new JButton("Clear");
     b.addActionListener(new ActionListener() {
       @Override
@@ -511,11 +687,14 @@ abstract class NBODialogModel extends NBODialogConfig {
         clearOutput();
       }
     });
-    s.add(b, BorderLayout.SOUTH);
+    box.add(b);
+    box.add(jCheckAtomNum);
+    box.add(jCheckNboView);
+    s.add(box, BorderLayout.SOUTH);
     return s;
   }
-
-  private void saveHistoryM() {
+  
+  protected void saveHistoryM() {
     java.util.Properties props = new java.util.Properties();
     props.setProperty("savePath", savePath);
     props.setProperty("usePath", usePath);
@@ -523,57 +702,52 @@ abstract class NBODialogModel extends NBODialogConfig {
   }
 
   protected void getSymmetry() {
-    jbSym.setSelected(false);
+    //jbSym.setSelected(false);
+    editMode = 0;
     SB sb = new SB();
     appendToFile("CMD symmetry", sb);
-    appendOutputWithCaret("Symmetry: ");
+    appendOutputWithCaret("Symmetry: ",'p');
     modelCmd(sb);
   }
 
   protected void getModel(JTextField textBox) {
+    clearModel();
     if (textBox.getText().equals(""))
       return;
-    action.setSelectedIndex(0);
+    //action.setSelectedIndex(0);
     String s = "";
+    //clearInputFile();
     if (textBox.equals(jtJmolInput)) {
-      jrJmolIn.setSelected(true);
-      nboService.runScriptNow("zap");
-      s = "load $" + textBox.getText();
+      //nboService.runScriptNow("zap");
+      s = "load $" + (jobStem = textBox.getText());
+      appendOutputWithCaret(s,'i');
       if (nboService.runScriptNow(s) == null) {
         if (nboService.runScriptNow("load :" + textBox.getText()) != null) {
-          while (vwr.ms.ac == 0)
-            try {
-              Thread.sleep(10);
-            } catch (Exception e) {
-              System.out.println("HELLO");
-              return;
-            }
-          loadModel();
+//          while (vwr.ms.ac == 0)
+//            try {
+//              Thread.sleep(10);
+//            } catch (Exception e) {
+//              return;
+//            }
+         // loadModel();
           return;
         }
-        appendOutputWithCaret("File not found");
+        appendOutputWithCaret("File not found",'i');
         return;
       }
-      while (vwr.ms.ac == 0)
-        try {
-          Thread.sleep(10);
-        } catch (Exception e) {
-          System.out.println("HELLO");
-          return;
-        }
-      loadModel();
     } else if (textBox.equals(jtLineInput)) {
-      jrLineIn.setSelected(true);
       SB sb = new SB();
-      s = "show " + textBox.getText();
+      s = "show " + (jobStem=textBox.getText());
       appendToFile("CMD " + s, sb);
       modelCmd(sb);
     }
-    appendOutputWithCaret(s);
+    enableComponentsR(this, true);
+    appendOutputWithCaret(s,'i');
 
   }
 
   private void loadModel(String path, String fname, String ext) {
+    clearModel();
     String ess = getEss(ext);
     SB sb = new SB();
     appendToFile("GLOBAL C_PATH " + path + sep, sb);
@@ -581,33 +755,43 @@ abstract class NBODialogModel extends NBODialogConfig {
     appendToFile("GLOBAL C_FNAME " + fname + sep, sb);
     appendToFile("GLOBAL C_IN_EXT " + ext.toLowerCase() + sep, sb);
     appendToFile("CMD use", sb);
-    appendOutputWithCaret("use." + ess + " " + fname + "." + ext);
+    appendOutputWithCaret("use." + ess + " " + fname + "." + ext,'i');
     modelCmd(sb);
+  }
+  
+  protected void clearModel(){
+    this.tfName.setText("");
+    this.tfExt.setText("");
+    this.tfExtS.setText("");
+    this.tfNameS.setText("");
   }
 
   protected void loadModel() {
+    clearModel();
     File f = new File(new File(nboService.serverPath).getParent()
-        + "/jmol_outfile.cfi");
+        + "/jmol_outfile.gau");
     SB sb = new SB();
-    vwr.script(LOAD_SCRIPT);
+      vwr.script(LOAD_SCRIPT);
     try {
+      //TODO this no longer works with new build
       String fileContents = nboService
-          .evaluateJmolString("data({visible},'cfi')");
+          .evaluateJmolString("data({visible},'gau')");
       nboService.writeToFile(fileContents, f);
-      setInputFile(f, "cfi", null);
+      //setInputFile(f, "cfi", null);
       appendToFile("GLOBAL C_PATH " + f.getParent() + sep, sb);
-      appendToFile("GLOBAL C_ESS c" + sep, sb);
+      appendToFile("GLOBAL C_ESS g" + sep, sb);
       appendToFile("GLOBAL C_FNAME jmol_outfile" + sep, sb);
-      appendToFile("GLOBAL C_IN_EXT cfi" + sep, sb);
+      appendToFile("GLOBAL C_IN_EXT gau" + sep, sb);
       appendToFile("CMD use", sb);
       modelCmd(sb);
-      enableComps();
+      enableComponentsR(this,true);
+      
     } catch (IOException e) {
       System.out.println("could not write file contents to " + f);
     }
   }
 
-  private void saveModel(String path, String fname, String ext) {
+  protected void saveModel(String path, String fname, String ext) {
     String ess = getEss(ext);
     SB sb = new SB();
     appendToFile("GLOBAL C_PATH " + path + sep, sb);
@@ -616,17 +800,24 @@ abstract class NBODialogModel extends NBODialogConfig {
     appendToFile("GLOBAL C_OUT_EXT " + ext + sep, sb);
     appendToFile("CMD save", sb);
     modelCmd(sb);
-    appendOutputWithCaret("save." + ess + " " + fname + "\n--Model Saved--");
+    appendOutputWithCaret("save." + ess + " " + fname,'i');
+    appendOutputWithCaret("--Model Saved--\n"+path+"\\"+fname+"."+ext,'b');
+    tfFolderS.setText(path);
+    tfNameS.setText(fname);
+    tfExtS.setText(ext);
   }
 
   private String getEss(String ext) {
+    ext = ext.toLowerCase();
     if (ext.equals("cfi") || ext.equals("vfi") || ext.equals("gau")
-        || ext.equals("log"))
+        || ext.equals("log") || ext.equals("g09")) 
       return "" + ext.charAt(0);
     else if (ext.equals("47"))
       return "a";
     else if (ext.equals("mm2"))
       return "mm";
+    else if (ext.equals("com"))
+      return "g";
     else
       return ext;
   }
@@ -647,112 +838,155 @@ abstract class NBODialogModel extends NBODialogConfig {
    *        of file extension
    */
   @Override
-  protected void showWorkpathDialogM(String path, String type) {
+  protected boolean showWorkpathDialogM(String path, String type) {
     if (path == null) {
       path = usePath;
-      type = "47, adf, cfi, gau, gms, jag, log, mp, nw, orc, pqs, qc, vfi";
-    }    
-    JFileChooser myChooser = new JFileChooser();
+      type = "47,adf,cfi,com,gau,g09,gms,jag,log,mp,nw,orc,pqs,qc,vfi";
+    } 
+    String folder = tfFolder.getText().trim();
+    if(!folder.equals("")){
+      if(!folder.contains(":")) folder = "C:/"+folder;
+      path = folder + "/"+(tfName.getText().equals("") ? "new":tfName.getText())+"."+tfExt.getText();
+    }
+    if(!tfExt.getText().equals("")) 
+      type = tfExt.getText();
+    JFileChooser myChooser = new JFileChooser();  
     if (type != null)
       myChooser.setFileFilter(new FileNameExtensionFilter(type, type
-          .split(", ")));
+          .split(",")));
     myChooser.setFileHidingEnabled(true);
     myChooser.setSelectedFile(new File(path));
     int button = myChooser.showDialog(this, GT._("Select"));
     if (button == JFileChooser.APPROVE_OPTION) {
       jtJmolInput.setText("");
       File newFile = myChooser.getSelectedFile();
+      if(newFile.toString().indexOf(".")<0){
+        appendOutputWithCaret("File not found",'i');
+        return false;
+      }
       loadModel(newFile.getParent(), getJobStem(newFile), getExt(newFile));
       setInputFile(newFile, getExt(newFile), null);
       nboResetV();
-      enableComps();
       this.usePath = newFile.toString();
       saveHistoryM();
-    } else if (button == JFileChooser.CANCEL_OPTION) {
-      jComboUse.setSelectedIndex(0);
+      enableComponentsR(this,true);
+      return true;
     }
+    return false;
   }
 
   protected void showSaveDialog(String type) {
     JFileChooser myChooser = new JFileChooser();
-    myChooser
-        .setFileFilter(new FileNameExtensionFilter(type, type.split(", ")));
+    myChooser.setFileFilter(new FileNameExtensionFilter(type, type.split(",")));
     myChooser.setFileHidingEnabled(true);
-    myChooser
-        .setSelectedFile(new File(new File(savePath).getParent() + "/new"));
+    String savePath = this.savePath;
+    String folder = tfFolderS.getText().trim();
+    if(!folder.equals("")){
+      if(!folder.contains(":")) 
+        folder = "C:/"+folder;
+    }else
+      folder = new File(this.savePath).getParent();
+    System.out.println("-----"+folder+this.savePath);
+    if(tfNameS.getText().equals(""))
+      savePath = folder + "/"+(jobStem.equals("") ? "new.cfi":jobStem+"."+tfExtS.getText());
+    else
+      savePath = folder + "/"+tfNameS.getText()+"."+tfExtS.getText();
+    myChooser.setSelectedFile(new File(savePath));
     int button = myChooser.showSaveDialog(this);
     if (button == JFileChooser.APPROVE_OPTION) {
       File newFile = myChooser.getSelectedFile();
       String ext = getExt(newFile);
-      if (ext.equals(newFile.toString())) {
-        String st = jComboSave.getSelectedItem().toString();
-        ext = st.substring(st.indexOf("(") + 2, st.indexOf(")"));
-      }
-      if (PT.isOneOf(ext, INPUT_FILE_EXTENSIONS)) {
-        //savePathLabel.setText(newFile.toString());
-        setInputFile(newFile, ext, null);
-        savePath = newFile.toString();
-        saveModel(newFile.getParent(), jobStem, ext);
+      if(newFile.exists()) showConfirmationDialog("File already exists, overwrite file?",newFile,ext,CONFIRM_SAVE);
+      else if (PT.isOneOf(ext, INPUT_FILE_EXTENSIONS)) {
+        this.savePath = newFile.toString();
+        saveModel(newFile.getParent(), getJobStem(newFile), ext);
         saveHistoryM();
-      } //else
-        //savePathLabel.setText("Invalid extension");
-    } else
-      jComboSave.setSelectedIndex(0);
+      }else appendOutputWithCaret("No valid extension defined",'b');
+    }
   }
 
-  /**
-   * enable components after model is loaded
-   */
-  protected void enableComps() {
-    action.setEnabled(true);
-    jComboSave.setEnabled(true);
-    jbSym.setEnabled(true);
-    jCheckAtomNum.setEnabled(true);
+  @Override
+  protected void showConfirmationDialog(String st, final File newFile, final String ext, final int mode){
+    final JDialog d = new JDialog();
+    int i = JOptionPane.showConfirmDialog(this, st, "Message", JOptionPane.YES_NO_OPTION);
+    if(i==JOptionPane.YES_OPTION){
+        if(mode == CONFIRM_SAVE){
+          savePath = newFile.toString();
+          saveModel(newFile.getParent(), getJobStem(newFile), ext);
+          saveHistoryM();
+          d.setVisible(false);
+        }else if(mode == CONFIRM_VIEWOUTPUT){
+          d.setVisible(false);
+          showNboOutput(newFile.toString());
+        }else if(mode == 2){
+          d.setVisible(false);
+          goRunClicked("PLOT","gennbo",newFile,showRunDone);
+        }
+      }
   }
 
   protected void notifyCallbackM(String atomno) {
     if (editMode != 0) {
+      jtSelectAtoms.requestFocus();
+      jtSelectAtoms.setText("");
+      jtSelectAtoms.setEnabled(true);
       String st = nboService.runScriptNow("print {*}[" + atomno + "].selected");
       if (st.contains("1.0")) {
-        appendOutputWithCaret("Atom # " + atomno + " deselected");
+        appendOutputWithCaret("Atom # " + atomno + " deselected",'i');
         selected = selected.replace(atomno + " ", "");
-        nboService.runScriptNow("select remove {*}[" + atomno + "]");
+        nboService.runScriptNow("select remove {*}[" + atomno + "];measure off;measure "+selected);
+        for(int i=0;i<atomNumBox.length;i++)
+          if(i>=selected.split(" ").length)
+            atomNumBox[i].setText("");
+          else
+            atomNumBox[i].setText(selected.split(" ")[i]);
         return;
       }
-      appendOutputWithCaret("Atom # " + atomno + " selected");
-      selected += atomno + " ";
-      nboService.runScriptNow("select add {*}[" + atomno + "]");
-      int cnt = selected.split(" ").length;
+      int cnt = (selected.equals("")?1:selected.split(" ").length + 1);
       switch (editMode) {
       case ALTER:
-        if (cnt == 1) {
-          jtSelectAtoms.setEnabled(true);
+        String [] ats = selected.split(" ");
+        String script;
+        if(cnt == 1){
+          valLab.setText("(Atomic number)");
           jtSelectAtoms.setText("");
-          nboService.runScriptQueued("label %a");
-        } else if (cnt == 5) {
-          nboService
-              .runScriptNow("measure off;select remove {*};select add {*}["
-                  + atomno + "]");
-          selected = atomno + " ";
-        } else {
+          jtSelectAtoms.setEnabled(true);
+          script = "print {*}["+atomno+"].elemno";
+          currVal.setText(nboService.runScriptNow(script));
+        }else if (cnt == 5) {
+          clearSelected();
+          valLab.setText("(Atomic number)");
+          script = "print {*}["+atomno+"].elemno";
+          currVal.setText(nboService.runScriptNow(script));
+          cnt=1;
+        } else{
           if (!jCheckAtomNum.isSelected())
             nboService.runScriptQueued("label off");
-          if (cnt == 2)
+          if (cnt == 2){
+            valLab.setText("(Bond length)");
             //TODO script needs to be run twice for some reason
-            nboService.runScriptQueued("measure off;measure " + selected
-                + "\"2:%0.4VALUE //A\"" + ";measure " + selected
+            nboService.runScriptQueued("measure off;measure " + selected + " " + atomno
+                + "\"2:%0.4VALUE //A\"" + ";measure " + selected + " " + atomno
                 + "\"2:%0.4VALUE //A\"");
-          else
-            nboService.runScriptQueued("measure off;measure " + selected);
+          }
+          else{
+            nboService.runScriptQueued("measure off;measure " + selected + " " + atomno);
+            if(cnt == 3) valLab.setText("(Valence angle)");
+            else if(cnt == 4) valLab.setText("(Dihedral angle)");
+          }
+          script = "print measure({*}[";
+          for(String x:ats)
+            script += x +"],{*}[";
+          script += atomno+"])";
+          currVal.setText(nboService.runScriptNow(script).split("\\s+")[1]);
         }
         break;
       case CLIP:
         if (cnt == 2)
           jbEdit.setEnabled(true);
         else if (cnt == 3) {
-          nboService.runScriptNow("select remove {*};select add {*}[" + atomno
-              + "]");
-          selected = atomno + " ";
+          clearSelected();
+          cnt = 1;
         }
         break;
       case MUTATE:
@@ -761,27 +995,81 @@ abstract class NBODialogModel extends NBODialogConfig {
           jtSelectAtoms.setText("");
         }
         if (cnt == 2) {
-          nboService.runScriptNow("select remove {*};select add {*}[" + atomno
-              + "]");
-          selected = atomno + " ";
+          clearSelected();
+          cnt = 1;
         }
       }
+      nboService.runScriptQueued("select add {*}[" + atomno + "]");
+      selected += atomno + " ";
+      atomNumBox[cnt-1].setText("  "+atomno);
     }
   }
   
+  protected void getValue(){
+    String script = "";
+    String [] ats = selected.split(" ");
+    int cnt = ats.length;
+    if(cnt == 1){
+      valLab.setText("(Atomic number)");
+      jtSelectAtoms.setText("");
+      jtSelectAtoms.setEnabled(true);
+      script = "print {*}["+selected+"].elemno";
+      currVal.setText(nboService.runScriptNow(script));
+    } else{
+      if (cnt == 2){
+        valLab.setText("(Bond length)");
+        //TODO script needs to be run twice for some reason
+        nboService.runScriptQueued("measure off;measure " + selected
+            + "\"2:%0.4VALUE //A\"" + ";measure " + selected
+            + "\"2:%0.4VALUE //A\"");
+      }
+      else{
+        nboService.runScriptQueued("measure off;measure " + selected + " ");
+        if(cnt == 3) valLab.setText("(Valence angle)");
+        else if(cnt == 4) valLab.setText("(Dihedral angle)");
+      }
+      script = "print measure({*}[";
+      for(int i = 0; i<ats.length-1; i++)
+        script += ats[i] +"],{*}[";
+      script += ats[ats.length-1]+"]);";
+      String s = nboService.runScriptNow(script);
+      
+      currVal.setText(s.split("\\s+")[1]);
+    }
+  }
+  
+  protected void notifyLoadModel(){
+    if(nboView){
+      String s2 = nboService.runScriptNow("print {*}.bonds");
+      nboService.runScriptQueued("select "+s2+";color bonds lightgrey; wireframe 0.1");
+    }
+    if(jCheckAtomNum.isSelected()) showAtomNums();
+    jmolAtomCount = vwr.ms.ac;
+    nboService.runScriptQueued("select on");
+    if(selected.equals("")) return;
+    showSelected(selected.split(" "));
+    if(editMode == ALTER){
+      int cnt = selected.split(" ").length;
+      if(cnt == 1) return;
+      if(cnt == 2)
+        //TODO script needs to be run twice for some reason
+        nboService.runScriptQueued("measure off;measure " + selected
+            + "\"2:%0.4VALUE //A\"" + ";measure " + selected
+            + "\"2:%0.4VALUE //A\"");
+      else
+        nboService.runScriptQueued("measure off;measure " + selected);
+    }
+  }
   
   protected boolean helpDialogM(JTextPane p, String key) {
-    if (key == null)
-      if (action.getSelectedIndex() == 0)
-        key = "";
-      else
-        key = action.getSelectedItem().toString().split(" ")[0].toLowerCase();
+//    if (key == null)
+//      if (action.getSelectedIndex() == 0)
+//        key = "";
+//      else
+//        key = action.getSelectedItem().toString().split(" ")[0].toLowerCase();
     if (key.equals("")) {
-      if ((jtJmolInput.hasFocus() || jComboUse.hasFocus())
-          && jComboUse.getSelectedIndex() == 0)
+      if (jtJmolInput.hasFocus())
         p.setText(showHelp);
-      else if (/*savePathLabel.hasFocus() || */jComboSave.hasFocus())
-        p.setText(saveHelp);
       else
         p.setText(helpModel + "\n\n" + showHelp + "\n" + useHelp + "\n"
             + symHelp);
@@ -812,7 +1100,7 @@ abstract class NBODialogModel extends NBODialogConfig {
     } else if (key.contains("sym")) {
       p.setText(symHelp);
     } else {
-      appendOutputWithCaret("Unkown command type");
+      appendOutputWithCaret("Unkown command type",'p');
       return false;
     }
     return true;
@@ -820,8 +1108,44 @@ abstract class NBODialogModel extends NBODialogConfig {
 
   protected void rawInputM(String cmd) {
     SB sb = new SB();
+    String [] tokens = cmd.split(" ");
+    if(tokens.length==0) return;
+    cmd = tokens[0].toLowerCase();
+    if(cmd.startsWith("al")){
+      cmd = "alter";
+    }else if(cmd.startsWith("sh")){
+      cmd = "show";
+      enableComponentsR(this,true);
+    }else if(cmd.startsWith("cl")){
+      cmd = "clip";
+    }else if(cmd.startsWith("mu")){
+      cmd = "mutate";
+    }else if(cmd.startsWith("fu")){
+      cmd = "fuse";
+    }else if(cmd.startsWith("sy")){
+      cmd = "symmetry";
+      editMode = 0;
+    }else if(cmd.startsWith("sw")){
+      cmd = "switch";
+    }else if(cmd.startsWith("li")){
+      cmd = "link";
+    }else if(cmd.startsWith("re")){
+      cmd = "rebond";
+    }else if(cmd.startsWith("save")){
+      //TODO
+    }else if(cmd.startsWith("va")){
+      cmd = "value";
+      editMode = VALUE;
+    }else if(cmd.startsWith("tw")){
+      cmd = "twist";
+    }else if(cmd.startsWith("ro")){
+      cmd = "rotate";
+    }
+    for(int i = 1; i<tokens.length; i++){
+      cmd += " " + tokens[i];
+    }
     appendToFile("CMD " + cmd, sb);
-    appendOutputWithCaret(cmd);
+    appendOutputWithCaret(cmd,'i');
     modelCmd(sb);
   }
 

@@ -24,14 +24,20 @@
 package org.openscience.jmol.app.nbo;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Hashtable;
 
 import javajs.util.PT;
@@ -46,40 +52,41 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
-import org.jmol.i18n.GT;
-import org.openscience.jmol.app.jmolpanel.JmolPanel;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
+import javax.swing.plaf.metal.MetalComboBoxUI;
 
 abstract class NBODialogView extends NBODialogRun {
 
-  protected JComboBox<String> basis;
-  protected String keyword = "PNBO";
-  protected int keywordNumber = 6;
   protected final static String[] basSet = { "AO", "PNAO", "NAO", "PNHO",
       "NHO", "PNBO", "NBO", "PNLMO", "NLMO", "MO" };
-  protected JLabel sLab, vLab, pLab;
-  protected JButton btnSign, btnVec, btnPla, btnCam, btnStip, goBtn, goBtn2;
-  protected JRadioButton btnProf, btnCont, btnShow, btnView3D;
-  protected boolean oneD = true;
-  protected boolean inLobes = true;
+  protected int keywordNumber = 6;
+  protected JLabel vLab, pLab;
+  protected JButton goBtn2;
+  protected JButton btnShow;
+  protected JButton btnView3D;
+  protected JRadioButton btnProf;
+  protected boolean oneD = true, inLobes = true;
   protected JComboBox<String> list;
-  protected JCheckBox selToggle;
+  protected JComboBox<String> basis;
   protected Hashtable<String, String[]> lists;
   protected int viewState;
+  protected boolean positiveSign;
+  protected Box orbBox, profBox, dispBox;
+  protected JPanel selectPanel;
 
   protected final JTextField[] vectorFields = new JTextField[8];
   {
@@ -154,6 +161,19 @@ abstract class NBODialogView extends NBODialogRun {
 
   }
 
+  /**
+   * TODO this was sli business. not implemented?
+   * @return countouring parameters, I think contour levels
+   */
+  private String getContourParams() {
+    String s = "";
+    for (int i = 0; i < contourFields.length; i++)
+      s += "GLOBAL CONTOUR_" + contourFieldIDs[i] + " " + contourFields[i].getText()
+          + sep;
+    return s;
+
+  }
+
   protected final JTextField[] contourFields = new JTextField[7];
   {
     String[] contVal = { "0.03", "0.05", "4", "0.05", "0.05", "0.10", "0.10" };
@@ -180,26 +200,35 @@ abstract class NBODialogView extends NBODialogRun {
 
   protected void buildView(Container p) {
     viewState = VIEW_STATE_MAIN;
-    //numStor = 0;
-    java.util.Properties props = JmolPanel.historyFile.getProperties();
-    workingPath = (props.getProperty("workingPath",
-        System.getProperty("user.home")));
     p.removeAll();
     p.setLayout(new BorderLayout());
-    if(topPanel==null)topPanel = buildTopPanel();
     p.add(topPanel, BorderLayout.PAGE_START);
-    JPanel p2 = new JPanel(new BorderLayout());
-    JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,select(),display());
-    sp.setDividerLocation(430);
-    p2.add(sp,BorderLayout.CENTER);
-    Box box = Box.createHorizontalBox();
-    box.add(new JLabel("JobFile")).setFont(new Font("Arial",Font.BOLD,25));
-    box.add(folderBox());
-    browse.setEnabled(true);
-    p2.add(box,BorderLayout.NORTH);
-    p.add(p2,BorderLayout.CENTER);
+    JPanel jp = new JPanel(new BorderLayout());
+    jp.add(modelOut(),BorderLayout.CENTER);
+    JPanel jp2 = new JPanel(new BorderLayout());
+    jp2.add(profileBox(),BorderLayout.CENTER);
+    JLabel lab = new JLabel("Settings");
+    lab.setOpaque(true);
+    lab.setBackground(Color.black);
+    lab.setForeground(Color.white);
+    lab.setFont(nboFont);
+    jp2.add(lab,BorderLayout.NORTH);
+    jp.add(jp2,BorderLayout.NORTH);
+    JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,select(),jp);
+    sp.setDividerLocation(350);
+
+//    if(tfExt!=null&&inputFile!=null)
+//      if(tfExt.getText().equals("47")&& !isJmolNBO && newNBOFile(inputFile,"31").exists()){
+//        setInputFile(inputFile,"31",showWorkPathDone);
+//        orbBox.setVisible(true);
+//        basis.setSelectedIndex(5);
+//      }
+    p.add(sp,BorderLayout.CENTER);
     p.add(statusPanel, BorderLayout.PAGE_END);
-    if(isJmolNBO) setInputFile(inputFile,"nbo",null);
+    tfExt.setText("31");
+    tfExt.setEditable(false);
+    if(isJmolNBO)
+      basis.setSelectedIndex(5);
   }
 
   /**
@@ -207,294 +236,257 @@ abstract class NBODialogView extends NBODialogRun {
    * @return select panel
    */
   protected JPanel select() {
-    JPanel selectPanel = new JPanel();
+    selectPanel = new JPanel();
     selectPanel.setLayout(new BoxLayout(selectPanel,BoxLayout.Y_AXIS));
     selectPanel.setBorder(BorderFactory.createLoweredBevelBorder());
-    Box box;
-    //basis/////////////
-    (box = Box.createHorizontalBox()).add(new JLabel("Basis ")).setFont(
-        new Font("Arial",Font.BOLD, 25));
-    box.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 5));
-    (basis = new JComboBox<String>(basSet)).setMaximumSize(new Dimension(100,25));
-    box.add(basis).setEnabled(isJmolNBO);
-    box.add(Box.createRigidArea(new Dimension(300,0)));
-    basis.setSelectedIndex(5);
+    //JOBFILE////////
+    Box box = Box.createHorizontalBox();
+    JLabel title = new JLabel(" Select Job ");
+    title.setAlignmentX(0.0f);
+    title.setBackground(titleColor);
+    title.setForeground(Color.white);
+    title.setFont(titleFont);
+    title.setOpaque(true);
+    Box box2 = Box.createVerticalBox();
+    box2.add(title);
+    box.setAlignmentX(0.0f);
+    box2.setAlignmentX(0.0f);
+    box2.add(box);
+    box.add(folderBox());
+    box.setBorder(BorderFactory.createLineBorder(Color.black));
+    box.setMaximumSize(new Dimension(355,65));
+    selectPanel.add(box2);
+    //BASIS/////////////
+    orbBox = Box.createVerticalBox();
+    orbBox.setAlignmentX(0.0f);
+    title = new JLabel(" Select Orbital ");
+    title.setAlignmentX(0.0f);
+    title.setBackground(titleColor);
+    title.setForeground(Color.white);
+    title.setFont(titleFont);
+    title.setOpaque(true);
+    orbBox.add(title);
+    Box b2 = Box.createVerticalBox();
+    b2.setAlignmentX(0.0f);
+    orbBox.add(b2);
+    Box b = Box.createHorizontalBox();
+    final DefaultComboBoxModel<String> listModel = new DefaultComboBoxModel<String>();
+    (basis = new JComboBox<String>(basSet)).setMaximumSize(new Dimension(70,25));
+    basis.setUI(new StyledComboBoxUI(180,-1));
+    b.add(basis);
     basis.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        basisSel();
+        basisSel(listModel);
       }
     });
-    selectPanel.add(box);
-    //orbital//////////
-    (box = Box.createHorizontalBox()).add(new JLabel("Orbital ")).setFont(
-        new Font("Arial",Font.BOLD, 25));
-    selectPanel.add(new JSeparator());
-    box.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 5));
-    DefaultComboBoxModel<String> listModel = new DefaultComboBoxModel<String>();
+    //ORBITAL//////////
     (list = new JComboBox<String>(listModel)).setFont(nboFont);
+    list.setMaximumSize(new Dimension(270,25));
+    list.setAlignmentX(0.5f);
     list.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         int i = list.getSelectedIndex();
-        if (i == -1)
+        if (i <1){
+          nboService.runScriptQueued("nbo delete; mo delete");
           return;
-        showOrbJmol(basis.getSelectedItem().toString(), list.getSelectedIndex()+1);
+        }
+        profBox.setVisible(true);
+        showOrbJmol(basis.getSelectedItem().toString(), list.getSelectedIndex());
+        if(nboView)
+          nboService.runScriptQueued("nbo color yellow [134,254,253]; nbo fill nomesh translucent 0.3");
       }
     });
-    box.add(list).setMaximumSize(new Dimension(225,25));
-    box.add(Box.createRigidArea(new Dimension(110,0)));
-    selectPanel.add(box);
-    selectPanel.add(new JSeparator());
-    int i = iLast;
+    list.setUI(new StyledComboBoxUI(125,-1));
+    b.add(list);
+    b.setAlignmentX(0.0f);
+    b2.add(b);
+    b = Box.createHorizontalBox();
+    b.add(new JLabel("Basis"));
+    b.add(Box.createRigidArea(new Dimension(50,0)));
+    b.add(new JLabel("Orbital"));
+    b.setAlignmentX(0.0f);
+    b2.add(b);
+    b2.setBorder(BorderFactory.createLineBorder(Color.black));
+    selectPanel.add(orbBox);
+    orbBox.setMaximumSize(new Dimension(355,65));
+    orbBox.setVisible(isJmolNBO);
+    int j = iLast;
     iLast = -1;
-    if (i > 0 && i < list.getComponentCount())
-      i = 0;
-    final int i0 = i;
-    EventQueue.invokeLater(new Runnable() {
-      @Override
-      public void run() {
-        list.setSelectedIndex(i0);
-      }
-    });
-    //store////////////
-    (box = Box.createHorizontalBox()).add(new JLabel("Store ")).setFont(
-        new Font("Arial",Font.BOLD, 25));
-    Box box2 = Box.createVerticalBox();
-    (btnProf = new JRadioButton("1D Profile")).setFont(nboFont);
-    box2.add(btnProf).setEnabled(isJmolNBO);
-    (btnCont = new JRadioButton("2D Contour")).setFont(nboFont);
-    btnProf.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        oneD = true;
-        btnProf.setSelected(true);
-        btnCont.setSelected(false);
-        btnPla.setEnabled(false);
-        btnVec.setEnabled(true);
-        viewState = VIEW_STATE_VECTOR;
-        showSelected(vLab.getText().split(", "));
-      }
-    });
-    box2.add(btnCont).setEnabled(isJmolNBO);
-    box.add(box2);
-    btnCont.addActionListener(new ActionListener() {
+    if (j > 0 &&j < list.getComponentCount())
+      j = 0;
+    //PROFILE-CONTOUR////////////
+    profBox = Box.createVerticalBox();
+    profBox.setAlignmentX(0.0f);
+    title = new JLabel(" Select Image Type ");
+    title.setAlignmentX(0.0f);
+    title.setBackground(titleColor);
+    title.setForeground(Color.white);
+    title.setFont(titleFont);
+    title.setOpaque(true);
+    profBox.add(title);
+    b = Box.createHorizontalBox();
+    b.setAlignmentX(0.0f);
+    profBox.add(b);
+    b.add(Box.createRigidArea(new Dimension(75,0)));
+    JButton btn = new JButton("2D Contour");
+    b.add(btn);
+    btn.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         oneD = false;
-        btnCont.setSelected(true);
-        btnProf.setSelected(false);
-        btnPla.setEnabled(true);
-        btnVec.setEnabled(false);
         viewState = VIEW_STATE_PLANE;
-        showSelected(pLab.getText().split(", "));
-      }
-    });
-    goBtn = new JButton("GO");
-    goBtn.setEnabled(isJmolNBO);
-    goBtn.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
         goViewClicked();
       }
     });
-    box.add(Box.createRigidArea(new Dimension(165,0)));
-    box.add(goBtn).setFont(new Font("Arial",Font.BOLD,18));
-    selectPanel.add(box);
-    selToggle = new JCheckBox("Show Atoms Defining Axis/Plane");
-    selToggle.setAlignmentX(0.0f);
-    selToggle.setSelected(true);
-    selToggle.addActionListener(new ActionListener() {
+    btn = new JButton("1D Profile");
+    btn.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        if(!selToggle.isSelected()) nboService.runScriptQueued("select off");
-        else
-          if(btnProf.isSelected()) showSelected(vLab.getText().split(", "));
-          else showSelected(pLab.getText().split(", "));
+        oneD = true;
+        viewState = VIEW_STATE_VECTOR;
+        goViewClicked();
       }
     });
-    selectPanel.add(selToggle);
-    selectPanel.add(new JSeparator());
-    //display///////////
-    (box = Box.createHorizontalBox()).add(new JLabel("Display ")).setFont(
-        new Font("Arial",Font.BOLD, 25));
-    box2 = Box.createVerticalBox();
-    (btnShow = new JRadioButton("1D/2D")).setFont(nboFont);
-    btnShow.setEnabled(numStor>0);
+    b.add(btn);
+    b.add(Box.createRigidArea(new Dimension(75,0)));
+    //selectPanel.add(profBox=profileBox());
+    //profBox.setMaximumSize(new Dimension(350,105));
+    profBox.setVisible(false);
+    //profBox.setBorder(BorderFactory.create);
+    selectPanel.add(profBox);
+    //DISPLAY/////////////
+    dispBox();
+    return selectPanel;
+  }
+  
+  protected void dispBox(){
+    if(dispBox!=null)
+      selectPanel.remove(dispBox);
+    dispBox = Box.createVerticalBox();
+    JLabel title = new JLabel(" Select Image Type ");
+    title.setAlignmentX(0.0f);
+    title.setBackground(titleColor);
+    title.setForeground(Color.white);
+    title.setFont(titleFont);
+    title.setOpaque(true);
+    dispBox.add(title);
+    dispBox.setAlignmentX(0.0f);
+    Box box = Box.createHorizontalBox();
+    box.setAlignmentX(0.0f);
+    dispBox.setVisible(numStor>0);
+    Box box2 = Box.createVerticalBox();
+    (btnShow = new JButton("1D/2D")).setFont(nboFont);
     btnShow.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        btnView3D.setSelected(false);
-        btnShow.setSelected(true);
+        //TODO
       }
     });
-    box2.add(Box.createRigidArea(new Dimension(30,0)));
     box2.add(btnShow);
-    (btnView3D = new JRadioButton("3D")).setFont(nboFont);
-    btnView3D.setEnabled(numStor>0);
+    (btnView3D = new JButton("3D")).setFont(nboFont);
     btnView3D.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        btnView3D.setSelected(true);
-        btnShow.setSelected(false);
+        view3D();
       }
     });
     box2.add(btnView3D);
-    box.add(box2);
-    box.add(Box.createRigidArea(new Dimension(176,0)));
-    goBtn2 = new JButton("GO");
-    goBtn2.setEnabled(isJmolNBO);
-    goBtn2.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if(btnView3D.isSelected()) view3D();
-        else showView1D2D();
-      }
-    });
-    box.add(goBtn2).setFont(new Font("Arial",Font.BOLD,18));
-    selectPanel.add(box);
-    box2 = Box.createHorizontalBox();
-    //box2.add(selToggle);
-    jCheckAtomNum = new JCheckBox("Show Atom #'s");
-    box2.add(jCheckAtomNum);
-    jCheckAtomNum.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) { 
-        if(!jCheckAtomNum.isSelected())
-          nboService.runScriptQueued("select {*};label off");
-        else
-          nboService.runScriptQueued("select {*};label %a");
-      nboService.runScriptQueued("color labels white;select remove {*}");
-      if(selToggle.isSelected())
-        if(btnProf.isSelected()) showSelected(vLab.getText().split(", "));
-        else showSelected(pLab.getText().split(", "));
-      }
-    });
-    JCheckBox orientation = new JCheckBox("Use Jmol orientation");
-    box2.add(orientation);
-    //bo.add(box2);
-    selectPanel.add(box2,BorderLayout.PAGE_END);
-    selectPanel.add(Box.createRigidArea(new Dimension(0,200)));
-    if(isJmolNBO)
-      basisSel();
-    return selectPanel;
-  }
-
-
-  /**
-   * TODO this was sli business. not implemented?
-   * @return countouring parameters, I think contour levels
-   */
-  private String getContourParams() {
-    String s = "";
-    for (int i = 0; i < contourFields.length; i++)
-      s += "GLOBAL CONTOUR_" + contourFieldIDs[i] + " " + contourFields[i].getText()
-          + sep;
-    return s;
-
-  }
-
-  protected void showSelected(String[] s){
-    if(!selToggle.isSelected()) return;
-    nboService.runScriptQueued("select remove {*}");
-    for(String x:s)
-      nboService.runScriptQueued("select add {*}["+x+"]");
-    nboService.runScriptQueued("select on;refresh");
-  }
-
-  protected int iLast = -1, iLastD = -1;
-
-  /**
-   * builds orbital display panel
-   * @return display panel
-   */
-  private JPanel display() {
-    JPanel s = new JPanel(new BorderLayout());
-    s.setBorder(BorderFactory.createLoweredBevelBorder());
-    JLabel lab = new JLabel("Storage:");
-    lab.setFont(nboFont);
-    s.add(lab,BorderLayout.PAGE_START);
-    JScrollPane p = new JScrollPane();
-    if(dList==null){
-      model = new DefaultListModel<String>();
-      for(int i = 1; i < 10; i++){
-        model.addElement(""+ i + ")");
-      }
-      (dList = new JList<String>(model)).setFont(nboFont);
-      dList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-      dList.addListSelectionListener(new ListSelectionListener() {
-        @Override
-        public void valueChanged(ListSelectionEvent e) {
-          int i = dList.getSelectedIndex();
-          System.out.println("-----------------------" + iLastD + " " + i);
-          if (i == -1)
-            return;
-          showOrbJmol(dList);
-        }
-      });
+    JScrollPane sp = new JScrollPane();
+    model = new DefaultListModel<String>();
+    for(int i = 1; i < 10; i++){
+      model.addElement(""+ i + ")");
     }
-    p.getViewport().add(dList);
-    s.add(p, BorderLayout.CENTER);
-    //Settings Panel//////////////////////////////
-    JPanel p2 = new JPanel(new GridLayout(4,1));
-    p2.add(btnSign = new JButton("Sign")).setFont(nboFont);
-    btnSign.setEnabled(isJmolNBO);
-    btnSign.addActionListener(new ActionListener() {
+    (dList = new JList<String>(model)).setFont(nboFont);
+    dList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+    dList.addListSelectionListener(new ListSelectionListener() {
       @Override
-      public void actionPerformed(ActionEvent e) {
-        if (sLab.getText().trim().equals("+"))
-          sLab.setText(" -");
-        else
-          sLab.setText(" +");
+      public void valueChanged(ListSelectionEvent e) {
+        int i = dList.getSelectedIndex();
+        System.out.println("-----------------------" + iLastD + " " + i);
+        if (i == -1)
+          return;
+        showOrbJmol(dList);
+        if(nboView)
+          nboService.runScriptQueued("nbo color yellow [181,229,255]; nbo fill nomesh translucent 0.3");
       }
     });
-    p2.add(btnVec = new JButton("1D Axis")).setFont(nboFont);
-    btnVec.setEnabled(isJmolNBO);
+    sp.getViewport().add(dList);
+    dList.setBackground(new Color(245,245,220));
+    sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+    sp.setPreferredSize(new Dimension(200,280));
+    box.add(sp);
+    box.setMaximumSize(new Dimension(350,230));
+    box.add(box2);
+    box.setBorder(BorderFactory.createLineBorder(Color.black));
+    dispBox.add(box);
+    selectPanel.add(dispBox);
+    selectPanel.repaint();
+    selectPanel.revalidate();
+  }
+  
+  private Component profileBox(){
+    JPanel p = new JPanel(new GridLayout(4,2));
+    final JButton btnVec = new JButton("Axis");
+    final JButton btnPla = new JButton("Plane");
+    vLab = new JLabel("1, 2");
+    p.add(btnVec);
     btnVec.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         vector();
       }
     });
-    p2.add(btnPla = new JButton("2D Plane")).setFont(nboFont);
-    btnPla.setEnabled(isJmolNBO);
+    p.add(vLab).setFont(nboFont);
+    
+    p.add(btnPla);
     btnPla.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         plane();
       }
     });
-    (btnCam = new JButton("Camera")).setFont(nboFont);
-    p2.add(btnCam);
-    btnCam.addActionListener(new ActionListener() {
+    p.add(pLab = new JLabel("1, 2, 3")).setFont(nboFont);
+    
+    JButton btnSign = new JButton("Sign");
+    p.add(btnSign);
+    final JLabel sLab = new JLabel(" +");
+    positiveSign = true;
+    btnSign.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        cam1();
+        if (sLab.getText().trim().equals("+")){
+          positiveSign = true;
+          sLab.setText(" -");
+        }else{
+          sLab.setText(" +");
+          positiveSign = false;
+        }
       }
     });
-    btnCam.setEnabled(isJmolNBO);
-    JPanel p3 = new JPanel(new BorderLayout());
-    p3.add(p2, BorderLayout.CENTER);
-    p2 = new JPanel(new GridLayout(4,1));
-    p2.add(sLab = new JLabel(" +")).setFont(new Font("Monospaced",Font.BOLD,20));
-    p2.add(vLab = new JLabel("1, 2")).setFont(nboFont);
-    p2.add(pLab = new JLabel("1, 2, 3")).setFont(nboFont);
-    (btnStip = new JButton("Lines")).setFont(nboFont);
-    p2.add(btnStip);
-    btnStip.setEnabled(isJmolNBO);
+    p.add(sLab).setFont(new Font("Monospaced",Font.BOLD,20));
+    JButton btnStip = new JButton("Lines");
+    p.add(btnStip);
     btnStip.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         stip();
       }
     });
-    p3.add(p2, BorderLayout.LINE_END);
-    p3.setBorder(BorderFactory.createTitledBorder("Settings:"));
-    s.add(p3, BorderLayout.PAGE_END);
-    btnProf.doClick();
-    return s;
+    JButton btnCam = new JButton("Camera");
+    p.add(btnCam);
+    btnCam.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        cam1();
+      }
+    });
+    return p;
   }
-  
+
+  protected int iLast = -1, iLastD = -1;
+
   /**
    * Plane dialog
    */
@@ -896,31 +888,40 @@ abstract class NBODialogView extends NBODialogRun {
       return;
     int pt = item.indexOf("-");
     String type = item.split(" ")[1];
+    if(type.equals("NAO")) 
+      type = "PNAO";
     nboService.runScriptQueued("MO delete; NBO delete; NBO TYPE " + type
         + "; NBO " + item.substring(pt+1, item.indexOf("]")));
   }
   
   protected void showOrbJmol(String type, int i){
+    System.out.println("----"+type);
+    if(type.trim().equals("NAO"))
+      type = "PNAO";
+    System.out.println("----"+type);
     nboService.runScriptQueued("MO delete; NBO delete; NBO TYPE " + type
         + "; NBO " + i);
+    if(nboView)
+      nboService.runScriptQueued("nbo color yellow [134,254,253]; nbo fill nomesh translucent 0.3");
   }
 
-  synchronized protected void basisSel() {
+  synchronized protected void basisSel(final DefaultComboBoxModel<String> listModel) {
     keywordNumber = basis.getSelectedIndex() + 1;
+    reqInfo = "";
     String keyword = basis.getSelectedItem().toString();
     final SB sb = new SB();
-    if(lists.get("o "+basis.getSelectedItem().toString())!=null){
-      setOrbitalList(lists.get("o "+keyword));
+    if(lists.get("o "+keyword)!=null){
+      setOrbitalList(lists.get("o "+keyword), listModel);
       return;
     }
     if (keyword.equals("MO")) {
-      for (int i = 1; i <= list.getModel().getSize(); i++) {
+      for (int i = 1; i <= listModel.getSize(); i++) {
         sb.append((i + ".  MO " + i + "                 ").substring(0, 20));
       }
       nboService.queueJob("view", "getting orbital list", new Runnable() {
         @Override
         public void run() {
-          processOrbitalList(sb.toString());
+          processOrbitalList(sb.toString(),listModel);
         }
       });
     } else {
@@ -932,34 +933,15 @@ abstract class NBODialogView extends NBODialogRun {
         @Override
         public void run() {
           nboService.rawCmdNew("v", sb, true, NBOService.MODE_VIEW_LIST);
-          processOrbitalList(reqInfo);
+          processOrbitalList(reqInfo, listModel);
         }
       });
     }
   }
-
-  @Override
-  protected void showWorkpathDialogV(String workingPath) {
-    JFileChooser myChooser = new JFileChooser();
-    myChooser.setFileFilter(new FileNameExtensionFilter("NBO", "nbo"));
-    myChooser.setFileHidingEnabled(true);
-    String fname = workingPath;
-    myChooser.setSelectedFile(new File(fname));
-    int button = myChooser.showDialog(this, GT._("Select"));
-    if (button == JFileChooser.APPROVE_OPTION) {
-      setInputFile(newNBOFile(myChooser.getSelectedFile(), "47"), "nbo", showWorkPathDone);
-      if(basis == null) basis = new JComboBox<String>(basSet);
-      isJmolNBO = true;
-      saveHistory();
-      basisSel();
-      nboResetV();
-      buildView(this.getContentPane());
-      setComponents(this.getContentPane());
-    }
-  }
-
+  
   @Override
   protected void nboResetV() {
+    resetRunFile();
     dList = null;
     for(int i = 1; i<=numStor;i++){
       String dir = new File(workingPath).getParent();
@@ -978,20 +960,23 @@ abstract class NBODialogView extends NBODialogRun {
 
   protected void goViewClicked() {
     final SB sb = new SB();
-    final int index = list.getSelectedIndex() + 1;
+    final int index = list.getSelectedIndex()+1;
     appendToFile("GLOBAL C_PATH " + inputFile.getParent() + sep, sb);
     appendToFile("GLOBAL C_JOBSTEM " + jobStem + sep, sb);
     appendToFile("GLOBAL I_BAS_1 " + (basis.getSelectedIndex() + 1) + sep, sb);
-    if (sLab.getText().equals(" +"))
+    if (positiveSign)
       appendToFile("GLOBAL SIGN +1 " + sep, sb);
     else
       appendToFile("GLOBAL SIGN -1 " + sep, sb);
+    int ind = list.getSelectedIndex();
     if (oneD) {
       appendToFile(getVectorParams(), sb);
-      appendToFile("CMD PROFILE " + (list.getSelectedIndex() + 1), sb);
+      appendToFile("CMD PROFILE " + ind, sb);
+      appendOutputWithCaret("Profile " + ind, 'i');
     } else {
       appendToFile(getPlaneParams(), sb);
-      appendToFile("CMD CONTOUR " + (list.getSelectedIndex() + 1), sb);
+      appendToFile("CMD CONTOUR " + ind, sb);
+      appendOutputWithCaret("Contour " + ind, 'i');
     }
     final boolean oneD = this.oneD;
     String s = list.getSelectedItem().toString();
@@ -1001,9 +986,10 @@ abstract class NBODialogView extends NBODialogRun {
         new Runnable() {
           @Override
           public void run() {
+            dispBox.setVisible(true);
             nboService.rawCmdNew("v", sb, false, NBOService.MODE_IMAGE);
             String s = (numStor%9 + 1) + ")*[" + (oneD ? "P-" : "C-") + index
-                + "] " + orb + " " + val +"  {"+sLab.getText().trim()+": "+(oneD ? vLab.getText():pLab.getText())+"}";
+                + "] " + orb + " " + val +"  {"+(positiveSign?"+":"-")+": "+(oneD ? vLab.getText():pLab.getText())+"}";
             if(numStor%9==0)
               model.add(8,model.remove(8).replace("*", ""));
             else
@@ -1012,11 +998,32 @@ abstract class NBODialogView extends NBODialogRun {
             model.add(numStor % 9, s);
             dList.setSelectedIndex(numStor % 9);
             numStor++;
-            btnView3D.setEnabled(true);
-            btnShow.setEnabled(true);
-            goBtn2.setEnabled(true);
           }
         });
+//    nboService.queueJob("view", "getting .eps", new Runnable(){
+//      @Override
+//      public void run(){
+//        SB sb = new SB();
+//        BufferedReader b = null;
+//        try {
+//          b = new BufferedReader(new FileReader(new File(inputFile.getParent()+"/"+jobStem+".ps")));
+//        } catch (FileNotFoundException e1) {
+//          System.out.println("------ERROR------");
+//        }
+//        sb.append("%%Header"+sep+"%%BoundingBox(0,0,200,200)"+sep);
+//        String line;
+//        try {
+//          while((line = b.readLine())!= null){
+//            if(line.contains("showpage"))
+//              sb.append("%%tailer"+sep);
+//            sb.append(line + sep);
+//          }
+//        nboService.writeToFile(sb.toString(), new File(inputFile.getParent()+"/"+jobStem+".eps"));
+//        } catch (IOException e) {
+//          // TODO
+//        }
+//      }
+//    });
   }
 
   protected void showView1D2D() {
@@ -1052,7 +1059,7 @@ abstract class NBODialogView extends NBODialogRun {
     appendToFile("GLOBAL C_PATH " + inputFile.getParent() + sep, sb);
     appendToFile("GLOBAL C_JOBSTEM " + jobStem + sep, sb);
     appendToFile(getCameraParams(), sb);
-    appendToFile("GLOBAL C_FNAME " + jobStem + num + sep, sb);
+    //appendToFile("GLOBAL C_FNAME " + jobStem + num + sep, sb);
     appendToFile("CMD VIEW ", sb);
     int[] indices = dList.getSelectedIndices();
     final SB title = new SB();
@@ -1060,7 +1067,7 @@ abstract class NBODialogView extends NBODialogRun {
       appendToFile(Integer.toString(x + 1) + " ", sb);
       title.append(PT.split(dList.getModel().getElementAt(x), "]")[1] + " ");
     }
-    final String fname = inputFile.getParent() + "\\" + jobStem + num + ".bmp";
+    final String fname = inputFile.getParent() + "\\" + jobStem + ".bmp";
     nboService.queueJob("view", "Raytracing, please be patient...",
         new Runnable() {
           @Override
@@ -1068,11 +1075,11 @@ abstract class NBODialogView extends NBODialogRun {
             String err = null;
             File f = new File(fname);
               String id = "id " + PT.esc(title.toString().trim());
-            if (f.exists()){
-              nboService.runScriptQueued("image " + id + " close;image " + id + " "
-                  + PT.esc(f.toString().replace('\\', '/')));
-              return;
-            }
+//            if (f.exists()){
+//              nboService.runScriptQueued("image " + id + " close;image " + id + " "
+//                  + PT.esc(f.toString().replace('\\', '/')));
+//              return;
+//            }
             f.delete();
             nboService.rawCmdNew("v", sb, false, NBOService.MODE_IMAGE);
             while (!f.exists()&&!nboService.jobCanceled) {
@@ -1094,20 +1101,20 @@ abstract class NBODialogView extends NBODialogRun {
         });
   }
 
-  protected void processOrbitalList(String list) {
+  protected void processOrbitalList(String list, DefaultComboBoxModel<String> listModel) {
     System.out.println("processing list " + list);
     try {
       String[] st = new String[list.length() / 20];
       for (int i = 0; (i + 1) * 20 <= list.length(); i++)
         st[i] = list.substring(i * 20, (i + 1) * 20);
       lists.put("o "+basis.getSelectedItem().toString(), st);
-      setOrbitalList(st);
+      setOrbitalList(st, listModel);
     } catch (Exception e) {
       System.out.println(e);
     }
   }
   
-  private void setOrbitalList(String[] s){
+  private void setOrbitalList(String[] s,DefaultComboBoxModel<String> listModel){
     int select = this.list.getSelectedIndex();
     listModel.removeAllElements();
     for(String x:s)
@@ -1148,9 +1155,9 @@ abstract class NBODialogView extends NBODialogRun {
     if (cmd.startsWith("BAS"))
       try {
         basis.setSelectedItem(cmd.split(" ")[1]);
-        appendOutputWithCaret("Basis changed:\n  " + cmd.split(" ")[1]);
+        appendOutputWithCaret("Basis changed:  " + cmd.split(" ")[1],'i');
       } catch (Exception e) {
-        appendOutputWithCaret("NBO View can't do that");
+        appendOutputWithCaret("NBO View can't do that",'b');
       }
     else if (cmd.startsWith("CON")) {
       try {
@@ -1159,7 +1166,7 @@ abstract class NBODialogView extends NBODialogRun {
         oneD = false;
         goViewClicked();
       } catch (Exception e) {
-        appendOutputWithCaret("NBO View can't do that");
+        appendOutputWithCaret("NBO View can't do that",'b');
       }
     } else if (cmd.startsWith("PR")) {
       try {
@@ -1168,7 +1175,7 @@ abstract class NBODialogView extends NBODialogRun {
         oneD = true;
         goViewClicked();
       } catch (Exception e) {
-        appendOutputWithCaret("NBO View can't do that");
+        appendOutputWithCaret("NBO View can't do that",'b');
       }
     } else if (cmd.startsWith("VIEW")) {
       try {
@@ -1176,7 +1183,7 @@ abstract class NBODialogView extends NBODialogRun {
         dList.setSelectedIndex(i - 1);
         view3D();
       } catch (Exception e) {
-        appendOutputWithCaret("NBO View can't do that");
+        appendOutputWithCaret("NBO View can't do that",'b');
       }
     }
   }

@@ -373,6 +373,7 @@ public class NBOService {
       }
       if (!inData && line.indexOf("NBO") < 0
           && dialogMode == MODE_MODEL)
+        if(!line.equals(""))
         nboDialog.addLine(NBODialogConfig.DIALOG_MODEL, line);
       if (inData && sbRet != null) {
         sbRet.append(line + "\n");
@@ -386,6 +387,7 @@ public class NBOService {
             if(s.contains("\\")) 
               s = s.replaceAll("\\\\", "");
             runScriptQueued(s);// + ";rotate best;select remove {*}; select on;");
+            
           }
           return;
         }
@@ -457,14 +459,15 @@ public class NBOService {
                 }
                 if (line.indexOf("Permission denied") >= 0||line.indexOf("PGFIO-F")>=0 || line.indexOf("Invalid command")>=0) {
                   nboDialog.alert(line
-                      + "\n\nNBOServe could not access key files -- Is another version running? Perhaps NBOPro?");
-                  isWorking = inRequest = isWorking = false;
+                      + "\n\nNBOServe could not access key files -- Is another version running? Perhaps NBOPro?\n");
+                  isWorking = inRequest = false;
                   manager.clearQueue();
                   continue;
                 }
                 if (line.indexOf("missing or invalid") >= 0){
                   vwr.alert(line);
                   manager.clearQueue();
+                  inRequest = isWorking = false;
                 }
                 if (line.indexOf("FORTRAN STOP") >= 0){
                   vwr.alert("NBOServe has stopped working");
@@ -480,7 +483,7 @@ public class NBOService {
                 case MODE_VIEW_LIST:
                 case MODE_SEARCH_VALUE:
                   if (isWorking && inRequest)
-                    nboDialog.addLine(NBODialogConfig.DIALOG_VIEW, line);
+                    nboDialog.addLine(NBODialogConfig.DIALOG_VIEW,line);
                   break;
                 case MODE_SEARCH_LIST:
                   if (isWorking && inRequest) {
@@ -496,10 +499,14 @@ public class NBOService {
                 case MODE_IMAGE: 
                   if(line.startsWith("END"))
                     isWorking = inRequest = false;
+                  if(line.contains("Missing valid")){
+                    isWorking = inRequest = false;
+                    vwr.alert(line);
+                  }
                   break;
                 case MODE_MODEL:
                   if(line.indexOf("can't do that")>=0){
-                    nboDialog.addLine(NBODialogConfig.DIALOG_MODEL, line);
+                    nboDialog.addLine(NBODialogConfig.DIALOG_MODEL,line);
                     isWorking = inRequest = false;
                     break;
                   }
@@ -670,7 +677,7 @@ public class NBOService {
     PrintWriter writer = new PrintWriter(file);
     writer.print(s);
     writer.close();
-    Logger.info(s.length() + " bytes written to " + file + "\n" + s);
+    //Logger.info(s.length() + " bytes written to " + file + "\n" + s);
   }
 
   String getFileData(String fileName) {

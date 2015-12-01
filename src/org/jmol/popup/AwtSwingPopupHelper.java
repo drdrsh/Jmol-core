@@ -112,6 +112,8 @@ public class AwtSwingPopupHelper implements
 
   @Override
   public int getItemType(SC m) {
+    if (m == null)
+      return 0;
     JComponent jc = ((AwtSwingComponent) m).jc;
     return (jc instanceof JMenu ? 4 
         : jc instanceof JRadioButtonMenuItem ? 3

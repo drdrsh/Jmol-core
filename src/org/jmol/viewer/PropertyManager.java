@@ -254,8 +254,8 @@ public class PropertyManager implements JmolPropertyManager {
       return (info == null ? "" : info.toString());
     if (requestedReadable)
       return Escape.toReadable(infoType, info);
-    else if (returnType.equalsIgnoreCase("JSON"))
-      return "{" + PT.toJSON(infoType, info) + "}";
+    if (returnType.equalsIgnoreCase("JSON"))
+      return SV.safeJSON(infoType, info);
     return info;
   }
 

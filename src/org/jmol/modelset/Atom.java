@@ -1369,8 +1369,7 @@ public class Atom extends Point3fi implements BNode {
       return (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp) 
           : getFractionalUnitCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp));
     case T.screenxyz:
-      return P3.new3(sX, group.chain.model.ms.vwr.getScreenHeight()
-          - sY, sZ);
+      return P3.new3(vwr.antialiased ? sX / 2 : sX, vwr.getScreenHeight() - (vwr.antialiased ? sY / 2 : sY), vwr.antialiased ? sZ / 2 : sZ);
     case T.vibxyz:
       return getVibrationVector();
     case T.modxyz:
