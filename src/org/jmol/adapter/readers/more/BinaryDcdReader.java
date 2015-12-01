@@ -117,9 +117,8 @@ ICNTRL(20)=VERNUM ! version number
     
     // read DCD header
     
-    int n = binaryDoc.readInt(); 
-    binaryDoc.setStream(vwr.getJzt(), null, n != 0x54);
-    n = binaryDoc.readInt(); // "CORD"
+    binaryDoc.setStream(vwr.getJzt(), null, binaryDoc.readInt() == 0x54);
+    binaryDoc.readInt(); // "CORD"
     nModels = binaryDoc.readInt();
     /* int nPriv = */ binaryDoc.readInt();
     /* int nSaveC = */ binaryDoc.readInt();
@@ -133,23 +132,22 @@ ICNTRL(20)=VERNUM ! version number
     /* int delta4 = */ binaryDoc.readInt();
     binaryDoc.readByteArray(bytes, 0, 36);
     /* int nTitle = */ binaryDoc.readInt();
-    n = binaryDoc.readInt();  // TRAILER
+    binaryDoc.readInt();  // TRAILER
     
     // read titles
     
-    n = binaryDoc.readInt();  // HEADER
-    n = binaryDoc.readInt();
+    binaryDoc.readInt();  // HEADER
     SB sb = new SB();
-    for (int i = 0; i < n; i++)
+    for (int i = 0, n = binaryDoc.readInt(); i < n; i++)
       sb.append(binaryDoc.readString(80).trim()).appendC('\n');
-    n = binaryDoc.readInt(); // TRAILER
+    binaryDoc.readInt(); // TRAILER
     Logger.info("BinaryDcdReadaer:\n" + sb);
 
     // read number of atoms and free-atom list
     
-    n = binaryDoc.readInt(); // HEADER
+    binaryDoc.readInt(); // HEADER
     nAtoms = binaryDoc.readInt();
-    n = binaryDoc.readInt(); // TRAILER
+    binaryDoc.readInt(); // TRAILER
     nFree = nAtoms - nFixed;
     if (nFixed != 0) {
       // read list of free atoms
@@ -157,7 +155,7 @@ ICNTRL(20)=VERNUM ! version number
       bsFree = BS.newN(nFree);
       for (int i = 0; i < nFree; i++)
         bsFree.set(binaryDoc.readInt() - 1);
-      n = binaryDoc.readInt() / 4; // TRAILER
+      binaryDoc.readInt(); // TRAILER
       Logger.info("free: " + bsFree.cardinality() + " " + Escape.eBS(bsFree));
     }
     
