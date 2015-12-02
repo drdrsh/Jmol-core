@@ -1116,11 +1116,11 @@ public class XtalSymmetry {
         if (bsAtoms != null
             && !bsAtoms.get(iAtom)
             || chains != null
-            && chains.indexOf(":" + acr.vwr.getChainIDStr(atoms[i].chainID)
+            && chains.indexOf(":" + acr.vwr.getChainIDStr(atoms[iAtom].chainID)
                 + ";") < 0)
           continue;
         try {
-          int atomSite = atoms[iAtom].atomSite;
+          int atomSite = atoms[iAtom].atomSite; 
           Atom atom1;
           if (addBonds)
             atomMap[atomSite] = asc.ac;
@@ -1150,8 +1150,7 @@ public class XtalSymmetry {
     if (biomtchains != null) {
       if (asc.bsAtoms == null)
         asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
-      for (int iAtom = firstSymmetryAtom; iAtom < atomMax; iAtom++)
-        asc.bsAtoms.clear(iAtom);
+      asc.bsAtoms.clearBits(firstSymmetryAtom, atomMax);
     }
 
     noSymmetryCount = atomMax - firstSymmetryAtom;

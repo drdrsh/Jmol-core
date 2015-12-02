@@ -697,11 +697,11 @@ SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT
           }
           String list = line.substring(41).trim();
           appendLoadNote("found biomolecule " + id + ": " + list);
-          chainlist = ":" + list.replace(' ', ':');
+          chainlist = ":" + list.replace(',', ';').replace(' ', ':');
           needLine = false;
           while (readHeader(true) != null && line.indexOf("BIOMT") < 0
               && line.indexOf("350") == 7)
-            chainlist += ":" + line.substring(11).trim().replace(' ', ':');
+            chainlist += ":" + line.substring(11).trim().replace(',',';').replace(' ', ':');
           chainlist += ";";
           if (checkFilterKey("BIOMOLECULE " + id + ";")
               || checkFilterKey("BIOMOLECULE=" + id + ";")) {

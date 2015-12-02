@@ -76,7 +76,6 @@ public class MMCifReader extends CifReader {
   private int thisChain = -1;
   private int modelIndex = 0;
   
-
   private P3 chainSum;
   private int[] chainAtomCount;
   
@@ -92,18 +91,18 @@ public class MMCifReader extends CifReader {
       asc.setInfo("isMutate",Boolean.TRUE);      
     doSetBonds = checkFilterKey("ADDBONDS");
     byChain = checkFilterKey("BYCHAIN");
-    bySymop = checkFilterKey("BYSYMOP");
+    if (checkFilterKey("BIOMOLECULE")) // PDB format
+      filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
+    isBiomolecule = checkFilterKey("ASSEMBLY");
+    if (isBiomolecule) {
+      filter = filter.replace(':', ' '); // no chain selection for biomolecules
+      bySymop = checkFilterKey("BYSYMOP");
+    }    
     isCourseGrained = byChain || bySymop;
     if (isCourseGrained) {
       chainAtomMap = new Hashtable<String, P3>();
       chainAtomCounts = new Hashtable<String, int[]>();
     }
-    if (checkFilterKey("BIOMOLECULE")) // PDB format
-      filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
-    isBiomolecule = checkFilterKey("ASSEMBLY");
-    if (isBiomolecule)
-      filter = filter.replace(':', ' '); // no chain selection for biomolecules
-    
     // When this reader was split off from CifReader, a bug was introduced
     // into the Resolver that made it so that ligand files were read by 
     // CifReader and not MMCifReader. This caused CHEM_COMP_BOND records to be 
@@ -198,11 +197,9 @@ public class MMCifReader extends CifReader {
     if (vBiomolecules != null && vBiomolecules.size() > 0
         && (isCourseGrained || asc.ac > 0)) {
       asc.setCurrentModelInfo("biomolecules", vBiomolecules);
-      Map<String, Object> ht = vBiomolecules.get(0);
-      appendLoadNote("Constructing " + ht.get("name"));
-      setBiomolecules(ht);
+      setBiomolecules();
       if (thisBiomolecule != null) {
-        asc.getXSymmetry().applySymmetryBio(ht, unitCellParams,
+        asc.getXSymmetry().applySymmetryBio(thisBiomolecule, unitCellParams,
             applySymmetryToBonds, filter);
         asc.xtalSymmetry = null;
       }
@@ -331,8 +328,6 @@ public class MMCifReader extends CifReader {
     "_pdbx_struct_assembly_gen_asym_id_list" 
   };
 
-  private String[] assem = null;
-
   /*
   _pdbx_struct_assembly_gen.assembly_id       1 
   _pdbx_struct_assembly_gen.oper_expression   1,2,3,4 
@@ -397,7 +392,7 @@ public class MMCifReader extends CifReader {
   private boolean processAssemblyGenBlock() throws Exception {
     parseLoopParameters(assemblyFields);
     while (parser.getData()) {
-      assem = new String[3];
+      String[] assem = new String[3];
       int count = 0;
       int p;
       int n = parser.getColumnCount();
@@ -412,35 +407,44 @@ public class MMCifReader extends CifReader {
         }
       }
       if (count == 3)
-        addAssembly();
+        addAssembly(assem);
     }
-    assem = null;
     return true;
   }
 
-  private void addAssembly() throws Exception {
+  @SuppressWarnings("unchecked")
+  private void addAssembly(String[] assem) throws Exception {
     String id = assem[ASSEM_ID];
-    int iMolecule = parseIntStr(id);
     String list = assem[ASSEM_LIST];
-    appendLoadNote("found biomolecule " + id + ": " + list);
-    if (!checkFilterKey("ASSEMBLY " + id + ";") && !checkFilterKey("ASSEMBLY=" + id + ";"))
-      return;
-    if (vBiomolecules == null) {
+    String operators = assem[ASSEM_OPERS];
+    String name = "biomolecule " + id;
+    Logger.info(name + " operators " + operators
+        + " ASYM_IDs " + list);
+    appendLoadNote("found " + name + ": " + list);
+    if (vBiomolecules == null)
       vBiomolecules = new Lst<Map<String, Object>>();
-    }
-    Map<String, Object> info = new Hashtable<String, Object>();
-    info.put("name", "biomolecule " + id);
-    info.put("molecule",
+    Map<String, Object> info = null;
+    for (int i = vBiomolecules.size(); --i >= 0;)
+      if (vBiomolecules.get(i).get("name").equals(name)) {
+        info = vBiomolecules.get(i);
+        break;
+      }
+    if (info == null) {
+      info = new Hashtable<String, Object>();
+      info.put("name", name);
+      int iMolecule = parseIntStr(id);
+      info.put("molecule",
         iMolecule == Integer.MIN_VALUE ? id : Integer.valueOf(iMolecule));
-    info.put("assemblies", "$" + list.replace(',', '$'));
-    info.put("operators", decodeAssemblyOperators(assem[ASSEM_OPERS]));
-    info.put("biomts", new Lst<M4>());
-    if (thisBiomolecule == null)
+      info.put("biomts", new Lst<M4>());
+      info.put("chains", new Lst<String>());
+      info.put("assemblies", new Lst<String>()); 
+      info.put("operators", new Lst<String>());
+      vBiomolecules.addLast(info);
+    }
+    ((Lst<String>) info.get("assemblies")).addLast("$" + list.replace(',', '$'));
+    ((Lst<String>) info.get("operators")).addLast(decodeAssemblyOperators(operators));
+    if (checkFilterKey("ASSEMBLY " + id + ";") || checkFilterKey("ASSEMBLY=" + id + ";"))
       thisBiomolecule = info;
-    Logger.info("assembly " + id + " operators " + assem[ASSEM_OPERS]
-        + " ASYM_IDs " + assem[ASSEM_LIST]);
-    vBiomolecules.addLast(info);
-    assem = null;
   }
 
   private String decodeAssemblyOperators(String ops) {
@@ -814,73 +818,79 @@ public class MMCifReader extends CifReader {
     return true;
   }
 
-  private void setBiomolecules(Map<String, Object> biomolecule) {
-    if (!isBiomolecule || assemblyIdAtoms == null && chainAtomCounts == null)
+  private void setBiomolecules() {
+    if (assemblyIdAtoms == null && chainAtomCounts == null)
       return;
-    Lst<M4> biomts = new Lst<M4>();
-    Lst<String> biomtchains  = new Lst<String>();
-    biomolecule.put("biomts", biomts);
-    biomolecule.put("chains", biomtchains);
-    int nBio = vBiomolecules.size();
     BS bsAll = new BS();
-    int nAtoms = setBiomolecule(biomolecule, biomts, biomtchains, bsAll);
-    for (int i = 1; i < nBio; i++)
-      nAtoms += setBiomolecule(vBiomolecules.get(i), biomts, biomtchains, bsAll);
-    if (bsAll.cardinality() < asc.ac) {
-      if (asc.bsAtoms == null)
-        asc.bsAtoms = bsAll;
-      else
-        asc.bsAtoms.and(bsAll);
+    for (int i = vBiomolecules.size(); --i >= 0;) {
+      Map<String, Object> biomolecule = vBiomolecules.get(i);
+      setBiomolecule(biomolecule, (biomolecule == thisBiomolecule ? bsAll : null));
     }
-    biomolecule.put("atomCount", Integer.valueOf(nAtoms));
+    if (isBiomolecule && bsAll.cardinality() < asc.ac) {
+      if (asc.bsAtoms != null)
+        asc.bsAtoms.and(bsAll);
+      else if (!isCourseGrained)
+        asc.bsAtoms = bsAll;
+    }
   }
   
-  private int setBiomolecule(Map<String, Object> biomolecule, Lst<M4> biomts,
-                             Lst<String> biomtchains, BS bsAll) {
-    M4 mident = M4.newM4(null);
-    String[] ops = PT.split((String) biomolecule.get("operators"), ",");
-    String assemblies = (String) biomolecule.get("assemblies");
-    biomolecule.put("asemblyIdAtoms", assemblyIdAtoms);
+  @SuppressWarnings("unchecked")
+  private int setBiomolecule(Map<String, Object> biomolecule, BS bsAll) {
+    Lst<String> biomtchains = (Lst<String>) biomolecule.get("chains");
+    Lst<M4> biomts = (Lst<M4>) biomolecule.get("biomts");
+    Lst<String> operators = (Lst<String>) biomolecule.get("operators");
+    Lst<String> assemblies = (Lst<String>) biomolecule.get("assemblies");
     P3 sum = new P3();
     int count = 0;
-    int nAtoms = 0;
-    String[] ids = PT.split(assemblies, "$");
-    String chainlist = "";
-    for (int j = 1; j < ids.length; j++) {
-      String id = ids[j];
-      chainlist += ":" + id + ";";
-      if (assemblyIdAtoms != null) {
-        BS bs = assemblyIdAtoms.get(id);
-        if (bs != null)
-          bsAll.or(bs);
-      } else if (isCourseGrained) {
-        P3 asum = chainAtomMap.get(id);
-        int c = chainAtomCounts.get(id)[0];
-        if (asum != null) {
-          if (bySymop) {
-            sum.add(asum);
-            count += c;
-          } else {
-            createParticle(id);
-            nAtoms++;
+    BS bsAtoms = new BS();
+    int nAtomsTotal = 0;
+    M4 mident = M4.newM4(null);
+    boolean isBioCourse = (isBiomolecule && isCourseGrained);
+    for (int i = operators.size(); --i >= 0;) {
+      String[] ops = PT.split(operators.get(i), ",");
+      String[] ids = PT.split(assemblies.get(i), "$");
+      String chainlist = "";
+      int nAtoms = 0;
+      for (int j = 1; j < ids.length; j++) {
+        String id = ids[j];
+        chainlist += ":" + id + ";";
+        if (assemblyIdAtoms != null) {
+          biomolecule.put("asemblyIdAtoms", assemblyIdAtoms);
+          BS bs = assemblyIdAtoms.get(id);
+          if (bs != null) {
+            bsAtoms.or(bs);
+            if (bsAll != null)
+              bsAll.or(bs);
+            nAtoms += bs.cardinality();
+          }
+        } else if (isBioCourse) {
+          P3 asum = chainAtomMap.get(id);
+          if (asum != null) {
+            if (bySymop) {
+              sum.add(asum);
+              count += chainAtomCounts.get(id)[0];
+            } else {
+              createParticle(id);
+              nAtoms++;
+            }
           }
         }
       }
-    }
-    for (int j = 0; j < ops.length; j++) {
-      M4 m = getOpMatrix(ops[j]);
-      if (m == null)
-        return 0;
-      if (m.equals(mident)) {
-        biomts.add(0, mident);
-        biomtchains.add(0, chainlist);
-      } else {
-        biomts.addLast(m);
-        biomtchains.addLast(chainlist);
+      if (!isBiomolecule)
+        continue;
+      for (int j = 0; j < ops.length; j++) {
+        M4 m = getOpMatrix(ops[j]);
+        if (m == null)
+          return 0;
+        if (m.equals(mident)) {
+          biomts.add(0, mident);
+          biomtchains.add(0, chainlist);
+        } else {
+          biomts.addLast(m);
+          biomtchains.addLast(chainlist);
+        }
       }
-    }
-    if (isCourseGrained) {
-      if (bySymop) {
+      if (bySymop && bsAll != null) {
         nAtoms = 1;
         Atom a1 = new Atom();
         a1.setT(sum);
@@ -888,10 +898,11 @@ public class MMCifReader extends CifReader {
         a1.radius = 16;
         asc.addAtom(a1);
       }
-    } else {
-      nAtoms = bsAll.cardinality();
+      nAtoms *= ops.length;
+      nAtomsTotal += nAtoms;
     }
-    return nAtoms * ops.length;
+    biomolecule.put("atomCount", Integer.valueOf(nAtomsTotal));
+    return nAtomsTotal;
 
   }
 
@@ -1063,29 +1074,29 @@ public class MMCifReader extends CifReader {
   }
   
   @Override
-  public boolean processSubclassAtom(Atom atom, String assemblyId, String strChain) {    
-    if (byChain && !isBiomolecule) {
+  public boolean processSubclassAtom(Atom atom, String assemblyId, String strChain) {
+    if (isBiomolecule) {
+      if (isCourseGrained) {
+        P3 sum = chainAtomMap.get(assemblyId);
+        if (sum == null) {
+          chainAtomMap.put(assemblyId, sum = new P3());
+          chainAtomCounts.put(assemblyId, new int[1]);
+        }
+        chainAtomCounts.get(assemblyId)[0]++;
+        sum.add(atom);
+        return false;
+      }
+    } else if (byChain) {
       if (thisChain != atom.chainID) {
         thisChain = atom.chainID;
-        String id = "" + atom.chainID;
-        chainSum = chainAtomMap.get(id);
+        chainSum = chainAtomMap.get(strChain);
         if (chainSum == null) {
-          chainAtomMap.put(id, chainSum = new P3());
-          chainAtomCounts.put(id, chainAtomCount = new int[1]);
+          chainAtomMap.put(strChain, chainSum = new P3());
+          chainAtomCounts.put(strChain, chainAtomCount = new int[1]);
         }
       }
       chainSum.add(atom);
       chainAtomCount[0]++;
-      return false;
-    }
-    if (isBiomolecule && isCourseGrained) {
-      P3 sum = chainAtomMap.get(assemblyId);
-      if (sum == null) {
-        chainAtomMap.put(assemblyId, sum = new P3());
-        chainAtomCounts.put(assemblyId, new int[1]);
-      }
-      chainAtomCounts.get(assemblyId)[0]++;
-      sum.add(atom);
       return false;
     }
     if (assemblyId != null) {
