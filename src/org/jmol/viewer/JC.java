@@ -633,12 +633,12 @@ public final class JC {
     "@dynamic_flatring search('[a]')",
 
     //periodic table
-    "@nonmetal _H,_He,_C,_N,_O,_F,_Ne,_S,_P,_Cl,_Ar,_Se,_Br,_Kr,_I,_Xe,_At,_Rn",
-    "@noblegas _He,_Ne,_Ar,_Kr,_Xe,_Rn",
+    "@nonmetal _H,_He,_B,_C,_N,_O,_F,_Ne,_Si,_P,_S,_Cl,_Ar,_As,_Se,_Br,_Kr,_Te,_I,_Xe,_At,_Rn",
     "@metal !nonmetal",
     "@alkaliMetal _Li,_Na,_K,_Rb,_Cs,_Fr",
     "@alkalineEarth _Be,_Mg,_Ca,_Sr,_Ba,_Ra",
-    "@semimetal _B,_Si,_Ge,_As,_Sb,_Te,_Po",
+    "@nobleGas _He,_Ne,_Ar,_Kr,_Xe,_Rn",
+    "@metalloid _B,_Si,_Ge,_As,_Sb,_Te",
     "@transitionMetal elemno>=21&elemno<=30|elemno>=39&elemno<=48|elemno>=72&elemno<=80|elemno>=104&elemno<=112",
     "@lanthanide elemno>=57&elemno<=71",
     "@actinide elemno>=89&elemno<=103",
