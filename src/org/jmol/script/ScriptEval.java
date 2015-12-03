@@ -4933,7 +4933,7 @@ public class ScriptEval extends ScriptExpr {
    * @throws ScriptException
    */
   private void cmdModel(int offset) throws ScriptException {
-    boolean isFrame = (theTok == T.frame);
+    boolean isFrame = (theTok == T.frame || vwr.ms.mc > 1);
     boolean useModelNumber = true;
     if (slen == 1 && offset == 1) {
       int modelIndex = vwr.am.cmi;
