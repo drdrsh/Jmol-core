@@ -2464,8 +2464,10 @@ abstract public class AtomCollection {
   }
 
   public BS getVisibleSet(boolean forceNew) {
-    if (forceNew)
+    if (forceNew) {
       vwr.setModelVisibility();
+      vwr.shm.finalizeAtoms(false, true);
+    }
     else if (haveBSVisible)
       return bsVisible;
     bsVisible.clearAll();

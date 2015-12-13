@@ -36,7 +36,6 @@ public interface BNode extends Node {
   
   // BIOSMILES/BIOSMARTS
   
-  public int getAtomNumber();
   public String getBioStructureTypeName();
   public String getGroup1(char c0);
   public String getGroup3(boolean allowNull);

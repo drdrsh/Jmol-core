@@ -595,6 +595,7 @@ public class FileManager implements BytePoster {
     }
     if (bytes == null && (bytes = getCachedPngjBytes(name)) != null && htParams != null)
         htParams.put("sourcePNGJ", Boolean.TRUE);
+    name = name.replace("#_DOCACHE_", "");
     String fullName = name;
     String[] subFileList = null;
     if (name.indexOf("|") >= 0) {

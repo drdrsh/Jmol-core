@@ -33,6 +33,7 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
+import org.jmol.util.Logger;
 
 /**
  * 
@@ -86,7 +87,8 @@ public class ChimeMessenger implements JmolChimeMessenger {
     if (s == null)
       return;
     if (outputBuffer == null) {
-      vwr.warn(s);
+      if (!vwr.isPrintOnly)
+        Logger.warn(s);
       vwr.scriptStatus(s);
     } else {
       outputBuffer.append(s).appendC('\n');

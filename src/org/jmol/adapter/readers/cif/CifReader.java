@@ -121,6 +121,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   protected Map<String, String> htGroup1;
   private int nAtoms0;
+  private int titleAtomSet = 1;
 
   @Override
   public void initializeReader() throws Exception {
@@ -182,6 +183,8 @@ public class CifReader extends AtomSetCollectionReader {
       isLigand = false;
       if (iHaveDesiredModel)
         return false;
+      if (desiredModelNumber != Integer.MIN_VALUE)
+        appendLoadNote(null);
       newModel(++modelNumber);
       haveCellWaveVector = false;
       if (auditBlockCode == null)
@@ -266,13 +269,21 @@ public class CifReader extends AtomSetCollectionReader {
         processSymmetrySpaceGroupName();
       } else if (key.startsWith("_space_group_transform")) {
         processUnitCellTransform();
+      } else if (key.contains("_database_code")) {
+        addModelTitle("ID");
       } else if (titleRecords.contains("_" + key + "__")) {
-        appendLoadNote("TITLE: " + parser.fullTrim(data) + "\n");
+        addModelTitle("TITLE");
       } else {
         processSubclassEntry();
       }
     }
     return true;
+  }
+
+  private void addModelTitle(String key) {
+    if (asc.atomSetCount > titleAtomSet)
+      appendLoadNote("\nMODEL: " + (titleAtomSet = asc.atomSetCount));
+    appendLoadNote(key + ": " + parser.fullTrim(data));
   }
 
   protected void processSubclassEntry() throws Exception {

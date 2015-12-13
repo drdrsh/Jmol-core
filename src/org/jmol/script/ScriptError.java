@@ -13,7 +13,7 @@ import org.jmol.viewer.Viewer;
  */
 public abstract class ScriptError implements JmolScriptEvaluator {
 
-  abstract protected void showString(String msg);
+  abstract protected void showStringPrint(String msg, boolean mustDo);
   
   public Viewer vwr;
   public boolean chk;
@@ -83,7 +83,7 @@ public abstract class ScriptError implements JmolScriptEvaluator {
         : errorString(iError, value, more, more2, false));
     if (!warningOnly)
       evalError(strError, strUntranslated);
-    showString(strError);
+    showStringPrint(strError, true);
   }
 
   public void evalError(String message, String strUntranslated)

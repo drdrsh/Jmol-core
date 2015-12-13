@@ -25,7 +25,6 @@ package org.openscience.jmol.app;
 
 import javajs.util.PT;
 
-import org.jmol.api.JmolViewer;
 import org.jmol.util.Escape;
 import org.jmol.viewer.Viewer;
 
@@ -42,7 +41,7 @@ public class JmolData {
    */
 
   public JmolApp jmolApp;
-  public JmolViewer vwr;
+  public Viewer vwr;
   
   public static JmolData getJmol(int width, int height, String commandOptions) {
     JmolApp jmolApp = new JmolApp();
@@ -82,6 +81,7 @@ public class JmolData {
     this.jmolApp = jmolApp;
     vwr = new Viewer(jmolApp.info);
     vwr.setScreenDimension(jmolApp.startupWidth, jmolApp.startupHeight);
+    vwr.setWidthHeightVar();
     jmolApp.startViewer(vwr, null, true);
   }
   

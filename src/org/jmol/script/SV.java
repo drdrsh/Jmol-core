@@ -816,15 +816,8 @@ public class SV extends T implements JSONEncodable {
     return getVariableList(vlist);
   }
 
-  static BS bsSelectToken(T x) {
-    x = selectItemTok(x, Integer.MIN_VALUE);
-    return (BS) x.value;
-  }
-
-  public static BS bsSelectVar(SV var) {
-    if (var.index == Integer.MAX_VALUE)
-      var = selectItemVar(var);
-    return (BS) var.value;
+  private static BS bsSelectToken(T x) {
+    return (BS) selectItemTok(x, Integer.MIN_VALUE).value;
   }
 
   static BS bsSelectRange(T x, int n) {
@@ -835,12 +828,12 @@ public class SV extends T implements JSONEncodable {
   }
 
   static SV selectItemVar(SV var) {
-    // pass bitsets created by the select() or for() commands
+    // pass bitsets created by the select() or for() inline functions
     // and all arrays by reference
-    if (var.index != Integer.MAX_VALUE || 
-        (var.tok == varray || var.tok == barray) && var.intValue == Integer.MAX_VALUE)
-      return var;
-    return (SV) selectItemTok(var, Integer.MIN_VALUE);
+    return (var.index != Integer.MAX_VALUE
+        || (var.tok == varray || var.tok == barray)
+        && var.intValue == Integer.MAX_VALUE ? var : (SV) selectItemTok(var,
+        Integer.MIN_VALUE));
   }
 
   static T selectItemTok(T tokenIn, int i2) {
@@ -1307,7 +1300,10 @@ public class SV extends T implements JSONEncodable {
   public static BS getBitSet(SV x, boolean allowNull) {
     switch (x.tok) {
     case bitset:
-      return bsSelectVar(x);
+      // selectItemTok is important here because this may come from setVariable()
+      // in the case of     a[1].xyz = ptX1
+      return (BS) (x.index == Integer.MAX_VALUE ? (SV) selectItemTok(x,
+          Integer.MIN_VALUE) : x).value;
     case varray:
       return unEscapeBitSetArray(x.getList(), allowNull);
     default:
@@ -1443,8 +1439,9 @@ public class SV extends T implements JSONEncodable {
 
   /**
    * 
-   * Script variables are pushed after cloning, because the name comes with them
-   * when we do otherwise they are not mutable anyway. We do want to have actual
+   * Script variables are pushed after cloning, because
+   * the name comes with them when we do otherwise
+   * they are not mutable anyway. We do want to have actual
    * references to points, lists, and associative arrays
    * 
    * @param value

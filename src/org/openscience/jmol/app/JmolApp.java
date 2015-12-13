@@ -488,7 +488,7 @@ public class JmolApp implements JmolAppAPI {
     
   }
 
-  public void startViewer(JmolViewer vwr, SplashInterface splash, boolean isJmolData) { 
+  public void startViewer(JmolViewer vwr, SplashInterface splash, boolean isJmolData) {
     try {
     } catch (Throwable t) {
       System.out.println("uncaught exception: " + t);

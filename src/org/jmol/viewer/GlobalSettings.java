@@ -960,7 +960,7 @@ public class GlobalSettings {
           + ";loglevel;logfile;loggestures;logcommands;measurestylechime"
           + ";loadformat;loadligandformat;smilesurlformat;pubchemformat;nihresolverformat;edsurlformat;edsurlcutoff;multiprocessor;navigationmode;"
           + ";pathforallfiles;perspectivedepth;phongexponent;perspectivemodel;platformspeed"
-          + ";preservestate;refreshing;repaintwaitms;rotationradius"
+          + ";preservestate;refreshing;repaintwaitms;rotationradius;selectallmodels"
           + ";showaxes;showaxis1;showaxis2;showaxis3;showboundbox;showfrank;showtiming;showunitcell"
           + ";slabenabled;slab;slabrange;depth;zshade;zshadepower;specular;specularexponent;specularpercent"
           + ";celshading;celshadingpower;specularpower;stateversion"

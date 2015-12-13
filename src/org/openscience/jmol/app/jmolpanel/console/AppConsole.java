@@ -30,7 +30,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -531,7 +530,7 @@ public class AppConsole extends JmolConsole implements EnterListener {
         str = str.substring(1);
       if (vwr.checkHalt(str, isInterrupt))
         strErrorMessage = (isScriptExecuting ? "script execution halted with "
-            + strCommand : "no script was executing");
+            + strCommand : "no script was executing - use exitJmol to exit Jmol");
       //the problem is that scriptCheck is synchronized, so these might get backed up. 
       if (strErrorMessage.length() > 0) {
         console.outputError(strErrorMessage);

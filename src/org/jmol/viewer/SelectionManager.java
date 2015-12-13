@@ -48,7 +48,7 @@ public class SelectionManager {
   private final BS bsSelection = new BS();
   final BS bsFixed = new BS();
 
-  public BS bsSubset; // set in Eval and only pointed to here
+  public BS bsSubset; 
   public BS bsDeleted;
   public Boolean noneSelected;
 
@@ -62,10 +62,8 @@ public class SelectionManager {
 //  }
 
   void processDeletedModelAtoms(BS bsAtoms) {
-    if (bsDeleted != null)
-      BSUtil.deleteBits(bsDeleted, bsAtoms);
-    if (bsSubset != null)
-      BSUtil.deleteBits(bsSubset, bsAtoms);
+    BSUtil.deleteBits(bsDeleted, bsAtoms);
+    BSUtil.deleteBits(bsSubset, bsAtoms);
     BSUtil.deleteBits(bsFixed, bsAtoms);
     BSUtil.deleteBits(bsHidden, bsAtoms);
     BS bs = BSUtil.copy(bsSelection);
@@ -84,8 +82,8 @@ public class SelectionManager {
 
   void clear() {
     clearSelection(true);
-    hide(null, null, 0, true);
     setSelectionSubset(null);
+    hide(null, null, 0, true);
     bsDeleted = null;
     setMotionFixedAtoms(null);
   }
@@ -93,8 +91,13 @@ public class SelectionManager {
   void display(ModelSet modelSet, BS bs, int addRemove, boolean isQuiet) {
     switch (addRemove) {
     default:
+      BS bsNotSubset = (bsSubset == null ? null : BSUtil.andNot(BSUtil.copy(bsHidden), bsSubset));
       BS bsAll = modelSet.getModelAtomBitSetIncludingDeleted(-1, false);
       bsHidden.or(bsAll);
+      if (bsNotSubset != null) {
+        bsHidden.and(bsSubset);
+        bsHidden.or(bsNotSubset);
+      }
       //$FALL-THROUGH$
     case T.add:
       if (bs != null)
@@ -112,7 +115,10 @@ public class SelectionManager {
   }
 
   void hide(ModelSet modelSet, BS bs, int addRemove, boolean isQuiet) {
+    BS bsNotSubset = (addRemove == 0 || bsSubset == null ? null : BSUtil.andNot(BSUtil.copy(bsHidden), bsSubset));
     setBitSet(bsHidden, bs, addRemove);
+    if (bsNotSubset != null)
+      bsHidden.or(bsNotSubset);
     if (modelSet != null)
       modelSet.setBsHidden(bsHidden);
     if (!isQuiet)
@@ -219,12 +225,6 @@ public class SelectionManager {
   }
 
   public void setSelectionSubset(BS bs) {
-
-    // for informational purposes only
-    // the real copy is in Eval so that eval operations
-    // can all use it directly, and so that all these
-    // operations still work properly on the full set of atoms
-
     bsSubset = bs;
   }
 
@@ -252,14 +252,14 @@ public class SelectionManager {
       return 0;
     empty = TRUE;
     BS bs;
-    if (bsSubset != null) {
+    if (bsSubset == null) {
+      bs = bsSelection;
+    } else {
       bsTemp.clearAll();
       bsTemp.or(bsSubset);
       bsTemp.and(bsSelection);
       bs = bsTemp;
-    } else {
-      bs = bsSelection;
-    }
+   }
     int count = bs.cardinality();
     if (count > 0)
       empty = FALSE;

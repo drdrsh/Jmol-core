@@ -68,8 +68,9 @@ public final class JC {
     "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
     "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
-    "ams", "http://rruff.geo.arizona.edu/AMS/viewJmol.php?DYNAMIC?&mineral=%file&action=showcif",
-    "am", "'http://rruff.geo.arizona.edu/AMS/CIF_text_files/'+load('http://rruff.geo.arizona.edu/AMS/minerals/%FILE').split(\"viewJmol('\")[(%n == 0 ? 0 : %n + 1)].split(\"'\")[1]+'_cif.txt'"
+    // _#CHANGEABLE_ flag indicates that the loaded file should be saved in any state in full
+    // ' at start indicates a Jmol script evaluation
+    "ams", "'http://rruff.geo.arizona.edu/AMS/viewJmol.php?'+(0+'%file'==0? 'mineral':('%file'.length==7? 'amcsd':'id'))+'=%file&action=showcif#_DOCACHE_'"
   };
   
   public static String[] macros = {

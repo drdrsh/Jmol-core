@@ -97,6 +97,7 @@ public class ScriptEval extends ScriptExpr {
    *       extends ScriptError -- error handling 
    * 
    *   scriptext.CmdExt        -- optionally loaded, less-used commands
+   *   scriptext.IsoExt        -- optionally loaded, less-used commands
    *   scriptext.MathExt       -- optionally loaded, less-used functions
    *   scriptext.SmilesExt     -- optionally loaded methods for cmds and math
    *   
@@ -232,6 +233,7 @@ public class ScriptEval extends ScriptExpr {
   private JmolThread scriptDelayThread, fileLoadThread;
 
   public boolean allowJSThreads = true;
+  private boolean isFuncReturn;
 
   @Override
   public boolean getAllowJSThreads() {
@@ -391,7 +393,7 @@ public class ScriptEval extends ScriptExpr {
     this.historyDisabled = historyDisabled;
     this.outputBuffer = outputBuffer;
     currentThread = Thread.currentThread();
-    this.allowJSThreads = allowThreads;
+    allowJSThreads = allowThreads;
     this.listCommands = listCommands;
     timeBeginExecution = System.currentTimeMillis();
     executionStopped = executionPaused = false;
@@ -419,7 +421,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.handleError(er, false);
       setErrorMessage("" + er + " " + vwr.getShapeErrorState());
       errorMessageUntranslated = "" + er;
-      report(errorMessage);
+      report(errorMessage, true);
       haveError = true;
     } catch (ScriptException e) {
       if (e instanceof ScriptInterruption && (!isTry || !e.isError)) {
@@ -442,7 +444,7 @@ public class ScriptEval extends ScriptExpr {
       }
       setErrorMessage(e.toString());
       errorMessageUntranslated = e.getErrorMessageUntranslated();
-      report(errorMessage);
+      report(errorMessage, true);
       vwr
           .notifyError(
               (errorMessage != null
@@ -566,27 +568,30 @@ public class ScriptEval extends ScriptExpr {
   @Override
   public void runScript(String script) throws ScriptException {
     if (!vwr.isPreviewOnly)
-      runScriptBuffer(script, outputBuffer);
+      runScriptBuffer(script, outputBuffer, false);
   }
 
   /**
    * runs a script immediately and sends selected output to a provided SB
-   * 
-   * @param script
    * @param outputBuffer
+   * @param script
+   * 
    * @throws ScriptException
    */
   @Override
-  public void runScriptBuffer(String script, SB outputBuffer)
+  public void runScriptBuffer(String script, SB outputBuffer, boolean isFuncReturn)
       throws ScriptException {
     pushContext(null, "runScriptBuffer");
     contextPath += " >> script() ";
     this.outputBuffer = outputBuffer;
     allowJSThreads = false;
+    boolean fret = this.isFuncReturn;
+    this.isFuncReturn |= isFuncReturn;    
     if (compileScript(null, script + JC.SCRIPT_EDITOR_IGNORE
         + JC.REPAINT_IGNORE, false))
       dispatchCommands(false, false, false);
     popContext(false, false);
+    this.isFuncReturn = fret;
   }
 
   /**
@@ -1776,29 +1781,33 @@ public class ScriptEval extends ScriptExpr {
 
   //////////////////// showing strings /////////////////
 
-  @Override
   public void showString(String str) {
     // called by ScriptExt and ScriptError
     showStringPrint(str, false);
   }
 
-  public void showStringPrint(String str, boolean isPrint) {
-    if (chk || str == null)
+  @Override
+  public void showStringPrint(String s, boolean mustDo) {
+    if (chk || s == null)
       return;
-    if (outputBuffer != null && Logger.isActiveLevel(Logger.LEVEL_WARN))
-      outputBuffer.append(str).appendC('\n');
+    if (outputBuffer == null)
+      vwr.showString(s, mustDo);
     else
-      vwr.showString(str, isPrint);
+      appendBuffer(s, mustDo);
   }
 
-  public void report(String s) {
+  public void report(String s, boolean isError) {
     if (chk)
       return;
-    if (outputBuffer != null) {
-      outputBuffer.append(s).appendC('\n');
-      return;
-    }
-    vwr.scriptStatus(s);
+    if (outputBuffer == null)
+      vwr.scriptStatus(s);
+    else 
+      appendBuffer(s, isError);
+  }
+
+  private void appendBuffer(String str, boolean mustDo) {
+    if (mustDo || isFuncReturn || Logger.isActiveLevel(Logger.LEVEL_INFO))
+      outputBuffer.append(str).appendC('\n');
   }
 
   /*
@@ -1859,7 +1868,7 @@ public class ScriptEval extends ScriptExpr {
           setErrorMessage("" + er);
         }
         if (error) {
-          report(errorMessage);
+          report(errorMessage, true);
           setErrorMessage(null);
         }
         restoreScriptContext(scSave, true, false, false);
@@ -2104,7 +2113,7 @@ public class ScriptEval extends ScriptExpr {
       return true;
     String script = vwr.getInsertedCommand();
     if (!"".equals(script))
-      runScriptBuffer(script, null);
+      runScriptBuffer(script, null, false);
     else if (isSpt && debugScript && vwr.getBoolean(T.messagestylechime))
       vwr.getChimeMessenger().update(null);
     if (!mustResumeEval && !allowJSInterrupt || fromFunc)
@@ -3251,7 +3260,7 @@ public class ScriptEval extends ScriptExpr {
       if (slen == 4 && optParameterAsString(2).equals("saved") && slen == 4) {
         vwr.stm.deleteSaved(optParameterAsString(3));
         if (doReport())
-          report(GT.o(GT._("show saved: {0}"), vwr.stm.listSavedStates()));
+          report(GT.o(GT._("show saved: {0}"), vwr.stm.listSavedStates()), false);
         return;
       }
       setObjectProperty();
@@ -3265,7 +3274,7 @@ public class ScriptEval extends ScriptExpr {
       bs = vwr.getAllAtoms();
     int nDeleted = vwr.deleteAtoms(bs, false);
     if (doReport())
-      report(GT.i(GT._("{0} atoms deleted"), nDeleted));
+      report(GT.i(GT._("{0} atoms deleted"), nDeleted), false);
   }
 
   private void cmdDisplay(boolean isDisplay) throws ScriptException {
@@ -3483,8 +3492,8 @@ public class ScriptEval extends ScriptExpr {
             SV vl = what.get(0);
             switch (inTok = vl.tok) {
             case T.bitset:
-              bsOrList = SV.getBitSet(vl, false);
-              isOK = (((BS) bsOrList).nextSetBit(0) >= 0);
+              bsOrList = vl.value;
+              isOK = !((BS) bsOrList).isEmpty();
               break;
             case T.varray:
               Lst<SV> v = vl.getList();
@@ -3983,7 +3992,7 @@ public class ScriptEval extends ScriptExpr {
       if (chk)
         return;
       int n = vwr.autoHbond(null, null, false);
-      report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)));
+      report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)), false);
       return;
     }
     if (slen == 2 && getToken(1).tok == T.delete) {
@@ -4231,28 +4240,6 @@ public class ScriptEval extends ScriptExpr {
           }
         }
         return;
-      case T.data:
-        isData = true;
-        loadScript.append(" /*data*/ data");
-        String key = stringParameter(++i).toLowerCase();
-        int ptVar = key.indexOf("@");
-        if (ptVar >= 0)
-          key = key.replace('@', '_');
-        loadScript.append(" ").append(PT.esc(key));
-        isAppend = key.startsWith("append");
-        doOrient = (key.indexOf("orientation") >= 0);
-        String strModel = (ptVar >= 0 ? ""
-            + getParameter(key.substring(ptVar + 1), T.string, true)
-            : paramAsStr(++i));
-        strModel = Viewer.fixInlineString(strModel, vwr.getInlineChar());
-        htParams.put("fileData", strModel);
-        htParams.put("isData", Boolean.TRUE);
-        //note: ScriptCompiler will remove an initial \n if present
-        loadScript.appendC('\n').append(strModel).append(" end ")
-            .append(PT.esc(key));
-        if (ptVar < 0)
-          i += 2; // skip END "key"
-        break;
       case T.mutate:
         isMutate = isAppend = true;
         appendNew = false;
@@ -4295,7 +4282,7 @@ public class ScriptEval extends ScriptExpr {
       // LOAD [[APPEND]] SMILES
       // LOAD [[APPEND]] TRAJECTORY
       // LOAD [[APPEND]] MODEL
-      // LOAD SYNC  (asynchronous -- flag for RecentFileDialog)
+      // LOAD ASYNC  (asynchronous -- flag for RecentFileDialog)
       // LOAD [[APPEND]] "fileNameInQuotes"
 
       switch (tok) {
@@ -4357,6 +4344,13 @@ public class ScriptEval extends ScriptExpr {
         break;
       case T.identifier:
         // i has been incremented; continue...
+        break;
+      case T.data:
+        String key = stringParameter(++i).toLowerCase();
+        isAppend = key.startsWith("append");
+        doOrient = (key.indexOf("orientation") >= 0);
+        i = addLoadData(loadScript, key, htParams, i);
+        isData = true;
         break;
       default:
         modelName = "fileset";
@@ -4686,11 +4680,31 @@ public class ScriptEval extends ScriptExpr {
 
     if (debugHigh)
       report("Successfully loaded:"
-          + (filenames == null ? htParams.get("fullPathName") : modelName));
+          + (filenames == null ? htParams.get("fullPathName") : modelName), false);
 
     finalizeLoad(isAppend, appendNew, isConcat, doOrient, nFiles, ac0,
         modelCount0);
 
+  }
+
+  private int addLoadData(SB loadScript, String key, Map<String, Object> htParams, int i) throws ScriptException {
+    loadScript.append(" /*data*/ data");
+    int ptVar = key.indexOf("@");
+    if (ptVar >= 0)
+      key = key.replace('@', '_');
+    loadScript.append(" ").append(PT.esc(key));
+    String strModel = (ptVar >= 0 ? ""
+        + getParameter(key.substring(ptVar + 1), T.string, true)
+        : paramAsStr(++i));
+    strModel = Viewer.fixInlineString(strModel, vwr.getInlineChar());
+    htParams.put("fileData", strModel);
+    htParams.put("isData", Boolean.TRUE);
+    //note: ScriptCompiler will remove an initial \n if present
+    loadScript.appendC('\n').append(strModel).append(" end ")
+        .append(PT.esc(key));
+    if (ptVar < 0)
+      i += 2; // skip END "key"
+    return i;
   }
 
   private void loadPNGJVar(String varName, Object o, Map<String, Object> htParams) throws ScriptException {
@@ -4799,6 +4813,7 @@ public class ScriptEval extends ScriptExpr {
     case T.unitcell:
     // OFFSET {x y z}
     case T.offset:
+    case T.data:
     // FILTER "..."
     case T.append:
       // Jmol 13.1.5 -- APPEND "data..."
@@ -4919,10 +4934,10 @@ public class ScriptEval extends ScriptExpr {
     if (chk)
       return;
     String s = Txt.formatText(vwr, text);
-    if (outputBuffer == null)
-      vwr.warn(s);
+    if (outputBuffer == null && !vwr.isPrintOnly)
+      Logger.warn(s);
     if (!s.startsWith("_"))
-      report(s);
+      report(s, false);
   }
 
   /**
@@ -7649,7 +7664,7 @@ public class ScriptEval extends ScriptExpr {
     if (pt == 2) {
       saveContext(info);
       if (doReport())
-        report(GT.o(GT._("to resume, enter: &{0}"), info));
+        report(GT.o(GT._("to resume, enter: &{0}"), info), false);
       throw new ScriptInterruption(this, info, Integer.MIN_VALUE);
     }
     evalError(info, null);
@@ -7942,7 +7957,7 @@ public class ScriptEval extends ScriptExpr {
     int nDeleted = vwr.deleteAtoms(bs, true);
     boolean isQuiet = !doReport();
     if (!isQuiet)
-      report(GT.i(GT._("{0} atoms deleted"), nDeleted));
+      report(GT.i(GT._("{0} atoms deleted"), nDeleted), false);
     vwr.select(null, false, 0, isQuiet);
   }
 
@@ -8040,7 +8055,7 @@ public class ScriptEval extends ScriptExpr {
       xTrans = 0;
     if (Float.isNaN(yTrans))
       yTrans = 0;
-    if (isSameAtom && Math.abs(zoom - newZoom) < 1)
+    if (isSameAtom && Math.abs(zoom - newZoom) < 1 || !useThreads())
       floatSecondsTotal = 0;
     vwr.moveTo(this, floatSecondsTotal, center, JC.center, Float.NaN, null,
         newZoom, xTrans, yTrans, Float.NaN, null, Float.NaN, Float.NaN,

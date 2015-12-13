@@ -640,7 +640,7 @@ public class CmdExt extends ScriptExt {
           return;
         n = vwr.autoHbond(bs1, bs2, false);
         if (n != Integer.MIN_VALUE)
-          eval.report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)));
+          eval.report(GT.i(GT._("{0} hydrogen bonds"), Math.abs(n)), false);
         return;
       case T.hydrogen:
         boolean andBond = (tokAt(2) == T.on);
@@ -1869,7 +1869,7 @@ public class CmdExt extends ScriptExt {
     boolean report = eval.doReport(); 
     if (isDelete) {
       if (report)
-        eval.report(GT.i(GT._("{0} connections deleted"), nModified));
+        eval.report(GT.i(GT._("{0} connections deleted"), nModified), false);
       return;
     }
     if (isColorOrRadius) {
@@ -1882,7 +1882,7 @@ public class CmdExt extends ScriptExt {
     }
     if (report)
       eval.report(GT.o(GT._("{0} new bonds; {1} modified"),
-          new Object[] { Integer.valueOf(nNew), Integer.valueOf(nModified) }));
+          new Object[] { Integer.valueOf(nNew), Integer.valueOf(nModified) }), false);
   }
 
   private void console() throws ScriptException {
@@ -3827,9 +3827,10 @@ public class CmdExt extends ScriptExt {
       if (timeMsg)
         showString(Logger.getTimerMsg("export", 0));
       if (msg != null) {
-        if (!msg.startsWith("OK"))
+        boolean isError = !msg.startsWith("OK"); 
+        if (isError)
           eval.evalError(msg, null);
-        eval.report(data);
+        eval.report(data, isError);
       }
       return "";
     }
@@ -4046,7 +4047,8 @@ public class CmdExt extends ScriptExt {
   private String writeMsg(String msg) throws ScriptException {
     if (chk || msg == null)
       return "";
-    if (!msg.startsWith("OK")) {
+    boolean isError = !msg.startsWith("OK"); 
+    if (isError) {
       e.evalError(msg, null);
       /**
        * @j2sNative
@@ -4056,7 +4058,7 @@ public class CmdExt extends ScriptExt {
       {
       }
     }
-    e.report(msg);
+    e.report(msg, isError);
     return msg;
   }
 

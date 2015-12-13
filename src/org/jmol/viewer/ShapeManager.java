@@ -401,20 +401,24 @@ public class ShapeManager {
 
   private final int[] navMinMax = new int[4];
 
-  public int[] finalizeAtoms(BS bsAtoms, P3 ptOffset) {
+  public int[] finalizeAtoms(boolean checkAtoms, boolean finalizeParams) {
     Viewer vwr = this.vwr;
+    if (finalizeParams)
+      vwr.finalizeTransformParameters();
     TransformManager tm = vwr.tm;
     BS bs = bsRenderableAtoms;
+    BS bsAtoms = (checkAtoms ? tm.bsSelectedAtoms : null); 
     if (bsAtoms != null) {
       // translateSelected operation
       P3 ptCenter = ms.getAtomSetCenter(bsAtoms);
       P3 pt = new P3();
       tm.transformPt3f(ptCenter, pt);
-      pt.add(ptOffset);
+      pt.add(tm.ptOffset);
       tm.unTransformPoint(pt, pt);
       pt.sub(ptCenter);
       vwr.setAtomCoordsRelative(pt, bsAtoms);
-      ptOffset.set(0, 0, 0);
+      tm.ptOffset.set(0, 0, 0);
+      tm.bsSelectedAtoms = null;
     }
     ms.getAtomsInFrame(bs);
     Vibration[] vibrationVectors = ms.vibrations;

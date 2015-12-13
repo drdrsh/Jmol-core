@@ -941,7 +941,7 @@ public class ScriptMathProcessor {
         m4.transpose();
         return addXM4(m4);
       case T.bitset:
-        return addXBs(BSUtil.copyInvert(SV.bsSelectVar(x2),
+        return addXBs(BSUtil.copyInvert((BS) x2.value,
             (x2.value instanceof BondSet ? vwr.ms.bondCount : vwr.ms.ac)));
       }
       return addXFloat(-x2.asFloat());
@@ -958,7 +958,7 @@ public class ScriptMathProcessor {
       case T.matrix4f:
         return addXM4(M4.newM4((M4) x2.value).invert());
       case T.bitset:
-        return addXBs(BSUtil.copyInvert(SV.bsSelectVar(x2),
+        return addXBs(BSUtil.copyInvert((BS) x2.value,
             (x2.value instanceof BondSet ? vwr.ms.bondCount : vwr.ms.ac)));
       default:
         return addXBool(!x2.asBoolean());
@@ -1074,14 +1074,14 @@ public class ScriptMathProcessor {
     case T.opAnd:
       switch (x1.tok) {
       case T.bitset:
-        BS bs = SV.bsSelectVar(x1);
+        BS bs = (BS) x1.value;
         switch (x2.tok) {
         case T.integer:
           int x = x2.asInt();
           return (addXBool(x < 0 ? false : bs.get(x)));
         case T.bitset:
           bs = BSUtil.copy(bs);
-          bs.and(SV.bsSelectVar(x2));
+          bs.and((BS) x2.value);
           return addXBs(bs);
         }
         break;
@@ -1090,10 +1090,10 @@ public class ScriptMathProcessor {
     case T.opOr:
       switch (x1.tok) {
       case T.bitset:
-        BS bs = BSUtil.copy(SV.bsSelectVar(x1));
+        BS bs = BSUtil.copy((BS) x1.value);
         switch (x2.tok) {
         case T.bitset:
-          bs.or(SV.bsSelectVar(x2));
+          bs.or((BS) x2.value);
           return addXBs(bs);
         case T.integer:
           int x = x2.asInt();
@@ -1117,8 +1117,8 @@ public class ScriptMathProcessor {
       return addXBool(x1.asBoolean() || x2.asBoolean());
     case T.opXor:
       if (x1.tok == T.bitset && x2.tok == T.bitset) {
-        BS bs = BSUtil.copy(SV.bsSelectVar(x1));
-        bs.xor(SV.bsSelectVar(x2));
+        BS bs = BSUtil.copy((BS) x1.value);
+        bs.xor((BS) x2.value);
         return addXBs(bs);
       }
       boolean a = x1.asBoolean();
@@ -1127,8 +1127,8 @@ public class ScriptMathProcessor {
     case T.opToggle:
       if (x1.tok != T.bitset || x2.tok != T.bitset)
         return false;
-      return addXBs(BSUtil.toggleInPlace(BSUtil.copy(SV.bsSelectVar(x1)),
-          SV.bsSelectVar(x2)));
+      return addXBs(BSUtil.toggleInPlace(BSUtil.copy((BS) x1.value),
+          (BS) x2.value));
     case T.opLE:
       return addXBool(x1.asFloat() <= x2.asFloat());
     case T.opGE:
@@ -1543,8 +1543,8 @@ public class ScriptMathProcessor {
     case T.point3f:
       return (P3) x.value;
     case T.bitset:
-      BS bs = SV.bsSelectVar(x);
-      if (bs.nextSetBit(0) < 0)
+      BS bs = (BS) x.value;
+      if (bs.isEmpty())
         break;
       return (P3) eval.getBitsetProperty(bs, T.xyz, null, null,
           x.value, null, false, Integer.MAX_VALUE, false);
@@ -1603,7 +1603,7 @@ public class ScriptMathProcessor {
 
   private boolean getAllProperties(SV x2, String abbr)
       throws ScriptException {
-    BS bs = SV.bsSelectVar(x2);
+    BS bs = (BS) x2.value;
     Lst<T> tokens;
     int n = bs.cardinality();
     if (n == 0 || !abbr.endsWith("?")
@@ -1636,7 +1636,7 @@ public class ScriptMathProcessor {
   private boolean getBoundBox(SV x2) {
     if (x2.tok != T.bitset)
       return false;
-    BoxInfo b = vwr.ms.getBoxInfo(SV.bsSelectVar(x2), 1);
+    BoxInfo b = vwr.ms.getBoxInfo((BS) x2.value, 1);
     P3[] pts = b.getBoundBoxPoints(true);
     Lst<P3> list = new  Lst<P3>();
     for (int i = 0; i < 4; i++)
@@ -1739,7 +1739,7 @@ public class ScriptMathProcessor {
       boolean isAtoms = (op.intValue != T.bonds); 
       if (!isAtoms && x2.value instanceof BondSet)
         return addX(x2);
-      BS bs = SV.bsSelectVar(x2);
+      BS bs = (BS) x2.value;
       if (isAtoms && bs.cardinality() == 1 && (op.intValue & T.minmaxmask) == 0)
         op.intValue |= T.min;
       Object val = eval.getBitsetProperty(bs, op.intValue, null, null,

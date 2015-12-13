@@ -833,8 +833,8 @@ public class MathExt {
       SV x1 = mp.getX();
       if (x1.tok != T.bitset || args.length != 1 || args[0].tok != T.bitset)
         return false;
-      atoms1 = SV.bsSelectVar(x1);
-      atoms2 = SV.bsSelectVar(args[0]);
+      atoms1 = (BS) x1.value;
+      atoms2 = (BS) args[0].value;
       Lst<Integer> list = new Lst<Integer>();
       Atom[] atoms = vwr.ms.at;
       for (int i = atoms1.nextSetBit(0); i >= 0; i = atoms1.nextSetBit(i + 1)) {
@@ -857,9 +857,9 @@ public class MathExt {
         if (isBonds && atoms1 != null)
           return false;
         if (atoms1 == null)
-          atoms1 = SV.bsSelectVar(var);
+          atoms1 = (BS) var.value;
         else if (atoms2 == null)
-          atoms2 = SV.bsSelectVar(var);
+          atoms2 = (BS) var.value;
         else
           return false;
         break;
@@ -934,8 +934,8 @@ public class MathExt {
     }
     if (i == args.length || !(args[i].value instanceof BS))
       return false;
-    BS bsA = BSUtil.copy(SV.bsSelectVar(args[i++]));
-    BS bsB = (i < args.length ? BSUtil.copy(SV.bsSelectVar(args[i])) : null);
+    BS bsA = BSUtil.copy((BS) args[i++].value);
+    BS bsB = (i < args.length ? BSUtil.copy((BS) args[i].value) : null);
     RadiusData rd = new RadiusData(null, (distance > 10 ? distance / 100
         : distance), (distance > 10 ? EnumType.FACTOR : EnumType.OFFSET),
         VDW.AUTO);
@@ -1097,12 +1097,12 @@ public class MathExt {
       boolean isAll = minMax == T.minmaxmask;
       switch (x1.tok) {
       case T.bitset:
-        BS bs = SV.bsSelectVar(x1);
+        BS bs = (BS) x1.value;
         BS bs2 = null;
         boolean returnAtom = (isMinMax && x3 != null && x3.asBoolean());
         switch (x2.tok) {
         case T.bitset:
-          bs2 = (x2.tok == T.bitset ? SV.bsSelectVar(x2) : null);
+          bs2 = (x2.tok == T.bitset ? (BS) x2.value : null);
           //$FALL-THROUGH$
         case T.point3f:
           Atom[] atoms = vwr.ms.at;
@@ -1276,8 +1276,7 @@ public class MathExt {
     boolean isON = !isList && (argLast.tok == T.on);
     try {
       if (isChemical) {
-        String data = (x1.tok == T.bitset ? vwr.getSmiles(SV.getBitSet(x1,
-            false)) : SV.sValue(x1));
+        String data = (x1.tok == T.bitset ? vwr.getSmiles((BS) x1.value) : SV.sValue(x1));
         data = data.length() == 0 ? "" : vwr.getChemicalInfo(data,
             args.length > 1 ? T.getTokenFromName(flags.toLowerCase()) : null);
         if (data.endsWith("\n"))
@@ -1528,7 +1527,7 @@ public class MathExt {
       return mp.addXObj(vwr.extractProperty(args[0].value,
           args[1].value.toString(), -1));
     }
-    BS bsSelect = (isAtomProperty && args.length == 1 && args[0].tok == T.bitset ? SV.bsSelectVar(args[0]) : null);
+    BS bsSelect = (isAtomProperty && args.length == 1 && args[0].tok == T.bitset ? (BS) args[0].value : null);
     String pname = (bsSelect == null && args.length > 0 ? SV.sValue(args[pt++]) : "");
     String propertyName = pname;
     String lc = propertyName.toLowerCase();
@@ -1550,7 +1549,7 @@ public class MathExt {
         Object[] data = new Object[3];
         int shapeID;
         if (name.startsWith("$")) {
-          // "P4".getProperty....
+          // "$P4".getProperty....
           name = name.substring(1);
           shapeID = vwr.shm.getShapeIdFromObjectName(name);
           if (shapeID >= 0) {
@@ -1600,11 +1599,11 @@ public class MathExt {
     } else if (args.length > pt) {
       switch (args[pt].tok) {
       case T.bitset:
-        propertyValue = SV.bsSelectVar(args[pt++]);
+        propertyValue = args[pt++].value;
         if (propertyName.equalsIgnoreCase("bondInfo") && args.length > pt
             && args[pt].tok == T.bitset)
           propertyValue = new BS[] { (BS) propertyValue,
-              SV.bsSelectVar(args[pt]) };
+              (BS) args[pt].value };
         break;
       case T.hash:
       case T.string:
@@ -1614,7 +1613,7 @@ public class MathExt {
       }
     }
     if (isAtomProperty) {
-      BS bs = SV.bsSelectVar(x);
+      BS bs = (BS) x.value;
       int iAtom = bs.nextSetBit(0);
       if (iAtom < 0)
         return mp.addXStr("");
@@ -1685,7 +1684,7 @@ public class MathExt {
       return mp.addXList(listOut);
     }
     
-    BS bs = SV.getBitSet(x1, true);
+    BS bs = (x1.tok == T.bitset ? (BS) x1.value : null);
     boolean asArray = T.tokAttr(intValue, T.minmaxmask); // "all"
     return mp.addXObj(format == null ? "" : bs == null ? SV.sprintf(PT.formatCheck(format), x1) : e
         .getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,
@@ -2199,7 +2198,8 @@ public class MathExt {
     }
     if (t456 == null && t < 1e6)
       t456 = P3.new3(t, t, t);
-    BS bs = SV.getBitSet(mp.getX(), false);
+    SV x = mp.getX();
+    BS bs = (x.tok == T.bitset ? (BS) x.value : new BS());
     return mp.addXList(vwr.ms.getModulationList(bs,
         (type + "D").toUpperCase().charAt(0), t456));
   }
@@ -2226,7 +2226,7 @@ public class MathExt {
     switch (args.length) {
     case 1:
       if (args[0].tok == T.bitset) {
-        BS bs = SV.getBitSet(args[0], false);
+        BS bs = (BS) args[0].value;
         if (bs.cardinality() == 3) {
           Lst<P3> pts = vwr.ms.getAtomPointVector(bs);
           return mp.addXPt4(Measure.getPlaneThroughPoints(pts.get(0), pts.get(1), pts.get(2),
@@ -2399,7 +2399,7 @@ public class MathExt {
           pt3 = P3.newP((T3) args[0].value);
           break;
         case T.bitset:
-          pt3 = vwr.ms.getAtomSetCenter(SV.bsSelectVar(args[0]));
+          pt3 = vwr.ms.getAtomSetCenter((BS) args[0].value);
           break;
         default:
           return false;
@@ -2766,6 +2766,7 @@ public class MathExt {
 
   private boolean evaluateScript(ScriptMathProcessor mp, SV[] args, int tok)
       throws ScriptException {
+    // eval(cmd)
     // javascript(cmd)
     // script(cmd)
     // script(cmd, syncTarget)
@@ -2785,10 +2786,10 @@ public class MathExt {
       if (!appID.equals("."))
         sb.append(vwr.jsEval(appID + "\1" + s));
       if (appID.equals(".") || appID.equals("*"))
-        e.runScriptBuffer(s, sb);
+        e.runScriptBuffer(s, sb, true);
       break;
     case T.show:
-      e.runScriptBuffer("show " + s, sb);
+      e.runScriptBuffer("show " + s, sb, true);
       break;
     case T.javascript:
       sb.append(vwr.jsEval(s));
@@ -2896,7 +2897,7 @@ public class MathExt {
     switch (tok) {
     case T.split:
       if (x.tok == T.bitset) {
-        BS bsSelected = SV.bsSelectVar(x);
+        BS bsSelected = (BS) x.value;
         int modelCount = vwr.ms.mc;
         Lst<SV> lst = new Lst<SV>();
         for (int i = 0; i < modelCount; i++) {
@@ -2935,9 +2936,8 @@ public class MathExt {
     String pattern = SV.sValue(args[0]);
     if (pattern.length() > 0)
       try {
-        BS bsSelected = (isSelector ? SV.bsSelectVar(mp.getX())
-            : args.length == 2 && args[1].tok == T.bitset ? SV
-                .bsSelectVar(args[1]) : null);
+        BS bsSelected = (isSelector ? (BS) mp.getX().value
+            : args.length == 2 && args[1].tok == T.bitset ?  (BS) args[1].value : null);
         bs = vwr.getSmilesMatcher().getSubstructureSet(pattern, vwr.ms.at,
             vwr.ms.ac, bsSelected,
             (tok == T.smiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
@@ -3026,9 +3026,10 @@ public class MathExt {
     // {*}.tensor("isc")            // only within this atom set
     // {atomindex=1}.tensor("isc")  // all to this atom
     // {*}.tensor("efg","eigenvalues")
-    if (args.length > 2)
+    SV x = mp.getX();
+    if (args.length > 2 || x.tok != T.bitset)
       return false;
-    BS bs = SV.getBitSet(mp.getX(), false);
+    BS bs = (BS) x.value;
     String tensorType = (args.length == 0 ? null : SV.sValue(args[0])
         .toLowerCase());
     JmolNMRInterface calc = vwr.getNMRCalculation();
@@ -3066,7 +3067,7 @@ public class MathExt {
     }
     if (isSelector) {
       return mp
-          .addXObj(e.getBitsetProperty(SV.bsSelectVar(x1), tok, null, null,
+          .addXObj(e.getBitsetProperty((BS) x1.value, tok, null, null,
               x1.value, new Object[] { name, params }, false, x1.index, false));
     }
     SV var = e.getUserFunctionResult(name, params, null);
@@ -3264,7 +3265,7 @@ public class MathExt {
     if (plane != null)
       return mp.addXBs(ms.getAtomsNearPlane(distance, plane));
 
-    bs = (args[last].tok == T.bitset ? SV.bsSelectVar(args[last]) : null);
+    bs = (args[last].tok == T.bitset ? (BS) args[last].value : null);
     if (tok == T.unitcell) {
       boolean asMap = isWithinModelSet;
       return mp

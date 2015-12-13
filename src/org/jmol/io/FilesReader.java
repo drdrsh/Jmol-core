@@ -95,6 +95,8 @@ public class FilesReader implements JmolFilesReaderInterface {
       subFileList = PT.split(name, "|");
       name = subFileList[0];
     }
+    if (name.contains("#_DOCACHE_"))
+      return FileReader.getChangeableReader(vwr, namesAsGivenIn[i], name);
     Object t = fm.getUnzippedReaderOrStreamFromName(name, null,
         true, forceBinary, false, true, htParams);
     if (t instanceof ZipInputStream) {

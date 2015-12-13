@@ -430,30 +430,41 @@ public class AnimationManager {
   private int lastModelPainted;
   private int intAnimThread;
   public int cai = -1;
+
   private void setViewer(boolean clearBackgroundModel) {
     vwr.ms.setTrajectory(cmi);
     vwr.tm.setFrameOffset(cmi);
     if (cmi == -1 && clearBackgroundModel)
-      setBackgroundModelIndex(-1);  
+      setBackgroundModelIndex(-1);
     vwr.setTainted(true);
-    setFrameRangeVisible();
+    int nDisplay = setFrameRangeVisible();
     vwr.setStatusFrameChanged(false, false);
-    if (vwr.ms != null && !vwr.g.selectAllModels)
-        vwr.slm.setSelectionSubset(vwr.getModelUndeletedAtomsBitSet(cmi));
+    if (!vwr.g.selectAllModels)
+      setSelectAllSubset(nDisplay < 2);
   }
 
-  private void setFrameRangeVisible() {
+  void setSelectAllSubset(boolean justOne) {
+    if (vwr.ms != null)
+      vwr.slm.setSelectionSubset(justOne ? vwr.ms
+          .getModelAtomBitSetIncludingDeleted(cmi, true) : vwr.ms
+          .getModelAtomBitSetIncludingDeletedBs(bsVisibleModels));
+  }
+
+  private int setFrameRangeVisible() {
+    int nDisplayed = 0;
     bsVisibleModels.clearAll();
-    if (backgroundModelIndex >= 0)
+    if (backgroundModelIndex >= 0) {
       bsVisibleModels.set(backgroundModelIndex);
+      nDisplayed = 1;
+    }
     if (cmi >= 0) {
       bsVisibleModels.set(cmi);
-      return;
+      return ++nDisplayed;
     }
     if (frameStep == 0)
-      return;
-    int nDisplayed = 0;
+      return nDisplayed;
     int frameDisplayed = 0;
+    nDisplayed = 0;
     for (int iframe = firstFrameIndex; iframe != lastFrameIndex; iframe += frameStep) {
       int i = modelIndexForFrame(iframe); 
       if (!vwr.ms.isJmolDataFrameForModel(i)) {
@@ -472,6 +483,7 @@ public class AnimationManager {
     }
     if (nDisplayed == 1 && cmi < 0)
       setFrame(frameDisplayed);   
+    return nDisplayed;
   }
 
   private void animation(boolean TF) {

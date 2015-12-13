@@ -36,6 +36,7 @@ import javajs.api.GenericBinaryDocument;
 import javajs.api.ZInputStream;
 import javajs.util.AU;
 import javajs.util.PT;
+import javajs.util.Rdr;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
@@ -78,6 +79,8 @@ public class FileReader {
       vwr.zap(false, true, false);
     String errorMessage = null;
     Object t = null;
+    if (fullPathNameIn.contains("#_DOCACHE_"))
+      reader = getChangeableReader(vwr, nameAsGivenIn, fullPathNameIn);
     if (reader == null) {
       t = fm.getUnzippedReaderOrStreamFromName(fullPathNameIn,
           bytes, true, false, false, true, htParams);
@@ -143,6 +146,11 @@ public class FileReader {
     fm.setFileInfo(new String[] { fullPathNameIn, fileNameIn, nameAsGivenIn });
   }
   
+  final static BufferedReader getChangeableReader(Viewer vwr, 
+                               String nameAsGivenIn, String fullPathNameIn) {
+    return Rdr.getBR((String) vwr.getLigandModel(nameAsGivenIn, fullPathNameIn, "_file", null));
+  }
+
   public Object getAtomSetCollection() {
     return atomSetCollection;
   }

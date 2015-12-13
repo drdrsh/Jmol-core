@@ -139,8 +139,7 @@ import org.jmol.viewer.binding.Binding;
  * 
  * The JmolViewer runs on Java 1.5+ virtual machines. The 3d graphics rendering
  * package is a software implementation of a z-buffer. It does not use Java3D
- * and does not use Graphics2D from Java 1.2. "
- * 
+ * and does not use Graphics2D from Java 1.2.
  * 
  * public here is a test for applet-applet and JS-applet communication the idea
  * being that applet.getProperty("jmolViewer") returns this Viewer object,
@@ -266,7 +265,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   String logFilePath = "";
 
   private boolean allowScripting;
-  private boolean isPrintOnly = false;
+  public boolean isPrintOnly;
   public boolean isSignedApplet = false;
   private boolean isSignedAppletLocal = false;
   private boolean isSilent;
@@ -478,15 +477,15 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     apiPlatform = (GenericPlatform) o;
     display = info.get("display");
     isSingleThreaded = apiPlatform.isSingleThreaded();
-    noGraphicsAllowed = checkOption2("noGraphics", "-n");
-    System.out.println("nographics " + noGraphicsAllowed);
+    noGraphicsAllowed = checkOption2("noDisplay", "-n");
+    //System.out.println("nographics " + noGraphicsAllowed);
     headless = apiPlatform.isHeadless();
     haveDisplay = (isWebGL || display != null && !noGraphicsAllowed
         && !headless && !dataOnly);
     noGraphicsAllowed &= (display == null);
-    System.out.println("nographics " + noGraphicsAllowed);
+    //System.out.println("nographics " + noGraphicsAllowed);
     headless |= noGraphicsAllowed;
-    System.out.println("headless " + headless + commandOptions);
+    //System.out.println("headless " + headless + commandOptions);
     if (haveDisplay) {
       mustRender = true;
       multiTouch = checkOption2("multiTouch", "-multitouch");
@@ -778,8 +777,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public void initialize(boolean clearUserVariables) {
     g = new GlobalSettings(this, g, clearUserVariables);
     setStartupBooleans();
-    g.setI("_width", dimScreen.width);
-    g.setI("_height", dimScreen.height);
+    setWidthHeightVar();
     if (haveDisplay) {
       g.setB("_is2D", isJS && !isWebGL);
       g.setB("_multiTouchClient", acm.isMTClient());
@@ -799,6 +797,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     setBooleanProperty("antialiasDisplay", g.antialiasDisplay);
     stm.resetLighting();
     tm.setDefaultPerspective();
+  }
+
+  public void setWidthHeightVar() {
+    g.setI("_width", dimScreen.width);
+    g.setI("_height", dimScreen.height);
   }
 
   void saveModelOrientation() {
@@ -1770,6 +1773,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       }
       return null;
     }
+    id = id.replace('\\', '/');
     boolean isLigand = prefix.equals("ligand_");
     id = (isLigand ? id.toUpperCase() : id.substring(id.lastIndexOf("/") + 1));
     if (ligandModelSet == null)
@@ -1777,18 +1781,19 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     ligandModelSet.put(id, Boolean.TRUE);
     if (ligandModels == null)
       ligandModels = new Hashtable<String, Object>();
-    boolean isPng = (id.indexOf("|") > 0);
-    if (isPng)
+    int pngPt = id.indexOf("|");
+    if (pngPt >= 0)
       id = id.substring(id.indexOf("|") + 1);
     Object model = (terminator == null ? ligandModels.get(id) : null);
     String data;
     String fname = null;
     if (model instanceof Boolean)
       return null;
-    if (model == null && (terminator == null || isPng))
+    if (model == null && (terminator == null || pngPt >= 0))
       model = ligandModels.get(id + suffix);
     boolean isError = false;
-    if (model == null) {
+    boolean isNew = (model == null);
+    if (isNew) {
       String s;
       if (isLigand) {
         fname = (String) setLoadFormat("#" + id, '#', false);
@@ -1797,6 +1802,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         scriptEcho("fetching " + fname);
         s = getFileAsString3(fname, false, null);
       } else {
+        scriptEcho("fetching " + prefix);
         s = getFileAsString3(prefix, false, null);
         int pt = (terminator == null ? -1 : s.indexOf(terminator));
         if (pt >= 0)
@@ -1807,8 +1813,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       if (!isError)
         ligandModels.put(id + suffix, model);
     }
-    if (!isLigand)
+    if (!isLigand) {
+      if (!isNew)
+        scriptEcho(prefix + " loaded from cache");
       return model;
+    }
     // process ligand business
     
     if (!isError && model instanceof String) {
@@ -3334,8 +3343,13 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     // called by AnimationThread run()
     // called by TransformationManager move and moveTo
     // called by TransformationManager11 navigate, navigateTo
-    if (!haveDisplay || rm == null)
+    if (rm == null)
       return;
+    if (!haveDisplay) {
+      setModelVisibility();
+      shm.finalizeAtoms(false, true);
+      return;
+    }
     rm.requestRepaintAndWait(why);
     setSync();
   }
@@ -3617,9 +3631,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         || rm == null)
       return;
     boolean antialias2 = antialiased && g.antialiasTranslucent;
-    finalizeTransformParameters();
-    int[] navMinMax = shm.finalizeAtoms(tm.bsSelectedAtoms, tm.ptOffset);
-    tm.bsSelectedAtoms = null;
+    int[] navMinMax = shm.finalizeAtoms(true, true);
     if (isWebGL) {
       rm.renderExport(gdata, ms, jsParams);
       notifyViewerRepaintDone();
@@ -3718,6 +3730,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public String evalFile(String strFilename) {
+    // from JmolApp and test suite only
     return (allowScripting && getScriptManager() != null ? scm
         .evalFile(strFilename) : null);
   }
@@ -6204,6 +6217,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     case T.selectallmodels:
       // 11.5.52
       g.selectAllModels = value;
+      if (value)
+        slm.setSelectionSubset(null);
+      else
+        am.setSelectAllSubset(false);
       break;
     case T.messagestylechime:
       // 11.5.39
@@ -8269,11 +8286,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return getStateCreator().getFunctionCalls(selectedFunction);
   }
 
-  public void warn(String s) {
-    if (!isPrintOnly)
-      Logger.warn(s);
-  }
-
   /**
    * Simple method to ensure that the image creator (which writes files) was in
    * fact opened by this vwr and not by some manipulation of the applet. When
@@ -8824,7 +8836,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     try {
       if (getScriptManager() == null)
         return null;
-      eval.runScriptBuffer(script, outputBuffer);
+      eval.runScriptBuffer(script, outputBuffer, false);
     } catch (Exception e) {
       return eval.getErrorMessage();
     }
