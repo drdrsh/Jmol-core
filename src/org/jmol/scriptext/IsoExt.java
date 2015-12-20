@@ -3545,7 +3545,7 @@ public class IsoExt extends ScriptExt {
           + ret + "}", false);
       Lst<SV> params = new Lst<SV>();
       for (int i = 0; i < xyz.length(); i += 2)
-        params.addLast(SV.newV(T.decimal, Float.valueOf(0f)).setName(
+        params.addLast(SV.newF(0).setName(
             xyz.substring(i, i + 1)));
       return new Object[] { e.aatoken[0][1].value, params };
     } catch (Exception ex) {

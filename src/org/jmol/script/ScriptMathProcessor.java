@@ -274,7 +274,7 @@ public class ScriptMathProcessor {
   public boolean addXFloat(float x) {
     if (Float.isNaN(x))
       return addXStr("NaN");
-    putX(SV.newV(T.decimal, Float.valueOf(x)));
+    putX(SV.newF(x));
     return wasX = true;
   }
 
@@ -309,7 +309,7 @@ public class ScriptMathProcessor {
           float f = ((Float) x.value).floatValue();
           if (f < 0 || f == 0 && 1 / f == Float.NEGATIVE_INFINITY) {
             addOp(T.tokenMinus);
-            v = SV.newV(T.decimal, Float.valueOf(-f));
+            v = SV.newF(-f);
             break;
           }
         }

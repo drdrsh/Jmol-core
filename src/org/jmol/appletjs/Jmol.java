@@ -24,22 +24,21 @@
 
 package org.jmol.appletjs;
 
-import org.jmol.util.Logger;
-import org.jmol.util.Parser;
-import org.jmol.util.GenericApplet;
-
 import java.net.URL;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javajs.api.JSInterface;
 import javajs.util.PT;
 
-import java.util.Hashtable;
-import java.util.Map;
+import org.jmol.util.GenericApplet;
+import org.jmol.util.Logger;
+import org.jmol.util.Parser;
 
 /**
  * Java2Script rendition of Jmol using HTML5-only or WebGL-based graphics
  * 
- * @author Bob Hanson hansonr@stolaf.edu, Takanori Nakane, with the assistance
+ * @author Bob Hanson hansonr@stolaf.edu, Takanori Nakane, with the assistance  
  *         of Jhou Renjian
  * 
  */
@@ -128,7 +127,7 @@ public class Jmol extends GenericApplet implements JSInterface {
             /**
              * @j2sNative
              * 
-             *            fxy[i][j] = eval(functionName)(this.htmlName, i, j);
+             *            fxy[i][j] = window.eval(functionName)(this.htmlName, i, j);
              */
             {
             }
@@ -138,7 +137,7 @@ public class Jmol extends GenericApplet implements JSInterface {
         /**
          * @j2sNative
          * 
-         *            data = eval(functionName)(this.htmlName, nX, nY);
+         *            data = window.eval(functionName)(this.htmlName, nX, nY);
          * 
          */
         {
@@ -156,7 +155,7 @@ public class Jmol extends GenericApplet implements JSInterface {
         /**
          * @j2sNative
          * 
-         *            data = eval(functionName)(this.htmlName, nX, nY, fxy);
+         *            data = window.eval(functionName)(this.htmlName, nX, nY, fxy);
          * 
          */
         {
@@ -182,7 +181,7 @@ public class Jmol extends GenericApplet implements JSInterface {
       /**
        * @j2sNative
        * 
-       *            eval(functionName)(this.htmlName, nX, nY, nZ, fxyz);
+       *            window.eval(functionName)(this.htmlName, nX, nY, nZ, fxyz);
        * 
        */
       {
@@ -240,13 +239,17 @@ public class Jmol extends GenericApplet implements JSInterface {
     return "";
   }
 
+  /**
+   * return RAW JAVASCRIPT OBJECT, NOT A STRING 
+   */
   @Override
   protected String doEval(String strEval) {
     try {
       /**
+       * 
        * @j2sNative
        * 
-       *            return "" + eval(strEval);
+       *            return window.eval(strEval);
        */
       {
       }

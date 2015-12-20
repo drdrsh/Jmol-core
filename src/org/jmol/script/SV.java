@@ -86,6 +86,13 @@ public class SV extends T implements JSONEncodable {
     return sv;
   }
   
+  public static SV newF(float f) {
+    SV sv = new SV();
+    sv.tok = decimal;
+    sv.value = Float.valueOf(f);
+    return sv;
+  }
+  
   public static SV newS(String s) {
     return newV(string, s);
   }
@@ -267,6 +274,7 @@ public class SV extends T implements JSONEncodable {
     if (x instanceof ScriptContext)
       return newV(context, x);
     // rest are specific array types supported
+    // DO NOT ADD MORE UNLESS YOU CHANGE isArray(), above
     if (Escape.isAV(x))
       return getVariableAV((SV[]) x);
     if (AU.isAI(x))
@@ -291,12 +299,53 @@ public class SV extends T implements JSONEncodable {
       return getVariableADD((double[][]) x);
     if (AU.isAFloat(x))
       return newV(listf, x);
-    return newS(x.toString());
+    return newJSVar(x);
+  }
+
+  /**
+   * Conversion to Jmol variables of JavaScript variables using
+   * y = javascript("x")
+   * 
+   * @param x a JavaScript variable, perhaps
+   * @return SV
+   */
+  @SuppressWarnings("unused")
+  private static SV newJSVar(Object x) {
+    // JavaScript only
+    /**
+     * @j2sNative
+     * 
+     *            switch(x.BYTES_PER_ELEMENT ? Array : x.constructor) {
+     *            case Boolean:
+     *              return (x ? org.jmol.script.SV.vT : org.jmol.script.SV.vF);
+     *            case Number:
+     *              return (x > Integer.MAX_VALUE || x != Math.floor(x) ? org.jmol.script.SV.newF(x) : org.jmol.script.SV.newI(x));
+     *            case Array:
+     *              var v =  new javajs.util.Lst();
+     *              for (var i = 0, n = x.length; i < n; i++)
+     *                v.addLast(org.jmol.script.SV.newJSVar(x[i]));
+     *              return org.jmol.script.SV.getVariableList(v);
+     *            case Object: 
+     *              var keys = Object.keys(x);
+     *              var v =  new java.util.Hashtable();
+     *              for (var i = keys.length; --i >= 0;)
+     *                v.put(keys[i],org.jmol.script.SV.newJSVar(x[keys[i]]));
+     *              return org.jmol.script.SV.getVariableMap(v);
+     *            }
+     *            
+     */
+    {
+      // for reference only; not included in JavaScript
+      if (false) {
+        getVariableList(new Lst<SV>());
+        getVariableMap(new Hashtable<String, Object>());
+      }
+    }
+    return newS(x.toString());    
   }
 
   @SuppressWarnings("unchecked")
-  public
-  static SV getVariableMap(Map<String, ?> x) {
+  public static SV getVariableMap(Map<String, ?> x) {
     Map<String, Object> ht = (Map<String, Object>) x;
     Object o = null;
     for (Object oo : ht.values()) {
@@ -1080,16 +1129,17 @@ public class SV extends T implements JSONEncodable {
       intValue = index = Integer.MAX_VALUE;
       break;
     case varray:
-      len = getList().size();
+      @SuppressWarnings("unchecked")
+      Lst<SV> v = (Lst<SV>) value;
+      len = v.size();
       if (pt1 <= 0)
         pt1 = len + pt1;
       if (--pt1 < 0)
         pt1 = 0;
-      if (len <= pt1) {
+      if (len <= pt1)
         for (int i = len; i <= pt1; i++)
-          getList().addLast(newV(string, ""));
-      }
-      getList().set(pt1, var);
+          v.addLast(newV(string, ""));
+      v.set(pt1, var);
       break;
     }
   }
@@ -1511,27 +1561,6 @@ public class SV extends T implements JSONEncodable {
     return list;
   }
 
-// I have no idea! 
-//
-//  static List<Object> listAny(SV x) {
-//    List<Object> list = new List<Object>();
-//    List<SV> l = x.getList();
-//    for (int i = 0; i < l.size(); i++) {
-//      SV v = l.get(i);
-//      List<SV> l2 = v.getList();
-//      if (l2 == null) {
-//        list.addLast(v.value);        
-//      } else {
-//        List<Object> o = new List<Object>();
-//        for (int j = 0; j < l2.size(); j++) {
-//          v = l2.get(j);
-//        }
-//        list.addLast(o);
-//      }
-//    }
-//    return list;    
-//  }
-  
   public static float[] flistValue(T x, int nMin) {
     if (x.tok != varray)
       return new float[] { fValue(x) };
@@ -1776,4 +1805,5 @@ public class SV extends T implements JSONEncodable {
         + (property instanceof SV ? PT.esc(key) + " : " + format(new SV[] { null, (SV) property },
             0) : PT.toJSON(key, property)) + "}";
   }
+
 }

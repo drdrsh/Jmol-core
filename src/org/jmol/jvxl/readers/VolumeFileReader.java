@@ -327,9 +327,9 @@ abstract class VolumeFileReader extends SurfaceFileReader {
       initPlanes();
     if (preProcessPlanes)
       return getPlaneProcessed(x);
-    float[] plane = getPlane2(x);
+    float[] plane = getPlaneSR(x);
     if (qpc == null)
-      getPlane(plane, true);
+      getPlaneVFR(plane, true);
     return plane;
   }
 
@@ -362,8 +362,8 @@ abstract class VolumeFileReader extends SurfaceFileReader {
       qpc.setPlanes(yzPlanesRaw = new float[4][yzCount]);
       if (hasColorData) {
         //float nan = qpc.getNoValue();
-        getPlane(yzPlanesRaw[0], false);
-        getPlane(yzPlanesRaw[1], false);
+        getPlaneVFR(yzPlanesRaw[0], false);
+        getPlaneVFR(yzPlanesRaw[1], false);
         plane = yzPlanes[0];
         for (int i = 0; i < yzCount; i++)
           plane[i] = Float.NaN;
@@ -391,7 +391,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
       plane = yzPlanesRaw[iPlaneRaw];
     }
     if (x < x1) {
-      getPlane(plane, false);
+      getPlaneVFR(plane, false);
       qpc.calcPlane(x, plane = yzPlanes[x % 2]);
       for (int i = 0; i < yzCount; i++)
         if (plane[i] != nan)
@@ -403,7 +403,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
     return plane;
   }
 
-  private void getPlane(float[] plane, boolean doRecord) {
+  private void getPlaneVFR(float[] plane, boolean doRecord) {
     try {
       for (int y = 0, ptyz = 0; y < nPointsY; ++y) {
         for (int z = 0; z < nPointsZ; ++z) {

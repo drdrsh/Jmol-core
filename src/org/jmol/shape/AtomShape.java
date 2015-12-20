@@ -105,11 +105,11 @@ public abstract class AtomShape extends Shape {
     if (atoms == null)  // vector values are ignored if there are none for a model 
       return;
     isActive = true;
-    if (bsSizeSet == null)
-      bsSizeSet = new BS();
     boolean isVisible = (rd != null && rd.value != 0);
     boolean isAll = (bsSelected == null);
     int i0 = (isAll ? ac - 1 : bsSelected.nextSetBit(0));
+    if (bsSizeSet == null)
+      bsSizeSet = BS.newN(ac);
     if (mads == null && i0 >= 0)
       mads = new short[ac];
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsSelected.nextSetBit(i + 1)))
@@ -128,9 +128,8 @@ public abstract class AtomShape extends Shape {
       isActive = true;
       short colix = C.getColixO(value);
       byte pid = PAL.pidOf(value);
-      if (bsColixSet == null)
-        bsColixSet = new BS();
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      int n = checkColixLength(colix, bs.length());
+      for (int i = bs.nextSetBit(0); i >= 0 && i < n; i = bs.nextSetBit(i + 1))
         setColixAndPalette(colix, pid, i);
       return;
     }
@@ -149,7 +148,8 @@ public abstract class AtomShape extends Shape {
       int i0 = bs.nextSetBit(0);
       if (mads == null && i0 >= 0)
         mads = new short[ac];
-      for (int i = i0, pt = 0; i >= 0; i = bs.nextSetBit(i + 1), pt++) {
+      int n = checkColixLength(colixes == null ? 0 : C.BLACK, bs.length());
+      for (int i = i0, pt = 0; i >= 0 && i < n; i = bs.nextSetBit(i + 1), pt++) {
         short colix = (colixes == null ? 0 : colixes[pt]);
         if (colix == 0)
           colix = C.INHERIT_ALL;
@@ -200,15 +200,20 @@ public abstract class AtomShape extends Shape {
     setPropS(propertyName, value, bs);
   }
 
-  protected void setColixAndPalette(short colix, byte paletteID, int atomIndex) {
-    if (colixes == null || atomIndex >= colixes.length) {
-      if (colix == C.INHERIT_ALL)
-        return;
-      colixes = AU.ensureLengthShort(colixes, atomIndex + 1);
-      paletteIDs = AU.ensureLengthByte(paletteIDs, atomIndex + 1);
+  protected int checkColixLength(short colix, int n) {
+    n = Math.min(ac, n);
+    if (colix == C.INHERIT_ALL)
+      return (colixes == null ? 0 : colixes.length);
+    if (colixes == null || n > colixes.length) {
+      colixes = AU.ensureLengthShort(colixes, n);
+      paletteIDs = AU.ensureLengthByte(paletteIDs, n);
     }
     if (bsColixSet == null)
       bsColixSet = BS.newN(ac);
+    return n;
+  }
+  
+  protected void setColixAndPalette(short colix, byte paletteID, int atomIndex) {
     colixes[atomIndex] = colix = getColixI(colix, paletteID, atomIndex);
     bsColixSet.setBitTo(atomIndex, colix != C.INHERIT_ALL);
     paletteIDs[atomIndex] = paletteID;

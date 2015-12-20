@@ -99,7 +99,7 @@ class IsoFxyReader extends AtomDataReader {
 
   @Override
   public float[] getPlane(int x) {
-    float[] plane = getPlane2(x);
+    float[] plane = getPlaneSR(x);
     setPlane(x, plane);
     return plane;
   }

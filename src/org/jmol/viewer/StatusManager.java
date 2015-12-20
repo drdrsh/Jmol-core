@@ -692,6 +692,12 @@ public class StatusManager {
       jsl.functionXYZ(functionName, nX, nY, nZ));
   }
   
+  /**
+   * 
+   * @param strEval
+   * @return in Java a String; in JavaScript window.eval() 
+   * 
+   */
   String jsEval(String strEval) {
     return (jsl == null ? "" : jsl.eval(strEval));
   }

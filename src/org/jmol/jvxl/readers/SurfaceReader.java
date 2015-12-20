@@ -547,10 +547,10 @@ public abstract class SurfaceReader implements VertexDataServer {
   
   @Override
   public float[] getPlane(int x) {
-    return getPlane2(x);
+    return getPlaneSR(x);
   }
 
-  protected float[] getPlane2(int x) {
+  protected float[] getPlaneSR(int x) {
     if (yzCount == 0)
       initPlanes();
     if (qpc != null)

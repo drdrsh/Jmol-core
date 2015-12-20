@@ -24,25 +24,25 @@
 
 package org.jmol.applet;
 
-import org.jmol.awt.FileDropper;
-import org.jmol.c.CBK;
-import org.jmol.util.GenericApplet;
-import org.jmol.util.Logger;
-import org.jmol.util.Parser;
-
 import java.applet.Applet;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.net.URL;
-import javajs.util.PT;
-
 import java.util.Hashtable;
 import java.util.Map;
+
+import javajs.util.PT;
 
 import javax.swing.UIManager;
 
 import netscape.javascript.JSObject;
+
+import org.jmol.awt.FileDropper;
+import org.jmol.c.CBK;
+import org.jmol.util.GenericApplet;
+import org.jmol.util.Logger;
+import org.jmol.util.Parser;
 
 /*
  * 
@@ -679,5 +679,4 @@ public class Jmol extends GenericApplet implements WrappedApplet {
       //ignore if page is closing
     }
   }
-
 }

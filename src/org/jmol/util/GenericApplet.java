@@ -6,7 +6,6 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.awt.Dimension;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -73,7 +72,7 @@ public abstract class GenericApplet implements JmolAppletInterface,
   abstract protected String getJmolParameter(String name);
 
   // callback implementations
-  abstract protected String doEval(String strEval);
+  abstract protected String doEval(String strEval); // in JavaScript, this will be an Object, Number, String, etc.
 
   abstract protected float[][] doFunctionXY(String functionName, int nX, int nY);
 

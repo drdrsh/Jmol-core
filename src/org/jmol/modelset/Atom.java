@@ -441,7 +441,7 @@ public class Atom extends Point3fi implements BNode {
 
   public void setValence(int nBonds) {
     if (!isDeleted()) // no resurrection
-      valence = (byte) (nBonds < 0 ? 0 : nBonds < 0xEF ? nBonds : 0xEF);
+      valence = (byte) (nBonds < 0 ? 0 : nBonds <= 0x7F ? nBonds : 0x7F);
   }
 
   /**

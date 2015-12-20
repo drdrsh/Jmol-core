@@ -460,8 +460,8 @@ public class MathExt {
         map.put("_bin", SV.newI(bin));
         float v1 = f0 + df * bin;
         float v2 = v1 + df;
-        map.put("_binMin", SV.newV(T.decimal,  Float.valueOf(bin == 0 ? -Float.MAX_VALUE : v1)));
-        map.put("_binMax", SV.newV(T.decimal,  Float.valueOf(bin == nbins - 1 ? Float.MAX_VALUE  : v2)));        
+        map.put("_binMin", SV.newF(bin == 0 ? -Float.MAX_VALUE : v1));
+        map.put("_binMax", SV.newF(bin == nbins - 1 ? Float.MAX_VALUE  : v2));        
       }
     }
     return mp.addXAI(array);
@@ -1945,14 +1945,14 @@ public class MathExt {
       else if (Float.isNaN(list2[i]))
         b = SV.getVariable(SV.unescapePointOrBitsetAsVariable(sList2[i]));
       else
-        b = SV.newV(T.decimal, Float.valueOf(list2[i]));
+        b = SV.newF(list2[i]);
       if (!isScalar1) {
         if (isArray1)
           a = alist1.get(i);
         else if (Float.isNaN(list1[i]))
           a = SV.getVariable(SV.unescapePointOrBitsetAsVariable(sList1[i]));
         else
-          a = SV.newV(T.decimal, Float.valueOf(list1[i]));
+          a = SV.newF(list1[i]);
       }
       if (tok == T.join) {
         if (a.tok != T.varray) {
@@ -2792,8 +2792,7 @@ public class MathExt {
       e.runScriptBuffer("show " + s, sb, true);
       break;
     case T.javascript:
-      sb.append(vwr.jsEval(s));
-      break;
+      return mp.addX(vwr.jsEvalSV(s));
     }
     s = sb.toString();
     float f;

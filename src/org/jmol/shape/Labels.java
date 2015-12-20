@@ -84,6 +84,8 @@ public class Labels extends AtomShape {
     defaultColix = 0; //"none" -- inherit from atom
     defaultBgcolix = 0; //"none" -- off
     defaultOffset = JC.LABEL_DEFAULT_OFFSET;
+    defaultAlignment = JC.TEXT_ALIGN_LEFT;
+    defaultPointer = JC.LABEL_POINTER_NONE;
     defaultZPos = 0;
     translucentAllowed = false;
   }
@@ -101,10 +103,12 @@ public class Labels extends AtomShape {
     if ("color" == propertyName) {
       byte pid = PAL.pidOf(value);
       short colix = C.getColixO(value);
-      if (!setDefaults)
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
+      if (!setDefaults) {
+        int n = checkColixLength(colix, bsSelected.length());
+        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < n; i = bsSelected
             .nextSetBit(i + 1))
           setLabelColix(i, colix, pid);
+      }
       if (setDefaults || !defaultsOnlyForNone) {
         defaultColix = colix;
         defaultPaletteID = pid;
@@ -117,10 +121,9 @@ public class Labels extends AtomShape {
         return;
       float val = ((Float) value).floatValue();
       float scalePixelsPerMicron = (val == 0 ? 0 : 10000f / val);
-      for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
+      int n = Math.min(ac, strings.length);
+      for (int i = bsSelected.nextSetBit(0); i >= 0 && i < n; i = bsSelected
           .nextSetBit(i + 1)) {
-        if (strings.length <= i)
-          continue;
         Text text = getLabel(i);
         if (text == null) {
           text = Text.newLabel(vwr, null, strings[i], C.INHERIT_ALL, (short) 0,
@@ -136,15 +139,16 @@ public class Labels extends AtomShape {
     if ("label" == propertyName) {
       setScaling();
       LabelToken[][] tokens = null;
+      int nbs = checkStringLength(bsSelected.length());
       if (value instanceof Lst) {
         Lst<SV> list = (Lst<SV>) value;
         int n = list.size();
         tokens = new LabelToken[][] { null };
-        for (int pt = 0, i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
+        for (int pt = 0, i = bsSelected.nextSetBit(0); i >= 0 && i < nbs; i = bsSelected
             .nextSetBit(i + 1)) {
           if (pt >= n) {
             setLabel(nullToken, "", i, true);
-            return;
+            continue;
           }
           tokens[0] = null;
           setLabel(tokens, SV.sValue(list.get(pt++)), i, true);
@@ -160,19 +164,16 @@ public class Labels extends AtomShape {
       return;
     }
 
-// see label:
-//    if ("labels" == propertyName) {
-//      setScaling();
-//      Lst<String> labels = (Lst<String>) value;
-//      for (int i = bsSelected.nextSetBit(0), pt = 0; i >= 0 && i < ac; i = bsSelected
-//          .nextSetBit(i + 1)) {
-//        String strLabel = labels.get(pt++);
-//        LabelToken[][] tokens = (strLabel == null || strLabel.length() == 0 ? nullToken
-//            : new LabelToken[][] { null });
-//        setLabel(tokens, strLabel, i, true);
-//      }
-//      return;
-//    }
+    if (propertyName.startsWith("label:")) {
+      // from @1.label = "xxx"
+      setScaling();
+      // in principle, we could make this more efficient,
+      // it would be at the cost of general atom property setting
+      checkStringLength(ac);
+      setLabel(new LabelToken[][] { null }, propertyName.substring(6),
+          ((Integer) value).intValue(), false);
+      return;
+    }
 
     if ("clearBoxes" == propertyName) {
       labelBoxes = null;
@@ -187,12 +188,14 @@ public class Labels extends AtomShape {
     if ("bgcolor" == propertyName) {
       isActive = true;
       if (bsBgColixSet == null)
-        bsBgColixSet = new BS();
+        bsBgColixSet = BS.newN(ac);
       short bgcolix = C.getColixO(value);
-      if (!setDefaults)
-        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
+      if (!setDefaults) {
+        int n = checkBgColixLength(bgcolix, bsSelected.length());
+        for (int i = bsSelected.nextSetBit(0); i >= 0 && i < n; i = bsSelected
             .nextSetBit(i + 1))
           setBgcolix(i, bgcolix);
+      }
       if (setDefaults || !defaultsOnlyForNone)
         defaultBgcolix = bgcolix;
       return;
@@ -201,7 +204,7 @@ public class Labels extends AtomShape {
     // the rest require bsFontSet setting
 
     if (bsFontSet == null)
-      bsFontSet = new BS();
+      bsFontSet = BS.newN(ac);
 
     if ("fontsize" == propertyName) {
       int fontsize = ((Integer) value).intValue();
@@ -232,10 +235,11 @@ public class Labels extends AtomShape {
 
     if ("offset" == propertyName) {
       if (!(value instanceof Integer)) {
-        if (!setDefaults)
+        if (!setDefaults) {
           for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
               .nextSetBit(i + 1))
             setPymolOffset(i, (float[]) value);
+        }
         return;
       }
 
@@ -250,12 +254,11 @@ public class Labels extends AtomShape {
     }
 
     if ("align" == propertyName) {
+      // note that if the label is not offset, this centers the label with offset 0 0
       String type = (String) value;
-      int hAlignment = JC.TEXT_ALIGN_LEFT;
-      if (type.equalsIgnoreCase("right"))
-        hAlignment = JC.TEXT_ALIGN_RIGHT;
-      else if (type.equalsIgnoreCase("center"))
-        hAlignment = JC.TEXT_ALIGN_CENTER;
+      int hAlignment = (type.equalsIgnoreCase("right") ? JC.TEXT_ALIGN_RIGHT
+          : type.equalsIgnoreCase("center") ? JC.TEXT_ALIGN_CENTER
+              : JC.TEXT_ALIGN_LEFT);
       for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
           .nextSetBit(i + 1))
         setHorizAlignment(i, hAlignment);
@@ -309,17 +312,19 @@ public class Labels extends AtomShape {
       LabelToken[] tokensUNK = null;
       String strLabel;
       LabelToken[] tokens;
+      int nstr = checkStringLength(bsSelected.length());
+      short bgcolix = defaultBgcolix;
+      int nbg = checkBgColixLength(bgcolix, bsSelected.length());
+      short thisMad = (short) (mode >= 0 ? 1 : -1);
       for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
           .nextSetBit(i + 1)) {
         Atom atom = atoms[i];
-        if (formats == null || i >= formats.length)
-          formats = AU.ensureLengthS(formats, i + 1);
-        if (strings != null && strings.length > i && strings[i] != null) {
-          mads[i] = (short) (mode == 0 && mads[i] < 0 || mode == 1 ? 1 : -1);
+        if (i < nstr && strings[i] != null) {
+          // an old string -- toggle
+          mads[i] = (short) (mode == 1 || mode == 0 && mads[i] < 0 ? 1 : -1);
         } else {
-          if (bsSizeSet == null)
-            bsSizeSet = new BS();
-          strings = AU.ensureLengthS(strings, i + 1);
+          // a new string -- turn on
+          mads[i] = thisMad;
           if (atom.getGroup3(false).equals("UNK")) {
             if (strLabelUNK == null) {
               strLabelUNK = vwr.getStandardLabelFormat(1);
@@ -339,34 +344,17 @@ public class Labels extends AtomShape {
               null, ptTemp);
           formats[i] = strLabel;
           bsSizeSet.set(i);
-          if ((bsBgColixSet == null || !bsBgColixSet.get(i))
-              && defaultBgcolix != 0)
+          if (i < nbg && !bsBgColixSet.get(i))
             setBgcolix(i, defaultBgcolix);
-          mads[i] = (short) (mode >= 0 ? 1 : -1);
         }
         setShapeVisibility(atom, strings != null && i < strings.length
             && strings[i] != null && mads[i] >= 0);
-        //        } else if (strings != null && atomIndex < strings.length) {
-        //        strings[atomIndex] = null;          
       }
       return;
     }
 
-    if (propertyName.startsWith("label:")) {
-      // from @1.label = "xxx"
-      setScaling();
-      setLabel(new LabelToken[1][], propertyName.substring(6),
-          ((Integer) value).intValue(), false);
-      return;
-    }
-
-    if ("textLabels" == propertyName) {
-      // from PyMOL reader
-      setScaling();
-      Map<Integer, Text> labels = (Map<Integer, Text>) value;
-      for (int i = bsSelected.nextSetBit(0); i >= 0 && i < ac; i = bsSelected
-          .nextSetBit(i + 1))
-        setTextLabel(i, labels.get(Integer.valueOf(i)), null);
+    if ("pymolLabels" == propertyName) {
+      setPymolLabels((Map<Integer, Text>) value, bsSelected);
       return;
     }
 
@@ -392,10 +380,47 @@ public class Labels extends AtomShape {
 
   }
 
+  private int checkStringLength(int n) {
+    n = Math.min(ac, n);
+    if (strings == null || n > strings.length) {
+      formats = AU.ensureLengthS(formats, n);
+      strings = AU.ensureLengthS(strings, n);
+      if (bsSizeSet == null)
+        bsSizeSet = BS.newN(n);
+    }
+    return n;
+  }
+
+  private int checkBgColixLength(short colix, int n) {
+    n = Math.min(ac, n);
+    if (colix == C.INHERIT_ALL)
+      return (bgcolixes == null ? 0 : bgcolixes.length);
+    if (bgcolixes == null || n > bgcolixes.length)
+      bgcolixes = AU.ensureLengthShort(bgcolixes, n);
+    return n;
+  }
+  
+  private void setPymolLabels(Map<Integer, Text> labels, BS bsSelected) {
+    // from PyMOL reader
+    setScaling();
+    int n = checkStringLength(ac);
+    for (int i = bsSelected.nextSetBit(0); i >= 0 && i < n; i = bsSelected
+        .nextSetBit(i + 1))
+      setPymolLabel(i, labels.get(Integer.valueOf(i)), null);
+  }
+
+  /**
+   * Sets offset using PyMOL standard array;
+   * only operates in cases where label is already defined
+   * 
+   * @param i
+   * @param value
+   */
   private void setPymolOffset(int i, float[] value) {
+    // from PyMOL reader or from set labeloffset [...]
     Text text = getLabel(i);
     if (text == null) {
-      if (strings == null || strings.length <= i || strings[i] == null)
+      if (strings == null || i >= strings.length || strings[i] == null)
         return;
       byte fid = (bsFontSet != null && bsFontSet.get(i) ? fids[i] : -1);
       if (fid < 0)
@@ -403,9 +428,7 @@ public class Labels extends AtomShape {
       text = Text.newLabel(vwr, Font.getFont3D(fid), strings[i],
           getColix2(i, atoms[i], false), getColix2(i, atoms[i], true), 0,
           scalePixelsPerMicron);
-      setTextLabel(i, text, formats[i]);
-      if (text == null)
-        return;
+      setPymolLabel(i, text, formats[i]);
     }
     text.pymolOffset = value;
   }
@@ -418,13 +441,13 @@ public class Labels extends AtomShape {
   private void setScaling() {
     isActive = true;
     if (bsSizeSet == null)
-      bsSizeSet = new BS();
+      bsSizeSet = BS.newN(ac);
     isScaled = vwr.getBoolean(T.fontscaling);
     scalePixelsPerMicron = (isScaled ? vwr
         .getScalePixelsPerAngstrom(false) * 10000f : 0);
   }
   
-  private void setTextLabel(int i, Text t, String format) {
+  private void setPymolLabel(int i, Text t, String format) {
     if (t == null)
       return;
     String label = t.getText();
@@ -438,6 +461,7 @@ public class Labels extends AtomShape {
   }
 
   private void setLabel(LabelToken[][] temp, String strLabel, int i, boolean doAll) {
+    // checkStringLength must be first
     Atom atom = atoms[i];
     LabelToken[] tokens = temp[0];
     if (tokens == null)
@@ -476,10 +500,6 @@ public class Labels extends AtomShape {
 
   private boolean addString(Atom atom, int i, String label, String strLabel) {
     setShapeVisibility(atom, label != null);
-    if (strings == null || i >= strings.length)
-      strings = AU.ensureLengthS(strings, i + 1);
-    if (formats == null || i >= formats.length)
-      formats = AU.ensureLengthS(formats, i + 1);
     boolean notNull = (strLabel != null);
     boolean isNew = (strings[i] == null);
     strings[i] = label;
@@ -533,11 +553,6 @@ public class Labels extends AtomShape {
   }
 
   private void setBgcolix(int i, short bgcolix) {
-    if (bgcolixes == null || i >= bgcolixes.length) {
-      if (bgcolix == 0)
-        return;
-      bgcolixes = AU.ensureLengthShort(bgcolixes, i + 1);
-    }
     bgcolixes[i] = bgcolix;
     bsBgColixSet.setBitTo(i, bgcolix != 0);
     Text text = getLabel(i);
@@ -548,12 +563,10 @@ public class Labels extends AtomShape {
   private void setOffsets(int i, int offset) {
     
     if (offsets == null || i >= offsets.length) {
-      if (offset == 0)
+      if (offset == JC.LABEL_DEFAULT_OFFSET)
         return;
-      offsets = AU.ensureLengthI(offsets, i + 1);
+      offsets = AU.ensureLengthI(offsets, ac);
     }
-    if (offset == 0)
-      offset = JC.LABEL_DEFAULT_OFFSET;
     offsets[i] = (offsets[i] & JC.LABEL_FLAGS) | offset;
 
     Text text = getLabel(i);
@@ -563,10 +576,15 @@ public class Labels extends AtomShape {
 
   private void setHorizAlignment(int i, int hAlign) {
     if (offsets == null || i >= offsets.length) {
-      if (hAlign == JC.TEXT_ALIGN_LEFT)
+      switch (hAlign) {
+      case JC.TEXT_ALIGN_NONE:
+      case JC.TEXT_ALIGN_LEFT:
         return;
-      offsets = AU.ensureLengthI(offsets, i + 1);
+      }
+      offsets = AU.ensureLengthI(offsets, ac);
     }
+    if (hAlign == JC.TEXT_ALIGN_NONE)
+      hAlign = JC.TEXT_ALIGN_LEFT;
     offsets[i] = JC.setHorizAlignment(offsets[i], hAlign);
     Text text = getLabel(i);
     if (text != null)
@@ -577,7 +595,7 @@ public class Labels extends AtomShape {
     if (offsets == null || i >= offsets.length) {
       if (pointer == JC.LABEL_POINTER_NONE)
         return;
-      offsets = AU.ensureLengthI(offsets, i + 1);
+      offsets = AU.ensureLengthI(offsets, ac);
     }
     offsets[i] = JC.setPointer(offsets[i], pointer);
     Text text = getLabel(i);
@@ -589,7 +607,7 @@ public class Labels extends AtomShape {
     if (offsets == null || i >= offsets.length) {
       if (!TF)
         return;
-      offsets = AU.ensureLengthI(offsets, i + 1);
+      offsets = AU.ensureLengthI(offsets, ac);
     }
     offsets[i] = JC.setZPosition(offsets[i], TF ? flag : 0);
   }
@@ -598,7 +616,7 @@ public class Labels extends AtomShape {
     if (fids == null || i >= fids.length) {
       if (fid == zeroFontId)
         return;
-      fids = AU.ensureLengthByte(fids, i + 1);
+      fids = AU.ensureLengthByte(fids, ac);
     }
     fids[i] = fid;
     bsFontSet.set(i);

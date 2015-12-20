@@ -187,7 +187,7 @@ class JmolObject {
       return;
     case JC.SHAPE_LABELS:
       sm.loadShape(id);
-      sm.setShapePropertyBs(id, "textLabels", info, bsAtoms);
+      sm.setShapePropertyBs(id, "pymolLabels", info, bsAtoms);
       return;
     case T.bonds:
       break;

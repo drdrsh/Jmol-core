@@ -343,7 +343,7 @@ class IsoMOReader extends AtomDataReader {
   public float[] getPlane(int x) {
     if (!qSetupDone) 
       setupCalculation();
-    return getPlane2(x); 
+    return getPlaneSR(x); 
   }
 
   private boolean qSetupDone;

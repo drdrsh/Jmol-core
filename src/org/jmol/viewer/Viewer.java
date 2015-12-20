@@ -4641,7 +4641,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    */
 
   public String jsEval(String strEval) {
-    return sm.jsEval(strEval);
+    return "" + sm.jsEval(strEval);
+  }
+
+  public SV jsEvalSV(String strEval) {
+    return SV.getVariable(isJS ? sm.jsEval(strEval) : jsEval(strEval));
   }
 
   /*
@@ -5746,7 +5750,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       break;
     default:
       if (!g.htNonbooleanParameterValues.containsKey(key.toLowerCase())) {
-        g.setUserVariable(key, SV.newV(T.decimal, Float.valueOf(value)));
+        g.setUserVariable(key, SV.newF(value));
         return;
       }
     }
