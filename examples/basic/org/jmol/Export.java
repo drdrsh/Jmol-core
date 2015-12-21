@@ -213,9 +213,10 @@ class MyStatusListener implements JmolStatusListener {
    * @see org.jmol.api.JmolStatusListener#eval(java.lang.String)
    */
   @Override
-  public Object eval(String strEval) {
+  public String eval(String strEval) {
     return null;
   }
+
 
   @Override
   public Map<String, Object> getRegistryInfo() {
