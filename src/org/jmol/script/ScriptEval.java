@@ -6977,7 +6977,7 @@ public class ScriptEval extends ScriptExpr {
         break;
       case T.spin:
         sval = paramAsStr(2).toLowerCase();
-        switch ("x;y;z;fps".indexOf(sval + ";")) {
+        switch ("x;y;z;fps;".indexOf(sval + ";")) {
         case 0:
           newTok = T.spinx;
           break;
