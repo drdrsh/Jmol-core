@@ -25,15 +25,6 @@ package org.jmol.render;
 
 
 
-import org.jmol.api.SymmetryInterface;
-import org.jmol.g3d.Graphics3D;
-import org.jmol.java.BS;
-import org.jmol.script.T;
-import org.jmol.shape.Mesh;
-import org.jmol.util.C;
-import org.jmol.util.GData;
-import org.jmol.util.MeshSurface;
-
 import javajs.util.AU;
 import javajs.util.M4;
 import javajs.util.P3;
@@ -41,6 +32,14 @@ import javajs.util.P3i;
 import javajs.util.P4;
 import javajs.util.T3;
 import javajs.util.V3;
+
+import org.jmol.api.SymmetryInterface;
+import org.jmol.java.BS;
+import org.jmol.script.T;
+import org.jmol.shape.Mesh;
+import org.jmol.util.C;
+import org.jmol.util.GData;
+import org.jmol.util.MeshSurface;
 
 /**
  * an abstract class subclasssed by BioShapeRenderer, DrawRenderer, and IsosurfaceRenderer

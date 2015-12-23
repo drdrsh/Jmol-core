@@ -141,10 +141,8 @@ public class Dots extends AtomShape {
         ec.setMads(mads);
       }
       mads[thisAtom] = (short) (thisRadius * 1000f);
-      if (colixes == null) {
-        colixes = new short[ac];
-        paletteIDs = new byte[ac];
-      }
+      if (colixes == null) 
+        checkColixLength(C.BLACK, ac);
       colixes[thisAtom] = C.getColix(thisArgb);
       bsOn.set(thisAtom);
       //all done!
@@ -271,10 +269,8 @@ public class Dots extends AtomShape {
     }
     // now, calculate surface for selected atoms
 
-    if (dotsConvexMaps == null && (colixes == null || colixes.length != ac)) {
-      colixes = new short[ac];
-      paletteIDs = new byte[ac];
-    }
+    if (dotsConvexMaps == null && (colixes == null || colixes.length != ac))
+      checkColixLength(C.BLACK, ac);
     ec.calculate(rd, maxRadius, bsOn, bsIgnore, !vwr.getBoolean(T.dotsurface),
         vwr.getBoolean(T.dotsselectedonly), isSurface, true);
 

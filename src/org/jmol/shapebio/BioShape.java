@@ -25,10 +25,15 @@
 
 package org.jmol.shapebio;
 
+import java.util.Map;
+
+import javajs.util.AU;
+import javajs.util.PT;
+import javajs.util.V3;
+
 import org.jmol.c.PAL;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
-import org.jmol.modelset.Group;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelsetbio.AlphaPolymer;
 import org.jmol.modelsetbio.BioPolymer;
@@ -37,11 +42,9 @@ import org.jmol.modelsetbio.NucleicMonomer;
 import org.jmol.modelsetbio.NucleicPolymer;
 import org.jmol.shape.AtomShape;
 import org.jmol.shape.Mesh;
+import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Logger;
-
-import javajs.util.AU;
-import javajs.util.V3;
 import org.jmol.viewer.JC;
 
 public class BioShape extends AtomShape {
@@ -65,11 +68,6 @@ public class BioShape extends AtomShape {
   public short[] colixesBack;
 
   public Monomer[] monomers;
-
-  @Override
-  public Group[] getMonomers() {
-    return monomers;
-  }
 
   public V3[] wingVectors;
   int[] leadAtomIndices;
@@ -285,29 +283,39 @@ public class BioShape extends AtomShape {
   void setColixBS(short colix, byte pid, BS bsSelected) {
     isActive = true;
     if (bsColixSet == null)
-      bsColixSet = new BS();
+      bsColixSet = BS.newN(monomerCount);
     for (int i = monomerCount; --i >= 0;) {
       int atomIndex = leadAtomIndices[i];
       if (bsSelected.get(atomIndex)) {
         colixes[i] = shape.getColixI(colix, pid, atomIndex);
         if (colixesBack != null && colixesBack.length > i)
-          colixesBack[i] = 0;
+          colixesBack[i] = C.INHERIT_ALL;
         paletteIDs[i] = pid;
         bsColixSet.setBitTo(i, colixes[i] != C.INHERIT_ALL);
       }
     }
   }
   
+  void setColixBack(short colix, BS bsSelected) {
+    if (colixesBack == null)
+      colixesBack = new short[colixes.length];
+    if (colixesBack.length < colixes.length)
+      colixesBack = AU.ensureLengthShort(colixesBack, colixes.length);
+    for (int i = monomerCount; --i >= 0;)
+      if (bsSelected.get(leadAtomIndices[i]))
+        colixesBack[i] = colix;
+  }
+  
   void setColixes(short[] atomColixes, BS bsSelected) {
     isActive = true;
     if (bsColixSet == null)
-      bsColixSet = new BS();
+      bsColixSet = BS.newN(monomerCount);
     for (int i = monomerCount; --i >= 0;) {
       int atomIndex = leadAtomIndices[i];
       if (bsSelected.get(atomIndex) && i < colixes.length && atomIndex < atomColixes.length) {
         colixes[i] = shape.getColixI(atomColixes[atomIndex], PAL.UNKNOWN.id, atomIndex);
         if (colixesBack != null && i < colixesBack.length)
-          colixesBack[i] = 0;
+          colixesBack[i] = C.INHERIT_ALL;
         paletteIDs[i] = PAL.UNKNOWN.id;
         bsColixSet.set(i);
       }
@@ -325,7 +333,7 @@ public class BioShape extends AtomShape {
 
     isActive = true;
     if (bsColixSet == null)
-      bsColixSet = new BS();
+      bsColixSet = BS.newN(monomerCount);
     int n = atomMap.length;
     for (int i = monomerCount; --i >= 0;) {
       int atomIndex = leadAtomIndices[i];
@@ -344,25 +352,10 @@ public class BioShape extends AtomShape {
     }    
   }
 
-
-  
-  void setColixBack(short colix, BS bsSelected) {
-    for (int i = monomerCount; --i >= 0;) {
-      int atomIndex = leadAtomIndices[i];
-      if (bsSelected.get(atomIndex)) {
-        if (colixesBack == null)
-          colixesBack = new short[colixes.length];
-        if (colixesBack.length < colixes.length)
-          colixesBack = AU.ensureLengthShort(colixesBack, colixes.length);
-        colixesBack[i] = colix;
-      }
-    }
-  }
-  
   void setTranslucent(boolean isTranslucent, BS bsSelected, float translucentLevel) {
     isActive = true;
     if (bsColixSet == null)
-      bsColixSet = new BS();
+      bsColixSet = BS.newN(monomerCount);
     for (int i = monomerCount; --i >= 0; )
       if (bsSelected.get(leadAtomIndices[i])) {
         colixes[i] = C.getColixTranslucent3(colixes[i], isTranslucent, translucentLevel);
@@ -389,6 +382,36 @@ public class BioShape extends AtomShape {
         ms.at[iAtom].setClickable(JC.ALPHA_CARBON_VISIBILITY_FLAG);
       if (setRingsClickable)
         ((NucleicMonomer) monomers[i]).setRingsClickable();
+    }
+  }
+
+  void getBioShapeState(String type, boolean translucentAllowed,
+                               Map<String, BS> temp, Map<String, BS> temp2) {
+    if (monomerCount > 0) {
+      if (!isActive || bsSizeSet == null && bsColixSet == null)
+        return;
+      for (int i = 0; i < monomerCount; i++) {
+        int atomIndex1 = monomers[i].firstAtomIndex;
+        int atomIndex2 = monomers[i].lastAtomIndex;
+        if (bsSizeSet != null
+            && (bsSizeSet.get(i) || bsColixSet != null && bsColixSet.get(i))) {//shapes MUST have been set with a size
+          if (bsSizeDefault.get(i)) {
+            BSUtil.setMapBitSet(temp, atomIndex1, atomIndex2,
+                type + (bsSizeSet.get(i) ? " on" : " off"));
+          } else {
+            BSUtil.setMapBitSet(temp, atomIndex1, atomIndex2,
+                type + " " + PT.escF(mads[i] / 2000f));
+          }
+        }
+        if (bsColixSet == null || !bsColixSet.get(i))
+          continue;
+        String s = getColorCommand(type, paletteIDs[i], colixes[i],
+            translucentAllowed);
+        if (colixesBack != null && colixesBack.length > i
+            && colixesBack[i] != C.INHERIT_ALL)
+          s += " " + C.getHexCode(colixesBack[i]);
+        BSUtil.setMapBitSet(temp2, atomIndex1, atomIndex2, s);
+      }
     }
   }
 

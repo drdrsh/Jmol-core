@@ -2,17 +2,16 @@ package org.jmol.viewer;
 
 import java.util.Map;
 
+import javajs.awt.Font;
+import javajs.util.Lst;
+import javajs.util.SB;
+
 import org.jmol.java.BS;
-import org.jmol.modelset.Group;
 import org.jmol.modelset.Measurement;
 import org.jmol.modelset.TickInfo;
 import org.jmol.shape.AtomShape;
 import org.jmol.shape.Measures;
 import org.jmol.shape.Shape;
-
-import javajs.awt.Font;
-import javajs.util.Lst;
-import javajs.util.SB;
 
 public abstract class JmolStateCreator {
 
@@ -31,15 +30,10 @@ public abstract class JmolStateCreator {
 
   abstract String getFontLineShapeState(String s, String myType, TickInfo[] tickInfos);
 
-  abstract void getShapeSetState(AtomShape atomShape, Shape shape, int monomerCount, Group[] monomers,
-                     BS bsSizeDefault, Map<String, BS> temp, Map<String, BS> temp2);
-
   abstract String getMeasurementState(Measures shape, Lst<Measurement> mList, int measurementCount,
                              Font font3d, TickInfo tickInfo);
 
   abstract String getBondState(Shape shape, BS bsOrderSet, boolean reportAll);
-
-  abstract String getAtomShapeSetState(Shape shape, AtomShape[] shapes);
 
   abstract String getShapeState(Shape shape);
 

@@ -23,17 +23,16 @@
 
 package org.jmol.viewer;
 
-import javajs.awt.Font;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.awt.Font;
+import javajs.util.Lst;
 import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.SB;
 
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
@@ -47,7 +46,6 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondSet;
-import org.jmol.modelset.Group;
 import org.jmol.modelset.Measurement;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
@@ -343,6 +341,7 @@ public class StateCreator extends JmolStateCreator {
         if (sb.length() > 0)
           commands.append("  frame " + ms.getModelNumberDotted(i) + ";\n").appendSB(sb);
       }
+
       boolean loadUC = false;
       if (ms.unitCells != null) {
         boolean haveModulation = false;
@@ -973,33 +972,6 @@ public class StateCreator extends JmolStateCreator {
   }
 
   @Override
-  void getShapeSetState(AtomShape as, Shape shape, int monomerCount,
-                               Group[] monomers, BS bsSizeDefault,
-                               Map<String, BS> temp, Map<String, BS> temp2) {
-    String type = JC.shapeClassBases[shape.shapeID];
-    for (int i = 0; i < monomerCount; i++) {
-      int atomIndex1 = monomers[i].firstAtomIndex;
-      int atomIndex2 = monomers[i].lastAtomIndex;
-      if (as.bsSizeSet != null
-          && (as.bsSizeSet.get(i) || as.bsColixSet != null
-              && as.bsColixSet.get(i))) {//shapes MUST have been set with a size
-        if (bsSizeDefault.get(i)) {
-          BSUtil.setMapBitSet(temp, atomIndex1, atomIndex2, type
-              + (as.bsSizeSet.get(i) ? " on" : " off"));
-        } else {
-          
-          BSUtil.setMapBitSet(temp, atomIndex1, atomIndex2, type + " "
-              + PT.escF(as.mads[i] / 2000f));
-        }
-      }
-      if (as.bsColixSet != null && as.bsColixSet.get(i))
-        BSUtil.setMapBitSet(temp2, atomIndex1, atomIndex2, Shape
-            .getColorCommand(type, as.paletteIDs[i], as.colixes[i],
-                shape.translucentAllowed));
-    }
-  }
-
-  @Override
   String getMeasurementState(Measures shape,
                                     Lst<Measurement> mList,
                                     int measurementCount, Font font3d,
@@ -1123,25 +1095,6 @@ public class StateCreator extends JmolStateCreator {
   private void clearTemp() {
     temp.clear();
     temp2.clear();
-  }
-
-  @Override
-  String getAtomShapeSetState(Shape shape, AtomShape[] bioShapes) {
-    clearTemp();
-    for (int i = bioShapes.length; --i >= 0;) {
-      AtomShape bs = bioShapes[i];
-      if (bs.monomerCount > 0) {
-        if (!bs.isActive || bs.bsSizeSet == null && bs.bsColixSet == null)
-          continue;
-        vwr.getShapeSetState(bs, shape, bs.monomerCount, bs.getMonomers(),
-            bs.bsSizeDefault, temp, temp2);
-      }
-    }
-    String s = "\n"
-        + getCommands(temp, temp2,
-            shape.shapeID == JC.SHAPE_BACKBONE ? "Backbone" : "select");
-    clearTemp();
-    return s;
   }
 
   @Override

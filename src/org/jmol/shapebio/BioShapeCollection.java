@@ -25,6 +25,11 @@
 
 package org.jmol.shapebio;
 
+import java.util.Hashtable;
+import java.util.Map;
+
+import javajs.util.AU;
+
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.PAL;
 import org.jmol.java.BS;
@@ -35,11 +40,9 @@ import org.jmol.modelsetbio.BioModel;
 import org.jmol.modelsetbio.BioPolymer;
 import org.jmol.modelsetbio.Monomer;
 import org.jmol.shape.Shape;
-
-import javajs.util.AU;
-
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
+import org.jmol.viewer.JC;
 /****************************************************************
  * Mps stands for Model-Polymer-Shape
  * 
@@ -67,15 +70,15 @@ public abstract class BioShapeCollection extends Shape {
   public BioShape[] bioShapes;
   
   @Override
-  public void initShape() {
-    // nothing to do  
-  }
-  
-  @Override
   public final void initModelSet() {
     isBioShape = true;
     atoms = ms.at;
     initialize();
+  }
+
+  @Override
+  public void initShape() {
+    // nothing to do
   }
 
   @Override
@@ -180,7 +183,7 @@ public abstract class BioShapeCollection extends Shape {
       for (int i = bioShapes.length; --i >= 0;) {
         BioShape bioShape = bioShapes[i];
         if (bioShape.monomerCount > 0) {
-          bioShape.setColixBS(colix, (byte) 0, bsSelected);
+          bioShape.setColixBS(colix, PAL.PALETTE_VOLATILE, bsSelected);
           bioShape.setColixBack(colixBack, bsSelected);
         }
       }
@@ -201,8 +204,18 @@ public abstract class BioShapeCollection extends Shape {
 
   @Override
   public String getShapeState() {
-    return vwr.getAtomShapeSetState(this, bioShapes);
+    // leaving this here because it is so specialized
+    Map<String, BS> temp = new Hashtable<String, BS>();
+    Map<String, BS> temp2 = new Hashtable<String, BS>();
+    String type = JC.shapeClassBases[shapeID];
+    for (int iShape = bioShapes.length; --iShape >= 0;)
+      bioShapes[iShape].getBioShapeState(type, translucentAllowed, temp, temp2);
+    String s = "\n"
+        + vwr.getCommands(temp, temp2,
+            shapeID == JC.SHAPE_BACKBONE ? "Backbone" : "select");
+    return s;
   }
+
 
   void initialize() {
     int modelCount = ms.mc;

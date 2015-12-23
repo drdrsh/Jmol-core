@@ -404,10 +404,10 @@ abstract class BioShapeRenderer extends MeshRenderer {
     // cartoons and meshRibbon
 
     setNeighbors(i);
-    colix = getLeadColix(i);
+    short c0 = colix = getLeadColix(i);
     if (!setBioColix(colix))
       return;
-    colixBack = getLeadColixBack(i);
+    short cb = colixBack = getLeadColixBack(i);
     if (doFill && (aspectRatio != 0 || isExport)) {
       if (setMads(i, thisTypeOnly) || isExport) {
         try {
@@ -415,22 +415,31 @@ abstract class BioShapeRenderer extends MeshRenderer {
               && !createMesh(i, madBeg, madMid, madEnd, aspectRatio, isNucleic ? 4 : 7))
             return;
           meshes[i].setColix(colix);
-          meshes[i].setColixBack(colixBack);
+          meshes[i].setColixBack(cb);
           bsRenderMesh.set(i);
-          return;
         } catch (Exception e) {
           bsRenderMesh.clear(i);
           meshes[i] = null;
           Logger.error("render mesh error hermiteRibbon: " + e.toString());
           //System.out.println(e.getMessage());
         }
+        return;
       }
     }
-    g3d.drawHermite7(doFill, ribbonBorder, (reversed.get(i) ? -1 : 1) * (isNucleic ? 4 : 7),
+    boolean isReversed = reversed.get(i);
+    if (isReversed && colixBack != 0) {
+      setColix(colixBack);
+      cb = c0;
+    }
+    g3d.drawHermite7(doFill, ribbonBorder, (isReversed ? -1 : 1) * (isNucleic ? 4 : 7),
         ribbonTopScreens[iPrev], ribbonTopScreens[i], ribbonTopScreens[iNext],
         ribbonTopScreens[iNext2], ribbonBottomScreens[iPrev],
         ribbonBottomScreens[i], ribbonBottomScreens[iNext],
-        ribbonBottomScreens[iNext2], (int) aspectRatio, colixBack);
+        ribbonBottomScreens[iNext2], (int) aspectRatio, cb);
+    if (isReversed && colixBack != 0) {
+      setColix(c0);
+      cb = colixBack;
+    }
   }
 
   //// cardinal hermite (box or flat) arrow head (cartoon)

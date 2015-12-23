@@ -8972,15 +8972,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return getStateCreator().getFontLineShapeState(s, myType, tickInfos);
   }
 
-  public void getShapeSetState(AtomShape atomShape, Shape shape,
-                               int monomerCount, Group[] monomers,
-                               BS bsSizeDefault, Map<String, BS> temp,
-                               Map<String, BS> temp2) {
-    getStateCreator().getShapeSetState(atomShape, shape, monomerCount,
-        monomers, bsSizeDefault, temp, temp2);
-
-  }
-
   public String getMeasurementState(Measures measures, Lst<Measurement> mList,
                                     int measurementCount, Font font3d,
                                     TickInfo ti) {
@@ -8990,10 +8981,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public String getBondState(Shape shape, BS bsOrderSet, boolean reportAll) {
     return getStateCreator().getBondState(shape, bsOrderSet, reportAll);
-  }
-
-  public String getAtomShapeSetState(Shape shape, AtomShape[] shapes) {
-    return getStateCreator().getAtomShapeSetState(shape, shapes);
   }
 
   public String getShapeState(Shape shape) {

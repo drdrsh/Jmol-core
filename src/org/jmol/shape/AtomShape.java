@@ -53,10 +53,6 @@ public abstract class AtomShape extends Shape {
   public int monomerCount;
   public BS bsSizeDefault;
   
-  public Group[] getMonomers() {
-    return null;
-  }
-
   @Override
   public void initShape() {
     // nothing  to do  
@@ -167,13 +163,8 @@ public abstract class AtomShape extends Shape {
     if ("translucency" == propertyName) {
       isActive = true;
       boolean isTranslucent = (value.equals("translucent"));
-      if (bsColixSet == null)
-        bsColixSet = new BS();
+      checkColixLength(C.BLACK, ac);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        if (colixes == null) {
-          colixes = new short[ac];
-          paletteIDs = new byte[ac];
-        }
         colixes[i] = C.getColixTranslucent3(colixes[i], isTranslucent,
             translucentLevel);
         if (isTranslucent)
