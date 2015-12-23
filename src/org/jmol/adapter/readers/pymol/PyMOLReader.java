@@ -272,8 +272,9 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
         pymolVersion, haveScenes, baseAtomIndex, baseModelIndex, doCache, filePath);
 
     // just log and display some information here
-
-    logging = (vwr.getLogFileName().length() > 0);
+    String logFile = vwr.getLogFileName();
+    logging = (logFile.length() > 0);
+    Logger.info(logging ? "PyMOL file data streaming to " + logFile : "To view raw PyMOL file data, use 'set logFile \"some_filename\" ");
     Lst<Object> names = getMapList(map, "names");
     for (Map.Entry<String, Object> e : map.entrySet()) {
       String name = e.getKey();
@@ -333,6 +334,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     if (!isStateScript && doResize) {
       int width = 0, height = 0;
       try {
+        // not all PSE files have this
         width = intAt(getMapList(map, "main"), 0);
         height = intAt(getMapList(map, "main"), 1);
       } catch (Exception e) {
@@ -1083,6 +1085,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     int formalCharge = intAt(a, 18);
 
     BS bsReps = getBsReps(listAt(a, 20));
+    int intReps = (bsReps == null ? intAt(a, 20) : 0); // Pymol 1.8      
     int atomColor = intAt(a, 21);
     int serNo = intAt(a, 22);
     int cartoonType = intAt(a, 23);
@@ -1116,7 +1119,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     if (isNucleic)
       pymolScene.bsNucleic.set(ac);
     for (int i = 0; i < PyMOL.REP_MAX; i++)
-      if (bsReps.get(i))
+      if (bsReps == null ? ((intReps &  (1<<i)) != 0) : bsReps.get(i))
         reps[i].set(ac);
     if (atom.elementSymbol.equals("H"))
       pymolScene.bsHydrogen.set(ac);
@@ -1353,6 +1356,8 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
   }
 
   private static BS getBsReps(Lst<Object> list) {
+    if (list == null)
+      return null;
     BS bsReps = new BS();
     int n = Math.min(list.size(), PyMOL.REP_MAX);
     for (int i = 0; i < n; i++) {
