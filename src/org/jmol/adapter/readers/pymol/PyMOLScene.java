@@ -212,10 +212,9 @@ class PyMOLScene implements JmolSceneGenerator {
     this.stateCount = stateCount;
   }
 
-  @SuppressWarnings("unchecked")
   PyMOLScene(PymolAtomReader reader, Viewer vwr, Lst<Object> settings,
-      Map<Integer, Lst<Object>> uniqueSettings, int pymolVersion, 
-      boolean haveScenes, int baseAtomIndex, int baseModelIndex, 
+      Map<Integer, Lst<Object>> uniqueSettings, int pymolVersion,
+      boolean haveScenes, int baseAtomIndex, int baseModelIndex,
       boolean doCache, String filePath) {
     this.reader = reader;
     this.vwr = vwr;
@@ -229,9 +228,31 @@ class PyMOLScene implements JmolSceneGenerator {
     this.surfaceInfoName = filePath + "##JmolSurfaceInfo##";
     setVersionSettings();
     settings.trimToSize();
-    bgRgb = colorSetting(listAt(settings, PyMOL.bg_rgb));
-    pointAt((Lst<Object>) listAt(settings, PyMOL.label_position).get(2),
-        0, labelPosition0);
+    bgRgb = colorSetting(PyMOL.bg_rgb);
+    labelPosition0 = pointSetting(PyMOL.label_position);
+  }
+
+  @SuppressWarnings("unchecked")
+  private int colorSetting(int i) {
+    Lst<Object> pos = listAt(settings, i);
+    Object o = (pos == null || pos.size() != 3 ? null : pos.get(2));
+    if (o == null)
+      return (int) PyMOL.getDefaultSetting(i, pymolVersion);
+    return (o instanceof Integer ? ((Integer) o).intValue() : CU
+        .colorPtToFFRGB(pointAt((Lst<Object>) o, 0, ptTemp)));
+  }
+  
+  @SuppressWarnings("unchecked")
+  private P3 pointSetting(int i) {
+    P3 pt = new P3();
+    Lst<Object> pos = listAt(settings, i);
+    if (pos != null && pos.size() == 3) 
+      return pointAt((Lst<Object>) pos.get(2), 0, pt);
+    return PyMOL.getDefaultSettingPt(i, pymolVersion, pt); 
+  }
+
+  void ensureCapacity(int n) {
+    atomColorList.ensureCapacity(atomColorList.size() + n);
   }
 
   void setReaderObjectInfo(String name, int type, String groupName, boolean isHidden,
@@ -634,16 +655,12 @@ class PyMOLScene implements JmolSceneGenerator {
 
   @SuppressWarnings("unchecked")
   static int getColorPt(Object o) {
-    return (o instanceof Integer ? ((Integer) o).intValue() : CU
+    return (o == null ? 0 : o instanceof Integer ? ((Integer) o).intValue() : CU
         .colorPtToFFRGB(pointAt((Lst<Object>) o, 0, ptTemp)));
   }
 
   static int intAt(Lst<Object> list, int i) {
     return ((Number) list.get(i)).intValue();
-  }
-
-  static int colorSetting(Lst<Object> c) {
-    return getColorPt(c.get(2));
   }
 
   void setReaderObjects() {
@@ -723,7 +740,7 @@ class PyMOLScene implements JmolSceneGenerator {
     for (int j = 0; j < 8; j++)
       pymolView[pt++] = floatAt(view, i++);
 
-    boolean isOrtho = booleanSetting(PyMOL.ortho); // 23
+    boolean isOrtho = booleanSetting(PyMOL.orthoscopic); // 23
     float fov = floatSetting(PyMOL.field_of_view); // 152
 
     pymolView[pt++] = (isOrtho ? fov : -fov);
@@ -735,12 +752,10 @@ class PyMOLScene implements JmolSceneGenerator {
 
   @SuppressWarnings("unchecked")
   float globalSetting(int i) {
-    try {
-      Lst<Object> setting = (Lst<Object>) settings.get(i);
+    Lst<Object> setting = (Lst<Object>) settings.get(i);
+    if (setting != null && setting.size() == 3)
       return ((Number) setting.get(2)).floatValue();
-    } catch (Exception e) {
-      return PyMOL.getDefaultSetting(i, pymolVersion);
-    }
+    return PyMOL.getDefaultSetting(i, pymolVersion);
   }
 
   /**
@@ -947,21 +962,17 @@ class PyMOLScene implements JmolSceneGenerator {
   }
 
   float floatSetting(int i) {
-    try {
-      Lst<Object> setting = getSetting(i);
+    Lst<Object> setting = getSetting(i);
+    if (setting != null && setting.size() == 3)
       return ((Number) setting.get(2)).floatValue();
-    } catch (Exception e) {
-      return PyMOL.getDefaultSetting(i, pymolVersion);
-    }
+    return PyMOL.getDefaultSetting(i, pymolVersion);
   }
 
   String stringSetting(int i) {
-    try {
       Lst<Object> setting = getSetting(i);
-      return setting.get(2).toString();
-    } catch (Exception e) {
-      return null;
-    }
+      if (setting != null && setting.size() == 3)
+        return setting.get(2).toString();
+      return PyMOL.getDefaultSettingS(i, pymolVersion);
   }
 
   @SuppressWarnings("unchecked")
@@ -1105,8 +1116,7 @@ class PyMOLScene implements JmolSceneGenerator {
   }
 
   static int colorSettingClamped(Lst<Object> c) {
-    return (c.size() < 6 || intAt(c, 4) == 0 ? colorSetting(c) : getColorPt(c
-        .get(5)));
+    return getColorPt(c.get(c.size() < 6 || intAt(c, 4) == 0 ? 2 : 5));
   }
 
   void setAtomColor(int atomColor) {
@@ -1685,11 +1695,11 @@ class PyMOLScene implements JmolSceneGenerator {
     return defs;
   }
 
-  public boolean needSelections() {
+  boolean needSelections() {
     return haveScenes || !htCarveSets.isEmpty();
   }
 
-  public void setUniqueBonds(BS bsBonds, boolean isSticks) {
+  void setUniqueBonds(BS bsBonds, boolean isSticks) {
     if (isSticks) {
       bsStickBonds.or(bsBonds);
       bsStickBonds.andNot(bsLineBonds);
@@ -1734,7 +1744,7 @@ class PyMOLScene implements JmolSceneGenerator {
    * @param argb
    * @param trans
    */
-  public void setBondParameters(Bond b, int modelIndex, float rad, float pymolValence,
+  void setBondParameters(Bond b, int modelIndex, float rad, float pymolValence,
                              int argb, float trans) {
     if (modelIndex >= 0 && b.atom1.mi != modelIndex)
       return; 
@@ -1755,7 +1765,7 @@ class PyMOLScene implements JmolSceneGenerator {
   }
 
 
-  public void addMesh(int tok, Lst<Object> obj, String objName, boolean isMep) {
+  void addMesh(int tok, Lst<Object> obj, String objName, boolean isMep) {
     JmolObject jo = addJmolObject(tok, null, obj);
     setSceneObject(objName, -1);
     int meshColor = (int) floatSetting(PyMOL.mesh_color);
@@ -1769,7 +1779,7 @@ class PyMOLScene implements JmolSceneGenerator {
     jo.cacheID = surfaceInfoName;
   }
 
-  public JmolObject addIsosurface(String objectName) {
+  JmolObject addIsosurface(String objectName) {
     JmolObject jo = addJmolObject(T.isosurface, null, objectName);
     jo.cacheID = surfaceInfoName;
     return jo;

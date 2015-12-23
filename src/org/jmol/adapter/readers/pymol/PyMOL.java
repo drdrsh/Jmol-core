@@ -3,6 +3,8 @@ package org.jmol.adapter.readers.pymol;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javajs.util.P3;
+
 import org.jmol.util.Logger;
 
 /**
@@ -471,7 +473,7 @@ class PyMOL {
   final static int offscreen_rendering_for_antialiasing  = 695;
   final static int offscreen_rendering_multiplier        = 696;
   final static int opaque_background                     = 435;
-  final static int ortho                                 =  23;
+  final static int orthoscopic                           =  23;
   final static int overlay                               =  61;
   final static int overlay_lines                         = 311;
   final static int pdb_conect_all                        = 329;
@@ -6243,30 +6245,137 @@ class PyMOL {
     moreColors.put(id, Integer.valueOf(value));
   }
 
-  public static float getDefaultSetting(int i, int pymolVersion) {
+  /**
+   * All settings that Jmol uses should go here
+   * 
+   * @param i
+   * @param pymolVersion
+   * @return setting or 0
+   */
+   static float getDefaultSetting(int i, int pymolVersion) {
     switch (i) {
-    case label_size:
-      return 14;
+    case sphere_color:
     case cartoon_color:
     case ellipsoid_color:
     case ribbon_color:
     case line_color:
+    case dot_color:
     case stick_color:
+    case surface_color:
+    case dash_color:
+    case mesh_color:
+    case cartoon_putty_quality:
     case label_distance_digits:
     case label_angle_digits:
     case label_dihedral_digits:
+    case two_sided_lighting:
       return -1;
     case ray_pixel_scale:
     case ellipsoid_scale:
+    case sphere_scale:
+    case mesh_width:
+    case cartoon_ladder_mode:
+    case clamp_colors:
+    case frame:
+    case state:
+    case depth_cue:
+    case fog:
+    case cartoon_round_helices:
+    case cartoon_fancy_helices:
+    case label_digits:
+    case ribbon_sampling:
       return 1;
-    default:
-      Logger.info("PyMOL " + pymolVersion + " does not have setting " + i);
-      //$FALL-THROUGH$
+    case sphere_transparency:
     case ellipsoid_transparency:
     case ribbon_transparency:
     case nonbonded_transparency:
+    case cartoon_transparency:
+    case stick_transparency:
+    case transparency:
+    case bg_rgb:
+    case cartoon_cylindrical_helices:
+    case surface_mode:
+    case surface_solvent:
+    case all_states:
+    case valence:
+    case cgo_transparency:
+    case cartoon_putty_transform:
+    case orthoscopic:
+    case ribbon_radius:
+    case ribbon_smooth:
+    case sphere_solvent:
+    case surface_carve_cutoff:
+      return 0;
+    case cartoon_loop_radius:
+      return 0.2F;
+    case cartoon_rect_length:
+      return 1.4F;
+    case nonbonded_size:
+      return 0.25F;
+    case fog_start:
+      return 0.45f;
+    case label_size:
+      return 14;
+    case label_color:
+      return -6;
+    case label_font_id:
+      return 5;
+    case transparency_mode:
+    case cartoon_putty_range:
+    case cartoon_tube_cap:
+      return 2;
+    case cartoon_nucleic_acid_mode:
+    case cartoon_putty_scale_max:
+      return 4;
+    case cartoon_putty_radius:
+      return 0.4f;
+    case cartoon_putty_scale_min:
+      return 0.6f;
+    case cartoon_putty_scale_power:
+      return 1.5f;
+    case cartoon_tube_radius:
+      return 0.5f;
+    case solvent_radius:
+      return 1.4f;
+    case dash_width:
+      return 2.5f;
+    case line_width:
+      return 1.49f;
+    case ribbon_width:
+      return 3;
+    case field_of_view:
+      return 20;
+    case movie_fps:
+      return 30;
+    case stick_radius:
+      return 0.25f;
+    default:
+      Logger.error("PyMOL " + pymolVersion + " default float setting not found: " + i);
       return 0;
     }
+  }
+
+  static P3 getDefaultSettingPt(int i, int pymolVersion, P3 pt) {
+    switch (i) {
+    case label_position:
+      pt.set(0,  0,  0.75f);
+      break;
+    default:
+      Logger.error("PyMOL " + pymolVersion + " default point setting not found: " + i);
+      break;
+    }
+    return pt;
+  }
+
+  static String getDefaultSettingS(int i, int pymolVersion) {
+    switch (i) {
+    case surface_carve_selection:
+      break;
+    default:
+      Logger.info("PyMOL " + pymolVersion + " does not have String setting " + i);
+      break;
+    }
+    return "";
   }
 
 }

@@ -771,6 +771,7 @@ public final class ModelLoader {
     boolean addH = false;
     boolean isLegacyHAddition = false;//vwr.getBoolean(T.legacyhaddition);
     JmolAdapterAtomIterator iterAtom = adapter.getAtomIterator(asc);
+    ms.setCapacity(adapter.getAtomCount(asc));
     int nRead = 0;
     Model[] models = ms.am;
     if (ms.mc > 0)

@@ -99,7 +99,6 @@ import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
-import org.jmol.modelset.Group;
 import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Measurement;
 import org.jmol.modelset.MeasurementData;

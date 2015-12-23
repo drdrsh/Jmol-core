@@ -540,7 +540,7 @@ public class ScriptManager implements JmolScriptManager {
     try {
       if (fileName.endsWith(".pse")) {
         cmd = (isCached ? "" : "zap;") + "load SYNC " + PT.esc(fileName)
-            + " filter 'DORESIZE'";
+            + (vwr.isApplet ? "" : " filter 'DORESIZE'");
         return;
       }
       if (fileName.endsWith("jvxl")) {

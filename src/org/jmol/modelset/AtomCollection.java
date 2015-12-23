@@ -2570,6 +2570,12 @@ abstract public class AtomCollection {
       atomTensors.remove(toDelete.get(i));
   }
 
+  
+  private int atomCapacity;
+  void setCapacity(int nAtoms) {
+    atomCapacity += nAtoms;
+  }
+
   public void setAtomTensors(int atomIndex, Lst<Object> list) {
     if (list == null || list.size() == 0)
       return;
@@ -2588,6 +2594,16 @@ abstract public class AtomCollection {
       if (t.altType != null)
         addTensor(t, t.altType);
     }
+  }
+
+  public void addTensor(Tensor t, String type) {
+    type = type.toLowerCase();
+    Lst<Object> tensors = atomTensors.get(type);
+    if (tensors == null) {
+      atomTensors.put(type, tensors = new Lst<Object>());
+      tensors.ensureCapacity(atomCapacity);
+    }
+    tensors.addLast(t);
   }
 
   private static Object[] getTensorList(Lst<Object> list) {
@@ -2635,14 +2651,6 @@ abstract public class AtomCollection {
       }
     }
     return null;
-  }
-
-  public void addTensor(Tensor t, String type) {
-    type = type.toLowerCase();
-    Lst<Object> tensors = atomTensors.get(type);
-    if (tensors == null)
-      atomTensors.put(type, tensors = new Lst<Object>()); 
-    tensors.addLast(t);
   }
 
   public Lst<Object> getAllAtomTensors(String type) {

@@ -1,15 +1,13 @@
 package org.jmol.adapter.readers.pymol;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.api.GenericBinaryDocument;
 import javajs.util.Lst;
 import javajs.util.SB;
 
 import org.jmol.util.Logger;
-
-import java.util.Hashtable;
-
-import java.util.Map;
-
 import org.jmol.viewer.Viewer;
 
 /**
@@ -98,6 +96,7 @@ class PickleReader {
   PickleReader(GenericBinaryDocument doc, Viewer vwr) {
     binaryDoc = doc;
     this.vwr = vwr;
+    stack.ensureCapacity(1000);
   }
 
   private void log(String s) {
@@ -386,10 +385,11 @@ class PickleReader {
   private Lst<Object> getObjects(int mark) {
     int n = stack.size() - mark;
     Lst<Object> args = new  Lst<Object>();
-    for (int j = 0; j < n; j++)
-      args.addLast(null);
-    for (int j = n, i = stack.size(); --i >= mark;)
-      args.set(--j, stack.remove(i));
+    args.ensureCapacity(n);
+    for (int i = mark; i < stack.size(); ++i)
+      args.addLast(stack.get(i));
+    for (int i = stack.size(); --i >= mark;)
+      stack.remove(i);
     return args;
   }
 
@@ -417,8 +417,12 @@ class PickleReader {
     switch (markCount) {
     case 2:
       thisSection = stack.get(i - 2);
-      inMovie = "movie".equals(thisSection);
-      inNames = "names".equals(thisSection);
+      // BH: Note that JavaScript string == object first converts object to string, then checks. 
+      // This can be very slow if the object is complex.
+      if (thisSection instanceof String) {
+        inMovie = "movie".equals(thisSection);
+        inNames = "names".equals(thisSection);
+      }
       break;
     default:
       break;
