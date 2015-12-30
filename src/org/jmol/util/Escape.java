@@ -114,10 +114,10 @@ public class Escape {
       return escapeMap((Map<String, Object>) x);
     if (x instanceof BS) 
       return eBS((BS) x);
-    if (x instanceof T3)
-      return eP((T3) x);
     if (x instanceof P4)
       return eP4((P4) x);
+    if (x instanceof T3)
+      return eP((T3) x);
     if (AU.isAP(x))
       return eAP((T3[]) x);
     if (AU.isAS(x))
