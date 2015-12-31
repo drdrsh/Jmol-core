@@ -436,10 +436,10 @@ public class SurfaceTool {
     cmd.append(cmdStart).append(idStr).append(" slab none;");
     cmd.append(cmdStart).append(idStr);
     cmd.append(slabCapStr).append(ghostStr).append("-")
-        .append(Escape.e(slice.leftPlane));
+        .append(Escape.eP4(slice.leftPlane));
     cmd.append(";").append(cmdStart).append(idStr);
     cmd.append(slabCapStr).append(ghostStr)
-        .append(Escape.e(slice.rightPlane));
+        .append(Escape.eP4(slice.rightPlane));
     cmd.append(";");
     vwr.evalStringQuiet(cmd.toString());
     return;
@@ -462,7 +462,7 @@ public class SurfaceTool {
     }
     cmd.append("isosurface _slicer").append(name);
     if (on) {
-      cmd.append(" plane ").append(Escape.e(plane))
+      cmd.append(" plane ").append(Escape.eP4(plane))
           .append(" translucent 0.7 ").append(color).append(";");
     } else {
       cmd.append(" off;");
