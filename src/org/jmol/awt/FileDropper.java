@@ -25,32 +25,29 @@ package org.jmol.awt;
 
 import java.awt.Component;
 import java.awt.Point;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetListener;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetDragEvent;
-
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
-
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-
 import java.io.File;
 import java.util.List;
-
-import javax.swing.JOptionPane;
 
 import javajs.util.PT;
 import javajs.util.SB;
 
+import javax.swing.JOptionPane;
+
 import org.jmol.api.JmolStatusListener;
 import org.jmol.i18n.GT;
 import org.jmol.util.Logger;
-import org.jmol.viewer.JC;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -102,8 +99,9 @@ public class FileDropper implements DropTargetListener {
       return;
     
     int flags = 1; //
-    boolean isScript = JC.isScriptType(fname);
-    switch (vwr.ms.ac > 0 && !isScript ? JOptionPane.showConfirmDialog(null, GT._("Would you like to replace the current model with the selected model?")) : JOptionPane.OK_OPTION) {
+    boolean isScript = FileManager.isScriptType(fname);
+    boolean isSurface = FileManager.isSurfaceType(fname);
+    switch (vwr.ms.ac > 0 && !isScript && !isSurface ? JOptionPane.showConfirmDialog(null, GT._("Would you like to replace the current model with the selected model?")) : JOptionPane.OK_OPTION) {
     case JOptionPane.CANCEL_OPTION:
       return;
     case JOptionPane.OK_OPTION:

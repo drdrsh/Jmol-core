@@ -244,6 +244,7 @@ public class MeshCapper {
    */
   void createCap(V3 norm) {
 
+
     capMap = null;
 
     CapVertex[] vs = new CapVertex[vertices.size()];
@@ -269,16 +270,17 @@ public class MeshCapper {
     M4 m4 = M4.newMV(m3, vertices.get(0));
     M4 m4inv = M4.newM4(m4).invert();
     vertices.toArray(vs);
+    vertices = null;
+        
     for (int i = vs.length; --i >= 0;)
       m4inv.rotTrans2(vs[i], vs[i]);
-    vertices = null;
 
     // link by Y,X sort
 
     vs = test(vs);
 
     Logger.info("MeshCapper using " + vs.length + " vertices");
-
+    
     CapVertex v0 = vs[0].sort(vs);
     if (v0 == null) {
       Logger.error("two identical points -- aborting");
@@ -296,6 +298,7 @@ public class MeshCapper {
     } while (v != v0);
     } catch (Exception e) {
       System.out.println("MeshCapper exception " + e);
+      e.printStackTrace();
     }
     if (slicer != null)
       clear();
@@ -327,6 +330,8 @@ public class MeshCapper {
     if (v.prev == v.next)
       return q;
 
+    if (v.next == null)
+      System.out.println("OHO");
     boolean isDescending = (v.prev.region != null);
     boolean isAscending = (v.next.region != null);
 
@@ -777,6 +782,8 @@ public class MeshCapper {
      */
     protected int ok = 1;
 
+    boolean disabled;
+
     CapVertex(T3 p, int i) {
       ipt = i;
       id = "" + i;
@@ -799,12 +806,39 @@ public class MeshCapper {
      * @return null if there are two identical points (edge crossings)
      */
     public CapVertex sort(CapVertex[] vs) {
-      Arrays.sort(vs, this);
-      if (ok == 0)
-        return null;
-      for (int i = vs.length - 1; --i >= 0;)
-        vs[i].qnext = vs[i + 1];
-      vs[vs.length - 1].qnext = vs[0];
+      CapVertex v0 = null;
+      CapVertex v1 = null;
+      int n = vs.length;
+      for (int i = n; --i >= 0;) {
+        if (vs[i].next == null) {
+          if (v0 == null) {
+            v1 = vs[i];
+          } else {
+            vs[i].link(v0);            
+            v0 = null;
+          }
+        } else if (vs[i].prev == null) {
+          if (v1 == null) {
+            v0 = vs[i];
+          } else {
+            v1.link(vs[i]);            
+            v1 = null;
+          }
+        }
+      }
+
+      ok = 0;
+      while (ok == 0) {
+        ok = 1;
+        Arrays.sort(vs, this);
+        System.out.println(ok);
+      }
+      for (int i = n; --i >= 0;) {
+        if (vs[i].x == Float.MAX_VALUE)
+          n = i;
+        vs[i].qnext = vs[(i + 1) % n];
+      }
+      vs[n - 1].qnext = vs[0];
       return vs[0];
     }
 
@@ -812,7 +846,19 @@ public class MeshCapper {
     public int compare(CapVertex v1, CapVertex v2) {
       // first HIGHEST Y to LOWEST Y, then LOWEST X to HIGHEST X
       return (v1.y < v2.y ? 1 : v1.y > v2.y || v1.x < v2.x ? -1
-          : v1.x > v2.x ? 1 : (ok = 0));
+          : v1.x > v2.x ? 1 
+              : disable(v1, v2));
+    }
+
+    private int disable(CapVertex v1, CapVertex v2) {
+      if (v2.x == Float.MAX_VALUE)
+        return 0; // both are disabled
+      CapVertex v = (v1.x == Float.MAX_VALUE ? v1 : v2);
+      v.x = Float.MAX_VALUE;
+      v.y = -Float.MAX_VALUE;
+      v.link(null);
+      ok = 0;
+      return (v1.x > v2.x ? 1 : -1);
     }
 
     /**
@@ -889,8 +935,8 @@ public class MeshCapper {
           + " "
           + z
           + "} # "
-          + (prev == null ? "" : prev.id)
-          + (next == null ? "" : " " + next.id)
+          + (prev == null ? "null" : prev.id)
+          + (next == null ? " null" : " " + next.id)
               + (region == null ? "" : dumpRegion());
     }
 

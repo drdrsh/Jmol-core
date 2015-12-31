@@ -887,12 +887,6 @@ public final class JC {
   public final static String IMAGE_TYPES = JPEG_EXTENSIONS + "gif;gift;pdf;ppm;png;pngj;pngt;";
   public static final String IMAGE_OR_SCENE = IMAGE_TYPES + "scene;";
 
-  public static boolean isScriptType(String fname) {
-    return PT.isOneOf(fname.substring(fname.lastIndexOf(".")+1), ";pse;spt;png;pngj;jmol;zip;");
-  }
-  
-
-  
   static {
     /**
      * @j2sNative

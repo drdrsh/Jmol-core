@@ -1326,6 +1326,14 @@ public class FileManager implements BytePoster {
   
   private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0";
 
+  public static boolean isScriptType(String fname) {
+    return PT.isOneOf(fname.toLowerCase().substring(fname.lastIndexOf(".")+1), ";pse;spt;png;pngj;jmol;zip;");
+  }
+
+  public static boolean isSurfaceType(String fname) {
+    return PT.isOneOf(fname.toLowerCase().substring(fname.lastIndexOf(".")+1), ";jvxl;kin;o;msms;map;pmesh;mrc;efvet;cube;obj;");
+  }
+  
   public static String determineSurfaceFileType(BufferedReader bufferedReader) {
     // drag-drop and isosurface command only
     // JVXL should be on the FIRST line of the file, but it may be 
@@ -1335,6 +1343,7 @@ public class FileManager implements BytePoster {
 
     String line = null;
     LimitedLineReader br = null;
+ 
     
     try {
       br = new LimitedLineReader(bufferedReader, 16000);

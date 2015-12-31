@@ -518,7 +518,7 @@ public class ScriptManager implements JmolScriptManager {
    * 
    * From file dropping.
    * 
-   * @param fileName 
+   * @param fileName
    * @param flags 1=pdbCartoons, 2=no scripting, 4=append 
    * 
    */
@@ -545,9 +545,7 @@ public class ScriptManager implements JmolScriptManager {
       }
       if (fileName.endsWith("jvxl")) {
         cmd = "isosurface ";
-        return;
-      }
-      if (!fileName.toLowerCase().endsWith(".spt")) {
+      } else if (!fileName.toLowerCase().endsWith(".spt")) {
         String type = getDragDropFileTypeName(fileName);
         if (type == null) {
           type = FileManager.determineSurfaceTypeIs(vwr
@@ -565,8 +563,7 @@ public class ScriptManager implements JmolScriptManager {
         } else if (!type.equals("spt")) {
           cmd = vwr.g.defaultDropScript;
           cmd = PT.rep(cmd, "%FILE", fileName);
-          cmd = PT.rep(cmd, "%ALLOWCARTOONS", ""
-              + pdbCartoons);
+          cmd = PT.rep(cmd, "%ALLOWCARTOONS", "" + pdbCartoons);
           if (cmd.toLowerCase().startsWith("zap") && (isCached || isAppend))
             cmd = cmd.substring(3);
           if (isAppend) {
