@@ -982,7 +982,7 @@ class PyMOLScene implements JmolSceneGenerator {
       setting = stateSettings.get(Integer.valueOf(i));
     if (setting == null && objectSettings != null)
       setting = objectSettings.get(Integer.valueOf(i));
-    if (setting == null)
+    if (setting == null && i < settings.size())
       setting = (Lst<Object>) settings.get(i);
     return setting;
   }
