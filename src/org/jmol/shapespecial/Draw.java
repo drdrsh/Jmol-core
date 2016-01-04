@@ -377,12 +377,12 @@ public void initShape() {
     }
 
     if ("coords" == propertyName) {
-      addPoints(PT_COORD, value, false);
+      addPoints(PT_COORD, value);
       return;
     }
 
     if ("modelBasedPoints" == propertyName) {
-      addPoints(PT_MODEL_BASED_POINTS, value, true);
+      addPoints(PT_MODEL_BASED_POINTS, value);
       return;
     }
 
@@ -416,23 +416,34 @@ public void initShape() {
     setPropertySuper(propertyName, value, bs);
   }
 
-  private void addPoints(int type, Object value, boolean allowNull) {
+  private void addPoints(int type, Object value) {
     @SuppressWarnings("unchecked")
     Lst<SV> pts = (Lst<SV>) value;
     Integer key = Integer.valueOf(type);
+    boolean isModelPoints = (type == PT_MODEL_BASED_POINTS);
+    if (isModelPoints)
+      vData.addLast(new Object[] { key, pts });
     for (int i = 0, n = pts.size(); i < n; i++) {
       SV v = pts.get(i);
       P3 pt;
       switch (v.tok) {
       case T.bitset:
-        if (!allowNull && ((BS) v.value).isEmpty())
+        if (!isModelPoints && ((BS) v.value).isEmpty())
           continue;
         pt = vwr.ms.getAtomSetCenter((BS) v.value);
         break;
+      case T.point3f:
+        if (isModelPoints)
+          continue;
+        //$FALL-THROUGH$
       default:
         pt = SV.ptValue(v);
       }
-      vData.addLast(new Object[] { key, pt });
+      if (isModelPoints) {
+        pts.set(i, SV.getVariable(pt));
+      } else {       
+        vData.addLast(new Object[] { key, pt });
+      }
     }
   }
 
@@ -707,9 +718,8 @@ private void initDraw() {
   MeshSurface slabData;
   
   private void addPoint(T3 newPt, int iModel) {
-    boolean isOK = (iModel < 0 || bsAllModels.get(iModel));
     if (makePoints) {
-      if (!isOK)
+      if (newPt == null || iModel >= 0 && !bsAllModels.get(iModel))
         return;
       ptList[nPoints] = P3.newP(newPt);
       if (newPt.z == Float.MAX_VALUE || newPt.z == -Float.MAX_VALUE)
@@ -829,6 +839,8 @@ private void initDraw() {
                 bs.and(bsModel);
               if (bs.length() > 0)
                 addPoint(vwr.ms.getAtomSetCenter(bs), j);
+            } else if (point instanceof SV) {
+              addPoint(SV.ptValue((SV) point), j);
             }
           }
         break;

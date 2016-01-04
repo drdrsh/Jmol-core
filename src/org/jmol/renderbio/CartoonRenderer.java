@@ -38,7 +38,7 @@ public class CartoonRenderer extends RocketsRenderer {
   protected void renderBioShape(BioShape bioShape) {
     if (!setupRR(bioShape, false))
       return;
-    if (isNucleic) {
+    if (isNucleic || isPhosphorusOnly) {
       if (nucleicRenderer == null)
         nucleicRenderer = (NucleicRenderer) Interface.getInterface("org.jmol.renderbio.NucleicRenderer", vwr, "render");
       calcScreenControlPoints();
@@ -75,6 +75,9 @@ public class CartoonRenderer extends RocketsRenderer {
     boolean doRockets = false;
     for (int i = monomerCount; --i >= 0;) {
       // runs backwards, so it can render the heads first
+      if (monomers[i].getStructure() != null && !(monomers[i].getStructure() instanceof ProteinStructure)) {
+        System.out.println("BUG HERE IN CARTOONRENDERER");
+      }
       thisStructure = (ProteinStructure) monomers[i].getStructure();
       if (thisStructure != previousStructure) {
         lastWasSheet = false;

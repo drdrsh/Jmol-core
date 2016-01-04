@@ -101,14 +101,15 @@ public class NucleicRenderer {
   }
 
   private void renderNucleicBaseStep(int im) {
-    NucleicMonomer nucleotide=
-    (NucleicMonomer) bsr.monomers[im];
-    short thisMad= bsr.mads[im];
-    if (rScr[0] == null)    {
-      for (int i = 10; --i >= 0; )
+    if (bsr.isPhosphorusOnly)
+      return;
+    NucleicMonomer nucleotide = (NucleicMonomer) bsr.monomers[im];
+    short thisMad = bsr.mads[im];
+    if (rScr[0] == null) {
+      for (int i = 10; --i >= 0;)
         rScr[i] = new P3();
-      for (int i = 5; --i >= 0; )
-          rScr5[i] = new P3();
+      for (int i = 5; --i >= 0;)
+        rScr5[i] = new P3();
       baseScreen = new P3();
       basePt = new P3();
       rPt[9] = new P3(); // ribose center
@@ -163,8 +164,8 @@ public class NucleicRenderer {
       basePt.setT(stepPt);
       nucleotide.getRiboseRing5Points(rPt);
       P3 c = rPt[9];
-      c.set(0,  0,  0);
-      for (int i = 0; i < 5; i++) 
+      c.set(0, 0, 0);
+      for (int i = 0; i < 5; i++)
         c.add(rPt[i]);
       c.scale(0.2f);
       transformPoints(10, rPt, rScr);

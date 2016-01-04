@@ -26,10 +26,11 @@ package org.jmol.renderbio;
 
 import org.jmol.c.STR;
 import org.jmol.java.BS;
-import org.jmol.modelset.Atom; //import org.jmol.modelsetbio.AlphaMonomer;
+import org.jmol.modelset.Atom;
 import org.jmol.modelsetbio.CarbohydratePolymer;
 import org.jmol.modelsetbio.Monomer;
-import org.jmol.modelsetbio.NucleicPolymer; //import org.jmol.modelsetbio.ProteinStructure;
+import org.jmol.modelsetbio.NucleicPolymer;
+import org.jmol.modelsetbio.PhosphorusPolymer;
 import org.jmol.render.MeshRenderer;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
@@ -73,6 +74,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
   protected Monomer[] monomers;
 
   protected boolean isNucleic;
+  protected boolean isPhosphorusOnly;
   protected boolean isCarbohydrate;
   protected BS bsVisible = new BS();
   protected P3[] ribbonTopScreens;
@@ -224,6 +226,7 @@ abstract class BioShapeRenderer extends MeshRenderer {
     // isNucleic = bioShape.bioPolymer.isNucleic();
 
     isNucleic = bioShape.bioPolymer instanceof NucleicPolymer;
+    isPhosphorusOnly = !isNucleic && bioShape.bioPolymer instanceof PhosphorusPolymer;
     isCarbohydrate = bioShape.bioPolymer instanceof CarbohydratePolymer;
     haveControlPointScreens = false;
     wingVectors = bioShape.wingVectors;

@@ -140,6 +140,10 @@ public class Labels extends AtomShape {
       setScaling();
       LabelToken[][] tokens = null;
       int nbs = checkStringLength(bsSelected.length());
+      if (defaultColix != C.INHERIT_ALL || defaultPaletteID != 0)
+        checkColixLength(defaultColix, bsSelected.length());
+      if (defaultBgcolix != C.INHERIT_ALL)
+        checkBgColixLength(defaultBgcolix, bsSelected.length());
       if (value instanceof Lst) {
         Lst<SV> list = (Lst<SV>) value;
         int n = list.size();
@@ -490,9 +494,9 @@ public class Labels extends AtomShape {
       setZPos(i, JC.LABEL_ZPOS_GROUP, true);
     if (defaultPointer != JC.LABEL_POINTER_NONE)
       setPointer(i, defaultPointer);
-    if (defaultColix != 0 || defaultPaletteID != 0)
+    if (defaultColix != C.INHERIT_ALL || defaultPaletteID != 0)
       setLabelColix(i, defaultColix, defaultPaletteID);
-    if (defaultBgcolix != 0)
+    if (defaultBgcolix != C.INHERIT_ALL)
       setBgcolix(i, defaultBgcolix);
     if (defaultFontId != zeroFontId)
       setFont(i, defaultFontId);
