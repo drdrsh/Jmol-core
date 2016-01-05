@@ -618,6 +618,7 @@ private void initDraw() {
         || indicatedModelIndex < 0
         && (isFixed || isArrow || isCurve || isCircle || isCylinder || modelCount == 1)) {
       // make just ONE copy 
+      
       // arrows and curves simply can't be handled as
       // multiple frames yet
       thisMesh.modelIndex = (lineData == null ? vwr.am.cmi

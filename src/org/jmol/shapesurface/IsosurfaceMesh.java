@@ -683,7 +683,8 @@ public class IsosurfaceMesh extends Mesh {
       colix = C.ORANGE;
     colix = C.getColixTranslucent3(colix, jvxlData.translucency != 0,
         jvxlData.translucency);
-    float translucencyLevel = (jvxlData.translucency == 0 ? Float.NaN : jvxlData.translucency);
+    float translucencyLevel = (jvxlData.translucency == 0 ? Float.NaN
+        : jvxlData.translucency);
     if (jvxlData.meshColor != null)
       meshColix = C.getColixS(jvxlData.meshColor);
     setJvxlDataRendering();
@@ -692,32 +693,32 @@ public class IsosurfaceMesh extends Mesh {
         && jvxlData.vertexColorMap == null;
     if (colorEncoder == null)
       return false;
-      // bicolor map will be taken care of with params.isBicolorMap
-      if (jvxlData.vertexColorMap == null) {
-        if (jvxlData.colorScheme != null) {
-          String colorScheme = jvxlData.colorScheme;
-          boolean isTranslucent = colorScheme.startsWith("translucent ");
-          if (isTranslucent) {
-            colorScheme = colorScheme.substring(12);
-            translucencyLevel = Float.NaN;
-          }
-          colorEncoder.setColorScheme(colorScheme, isTranslucent);
-          remapColors(null, null, translucencyLevel);
+    // bicolor map will be taken care of with params.isBicolorMap
+    if (jvxlData.vertexColorMap == null) {
+      if (jvxlData.colorScheme != null) {
+        String colorScheme = jvxlData.colorScheme;
+        boolean isTranslucent = colorScheme.startsWith("translucent ");
+        if (isTranslucent) {
+          colorScheme = colorScheme.substring(12);
+          translucencyLevel = Float.NaN;
         }
-      } else {
-        if (jvxlData.baseColor != null) {
-          for (int i = vc; --i >= 0;)
-            vcs[i] = colix;
-        }
-        for (Map.Entry<String, BS> entry : jvxlData.vertexColorMap.entrySet()) {
-          BS bsMap = entry.getValue();
-          short colix = C.copyColixTranslucency(this.colix, C.getColixS(entry
-              .getKey()));
-          for (int i = bsMap.nextSetBit(0); i >= 0; i = bsMap.nextSetBit(i + 1))
-            vcs[i] = colix;
-        }
+        colorEncoder.setColorScheme(colorScheme, isTranslucent);
+        remapColors(null, null, translucencyLevel);
       }
-      return true;
+    } else {
+      if (jvxlData.baseColor != null) {
+        for (int i = vc; --i >= 0;)
+          vcs[i] = colix;
+      }
+      for (Map.Entry<String, BS> entry : jvxlData.vertexColorMap.entrySet()) {
+        BS bsMap = entry.getValue();
+        short colix = C.copyColixTranslucency(this.colix,
+            C.getColixS(entry.getKey()));
+        for (int i = bsMap.nextSetBit(0); i >= 0; i = bsMap.nextSetBit(i + 1))
+          vcs[i] = colix;
+      }
+    }
+    return true;
   }
 
   void setJvxlDataRendering() {
