@@ -329,7 +329,7 @@ public class JvxlXmlReader extends VolumeFileReader {
       jvxlData.rendering = s;
     jvxlData.colorScheme = XmlReader.getXmlAttrib(data, "colorScheme");
     if (jvxlData.colorScheme.length() == 0)
-      jvxlData.colorScheme = null;
+      jvxlData.colorScheme = (jvxlDataIsColorMapped ? "roygb": null); // allow for legacy default
     if (jvxlData.thisSet < 0) {
       int n = parseIntStr(XmlReader.getXmlAttrib(data, "set"));
       if (n > 0)
