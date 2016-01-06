@@ -54,13 +54,13 @@ class PixelatorT extends Pixelator {
       // if (zT != Integer.MAX_VALUE)
       int argb = g.pbufT[offset];
       if (!g.translucentCoverOnly && argb != 0 && zT - z > g.zMargin)
-        Graphics3D.mergeBufferPixel(g.pbuf, offset, argb, g.bgcolor);
+        pb[offset] = Graphics3D.mergeBufferPixel(pb[offset], argb, g.bgcolor);
       g.zbufT[offset] = z;
       g.pbufT[offset] = p & g.translucencyMask;
     } else if (z == zT) {
     } else if (!g.translucentCoverOnly && z - zT > g.zMargin) {
         // oops-out of order
-        Graphics3D.mergeBufferPixel(g.pbuf, offset, p & g.translucencyMask, g.bgcolor);
+        pb[offset] = Graphics3D.mergeBufferPixel(pb[offset], p & g.translucencyMask, g.bgcolor);
     }
   }
 }

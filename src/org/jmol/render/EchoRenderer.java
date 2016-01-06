@@ -42,7 +42,6 @@ public class EchoRenderer extends LabelsRenderer {
         .getScalePixelsPerAngstrom(true) * 10000 : 0);
     imageFontScaling = vwr.imageFontScaling;
     boolean haveTranslucent = false;
-    setZcutoff();
     for (Text t : echo.objects.values()) {
       if (!t.visible || t.hidden) {
         continue;
@@ -61,8 +60,6 @@ public class EchoRenderer extends LabelsRenderer {
           z = pt0i.z - vwr.tm.zValueFromPercent(0) + z;
         t.setZs(z, z);
       }
-      if (t.zSlab >= zCutoff)
-        continue;
       if (t.pointerPt == null) {
         t.pointer = JC.LABEL_POINTER_NONE;
       } else {

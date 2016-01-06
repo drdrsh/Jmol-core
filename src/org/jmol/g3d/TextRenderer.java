@@ -125,26 +125,11 @@ class TextRenderer {
           if (shade != 0)
             jr.plotImagePixel(argb, x + j, y + i, z, shade, bgargb, width, height, zbuf, p, tLog);
         }
-      }
-      
+      }      
     } else {
-      int pbufOffset = y * width + x;
-      for (int i = 0, off = 0; i < textHeight; i++) {
-        for (int j = 0; j < textWidth; j++) {
-          byte shade = tmap[off++];
-          if (shade != 0 && z < zbuf[pbufOffset]) {
-            if (shade == 8) {
-              p.addPixel(pbufOffset, z, argb);
-            } else {
-              shade += tLog;
-              if (shade <= 7)
-                g3d.shadeTextPixel(pbufOffset, z, argb, bgargb, shade, zbuf);
-            }
-          }
-          pbufOffset++;
-        }
-        pbufOffset += (width - textWidth);
-      }
+      for (int i = 0, off = 0, pbufOffset = y * width + x; i < textHeight; i++, pbufOffset += (width - textWidth))
+        for (int j = 0; j < textWidth; j++)
+          p.addImagePixel(tmap[off++], tLog, pbufOffset++, z, argb, bgargb);
     }
     return text3d.width;
   }

@@ -432,7 +432,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     if (pbuf != null) {
       if (isPass2 && pbufT != null)
         for (int offset = pbufT.length; --offset >= 0;)
-          mergeBufferPixel(pbuf, offset, pbufT[offset], bgcolor);
+          pbuf[offset] = mergeBufferPixel(pbuf[offset], pbufT[offset], bgcolor);
       
       if (pixel == pixelShaded && pixelShaded.zShadePower == 0)
         pixelShaded.showZBuffer();
@@ -455,13 +455,10 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     currentlyRendering = isPass2 = false;
   }
 
-  public static void mergeBufferPixel(int[] pbuf, int offset, int argbB,
+  public static int mergeBufferPixel(int argbA, int argbB,
                                       int bgcolor) {
-    if (argbB == 0)
-      return;
-    int argbA = pbuf[offset];
-    if (argbA == argbB)
-      return;
+    if (argbB == 0 || argbA == argbB)
+      return argbA;
     if (argbA == 0)
       argbA = bgcolor;
     int rbA = (argbA & 0x00FF00FF);
@@ -510,7 +507,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       gA = (((gA << 2) + (gA << 1) + gA + gB) >> 3) & 0x0000FF00;
       break;
     }
-    pbuf[offset] = 0xFF000000 | rbA | gA;
+    return 0xFF000000 | rbA | gA;
   }
 
   @Override
@@ -1193,7 +1190,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         for (int j = 0; j < imageWidth; j++) {
           int b = buffer[offset++];
           if ((b & 0xFF000000) == (0xFF000000 & 0xFF000000))
-            jmolRenderer.plotImagePixel(b, x + j, y + i, z, 8, bg, w,
+            jmolRenderer.plotImagePixel(b, x + j, y + i, z, (byte) 8, bg, w,
               h, zb, p, t);
         }
     }
@@ -1608,24 +1605,13 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   }
 
   @Override
-  public void plotImagePixel(int argb, int x, int y, int z, int shade,
+  public void plotImagePixel(int argb, int x, int y, int z, byte shade,
                              int bgargb, int width, int height, int[] zbuf,
                              Object p, int transpLog) {
     // drawString via text3d.plotClipped; overridden in Export
     if (x < 0 || x >= width || y < 0 || y >= height)
       return;
-    int offset = y * width + x;
-    if (z < zbuf[offset]) {
-      if (shade == 8)
-        ((Pixelator) p).addPixel(offset, z, argb);
-      else {
-        // shade is a log of translucency, so adding two is equivalent to
-        // multiplying them. Works like a charm! - BH 
-        shade += transpLog;
-        if (shade <= 7)
-          shadeTextPixel(offset, z, argb, bgargb, shade, zbuf);
-      }
-    }
+    ((Pixelator)p).addImagePixel(shade, transpLog, y * width + x, z, argb, bgargb);
   }
 
   void plotPixelsClippedRaster(int count, int x, int y, int zAtLeft,
@@ -2044,14 +2030,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
                                   Map<String, Object> params) {
     // N/A
     return false;
-  }
-
-  void shadeTextPixel(int offset, int z, int argb, int bgargb, int shade,
-                      int[] zbuf) {
-    if (bgargb != 0)
-      mergeBufferPixel(pbuf, offset, bgargb, bgcolor);
-    mergeBufferPixel(pbuf, offset, (argb & 0xFFFFFF) | shade << 24, bgcolor);
-    zbuf[offset] = z;
   }
 
 }

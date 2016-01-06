@@ -640,24 +640,18 @@ public class IsosurfaceMesh extends Mesh {
    *  just sets the color command for this isosurface. 
    */
   void setColorCommand() {
-    if (colorEncoder == null)
+    if (colorEncoder == null || (colorCommand = colorEncoder.getColorScheme()) == null)
       return;
-    colorCommand = colorEncoder.getColorScheme();
     if (colorCommand.equals("inherit")) {
       colorCommand = "#inherit;";
       return;
     }
-    if (colorCommand == null)
-      return;
-    colorCommand = "color $"
-        + (PT.isLetter(thisID.charAt(0)) && thisID.indexOf(" ") < 0 ? thisID : "\"" + thisID + "\"")
-        + " \""
-        + colorCommand
-        + "\" range "
+    colorCommand = "color $"  + PT.esc(thisID)  + PT.esc(colorCommand) + " range "
         + (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue + " "
             + jvxlData.valueMappedToRed : jvxlData.valueMappedToRed + " "
             + jvxlData.valueMappedToBlue);
   }
+
 
   /**
    * from Isosurface.notifySurfaceGenerationCompleted()

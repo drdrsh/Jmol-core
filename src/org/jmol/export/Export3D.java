@@ -789,7 +789,7 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void plotImagePixel(int argb, int x, int y, int z, int shade,
+  public void plotImagePixel(int argb, int x, int y, int z, byte shade,
                              int bgargb, int width, int height, int[] pbuf, Object p, int transpLog) {
     // from Text3D
     if (isWebGL)

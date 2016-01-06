@@ -260,7 +260,7 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                         double privateKey,
                                         Map<String, Object> params);
 
-  public abstract void plotImagePixel(int argb, int x, int y, int z, int shade, int bgargb, int width, int  height, int[] zbuf, Object pixel, int transpLog);
+  public abstract void plotImagePixel(int argb, int x, int y, int z, byte shade, int bgargb, int width, int  height, int[] zbuf, Object pixel, int transpLog);
 
   public abstract void plotPixelClippedP3i(P3i a);
 

@@ -60,4 +60,29 @@ class Pixelator {
     pb[offset] = p;
   }
 
+  public void addImagePixel(byte shade, int tLog, int offset, int z, int argb,
+                            int bgargb) {
+    if (z < zb[offset]) {
+      switch (shade) {
+      case 0:
+        return;
+      case 8:
+        addPixel(offset, z, argb);
+        return;
+      default:
+        // shade is a log of translucency, so adding two is equivalent to
+        // multiplying them. Works like a charm! - BH 
+        shade += tLog;
+        if (shade <= 7) {
+          int p = pb[offset];
+          if (bgargb != 0)
+            p = Graphics3D.mergeBufferPixel(p, bgargb, bgargb);
+          p = Graphics3D.mergeBufferPixel(p, (argb & 0xFFFFFF)
+              | (shade << 24), bgargb);
+          addPixel(offset, z, p);
+        }
+      }
+    }
+  }
+
 }

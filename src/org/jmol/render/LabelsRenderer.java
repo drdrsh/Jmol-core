@@ -69,8 +69,6 @@ public class LabelsRenderer extends FontLineShapeRenderer {
 
   protected int zSlab = Integer.MIN_VALUE;
 
-  protected int zCutoff;
-
   private int zBox;
 
   private float[] boxXY;
@@ -87,7 +85,6 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     int[] offsets = labels.offsets;
     if (labelStrings == null)
       return false;
-    setZcutoff();
     Atom[] atoms = ms.at;
     short backgroundColixContrast = vwr.cm.colixBackgroundContrast;
     int backgroundColor = vwr.getBackgroundArgb();
@@ -119,8 +116,6 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       isAbsolute = JC.isOffsetAbsolute(offset);
       pointer = JC.getPointer(offset);
       zSlab = atom.sZ - atom.sD / 2 - 3;
-      if (zSlab > zCutoff)
-        continue;
       if (zSlab < 1)
         zSlab = 1;
       zBox = zSlab;
@@ -153,10 +148,6 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       boxXY[4] = zBox;
     }
     return false;
-  }
-
-  protected void setZcutoff() {
-    zCutoff = (tm.zShadeEnabled ? tm.zSlabValue : Integer.MAX_VALUE);
   }
 
   protected Text renderLabelOrMeasure(Text text, String label) {

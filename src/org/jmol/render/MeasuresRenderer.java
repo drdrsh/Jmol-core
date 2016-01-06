@@ -96,7 +96,6 @@ public class MeasuresRenderer extends LabelsRenderer {
       return false;
     boolean showMeasurementLabels = vwr.getBoolean(T.measurementlabels);
     measures.setVisibilityInfo();
-    setZcutoff();
     for (int i = measures.measurementCount; --i >= 0;) {
       m = measures.measurements.get(i);
       if (!m.isVisible || !m.isValid || (count = m.count) == 1 && m.traceX == Integer.MIN_VALUE)
@@ -214,7 +213,7 @@ public class MeasuresRenderer extends LabelsRenderer {
     int zB = b.sZ - b.sD - 10;
     int radius = drawLine(a.sX, a.sY, zA, b.sX,
         b.sY, zB, mad);
-    if (s == null || zB >= zCutoff)
+    if (s == null)
       return;
     if (mad > 0)
       radius <<= 1;
@@ -245,7 +244,7 @@ public class MeasuresRenderer extends LabelsRenderer {
         b.sY, zB, mad);
     radius += drawLine(b.sX, b.sY, zB, c.sX,
         c.sY, zC, mad);
-    if (s == null || zB >= zCutoff)
+    if (s == null)
       return;
     radius = (radius + 1) / 2;
     if (m.value > 175) {
@@ -320,9 +319,9 @@ public class MeasuresRenderer extends LabelsRenderer {
         c.sY, zC, mad);
     radius += drawLine(c.sX, c.sY, zC, d.sX,
         d.sY, zD, mad);
-    int zLabel = (zA + zB + zC + zD) / 4;
-    if (s == null || zLabel >= zCutoff)
+    if (s == null)
       return;
+    int zLabel = (zA + zB + zC + zD) / 4;
     radius /= 3;
     if (m.text == null) {
       g3d.setC(labelColix);
