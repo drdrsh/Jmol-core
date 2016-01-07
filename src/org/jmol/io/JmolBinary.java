@@ -30,7 +30,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.api.GenericBinaryDocument;
-import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
@@ -40,7 +39,6 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolZipUtilities;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
-import org.jmol.viewer.JC;
 
 
 public class JmolBinary {
@@ -56,29 +54,6 @@ public class JmolBinary {
     return this;
   }
  
-  public final static String PMESH_BINARY_MAGIC_NUMBER = "PM\1\0";
-
-  public static String getEmbeddedScript(String script) {
-    if (script == null)
-      return script;
-    int pt = script.indexOf(JC.EMBEDDED_SCRIPT_TAG);
-    if (pt < 0)
-      return script;
-    int pt1 = script.lastIndexOf("/*", pt);
-    int pt2 = script.indexOf((script.charAt(pt1 + 2) == '*' ? "*" : "") + "*/",
-        pt);
-    if (pt1 >= 0 && pt2 >= pt)
-      script = script.substring(
-          pt + JC.EMBEDDED_SCRIPT_TAG.length(), pt2)
-          + "\n";
-    while ((pt1 = script.indexOf(FileManager.JPEG_CONTINUE_STRING)) >= 0)
-      script = script.substring(0, pt1)
-          + script.substring(pt1 + FileManager.JPEG_CONTINUE_STRING.length() + 4);
-    if (Logger.debugging)
-      Logger.debug(script);
-    return script;
-  }
-
   JmolZipUtilities jzu;
   
   private JmolZipUtilities getJzu() {
@@ -107,39 +82,6 @@ public class JmolBinary {
 
   public Object getImage(Object fullPathNameOrBytes, String echoName, boolean forceSync) {
     return getJzu().getImage(fm.vwr, fullPathNameOrBytes, echoName, forceSync);
-  }
-
-  public static void getFileReferences(String script, Lst<String> fileList) {
-    for (int ipt = 0; ipt < FileManager.scriptFilePrefixes.length; ipt++) {
-      String tag = FileManager.scriptFilePrefixes[ipt];
-      int i = -1;
-      while ((i = script.indexOf(tag, i + 1)) >= 0) {
-        String s = PT.getQuotedStringAt(script, i);
-        if (s.indexOf("::") >= 0)
-          s = PT.split(s, "::")[1];
-        fileList.addLast(s);
-      }
-    }
-  }
-
-  /**
-   * check a JmolManifest for a reference to a script file (.spt)
-   * 
-   * @param manifest
-   * @return null, "", or a directory entry in the ZIP file
-   */
-
-  public static String getManifestScriptPath(String manifest) {
-    if (manifest.indexOf("$SCRIPT_PATH$") >= 0)
-      return "";
-    String ch = (manifest.indexOf('\n') >= 0 ? "\n" : "\r");
-    if (manifest.indexOf(".spt") >= 0) {
-      String[] s = PT.split(manifest, ch);
-      for (int i = s.length; --i >= 0;)
-        if (s[i].indexOf(".spt") >= 0)
-          return "|" + PT.trim(s[i], "\r\n \t");
-    }
-    return null;
   }
 
   public BufferedReader spartanFileGetRdr(String name, String[] info) {

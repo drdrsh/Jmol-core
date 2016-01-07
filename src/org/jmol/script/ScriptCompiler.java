@@ -26,11 +26,11 @@ package org.jmol.script;
 import org.jmol.util.Escape;
 import org.jmol.util.CommandHistory;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
-import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
@@ -249,7 +249,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       allowMissingEnd = (scriptExtensions.indexOf("##noendcheck") >= 0); // when typing
     }
     haveComments = (script.indexOf("#") >= 0); // speeds processing
-    return JmolBinary.getEmbeddedScript(script);
+    return FileManager.getEmbeddedScript(script);
   }
 
   private void addTokenToPrefix(T token) {
@@ -737,8 +737,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       }
       if (bracketCount > 0 || setBraceCount > 0 || parenCount > 0
           || braceCount == 1 && !checkFlowStartBrace(true)) {
-        error(n == 1 ? ERROR_commandExpected
-            : ERROR_endOfCommandUnexpected);
+        error(n == 1 ? ERROR_commandExpected : ERROR_endOfCommandUnexpected);
         return ERROR;
       }
       if (needRightParen) {
@@ -1850,8 +1849,9 @@ public class ScriptCompiler extends ScriptTokenParser {
       if (nTokens == 1) {
         if (thisFunction != null)
           vFunctionStack.add(0, thisFunction);
-        thisFunction = (tokCommand == T.parallel ? newScriptParallelProcessor(
-            ident, tokCommand) : new ScriptFunction(ident, tokCommand));
+        thisFunction = (ScriptFunction) Interface.getInterface(
+            "org.jmol.script.ScriptParallelProcessor", null, null);
+        thisFunction.set(ident, T.parallel);  
         htUserFunctions.put(ident, Boolean.TRUE);
         flowContext.setFunction(thisFunction);
         break; // function f
@@ -2066,13 +2066,6 @@ public class ScriptCompiler extends ScriptTokenParser {
       break;
     }
     return OK;
-  }
-
-  private static ScriptFunction newScriptParallelProcessor(String name, int tok) {
-    ScriptFunction jpp = (ScriptFunction) Interface.getInterface(
-        "org.jmol.script.ScriptParallelProcessor", null, null);
-    jpp.set(name, tok);
-    return jpp;
   }
 
   private T setNewSetCommand(boolean isSetBrace, String ident) {
@@ -2290,7 +2283,7 @@ public class ScriptCompiler extends ScriptTokenParser {
           ichCurrentCommand, lineCurrent);
       if (thisFunction != null)
         vFunctionStack.add(0, thisFunction);
-      thisFunction = newScriptParallelProcessor("", tokCommand);
+      thisFunction = new ScriptFunction("", T.trycmd);
       flowContext.setFunction(thisFunction);
       pushContext(ct);
       break;

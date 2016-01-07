@@ -507,7 +507,7 @@ public class FileManager implements BytePoster {
     if (dir.length == 0) {
       String state = vwr.getFileAsString4(fileName, -1, false, true, false, "file");
       return (state.indexOf(JC.EMBEDDED_SCRIPT_TAG) < 0 ? ""
-          : JmolBinary.getEmbeddedScript(state));
+          : FileManager.getEmbeddedScript(state));
     }
     for (int i = 0; i < dir.length; i++)
       if (dir[i].indexOf(".spt") >= 0) {
@@ -1122,7 +1122,7 @@ public class FileManager implements BytePoster {
       return script;
     boolean noPath = (dataPath.length() == 0);
     Lst<String> fileNames = new  Lst<String>();
-    JmolBinary.getFileReferences(script, fileNames);
+    FileManager.getFileReferences(script, fileNames);
     Lst<String> oldFileNames = new  Lst<String>();
     Lst<String> newFileNames = new  Lst<String>();
     int nFiles = fileNames.size();
@@ -1325,6 +1325,8 @@ public class FileManager implements BytePoster {
   }
   
   private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0";
+  public final static String PMESH_BINARY_MAGIC_NUMBER = "PM\1\0";
+
 
   public static boolean isScriptType(String fname) {
     return PT.isOneOf(fname.toLowerCase().substring(fname.lastIndexOf(".")+1), ";pse;spt;png;pngj;jmol;zip;");
@@ -1406,7 +1408,7 @@ public class FileManager implements BytePoster {
     // and thus shifting the offset
     int pt0 = line.indexOf('\0');
     if (pt0 >= 0) {
-      if (line.indexOf(JmolBinary.PMESH_BINARY_MAGIC_NUMBER) == 0)
+      if (line.indexOf(FileManager.PMESH_BINARY_MAGIC_NUMBER) == 0)
         return "Pmesh";
       if (line.indexOf(DELPHI_BINARY_MAGIC_NUMBER) == 0)
         return "DelPhi";
@@ -1477,6 +1479,60 @@ public class FileManager implements BytePoster {
       return;
     pngjCache.put(fileName, bytes);
     Logger.info("PNGJ recaching " + fileName + " (" + bytes.length + ")");
+  }
+
+  /**
+   * check a JmolManifest for a reference to a script file (.spt)
+   * 
+   * @param manifest
+   * @return null, "", or a directory entry in the ZIP file
+   */
+  
+  public static String getManifestScriptPath(String manifest) {
+    if (manifest.indexOf("$SCRIPT_PATH$") >= 0)
+      return "";
+    String ch = (manifest.indexOf('\n') >= 0 ? "\n" : "\r");
+    if (manifest.indexOf(".spt") >= 0) {
+      String[] s = PT.split(manifest, ch);
+      for (int i = s.length; --i >= 0;)
+        if (s[i].indexOf(".spt") >= 0)
+          return "|" + PT.trim(s[i], "\r\n \t");
+    }
+    return null;
+  }
+
+  public static String getEmbeddedScript(String script) {
+    if (script == null)
+      return script;
+    int pt = script.indexOf(JC.EMBEDDED_SCRIPT_TAG);
+    if (pt < 0)
+      return script;
+    int pt1 = script.lastIndexOf("/*", pt);
+    int pt2 = script.indexOf((script.charAt(pt1 + 2) == '*' ? "*" : "") + "*/",
+        pt);
+    if (pt1 >= 0 && pt2 >= pt)
+      script = script.substring(
+          pt + JC.EMBEDDED_SCRIPT_TAG.length(), pt2)
+          + "\n";
+    while ((pt1 = script.indexOf(JPEG_CONTINUE_STRING)) >= 0)
+      script = script.substring(0, pt1)
+          + script.substring(pt1 + JPEG_CONTINUE_STRING.length() + 4);
+    if (Logger.debugging)
+      Logger.debug(script);
+    return script;
+  }
+
+  public static void getFileReferences(String script, Lst<String> fileList) {
+    for (int ipt = 0; ipt < scriptFilePrefixes.length; ipt++) {
+      String tag = scriptFilePrefixes[ipt];
+      int i = -1;
+      while ((i = script.indexOf(tag, i + 1)) >= 0) {
+        String s = PT.getQuotedStringAt(script, i);
+        if (s.indexOf("::") >= 0)
+          s = PT.split(s, "::")[1];
+        fileList.addLast(s);
+      }
+    }
   }
 
 

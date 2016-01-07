@@ -51,6 +51,7 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolZipUtilities;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -271,7 +272,7 @@ public class JmolUtil implements JmolZipUtilities {
     if (selectAll || subFileName != null)
       haveManifest = false;
     if (useFileManifest && haveManifest) {
-      String path = JmolBinary.getManifestScriptPath(manifest);
+      String path = FileManager.getManifestScriptPath(manifest);
       if (path != null)
         return JC.NOTE_SCRIPT_FILE + fileName + path + "\n";
     }

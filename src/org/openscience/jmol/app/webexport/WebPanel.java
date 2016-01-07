@@ -73,9 +73,9 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 import org.jmol.i18n.GT;
-import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 import org.jmol.util.Logger;
 import org.openscience.jmol.app.jmolpanel.GuiMap;
@@ -615,7 +615,7 @@ abstract class WebPanel extends JPanel implements ActionListener,
             LogPanel.log(GT._("There was an error in the text encoding so the path to jsmol.zip is unknown."));
           }
         }
-        JmolBinary.getFileReferences(script, filesToCopy);
+        FileManager.getFileReferences(script, filesToCopy);
         ArrayList<String> copiedFileNames = new  ArrayList<String>();
         int nFiles = filesToCopy.size();
         for (int iFile = 0; iFile < nFiles; iFile++) {

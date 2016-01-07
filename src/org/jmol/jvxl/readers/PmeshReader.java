@@ -26,9 +26,9 @@ package org.jmol.jvxl.readers;
 import java.io.BufferedReader;
 
 
-import org.jmol.io.JmolBinary;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 
 import javajs.util.CU;
 import javajs.util.P3;
@@ -139,7 +139,7 @@ class PmeshReader extends PolygonFileReader {
       br.mark(4);
       char[] buf = new char[5];
       br.read(buf, 0, 5);
-      if ((new String(buf)).startsWith(JmolBinary.PMESH_BINARY_MAGIC_NUMBER)) {
+      if ((new String(buf)).startsWith(FileManager.PMESH_BINARY_MAGIC_NUMBER)) {
         br.close();
         binarydoc = newBinaryDocument();
         setStream(fileName, (buf[4] == '\0'));

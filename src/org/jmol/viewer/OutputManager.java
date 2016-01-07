@@ -17,7 +17,6 @@ import javajs.util.SB;
 
 import org.jmol.api.Interface;
 import org.jmol.i18n.GT;
-import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;
@@ -910,9 +909,9 @@ abstract class OutputManager {
         .startsWith(SCENE_TAG));
     boolean sceneScriptOnly = (haveSceneScript && scripts[2].equals("min"));
     if (!sceneScriptOnly) {
-      JmolBinary.getFileReferences(script, fileNames);
+      FileManager.getFileReferences(script, fileNames);
       if (haveSceneScript)
-        JmolBinary.getFileReferences(scripts[1], fileNames);
+        FileManager.getFileReferences(scripts[1], fileNames);
     }
     boolean haveScripts = (!haveSceneScript && scripts != null && scripts.length > 0);
     if (haveScripts) {

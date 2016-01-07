@@ -54,7 +54,7 @@ import javax.swing.JScrollPane;
 
 import org.jmol.api.JmolScriptEditorInterface;
 import org.jmol.i18n.GT;
-import org.jmol.io.JmolBinary;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.script.ScriptContext;
@@ -602,7 +602,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     String msg = fileText[1];
     if (msg != null) {
       setFilename(filename);
-      output(JmolBinary.getEmbeddedScript(msg));
+      output(FileManager.getEmbeddedScript(msg));
     }
     setVisible(true);
   }

@@ -55,7 +55,6 @@ import org.jmol.c.PAL;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import org.jmol.io.JmolBinary;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.BondSet;
@@ -973,7 +972,7 @@ public class ScriptEval extends ScriptExpr {
           setErrorMessage("io error reading " + data[0] + ": " + data[1]);
           return false;
         }
-        path = JmolBinary.getManifestScriptPath(data[1]);
+        path = FileManager.getManifestScriptPath(data[1]);
       }
       if (path != null && path.length() > 0) {
         data[0] = filename = filename.substring(0, filename.lastIndexOf("|"))
@@ -985,7 +984,7 @@ public class ScriptEval extends ScriptExpr {
       }
     }
     scriptFileName = filename;
-    data[1] = JmolBinary.getEmbeddedScript(data[1]);
+    data[1] = FileManager.getEmbeddedScript(data[1]);
     String script = fixScriptPath(data[1], data[0]);
     if (scriptPath == null) {
       scriptPath = vwr.fm.getFilePath(filename, false, false);
