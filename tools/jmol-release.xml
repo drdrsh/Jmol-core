@@ -102,7 +102,7 @@
     <!-- Do the copy using scp -->
     <echo message="Copying binary.zip to ${web.dir}" level="info"/>
     <scp todir="${ssh.user},jmol:${ssh.password}@${web.host}:${web.dir}"
-         trust="yes" failonerror="true">
+         trust="yes" failonerror="true" verbose="true">
       <fileset dir="${temp.dir}">
         <include name="**/*.zip"/>
         <include name="**/*.properties"/>
@@ -110,14 +110,14 @@
     </scp>
     <echo message="Copying binary.tar.gz to ${web.dir}" level="info"/>
     <scp todir="${ssh.user},jmol:${ssh.password}@${web.host}:${web.dir}"
-         trust="yes" failonerror="true">
+         trust="yes" failonerror="true" verbose="true">
       <fileset dir="${temp.dir}">
         <include name="**/*-binary.tar.gz"/>
       </fileset>
     </scp>
     <echo message="Copying full.tar.gz to ${web.dir}" level="info"/>
     <scp todir="${ssh.user},jmol:${ssh.password}@${web.host}:${web.dir}"
-         trust="yes" failonerror="true">
+         trust="yes" failonerror="true" verbose="true">
       <fileset dir="${temp.dir}">
         <include name="**/*-full.tar.gz"/>
       </fileset>
