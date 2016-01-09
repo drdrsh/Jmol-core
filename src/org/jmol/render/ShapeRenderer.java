@@ -52,11 +52,8 @@ public abstract class ShapeRenderer {
   protected int shapeID;
   
   //working values
-  protected short colix;
-  protected short mad;
-  protected short madBeg;
-  protected short madMid;
-  protected short madEnd;
+  public short colix;
+  public short mad;
   protected int exportType;
   protected boolean isExport;
 
@@ -73,16 +70,20 @@ public abstract class ShapeRenderer {
   }
 
   public boolean renderShape(JmolRendererInterface g3d, ModelSet modelSet, Shape shape) {
+    setup(g3d, modelSet, shape);
+    boolean needsTranslucent = render();
+    exportType = GData.EXPORT_NOT;
+    isExport = false;
+    return needsTranslucent;
+  }
+
+  public void setup(JmolRendererInterface g3d, ModelSet modelSet, Shape shape) {
     this.g3d = g3d;
     this.ms = modelSet;
     this.shape = shape;
     exportType = g3d.getExportType();
     isExport = (exportType != GData.EXPORT_NOT);
     
-    boolean needsTranslucent = render();
-    exportType = GData.EXPORT_NOT;
-    isExport = false;
-    return needsTranslucent;
   }
 
   protected boolean isVisibleForMe(Atom a) {

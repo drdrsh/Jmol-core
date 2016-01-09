@@ -66,7 +66,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected boolean haveBsDisplay;
   protected boolean selectedPolyOnly;
   protected boolean isGhostPass;
-  protected boolean isPrecision; // DRAW
+  protected boolean isPrecision; // DRAW, bioshape
 
   protected P4 thePlane;
   protected P3 latticeOffset = new P3();
@@ -79,21 +79,6 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected final P3i pt3i = new P3i();
   protected int exportPass;
   protected boolean needTranslucent;
-
-//  @Override
-//  protected boolean render() {
-//    needTranslucent = false;
-//    antialias = g3d.isAntialiased(); 
-//    MeshCollection mc = (MeshCollection) shape;
-//    for (int i = mc.meshCount; --i >= 0;)
-//      renderMesh(mc.meshes[i]);
-//    return needTranslucent;
-//  }
-//  
-//  // draw, isosurface, molecular orbitals, bioshapes use this basic form
-//  public boolean renderMesh(Mesh mesh) { 
-//    return renderMesh2(mesh);
-//  }
 
   /**
    * overridden in BioShapeRenderer, DrawRenderer, and IsosurfaceRenderer
@@ -243,7 +228,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return true;
   }
 
-  protected boolean setColix(short colix) {
+  public boolean setColix(short colix) {
     if (isGhostPass)
       return true;
     if (volumeRender && !isTranslucent)
@@ -558,5 +543,5 @@ public abstract class MeshRenderer extends ShapeRenderer {
     mesh.normals = null;
     mesh.bsPolygons = null;
   }
-  
+
 }
