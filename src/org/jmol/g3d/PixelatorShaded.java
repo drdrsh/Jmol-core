@@ -45,12 +45,13 @@ class PixelatorShaded extends Pixelator {
   }
   
   Pixelator set(int zSlab, int zDepth, int zShadePower) {
-    bgRGB = new int[] { g.bgcolor & 0xFF, (g.bgcolor >> 8) & 0xFF,
+    bgcolor = g.bgcolor;
+    bgRGB = new int[] { bgcolor & 0xFF, (bgcolor >> 8) & 0xFF,
         (g.bgcolor >> 16) & 0xFF };
     this.zSlab = zSlab < 0 ? 0 : zSlab;
     this.zDepth = zDepth < 0 ? 0 : zDepth;
     this.zShadePower = zShadePower;
-    this.p0 = g.pixel0; 
+    p0 = g.pixel0; 
     return this;
   }
 

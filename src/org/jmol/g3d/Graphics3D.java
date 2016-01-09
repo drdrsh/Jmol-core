@@ -235,7 +235,9 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void destroy() {
     releaseBuffers();
     platform = null;
-    pixel = pixel0 = pixelScreened = pixelShaded = null;
+    pixel = pixel0 = pixelShaded = null;
+    pixelT0 = null;
+    pixelScreened = null;
     graphicsForMetrics = null;
   }
 
@@ -256,8 +258,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
 
   Pixelator pixel;
   Pixelator pixel0;
-  private Pixelator pixelT0;
-  private Pixelator pixelScreened;
+  private PixelatorT pixelT0;
+  private PixelatorScreened pixelScreened;
   private PixelatorShaded pixelShaded;
 
   protected int zMargin;
@@ -363,6 +365,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     colixCurrent = 0;
     haveTranslucentObjects = wasScreened = false;
     pixel = pixel0;
+    pixel.bgcolor = bgcolor;
     translucentCoverOnly = !translucentMode;
     if (pbuf == null) {
       platform.allocateBuffers(windowWidth, windowHeight, antialiasThisFrame,
@@ -373,6 +376,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
       pixel0.setBuf();
       if (pixelT0 != null)
         pixelT0.setBuf();
+      if (pixelShaded != null)
+        pixelShaded.setBuf();
     }
     setWidthHeight(antialiasThisFrame);
     if (pixelScreened != null)

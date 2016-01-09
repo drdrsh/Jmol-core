@@ -33,6 +33,7 @@ class Pixelator {
   Pixelator p0;
   protected int[] zb, pb;
   int width;
+  int bgcolor;
 
 
   /**
@@ -40,6 +41,7 @@ class Pixelator {
    */
   Pixelator(Graphics3D graphics3d) {
     g = graphics3d;
+    bgcolor = g.bgcolor;
     setBuf();
   }
 
@@ -62,6 +64,8 @@ class Pixelator {
 
   public void addImagePixel(byte shade, int tLog, int offset, int z, int argb,
                             int bgargb) {
+    if (zb != g.zbuf)
+      System.out.println("OH");
     if (z < zb[offset]) {
       switch (shade) {
       case 0:
@@ -78,7 +82,7 @@ class Pixelator {
           if (bgargb != 0)
             p = Graphics3D.mergeBufferPixel(p, bgargb, bgargb);
           p = Graphics3D.mergeBufferPixel(p, (argb & 0xFFFFFF)
-              | (shade << 24), bgargb);
+              | (shade << 24), bgcolor);
           addPixel(offset, z, p);
         }
       }
