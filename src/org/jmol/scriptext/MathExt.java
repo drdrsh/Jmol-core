@@ -1379,22 +1379,21 @@ public class MathExt {
     boolean isReverse = (flags.indexOf("v") >= 0);
     boolean isCaseInsensitive = (flags.indexOf("i") >= 0);
     boolean asMatch = (flags.indexOf("m") >= 0);
-    boolean isPattern = (args.length == 2);
+    boolean checkEmpty = (sFind.length() == 0);
+    boolean isPattern = (!checkEmpty && args.length == 2);
     if (isList || isPattern) {
-      JmolPatternMatcher pm = getPatternMatcher();
+      JmolPatternMatcher pm = (isPattern ? getPatternMatcher() : null);
       Pattern pattern = null;
-      String[] list = null;
       Lst<SV> svlist = (isList ? x1.getList() : null);
-      if (sFind.length() > 0) {
+      if (isPattern) {
         try {
-          pattern = (sFind.length() == 0 ? null : pm.compile(sFind,
-              isCaseInsensitive));
-          list = SV.strListValue(x1);
+          pattern =  pm.compile(sFind, isCaseInsensitive);
         } catch (Exception ex) {
           e.evalError(ex.toString(), null);
         }
       }
-      int nlist = (list == null ? svlist.size() : list.length);
+      String[] list = (checkEmpty ? null : SV.strListValue(x1));
+      int nlist = (checkEmpty ? svlist.size() : list.length);
       if (Logger.debugging)
         Logger.debug("finding " + sFind);
       BS bs = new BS();
@@ -1404,7 +1403,7 @@ public class MathExt {
       String what = "";
       for (int i = 0; i < nlist; i++) {
         boolean isMatch;
-        if (pattern == null) {
+        if (checkEmpty) {
           SV o = svlist.get(i);
           switch (o.tok) {
           case T.hash:
@@ -1419,10 +1418,12 @@ public class MathExt {
           default:
             isMatch = true;
           }
-        } else {
+        } else if (isPattern) {
           what = list[i];
           matcher = pattern.matcher(what);
           isMatch = matcher.find();
+        } else {
+          isMatch = (SV.sValue(svlist.get(i)).indexOf(sFind) >= 0);
         }
         if (asMatch && isMatch || !asMatch && isMatch == !isReverse) {
           n++;

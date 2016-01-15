@@ -3053,12 +3053,18 @@ public class ScriptEval extends ScriptExpr {
 
   private void cmdColor() throws ScriptException {
     int i = 1;
+    String strColor = (tokAt(1) == T.string ? stringParameter(1) : null);
     if (isColorParam(1)) {
       theTok = T.atoms;
     } else {
       int argb = 0;
       i = 2;
       int tok = getToken(1).tok;
+      if (tok == T.string) {
+        tok = T.getTokFromName(strColor);
+        if (tok == T.nada)
+          tok = T.string;
+      }
       switch (tok) {
       case T.dollarsign:
         setObjectProperty();
@@ -3094,8 +3100,7 @@ public class ScriptEval extends ScriptExpr {
         i = 1;
         break;
       case T.string:
-        i = 1;
-        String strColor = stringParameter(i++);
+        i = 2;
         if (isArrayParameter(i)) {
           strColor = strColor += "="
               + SV.sValue(SV.getVariableAS(stringParameterSet(i))).replace(

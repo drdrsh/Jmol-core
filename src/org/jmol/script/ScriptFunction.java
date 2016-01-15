@@ -173,7 +173,7 @@ public class ScriptFunction implements JmolScriptFunction {
   @Override
   public String toString() {
     SB s = new SB().append("/*\n * ").append(name)
-        .append("\n */\n").append(getSignature()).append("{\n");
+        .append("\n */\n").append(getSignature()).append(" {\n");
     if (script != null)
       s.append(script);
     s.append("}\n");
@@ -185,7 +185,7 @@ public class ScriptFunction implements JmolScriptFunction {
     if (typeName == null)
       return T.nameOf(tok);
     SB s = new SB().append(typeName)
-      .append(" ").append(name).append(" (");
+      .append(" ").append(name).append("(");
     for (int i = 0; i < nParameters; i++) {
       if (i > 0)
         s.append(", ");
