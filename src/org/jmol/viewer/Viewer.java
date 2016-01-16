@@ -72,7 +72,6 @@ import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolJSpecView;
 import org.jmol.api.JmolNMRInterface;
-import org.jmol.api.JmolParallelProcessor;
 import org.jmol.api.JmolPropertyManager;
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.api.JmolRepaintManager;
@@ -287,6 +286,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public boolean allowArrayDotNotation;
   public boolean async;
+  public Object executor;
 
   private static String version_date;
 
@@ -1675,7 +1675,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         if (fileTypes != null && fileTypes[i] != null)
           fname = fileTypes[i] + "::" + fname;
         s = PT.rep(s, "$FILENAME" + (i + 1) + "$",
-            PT.esc(fname.replace('\\', '/')));
+            PT.esc(FileManager.fixDOSName(fname)));
       }
 
       loadScript = new SB().append(s);
@@ -1725,7 +1725,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
           "loadScript",
           loadScript = new SB().append(javajs.util.PT.rep(
               loadScript.toString(), "$FILENAME$",
-              PT.esc(fname.replace('\\', '/')))));
+              PT.esc(FileManager.fixDOSName(fname)))));
     }
 
     // and finally to create the model set...
@@ -8512,7 +8512,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   // parallel processing
 
-  private Object executor;
   public static int nProcessors = 1;
   static {
     /**
@@ -8523,23 +8522,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       nProcessors = Runtime.getRuntime().availableProcessors();
     }
 
-  }
-
-  public Object getExecutor() {
-    // a Java 1.5 function
-    if (executor != null || nProcessors < 2)
-      return executor; // note -- a Java 1.5 function
-    try {
-      executor = ((JmolParallelProcessor) Interface.getInterface(
-          "org.jmol.script.ScriptParallelProcessor", null, null)).getExecutor();
-    } catch (Exception e) {
-      executor = null;
-    } catch (Error er) {
-      executor = null;
-    }
-    if (executor == null)
-      Logger.error("parallel processing is not available");
-    return executor;
   }
 
   public boolean displayLoadErrors = true;

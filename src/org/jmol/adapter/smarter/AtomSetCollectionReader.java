@@ -231,7 +231,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       return;
     debugging = Logger.debugging;
     this.htParams = htParams;
-    filePath = fullPath.replace('\\', '/');
+    filePath = "" + htParams.get("fullPathName");
     int i = filePath.lastIndexOf('/');
     fileName = filePath.substring(i + 1);
     if (reader instanceof BufferedReader)
@@ -733,6 +733,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       asc.setCollectionName(name);
     }
     asc.setModelInfoForSet("name", name, Math.max(0, asc.iSet));
+    asc.setAtomSetName(name);
   }
 
   protected int cloneLastAtomSet(int ac, P3[] pts) throws Exception {

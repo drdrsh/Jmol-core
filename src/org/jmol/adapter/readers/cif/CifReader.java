@@ -91,7 +91,7 @@ public class CifReader extends AtomSetCollectionReader {
   private int configurationPtr = Integer.MIN_VALUE;
   private boolean useAuthorChainID = true;
 
-  private String thisDataSetName = "";
+  private String thisDataSetName = "", lastDataSetName;
   private String chemicalName = "";
   private String thisStructuralFormula = "";
   private String thisFormula = "";
@@ -711,7 +711,10 @@ public class CifReader extends AtomSetCollectionReader {
         return;
       if (thisDataSetName.equals("global"))
         asc.setCollectionName(thisDataSetName = chemicalName);
-      asc.setAtomSetName(thisDataSetName);
+      if (!thisDataSetName.equals(lastDataSetName)) {
+        asc.setAtomSetName(thisDataSetName);
+        lastDataSetName = thisDataSetName;
+      }
       asc.setCurrentModelInfo("chemicalName", chemicalName);
       asc.setCurrentModelInfo("structuralFormula", thisStructuralFormula);
       asc.setCurrentModelInfo("formula", thisFormula);

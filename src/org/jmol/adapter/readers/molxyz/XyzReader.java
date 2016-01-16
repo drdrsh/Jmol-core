@@ -67,7 +67,7 @@ public class XyzReader extends AtomSetCollectionReader {
       rd();
       checkCurrentLineForScript();
       asc.newAtomSet();
-      String name = line;
+      String name = line.trim();
       readAtoms(modelAtomCount);
       applySymmetryAndSetTrajectory();
       asc.setAtomSetName(name);

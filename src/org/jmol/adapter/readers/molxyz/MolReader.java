@@ -71,7 +71,7 @@ public class MolReader extends AtomSetCollectionReader {
    * $END MOL
    */
 
-  private boolean is2D;
+  private boolean optimize2D;
   private boolean haveAtomSerials;
   protected String dimension;
   protected boolean allow2D = true;
@@ -80,7 +80,7 @@ public class MolReader extends AtomSetCollectionReader {
 
   @Override
   public void initializeReader() throws Exception {
-    is2D = checkFilterKey("2D");
+    optimize2D = checkFilterKey("2D");
   }
 
   @Override
@@ -117,7 +117,7 @@ public class MolReader extends AtomSetCollectionReader {
   }
 
   protected void finalizeReaderMR() throws Exception {
-    if (is2D)
+    if (optimize2D)
       set2D();
     isTrajectory = false;
     finalizeReaderASCR();
@@ -152,22 +152,29 @@ public class MolReader extends AtomSetCollectionReader {
      */
 
     String header = "";
-    String thisDataSetName = line;
+    String thisDataSetName = line.trim();
     header += line + "\n";
-    asc.setCollectionName(line);
+    asc.setCollectionName(thisDataSetName);
     rd();
     if (line == null)
       return;
     header += line + "\n";
     dimension = (line.length() < 22 ? "3D" : line.substring(20, 22));
-    if (!allow2D && dimension.equals("2D"))
-      throw new Exception("File is 2D, not 3D");
+    if (dimension.equals("2D")) {
+      if (!allow2D)
+        throw new Exception("File is 2D, not 3D");
+      appendLoadNote("This model is 2D. Its 3D structure has not been generated.");
+    }
     asc.setInfo("dimension", dimension);
     //line 3: comment
     rd();
     if (line == null)
       return;
+    line = line.trim();
     header += line + "\n";
+    if (line.length() != 0) {
+      thisDataSetName += ": " + line;
+    }
     Logger.info(header);
     checkCurrentLineForScript();
     asc.setInfo("fileHeader", header);
@@ -180,7 +187,7 @@ public class MolReader extends AtomSetCollectionReader {
     if (rd() == null)
       return;
     if (line.indexOf("V3000") >= 0) {
-      is2D = (dimension.equals("2D"));
+      optimize2D = (dimension.equals("2D"));
       vr = ((V3000Rdr) getInterface("org.jmol.adapter.readers.molxyz.V3000Rdr")).set(this);
       discardLinesUntilContains("COUNTS");
       vr.readAtomsAndBonds(getTokens());
@@ -251,7 +258,7 @@ public class MolReader extends AtomSetCollectionReader {
       iAtom1 = line.substring(0, 3).trim();
       iAtom2 = line.substring(3, 6).trim();
       int order = parseIntRange(line, 6, 9);
-      if (is2D && order == 1 && line.length() >= 12)
+      if (optimize2D && order == 1 && line.length() >= 12)
         stereo = parseIntRange(line, 9, 12);
       order = fixOrder(order, stereo);
       if (haveAtomSerials)
@@ -295,8 +302,8 @@ public class MolReader extends AtomSetCollectionReader {
     default:
       elementSymbol = isotope + elementSymbol;
     }
-    if (is2D && z != 0)
-      is2D = false;
+    if (optimize2D && z != 0)
+      optimize2D = false;
     Atom atom = new Atom();
     atom.elementSymbol = elementSymbol;
     atom.formalCharge = charge;

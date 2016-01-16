@@ -213,7 +213,7 @@ public class FileManager implements BytePoster {
     String fullPathName = names[0];
     String fileName = names[1];
     htParams.put("fullPathName", (fileType == null ? "" : fileType + "::")
-        + fullPathName.replace('\\', '/'));
+        + FileManager.fixDOSName(fullPathName));
     if (vwr.getBoolean(T.messagestylechime) && vwr.getBoolean(T.debugscript))
       vwr.getChimeMessenger().update(fullPathName);
     FileReader fileReader = new FileReader(this, vwr, fileName, fullPathName, nameAsGiven,
@@ -240,7 +240,7 @@ public class FileManager implements BytePoster {
       if (names.length == 1)
         return names[0];
       fullPathNames[i] = names[0];
-      fileNames[i] = names[0].replace('\\', '/');
+      fileNames[i] = fixDOSName(names[0]);
       fileTypes[i] = fileType;
       namesAsGiven[i] = nameAsGiven;
     }
@@ -531,7 +531,7 @@ public class FileManager implements BytePoster {
     if (names == null || names[0] == null || names.length < 2)
       return new String[] { null, "cannot read file name: " + filename };
     String name = names[0];
-    String fullPath = names[0].replace('\\', '/');
+    String fullPath = fixDOSName(names[0]);
     name = Rdr.getZipRoot(name);
     Object errMsg = getBufferedInputStreamOrErrorMessageFromName(name, fullPath, false, !getStream, null, false, !getStream);
     ret[0] = fullPath;
@@ -560,7 +560,7 @@ public class FileManager implements BytePoster {
     if (names == null)
       return "cannot read file name: " + name;
     if (fullPathNameReturn != null)
-      fullPathNameReturn[0] = names[0].replace('\\', '/');
+      fullPathNameReturn[0] = fixDOSName(names[0]);
     return getUnzippedReaderOrStreamFromName(names[0], bytes,
         false, isBinary, false, doSpecialLoad, null);
   }
@@ -857,7 +857,7 @@ public class FileManager implements BytePoster {
     } else if (echoName == null || nameOrBytes instanceof String) {
       String[] names = getClassifiedName((String) nameOrBytes, true);
       nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
-          : names[0].replace('\\', '/'));
+          : fixDOSName(names[0]));
       if (names != null)
         image = getJmb().getImage(nameOrError, echoName, forceSync);
       isAsynchronous = (image == null);        
@@ -986,7 +986,7 @@ public class FileManager implements BytePoster {
   }
 
   private static String fixPath(String path) {
-    path = path.replace('\\', '/');
+    path = fixDOSName(path);
     path = PT.rep(path, "/./", "/");
     int pt = path.lastIndexOf("//") + 1;
     if (pt < 1)
@@ -1015,7 +1015,7 @@ public class FileManager implements BytePoster {
     return (names == null || names.length == 1 ? "" : asShortName ? names[1]
         : addUrlPrefix ? names[2] 
         : names[0] == null ? ""
-        : names[0].replace('\\', '/'));
+        : fixDOSName(names[0]));
   }
 
   public static GenericFileInterface getLocalDirectory(Viewer vwr, boolean forDialog) {
@@ -1149,6 +1149,15 @@ public class FileManager implements BytePoster {
     return PT.replaceStrings(script, oldFileNames, newFileNames);
   }
 
+  /**
+   * Switch \ for / only for DOS names such as C:\temp\t.xyz, not names like http://cactus.nci.nih.gov/chemical/structure/CC/C=C\CC
+   * @param fileName
+   * @return fixed name
+   */
+  public static String fixDOSName(String fileName) {
+    return (fileName.indexOf(":\\") >= 0 ? fileName.replace('\\', '/') : fileName);
+  }
+   
   public static String[] scriptFilePrefixes = new String[] { "/*file*/\"",
       "FILE0=\"", "FILE1=\"" };
 
@@ -1174,7 +1183,7 @@ public class FileManager implements BytePoster {
   
 
   void cachePut(String key, Object data) {
-    key = key.replace('\\', '/');
+    key = fixDOSName(key);
     if (Logger.debugging)
       Logger.debug("cachePut " + key);
     if (data == null || "".equals(data)) { // J2S error -- cannot implement Int32Array.equals 
@@ -1186,7 +1195,7 @@ public class FileManager implements BytePoster {
   }
   
   public Object cacheGet(String key, boolean bytesOnly) {
-    key = key.replace('\\', '/');
+    key = fixDOSName(key);
     // in the case of JavaScript local file reader, 
     // this will be a cached file, and the filename will not be known.
     int pt = key.indexOf("|");
@@ -1236,7 +1245,7 @@ public class FileManager implements BytePoster {
     } else {
       if (fileName.endsWith("*"))
         return AU.removeMapKeys(cache, fileName.substring(0, fileName.length() - 1));
-      data = cache.remove(fileName.replace('\\', '/'));
+      data = cache.remove(fixDOSName(fileName));
     }
     return (data == null ? 0 : data instanceof String ? ((String) data).length()
         : ((byte[]) data).length);

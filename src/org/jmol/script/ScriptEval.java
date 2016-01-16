@@ -4875,15 +4875,16 @@ public class ScriptEval extends ScriptExpr {
       vwr.setAnimationRange(-1, -1);
       vwr.setCurrentModelIndex(modelCount0);
     }    
-    if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2))
-      vwr.showString((String) vwr.ms.getInfoM("modelLoadNote"), false);
+    String msg;
+    if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2) && (msg = (String) vwr.ms.getInfoM("modelLoadNote")) != null)
+      vwr.showString(msg, false);
     Object centroid = vwr.ms.getInfoM("centroidMinMax");
     if (AU.isAI(centroid) && vwr.ms.ac > 0) {
       BS bs = BSUtil.newBitSet2(isAppend ? ac0 : 0, vwr.ms.ac);
       vwr.ms.setCentroid(bs, (int[]) centroid);
     }
     String script = vwr.g.defaultLoadScript;
-    String msg = "";
+    msg = "";
     if (script.length() > 0)
       msg += "\nUsing defaultLoadScript: " + script;
     String embeddedScript;

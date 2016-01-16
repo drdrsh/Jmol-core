@@ -35,6 +35,7 @@ import javajs.util.PT;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -105,7 +106,7 @@ public class Resolver {
       throws Exception {
     AtomSetCollectionReader rdr = null;
     String readerName;
-    fullName = fullName.replace('\\', '/');
+    fullName = FileManager.fixDOSName(fullName);
     String errMsg = null;
     if (type != null) {
       readerName = getReaderFromType(type);

@@ -42,7 +42,8 @@ public class ScriptParallelProcessor extends ScriptFunction implements JmolParal
    * 
    */
   
-  public ScriptParallelProcessor() {    
+  public ScriptParallelProcessor() {
+    // for reflection
   }
   
   @Override
@@ -136,7 +137,7 @@ public class ScriptParallelProcessor extends ScriptFunction implements JmolParal
 
   private void runProcess(final ScriptProcess process, ShapeManager shapeManager) {
     ScriptProcessRunnable r = new ScriptProcessRunnable(this, process, lock, shapeManager);
-    Executor exec = (shapeManager == null ? null : (Executor) vwr.getExecutor());
+    Executor exec = (shapeManager == null ? null : getMyExecutor());
     if (exec != null) {
       exec.execute(r);
     } else {
@@ -148,4 +149,22 @@ public class ScriptParallelProcessor extends ScriptFunction implements JmolParal
     vwr.evalParallel(context, shapeManager);
   }
 
+
+  private Executor getMyExecutor() {
+    // a Java 1.5 function
+    if (vwr.executor != null || Viewer.nProcessors < 2)
+      return (Executor) vwr.executor; // note -- a Java 1.5 function
+    try {
+      vwr.executor = getExecutor();
+    } catch (Exception e) {
+      vwr.executor = null;
+    } catch (Error er) {
+      vwr.executor = null;
+    }
+    if (vwr.executor == null)
+      Logger.error("parallel processing is not available");
+    return (Executor) vwr.executor;
+  }
+
+  
 }

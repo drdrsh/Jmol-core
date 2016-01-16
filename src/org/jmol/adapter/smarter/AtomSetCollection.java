@@ -873,6 +873,8 @@ public class AtomSetCollection {
       return;
     }
     setModelInfoForSet("name", atomSetName, iSet);
+    if (atomSetName != null && atomSetName.length() > 0)
+      reader.appendLoadNote(atomSetName);
     // TODO -- trajectories could have different names. Need this for vibrations?
     if (!allowMultiple)
       setCollectionName(atomSetName);

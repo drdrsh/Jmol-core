@@ -156,6 +156,7 @@ public class GlobalSettings {
       // accessed by the user. 
 
       setI("_version", JC.versionInt);
+      setO("_versionDate", Viewer.getJmolVersion());
 
       setB("axesWindow", true);
       setB("axesMolecular", false);

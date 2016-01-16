@@ -79,6 +79,7 @@ import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.V3;
 
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -257,7 +258,7 @@ public class MathExt {
       //$FALL-THROUGH$
     case 1:
       switch (args[0].tok) {
-      case T.list:
+      case T.varray:
       Lst<SV> points = args[0].getList();
       pts = new T3[points.size()];
       for (int i = pts.length; --i >= 0;)
@@ -2001,8 +2002,7 @@ public class MathExt {
       asBytes = args[1].tok == T.on;
       //$FALL-THROUGH$
     case 1:
-      file = SV.sValue(args[0]);
-      file = file.replace('\\', '/');
+      file = FileManager.fixDOSName(SV.sValue(args[0]));
       break;
     default:
       return false;

@@ -1147,8 +1147,7 @@ public class PropertyManager implements JmolPropertyManager {
     SB mol = new SB();
     ModelSet ms = vwr.ms;
     if (!isXYZ && !asJSON) {
-      mol.append(isModelKit ? "Jmol Model Kit" : vwr.fm.getFullPathName(false)
-          .replace('\\', '/'));
+      mol.append(isModelKit ? "Jmol Model Kit" : FileManager.fixDOSName(vwr.fm.getFullPathName(false)));
       String version = Viewer.getJmolVersion();
       mol.append("\n__Jmol-").append(version.substring(0, 2));
       int cMM, cDD, cYYYY, cHH, cmm;

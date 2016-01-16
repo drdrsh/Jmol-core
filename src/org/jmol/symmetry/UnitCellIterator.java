@@ -47,7 +47,7 @@ public class UnitCellIterator implements AtomIndexIterator {
    * @param distance
    *        <= 0 indicates that distance will be set later, probably from a
    *        point
-   * @return
+   * @return this
    */
   public UnitCellIterator set(SymmetryInterface unitCell, Atom atom,
                               Atom[] atoms, BS bsAtoms, float distance) {
