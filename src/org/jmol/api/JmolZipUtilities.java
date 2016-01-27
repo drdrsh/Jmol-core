@@ -19,7 +19,7 @@ public interface JmolZipUtilities {
 
   public byte[] getCachedPngjBytes(JmolBinary jmb, String pathName);
 
-  public String[] spartanFileList(GenericZipTools zpt, String name, String zipDirectory);
+  public String[] spartanFileList(GenericZipTools zpt, String name, String outputFileData);
 
   public Object getImage(Viewer vwr, Object fullPathNameOrBytes, String echoName, boolean forceSync);
 

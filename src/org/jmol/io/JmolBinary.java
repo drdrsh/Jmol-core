@@ -94,7 +94,7 @@ public class JmolBinary {
       fileData.put("OUTPUT", name0);
       info = spartanFileList(name, fileData.get(name0));
       if (info.length == 3) {
-        // might have a second option
+        // might have a second option -- zip of directory name, not just contents
         name0 = spartanGetObjectAsSections(info[2], header, fileData);
         fileData.put("OUTPUT", name0);
         info = spartanFileList(info[1], fileData.get(name0));
@@ -117,8 +117,8 @@ public class JmolBinary {
     return Rdr.getBR(s);
   }
 
-  private String[] spartanFileList(String name, String zipDirectory) {
-    return getJzu().spartanFileList(fm.vwr.getJzt(), name, zipDirectory);
+  private String[] spartanFileList(String name, String outputFileData) {
+    return getJzu().spartanFileList(fm.vwr.getJzt(), name, outputFileData);
   }
 
   /**
@@ -169,7 +169,7 @@ public class JmolBinary {
         doc.getAllDataMapped(name.replace('\\', '/'), "Molecule", fileData);
       } else if (Rdr.isZipS(bis)) {
         fm.vwr.getJzt().getAllZipData(bis, subFileList, name.replace('\\', '/'), "Molecule",
-            fileData);
+            "__MACOSX", fileData);
       } else if (asBinaryString) {
         // used for Spartan binary file reading
         GenericBinaryDocument bd = (GenericBinaryDocument) Interface

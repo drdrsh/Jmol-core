@@ -39,42 +39,41 @@ import org.jmol.util.Logger;
 
 public abstract class SpartanInputReader extends BasisFunctionReader {
 
-  protected String modelName;
   protected int modelAtomCount;
-  protected int ac;
   protected String bondData = "";
+  protected String constraints = "";
 
-  protected void readInputRecords() throws Exception {
-    int ac0 = ac;
-      readInputHeader();
-      while (rd() != null) {
-        String[] tokens = getTokens();
-        //charge and spin
-        if (tokens.length == 2 && parseIntStr(tokens[0]) != Integer.MIN_VALUE && parseIntStr(tokens[1]) >= 0)
-          break;
-      }
-      if (line == null)
-        return;
-      readInputAtoms();
-      discardLinesUntilContains("ATOMLABELS");
+  protected String readInputRecords() throws Exception {
+    int ac0 = asc.ac;
+    String modelName = readInputHeader();
+    while (rd() != null) {
+      String[] tokens = getTokens();
+      //charge and spin
+      if (tokens.length == 2 && parseIntStr(tokens[0]) != Integer.MIN_VALUE
+          && parseIntStr(tokens[1]) >= 0)
+        break;
+    }
+    if (line == null)
+      return null;
+    readInputAtoms();
+    discardLinesUntilContains("ATOMLABELS");
+    if (line != null)
+      readAtomNames();
+    if (modelAtomCount > 1) {
+      discardLinesUntilContains("HESSIAN");
       if (line != null)
-        readAtomNames();
-      if (modelAtomCount > 1) {
-        discardLinesUntilContains("HESSIAN");
-        if (line != null)
-          readBonds(ac0);
-        if (line != null && line.indexOf("BEGINCONSTRAINTS") >= 0)
-          readConstraints();
-      }
-      while (line != null && line.indexOf("END ") < 0 && line.indexOf("MOLSTATE") < 0)
-        rd();
-      if (line != null && line.indexOf("MOLSTATE") >= 0)
-        readTransform();
-      if (asc.ac > 0)
-        asc.setAtomSetName(modelName);
+        readBonds(ac0);
+      if (line != null && line.indexOf("BEGINCONSTRAINTS") >= 0)
+        readConstraints();
+    }
+//    while (line != null && line.indexOf("END ") < 0
+//        && line.indexOf("MOLSTATE") < 0)
+//      rd();
+//    if (line != null && line.indexOf("MOLSTATE") >= 0)
+//      readTransform();
+    return modelName;
   }
 
-  String constraints = "";
   private void readConstraints() throws Exception {
     constraints = "";
     while (rd() != null && line.indexOf("END") < 0)
@@ -102,12 +101,11 @@ public abstract class SpartanInputReader extends BasisFunctionReader {
     );
   }
   
-  private void readInputHeader() throws Exception {
+  private String readInputHeader() throws Exception {
     while (rd() != null
         && !line.startsWith(" ")) {}
     rd();
-    modelName = line + ";";
-    modelName = modelName.substring(0, modelName.indexOf(";")).trim();
+    return line.substring(0, (line + ";").indexOf(";")).trim();
   }
   
   private void readInputAtoms() throws Exception {
@@ -118,13 +116,12 @@ public abstract class SpartanInputReader extends BasisFunctionReader {
       addAtomXYZSymName(tokens, 1, getElementSymbol(parseIntStr(tokens[0])), null);
       modelAtomCount++;
     }
-    ac = asc.ac;
     if (debugging)
-      Logger.debug(ac + " atoms read");
+      Logger.debug(asc.ac + " atoms read");
   }
 
   private void readAtomNames() throws Exception {
-    int atom0 = ac - modelAtomCount;
+    int atom0 = asc.ac - modelAtomCount;
     // note that asc.isTrajectory() gets set onlyAFTER an input is
     // read.
     for (int i = 0; i < modelAtomCount; i++) {

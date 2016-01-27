@@ -51,10 +51,9 @@ public class AtomSetCollection {
   String collectionName;
 
   public void setCollectionName(String collectionName) {
-    if (collectionName == null
-        || (collectionName = collectionName.trim()).length() == 0)
-      return;
-    this.collectionName = collectionName;
+    if (collectionName != null
+        && (collectionName = collectionName.trim()).length() > 0)
+      this.collectionName = collectionName;
   }
 
   public Map<String, Object> atomSetInfo = new Hashtable<String, Object>();
@@ -868,12 +867,15 @@ public class AtomSetCollection {
    *        The name to be associated with the current AtomSet
    */
   public void setAtomSetName(String atomSetName) {
+    if (atomSetName == null)
+      return;
     if (isTrajectory) {
       setTrajectoryName(atomSetName);
       return;
     }
+    String name0 = (iSet < 0 ? null : getAtomSetName(iSet));
     setModelInfoForSet("name", atomSetName, iSet);
-    if (atomSetName != null && atomSetName.length() > 0)
+    if (reader != null && atomSetName.length() > 0 && !atomSetName.equals(name0))
       reader.appendLoadNote(atomSetName);
     // TODO -- trajectories could have different names. Need this for vibrations?
     if (!allowMultiple)

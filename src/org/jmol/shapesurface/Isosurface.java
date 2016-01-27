@@ -1959,18 +1959,20 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           break;
       } else if (m.vvs != null) {
         if (m.bsSlabDisplay != null) {
-          for (int k = m.bsSlabDisplay.nextSetBit(0); k >= 0; k = m.bsSlabDisplay.nextSetBit(k + 1)) {
+          for (int k = m.bsSlabDisplay.nextSetBit(0); k >= 0; k = m.bsSlabDisplay
+              .nextSetBit(k + 1)) {
             int[] p = m.pis[k];
-            for (int l = 0; l < 3; l++) {
-              T3 v = m.vs[p[l]];
-              int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
-              if (d2 >= 0) {
-                dmin2 = d2;
-                pickedVertex = p[l];
-                pickedMesh = m;
-                pickedPt = v;
+            if (p != null)
+              for (int l = 0; l < 3; l++) {
+                T3 v = m.vs[p[l]];
+                int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
+                if (d2 >= 0) {
+                  dmin2 = d2;
+                  pickedVertex = p[l];
+                  pickedMesh = m;
+                  pickedPt = v;
+                }
               }
-            }
           }
         } else {
           for (int k = m.vc; --k >= ilast;) {

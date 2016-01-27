@@ -641,7 +641,8 @@ public class FileManager implements BytePoster {
   }
 
   /**
-   * Open a Spartan compound document file as a 
+   * Check to see if we need to open just a subset of a spartan file.
+   *  
    * @param name
    * @param isTypeCheckOnly just return a String[] containing critical information
    * @return String[] or BufferedReader
@@ -678,7 +679,7 @@ public class FileManager implements BytePoster {
       if (name.lastIndexOf("/") > pt) {
         // a single file in the spardir directory is requested
         return new String[] { "SpartanSmol", "Directory Entry ",
-            name + "/input", name + "/archive",
+            name + "/input", name + "/archive", name + "/parchive",
             name + "/Molecule:asBinaryString", name + "/proparc" };      
       }
       return new String[] { "SpartanSmol", "Directory Entry ", name + "/output" };

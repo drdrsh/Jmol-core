@@ -81,7 +81,7 @@ import java.util.Map;
        /AONBO  / : Print the AO to NBO transformation
   * 
   */
-abstract public class MOReader extends BasisFunctionReader {
+abstract class MOReader extends BasisFunctionReader {
     
   protected int shellCount = 0;
   protected int gaussianCount = 0;
@@ -107,9 +107,6 @@ abstract public class MOReader extends BasisFunctionReader {
     line = "\nNBOCHARGES";
     getNBOCharges = (filter != null && filterMO());
     checkAndRemoveFilterKey("NBOCHARGES");
-    // allows for "!" and ";" 
-    if (filter != null && filter.length() < 3) 
-      filter = null;
   }
   
   /**
@@ -125,7 +122,8 @@ abstract public class MOReader extends BasisFunctionReader {
     if (!checkFilterKey(key))
       return false;
     filter = PT.rep(filter, key, "");
-    if (filter.length() == 0)
+    // allows for "!" and ";" 
+    if (filter.length() < 3)
       filter = null;
     return true;
   }

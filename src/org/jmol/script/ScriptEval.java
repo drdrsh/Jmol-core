@@ -8588,7 +8588,7 @@ public class ScriptEval extends ScriptExpr {
     switch (shapeType) {
     case JC.SHAPE_DRAW:
       setShapeProperty(JC.SHAPE_DRAW, "thisID", id);
-      P3[] points = (P3[]) getShapeProperty(JC.SHAPE_DRAW, "vertices");
+      T3[] points = (T3[]) getShapeProperty(JC.SHAPE_DRAW, "vertices");
       if (points == null || points.length < 3 || points[0] == null
           || points[1] == null || points[2] == null)
         break;

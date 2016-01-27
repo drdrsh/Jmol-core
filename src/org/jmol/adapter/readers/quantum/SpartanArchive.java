@@ -57,12 +57,14 @@ class SpartanArchive {
   private int shellCount = 0;
   private int gaussianCount = 0;
   private String endCheck;
+  private boolean isSMOL;
   
   private BasisFunctionReader r;
 
   SpartanArchive(BasisFunctionReader r, String bondData, String endCheck) {
     initialize(r, bondData);
     this.endCheck = endCheck;
+    isSMOL = (endCheck != null);
   }
 
   private void initialize(BasisFunctionReader r, String bondData) {
@@ -80,7 +82,7 @@ class SpartanArchive {
     boolean skipping = false;
     while (line != null) {
       if (line.equals("GEOMETRY")) {
-        if (!r.doGetModel(++modelCount, null)) {
+        if (!isSMOL && !r.doGetModel(++modelCount, null)) {
           readLine();
           skipping = true;
           continue;
@@ -96,11 +98,10 @@ class SpartanArchive {
           readMolecularOrbital();
           haveMOData = true;
         }
-        
       } else if (line.indexOf("ENERGY") == 0 && !skipping) {
         readEnergy();
       } else if (line.equals("ENDARCHIVE")
-          || endCheck != null && line.indexOf(endCheck) == 0) {
+          || isSMOL && line.indexOf(endCheck) == 0) {
         break;
       }
       readLine();
@@ -114,10 +115,8 @@ class SpartanArchive {
     String[] tokens = PT.getTokens(readLine());
     float value = parseFloat(tokens[0]);
     r.asc.setCurrentModelInfo("energy", Float.valueOf(value));
-    if (r instanceof SpartanSmolReader) {
-      String prefix = ((SpartanSmolReader)r).constraints;
-      r.asc.setAtomSetName(prefix + (prefix.length() == 0 ? "" : " ") + "Energy=" + value + " KJ");
-    }
+    if (isSMOL)
+      ((SpartanSmolReader)r).setEnergy(value); 
     r.asc.setAtomSetEnergy(tokens[0], value);
   }
 

@@ -993,7 +993,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         nameRequired = PT.split(nameRequired, "'")[1];
       else if (nameRequired.startsWith("\""))
         nameRequired = PT.split(nameRequired, "\"")[1];
-      filter0 = filter = PT.rep(filter, nameRequired, "");
+      filter = PT.rep(filter, nameRequired, "");
       filter0 = filter = PT.rep(filter, "NAME=", "");
     }
     filterAtomName = checkFilterKey("*.") || checkFilterKey("!.");
@@ -1511,7 +1511,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (out != null && line != null)
       out.append(line).append("\n");
     ptLine++;
-    if (debugging)
+    if (debugging && line != null)
       Logger.debug(line);
     return line;
   }

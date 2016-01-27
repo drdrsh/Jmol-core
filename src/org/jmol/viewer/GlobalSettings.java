@@ -914,14 +914,10 @@ public class GlobalSettings {
       // replace RCSB format extension when a file extension is made explicit 
       format = format.substring(0, format.indexOf("%FILE"));
     }
-    try {
-      while (format.indexOf("%c") >= 0)
-        for (int i = 1; i < 10; i++) {
-          format = PT.rep(format, "%c" + i, id.substring(i - 1, i));
-        }
-    } catch (Exception e) {
-      // too bad.
-    }
+    if (format.indexOf("%c") >= 0)
+      for (int i = 1, n = id.length(); i <= n; i++)
+        if (format.indexOf("%c" + i) >= 0)
+          format = PT.rep(format, "%c" + i, id.substring(i - 1, i).toLowerCase());
     return (format.indexOf("%FILE") >= 0 ? PT.formatStringS(format, "FILE", id)
         : format.indexOf("%file") >= 0 ? PT.formatStringS(format, "file",
             id.toLowerCase()) : format + id);

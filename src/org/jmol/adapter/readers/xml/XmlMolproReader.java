@@ -22,6 +22,8 @@
  */
 package org.jmol.adapter.readers.xml;
 
+import org.jmol.adapter.smarter.AtomSetCollectionReader;
+
 import javajs.util.PT;
 
 /**
@@ -30,6 +32,8 @@ import javajs.util.PT;
 
 public class XmlMolproReader extends XmlCmlReader {
 
+  AtomSetCollectionReader orbitalReader;
+  
   String[] myAttributes = { "id", "length", "type", //general
       "x3", "y3", "z3", "elementType", //atoms
       "name", //variable

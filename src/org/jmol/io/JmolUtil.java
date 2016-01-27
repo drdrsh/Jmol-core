@@ -86,7 +86,7 @@ public class JmolUtil implements JmolZipUtilities {
     data.append("Zip File Directory: ").append("\n")
         .append(Escape.eAS(zipDirectory, true)).append("\n");
     Map<String, String> fileData = new Hashtable<String, String>();
-    zpt.getAllZipData(is, new String[] {}, "", "Molecule", fileData);
+    zpt.getAllZipData(is, new String[] {}, "", "Molecule", "__MACOSX", fileData);
     String prefix = "|";
     String outputData = fileData.get(prefix + "output");
     if (outputData == null)
@@ -138,46 +138,56 @@ public class JmolUtil implements JmolZipUtilities {
       return new String[] {};
     Lst<String> v = new Lst<String>();
     String token;
-    String lasttoken = "";
-    if (!outputFileData.startsWith("java.io.FileNotFoundException")
-        && !outputFileData.startsWith("FILE NOT FOUND")
-        && outputFileData.indexOf("<html") < 0)
-      try {
-        StringTokenizer tokens = new StringTokenizer(outputFileData, " \t\r\n");
-        while (tokens.hasMoreTokens()) {
-          // profile file name is just before each right-paren:
-          /*
-           * MacSPARTAN '08 ENERGY PROFILE: x86/Darwin 130
-           * 
-           * Dihedral Move : C3 - C2 - C1 - O1 [ 4] -180.000000 .. 180.000000
-           * Dihedral Move : C2 - C1 - O1 - H3 [ 4] -180.000000 .. 180.000000
-           * 
-           * 1 ) -180.00 -180.00 -504208.11982719 2 ) -90.00 -180.00
-           * -504200.18593376
-           * 
-           * ...
-           * 
-           * 24 ) 90.00 180.00 -504200.18564495 25 ) 180.00 180.00
-           * -504208.12129747
-           * 
-           * Found a local maxima E = -504178.25455465 [ 3 3 ]
-           * 
-           * 
-           * Reason for exit: Successful completion Mechanics CPU Time : 1:51.42
-           * Mechanics Wall Time: 12:31.54
-           */
-          if ((token = tokens.nextToken()).equals(")"))
-            v.addLast(lasttoken);
-          else if (token.equals("Start-")
-              && tokens.nextToken().equals("Molecule"))
-            v.addLast(PT.split(tokens.nextToken(), "\"")[1]);
-          lasttoken = token;
+    String lastToken = "";
+    if (outputFileData.startsWith("java.io.FileNotFoundException")
+        || outputFileData.startsWith("FILE NOT FOUND")
+        || outputFileData.indexOf("<html") >= 0)
+      return new String[0];
+    try {
+      StringTokenizer tokens = new StringTokenizer(outputFileData, " \t\r\n");
+      while (tokens.hasMoreTokens()) {
+        // profile file name is just before each right-paren:
+        /*
+         * MacSPARTAN '08 ENERGY PROFILE: x86/Darwin 130
+         * 
+         * Dihedral Move : C3 - C2 - C1 - O1 [ 4] -180.000000 .. 180.000000
+         * Dihedral Move : C2 - C1 - O1 - H3 [ 4] -180.000000 .. 180.000000
+         * 
+         * 1 ) -180.00 -180.00 -504208.11982719 2 ) -90.00 -180.00
+         * -504200.18593376
+         * 
+         * ...
+         * 
+         * 24 ) 90.00 180.00 -504200.18564495 25 ) 180.00 180.00
+         * -504208.12129747
+         * 
+         * Found a local maxima E = -504178.25455465 [ 3 3 ]
+         * 
+         * 
+         * Reason for exit: Successful completion Mechanics CPU Time : 1:51.42
+         * Mechanics Wall Time: 12:31.54
+         */
+        if ((token = tokens.nextToken()).equals(")"))
+          v.addLast(lastToken);
+        else if (token.equals("Start-")
+            && tokens.nextToken().equals("Molecule"))
+          v.addLast(PT.split(tokens.nextToken(), "\"")[1]);
+        else if (token.equals("Molecules")) {
+          //            Using internal queue
+          //
+          //            35 Molecules analyzed (35 succeeded)
+          int n = PT.parseInt(lastToken);
+          for (int i = 1; i <= n; i++) {
+            String s = "0000" + i;
+            v.addLast("M" + s.substring(s.length() - 4));
+          }
         }
-      } catch (Exception e) {
-        //
+        lastToken = token;
       }
-    return (v.size() == 0 ? new String[] { "M0001" } : v.toArray(new String[v
-        .size()]));
+    } catch (Exception e) {
+      //
+    }
+    return (v.size() == 0 ? new String[] { "M0001" } : v.toArray(new String[v.size()]));
   }
 
   /**
@@ -190,21 +200,22 @@ public class JmolUtil implements JmolZipUtilities {
    * 
    */
   private static String[] getSpartanFileList(String name, String[] dirNums) {
-    String[] files = new String[2 + dirNums.length * 5];
+    String[] files = new String[2 + dirNums.length * 6];
     files[0] = "SpartanSmol";
     files[1] = "Directory Entry ";
     int pt = 2;
     name = name.replace('\\', '/');
     if (name.endsWith("/"))
       name = name.substring(0, name.length() - 1);
-    String sep = (name.endsWith(".zip") ? "|" : "/");
+    String sep = (name.equals("|") ? "" : name.endsWith(".zip") ? "|" : "/");
     for (int i = 0; i < dirNums.length; i++) {
       String path = name + sep;
-      path += (PT.isDigit(dirNums[i].charAt(0)) ? "Profile." + dirNums[i]
-              : dirNums[i]) + "/";
+      String s = dirNums[i];
+      path += (PT.isDigit(s.charAt(0)) ? "Profile." + s : s) + "/";
       files[pt++] = path + "#JMOL_MODEL " + dirNums[i];
       files[pt++] = path + "input";
       files[pt++] = path + "archive";
+      files[pt++] = path + "parchive";
       files[pt++] = path + "Molecule:asBinaryString";
       files[pt++] = path + "proparc";
     }
@@ -476,7 +487,7 @@ public class JmolUtil implements JmolZipUtilities {
     if (data[1] == null)
       return false;
     byte[] bytes = data[1].getBytes();
-    System.out.println("jmolutil caching " + bytes.length + " bytes as " + jmb.fm.getCanonicalName(data[0]));
+    //System.out.println("jmolutil caching " + bytes.length + " bytes as " + jmb.fm.getCanonicalName(data[0]));
     cache.put(jmb.fm.getCanonicalName(data[0]), bytes); // marker in case the .all. file is changed
     if (shortName.indexOf("_scene_") >= 0) {
       cache.put(shortSceneFilename(data[0]), bytes); // good for all .min. files of this scene set
@@ -484,8 +495,8 @@ public class JmolUtil implements JmolZipUtilities {
       if (bytes != null)
         cache.put(shortSceneFilename(data[0] + "|state.spt"), bytes);
     }
-    for (String key : cache.keySet())
-      System.out.println(key);
+    //for (String key : cache.keySet())
+      //System.out.println(key);
     return true;
 }
 
@@ -541,15 +552,15 @@ public class JmolUtil implements JmolZipUtilities {
    * each BEGIN/END block (ignored) [2...] files to load and concatenate
    * 
    * @param name
-   * @param type
+   * @param outputFileData
    * @return array detailing action for this set of files
    */
   @Override
-  public String[] spartanFileList(GenericZipTools zpt, String name, String type) {
+  public String[] spartanFileList(GenericZipTools zpt, String name, String outputFileData) {
     // make list of required files
-    String[] dirNums = getSpartanDirs(type);
+    String[] dirNums = getSpartanDirs(outputFileData);
     if (dirNums.length == 0 && name.endsWith(".spardir.zip")
-        && type.indexOf(".zip|output") >= 0) {
+        && outputFileData.indexOf(".zip|output") >= 0) {
       // try again, with the idea that 
       String sname = name.replace('\\', '/');
       int pt = name.lastIndexOf(".spardir");

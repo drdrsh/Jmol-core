@@ -40,14 +40,15 @@ import javajs.util.SB;
 
 public class SpartanSmolReader extends SpartanInputReader {
 
-  private boolean iHaveModelStatement = false;
-  private boolean isCompoundDocument = false;
+  private boolean iHaveModelStatement;
+  private boolean isCompoundDocument;
   private boolean inputOnly;
   private boolean espCharges;
+  private boolean isInputFirst;
+  private boolean iHaveNewDir;
 
   @Override
   protected void initializeReader() throws Exception {
-    modelName = "Spartan file";
     isCompoundDocument = (rd()
         .indexOf("Compound Document File Directory") >= 0);
     inputOnly = checkFilterKey("INPUT");
@@ -57,54 +58,93 @@ public class SpartanSmolReader extends SpartanInputReader {
 
   @Override
   protected boolean checkLine() throws Exception {
-    String lcline;
-    if (isCompoundDocument
-        && (lcline = line.toLowerCase())
-            .equals("begin directory entry molecule")
-        || line.indexOf("JMOL_MODEL") >= 0 && !line.startsWith("END")) {
+    // BH Note: I will be the first to say that this coding is way too complicated. 
+    // The original design accommodates too many variations. There are
+    // the Spartan for Windows compound document, the MacSpartan directory, and
+    // the Jmol translation of each of those. 
 
-      // bogus type added by Jmol as a marker only
+    // JMOL_MODEL is a bogus type added by Jmol as a marker only, 
+    // added only to the MacSpartan directory format.
+    // That record is placed BEFORE the Input record, while 
+    // for the compound document, Input comes before Molecule.
 
-      if (modelNumber > 0)
+    // MacSpartan:
+    //       c:/temp/cyclohexane_movie.spardir/M0001/#JMOL_MODEL M0001
+    //       BEGIN Directory Entry c:/temp/cyclohexane_movie.spardir/M0001/input
+    //       BEGIN Directory Entry c:/temp/cyclohexane_movie.spardir/M0001/Molecule:asBinaryString
+    // Spartan for Windows; Spartan 14:
+    //       BEGIN Directory Entry Input
+    //       BEGIN Directory Entry Molecule
+    // 
+    int pt = 3;
+    boolean isNewDir = (isCompoundDocument
+        && line.startsWith("NEW Directory M")
+        && !line.startsWith("NEW Directory Molecules"));
+    if (isNewDir)
+      iHaveNewDir = true;
+    boolean isMolecule = (!iHaveNewDir && !isNewDir && isCompoundDocument && line
+        .equals("BEGIN Directory Entry Molecule"));
+    boolean isMacDir = (!isCompoundDocument && (pt = line.indexOf("#JMOL_MODEL")) >= 0); 
+    if (isNewDir || isMolecule || isMacDir) {
+      if (modelNumber > 0 && !isInputFirst)
         applySymmetryAndSetTrajectory();
       iHaveModelStatement = true;
-      int modelNo = getModelNumber();
-      modelNumber = (bsModels == null && modelNo != Integer.MIN_VALUE ? modelNo
+      int modelNo = (isMolecule ? 0 : parseIntAt(line, pt + 12));
+      modelNumber = (bsModels == null && modelNo != Integer.MIN_VALUE && modelNo != 0 ? modelNo
           : modelNumber + 1);
       bondData = "";
-      if (!doGetModel(modelNumber, null))
-        return checkLastModel();
-      if (modelAtomCount == 0)
+      if (!doGetModel(modelNumber, null)) {
+        if (isInputFirst) {
+          asc.removeCurrentAtomSet();
+          discardLinesUntilContains("BEGIN Directory Entry Input");
+        } else if (isNewDir) {
+          discardLinesUntilContains("NEW Directory M");
+        } else if (isMolecule) {
+          discardLinesUntilContains("BEGIN Directory Entry M");
+        } else {
+          discardLinesUntilContains("#JMOL_MODEL");
+        }
+        checkLastModel();
+        return false;
+      }
+      if (!isInputFirst)
         asc.newAtomSet();
       moData = new Hashtable<String, Object>();
       moData.put("isNormalized", Boolean.TRUE);
-      if (modelNo == Integer.MIN_VALUE) {
+      boolean isOK = false;
+      if (modelNo == Integer.MIN_VALUE || titles == null) {
         modelNo = modelNumber;
         title = "Model " + modelNo;
       } else {
+        isOK = true;
         title = titles.get("Title" + modelNo);
         title = "Profile " + modelNo + (title == null ? "" : ": " + title);
       }
-      Logger.info(title);
-      asc.setAtomSetName(title);
+      if (constraints == null  && (isOK || !isInputFirst))
+        asc.setAtomSetName(title);
       setModelPDB(false);
       asc.setCurrentAtomSetNumber(modelNo);
-      if (isCompoundDocument)
+      if (isMolecule)
         readMyTransform();
       return true;
     }
     if (iHaveModelStatement && !doProcessLines)
       return true;
     if ((line.indexOf("BEGIN") == 0)) {
-      lcline = line.toLowerCase();
+      String lcline = line.toLowerCase();
       if (lcline.endsWith("input")) {
+        if (!iHaveModelStatement)
+          isInputFirst = true;
+        if (isInputFirst) {
+          asc.newAtomSet();
+        }
         bondData = "";
-        readInputRecords();
+        title = readInputRecords();
         if (asc.errorMessage != null) {
           continuing = false;
           return false;
         }
-        if (title != null)
+        if (title != null && constraints == null)
           asc.setAtomSetName(title);
         setCharges();
         if (inputOnly) {
@@ -125,7 +165,7 @@ public class SpartanSmolReader extends SpartanInputReader {
         readProperties();
         return false;
       } else if (lcline.endsWith("archive")) {
-        readArchive();
+        asc.setAtomSetName(readArchive());
         return false;
       }
       return true;
@@ -139,7 +179,7 @@ public class SpartanSmolReader extends SpartanInputReader {
   protected void finalizeSubclassReader() throws Exception {
     finalizeReaderASCR();
     // info out of order -- still a chance, at least for first model
-    if (ac > 0 && spartanArchive != null && asc.bondCount == 0
+    if (asc.ac > 0 && spartanArchive != null && asc.bondCount == 0
         && bondData != null)
       spartanArchive.addBonds(bondData, 0);
     if (moData != null) {
@@ -193,14 +233,12 @@ public class SpartanSmolReader extends SpartanInputReader {
         .toString());
   }
 
-  private void readArchive() throws Exception {
+  private String readArchive() throws Exception {
     spartanArchive = new SpartanArchive(this, bondData, endCheck);
-    if (readArchiveHeader()) {
-      modelAtomCount = spartanArchive
-          .readArchive(line, false, ac, false);
-      if (ac == 0 || !isTrajectory)
-        ac += modelAtomCount;
-    }
+    String modelName = readArchiveHeader();
+    if (modelName != null)
+      modelAtomCount = spartanArchive.readArchive(line, false, asc.ac, false);
+    return (constraints == null ? modelName : null);
   }
 
   private boolean haveCharges;
@@ -225,28 +263,24 @@ public class SpartanSmolReader extends SpartanInputReader {
     setCharges();
   }
 
-  private int getModelNumber() {
-    try {
-      int pt = line.indexOf("JMOL_MODEL ") + 11;
-      return parseIntAt(line, pt);
-    } catch (NumberFormatException e) {
-      return 0;
-    }
-  }
-
-  private boolean readArchiveHeader() throws Exception {
+  private String readArchiveHeader() throws Exception {
     String modelInfo = rd();
     if (debugging)
       Logger.debug(modelInfo);
     if (modelInfo.indexOf("Error:") == 0) // no archive here
-      return false;
+      return null;
     asc.setCollectionName(modelInfo);
-    modelName = rd();
+    asc.setAtomSetName(modelInfo);
+    String modelName = rd();
     if (debugging)
       Logger.debug(modelName);
     //    5  17  11  18   0   1  17   0 RHF      3-21G(d)           NOOPT FREQ
     rd();
-    return true;
+    return modelName;
+  }
+
+  public void setEnergy(float value) {    
+    asc.setAtomSetName(constraints + (constraints.length() == 0 ? "" : " ") + "Energy=" + value + " KJ");
   }
 
 }

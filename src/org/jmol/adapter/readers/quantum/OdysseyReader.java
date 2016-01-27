@@ -36,8 +36,8 @@ public class OdysseyReader extends SpartanInputReader {
   
   @Override
   public void initializeReader() throws Exception {
-    modelName = "Odyssey file";
-    readInputRecords();
+    String title = readInputRecords();
+    asc.setAtomSetName(title == null ? "Odyssey file" : title);
     continuing = false;
   }
   
