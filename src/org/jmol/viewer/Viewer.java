@@ -3907,21 +3907,21 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    */
   public Object setLoadFormat(String name, char type, boolean withPrefix) {
     String format = null;
-    String f = name.substring(1);
+    String id = name.substring(1);
     switch (type) {
     case '=':
       if (name.startsWith("==")) {
-        f = f.substring(1);
+        id = id.substring(1);
         type = '#';
-      } else if (f.indexOf("/") > 0) {
+      } else if (id.indexOf("/") > 0) {
         // =xxxx/....
         try {
-          int pt = f.indexOf("/");
-          String database = f.substring(0, pt);
-          f = g.resolveDataBase(database, f.substring(pt + 1), null);
-          if (f != null && f.startsWith("'"))
-            f = evaluateExpression(f).toString();
-          return (f == null || f.length() == 0 ? name : f);
+          int pt = id.indexOf("/");
+          String database = id.substring(0, pt);
+          id = g.resolveDataBase(database, id.substring(pt + 1), null);
+          if (id != null && id.startsWith("'"))
+            id = evaluateExpression(id).toString();
+          return (id == null || id.length() == 0 ? name : id);
         } catch (Exception e) {
           return name;
         }
@@ -3935,85 +3935,85 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     case '#': // ligand
       if (format == null)
         format = g.pdbLoadLigandFormat;
-      if (f.indexOf(".") >= 0 && format.equals(g.pdbLoadFormat))
+      if (id.indexOf(".") >= 0 && format.equals(g.pdbLoadFormat))
           format = g.pdbLoadFormat0; // older version for =1crn.cif or  =1crn.pdb
-      return g.resolveDataBase(null, f, format);
+      return g.resolveDataBase(null, id, format);
     case '*':
       // European Bioinformatics Institute
       int pt = name.lastIndexOf("/");
       if (name.startsWith("*dom/")) {
         //  *dom/.../.../.../xxxx
-        f = name.substring(pt + 1);
+        id = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "mappings");
-        return PT.rep(g.resolveDataBase("map", f, null), "%TYPE", format);
+        return PT.rep(g.resolveDataBase("map", id, null), "%TYPE", format);
       } else if (name.startsWith("*val/")) {
         //  *val/.../.../.../xxxx
-        f = name.substring(pt + 1);
+        id = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "validation/outliers/all");
-        return PT.rep(g.resolveDataBase("map", f, null), "%TYPE", format);
+        return PT.rep(g.resolveDataBase("map", id, null), "%TYPE", format);
       } else if (name.startsWith("*rna3d/")) {
         //  *rna3d/.../.../.../xxxx
-        f = name.substring(pt + 1);
+        id = name.substring(pt + 1);
         format = (pt > 6 ? name.substring(6) : "loops");
-        return PT.rep(g.resolveDataBase("rna3d", f, null), "%TYPE", format);
+        return PT.rep(g.resolveDataBase("rna3d", id, null), "%TYPE", format);
       } else if (name.startsWith("*dssr/")) {
-        f = name.substring(pt + 1);
-        return g.resolveDataBase("dssr", f, null);
+        id = name.substring(pt + 1);
+        return g.resolveDataBase("dssr", id, null);
       } else if (name.startsWith("*dssr1/")) {
-        f = name.substring(pt + 1);
-        return g.resolveDataBase("dssr1", f, null);
+        id = name.substring(pt + 1);
+        return g.resolveDataBase("dssr1", id, null);
       }
       // these are processed in SmarterJmolAdapter
       String pdbe = "pdbe";
-      if (f.length() == 5 && f.charAt(4) == '*') {
+      if (id.length() == 5 && id.charAt(4) == '*') {
         pdbe = "pdbe2";
-        f = f.substring(0, 4);
+        id = id.substring(0, 4);
       }
-      return g.resolveDataBase(pdbe, f, null);
+      return g.resolveDataBase(pdbe, id, null);
     case ':': // PubChem
       format = g.pubChemFormat;
-      if (f.equals("")) {
+      if (id.equals("")) {
         try {
-          f = "smiles:" + getSmiles(bsA());
+          id = "smiles:" + getSmiles(bsA());
         } catch (Exception e) {
           // oh well.
         }
       }
-      String fl = f.toLowerCase();
+      String fl = id.toLowerCase();
       int fi = Integer.MIN_VALUE;
       try {
-        fi = Integer.parseInt(f);
+        fi = Integer.parseInt(id);
       } catch (Exception e) {
         //
       }
       if (fi != Integer.MIN_VALUE) {
-        f = "cid/" + fi;
+        id = "cid/" + fi;
       } else {
         if (fl.startsWith("smiles:")) {
-          format += "?POST?smiles=" + f.substring(7);
-          f = "smiles";
-        } else if (f.startsWith("cid:") || f.startsWith("inchikey:")
-            || f.startsWith("cas:")) {
-          f = f.replace(':', '/');
+          format += "?POST?smiles=" + id.substring(7);
+          id = "smiles";
+        } else if (id.startsWith("cid:") || id.startsWith("inchikey:")
+            || id.startsWith("cas:")) {
+          id = id.replace(':', '/');
         } else {
           if (fl.startsWith("name:"))
-            f = f.substring(5);
-          f = "name/" + PT.escapeUrl(f);
+            id = id.substring(5);
+          id = "name/" + PT.escapeUrl(id);
         }
       }
-      return PT.formatStringS(format, "FILE", f);
+      return PT.formatStringS(format, "FILE", id);
     case '$':
       if (name.startsWith("$$")) {
         // 2D version
-        f = f.substring(1);
+        id = id.substring(1);
 
         //http://cactus.nci.nih.gov/chemical/structure/C%28O%29CCC/file?format=sdf
         format = PT.rep(g.smilesUrlFormat, "&get3d=True", "");
-        return PT.formatStringS(format, "FILE", PT.escapeUrl(f));
+        return PT.formatStringS(format, "FILE", PT.escapeUrl(id));
       }
       if (name.equals("$"))
         try {
-          f = getSmiles(bsA());
+          id = getSmiles(bsA());
         } catch (Exception e) {
           // oh well...
         }
@@ -4025,7 +4025,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     case 'S':
     case 'T':
     case '/':
-      f = PT.escapeUrl(f);
+      id = PT.escapeUrl(id);
       switch (type) {
       case 'N':
         format = g.nihResolverFormat + "/names";
@@ -4053,18 +4053,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         break;
       }
       return (withPrefix ? "MOL3D::" : "")
-          + PT.formatStringS(format, "FILE", f);
+          + PT.formatStringS(format, "FILE", id);
     case '_': // isosurface "=...", but we code that type as '_'
-      boolean isDiff = f.startsWith("=");
-      if (isDiff)
-        f = f.substring(1);
-      String server = FileManager.fixFileNameVariables(
-          isDiff ? g.edsUrlFormatDiff : g.edsUrlFormat, f);
-      String strCutoff = (isDiff ? "" : FileManager.fixFileNameVariables(
-          g.edsUrlCutoff, f));
-      return new String[] { server, strCutoff, isDiff ? "diff" : null };
+      return g.fixSurfaceFileNameVariables(id);
     }
-    return f;
+    return id;
   }
 
   public String getStandardLabelFormat(int type) {

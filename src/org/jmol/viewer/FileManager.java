@@ -53,6 +53,7 @@ import org.jmol.api.JmolDomReaderInterface;
 import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.io.FileReader;
 import org.jmol.io.JmolBinary;
+import org.jmol.io.JmolUtil;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
@@ -62,9 +63,6 @@ import org.jmol.viewer.Viewer.ACCESS;
 public class FileManager implements BytePoster {
 
   public static String SIMULATION_PROTOCOL = "http://SIMULATION/";
-
-  public Map<String, Object> pngjCache;
-  public Map<String, byte[]> spardirCache;
 
   public Viewer vwr;
 
@@ -80,6 +78,12 @@ public class FileManager implements BytePoster {
     return (jmb == null ? jmb = ((JmolBinary) Interface.getInterface("org.jmol.io.JmolBinary", vwr, "fm getJmb()")).set(this) : jmb);  
   }
   
+  JmolUtil jzu;
+ 
+  public JmolUtil getJzu() {
+    return (jzu == null ? jzu = (JmolUtil) Interface.getOption("io.JmolUtil", vwr, "file") : jzu);
+  }
+
   void clear() {
     // from zap
     setFileInfo(new String[] { vwr.getZapName() });
@@ -485,12 +489,42 @@ public class FileManager implements BytePoster {
     }
     return errorMessage;
   }
-  
-  private byte[] getPngjOrDroppedBytes(String fullName, String name) {
-    byte[] bytes = getCachedPngjBytes(fullName);
-    if (bytes == null)
-      bytes = (byte[]) cacheGet(name, true);
-    return bytes;
+
+  @SuppressWarnings("null")
+  public static BufferedReader getBufferedReaderForResource(Viewer vwr,
+                                                            Object resourceClass,
+                                                            String classPath,
+                                                            String resourceName)
+      throws IOException {
+
+    URL url;
+    /**
+     * @j2sNative
+     * 
+     */
+    {
+      url = resourceClass.getClass().getResource(resourceName);
+      if (url == null) {
+        System.err.println("Couldn't find file: " + classPath + resourceName);
+        throw new IOException();
+      }
+      if (!vwr.async)
+        return Rdr.getBufferedReader(
+            new BufferedInputStream((InputStream) url.getContent()), null);
+    }
+    resourceName = (url == null 
+        ? vwr.vwrOptions.get("codePath") + classPath + resourceName
+            : url.getFile());
+    if (vwr.async) {
+      // if we are running asynchronously, this will be a problem. 
+      Object bytes = vwr.fm.cacheGet(resourceName, false);
+      if (bytes == null)
+        throw new JmolAsyncException(resourceName);
+      return Rdr.getBufferedReader(Rdr.getBIS((byte[]) bytes), null);
+    }
+    // JavaScript only; here and not in JavaDoc to preserve Eclipse search reference
+    return (BufferedReader) vwr.fm.getBufferedReaderOrErrorMessageFromName(
+        resourceName, new String[] { null, null }, false, true);
   }
 
   private String urlEncode(String name) {
@@ -648,41 +682,11 @@ public class FileManager implements BytePoster {
    * @return String[] or BufferedReader
    */
   private Object checkOpenSpartanFile(String name, boolean isTypeCheckOnly) {
-    String[] info = getSpartanFileList(name);
-    // info[2] == null, for example, for an SPT file load that is not just a type check
-    // (type check is only for application file opening and drag-drop to
-    // determine if
-    // script or load command should be used)
-    return (isTypeCheckOnly || info == null || info[2] == null ? info : getJmb().spartanFileGetRdr(name, info));
-  }
-
-  /**
-   * check for spartan file based on file extension ".spardir.zip" or ".spardir"
-   * and if found, return the list of critical files needed 
-   * @param name
-   * @return compound document critical files list
-   */
-  private String[] getSpartanFileList(String name) {
-      // check for .spt file type -- Jmol script
-      if (name.endsWith(".spt"))
-        return new String[] { null, null, null }; // DO NOT actually load any file
-      // check for zipped up spardir -- we'll automatically take first file there
-      if (name.endsWith(".spardir.zip"))
-        return new String[] { "SpartanSmol", "Directory Entry ", name + "|output"};
-      name = name.replace('\\', '/');
-      if (!name.endsWith(".spardir") && name.indexOf(".spardir/") < 0)
-        return null; 
-      // look for .spardir or .spardir/...
-      int pt = name.lastIndexOf(".spardir");
-      if (pt < 0)
-        return null;
-      if (name.lastIndexOf("/") > pt) {
-        // a single file in the spardir directory is requested
-        return new String[] { "SpartanSmol", "Directory Entry ",
-            name + "/input", name + "/archive", name + "/parchive",
-            name + "/Molecule:asBinaryString", name + "/proparc" };      
-      }
-      return new String[] { "SpartanSmol", "Directory Entry ", name + "/output" };
+    // check for .spt file type -- Jmol script
+    return (
+        name.endsWith(".spt") ?  new String[] { null, null, null } // DO NOT actually load any file
+      : name.indexOf(".spardir") < 0 ? null 
+      : getJmb().getSpartanFileList(name, isTypeCheckOnly));
   }
 
   /**
@@ -860,13 +864,13 @@ public class FileManager implements BytePoster {
       nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
           : fixDOSName(names[0]));
       if (names != null)
-        image = getJmb().getImage(nameOrError, echoName, forceSync);
+        image = getJzu().getImage(vwr, nameOrError, echoName, forceSync);
       isAsynchronous = (image == null);        
     } else {
       image = nameOrBytes;
     }
     if (bytes != null) {
-      image = getJmb().getImage(bytes, echoName, true);
+      image = getJzu().getImage(vwr, bytes, echoName, true);
       isAsynchronous = false;
     }
     if (image instanceof String) {
@@ -964,6 +968,8 @@ public class FileManager implements BytePoster {
     return names;
   }
 
+  ///// DIRECTORY BUSINESS
+  
   private static String addDirectory(String defaultDirectory, String name) {
     if (defaultDirectory.length() == 0)
       return name;
@@ -1085,71 +1091,6 @@ public class FileManager implements BytePoster {
     return (dir == null ? file : fixPath(dir.toString() + "/" + file));
   }
 
-  public static String setScriptFileReferences(String script, String localPath,
-                                               String remotePath,
-                                               String scriptPath) {
-    if (localPath != null)
-      script = setScriptFileRefs(script, localPath, true);
-    if (remotePath != null)
-      script = setScriptFileRefs(script, remotePath, false);
-    script = PT.rep(script, "\1\"", "\"");
-    if (scriptPath != null) {
-      while (scriptPath.endsWith("/"))
-        scriptPath = scriptPath.substring(0, scriptPath.length() - 1);
-      for (int ipt = 0; ipt < scriptFilePrefixes.length; ipt++) {
-        String tag = scriptFilePrefixes[ipt];
-        script = PT.rep(script, tag + ".", tag + scriptPath);
-      }
-    }
-    return script;
-  }
-
-  /**
-   * Sets all local file references in a script file to point to files within
-   * dataPath. If a file reference contains dataPath, then the file reference is
-   * left with that RELATIVE path. Otherwise, it is changed to a relative file
-   * name within that dataPath. 
-   * 
-   * Only file references starting with "file://" are changed.
-   * 
-   * @param script
-   * @param dataPath
-   * @param isLocal 
-   * @return revised script
-   */
-  private static String setScriptFileRefs(String script, String dataPath,
-                                                boolean isLocal) {
-    if (dataPath == null)
-      return script;
-    boolean noPath = (dataPath.length() == 0);
-    Lst<String> fileNames = new  Lst<String>();
-    FileManager.getFileReferences(script, fileNames);
-    Lst<String> oldFileNames = new  Lst<String>();
-    Lst<String> newFileNames = new  Lst<String>();
-    int nFiles = fileNames.size();
-    for (int iFile = 0; iFile < nFiles; iFile++) {
-      String name0 = fileNames.get(iFile);
-      String name = name0;
-      if (isLocal == OC.isLocal(name)) {
-        int pt = (noPath ? -1 : name.indexOf("/" + dataPath + "/"));
-        if (pt >= 0) {
-          name = name.substring(pt + 1);
-        } else {
-          pt = name.lastIndexOf("/");
-          if (pt < 0 && !noPath)
-            name = "/" + name;
-          if (pt < 0 || noPath)
-            pt++;
-          name = dataPath + name.substring(pt);
-        }
-      }
-      Logger.info("FileManager substituting " + name0 + " --> " + name);
-      oldFileNames.addLast("\"" + name0 + "\"");
-      newFileNames.addLast("\1\"" + name + "\"");
-    }
-    return PT.replaceStrings(script, oldFileNames, newFileNames);
-  }
-
   /**
    * Switch \ for / only for DOS names such as C:\temp\t.xyz, not names like http://cactus.nci.nih.gov/chemical/structure/CC/C=C\CC
    * @param fileName
@@ -1159,170 +1100,19 @@ public class FileManager implements BytePoster {
     return (fileName.indexOf(":\\") >= 0 ? fileName.replace('\\', '/') : fileName);
   }
    
-  public static String[] scriptFilePrefixes = new String[] { "/*file*/\"",
-      "FILE0=\"", "FILE1=\"" };
-
   public static String stripPath(String name) {
     int pt = Math.max(name.lastIndexOf("|"), name.lastIndexOf("/"));
     return name.substring(pt + 1);
   }
 
-  public static String fixFileNameVariables(String format, String fname) {
-    String str = PT.rep(format, "%FILE", fname);
-    if (str.indexOf("%LC") < 0)
-      return str;
-    fname = fname.toLowerCase();
-    str = PT.rep(str, "%LCFILE", fname);
-    if (fname.length() == 4)
-      str = PT.rep(str, "%LC13", fname.substring(1, 3));
-    return str;
-  }
-
-  private Map<String, Object> cache = new Hashtable<String, Object>();
-
+  ///// FILE TYPING /////
+  
+  private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0";
+  public final static String PMESH_BINARY_MAGIC_NUMBER = "PM\1\0";
   public static final String JPEG_CONTINUE_STRING = " #Jmol...\0";
   
 
-  void cachePut(String key, Object data) {
-    key = fixDOSName(key);
-    if (Logger.debugging)
-      Logger.debug("cachePut " + key);
-    if (data == null || "".equals(data)) { // J2S error -- cannot implement Int32Array.equals 
-      cache.remove(key);
-      return;
-    }
-    cache.put(key, data);
-    getCachedPngjBytes(key);
-  }
   
-  public Object cacheGet(String key, boolean bytesOnly) {
-    key = fixDOSName(key);
-    // in the case of JavaScript local file reader, 
-    // this will be a cached file, and the filename will not be known.
-    int pt = key.indexOf("|");
-    if (pt >= 0 && !key.endsWith("##JmolSurfaceInfo##")) // check for PyMOL surface creation
-      key = key.substring(0, pt);
-    key = getFilePath(key, true, false);
-    Object data = null;
-    /**
-     * @j2sNative
-     * 
-     * (data = Jmol.Cache.get(key)) || (data = this.cache.get(key));
-     * 
-     */
-    {
-    //if (Logger.debugging)
-      //Logger.debug
-       data = cache.get(key);
-       if (data != null)
-         Logger.info("cacheGet " + key);
-    }    
-    return (bytesOnly && (data instanceof String) ? null : data);
-  }
-
-  void cacheClear() {
-    Logger.info("cache cleared");
-    cache.clear();
-    //String fileName = null;
-    //fileName = fileName == null ? null : getCanonicalName(Rdr.getZipRoot(fileName));
-    if (pngjCache == null)// || fileName != null && !pngjCache.containsKey(fileName))
-      return;
-    pngjCache = null;
-    Logger.info("PNGJ cache cleared");
-  }
-
-  public int cacheFileByNameAdd(String fileName, boolean isAdd) {
-    if (fileName == null || !isAdd && fileName.equalsIgnoreCase("")) {
-      cacheClear();
-      return -1;
-    }
-    Object data;
-    if (isAdd) {
-      fileName = vwr.resolveDatabaseFormat(fileName);
-      data = getFileAsBytes(fileName, null);
-      if (data instanceof String)
-        return 0;
-      cachePut(fileName, data);
-    } else {
-      if (fileName.endsWith("*"))
-        return AU.removeMapKeys(cache, fileName.substring(0, fileName.length() - 1));
-      data = cache.remove(fixDOSName(fileName));
-    }
-    return (data == null ? 0 : data instanceof String ? ((String) data).length()
-        : ((byte[]) data).length);
-  }
-
-  public Map<String, Integer> cacheList() {
-    Map<String, Integer> map = new Hashtable<String, Integer>();
-    for (Map.Entry<String, Object> entry : cache.entrySet())
-      map.put(entry.getKey(), Integer
-          .valueOf(AU.isAB(entry.getValue()) ? ((byte[]) entry
-              .getValue()).length : entry.getValue().toString().length()));
-    return map;
-  }
-
-  public String getCanonicalName(String pathName) {
-    String[] names = getClassifiedName(pathName, true);
-    return (names == null ? pathName : names[2]);
-  }
-
-  @Override
-  public String postByteArray(String fileName, byte[] bytes) {
-    // in principle, could have sftp or ftp here
-    // but sftp is not implemented
-    Object ret = getBufferedInputStreamOrErrorMessageFromName(fileName, null, false,
-            false, bytes, false, true);
-    if (ret instanceof String)
-      return (String) ret;
-    try {
-      ret = Rdr.getStreamAsBytes((BufferedInputStream) ret, null);
-    } catch (IOException e) {
-      try {
-        ((BufferedInputStream) ret).close();
-      } catch (IOException e1) {
-        // ignore
-      }
-    }
-    return (ret == null ? "" : Rdr.fixUTF((byte[]) ret));
-  }
-
-  @SuppressWarnings("null")
-  public static BufferedReader getBufferedReaderForResource(Viewer vwr,
-                                                            Object resourceClass,
-                                                            String classPath,
-                                                            String resourceName)
-      throws IOException {
-
-    URL url;
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      url = resourceClass.getClass().getResource(resourceName);
-      if (url == null) {
-        System.err.println("Couldn't find file: " + classPath + resourceName);
-        throw new IOException();
-      }
-      if (!vwr.async)
-        return Rdr.getBufferedReader(
-            new BufferedInputStream((InputStream) url.getContent()), null);
-    }
-    resourceName = (url == null 
-        ? vwr.vwrOptions.get("codePath") + classPath + resourceName
-            : url.getFile());
-    if (vwr.async) {
-      // if we are running asynchronously, this will be a problem. 
-      Object bytes = vwr.fm.cacheGet(resourceName, false);
-      if (bytes == null)
-        throw new JmolAsyncException(resourceName);
-      return Rdr.getBufferedReader(Rdr.getBIS((byte[]) bytes), null);
-    }
-    // JavaScript only; here and not in JavaDoc to preserve Eclipse search reference
-    return (BufferedReader) vwr.fm.getBufferedReaderOrErrorMessageFromName(
-        resourceName, new String[] { null, null }, false, true);
-  }
-
   public static String determineSurfaceTypeIs(InputStream is) {
     // drag-drop only
     BufferedReader br;
@@ -1334,10 +1124,6 @@ public class FileManager implements BytePoster {
     return determineSurfaceFileType(br);
   }
   
-  private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0";
-  public final static String PMESH_BINARY_MAGIC_NUMBER = "PM\1\0";
-
-
   public static boolean isScriptType(String fname) {
     return PT.isOneOf(fname.toLowerCase().substring(fname.lastIndexOf(".")+1), ";pse;spt;png;pngj;jmol;zip;");
   }
@@ -1472,25 +1258,8 @@ public class FileManager implements BytePoster {
     return (nSurfaces < 0 ? "Jvxl" : "Cube"); //Final test looks at surface definition line    
   }
 
-  public byte[] getCachedPngjBytes(String pathName) {
-    return (
-        pathName == null || pngjCache == null || pathName.indexOf(".png") < 0 ? null 
-            : getJmb().getCachedPngjBytes(pathName));
-  }
-
-  public void spardirPut(String name, byte[] bytes) {
-    if (spardirCache == null)
-      spardirCache = new Hashtable<String, byte[]>();
-    spardirCache.put(name, bytes);
-  }
+  ///// JMOL SCRIPT FILE PROCESSING
   
-  public void recachePngjBytes(String fileName, byte[] bytes) {
-    if (pngjCache == null || !pngjCache.containsKey(fileName))
-      return;
-    pngjCache.put(fileName, bytes);
-    Logger.info("PNGJ recaching " + fileName + " (" + bytes.length + ")");
-  }
-
   /**
    * check a JmolManifest for a reference to a script file (.spt)
    * 
@@ -1543,6 +1312,204 @@ public class FileManager implements BytePoster {
         fileList.addLast(s);
       }
     }
+  }
+  
+  private static String[] scriptFilePrefixes = new String[] { "/*file*/\"",
+    "FILE0=\"", "FILE1=\"" };
+
+  public static String setScriptFileReferences(String script, String localPath,
+                                               String remotePath,
+                                               String scriptPath) {
+    if (localPath != null)
+      script = setScriptFileRefs(script, localPath, true);
+    if (remotePath != null)
+      script = setScriptFileRefs(script, remotePath, false);
+    script = PT.rep(script, "\1\"", "\"");
+    if (scriptPath != null) {
+      while (scriptPath.endsWith("/"))
+        scriptPath = scriptPath.substring(0, scriptPath.length() - 1);
+      for (int ipt = 0; ipt < scriptFilePrefixes.length; ipt++) {
+        String tag = scriptFilePrefixes[ipt];
+        script = PT.rep(script, tag + ".", tag + scriptPath);
+      }
+    }
+    return script;
+  }
+
+  /**
+   * Sets all local file references in a script file to point to files within
+   * dataPath. If a file reference contains dataPath, then the file reference is
+   * left with that RELATIVE path. Otherwise, it is changed to a relative file
+   * name within that dataPath. 
+   * 
+   * Only file references starting with "file://" are changed.
+   * 
+   * @param script
+   * @param dataPath
+   * @param isLocal 
+   * @return revised script
+   */
+  private static String setScriptFileRefs(String script, String dataPath,
+                                                boolean isLocal) {
+    if (dataPath == null)
+      return script;
+    boolean noPath = (dataPath.length() == 0);
+    Lst<String> fileNames = new  Lst<String>();
+    FileManager.getFileReferences(script, fileNames);
+    Lst<String> oldFileNames = new  Lst<String>();
+    Lst<String> newFileNames = new  Lst<String>();
+    int nFiles = fileNames.size();
+    for (int iFile = 0; iFile < nFiles; iFile++) {
+      String name0 = fileNames.get(iFile);
+      String name = name0;
+      if (isLocal == OC.isLocal(name)) {
+        int pt = (noPath ? -1 : name.indexOf("/" + dataPath + "/"));
+        if (pt >= 0) {
+          name = name.substring(pt + 1);
+        } else {
+          pt = name.lastIndexOf("/");
+          if (pt < 0 && !noPath)
+            name = "/" + name;
+          if (pt < 0 || noPath)
+            pt++;
+          name = dataPath + name.substring(pt);
+        }
+      }
+      Logger.info("FileManager substituting " + name0 + " --> " + name);
+      oldFileNames.addLast("\"" + name0 + "\"");
+      newFileNames.addLast("\1\"" + name + "\"");
+    }
+    return PT.replaceStrings(script, oldFileNames, newFileNames);
+  }
+
+  //// CACHING ////
+  
+  private Map<String, Object> cache = new Hashtable<String, Object>();
+  public Map<String, Object> pngjCache;
+  public Map<String, byte[]> spardirCache;
+
+  void cachePut(String key, Object data) {
+    key = fixDOSName(key);
+    if (Logger.debugging)
+      Logger.debug("cachePut " + key);
+    if (data == null || "".equals(data)) { // J2S error -- cannot implement Int32Array.equals 
+      cache.remove(key);
+      return;
+    }
+    cache.put(key, data);
+    getCachedPngjBytes(key);
+  }
+  
+  public Object cacheGet(String key, boolean bytesOnly) {
+    key = fixDOSName(key);
+    // in the case of JavaScript local file reader, 
+    // this will be a cached file, and the filename will not be known.
+    int pt = key.indexOf("|");
+    if (pt >= 0 && !key.endsWith("##JmolSurfaceInfo##")) // check for PyMOL surface creation
+      key = key.substring(0, pt);
+    key = getFilePath(key, true, false);
+    Object data = null;
+    /**
+     * @j2sNative
+     * 
+     * (data = Jmol.Cache.get(key)) || (data = this.cache.get(key));
+     * 
+     */
+    {
+    //if (Logger.debugging)
+      //Logger.debug
+       data = cache.get(key);
+       if (data != null)
+         Logger.info("cacheGet " + key);
+    }    
+    return (bytesOnly && (data instanceof String) ? null : data);
+  }
+
+  void cacheClear() {
+    Logger.info("cache cleared");
+    cache.clear();
+    //String fileName = null;
+    //fileName = fileName == null ? null : getCanonicalName(Rdr.getZipRoot(fileName));
+    if (pngjCache == null)// || fileName != null && !pngjCache.containsKey(fileName))
+      return;
+    pngjCache = null;
+    Logger.info("PNGJ cache cleared");
+  }
+
+  public int cacheFileByNameAdd(String fileName, boolean isAdd) {
+    if (fileName == null || !isAdd && fileName.equalsIgnoreCase("")) {
+      cacheClear();
+      return -1;
+    }
+    Object data;
+    if (isAdd) {
+      fileName = vwr.resolveDatabaseFormat(fileName);
+      data = getFileAsBytes(fileName, null);
+      if (data instanceof String)
+        return 0;
+      cachePut(fileName, data);
+    } else {
+      if (fileName.endsWith("*"))
+        return AU.removeMapKeys(cache, fileName.substring(0, fileName.length() - 1));
+      data = cache.remove(fixDOSName(fileName));
+    }
+    return (data == null ? 0 : data instanceof String ? ((String) data).length()
+        : ((byte[]) data).length);
+  }
+
+  public Map<String, Integer> cacheList() {
+    Map<String, Integer> map = new Hashtable<String, Integer>();
+    for (Map.Entry<String, Object> entry : cache.entrySet())
+      map.put(entry.getKey(), Integer
+          .valueOf(AU.isAB(entry.getValue()) ? ((byte[]) entry
+              .getValue()).length : entry.getValue().toString().length()));
+    return map;
+  }
+
+  public String getCanonicalName(String pathName) {
+    String[] names = getClassifiedName(pathName, true);
+    return (names == null ? pathName : names[2]);
+  }
+
+  public void recachePngjBytes(String fileName, byte[] bytes) {
+    if (pngjCache == null || !pngjCache.containsKey(fileName))
+      return;
+    pngjCache.put(fileName, bytes);
+    Logger.info("PNGJ recaching " + fileName + " (" + bytes.length + ")");
+  }
+
+  private byte[] getPngjOrDroppedBytes(String fullName, String name) {
+    byte[] bytes = getCachedPngjBytes(fullName);
+    return (bytes == null ? (byte[]) cacheGet(name, true) : bytes);
+  }
+
+  private byte[] getCachedPngjBytes(String pathName) {
+    return (
+        pathName == null || pngjCache == null || pathName.indexOf(".png") < 0 ? null 
+            : getJzu().getCachedPngjBytes(this, pathName));
+  }
+
+  //// BytePoster interface 
+  
+  @Override
+  public String postByteArray(String fileName, byte[] bytes) {
+    // BytePoster interface - for javajs.util.OC (output channel)
+    // in principle, could have sftp or ftp here
+    // but sftp is not implemented
+    Object ret = getBufferedInputStreamOrErrorMessageFromName(fileName, null, false,
+            false, bytes, false, true);
+    if (ret instanceof String)
+      return (String) ret;
+    try {
+      ret = Rdr.getStreamAsBytes((BufferedInputStream) ret, null);
+    } catch (IOException e) {
+      try {
+        ((BufferedInputStream) ret).close();
+      } catch (IOException e1) {
+        // ignore
+      }
+    }
+    return (ret == null ? "" : Rdr.fixUTF((byte[]) ret));
   }
 
 

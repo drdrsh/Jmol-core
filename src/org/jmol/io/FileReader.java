@@ -106,8 +106,7 @@ public class FileReader {
           htParams.put("subFileList", subFileList);
         InputStream zis = (InputStream) t;
         String[] zipDirectory = fm.getZipDirectory(name, true, true);
-        atomSetCollection = t = fm.getJmb().getAtomSetCollectionOrBufferedReaderFromZip(vwr
-                .getModelAdapter(), zis, name, zipDirectory, htParams, false);
+        atomSetCollection = t = fm.getJzu().getAtomSetCollectionOrBufferedReaderFromZip(vwr, zis, name, zipDirectory, htParams, 1, false);
         try {
           zis.close();
         } catch (Exception e) {
