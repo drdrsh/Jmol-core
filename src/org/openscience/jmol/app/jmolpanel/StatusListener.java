@@ -337,7 +337,7 @@ class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterf
     }
     if (!display.haveDisplay)
       return;
-System.out.println("StatusListener notifyFileLoaded: " + fileName);
+//System.out.println("StatusListener notifyFileLoaded: " + fileName);
     // this code presumes only ptLoad = -1 (error), 0 (zap), or 3 (completed)
     String title = "Jmol";
     if (fileName != null && fileName.startsWith("DROP_"))

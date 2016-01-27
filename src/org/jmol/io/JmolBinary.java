@@ -195,7 +195,7 @@ public class JmolBinary {
           int pt = name.lastIndexOf(".spardir");
           pt = sname.lastIndexOf("/");
           // mac directory zipped up?
-          sname = name + "|" + name.substring(pt + 1, name.length() - 4);
+          sname = name + "|" + PT.rep(name.substring(pt + 1, name.length() - 4), "DROP_", "");
           return new String[] { "SpartanSmol", sname, sname + "/output" };
         }
       }
