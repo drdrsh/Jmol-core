@@ -1,4 +1,4 @@
-/* Copyright (c) 2002-2014 The University of the West Indies
+/* Copyright (c) 2002-2016 The University of the West Indies
  *
  * Contact: robert.lancashire@uwimona.edu.jm
  *
@@ -39,8 +39,8 @@ import javax.swing.border.EmptyBorder;
 import jspecview.common.JSVersion;
 
 /**
- * The <code>About Dialog</code> class is the <i>help | about</i> window for the
- * JSpecView.
+ * The <code>About Dialog</code> class is the <i>help | about</i> window for JSpecView.
+ * @author Bob Hanson
  * @author Debbie-Ann Facey
  * @author Khari A. Bryan
  * @author Prof. Robert J. Lancashire
@@ -120,7 +120,7 @@ public class AboutDialog extends JDialog {
     txt = drawMessage(message, "Arial", Font.BOLD, 12);
     p.add(txt);
 
-    message = "Copyright (c) 2014, Department of Chemistry\nUniversity of the West Indies, Mona Campus\nJAMAICA";
+    message = "Copyright (c) 2016, Department of Chemistry\nUniversity of the West Indies, Mona Campus\nJAMAICA";
     txt = drawMessage(message, "Arial", Font.PLAIN, 12);
     p.add(txt);
 
