@@ -3621,8 +3621,15 @@ public class ModelSet extends BondCollection {
       calculateStraightnessAll();
     recalculateLeadMidpointsAndWingVectors(-1);
     BS bsModels = getModelBS(bs, false);
-    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
       sm.notifyAtomPositionsChanged(i, bs, mat);
+      if (mat != null) {
+        Model m = am[i];
+        if (m.mat4 == null)
+          m.mat4 = M4.newM4(null);
+        m.mat4.mul2(mat, m.mat4);
+      }
+    }
     averageAtomPoint = null;
     /* but we would need to somehow indicate this in the state
     if (ellipsoids != null)

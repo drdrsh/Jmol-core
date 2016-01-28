@@ -33,6 +33,7 @@ import org.jmol.java.BS;
 
 
 import javajs.util.AU;
+import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.SB;
 
@@ -81,6 +82,8 @@ public class Model {
    */
   public ModelSet ms;
 
+  public M4 mat4;
+  
   public int modelIndex; // our 0-based reference
   int fileIndex; // 0-based file reference
   public boolean isBioModel;

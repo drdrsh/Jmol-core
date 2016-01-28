@@ -29,6 +29,7 @@ import org.jmol.modelset.Atom;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
+import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.T3;
 
@@ -114,7 +115,7 @@ abstract class QuantumCalculation {
   protected void setupCoordinates(float[] originXYZ, float[] stepsXYZ,
                                   BS bsSelected,
                                   T3[] atomCoordAngstroms,
-                                  T3[] points, boolean renumber) {
+                                  T3[] points, boolean renumber, M4 modelInvRotation) {
     
     // all coordinates come in as angstroms, not bohr, and are converted here into bohr
 
@@ -147,7 +148,7 @@ abstract class QuantumCalculation {
       for (int i = i0, j = 0; i >= 0; i = (isAll ? i - 1 : bsSelected
           .nextSetBit(i + 1)))
         qmAtoms[renumber ? j++ : i] = new QMAtom(i, (Atom) atomCoordAngstroms[i],
-            X, Y, Z, X2, Y2, Z2, unitFactor);
+            X, Y, Z, X2, Y2, Z2, unitFactor, modelInvRotation);
     }
   }
 

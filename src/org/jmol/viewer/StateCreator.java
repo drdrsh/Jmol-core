@@ -304,6 +304,12 @@ public class StateCreator extends JmolStateCreator {
     if (withProteinStructure)
       commands.append(ms.getProteinStructureState(null, isAll ? T.all : T.state));
 
+    // don't want to mess with 14.4 states here
+    if (JC.versionInt > 1405000)
+      for (int i = 0; i < modelCount; i++)
+        if (models[i].mat4 != null)
+          commands.append("  frame orientation " + ms.getModelNumberDotted(i) + Escape.matrixToScript(models[i].mat4) + ";\n");
+
     getShapeState(commands, isAll, Integer.MAX_VALUE);
 
     if (isAll) {
@@ -314,7 +320,8 @@ public class StateCreator extends JmolStateCreator {
           break;
         }
       SB sb = new SB();
-      for (int i = 0; i < modelCount; i++) {
+           for (int i = 0; i < modelCount; i++) {
+        Model m = models[i];
         sb.setLength(0);
         String s = (String) ms.getInfo(i, "modelID");
         if (s != null
@@ -325,16 +332,16 @@ public class StateCreator extends JmolStateCreator {
         if (t != null && t.length() > 0)
           sb.append("  frame title ").append(PT.esc(t))
               .append(";\n");
-        if (needOrientations && models[i].orientation != null
+        if (needOrientations && m.orientation != null
             && !ms.isTrajectorySubFrame(i))
           sb.append("  ").append(
-              models[i].orientation.getMoveToText(false)).append(";\n");
-        if (models[i].frameDelay != 0 && !ms.isTrajectorySubFrame(i))
+              m.orientation.getMoveToText(false)).append(";\n");
+        if (m.frameDelay != 0 && !ms.isTrajectorySubFrame(i))
           sb.append("  frame delay ").appendF(
-              models[i].frameDelay / 1000f).append(";\n");
-        if (models[i].simpleCage != null) {
+              m.frameDelay / 1000f).append(";\n");
+        if (m.simpleCage != null) {
           sb.append("  unitcell ").append(
-              Escape.eAP(models[i].simpleCage.getUnitCellVectors())).append(
+              Escape.eAP(m.simpleCage.getUnitCellVectors())).append(
               ";\n");
           getShapeState(sb, isAll, JC.SHAPE_UCCAGE);
         }

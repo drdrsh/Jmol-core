@@ -33,6 +33,7 @@ import org.jmol.util.Escape;
 import javajs.util.AU;
 import javajs.util.Eigen;
 import javajs.util.Lst;
+import javajs.util.M4;
 import javajs.util.T3;
 
 import org.jmol.util.Logger;
@@ -141,7 +142,7 @@ public class NciCalculation extends QuantumCalculation implements
                                   float[] linearCombination, boolean isSquaredLinear,
                                   float[][] coefs,
                                   float[] partialCharges, boolean isDensityOnly,
-                                  T3[] points, float[] parameters, int testFlags) {
+                                  T3[] points, float[] parameters, int testFlags, M4 modelInvRotation) {
     useAbsolute = (testFlags == 2);
     this.bsExcluded = bsExcluded;
     BS bsLigand = new BS();
@@ -205,7 +206,7 @@ public class NciCalculation extends QuantumCalculation implements
 
     setupCoordinates(volumeData.getOriginFloat(), volumeData
         .getVolumetricVectorLengths(), bsSelected, atomCoordAngstroms, points,
-        true);
+        true, null);
 
     if (qmAtoms != null) {
       int[] qmMap = new int[bsSelected.length()];

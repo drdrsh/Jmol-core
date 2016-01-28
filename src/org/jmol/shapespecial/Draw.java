@@ -633,7 +633,7 @@ private void initDraw() {
       thisMesh.modelFlags = null;
       thisMesh.drawTypes = null;
       thisMesh.drawVertexCounts = null;
-      thisMesh.connections = connections;
+      thisMesh.connectedAtoms = connections;
       if (polygon != null) {
         if (polygon.size() == 0)
           return false;
@@ -712,7 +712,7 @@ private void initDraw() {
   protected void clean() {
     for (int i = meshCount; --i >= 0;)
       if (meshes[i] == null || meshes[i].vc == 0 
-          && meshes[i].connections == null && meshes[i].lineData == null)
+          && meshes[i].connectedAtoms == null && meshes[i].lineData == null)
         deleteMeshI(i);
   }
 
@@ -1042,7 +1042,7 @@ private void initDraw() {
                     : EnumDrawType.LINE);
         break;
       default:
-        drawType = (thisMesh.connections == null ? EnumDrawType.PLANE
+        drawType = (thisMesh.connectedAtoms == null ? EnumDrawType.PLANE
             : EnumDrawType.ARROW);
       }
     }
@@ -1072,7 +1072,7 @@ private void initDraw() {
      * have to watch out for double-listed vertices
      * 
      */
-    if (newScale == 0 || dmesh.vc == 0 && dmesh.connections == null
+    if (newScale == 0 || dmesh.vc == 0 && dmesh.connectedAtoms == null
         || dmesh.scale == newScale)
       return;
     float f = newScale / dmesh.scale;
@@ -1392,7 +1392,7 @@ private void initDraw() {
     else if (dmesh.isBarb)
       str.append(" barb");
     if (dmesh.scale != 1 && dmesh.isScaleSet
-        && (dmesh.haveXyPoints || dmesh.connections != null || dmesh.drawType == EnumDrawType.CIRCLE || dmesh.drawType == EnumDrawType.ARC))
+        && (dmesh.haveXyPoints || dmesh.connectedAtoms != null || dmesh.drawType == EnumDrawType.CIRCLE || dmesh.drawType == EnumDrawType.ARC))
       str.append(" scale ").appendF(dmesh.scale);
     if (dmesh.width != 0)
       str.append(" diameter ").appendF(
@@ -1437,8 +1437,8 @@ private void initDraw() {
         break;
       case ARROW:
         str.append(dmesh.isVector ? " VECTOR" : " ARROW");
-        if (dmesh.connections != null)
-          str.append(" connect ").append(Escape.eAI(dmesh.connections));
+        if (dmesh.connectedAtoms != null)
+          str.append(" connect ").append(Escape.eAI(dmesh.connectedAtoms));
         break;
       case CIRCLE:
         str.append(" CIRCLE");

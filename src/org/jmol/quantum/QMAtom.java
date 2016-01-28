@@ -27,6 +27,8 @@ package org.jmol.quantum;
 
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
+
+import javajs.util.M4;
 import javajs.util.P3;
 
 class QMAtom extends P3 {
@@ -56,9 +58,10 @@ class QMAtom extends P3 {
    * @param Y2
    * @param Z2
    * @param unitFactor
+   * @param modelRotation 
    */
   QMAtom(int i, Atom atom, float[] X, float[] Y, float[] Z, 
-      float[] X2, float[] Y2, float[] Z2, float unitFactor) {
+      float[] X2, float[] Y2, float[] Z2, float unitFactor, M4 modelInvRotation) {
     index = i;
     myX = X;
     myY = Y;
@@ -70,6 +73,8 @@ class QMAtom extends P3 {
     
     //this.isExcluded = isExcluded;
     setT(atom);
+    if (modelInvRotation != null)
+      modelInvRotation.rotTrans(this);
     scale(unitFactor);
     znuc = atom.getElementNumber();
   }

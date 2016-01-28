@@ -5015,6 +5015,16 @@ public class ScriptEval extends ScriptExpr {
           vwr.setFrameTitleObj(slen == 2 ? "@{_modelName}"
               : (tokAt(2) == T.varray ? SV.strListValue(st[2]) : paramAsStr(2)));
       return;
+    case T.orientation:
+      if (tokAt(2) == T.decimal && tokAt(3) == T.matrix4f) {
+        int modelIndex = vwr.ms.getModelNumberIndex(getToken(2).intValue,
+            false, false);
+        M4 mat4 = (M4) getToken(3).value;
+        if (modelIndex >= 0)
+          vwr.ms.am[modelIndex].mat4 = mat4;
+        return;
+      }
+      break;
     case T.align:
       boolean isNone = (tokAt(2) == T.none);
       BS bs = (slen == 2 || isNone ? null : atomExpressionAt(2));
@@ -5097,7 +5107,8 @@ public class ScriptEval extends ScriptExpr {
             iFrame = (int) fFrame * 1000000;
           if (iFrame == Integer.MAX_VALUE) {
             useModelNumber = false;
-            frameList[nFrames++] = (chk || i != 1 ? 0 : vwr.getModelIndexFromId(theToken.value.toString()));
+            frameList[nFrames++] = (chk || i != 1 ? 0 : vwr
+                .getModelIndexFromId(theToken.value.toString()));
             break;
           }
           if (iFrame == -1) {

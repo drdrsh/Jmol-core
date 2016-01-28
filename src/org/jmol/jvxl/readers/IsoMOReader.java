@@ -31,6 +31,7 @@ import java.util.Random;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.PT;
 import javajs.util.T3;
@@ -351,6 +352,7 @@ class IsoMOReader extends AtomDataReader {
   @SuppressWarnings("unchecked")
   private boolean setupCalculation() {
     qSetupDone = true;
+    M4 mat = params.modelInvRotation;
     switch (params.qmOrbitalType) {
     case Parameters.QM_TYPE_VOLUME_DATA:
       break;
@@ -360,18 +362,18 @@ class IsoMOReader extends AtomDataReader {
           atomData.atomXyz, atomData.firstAtomIndex, (Lst<int[]>) params.moData.get("shells"), (float[][]) params.moData
                           .get("gaussians"), dfCoefMaps, null,
           coef, linearCombination, params.isSquaredLinear, coefs,
-          null, params.moData.get("isNormalized") == null, points, params.parameters, params.testFlags);
+          null, params.moData.get("isNormalized") == null, points, params.parameters, params.testFlags, mat);
     case Parameters.QM_TYPE_SLATER:
       return q.setupCalculation(volumeData, bsMySelected, null, null, (String) params.moData
                       .get("calculationType"),
           atomData.atomXyz, atomData.firstAtomIndex, null, null, null, params.moData.get("slaters"),
           coef, linearCombination, params.isSquaredLinear, coefs, 
-          null, true, points, params.parameters, params.testFlags);
+          null, true, points, params.parameters, params.testFlags, mat);
     case Parameters.QM_TYPE_NCI_PRO:
       return q.setupCalculation(volumeData, bsMySelected, params.bsSolvent,
           atomData.bsMolecules, null, atomData.atomXyz, atomData.firstAtomIndex, null, null,
           null, null, null, null, params.isSquaredLinear, null,
-          null, true, points, params.parameters, params.testFlags);
+          null, true, points, params.parameters, params.testFlags, mat);
     }
     return false;
   }

@@ -7,6 +7,7 @@ package org.jmol.api;
 import org.jmol.java.BS;
 
 import javajs.util.Lst;
+import javajs.util.M4;
 import javajs.util.T3;
 
 
@@ -27,7 +28,7 @@ public interface MOCalculationInterface {
                                            float[][] coefs,
                                            float[] partialCharges,
                                            boolean doNormalize, T3[] points,
-                                           float[] parameters, int testFlags);
+                                           float[] parameters, int testFlags, M4 modelInvRotation);
   
   public abstract void createCube();
   public abstract float processPt(T3 pt);

@@ -788,6 +788,12 @@ public class IsoExt extends ScriptExt {
         }
         nboType = paramAsStr(++i).toUpperCase(); 
         break;
+      case T.move: // Jmol 14.5.1 -- required for state saving after coordinate-based translate/rotate
+        propertyName = "moveIsosurface";
+        if (tokAt(++i) != T.matrix4f)
+          invArg();
+        propertyValue = getToken(i++).value;
+        break;
       case T.cap:
       case T.slab:
         propertyName = (String) eval.theToken.value;

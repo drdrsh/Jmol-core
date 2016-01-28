@@ -156,7 +156,7 @@ public class Mesh extends MeshSurface {
     cappingObject = null;
     colix = C.GOLD;
     colorDensity = false;
-    connections = null;
+    connectedAtoms = null;
     diameter = 0;
     drawTriangles = false;
     fillTriangles = true;
@@ -271,7 +271,8 @@ public class Mesh extends MeshSurface {
   public Object slabbingObject;
   public float volumeRenderPointSize = 0.15f;
 
-  public int[] connections;
+  public int[] connectedAtoms;
+  public boolean isModelConnected;
 
   public boolean recalcAltVertices;
 

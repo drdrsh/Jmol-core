@@ -28,6 +28,8 @@ import org.jmol.api.VolumeDataInterface;
 import org.jmol.java.BS;
 
 import javajs.util.Lst;
+import javajs.util.M4;
+
 import org.jmol.util.Logger;
 import javajs.util.T3;
 
@@ -138,7 +140,7 @@ public class MOCalculation extends QuantumCalculation implements
                         float[] linearCombination, boolean isSquaredLinear, 
                         float[][] coefs, float[] partialCharges, 
                         boolean doNormalize, T3[] points, 
-                        float[] parameters, int testFlags) {
+                        float[] parameters, int testFlags, M4 modelInvRotation) {
     havePoints = (points != null);
     this.calculationType = calculationType;
     this.firstAtomOffset = firstAtomOffset;
@@ -160,7 +162,7 @@ public class MOCalculation extends QuantumCalculation implements
     voxelDataTemp = (isSquaredLinear ? new float[nX][nY][nZ] : voxelData);
     setupCoordinates(volumeData.getOriginFloat(), 
         volumeData.getVolumetricVectorLengths(), 
-        bsSelected, atomCoordAngstroms, points, false);
+        bsSelected, atomCoordAngstroms, points, false, modelInvRotation);
     doDebug = (Logger.debugging);
     return (slaters != null || checkCalculationType());
   }  

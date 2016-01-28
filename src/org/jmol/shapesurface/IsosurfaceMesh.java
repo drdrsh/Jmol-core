@@ -982,10 +982,10 @@ public class IsosurfaceMesh extends Mesh {
    * @param bs
    */
   public void updateCoordinates(M4 m, BS bs) {
-    boolean doUpdate = (bs == null);
+    boolean doUpdate = (bs == null || isModelConnected);
     if (!doUpdate)
-      for (int i = 0; i < connections.length; i++)
-        if (connections[i] >= 0 && bs.get(connections[i])) {
+      for (int i = 0; i < connectedAtoms.length; i++)
+        if (connectedAtoms[i] >= 0 && bs.get(connectedAtoms[i])) {
           doUpdate = true;
           break;
         }

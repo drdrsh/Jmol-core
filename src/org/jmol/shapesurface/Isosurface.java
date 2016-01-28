@@ -330,7 +330,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (thisMesh != null) {
         setIsoMeshColor(thisMesh, color);
       } else {
-        Lst<Mesh> list = getMeshList(PT.isWild(previousMeshID) ? previousMeshID : null, false);
+        Lst<Mesh> list = getMeshList(PT.isWild(previousMeshID) ? previousMeshID
+            : null, false);
         for (int i = list.size(); --i >= 0;)
           setIsoMeshColor((IsosurfaceMesh) list.get(i), color);
       }
@@ -366,10 +367,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
 
     if ("refreshTrajectories" == propertyName) {
+      int m = ((Integer) ((Object[]) value)[0]).intValue();
       for (int i = meshCount; --i >= 0;)
-        if (meshes[i].connections != null
-            && meshes[i].modelIndex == ((Integer) ((Object[]) value)[0])
-                .intValue())
+        if (meshes[i].modelIndex == m
+            && (meshes[i].connectedAtoms != null || meshes[i].isModelConnected))
           ((IsosurfaceMesh) meshes[i]).updateCoordinates(
               (M4) ((Object[]) value)[2], (BS) ((Object[]) value)[1]);
       return;
@@ -472,9 +473,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (currentMesh != null) {
         connections = (int[]) value;
         if (connections[0] >= 0 && connections[0] < vwr.ms.ac)
-          currentMesh.connections = connections;
+          currentMesh.connectedAtoms = connections;
         else
-          connections = currentMesh.connections = null;
+          connections = currentMesh.connectedAtoms = null;
       }
       return;
     }
@@ -544,8 +545,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         // "fileName" property. We retrieve that from the surfaceGenerator
         // and open a BufferedReader for it. Or not. But that would be
         // unlikely since we have just checked it in ScriptEvaluator
-        value = vwr.fm.getBufferedReaderOrErrorMessageFromName(sg.params.fileName,
-            null, true, true);
+        value = vwr.fm.getBufferedReaderOrErrorMessageFromName(
+            sg.params.fileName, null, true, true);
         if (value instanceof String) {
           Logger.error("Isosurface: could not open file " + sg.params.fileName
               + " -- " + value);
@@ -681,14 +682,14 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         Mesh m = meshes[i];
         if (m == null)
           continue;
-        if (m.connections != null) {
-          int iAtom = m.connections[0];
+        if (m.connectedAtoms != null) {
+          int iAtom = m.connectedAtoms[0];
           if (iAtom >= firstAtomDeleted + nAtomsDeleted)
-            m.connections[0] = iAtom - nAtomsDeleted;
+            m.connectedAtoms[0] = iAtom - nAtomsDeleted;
           else if (iAtom >= firstAtomDeleted)
-            m.connections = null;
+            m.connectedAtoms = null;
         }
-        m.connections = null; // just no way to 
+        m.connectedAtoms = null; // just no way to 
         if (m.modelIndex == modelIndex) {
           meshCount--;
           if (m == currentMesh)
@@ -1017,8 +1018,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     int pt = cmd.indexOf("; #");
     if (pt >= 0)
       cmd = cmd.substring(0, pt);
-    if (imesh.connections != null)
-      cmd += " connect " + Escape.eAI(imesh.connections);
+    if (imesh.connectedAtoms != null)
+      cmd += " connect " + Escape.eAI(imesh.connectedAtoms);
     cmd = PT.trim(cmd, ";");
     if (imesh.linkedMesh != null)
       cmd += " LINK"; // for lcaoCartoon state
@@ -1390,7 +1391,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         allocMesh(null, null);
       if (!thisMesh.isMerged)
         thisMesh.clearType(myType, sg.params.iAddGridPoints);
-      thisMesh.connections = connections;
+      thisMesh.connectedAtoms = connections;
       thisMesh.colix = getDefaultColix();
       thisMesh.colorType = colorType;
       thisMesh.meshColix = meshColix;

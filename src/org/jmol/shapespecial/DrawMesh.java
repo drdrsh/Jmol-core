@@ -138,7 +138,7 @@ public class DrawMesh extends Mesh {
   public boolean isRenderScalable() {
     switch (drawType) {
     case ARROW:
-      return (connections != null);
+      return (connectedAtoms != null);
     case ARC:
     case CIRCLE: 
     case CIRCULARPLANE:

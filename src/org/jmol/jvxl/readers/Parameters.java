@@ -128,6 +128,7 @@ import org.jmol.util.Logger;
 
 import javajs.util.A4;
 import javajs.util.M3;
+import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P4;
 import javajs.util.PT;
@@ -251,6 +252,7 @@ public class Parameters {
     mep_calcType = -1;
     minSet = 0;
     modelIndex = -1;
+    modelInvRotation = null;
     nContours = 0;
     pocket = null;
     pointSize = Float.NaN;
@@ -787,6 +789,7 @@ public class Parameters {
   int fileIndex = -1; //one-based, although efvet reader uses 0 for "indicated color"
   public String fileName;
   public int modelIndex = -1; // zero-based
+  public M4 modelInvRotation = null; // MO calculations must be run using the ORIGINAL atom positions
   public boolean isXLowToHigh;
   
   boolean insideOut;

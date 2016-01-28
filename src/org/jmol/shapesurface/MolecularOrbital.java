@@ -25,26 +25,23 @@
 
 package org.jmol.shapesurface;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.M4;
+import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.SB;
 
-import java.util.Hashtable;
-
-import java.util.Map;
-
-
-import org.jmol.util.Escape;
-import javajs.util.P4;
-
-import org.jmol.quantum.QS;
-import org.jmol.script.T;
-import org.jmol.shape.MeshCollection;
-import org.jmol.shape.Shape;
 import org.jmol.java.BS;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.readers.Parameters;
+import org.jmol.quantum.QS;
+import org.jmol.script.T;
+import org.jmol.shape.MeshCollection;
+import org.jmol.util.Escape;
 
 public class MolecularOrbital extends Isosurface {
 
@@ -339,9 +336,8 @@ public class MolecularOrbital extends Isosurface {
       int thisMO = index;
       int currentMO = moNumber;
       boolean isShowCurrent = (thisMO == Integer.MIN_VALUE);
-      if (thisMO == Integer.MAX_VALUE) {
+      if (thisMO == Integer.MAX_VALUE)
         thisMO = currentMO;
-      }
       if (nOrb == 0 || isShowCurrent && currentMO == 0)
         return "";
       boolean doOneMo = (thisMO != 0);
@@ -503,8 +499,17 @@ public class MolecularOrbital extends Isosurface {
     setPropI("squareLinear", moSquareLinear, null);
     setPropI("title", moTitleFormat, null);
     setPropI("fileName", vwr.fm.getFileName(), null);
+    currentMesh.modelIndex = modelIndex;
+    currentMesh.isModelConnected = true;
+    M4 mat4 =  ms.am[currentMesh.modelIndex].mat4;
+    if (mat4 != null) {
+      M4 minv = M4.newM4(mat4);
+      minv.invert();
+      setPropI("modelInvRotation", minv, null);
+    }
     setPropI("molecularOrbital", linearCombination == null ? Integer
         .valueOf(moNumber) : linearCombination, null);
+    currentMesh.mat4 = mat4;
     if (moPlane != null && moColorNeg != null)
       setPropI("colorRGB", moColorNeg, null);
     if (moPlane != null && moColorPos != null)
@@ -523,7 +528,6 @@ public class MolecularOrbital extends Isosurface {
     setPropI("token", Integer.valueOf(moMesh), null);
     setPropI("token", Integer.valueOf(moDots), null);
     setPropI("token", Integer.valueOf(moFrontOnly), null);
-    
     thisModel.put("mesh", currentMesh);
     return;
   }

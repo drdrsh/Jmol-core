@@ -72,8 +72,8 @@ public class DrawRenderer extends MeshRenderer {
     isPrecision = true;//vwr.tm.perspectiveDepth;
     for (int i = draw.meshCount; --i >= 0;) {
       Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
-      if (mesh.connections != null) {
-        if (mesh.connections[0] < 0)
+      if (mesh.connectedAtoms != null) {
+        if (mesh.connectedAtoms[0] < 0)
           continue;
         // bond-bond [ a b   c d  ]
         // bond-atom [ a b   c -1 ]
@@ -82,7 +82,7 @@ public class DrawRenderer extends MeshRenderer {
 
         mesh.vs = new P3[4];
         mesh.vc = 4;
-        int[] c = mesh.connections;
+        int[] c = mesh.connectedAtoms;
         for (int j = 0; j < 4; j++)
           mesh.vs[j] = (c[j] < 0 ? mesh.vs[j - 1] : vwr.ms.at[c[j]]);
         mesh.recalcAltVertices = true;
@@ -112,7 +112,7 @@ public class DrawRenderer extends MeshRenderer {
     drawType = dmesh.drawType;
     diameter = dmesh.diameter;
     width = dmesh.width;
-    if (mesh.connections != null)
+    if (mesh.connectedAtoms != null)
       getConnectionPoints();
     if (mesh.lineData != null) {
       drawLineData(mesh.lineData);
@@ -461,7 +461,7 @@ public class DrawRenderer extends MeshRenderer {
   private float getArrowScale() {
     float fScale = (dmesh.isScaleSet ? dmesh.scale : 0);
     if (fScale == 0)
-      fScale = vwr.getFloat(T.defaultdrawarrowscale) * (dmesh.connections == null ? 1f : 0.5f);
+      fScale = vwr.getFloat(T.defaultdrawarrowscale) * (dmesh.connectedAtoms == null ? 1f : 0.5f);
     if (fScale <= 0)
       fScale = 0.5f;
     return fScale;

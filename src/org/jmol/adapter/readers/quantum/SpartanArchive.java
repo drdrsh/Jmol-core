@@ -56,7 +56,7 @@ class SpartanArchive {
   private int coefCount = 0;
   private int shellCount = 0;
   private int gaussianCount = 0;
-  private String endCheck;
+  private String endCheck; // for SMOL or SPARTAN files: "END Directory Entry "
   private boolean isSMOL;
   
   private BasisFunctionReader r;
@@ -92,11 +92,20 @@ class SpartanArchive {
         if (doAddAtoms && bondData.length() > 0)
           addBonds(bondData, ac0);
       } else if (line.indexOf("BASIS") == 0) {
-        readBasis();
+        if (r.doReadMolecularOrbitals) {
+          readBasis();
+        } else {
+          r.discardLinesUntilContains("ENERGY");
+          line = r.line;
+          continue;
+        }
       } else if (line.indexOf("WAVEFUNC") == 0 || line.indexOf("BETA") == 0) {
         if (r.doReadMolecularOrbitals && !skipping) {
           readMolecularOrbital();
           haveMOData = true;
+        } else {
+          r.discardLinesUntilContains("GEOM");
+          line = r.line;
         }
       } else if (line.indexOf("ENERGY") == 0 && !skipping) {
         readEnergy();

@@ -69,7 +69,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
     setGlobals();
     for (int i = isosurface.meshCount; --i >= 0;) {
       mesh = imesh = (IsosurfaceMesh) isosurface.meshes[i];
-      if (imesh.connections != null && !vwr.ms.at[imesh.connections[0]].checkVisible())
+      if (imesh.connectedAtoms != null && !vwr.ms.at[imesh.connectedAtoms[0]].checkVisible())
         continue;
       hasColorRange = false;
       if (renderMeshSlab()) {
