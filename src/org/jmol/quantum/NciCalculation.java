@@ -23,19 +23,16 @@
  */
 package org.jmol.quantum;
 
-import org.jmol.api.QuantumPlaneCalculationInterface;
-import org.jmol.api.VolumeDataInterface;
-import org.jmol.java.BS;
-
-import org.jmol.util.BSUtil;
-import org.jmol.util.Escape;
-
 import javajs.util.AU;
 import javajs.util.Eigen;
 import javajs.util.Lst;
-import javajs.util.M4;
 import javajs.util.T3;
 
+import org.jmol.api.QuantumPlaneCalculationInterface;
+import org.jmol.api.VolumeDataInterface;
+import org.jmol.java.BS;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
 
@@ -135,14 +132,14 @@ public class NciCalculation extends QuantumCalculation implements
   public boolean setupCalculation(VolumeDataInterface volumeData,
                                   BS bsSelected, BS bsExcluded,
                                   BS[] bsMolecules, String calculationType,
-                                  T3[] atomCoordAngstroms,
+                                  T3[] atomCoordAngstroms, T3[] atoms,
                                   int firstAtomOffset, Lst<int[]> shells,
                                   float[][] gaussians, int[][] dfCoefMaps,
                                   Object slaters, float[] moCoefficients,
                                   float[] linearCombination, boolean isSquaredLinear,
                                   float[][] coefs,
                                   float[] partialCharges, boolean isDensityOnly,
-                                  T3[] points, float[] parameters, int testFlags, M4 modelInvRotation) {
+                                  T3[] points, float[] parameters, int testFlags) {
     useAbsolute = (testFlags == 2);
     this.bsExcluded = bsExcluded;
     BS bsLigand = new BS();
@@ -205,8 +202,8 @@ public class NciCalculation extends QuantumCalculation implements
     }
 
     setupCoordinates(volumeData.getOriginFloat(), volumeData
-        .getVolumetricVectorLengths(), bsSelected, atomCoordAngstroms, points,
-        true, null);
+        .getVolumetricVectorLengths(), bsSelected, atomCoordAngstroms, null, points,
+        true);
 
     if (qmAtoms != null) {
       int[] qmMap = new int[bsSelected.length()];

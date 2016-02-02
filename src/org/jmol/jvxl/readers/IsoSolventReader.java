@@ -198,7 +198,7 @@ class IsoSolventReader extends AtomDataReader {
           && sr > 0 && (dataType == Parameters.SURFACE_SOLVENT || dataType == Parameters.SURFACE_MOLECULAR));
       doUseIterator = doCalculateTroughs;
       getAtoms(params.bsSelected, doAddHydrogens, true, false, false, true,
-          false, Float.NaN);
+          false, Float.NaN, null);
       if (isCavity || isPocket)
         dots = meshDataServer.calculateGeodesicSurface(bsMySelected,
             envelopeRadius);

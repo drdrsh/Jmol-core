@@ -239,6 +239,7 @@ public class Parameters {
     isBicolorMap = isCutoffAbsolute = isPositiveOnly = false;
     isCavity = false;
     isColorReversed = false;
+    isModelConnected = false;
     isSquared = false;
     isSquaredLinear = false;
     isContoured = false;
@@ -721,6 +722,7 @@ public class Parameters {
    
   @SuppressWarnings("unchecked")
   void setMO(int iMo, float[] linearCombination) {
+    isModelConnected = true;
     qm_moLinearCombination = linearCombination;
     qm_moNumber = (linearCombination == null ? Math.abs(iMo) : (int) linearCombination[1]);
     qmOrbitalType = (moData.containsKey("haveVolumeData") ? QM_TYPE_VOLUME_DATA 
@@ -848,6 +850,7 @@ public class Parameters {
   public boolean isMapped;
   public boolean showTiming;
   public float pointSize;
+  public boolean isModelConnected;
   
   void setMapRanges(SurfaceReader surfaceReader, boolean haveData) {
     if (!colorDensity)

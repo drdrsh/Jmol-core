@@ -574,7 +574,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     } else if (htParams.containsKey("bsModels")) {
       bsModels = (BS) htParams.get("bsModels");
     }
-    useFileModelNumbers = htParams.containsKey("useFileModelNumbers");
+    useFileModelNumbers = htParams.containsKey("useFileModelNumbers") || checkFilterKey("USEFILEMODELNUMBERS");
     if (htParams.containsKey("templateAtomCount"))
       templateAtomCount = ((Integer) htParams.get("templateAtomCount"))
           .intValue();

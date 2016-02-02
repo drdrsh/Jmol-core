@@ -23,15 +23,13 @@
  */
 package org.jmol.quantum;
 
+import javajs.util.Lst;
+import javajs.util.T3;
+
 import org.jmol.api.MOCalculationInterface;
 import org.jmol.api.VolumeDataInterface;
 import org.jmol.java.BS;
-
-import javajs.util.Lst;
-import javajs.util.M4;
-
 import org.jmol.util.Logger;
-import javajs.util.T3;
 
 
 
@@ -133,14 +131,14 @@ public class MOCalculation extends QuantumCalculation implements
   @Override
   public boolean setupCalculation(VolumeDataInterface volumeData, BS bsSelected,
                         BS bsExclude, BS[] bsMolecules,
-                        String calculationType, T3[] atomCoordAngstroms,
+                        String calculationType, T3[] atomCoordAngstroms, T3[] atoms,
                         int firstAtomOffset, Lst<int[]> shells,
                         float[][] gaussians,
                         int[][] dfCoefMaps, Object slaters, float[] moCoefficients,
                         float[] linearCombination, boolean isSquaredLinear, 
                         float[][] coefs, float[] partialCharges, 
                         boolean doNormalize, T3[] points, 
-                        float[] parameters, int testFlags, M4 modelInvRotation) {
+                        float[] parameters, int testFlags) {
     havePoints = (points != null);
     this.calculationType = calculationType;
     this.firstAtomOffset = firstAtomOffset;
@@ -162,7 +160,7 @@ public class MOCalculation extends QuantumCalculation implements
     voxelDataTemp = (isSquaredLinear ? new float[nX][nY][nZ] : voxelData);
     setupCoordinates(volumeData.getOriginFloat(), 
         volumeData.getVolumetricVectorLengths(), 
-        bsSelected, atomCoordAngstroms, points, false, modelInvRotation);
+        bsSelected, atomCoordAngstroms, atoms, points, false);
     doDebug = (Logger.debugging);
     return (slaters != null || checkCalculationType());
   }  
@@ -387,10 +385,18 @@ public class MOCalculation extends QuantumCalculation implements
 
   private double[] coeffs;
   private int[] map;
+
+  private int lastGaussianPtr = -1;
   
   private boolean setCoeffs(int type, boolean isProcess) {
     boolean isOK = false;
     map = dfCoefMaps[type];
+    if (type > QS.MAX_TYPE_SUPPORTED) {
+      if (isProcess && doDebug)
+        dumpInfo(type);
+      moCoeff += map.length;
+      return false;
+    }
     if (isProcess && thisAtom == null) {
       moCoeff += map.length;
       return false;
@@ -756,9 +762,9 @@ public class MOCalculation extends QuantumCalculation implements
         norm2 = norm1;
         norm3 = norm1;        
       } else {
-        norm1 = Math.pow(32768.0 / (Math.PI * Math.PI * Math.PI), 0.25);
-        norm2 = norm1 / Math.sqrt(3);
-        norm3 = norm1 / Math.sqrt(15);
+        norm1 = 5.701643762839922;  //Math.pow(32768.0 / (Math.PI * Math.PI * Math.PI), 0.25);
+        norm2 = 3.2918455612989796; //norm1 / Math.sqrt(3);
+        norm3 = 1.4721580892990938; //norm1 / Math.sqrt(15);
       }
 
     } else {
@@ -860,6 +866,7 @@ public class MOCalculation extends QuantumCalculation implements
     // TODO:  Check if norm4 should be -1 for all programs
     
     double norm1, norm2, norm3, norm4;
+        
     if (doNormalize) {
       if (nwChemMode) {
         norm3 = getContractionNormalization(3, 1);
@@ -867,9 +874,9 @@ public class MOCalculation extends QuantumCalculation implements
         norm1 = norm3 * Math.sqrt(15);
         norm4 = -1;
       } else {
-        norm1 = Math.pow(32768.0 / (Math.PI * Math.PI * Math.PI), 0.25);
-        norm2 = norm1 / Math.sqrt(3);
-        norm3 = norm1 / Math.sqrt(15);
+        norm1 = 5.701643762839922;  //Math.pow(32768.0 / (Math.PI * Math.PI * Math.PI), 0.25);
+        norm2 = 3.2918455612989796; //norm1 / Math.sqrt(3);
+        norm3 = 1.4721580892990938; //norm1 / Math.sqrt(15);
         // norm4 verified for Gaussian using CeO2.log 
         norm4 = 1;
       }
@@ -879,19 +886,19 @@ public class MOCalculation extends QuantumCalculation implements
     }
 
     // Linear combination coefficients for the various Cartesian gaussians
-    final double c0_xxz_yyz = (3.0 / (2.0 * Math.sqrt(5)));
+    final double c0_xxz_yyz = 0.6708203932499369; //(3.0 / (2.0 * Math.sqrt(5)));
 
-    final double c1p_xzz = Math.sqrt(6.0 / 5.0);
-    final double c1p_xxx = Math.sqrt(3.0 / 8.0);
-    final double c1p_xyy = Math.sqrt(3.0 / 40.0);
+    final double c1p_xzz = 1.0954451150103321; //Math.sqrt(6.0 / 5.0);
+    final double c1p_xxx = 0.6123724356957945; //Math.sqrt(3.0 / 8.0);
+    final double c1p_xyy = 0.27386127875258304; //Math.sqrt(3.0 / 40.0);
     final double c1n_yzz = c1p_xzz;
     final double c1n_yyy = c1p_xxx;
     final double c1n_xxy = c1p_xyy;
 
-    final double c2p_xxz_yyz = Math.sqrt(3.0 / 4.0);
+    final double c2p_xxz_yyz = 0.8660254037844386; //Math.sqrt(3.0 / 4.0);
 
-    final double c3p_xxx = Math.sqrt(5.0 / 8.0);
-    final double c3p_xyy = 0.75f * Math.sqrt(2);
+    final double c3p_xxx = 0.7905694150420949; //Math.sqrt(5.0 / 8.0);
+    final double c3p_xyy = 1.0606601717798214; //0.75 * Math.sqrt(2);
     final double c3n_yyy = c3p_xxx;
     final double c3n_xxy = c3p_xyy;
 
@@ -1173,13 +1180,15 @@ public class MOCalculation extends QuantumCalculation implements
           + nGaussians + " atom=" + atomIndex);
       doShowShellType = false;
     }
-    if (Logger.isActiveLevel(Logger.LEVEL_DEBUGHIGH))
+    if (Logger.isActiveLevel(Logger.LEVEL_DEBUGHIGH) && gaussianPtr != lastGaussianPtr) {
+      lastGaussianPtr  = gaussianPtr;
       for (int ig = 0; ig < nGaussians; ig++) {
         double alpha = gaussians[gaussianPtr + ig][0];
         double c1 = gaussians[gaussianPtr + ig][1];
         Logger.debug("\t\t\tGaussian " + (ig + 1) + " alpha=" + alpha + " c="
             + c1);
       }
+    }
     String[] so = getShellOrder(shell);
       for (int i = 0; i < map.length; i++) {
         int n = map[i] + moCoeff - map.length + i + 1;

@@ -410,6 +410,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     jvxlData.dataMax = dataMax;
     jvxlData.cutoff = (isJvxl ? jvxlCutoff : params.cutoff);
     jvxlData.isCutoffAbsolute = params.isCutoffAbsolute;
+    jvxlData.isModelConnected = params.isModelConnected;
     jvxlData.pointsPerAngstrom = 1f / volumeData.volumetricVectorLengths[0];
     jvxlData.jvxlColorData = "";
     jvxlData.jvxlPlane = params.thePlane;

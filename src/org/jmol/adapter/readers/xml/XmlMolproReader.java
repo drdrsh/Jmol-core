@@ -22,49 +22,67 @@
  */
 package org.jmol.adapter.readers.xml;
 
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-
 import javajs.util.PT;
 
 /**
  * A Molpro 2005 reader
  */
+public class XmlMolproReader extends XmlMOReader {
 
-public class XmlMolproReader extends XmlCmlReader {
+//  String[] myAttributes = { "id", "length", "type", //general
+//      "x3", "y3", "z3", "elementType", //atoms
+//      "name", //variable
+//      "groups", "cartesianLength", "primitives", // basisSet and
+//      "minL", "maxL", "angular", "contractions", //   basisGroup
+//      "wavenumber", "units", // normalCoordinate
+//      "minl", "maxl", "angular", // basisSet.basisGroup
+//      "href", // association.bases
+//      "occupation", "energy", "symmetryID", // orbital 
+//  };
 
-  AtomSetCollectionReader orbitalReader;
-  
-  String[] myAttributes = { "id", "length", "type", //general
-      "x3", "y3", "z3", "elementType", //atoms
-      "name", //variable
-      "groups", "cartesianLength", "primitives", // basisSet and
-      "minL", "maxL", "angular", "contractions", //   basisGroup
-      "occupation", "energy", "symmetryID", // orbital 
-      "wavenumber", "units", // normalCoordinate
-  };
-  
   public XmlMolproReader() {  
+    // These lists are for the nonstandard paramter order for Molpro. 
+    // We used them to create a coefficient map rather than actually
+    // moving any coefficients. In this case, we end up with:
+    
+    // D-spherical: [0, 1, 2, 0, -3]
+    // D-cartesian: [0, 0, 0, 0, 0, 0]
+    // F-spherical: [2, -1, -1, 3, 0, -2, -1]
+    // F-cartesian: [0, 0, 0, 2, -1, -1, 1, 1, -2, 0]
+      
+    dslist = "d0 d2- d1+ d2+ d1-";
+    fclist = "XXX YYY ZZZ XXY XXZ XYY YYZ XZZ YZZ XYZ";
+    fslist = "f1+ f1- f0 f3+ f2- f3- f2+";
+    
+    // For example, Jmol expects:  "d0 d1+ d1- d2+ d2-"
+    // but we have here:           "d0 d2- d1+ d2+ d1-"
+    // so the relative shifts are: [0, 1,  2,  0,  -3]
+
+    iHaveCoefMaps = true;
   }
   
+//  @Override
+//  protected String[] getDOMAttributes() {
+//    return myAttributes;
+//  }
+  
   @Override
-  protected String[] getDOMAttributes() {
-    return myAttributes;
-  }
-
-  @Override
-  public void processStartElement(String localName) {
+  public void processStartElement(String localName, String nodeName) {
     if (!processing)
       return;
     processStart2(localName);
-    if (localName.equalsIgnoreCase("normalCoordinate")) {
-      keepChars = false;
+    if (processStartMO(localName))
+      return;
+    if (localName.equals("normalcoordinate")) {
+      setKeepChars(false);
       if (!parent.doGetVibration(++vibrationNumber))
         return;
       try {
         asc.cloneLastAtomSet();
       } catch (Exception e) {
         System.out.println("" + e);
-        asc.errorMessage = "Error processing normalCoordinate: " + e.getMessage();
+        asc.errorMessage = "Error processing normalCoordinate: "
+            + e.getMessage();
         vibrationNumber = 0;
         return;
       }
@@ -77,7 +95,7 @@ public class XmlMolproReader extends XmlCmlReader {
             units = "cm^-1";
         }
         asc.setAtomSetFrequency(null, null, wavenumber, units);
-        keepChars = true;
+        setKeepChars(true);
       }
       return;
     }
@@ -90,7 +108,9 @@ public class XmlMolproReader extends XmlCmlReader {
 
   @Override
   void processEndElement(String localName) {
-    if (localName.equalsIgnoreCase("normalCoordinate")) {
+    if (processEndMO(localName))
+      return;
+    if (localName.equals("normalcoordinate")) {
       if (!keepChars)
         return;
       int ac = asc.getLastAtomSetAtomCount();
@@ -98,13 +118,13 @@ public class XmlMolproReader extends XmlCmlReader {
       tokens = PT.getTokens(chars);
       for (int offset = tokens.length - ac * 3, i = 0; i < ac; i++) {
         asc.addVibrationVector(i + baseAtomIndex,
-            parseFloatStr(tokens[offset++]),
-            parseFloatStr(tokens[offset++]),
-            parseFloatStr(tokens[offset++])
-        );
+            parseFloatStr(tokens[offset++]), parseFloatStr(tokens[offset++]),
+            parseFloatStr(tokens[offset++]));
       }
     }
     processEnd2(localName);
   }
+  
+
 
 }

@@ -266,6 +266,7 @@ public class JvxlCoder {
     int bytesUncompressedEdgeData = (vertexDataOnly ? 0
         : jvxlData.jvxlEdgeData.length() - 1);
     int nColorData = (jvxlData.jvxlColorData == null ? -1 : (jvxlData.jvxlColorData.length() - 1));
+    addAttrib(attribs, "\n  isModelConnected", "" + jvxlData.isModelConnected);
     if (!vertexDataOnly) {
       // informational only:
       addAttrib(attribs, "\n  cutoff", "" + jvxlData.cutoff);

@@ -90,7 +90,7 @@ class AtomPropertyMapper extends AtomDataReader {
       maxDistance = 5; // usually just local to a group
     //if (maxDistance == Integer.MAX_VALUE && calcType != params.mep_calcType)
       //maxDistance = 5; // max distance just for mep 
-    getAtoms(params.bsSelected, doAddHydrogens, true, false, false, true, false, Float.NaN);
+    getAtoms(params.bsSelected, doAddHydrogens, true, false, false, true, false, Float.NaN, null);
     if (meshDataServer != null)
       meshDataServer.fillMeshData(meshData, MeshData.MODE_GET_VERTICES, null);
     if (!doSmoothProperty && meshData.vertexSource != null) {

@@ -698,11 +698,11 @@ public class NWChemReader extends MOReader {
     nBasisFunctions = 0;
     boolean isD6F10 = (line.indexOf("cartesian") >= 0);
     if (isD6F10) {
-      getDFMap(DC_LIST, QS.DC, CANONICAL_DC_LIST, 3);
-      getDFMap(FC_LIST, QS.FC, CANONICAL_FC_LIST, 3);
+      getDFMap(DC_LIST, QS.DC, QS.CANONICAL_DC_LIST, 3);
+      getDFMap(FC_LIST, QS.FC, QS.CANONICAL_FC_LIST, 3);
     } else {
-      getDFMap(DS_LIST, QS.DS, CANONICAL_DS_LIST, 2);
-      getDFMap(FS_LIST, QS.FS, CANONICAL_FS_LIST, 2);
+      getDFMap(DS_LIST, QS.DS, QS.CANONICAL_DS_LIST, 2);
+      getDFMap(FS_LIST, QS.FS, QS.CANONICAL_FS_LIST, 2);
     }
     shells = new  Lst<int[]>();
     Map<String, Lst<Lst<Object[]>>> atomInfo = new Hashtable<String, Lst<Lst<Object[]>>>();

@@ -62,15 +62,15 @@ public class XmlArgusReader extends XmlReader {
   public XmlArgusReader() {
   }
 
+//  @Override
+//  protected String[] getDOMAttributes() {
+//    return new String[] { 
+//        "order" //, bond
+//    };
+//  }
+//
   @Override
-  protected String[] getDOMAttributes() {
-    return new String[] { 
-        "order" //, bond
-    };
-  }
-
-  @Override
-  public void processStartElement(String localName) {
+  public void processStartElement(String localName, String nodeName) {
     //System.out.println("open " + localName);
     for (int i = keepCharsList.length; --i >= 0;)
       if (keepCharsList[i].equals(localName)) {

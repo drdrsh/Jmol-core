@@ -35,25 +35,25 @@ import org.jmol.util.Logger;
 
 public class XmlMagResReader extends XmlReader {
 
-  private String[] myAttributes = new String[]{ /* XML tag attributes of interest here */};
+//  private String[] myAttributes = new String[]{ /* XML tag attributes of interest here */};
   
   public XmlMagResReader() {
   }
   
-  @Override
-  protected String[] getDOMAttributes() {
-    return myAttributes;
-  }
+//  @Override
+//  protected String[] getDOMAttributes() {
+//    return myAttributes;
+//  }
 
   @Override
   protected void processXml(XmlReader parent,
                             Object saxReader) throws Exception {
     parent.doProcessLines = true;
-    PX(parent, saxReader);
+    processXml2(parent, saxReader);
   }
 
   @Override
-  public void processStartElement(String localName) {
+  public void processStartElement(String localName, String nodeName) {
     if (debugging) 
       Logger.debug("xmlmagres: start " + localName);
 
@@ -61,12 +61,11 @@ public class XmlMagResReader extends XmlReader {
       return;
 
     if ("calculation".equals(localName)) {
-      keepChars = true;
+      setKeepChars(true);
       return;
-    }
-        
+    }        
     if ("atoms".equals(localName)) {
-      keepChars = true;
+      setKeepChars(true);
       return;
     }
 
@@ -95,8 +94,7 @@ public class XmlMagResReader extends XmlReader {
       
       return;
     }
-    chars = null;
-    keepChars = false;
+    setKeepChars(false);
   }
 
 }

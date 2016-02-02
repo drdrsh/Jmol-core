@@ -62,30 +62,30 @@ import java.util.Map;
  *
  **/
 
- /* NBO output analysis is based on
-  * 
- *********************************** NBO 5.G ***********************************
-             N A T U R A L   A T O M I C   O R B I T A L   A N D
-          N A T U R A L   B O N D   O R B I T A L   A N A L Y S I S
- *******************************************************************************
-  (c) Copyright 1996-2004 Board of Regents of the University of Wisconsin System
-      on behalf of the Theoretical Chemistry Institute.  All Rights Reserved.
-
-          Cite this program as:
-
-          NBO 5.G.  E. D. Glendening, J. K. Badenhoop, A. E. Reed,
-          J. E. Carpenter, J. A. Bohmann, C. M. Morales, and F. Weinhold
-          (Theoretical Chemistry Institute, University of Wisconsin,
-          Madison, WI, 2001); http://www.chem.wisc.edu/~nbo5
-
-       /AONBO  / : Print the AO to NBO transformation
-  * 
-  */
-abstract class MOReader extends BasisFunctionReader {
+// NBO output analysis is based on
+//  
+// *********************************** NBO 5.G ***********************************
+//             N A T U R A L   A T O M I C   O R B I T A L   A N D
+//          N A T U R A L   B O N D   O R B I T A L   A N A L Y S I S
+// *******************************************************************************
+//  (c) Copyright 1996-2004 Board of Regents of the University of Wisconsin System
+//      on behalf of the Theoretical Chemistry Institute.  All Rights Reserved.
+//
+//          Cite this program as:
+//
+//          NBO 5.G.  E. D. Glendening, J. K. Badenhoop, A. E. Reed,
+//          J. E. Carpenter, J. A. Bohmann, C. M. Morales, and F. Weinhold
+//          (Theoretical Chemistry Institute, University of Wisconsin,
+//          Madison, WI, 2001); http://www.chem.wisc.edu/~nbo5
+//
+//       /AONBO  / : Print the AO to NBO transformation
+//  
+//  
+public class MOReader extends BasisFunctionReader {
     
-  protected int shellCount = 0;
-  protected int gaussianCount = 0;
-  protected float[][] gaussians;
+  public int shellCount = 0;
+  public int gaussianCount = 0;
+  public float[][] gaussians;
   protected String energyUnits = "";
   
   protected Lst<String> moTypes;
@@ -95,6 +95,9 @@ abstract class MOReader extends BasisFunctionReader {
   protected boolean haveNboOrbitals;
   protected boolean orbitalsRead;
 
+  private Map<String, Object> lastMoData;
+  protected boolean allowNoOrbitals;
+  
   final protected int HEADER_GAMESS_UK_MO = 3;
   final protected int HEADER_GAMESS_OCCUPANCIES = 2;
   final protected int HEADER_GAMESS_ORIGINAL = 1;
@@ -290,7 +293,7 @@ abstract class MOReader extends BasisFunctionReader {
 
   private static final String FS_LIST =  "(F1)  (F2)  (F3)  (F4)  (F5)  (F6)  (F7)";
   
-  private static String FC_LIST  =       "(F1)  (F2)  (F10) (F4)  (F2)  (F3)  (F6)  (F9)  (F8)  F(5)";
+  private static String FC_LIST  =       "(F1)  (F2)  (F10) (F4)  (F2)  (F3)  (F6)  (F9)  (F8)  (F5)";
 
   // inferred from GenNBO, which is: 301 302 303 304 305 306 307 308 309 310
   //       for xxx xxy xxz xyy xyz xzz yyy yyz yzz zzz
@@ -360,7 +363,7 @@ abstract class MOReader extends BasisFunctionReader {
             isOK = getDFMap(pCoeffLabels, QS.P, P_LIST, 4);
           if (dCoeffLabels.length() > 0) {
             if (dCoeffLabels.indexOf("X") >= 0)
-              isOK = getDFMap(dCoeffLabels, QS.DC, CANONICAL_DC_LIST, 2);
+              isOK = getDFMap(dCoeffLabels, QS.DC, QS.CANONICAL_DC_LIST, 2);
             else if (dCoeffLabels.indexOf("(D6)") >= 0)
               isOK = getDFMap(dCoeffLabels, QS.DC, DC_LIST, 4);
             else
@@ -368,7 +371,7 @@ abstract class MOReader extends BasisFunctionReader {
           }
           if (fCoeffLabels.length() > 0) {
             if (fCoeffLabels.indexOf("X") >= 0)
-              isOK = getDFMap(fCoeffLabels, QS.FC, CANONICAL_FC_LIST, 2);
+              isOK = getDFMap(fCoeffLabels, QS.FC, QS.CANONICAL_FC_LIST, 2);
             else if (fCoeffLabels.indexOf("(F10)") >= 0)
               isOK = getDFMap(fCoeffLabels, QS.FC, FC_LIST, 5);
             else
@@ -394,9 +397,7 @@ abstract class MOReader extends BasisFunctionReader {
             iCoeff++;
           }
           haveMOs = true;
-          mos[iMo].put("coefficients", coefs);
-          moCount = setMOType(mos[iMo], moCount);
-          setMO(mos[iMo]);
+          addCoef(mos[iMo], coefs, null, Float.NaN, Float.NaN, moCount++);
         }
         nThisLine = 0;
         if (line.length() == 0)
@@ -478,19 +479,24 @@ abstract class MOReader extends BasisFunctionReader {
     dfCoefMaps = null;
   }
   
-  private int iMo0 = 1;
-  
-  protected int setMOType(Map<String, Object> mo, int i) {
+  public void addCoef(Map<String, Object> mo, float[] coefs, String type, float energy, float occ, int moCount) {
+    mo.put("coefficients", coefs);
     if (moTypes != null) {
-      String s = moTypes.get(i % moTypes.size());
-      i++;
-      mo.put("type", s);
-      mo.put("occupancy", Float.valueOf(s.indexOf("*") >= 0 ? 0 : 2));
+      type = moTypes.get(moCount % moTypes.size());
+      occ = (type.indexOf("*") >= 0 ? 0 : 2);
     } else if (alphaBeta.length() > 0) {
-      mo.put("type", alphaBeta);
+      type = alphaBeta;
     } 
-    return i;
+    if (type != null)
+      mo.put("type", type);
+    if (!Float.isNaN(energy))
+      mo.put("energy", Float.valueOf(energy));
+    if (!Float.isNaN(occ))
+      mo.put("occupancy", Float.valueOf(occ));
+    setMO(mo);
   }
+
+  private int iMo0 = 1;
   
   protected void getMOHeader(int headerType, String[] tokens, Map<String, Object>[] mos, int nThisLine)
       throws Exception {
@@ -544,10 +550,7 @@ abstract class MOReader extends BasisFunctionReader {
     }
   }
 
-  private Map<String, Object> lastMoData;
-  protected boolean allowNoOrbitals;
-  
-  protected void setMOData(boolean clearOrbitals) {
+  public void setMOData(boolean clearOrbitals) {
     if (shells != null && gaussians != null && (allowNoOrbitals || orbitals.size() != 0)) {
       moData.put("calculationType", calculationType);
       moData.put("energyUnits", energyUnits);

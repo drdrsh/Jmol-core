@@ -359,7 +359,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
 
     if ("moveIsosurface" == propertyName) {
-      if (thisMesh != null) {
+      if (thisMesh != null && !thisMesh.isModelConnected) {
         thisMesh.updateCoordinates((M4) value, null);
         thisMesh.altVertices = null;
       }
@@ -592,6 +592,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       value = vwr.getOutputChannel((String) value, null);
       propertyName = "outputChannel";
     } else if ("molecularOrbital" == propertyName) {
+      isFixed = false;
+      setMeshI();
       if (value instanceof Integer) {
         moNumber = ((Integer) value).intValue();
         moLinearCombination = null;
@@ -601,6 +603,14 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       }
       if (!isColorExplicit)
         isPhaseColored = true;
+      if (sg == null || !sg.params.isMapped) {
+        M4 mat4 =  ms.am[currentMesh.modelIndex].mat4;
+        if (mat4 != null) {
+          M4 minv = M4.newM4(mat4);
+          minv.invert();
+          setPropI("modelInvRotation", minv, null);
+        }
+      }
     } else if ("phase" == propertyName) {
       isPhaseColored = true;
     } else if ("plane" == propertyName) {
@@ -636,8 +646,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     // surface Export3D only (return TRUE) or shared (return FALSE)
 
     if (sg != null && sg.setProp(propertyName, value, bs)) {
-      if (sg.isValid)
+      if (sg.isValid) {
+        if ("molecularOrbital" == propertyName) {
+          currentMesh.isModelConnected = true;
+          currentMesh.mat4 = ms.am[currentMesh.modelIndex].mat4;          
+        }
         return;
+      }
       propertyName = "delete";
     }
 
@@ -1029,7 +1044,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     String id = myType + " ID " + PT.esc(imesh.thisID);
     if (imesh.jvxlData.thisSet >= 0)
       appendCmd(sb, id + " set " + (imesh.jvxlData.thisSet + 1));
-    if (imesh.mat4 != null)
+    if (imesh.mat4 != null && !imesh.isModelConnected)
       appendCmd(sb, id + " move " + Escape.matrixToScript(imesh.mat4));
     if (imesh.scale3d != 0)
       appendCmd(sb, id + " scale3d " + imesh.scale3d);
@@ -1466,6 +1481,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     setMeshI();
     setBsVdw();
     thisMesh.insideOut = sg.isInsideOut();
+    thisMesh.isModelConnected = sg.params.isModelConnected;
     thisMesh.vertexSource = sg.params.vertexSource;
     thisMesh.spanningVectors = sg.getSpanningVectors();
     thisMesh.calculatedArea = null;

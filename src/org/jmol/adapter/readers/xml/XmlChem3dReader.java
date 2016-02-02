@@ -47,27 +47,27 @@ public class XmlChem3dReader extends XmlReader {
   public XmlChem3dReader() {
   }
 
-  @Override
-  protected String[] getDOMAttributes() {
-    return new String[] { "id", //general 
-      "symbol", "cartCoords", //atoms
-      "bondAtom1", "bondAtom2", "bondOrder", //bond
-      "gridDatXDim", "gridDatYDim", "gridDatZDim",    
-      "gridDatXSize", "gridDatYSize", "gridDatZSize",    
-      "gridDatOrigin", "gridDatData",   // grid cube data
-      "calcPartialCharges", "calcAtoms" // electronicStructureCalculation 
-    };
-  }
+//  @Override
+//  protected String[] getDOMAttributes() {
+//    return new String[] { "id", //general 
+//      "symbol", "cartCoords", //atoms
+//      "bondAtom1", "bondAtom2", "bondOrder", //bond
+//      "gridDatXDim", "gridDatYDim", "gridDatZDim",    
+//      "gridDatXSize", "gridDatYSize", "gridDatZSize",    
+//      "gridDatOrigin", "gridDatData",   // grid cube data
+//      "calcPartialCharges", "calcAtoms" // electronicStructureCalculation 
+//    };
+//  }
   
   @Override
   protected void processXml(XmlReader parent,
                             Object saxReader) throws Exception {
-    PX(parent, saxReader);
+    processXml2(parent, saxReader);
     finalizeMOData(moData);
   }
 
   @Override
-  public void processStartElement(String localName) {
+  public void processStartElement(String localName, String nodeName) {
     String[] tokens;
     //System.out.println("xmlchem3d: start " + localName);
     if ("model".equals(localName)) {
@@ -79,8 +79,8 @@ public class XmlChem3dReader extends XmlReader {
       atom = new Atom();
       atom.atomName = atts.get("id");
       atom.elementSymbol = atts.get("symbol");
-      if (atts.containsKey("cartCoords")) {
-        String xyz = atts.get("cartCoords");
+      if (atts.containsKey("cartcoords")) {
+        String xyz = atts.get("cartcoords");
         tokens = PT.getTokens(xyz);
         atom.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]),
             parseFloatStr(tokens[2]));
@@ -88,36 +88,36 @@ public class XmlChem3dReader extends XmlReader {
       return;
     }
     if ("bond".equals(localName)) {
-      String atom1 = atts.get("bondAtom1");
-      String atom2 = atts.get("bondAtom2");
+      String atom1 = atts.get("bondatom1");
+      String atom2 = atts.get("bondatom2");
       int order = 1;
-      if (atts.containsKey("bondOrder"))
-        order = parseIntStr(atts.get("bondOrder"));
+      if (atts.containsKey("bondorder"))
+        order = parseIntStr(atts.get("bondorder"));
       asc.addNewBondFromNames(atom1, atom2, order);
       return;
     }
 
-    if ("electronicStructureCalculation".equalsIgnoreCase(localName)) {
-      tokens = PT.getTokens(atts.get("calcPartialCharges"));
-      String[] tokens2 = PT.getTokens(atts.get("calcAtoms"));
+    if ("electronicstructurecalculation".equals(localName)) {
+      tokens = PT.getTokens(atts.get("calcpartialcharges"));
+      String[] tokens2 = PT.getTokens(atts.get("calcatoms"));
       for (int i = parseIntStr(tokens[0]); --i >= 0;)
         asc.mapPartialCharge(tokens2[i + 1],
             parseFloatStr(tokens[i + 1]));
     }
 
-    if ("gridData".equalsIgnoreCase(localName)) {
-      int nPointsX = parseIntStr(atts.get("gridDatXDim"));
-      int nPointsY = parseIntStr(atts.get("gridDatYDim"));
-      int nPointsZ = parseIntStr(atts.get("gridDatZDim"));
-      float xStep = parseFloatStr(atts.get("gridDatXSize")) / (nPointsX);
-      float yStep = parseFloatStr(atts.get("gridDatYSize")) / (nPointsY);
-      float zStep = parseFloatStr(atts.get("gridDatZSize")) / (nPointsZ);
-      tokens = PT.getTokens(atts.get("gridDatOrigin"));
+    if ("griddata".equals(localName)) {
+      int nPointsX = parseIntStr(atts.get("griddatxdim"));
+      int nPointsY = parseIntStr(atts.get("griddatyxim"));
+      int nPointsZ = parseIntStr(atts.get("griddatzdim"));
+      float xStep = parseFloatStr(atts.get("griddatxsize")) / (nPointsX);
+      float yStep = parseFloatStr(atts.get("griddatyzize")) / (nPointsY);
+      float zStep = parseFloatStr(atts.get("griddatzsize")) / (nPointsZ);
+      tokens = PT.getTokens(atts.get("griddatorigin"));
       float ox = parseFloatStr(tokens[0]);
       float oy = parseFloatStr(tokens[1]);
       float oz = parseFloatStr(tokens[2]);
 
-      tokens = PT.getTokens(atts.get("gridDatData"));
+      tokens = PT.getTokens(atts.get("griddatdata"));
       int pt = 1;
       float[][][] voxelData = new float[nPointsX][nPointsY][nPointsZ];
 
@@ -189,8 +189,7 @@ public class XmlChem3dReader extends XmlReader {
       atom = null;
       return;
     }
-    keepChars = false;
-    chars = null;
+    setKeepChars(false);
   }
 
 }

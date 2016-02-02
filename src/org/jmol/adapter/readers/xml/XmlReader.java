@@ -91,7 +91,7 @@ import org.jmol.util.Logger;
 public class XmlReader extends AtomSetCollectionReader {
 
   protected Atom atom;
-  protected String[] domAttributes;
+  //protected String[] domAttributes;
   protected XmlReader parent; // XmlReader itself; to be assigned by the subReader
   public Map<String, String> atts;
 
@@ -99,6 +99,10 @@ public class XmlReader extends AtomSetCollectionReader {
 
   @Override
   public void initializeReader() throws Exception {
+    initCML();
+  }
+
+  protected void initCML() {
     atts = new Hashtable<String, String>();
     setMyError(parseXML());
     continuing = false;
@@ -166,16 +170,16 @@ public class XmlReader extends AtomSetCollectionReader {
    */
   protected void processXml(XmlReader parent, Object saxReader)
       throws Exception {
-    PX(parent, saxReader);
+    processXml2(parent, saxReader);
   }
 
-  protected void PX(XmlReader parent, Object saxReader) throws Exception {
+  protected void processXml2(XmlReader parent, Object saxReader) throws Exception {
     this.parent = parent;
     asc = parent.asc;
     reader = parent.reader;
     atts = parent.atts;
     if (saxReader == null) {
-      domAttributes = getDOMAttributes();
+      //domAttributes = getDOMAttributes();
       attribs = new Object[1];
       attArgs = new Object[1];
       domObj = new Object[1];
@@ -220,13 +224,14 @@ public class XmlReader extends AtomSetCollectionReader {
     @SuppressWarnings("unused")
     Object applet = parent.vwr.html5Applet;
     /**
+     * note that there is no need to actually load it into the document
      * 
      * @j2sNative
      * 
-      id = applet._id + "_" + id;
-      var d = document.getElementById(id);
-      if (d)
-        document.body.removeChild(d);
+     // id = applet._id + "_" + id;
+     // var d = document.getElementById(id);
+     // if (d)
+     //   document.body.removeChild(d);
       if (!data)
         return;
       if (data.indexOf("<?") == 0)
@@ -249,11 +254,8 @@ public class XmlReader extends AtomSetCollectionReader {
         }
         data = D.join('');
       }
-      d = document.createElement("_xml");
-      d.id = id;
+      var d = document.createElement("_xml");
       d.innerHTML = data;
-      d.style.display = "none";
-      document.body.appendChild(d);
       return d;
      * 
      */
@@ -284,18 +286,19 @@ public class XmlReader extends AtomSetCollectionReader {
     setMyError(selectReaderAndGo(null));
   }
 
-  protected String[] getDOMAttributes() {
-    // different subclasses will implement this differently
-    return new String[] { "id" };
-  }
+//  protected String[] getDOMAttributes() {
+//    // different subclasses will implement this differently
+//    return new String[] { "id" };
+//  }
 
   ////////////////////////////////////////////////////////////////
 
   /**
    * 
    * @param localName
+   * @param nodeName TODO
    */
-  protected void processStartElement(String localName) {
+  protected void processStartElement(String localName, String nodeName) {
     /* 
      * specific to each xml reader
      */
@@ -341,32 +344,31 @@ public class XmlReader extends AtomSetCollectionReader {
     /**
      * @j2sNative
      * 
+     * localName = "nodeName";
      * 
-     *            localName = this.jsObjectGetMember(this.domObj, "nodeName").toLowerCase();
-     *            localName = localName.substring(localName.lastIndexOf(":") + 1);
      */
     {
-      localName = ((String) jsObjectGetMember(domObj, "localName"))
-          .toLowerCase();
-      //namespaceURI = (String) jsObjectGetMember(DOMNodeObj, "namespaceURI");
-      //qName = (String) jsObjectGetMember(DOMNodeObj, "nodeName");
-      if (localName == null)
-        return;
+      localName = "localName";
     }
+    String nodeName = ((String) jsObjectGetMember(domObj, localName));
+    localName = fixLocal(nodeName);
+    if (localName == null)
+      return;
     if (localName.equals("#text")) {
       if (keepChars)
         chars = (String) jsObjectGetMember(domObj, "data");
       return;
     }
+    localName = localName.toLowerCase();
+    nodeName = nodeName.toLowerCase();
     attribs[0] = jsObjectGetMember(domObj, "attributes");
     getDOMAttributesA(attribs);
-    processStartElement(localName);
+    processStartElement(localName, nodeName);
     boolean haveChildren;
     /**
      * @j2sNative
      * 
-     *            haveChildren = this.jsObjectCall(this.domObj, "hasChildNodes",
-     *            null);
+     *            haveChildren = this.domObj[0].hasChildNodes;
      * 
      */
     {
@@ -385,45 +387,79 @@ public class XmlReader extends AtomSetCollectionReader {
     processEndElement(localName);
   }
 
-  private void getDOMAttributesA(Object[] attributes) {
-    atts.clear();
-    if (attributes == null) {
-      return;
+  private String fixLocal(String name) {
+    /**
+     * @j2sNative
+     * 
+     *            var pt = (name== null ? -1 : name.indexOf(":")); return (pt >=
+     *            0 ? name.substring(pt+1) : name);
+     */
+    {
+      return name;
     }
+  }
 
-    // load up only the implemented attributes
+  private void getDOMAttributesA(Object[] attributes) {
+    
+    atts.clear();
+    if (attributes == null)
+      return;
 
     /**
      * @j2sNative
      * 
-     *            if (!this.jsObjectGetMember(attributes, "length")) return;
+     * 
+     *            var nodes = attributes[0]; for (var i = nodes.length; --i >=
+     *            0;) { var key = this.fixLocal(nodes[i].name);
+     *            this.atts.put(key.toLowerCase(), nodes[i].value); }
+     *            return;
+     * 
+     * 
      * 
      */
     {
-      Number n = (Number) jsObjectGetMember(attributes, "length");
-      if (n == null || Integer.parseInt(n.toString()) == 0)
-        return;
-    }
-    String name;
-    for (int i = domAttributes.length; --i >= 0;) {
-      attArgs[0] = name = domAttributes[i];
-      Object att = jsObjectCall(attributes, "getNamedItem", attArgs);
-      if (att != null) {
-        attArgs[0] = att;
-        String attValue = (String) jsObjectGetMember(attArgs, "value");
-        if (attValue != null)
-          atts.put(name, attValue);
+      
+      // Java only -- no longer loading only specific values
+      
+      Number N = (Number) jsObjectGetMember(attributes, "length");
+      int n  = (N == null ? 0 : N.intValue());
+      for (int i = n; --i >= 0;) {
+        attArgs[0] = Integer.valueOf(i);
+        attArgs[0] = jsObjectCall(attributes, "item", attArgs);
+        if (attArgs[0] != null) {
+          String attValue = (String) jsObjectGetMember(attArgs, "value");
+          if (attValue != null)
+            atts.put(((String) jsObjectGetMember(attArgs, "name")).toLowerCase(), attValue);
+        }
       }
     }
   }
 
+  /**
+   * @j2sIgnore
+   * 
+   * @param jsObject
+   * @param method
+   * @param args
+   * @return object
+   */
   private Object jsObjectCall(Object[] jsObject, String method, Object[] args) {
+    {
     return parent.vwr.apiPlatform.getJsObjectInfo(jsObject, method,
         args == null ? nullObj : args);
+    }
   }
 
   private Object jsObjectGetMember(Object[] jsObject, String name) {
+    /**
+     * @j2sNative
+     * 
+     * return jsObject[0][name]; 
+     * 
+     */
+    {
     return parent.vwr.apiPlatform.getJsObjectInfo(jsObject, name, null);
+    }
   }
 
   public void endDocument() {

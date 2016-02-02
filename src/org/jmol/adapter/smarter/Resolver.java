@@ -50,7 +50,7 @@ public class Resolver {
     "more.", ";BinaryDcd;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
                  "Molden;MopacGraphf;GenNBO;NWChem;Odyssey;Psi;Qchem;Spartan;SpartanSmol;" +
-                 "WebMO;",
+                 "WebMO;MO;", // MO is for XmlMolpro 
     "pdb.", ";Pdb;Pqr;P2n;JmolData;",
     "pymol.", ";PyMOL;",
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;", 
@@ -104,7 +104,6 @@ public class Resolver {
                                         Object bufferedReader,
                                         Map<String, Object> htParams, int ptFile)
       throws Exception {
-    AtomSetCollectionReader rdr = null;
     String readerName;
     fullName = FileManager.fixDOSName(fullName);
     String errMsg = null;
@@ -144,6 +143,17 @@ public class Resolver {
       htParams.put("readerName", readerName);
     if (readerName.indexOf("Xml") == 0)
       readerName = "Xml";
+    return getReader(readerName, htParams);
+  }
+
+  /**
+   * Get a reader based on its name.
+   * @param readerName
+   * @param htParams
+   * @return AtomSetCollectionReader or error message 
+   */
+  public static Object getReader(String readerName, Map<String, Object> htParams) {
+    AtomSetCollectionReader rdr = null;
     String className = null;
     String err = null;
     className = getReaderClassBase(readerName);
@@ -180,28 +190,19 @@ public class Resolver {
    * a largely untested reader of the DOM - where in a browser there is model
    * actually in XML format already present on the page. -- Egon Willighagen
    * 
-   * @param DOMNode
    * @param htParams
    * @return an AtomSetCollection or a String error
    * @throws Exception
    */
-  static Object DOMResolve(Object DOMNode, Map<String, Object> htParams)
+  public static Object DOMResolve(Map<String, Object> htParams)
       throws Exception {
-    String className = null;
-    AtomSetCollectionReader rdr;
     String rdrName = getXmlType((String) htParams
         .get("nameSpaceInfo"));
     if (Logger.debugging) {
       Logger.debug("The Resolver thinks " + rdrName);
     }
     htParams.put("readerName", rdrName);
-    className = classBase + "xml.XmlReader";
-    if ((rdr = (AtomSetCollectionReader) Interface
-        .getInterface(className, (Viewer) htParams.get("vwr"), "file")) != null)
-      return rdr;
-    String err = "File reader was not found:" + className;
-    Logger.error(err);
-    return err;
+    return getReader("XmlReader", htParams);
   }
 
   private static final String CML_NAMESPACE_URI = "http://www.xml-cml.org/schema";

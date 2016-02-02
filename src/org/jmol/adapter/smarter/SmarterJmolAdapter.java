@@ -343,7 +343,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
   @Override
   public Object getAtomSetCollectionFromDOM(Object DOMNode, Map<String, Object> htParams) {
     try {
-      Object ret = Resolver.DOMResolve(DOMNode, htParams);
+      Object ret = Resolver.DOMResolve(htParams);
       if (!(ret instanceof AtomSetCollectionReader))
         return ret;
       AtomSetCollectionReader a = (AtomSetCollectionReader) ret;

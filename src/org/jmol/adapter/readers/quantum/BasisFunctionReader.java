@@ -43,7 +43,7 @@ import java.util.Map;
  */
 abstract class BasisFunctionReader extends AtomSetCollectionReader {
 
-  protected Lst<int[]> shells;
+  public Lst<int[]> shells;
 
   protected Map<String, Object> moData = new Hashtable<String, Object>();
   protected Lst<Map<String, Object>> orbitals = new  Lst<Map<String, Object>>();
@@ -113,54 +113,8 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
       return (ea < eb ? -1 : ea > eb ? 1 : 0);
     }
   }
-  // Jmol's ordering is based on GAUSSIAN
-  
-        
-  // We don't modify the coefficients at read time, only create a 
-  // map to send to MOCalculation. 
 
-  // DS: org.jmol.quantum.MOCalculation expects 
-  //   d2z^2-x2-y2, dxz, dyz, dx2-y2, dxy
-  
-  // DC: org.jmol.quantum.MOCalculation expects 
-  //      Dxx Dyy Dzz Dxy Dxz Dyz
-  
-  // FS: org.jmol.quantum.MOCalculation expects
-  //        as 2z3-3x2z-3y2z
-  //               4xz2-x3-xy2
-  //                   4yz2-x2y-y3
-  //                           x2z-y2z
-  //                               xyz
-  //                                  x3-3xy2
-  //                                     3x2y-y3
-
-  // FC: org.jmol.quantum.MOCalculation expects
-  //           xxx yyy zzz xyy xxy xxz xzz yzz yyz xyz
-
-  // These strings are the equivalents found in the file in Jmol order.
-  // DO NOT CHANGE THESE. They are in the order the MOCalculate expects. 
-  // Subclassed readers can make their own to match. 
-    
-  
-  protected static String CANONICAL_DC_LIST = "DXX   DYY   DZZ   DXY   DXZ   DYZ";
-  protected static String CANONICAL_FC_LIST = "XXX   YYY   ZZZ   XYY   XXY   XXZ   XZZ   YZZ   YYZ   XYZ";
-  
-  protected static String CANONICAL_DS_LIST = "d0    d1+   d1-   d2+   d2-";
-  protected static String CANONICAL_FS_LIST = "f0    f1+   f1-   f2+   f2-   f3+   f3-";
-
-  /* Molden -- same as Gaussian, so no need to map these:
-  5D: D 0, D+1, D-1, D+2, D-2
-  6D: xx, yy, zz, xy, xz, yz
-
-  7F: F 0, F+1, F-1, F+2, F-2, F+3, F-3
- 10F: xxx, yyy, zzz, xyy, xxy, xxz, xzz, yzz, yyz, xyz
-
-  9G: G 0, G+1, G-1, G+2, G-2, G+3, G-3, G+4, G-4
- 15G: xxxx yyyy zzzz xxxy xxxz yyyx yyyz zzzx zzzy,
-      xxyy xxzz yyzz xxyz yyxz zzxy
-  */
-  
-
+ 
   /**
    * 
    * finds the position in the Jmol-required list of function types. This list is
@@ -176,40 +130,17 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
   protected boolean getDFMap(String fileList, int shellType, String jmolList, int minLength) {
    if (fileList.equals(jmolList))
       return true;
-
-    
-    // say we had line = "251   252   253   254   255"  i  points here
-    // Jmol expects list "255   252   253   254   251"  pt points here
-    // we need an array that reads
-    //                    [4     0     0     0    -4]
-    // meaning add that number to the pointer for this coef.
    getDfCoefMaps();
-    String[] tokens = PT.getTokens(fileList);
-    boolean isOK = true;
-    for (int i = 0; i < dfCoefMaps[shellType].length && isOK; i++) {
-      String key = tokens[i];
-      if (key.length() >= minLength) {
-        int pt = jmolList.indexOf(key);
-        if (pt >= 0) {
-          pt /= 6;
-          dfCoefMaps[shellType][pt] = i - pt;
-          continue;
-        }
-      }
-      isOK = false;
-    }
-    if (!isOK) {
+   boolean isOK = QS.createDFMap(dfCoefMaps[shellType], fileList, jmolList, minLength);
+    if (!isOK)
       Logger.error("Disabling orbitals of type " + shellType + " -- Cannot read orbital order for: " + fileList + "\n expecting: " + jmolList);
-      dfCoefMaps[shellType][0] = Integer.MIN_VALUE;
-      //throw new NullPointerException("TESTING MO READER");
-    }
     return isOK;
   }
 
   protected int nCoef;
 
-  protected int[][] getDfCoefMaps() {
-    return (dfCoefMaps == null ? (dfCoefMaps = BasisFunctionReader.getNewDfCoefMap()) : dfCoefMaps);
+  public int[][] getDfCoefMaps() {
+    return (dfCoefMaps == null ? (dfCoefMaps = QS.getNewDfCoefMap()) : dfCoefMaps);
   }
 
   final protected static String canonicalizeQuantumSubshellTag(String tag) {
@@ -251,8 +182,6 @@ abstract class BasisFunctionReader extends AtomSetCollectionReader {
   public static String getQuantumShellTag(int id) {
     return QS.getQuantumShellTag(id);
   }
-
-  public final static int[][] getNewDfCoefMap() { return QS.getNewDfCoefMap(); }
 
   @Override
   protected void discardPreviousAtoms() {

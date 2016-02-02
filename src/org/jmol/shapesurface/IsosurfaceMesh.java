@@ -976,7 +976,8 @@ public class IsosurfaceMesh extends Mesh {
 
   /**
    * 
-   * bs will be null if this is a set from the new isosurface MOVE [mat4] command
+   * bs will be null if this is a set from the new isosurface MOVE [mat4]
+   * command
    * 
    * @param m
    * @param bs
@@ -991,10 +992,13 @@ public class IsosurfaceMesh extends Mesh {
         }
     if (!doUpdate)
       return;
-
-    if (mat4 == null)
-      mat4 = M4.newM4(null);
-    mat4.mul2(m, mat4);
+    if (isModelConnected) {
+      mat4 = vwr.ms.am[modelIndex].mat4;
+    } else {
+      if (mat4 == null)
+        mat4 = M4.newM4(null);
+      mat4.mul2(m, mat4);
+    }
     recalcAltVertices = true;
   }
 

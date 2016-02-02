@@ -40,25 +40,25 @@ public class XmlOdysseyReader extends XmlReader {
   private String formula = null;
   private String phase = null;
   
-  private String[] myAttributes = { "id", "label", //general 
-      "xyz", "element", "hybrid", //atoms
-      "a", "b", "order", //bond
-      "charge", // group 
-      "entity", // member
-      "box" // boundary
-  };
+//  private String[] myAttributes = { "id", "label", //general 
+//      "xyz", "element", "hybrid", //atoms
+//      "a", "b", "order", //bond
+//      "charge", // group 
+//      "entity", // member
+//      "box" // boundary
+//  };
   private int formalCharge = Integer.MIN_VALUE;
 
   public XmlOdysseyReader() {
   }
 
-  @Override
-  protected String[] getDOMAttributes() {
-    return myAttributes;
-  }
+//  @Override
+//  protected String[] getDOMAttributes() {
+//    return myAttributes;
+//  }
 
   @Override
-  protected void processStartElement(String localName) {
+  protected void processStartElement(String localName, String nodeName) {
 
     if ("structure".equals(localName)) {
       asc.newAtomSet();
@@ -139,7 +139,7 @@ public class XmlOdysseyReader extends XmlReader {
     }
     if ("title".equals(localName) || "formula".equals(localName)
         || "phase".equals(localName))
-      keepChars = true;
+      setKeepChars(true);
   }
 
   private int parseBondToken(String str) {
@@ -177,8 +177,7 @@ public class XmlOdysseyReader extends XmlReader {
     } else if ("phase".equals(localName)) {
       phase = chars;
     }
-    keepChars = false;
-    chars = null;
+    setKeepChars(false);
   }
 
 }

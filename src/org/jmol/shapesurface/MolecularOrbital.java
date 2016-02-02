@@ -30,7 +30,6 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.M4;
 import javajs.util.P4;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -336,7 +335,7 @@ public class MolecularOrbital extends Isosurface {
       int thisMO = index;
       int currentMO = moNumber;
       boolean isShowCurrent = (thisMO == Integer.MIN_VALUE);
-      if (thisMO == Integer.MAX_VALUE)
+      if (isShowCurrent)
         thisMO = currentMO;
       if (nOrb == 0 || isShowCurrent && currentMO == 0)
         return "";
@@ -500,16 +499,8 @@ public class MolecularOrbital extends Isosurface {
     setPropI("title", moTitleFormat, null);
     setPropI("fileName", vwr.fm.getFileName(), null);
     currentMesh.modelIndex = modelIndex;
-    currentMesh.isModelConnected = true;
-    M4 mat4 =  ms.am[currentMesh.modelIndex].mat4;
-    if (mat4 != null) {
-      M4 minv = M4.newM4(mat4);
-      minv.invert();
-      setPropI("modelInvRotation", minv, null);
-    }
     setPropI("molecularOrbital", linearCombination == null ? Integer
         .valueOf(moNumber) : linearCombination, null);
-    currentMesh.mat4 = mat4;
     if (moPlane != null && moColorNeg != null)
       setPropI("colorRGB", moColorNeg, null);
     if (moPlane != null && moColorPos != null)

@@ -115,17 +115,16 @@ package org.jmol.atomdata;
 
 
 
-import org.jmol.java.BS;
-
 import javajs.util.P3;
+
+import org.jmol.java.BS;
 
 
 
 public class AtomData {
   public AtomData() {
   }
- 
-  
+   
   public final static int MODE_FILL_MODEL = 0;
   public final static int MODE_FILL_COORDS = 1;
   public final static int MODE_FILL_RADII = 2;

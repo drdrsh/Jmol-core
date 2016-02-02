@@ -49,38 +49,38 @@ public class XmlQEReader extends XmlReader {
   //private float beta;
   //private float gamma;
   
-  private String[] myAttributes = { "SPECIES", "TAU" };
-  
-  @Override
-  protected String[] getDOMAttributes() {
-    return myAttributes;
-  }
+//  private String[] myAttributes = { "SPECIES", "TAU" };
+//  
+//  @Override
+//  protected String[] getDOMAttributes() {
+//    return myAttributes;
+//  }
 
   @Override
   protected void processXml(XmlReader parent,
                             Object saxReader) throws Exception {
     parent.doProcessLines = true;
-    PX(parent, saxReader);
+    processXml2(parent, saxReader);
   }
 
   @Override
-  public void processStartElement(String localName) {
+  public void processStartElement(String localName, String nodeName) {
     if (debugging)
       Logger.debug("xmlqe: start " + localName);
 
     if (!parent.continuing)
       return;
 
-    if ("NUMBER_OF_ATOMS".equalsIgnoreCase(localName)
-        || "CELL_DIMENSIONS".equalsIgnoreCase(localName)
-        || "AT".equalsIgnoreCase(localName)) {
-      keepChars = true;
+    if ("number_of_atoms".equals(localName)
+        || "cell_dimensions".equals(localName)
+        || "at".equals(localName)) {
+      setKeepChars(true);
       return;
     }
 
-    if (localName.startsWith("ATOM.")) {
-      parent.setAtomCoordScaled(null, PT.getTokens(atts.get("TAU")), 0,
-          ANGSTROMS_PER_BOHR).elementSymbol = atts.get("SPECIES").trim();
+    if (localName.startsWith("atom.")) {
+      parent.setAtomCoordScaled(null, PT.getTokens(atts.get("tau")), 0,
+          ANGSTROMS_PER_BOHR).elementSymbol = atts.get("species").trim();
     }
     if ("structure".equals(localName)) {
       if (!parent.doGetModel(++parent.modelNumber, null)) {
@@ -113,7 +113,7 @@ public class XmlQEReader extends XmlReader {
 //        break;
 //      }
 
-      if ("CELL_DIMENSIONS".equalsIgnoreCase(localName)) {
+      if ("cell_dimensions".equals(localName)) {
         parent.setFractionalCoordinates(true);
         float[] data = getTokensFloat(chars, null, 6);
         a = data[0];
@@ -125,7 +125,7 @@ public class XmlQEReader extends XmlReader {
         break;
       }
 
-      if ("AT".equalsIgnoreCase(localName)) {
+      if ("at".equals(localName)) {
         // probably wrong -- only cubic
         float[] m = getTokensFloat(chars, null, 9);
         for (int i = 0; i < 9; i += 3) {
@@ -139,7 +139,7 @@ public class XmlQEReader extends XmlReader {
         break;
       }
 
-      if ("GEOMETRY_INFO".equalsIgnoreCase(localName)) {
+      if ("geometry_info".equals(localName)) {
         try {
           parent.applySymmetryAndSetTrajectory();
         } catch (Exception e) {
@@ -150,8 +150,7 @@ public class XmlQEReader extends XmlReader {
 
       return;
     }
-    chars = null;
-    keepChars = false;
+    setKeepChars(false);
   }
 
 }

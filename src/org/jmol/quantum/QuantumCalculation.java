@@ -24,14 +24,13 @@
 package org.jmol.quantum;
 
 
+import javajs.util.P3;
+import javajs.util.T3;
+
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.T3;
 
 
 abstract class QuantumCalculation {
@@ -114,8 +113,8 @@ abstract class QuantumCalculation {
 
   protected void setupCoordinates(float[] originXYZ, float[] stepsXYZ,
                                   BS bsSelected,
-                                  T3[] atomCoordAngstroms,
-                                  T3[] points, boolean renumber, M4 modelInvRotation) {
+                                  T3[] atomCoordAngstroms, T3[] atoms,
+                                  T3[] points, boolean renumber) {
     
     // all coordinates come in as angstroms, not bohr, and are converted here into bohr
 
@@ -147,8 +146,8 @@ abstract class QuantumCalculation {
       int i0 = (isAll ? qmAtoms.length - 1 : bsSelected.nextSetBit(0));
       for (int i = i0, j = 0; i >= 0; i = (isAll ? i - 1 : bsSelected
           .nextSetBit(i + 1)))
-        qmAtoms[renumber ? j++ : i] = new QMAtom(i, (Atom) atomCoordAngstroms[i],
-            X, Y, Z, X2, Y2, Z2, unitFactor, modelInvRotation);
+        qmAtoms[renumber ? j++ : i] = new QMAtom(i, atomCoordAngstroms[i], (Atom) atoms[i],
+            X, Y, Z, X2, Y2, Z2, unitFactor);
     }
   }
 

@@ -118,6 +118,7 @@ public class JvxlData {
   public boolean isBicolorMap;
   public boolean isTruncated;
   public boolean isCutoffAbsolute;
+  public boolean isModelConnected;
   public boolean vertexDataOnly;
   public float mappedDataMin;
   public float mappedDataMax;

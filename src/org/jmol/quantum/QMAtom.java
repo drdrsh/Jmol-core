@@ -25,11 +25,11 @@
 
 package org.jmol.quantum;
 
+import javajs.util.P3;
+import javajs.util.T3;
+
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
-
-import javajs.util.M4;
-import javajs.util.P3;
 
 class QMAtom extends P3 {
 
@@ -50,7 +50,8 @@ class QMAtom extends P3 {
    * @j2sOverride
    * 
    * @param i
-   * @param atom
+   * @param xyz
+   * @param atom 
    * @param X
    * @param Y
    * @param Z
@@ -58,10 +59,9 @@ class QMAtom extends P3 {
    * @param Y2
    * @param Z2
    * @param unitFactor
-   * @param modelRotation 
    */
-  QMAtom(int i, Atom atom, float[] X, float[] Y, float[] Z, 
-      float[] X2, float[] Y2, float[] Z2, float unitFactor, M4 modelInvRotation) {
+  QMAtom(int i, T3 xyz, Atom atom, float[] X, float[] Y, float[] Z, 
+      float[] X2, float[] Y2, float[] Z2, float unitFactor) {
     index = i;
     myX = X;
     myY = Y;
@@ -69,12 +69,10 @@ class QMAtom extends P3 {
     myX2 = X2;
     myY2 = Y2;
     myZ2 = Z2;
-    this.atom = atom;
+    this.atom = (atom == null ? (Atom) xyz : atom);
     
     //this.isExcluded = isExcluded;
-    setT(atom);
-    if (modelInvRotation != null)
-      modelInvRotation.rotTrans(this);
+    setT(xyz);
     scale(unitFactor);
     znuc = atom.getElementNumber();
   }

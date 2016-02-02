@@ -92,7 +92,7 @@ class IsoIntersectReader extends AtomDataReader {
       bsSelected.or(bsB);
       doUseIterator = true; // just means we want a map
       getAtoms(bsSelected, doAddHydrogens, true, true, false, false, false,
-          Float.NaN);      
+          Float.NaN, null);      
       for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1))
         myBsA.set(myIndex[i]);
       for (int i = bsB.nextSetBit(0); i >= 0; i = bsB.nextSetBit(i + 1))

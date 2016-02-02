@@ -214,7 +214,8 @@ public class JvxlXmlReader extends VolumeFileReader {
       Logger.info("JVXL read: cutoff " + jvxlCutoff);
     int nContourData = parseIntStr(XmlReader.getXmlAttrib(data, "nContourData"));
     haveContourData = (nContourData > 0);
-    params.isContoured = XmlReader.getXmlAttrib(data, "contoured").equals("true");
+    params.isContoured = jvxlData.isModelConnected = XmlReader.getXmlAttrib(data, "contoured").equals("true");
+    params.isModelConnected = XmlReader.getXmlAttrib(data, "isModelConnected").equals("true");
     if (params.isContoured) {
       int nContoursRead = parseIntStr(XmlReader.getXmlAttrib(data, "nContours"));
       if (nContoursRead <= 0) {

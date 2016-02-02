@@ -788,12 +788,6 @@ public class IsoExt extends ScriptExt {
         }
         nboType = paramAsStr(++i).toUpperCase(); 
         break;
-      case T.move: // Jmol 14.5.1 -- required for state saving after coordinate-based translate/rotate
-        propertyName = "moveIsosurface";
-        if (tokAt(++i) != T.matrix4f)
-          invArg();
-        propertyValue = getToken(i++).value;
-        break;
       case T.cap:
       case T.slab:
         propertyName = (String) eval.theToken.value;
@@ -1028,8 +1022,8 @@ public class IsoExt extends ScriptExt {
     }
     Lst<Map<String, Object>> mos = null;
     Map<String, Object> mo;
-    Float f;
     int nOrb = 0;
+    Float f = null;
     if (lc == null || lc.length < 2) {
       if (lc != null && lc.length == 1)
         offset = 0;
@@ -1052,7 +1046,7 @@ public class IsoExt extends ScriptExt {
         if (moData.containsKey("HOMO")) {
           moNumber = ((Integer) moData.get("HOMO")).intValue() + offset;
         } else {
-          moNumber = -1;
+          moNumber = nOrb;
           for (int i = 0; i < nOrb; i++) {
             mo = mos.get(i);
             if ((f = (Float) mo.get("occupancy")) != null) {
@@ -1072,11 +1066,12 @@ public class IsoExt extends ScriptExt {
             }
             break;
           }
-          if (moNumber < 0)
+          if (f == null)
             error(ScriptError.ERROR_moOccupancy);
           moNumber += offset;
         }
-        Logger.info("MO " + moNumber);
+        if (!chk)
+          Logger.info("MO " + moNumber);
       }
       if (moNumber < 1 || moNumber > nOrb)
         eval.errorStr(ScriptError.ERROR_moIndex, "" + nOrb);
@@ -1214,6 +1209,8 @@ public class IsoExt extends ScriptExt {
         // offset, rotate, and scale3d don't need to be saved in sbCommand
         // because they are display properties
       case T.move: // Jmol 13.0.RC2 -- required for state saving after coordinate-based translate/rotate
+        // but this will not work for MO calculations, which have to be
+        // generated in their original atom-based frame
         propertyName = "moveIsosurface";
         if (tokAt(++i) != T.matrix4f)
           invArg();

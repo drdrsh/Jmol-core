@@ -25,17 +25,13 @@ package org.jmol.jvxl.readers;
 
 import java.util.Date;
 
-import org.jmol.util.BSUtil;
-import org.jmol.util.ContactPair;
-import org.jmol.util.Logger;
-
 import javajs.util.AU;
-import javajs.util.SB;
+import javajs.util.M4;
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
-
 
 import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.RadiusData;
@@ -44,6 +40,9 @@ import org.jmol.c.VDW;
 import org.jmol.java.BS;
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.MeshData;
+import org.jmol.util.BSUtil;
+import org.jmol.util.ContactPair;
+import org.jmol.util.Logger;
 
 abstract class AtomDataReader extends VolumeDataReader {
 
@@ -65,6 +64,7 @@ abstract class AtomDataReader extends VolumeDataReader {
   protected AtomData atomData = new AtomData();
 
   protected P3[] atomXyz;
+  protected P3[] atoms;
   protected float[] atomRadius;
   protected float[] atomProp;
   protected int[] atomNo;
@@ -129,7 +129,7 @@ abstract class AtomDataReader extends VolumeDataReader {
           * params.steps.y, (params.points.z - 1) * params.steps.z);
     } else if (params.boundingBox == null) {
       getAtoms(params.bsSelected, false, true, false, false, false, false,
-          params.mep_marginAngstroms);
+          params.mep_marginAngstroms, params.modelInvRotation);
       if (xyzMin == null) {
         xyzMin = P3.new3(-10, -10, -10);
         xyzMax = P3.new3(10, 10, 10);
@@ -151,11 +151,12 @@ abstract class AtomDataReader extends VolumeDataReader {
    * @param addNearbyAtoms
    * @param getAtomMinMax
    * @param marginAtoms
+   * @param modelInvRotation 
    */
   protected void getAtoms(BS bsSelected, boolean doAddHydrogens,
                           boolean getRadii, boolean getMolecules,
                           boolean getAllModels, boolean addNearbyAtoms,
-                          boolean getAtomMinMax, float marginAtoms) {
+                          boolean getAtomMinMax, float marginAtoms, M4 modelInvRotation) {
     if (addNearbyAtoms)
       getRadii = true;
     // set atomRadiusData to 100% if it has not been set already
@@ -253,8 +254,17 @@ abstract class AtomDataReader extends VolumeDataReader {
         myAtomCount++;
       }
     }
+    atoms = atomXyz;
     firstNearbyAtom = myAtomCount;
     Logger.info(myAtomCount + " atoms will be used in the surface calculation");
+    if (modelInvRotation != null) {
+      P3[] p = new P3[atomXyz.length];
+      for (int i = p.length; --i >= 0;) {
+        p[i] = P3.newP(atomXyz[i]);
+        modelInvRotation.rotTrans(p[i]);
+      }
+      atomXyz = p;
+    }
 
     if (myAtomCount == 0) {
       setBBox(P3.new3(10, 10, 10), 0);

@@ -4,11 +4,10 @@ package org.jmol.api;
 
 
 
-import org.jmol.java.BS;
-
 import javajs.util.Lst;
-import javajs.util.M4;
 import javajs.util.T3;
+
+import org.jmol.java.BS;
 
 
 public interface MOCalculationInterface {
@@ -18,6 +17,7 @@ public interface MOCalculationInterface {
                                            BS[] bsMolecules,
                                            String calculationType,
                                            T3[] atomCoordAngstroms,
+                                           T3[] atoms,
                                            int firstAtomOffset,
                                            Lst<int[]> shells,
                                            float[][] gaussians,
@@ -28,7 +28,7 @@ public interface MOCalculationInterface {
                                            float[][] coefs,
                                            float[] partialCharges,
                                            boolean doNormalize, T3[] points,
-                                           float[] parameters, int testFlags, M4 modelInvRotation);
+                                           float[] parameters, int testFlags);
   
   public abstract void createCube();
   public abstract float processPt(T3 pt);

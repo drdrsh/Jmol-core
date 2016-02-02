@@ -26,26 +26,22 @@ package org.jmol.jvxl.readers;
 import java.util.Map;
 import java.util.Random;
 
-
-
-
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M4;
 import javajs.util.Measure;
+import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.T3;
-
-import org.jmol.quantum.QS;
-import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
-
-import javajs.util.P3;
 import javajs.util.V3;
+
 import org.jmol.api.Interface;
 import org.jmol.api.MOCalculationInterface;
 import org.jmol.api.QuantumPlaneCalculationInterface;
 import org.jmol.jvxl.data.VolumeData;
+import org.jmol.quantum.QS;
+import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 class IsoMOReader extends AtomDataReader {
 
@@ -82,17 +78,19 @@ class IsoMOReader extends AtomDataReader {
     setup2();
     doAddHydrogens = false;
     getAtoms(params.bsSelected, doAddHydrogens, !isNci, isNci, isNci, false,
-        false, params.qm_marginAngstroms);
-    if (isNci)
+        false, params.qm_marginAngstroms, (isNci ? null : params.modelInvRotation));
+    String className;
+    if (isNci) {
+      className = "quantum.NciCalculation";
       setHeader(
           "NCI (promolecular)",
           "see NCIPLOT: A Program for Plotting Noncovalent Interaction Regions, Julia Contreras-Garcia, et al., J. of Chemical Theory and Computation, 2011, 7, 625-632");
-    else
+    } else {
+      className = "quantum.MOCalculation";
       setHeader("MO", "calculation type: "
           + params.moData.get("calculationType"));
+    }
     setRanges(params.qm_ptsPerAngstrom, params.qm_gridMax, 0);
-    String className = (isNci ? "quantum.NciCalculation"
-        : "quantum.MOCalculation");
     if (haveVolumeData) {
       for (int i = params.title.length; --i >= 0;)
         fixTitleLine(i, mo);
@@ -152,17 +150,16 @@ class IsoMOReader extends AtomDataReader {
       if (nboType != null)
         line = PT.rep(line, " MO ", " " + nboType + " ");
     }
-    if (line.indexOf("%M") > 0)
+    if (line.indexOf("%M") >= 0)
       line = params.title[iLine] = PT.formatStringS(line, "M", atomData.modelName);
-    if (line.indexOf("%F") > 0)
-      line = params.title[iLine] = PT.formatStringS(line, "F",
-          atomData.fileName);
+    if (line.indexOf("%F") >= 0)
+      line = params.title[iLine] = PT.formatStringS(line, "F", PT.rep(params.fileName, "DROP_", ""));
     int pt = line.indexOf("%");
     if (line.length() == 0 || pt < 0)
       return;
     int rep = 0;
-    if (line.indexOf("%F") >= 0)
-      line = PT.formatStringS(line, "F", params.fileName);
+//    if (line.indexOf("%F") >= 0)
+  //    line = PT.formatStringS(line, "F", params.fileName);
     if (line.indexOf("%I") >= 0)
       line = PT.formatStringS(line, "I",
           params.qm_moLinearCombination == null ? "" + params.qm_moNumber
@@ -352,28 +349,27 @@ class IsoMOReader extends AtomDataReader {
   @SuppressWarnings("unchecked")
   private boolean setupCalculation() {
     qSetupDone = true;
-    M4 mat = params.modelInvRotation;
     switch (params.qmOrbitalType) {
     case Parameters.QM_TYPE_VOLUME_DATA:
       break;
     case Parameters.QM_TYPE_GAUSSIAN:
       return q.setupCalculation(volumeData, bsMySelected, null, null, (String) params.moData
                       .get("calculationType"),
-          atomData.atomXyz, atomData.firstAtomIndex, (Lst<int[]>) params.moData.get("shells"), (float[][]) params.moData
+          atomXyz, atoms, atomData.firstAtomIndex, (Lst<int[]>) params.moData.get("shells"), (float[][]) params.moData
                           .get("gaussians"), dfCoefMaps, null,
           coef, linearCombination, params.isSquaredLinear, coefs,
-          null, params.moData.get("isNormalized") == null, points, params.parameters, params.testFlags, mat);
+          null, params.moData.get("isNormalized") == null, points, params.parameters, params.testFlags);
     case Parameters.QM_TYPE_SLATER:
       return q.setupCalculation(volumeData, bsMySelected, null, null, (String) params.moData
                       .get("calculationType"),
-          atomData.atomXyz, atomData.firstAtomIndex, null, null, null, params.moData.get("slaters"),
+          atomXyz, atoms, atomData.firstAtomIndex, null, null, null, params.moData.get("slaters"),
           coef, linearCombination, params.isSquaredLinear, coefs, 
-          null, true, points, params.parameters, params.testFlags, mat);
+          null, true, points, params.parameters, params.testFlags);
     case Parameters.QM_TYPE_NCI_PRO:
       return q.setupCalculation(volumeData, bsMySelected, params.bsSolvent,
-          atomData.bsMolecules, null, atomData.atomXyz, atomData.firstAtomIndex, null, null,
+          atomData.bsMolecules, null, atomData.atomXyz, atoms, atomData.firstAtomIndex, null, null,
           null, null, null, null, params.isSquaredLinear, null,
-          null, true, points, params.parameters, params.testFlags, mat);
+          null, true, points, params.parameters, params.testFlags);
     }
     return false;
   }

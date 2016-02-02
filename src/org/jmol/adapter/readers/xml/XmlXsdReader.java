@@ -47,47 +47,47 @@ public class XmlXsdReader extends XmlReader {
   private int iGroup = 0;
   private int iAtom = 0;
   
-  @Override
-  protected String[] getDOMAttributes() {
-    return new String[] { "ID", //general 
-        "XYZ", "Connections", "Components", "IsBackboneAtom",//Atom3d
-        "Connects", "Type", //Bond
-        "Name", //LinearChain
-    };
-  }
+//  @Override
+//  protected String[] getDOMAttributes() {
+//    return new String[] { "ID", //general 
+//        "XYZ", "Connections", "Components", "IsBackboneAtom",//Atom3d
+//        "Connects", "Type", //Bond
+//        "Name", //LinearChain
+//    };
+//  }
 
   @Override
   protected void processXml(XmlReader parent,
                             Object saxReader) throws Exception {
     parent.htParams.put("backboneAtoms", bsBackbone);
-    PX(parent, saxReader);
+    processXml2(parent, saxReader);
     asc.atomSymbolicMap.clear(); 
   }
 
   @Override
-  public void processStartElement(String localName) {
+  public void processStartElement(String localName, String nodeName) {
     String[] tokens;
     //System.out.println( " " + localName + " " + atts);
     //System.out.println("xmlchem3d: start " + localName);
-    if ("Molecule".equalsIgnoreCase(localName)) {
+    if ("molecule".equals(localName)) {
       asc.newAtomSet();
-      asc.setAtomSetName(atts.get("Name"));      
+      asc.setAtomSetName(atts.get("name"));      
       return;
     }
     
-    if ("LinearChain".equalsIgnoreCase(localName)) {
+    if ("linearchain".equals(localName)) {
       iGroup = 0;
       iChain++;
     }
 
-    if ("RepeatUnit".equalsIgnoreCase(localName)) {
+    if ("repeatunit".equals(localName)) {
       iGroup++;
     }
 
-    if ("Atom3d".equalsIgnoreCase(localName)) {
+    if ("atom3d".equals(localName)) {
       atom = new Atom();
-      atom.elementSymbol = atts.get("Components");
-      atom.atomName = atts.get("ID");
+      atom.elementSymbol = atts.get("components");
+      atom.atomName = atts.get("id");
       atom.atomSerial = ++iAtom;
       if (iChain >= 0)
         parent.setChainID(atom, "" + (char) ((iChain - 1)%26 + 'A'));
@@ -95,21 +95,21 @@ public class XmlXsdReader extends XmlReader {
       if (iGroup == 0)
         iGroup = 1;
       atom.sequenceNumber = iGroup;
-      String xyz = atts.get("XYZ");
+      String xyz = atts.get("xyz");
       if (xyz != null) {
         tokens = PT.getTokens(xyz.replace(',',' '));
         atom.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]), parseFloatStr(tokens[2]));
       }
-      boolean isBackbone = "1".equals(atts.get("IsBackboneAtom"));
+      boolean isBackbone = "1".equals(atts.get("isbackboneatom"));
       if (isBackbone)
         bsBackbone.set(iAtom);
       return;
     }
-    if ("Bond".equalsIgnoreCase(localName)) {
-      String[] atoms = PT.split(atts.get("Connects"), ",");
+    if ("bond".equals(localName)) {
+      String[] atoms = PT.split(atts.get("connects"), ",");
       int order = 1;
-      if (atts.containsKey("Type")) {
-        String type = atts.get("Type");
+      if (atts.containsKey("type")) {
+        String type = atts.get("type");
         if (type.equals("Double"))
           order = 2;
         else if (type.equals("Triple"))
@@ -122,7 +122,7 @@ public class XmlXsdReader extends XmlReader {
 
   @Override
   void processEndElement(String localName) {
-    if ("Atom3d".equalsIgnoreCase(localName)) {
+    if ("atom3d".equalsIgnoreCase(localName)) {
       if (atom.elementSymbol != null && !Float.isNaN(atom.z)) {
         parent.setAtomCoord(atom);
         asc.addAtomWithMappedName(atom);
@@ -130,8 +130,7 @@ public class XmlXsdReader extends XmlReader {
       atom = null;
       return;
     }
-    keepChars = false;
-    chars = null;
+    setKeepChars(false);
   }
 
 }

@@ -1129,6 +1129,11 @@ public class SurfaceGenerator {
     return null;
   }
 
+  /**
+   * @param vwr  
+   * @param value 
+   * @return SurfaceReader
+   */
   @SuppressWarnings("unchecked")
   private SurfaceReader setFileData(Viewer vwr, Object value) {
     // comes from "readFile" or "mapColors"

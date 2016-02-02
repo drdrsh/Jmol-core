@@ -163,6 +163,7 @@ public class Mesh extends MeshSurface {
     frontOnly = false;
     havePlanarContours = false;
     haveXyPoints = false;
+    isModelConnected = false;
     isTriangleSet = false;
     isTwoSided = false;
     lattice = null;

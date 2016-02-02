@@ -35,7 +35,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * a SAX handler
+ * a SAX handler -- Java only
  */
 
 public class XmlHandler extends DefaultHandler {
@@ -102,15 +102,14 @@ public class XmlHandler extends DefaultHandler {
     // I only realized this recently when I wrote the JavaScript swingjs.JSSAXParser
     // code and tested it against javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser().
     //
-    
     xmlReader.atts.clear();
     for (int i = attributes.getLength(); --i >= 0;)
-      xmlReader.atts.put(attributes.getLocalName(i), attributes.getValue(i));
+      xmlReader.atts.put(attributes.getLocalName(i).toLowerCase(), attributes.getValue(i));
     if (Logger.debugging) {
       debugContext += " " + localName;
       Logger.debug(debugContext);
     }
-    xmlReader.processStartElement(localName);
+    xmlReader.processStartElement(localName.toLowerCase(), nodeName.toLowerCase());
   }
 
   @Override
@@ -119,7 +118,7 @@ public class XmlHandler extends DefaultHandler {
       Logger.debug("");
       debugContext = debugContext.substring(0, debugContext.lastIndexOf(" "));
     }
-    xmlReader.processEndElement(localName);
+    xmlReader.processEndElement(localName.toLowerCase());
   }
 
   @Override

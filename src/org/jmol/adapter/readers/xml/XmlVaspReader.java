@@ -51,25 +51,25 @@ public class XmlVaspReader extends XmlReader {
   private boolean isE_fr_energy = false;
   private String enthalpy = null;
   private String gibbsEnergy = null;
-  private String[] myAttributes = { "name" }; 
+//  private String[] myAttributes = { "name" }; 
   
   public XmlVaspReader() {
   }
   
-  @Override
-  protected String[] getDOMAttributes() {
-    return myAttributes;
-  }
+//  @Override
+//  protected String[] getDOMAttributes() {
+//    return myAttributes;
+//  }
 
   @Override
   protected void processXml(XmlReader parent,
                             Object saxReader) throws Exception {
     parent.doProcessLines = true;
-    PX(parent, saxReader);
+    processXml2(parent, saxReader);
   }
 
   @Override
-  public void processStartElement(String localName) {
+  public void processStartElement(String localName, String nodeName) {
     if (debugging) 
       Logger.debug("xmlvasp: start " + localName);
 
@@ -88,7 +88,7 @@ public class XmlVaspReader extends XmlReader {
         return;
       isE_wo_entrp = s.equals("e_wo_entrp");
       isE_fr_energy = s.equals("e_fr_energy");
-      keepChars = (isE_wo_entrp || isE_fr_energy);
+      setKeepChars(isE_wo_entrp || isE_fr_energy);
       return;
     }
 
@@ -115,12 +115,12 @@ public class XmlVaspReader extends XmlReader {
       return;
     
     if ("v".equals(localName)) {
-      keepChars = (data != null);
+      setKeepChars(data != null);
       return;
     }
 
     if ("c".equals(localName)) {
-      keepChars = (iAtom < ac);
+      setKeepChars(iAtom < ac);
       return;
     }
 
@@ -132,7 +132,7 @@ public class XmlVaspReader extends XmlReader {
     }
 
     if ("atoms".equals(localName)) {
-      keepChars = true;
+      setKeepChars(true);
       return;
     }
     
@@ -252,8 +252,7 @@ public class XmlVaspReader extends XmlReader {
       
       return;
     }
-    chars = null;
-    keepChars = false;
+    setKeepChars(false);
   }
 
 }

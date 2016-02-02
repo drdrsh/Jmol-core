@@ -196,6 +196,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
         g3d.setC(C.getColixTranslucent3(C.BLACK, true, 0.5f));
       return true;
     }
+    if (mesh.isModelConnected)
+      mesh.mat4 = ms.am[mesh.modelIndex].mat4;
     vertices = (mesh.scale3d == 0 && mesh.mat4 == null ? mesh.vs : mesh.getOffsetVertices(thePlane));
     if (mesh.lineData == null) {
       // not a draw 
