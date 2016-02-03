@@ -33,7 +33,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
 
-abstract class QuantumCalculation {
+abstract public class QuantumCalculation {
 
   protected boolean doDebug = false;
   protected BS bsExcluded;
@@ -111,11 +111,23 @@ abstract class QuantumCalculation {
 
   protected float volume = 1;
 
+
+  /**
+   * 
+   * @param originXYZ
+   * @param stepsXYZ
+   * @param bsSelected
+   * @param xyz
+   *        full T3[] array -- may be transformed coordinates of Atom[]
+   * @param atoms
+   *        for debugging only -- full Atom[] array
+   * @param points
+   * @param renumber
+   */
   protected void setupCoordinates(float[] originXYZ, float[] stepsXYZ,
-                                  BS bsSelected,
-                                  T3[] atomCoordAngstroms, T3[] atoms,
+                                  BS bsSelected, T3[] xyz, Atom[] atoms,
                                   T3[] points, boolean renumber) {
-    
+
     // all coordinates come in as angstroms, not bohr, and are converted here into bohr
 
     if (points == null) {
@@ -125,30 +137,25 @@ abstract class QuantumCalculation {
         stepBohr[i] = stepsXYZ[i] * unitFactor;
         volume *= stepBohr[i];
       }
-      Logger.info("QuantumCalculation:"
-          + "\n origin = " + Escape.eAF(originXYZ) 
-          + "\n steps = " + Escape.eAF(stepsXYZ)
-          + "\n origin(Bohr)= " + Escape.eAF(originBohr) 
-          + "\n steps(Bohr)= " + Escape.eAF(stepBohr)
-          + "\n counts= " + nX + " " + nY + " " + nZ);
+      Logger.info("QuantumCalculation:" + "\n origin = "
+          + Escape.eAF(originXYZ) + "\n steps = " + Escape.eAF(stepsXYZ)
+          + "\n origin(Bohr)= " + Escape.eAF(originBohr) + "\n steps(Bohr)= "
+          + Escape.eAF(stepBohr) + "\n counts= " + nX + " " + nY + " " + nZ);
     }
+    
+     // Allowing missing atoms allows for selectively removing
+     // atoms from the rendering of an MO. This could allow for
+     // a subset of the MO -- one atom's contribution, for example -- to be rendered.
+     // Maybe a first time this has ever been done?
+      
 
-    /* 
-     * allowing null atoms allows for selectively removing
-     * atoms from the rendering. Maybe a first time this has ever been done?
-     * 
-     */
-
-    if (atomCoordAngstroms != null) {
-      qmAtoms = new QMAtom[renumber ? bsSelected.cardinality()
-          : atomCoordAngstroms.length];
-      boolean isAll = (bsSelected == null);
-      int i0 = (isAll ? qmAtoms.length - 1 : bsSelected.nextSetBit(0));
-      for (int i = i0, j = 0; i >= 0; i = (isAll ? i - 1 : bsSelected
-          .nextSetBit(i + 1)))
-        qmAtoms[renumber ? j++ : i] = new QMAtom(i, atomCoordAngstroms[i], (Atom) atoms[i],
-            X, Y, Z, X2, Y2, Z2, unitFactor);
-    }
+    qmAtoms = new QMAtom[renumber ? bsSelected.cardinality() : xyz.length];
+    boolean isAll = (bsSelected == null);
+    int i0 = (isAll ? qmAtoms.length - 1 : bsSelected.nextSetBit(0));
+    for (int i = i0, j = 0; i >= 0; i = (isAll ? i - 1 : bsSelected
+        .nextSetBit(i + 1)))
+      qmAtoms[renumber ? j++ : i] = new QMAtom(i, xyz[i], atoms[i], X, Y, Z,
+          X2, Y2, Z2, unitFactor);
   }
 
   public float processPt(T3 pt) {
@@ -224,5 +231,7 @@ abstract class QuantumCalculation {
     yMax = zMax = (ix < 0 ? xMax : ix + 1);
     yMin = zMin = (ix < 0 ? 0 : ix);    
   }
+  
+  public abstract void createCube();
   
 }

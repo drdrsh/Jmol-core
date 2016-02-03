@@ -9,6 +9,7 @@ public class DebugJS {
 
 	/**
 	 * Insert a JavaScript debug statement
+	 * @param msg 
 	 * 
 	 */
 		 public static void _(String msg) {

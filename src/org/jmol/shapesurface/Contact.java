@@ -387,7 +387,7 @@ public class Contact extends Isosurface {
       Atom atomA = atoms[ia];
       float vdwA = atomA.getVanderwaalsRadiusFloat(vwr, VDW.AUTO);
       if (isMultiModel)
-        vwr.setIteratorForPoint(iter, -1, ad.atomXyz[ia], ad.atomRadius[ia]
+        vwr.setIteratorForPoint(iter, -1, ad.atoms[ia], ad.atomRadius[ia]
             + maxRadius);
       else
         vwr.setIteratorForAtom(iter, ia, ad.atomRadius[ia] + maxRadius);

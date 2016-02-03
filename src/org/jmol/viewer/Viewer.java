@@ -82,7 +82,6 @@ import org.jmol.api.JmolScriptManager;
 import org.jmol.api.JmolSelectionListener;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolViewer;
-import org.jmol.api.MinimizerInterface;
 import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.AtomData;
@@ -95,6 +94,7 @@ import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
 import org.jmol.java.BS;
+import org.jmol.minimize.Minimizer;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
@@ -2448,11 +2448,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         postDefinitions);
   }
 
-  private MinimizerInterface minimizer;
+  private Minimizer minimizer;
   private SmilesMatcherInterface smilesMatcher;
 
-  public MinimizerInterface getMinimizer(boolean createNew) {
-    return (minimizer == null && createNew ? (minimizer = (MinimizerInterface) Interface
+  public Minimizer getMinimizer(boolean createNew) {
+    return (minimizer == null && createNew ? (minimizer = (Minimizer) Interface
         .getInterface("org.jmol.minimize.Minimizer", this, "script"))
         .setProperty("vwr", this) : minimizer);
   }

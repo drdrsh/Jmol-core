@@ -30,12 +30,12 @@ public abstract class XmlMOReader extends XmlCmlReader {
   private int minL, maxL;
   private String[] basisIds, basisAtoms;
   private float orbOcc, orbEnergy;
-  private int gaussianCount, slaterCount, coefCount, groupCount, primCount;
+  private int gaussianCount, slaterCount, coefCount, groupCount;
   private Lst<Lst<float[]>> lstGaussians;
   private int moCount;
   private String calcType;
+  private int iModelMO;
 
-  
   protected String dclist, dslist, fclist, fslist;
   protected boolean iHaveCoefMaps;
   private int maxContraction;
@@ -55,9 +55,10 @@ public abstract class XmlMOReader extends XmlCmlReader {
       return true;
     }
     if (localName.equals("basisset")) {
+      iModelMO = asc.iSet;
       lstGaussians = new Lst<Lst<float[]>>();
       htSlaterIDs = new Hashtable<String, int[]>();
-      coefCount = groupCount = primCount = gaussianCount = slaterCount = 0;
+      coefCount = groupCount = gaussianCount = slaterCount = 0;
       if (moReader == null && !skipMOs) {
         Object rdr = Resolver.getReader("MO", parent.htParams);
         if ((rdr instanceof String)) {
@@ -93,7 +94,8 @@ public abstract class XmlMOReader extends XmlCmlReader {
         // 2x + 1 = x(x+3)/2 +1
         // 4x = x(x+3)
         // [x = 0, 1]
-        htModelAtomMap.put(basisId+"_count", Integer.valueOf(nContractions * (isSpherical ? (minL * 2 + 1) : minL * (minL + 3) / 2 + 1))); // 6 10 14 
+        int n = nContractions *(isSpherical ? minL * 2 + 1 : minL * (minL + 3) / 2 + 1);
+        htModelAtomMap.put(basisId+"_count", Integer.valueOf(n)); // 6 10 14 
         return true;
       }
       if (localName.equals("basisexponents")
@@ -116,13 +118,12 @@ public abstract class XmlMOReader extends XmlCmlReader {
     if (moReader != null) {
       if (localName.equals("basisexponents")) {
         basisData = new Lst<float[]>();
-        basisData.addLast(PT.parseFloatArray(chars));
+        basisData.addLast(PT.parseFloatArray(chars.toString()));
         setKeepChars(false);
         return true;
       }
       if (localName.equals("basiscontraction")) {
-        float[] data = PT.parseFloatArray(chars);
-        primCount += data.length;
+        float[] data = PT.parseFloatArray(chars.toString());
         basisData.addLast(data);
         if (basisData.size() > maxContraction)
           maxContraction = basisData.size();
@@ -157,14 +158,18 @@ public abstract class XmlMOReader extends XmlCmlReader {
         buildSlaters();
         return true;
       }
-      if (localName.equals("orbital") && gaussianCount > 0) {
-        float[] coef = PT.parseFloatArray(chars);
+      if (localName.equals("orbital")) {
+        if (gaussianCount == 0)
+          return true;
+        float[] coef = PT.parseFloatArray(chars.toString());
         if (moCount == 0) {
-          if (coef.length == coefCount)
-            Logger.info(coefCount + " coefficients found");
-          else
+          if (coef.length != coefCount) {
             Logger.error("Number of orbital coefficients (" + coef.length
                 + ") does not agree with expected number (" + coefCount + ")");
+            moReader = null;
+            return skipMOs = true;
+          }
+          Logger.info(coefCount + " coefficients found");
         }
         moReader.addCoef(new Hashtable<String, Object>(), coef, null,
             orbEnergy, orbOcc, moCount++);
@@ -173,6 +178,8 @@ public abstract class XmlMOReader extends XmlCmlReader {
       }
       if (localName.equals("orbitals")) {
         moReader.setMOData(true);
+        Logger.info("XmlMOReader created\n " + gaussianCount + " gaussians\n "
+            + slaterCount + " slaters\n " + groupCount + " groups\n " + coefCount + " orbital coefficients\n " + moCount + " orbitals");
         return true;
       }
       if (state == ASSOCIATION) {
@@ -181,14 +188,14 @@ public abstract class XmlMOReader extends XmlCmlReader {
         } else if (localName.equals("atoms")) {
           basisAtoms = getXlink(atts.get("href"), "atom", true);
         } else if (localName.equals("association")) {
+          state = MOLECULE;
           for (int i = basisAtoms.length; --i >= 0;) {
             Atom a = (Atom) htModelAtomMap.get(basisAtoms[i]);
             if (a == null) {
-              Logger.error("XmlMolproReader atom not found; orbitals skipped: "
+              Logger.error("XmlMOReader atom not found; orbitals skipped: "
                   + a);
               moReader = null;
-
-              break;
+              return skipMOs = true;
             }
             htModelAtomMap.put(basisAtoms[i] + "_basis", basisIds);
           }
@@ -213,15 +220,16 @@ public abstract class XmlMOReader extends XmlCmlReader {
     }
     moReader.gaussians = gaussians;
     Lst<int[]> slaters = new Lst<int[]>();
-    String modelID = (String) htModelAtomMap.get("" + asc.iSet);
-    for (int i = asc.getAtomSetAtomIndex(asc.iSet), n = i
-        + asc.getAtomSetAtomCount(asc.iSet); i < n; i++) {
+    String modelID = (String) htModelAtomMap.get("" + iModelMO);
+    int i0 = asc.getAtomSetAtomIndex(iModelMO);
+    for (int i = 0, n = asc.getAtomSetAtomCount(iModelMO); i < n; i++) {
       String[] ids = (String[]) htModelAtomMap.get(modelID
-          + asc.atoms[i].atomName + "_basis");
+          + asc.atoms[i0 + i].atomName + "_basis");
       if (ids == null)
         continue;
       for (int k = 0; k < ids.length; k++) {
-        coefCount += ((Integer) htModelAtomMap.get(ids[k]+"_count")).intValue();
+        String key = ids[k]+"_count";
+        coefCount += ((Integer) htModelAtomMap.get(key)).intValue();
         for (int kk = 1; kk < maxContraction; kk++) {
           int[] slater = htSlaterIDs.get(ids[k] + "_" + kk);
           if (slater == null)
@@ -233,8 +241,6 @@ public abstract class XmlMOReader extends XmlCmlReader {
         }
       }
     }
-    Logger.info("XmlMolproReader created " + gaussianCount + " gaussians and "
-        + slaterCount + " slaters");
   }
 
   private String[] getXlink(String href, String key, boolean addMoleculeID) {

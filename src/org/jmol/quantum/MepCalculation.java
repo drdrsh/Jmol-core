@@ -31,9 +31,8 @@ import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Rdr;
 
-import org.jmol.api.MepCalculationInterface;
-import org.jmol.api.VolumeDataInterface;
 import org.jmol.java.BS;
+import org.jmol.jvxl.data.VolumeData;
 import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
@@ -50,7 +49,7 @@ import org.jmol.viewer.Viewer;
  * NOTE -- THIS CLASS IS INSTANTIATED USING Interface.getOptionInterface
  * NOT DIRECTLY -- FOR MODULARIZATION. NEVER USE THE CONSTRUCTOR DIRECTLY!
  */
-public class MepCalculation extends QuantumCalculation implements MepCalculationInterface {
+public class MepCalculation extends QuantumCalculation {
 
   // 
   // Implemented here is a flexible way of mapping atomic potential data onto 
@@ -97,12 +96,18 @@ public class MepCalculation extends QuantumCalculation implements MepCalculation
     unitFactor = 1;
   }
   
-  @Override
   public void set(Viewer vwr) {
     this.vwr = vwr;
   }
 
-  @Override
+  /**
+   * @param atoms 
+   * @param potentials 
+   * @param bsAromatic  
+   * @param bsCarbonyl 
+   * @param bsIgnore 
+   * @param data 
+   */
   public void assignPotentials(Atom[] atoms, float[] potentials,
                                BS bsAromatic, BS bsCarbonyl,
                                BS bsIgnore, String data) {
@@ -131,16 +136,15 @@ public class MepCalculation extends QuantumCalculation implements MepCalculation
     this.bsSelected = bsSelected;
   }
   
-  @Override
-  public void calculate(VolumeDataInterface volumeData, BS bsSelected,
-                        P3[] atomCoordAngstroms, float[] potentials,
+  public void calculate(VolumeData volumeData, BS bsSelected,
+                        P3[] xyz, Atom[] atoms, float[] potentials,
                         int calcType) {
-    setup(calcType, potentials, atomCoordAngstroms, bsSelected);
+    setup(calcType, potentials, atoms, bsSelected);
     voxelData = volumeData.getVoxelData();
     countsXYZ = volumeData.getVoxelCounts();
     initialize(countsXYZ[0], countsXYZ[1], countsXYZ[2], null);
     setupCoordinates(volumeData.getOriginFloat(), volumeData
-        .getVolumetricVectorLengths(), bsSelected, atomCoordAngstroms, null, null, false);
+        .getVolumetricVectorLengths(), bsSelected, xyz, atoms, null, false);
     setXYZBohr(points);
     process();
   }
@@ -178,7 +182,6 @@ public class MepCalculation extends QuantumCalculation implements MepCalculation
     
   }
 
-  @Override
   public float valueFor(float x0, float d2, int distanceMode) {
     switch (distanceMode) {
     case ONE_OVER_D:
@@ -243,9 +246,9 @@ public class MepCalculation extends QuantumCalculation implements MepCalculation
     }
   }
 
+  @Override
   public void createCube() {
-    // TODO
-    
+    // not relevant
   }
 
 }

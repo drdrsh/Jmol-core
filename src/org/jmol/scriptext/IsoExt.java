@@ -29,13 +29,13 @@ import java.util.Map;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
-import org.jmol.api.MepCalculationInterface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
 import org.jmol.c.VDW;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
+import org.jmol.quantum.MepCalculation;
 import org.jmol.quantum.QS;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptError;
@@ -3310,7 +3310,7 @@ public class IsoExt extends ScriptExt {
   private float[] getAtomicPotentials(BS bsSelected, BS bsIgnore,
                                       String fileName) throws Exception {
     float[] potentials = new float[vwr.ms.ac];
-    MepCalculationInterface m = (MepCalculationInterface) Interface
+    MepCalculation m = (MepCalculation) Interface
         .getOption("quantum.MlpCalculation", vwr, "script");
     m.set(vwr);
     String data = (fileName == null ? null : vwr.getFileAsString3(fileName,

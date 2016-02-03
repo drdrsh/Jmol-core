@@ -375,7 +375,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
           if (dotsConvexMaps[i].get(iDot)) {
             P3 pt = new P3();
             pt.scaleAdd2(atomData.atomRadius[i],
-                Geodesic.getVertexVector(iDot), atomData.atomXyz[i]);
+                Geodesic.getVertexVector(iDot), atomData.xyz[i]);
             points[nPoints++] = pt;
           }
       }
@@ -414,7 +414,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
 
   private void setAtomI(int indexI) {
     this.indexI = indexI;
-    centerI = atomData.atomXyz[indexI];
+    centerI = atomData.xyz[indexI];
     radiusI = atomData.atomRadius[indexI];
     radiiIP2 = radiusI + radiusP;
     radiiIP2 *= radiiIP2;
@@ -577,7 +577,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     while (iter.hasNext()) {
       int indexN = iter.next();
       float neighborRadius = atomData.atomRadius[indexN];
-      if (centerI.distance(atomData.atomXyz[indexN]) > radiusI + radiusP
+      if (centerI.distance(atomData.xyz[indexN]) > radiusI + radiusP
           + radiusP + neighborRadius)
         continue;
       if (neighborCount == neighborIndices.length) {
@@ -586,7 +586,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
         neighborPlusProbeRadii2 = AU.doubleLengthF(neighborPlusProbeRadii2);
         neighborRadii2 = AU.doubleLengthF(neighborRadii2);
       }
-      neighborCenters[neighborCount] = atomData.atomXyz[indexN];
+      neighborCenters[neighborCount] = atomData.xyz[indexN];
       neighborIndices[neighborCount] = indexN;
       float r = neighborRadius + radiusP;
       neighborPlusProbeRadii2[neighborCount] = r * r;
@@ -609,7 +609,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
       mads = (short[]) AU.deleteElements(mads, firstAtomDeleted, nAtomsDeleted);
     atomData.atomRadius = (float[]) AU.deleteElements(atomData.atomRadius,
         firstAtomDeleted, nAtomsDeleted);
-    atomData.atomXyz = (P3[]) AU.deleteElements(atomData.atomXyz,
+    atomData.xyz = (P3[]) AU.deleteElements(atomData.xyz,
         firstAtomDeleted, nAtomsDeleted);
     atomData.ac -= nAtomsDeleted;
     ac = atomData.ac;

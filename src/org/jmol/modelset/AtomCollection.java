@@ -1132,7 +1132,7 @@ abstract public class AtomCollection {
   }
 
   protected void fillADa(AtomData atomData, int mode) {
-    atomData.atomXyz = at;
+    atomData.xyz = atomData.atoms = at;
     atomData.ac = ac;
     atomData.atomicNumber = new int[ac];
     boolean includeRadii = ((mode & AtomData.MODE_FILL_RADII) != 0);

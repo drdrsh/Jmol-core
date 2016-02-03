@@ -107,7 +107,7 @@ public class XmlHandler extends DefaultHandler {
       xmlReader.atts.put(attributes.getLocalName(i).toLowerCase(), attributes.getValue(i));
     if (Logger.debugging) {
       debugContext += " " + localName;
-      Logger.debug(debugContext);
+      Logger.debug("start " + debugContext);
     }
     xmlReader.processStartElement(localName.toLowerCase(), nodeName.toLowerCase());
   }
@@ -115,7 +115,9 @@ public class XmlHandler extends DefaultHandler {
   @Override
   public void endElement(String uri, String localName, String qName) {
     if (Logger.debugging) {
-      Logger.debug("");
+      if (Logger.debugging) {
+        Logger.debug("end " + debugContext);
+      }
       debugContext = debugContext.substring(0, debugContext.lastIndexOf(" "));
     }
     xmlReader.processEndElement(localName.toLowerCase());
@@ -123,13 +125,8 @@ public class XmlHandler extends DefaultHandler {
 
   @Override
   public void characters(char[] ch, int start, int length) {
-    if (xmlReader.keepChars) {
-      if (xmlReader.chars == null) {
-        xmlReader.chars = new String(ch, start, length);
-      } else {
-        xmlReader.chars += new String(ch, start, length);
-      }
-    }
+    if (xmlReader.keepChars)
+      xmlReader.chars.appendCB(ch, start, length);
   }
 
   // Methods for entity resolving, e.g. getting a DTD resolved

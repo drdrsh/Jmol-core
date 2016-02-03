@@ -5,22 +5,21 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import javajs.util.A4;
 import javajs.util.AU;
+import javajs.util.CU;
 import javajs.util.Lst;
+import javajs.util.M4;
+import javajs.util.OC;
 import javajs.util.P3;
+import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
-import javajs.util.A4;
-import javajs.util.CU;
-import javajs.util.OC;
-import javajs.util.M4;
-import javajs.util.PT;
 import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
-import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
@@ -112,10 +111,11 @@ public class _ObjExporter extends __CartesianExporter {
    */
   private int currentTextureOrigin = 1;
 
-  /**
-   * The size of a pixel based on some assumptions about screen size
-   */
-  private float pixelSize;
+//  /**
+//   * The size of a pixel based on some assumptions about screen size
+//   */
+//  private float pixelSize;
+  
   public _ObjExporter() {
     debugPrint("_WavefrontObjExporter CTOR");
     commentChar = "# ";
@@ -432,7 +432,7 @@ public class _ObjExporter extends __CartesianExporter {
       return false;
     }
 
-    pixelSize = 0.5f / scalePixelsPerAngstrom;
+//    pixelSize = 0.5f / scalePixelsPerAngstrom;
 
     // Get the root path
     int dot = fileName.lastIndexOf(".");

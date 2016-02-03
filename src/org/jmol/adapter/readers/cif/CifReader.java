@@ -983,6 +983,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   /**
    * reads atom data in any order
+   * @param isLigand 
    * 
    * @return TRUE if successful; FALS if EOF encountered
    * @throws Exception

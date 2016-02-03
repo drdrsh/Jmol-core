@@ -163,27 +163,27 @@ public class XmlVaspReader extends XmlReader {
 
       if (isE_wo_entrp) {
         isE_wo_entrp = false;
-        enthalpy = chars.trim();
+        enthalpy = chars.toString().trim();
         break;
       }
 
       if (isE_fr_energy) {
         isE_fr_energy = false;
-        gibbsEnergy = chars.trim();
+        gibbsEnergy = chars.toString().trim();
         break;
       }
 
       if ("v".equals(localName) && data != null) {
-        data.append(chars);
+        data.append(chars.toString());
         break;
       }
 
       if ("c".equals(localName)) {
         if (iAtom < ac) {
           if (atomName == null) {
-            atomName = atomSym = chars.trim();
+            atomName = atomSym = chars.toString().trim();
           } else {
-            atomNames[iAtom++] = atomName + chars.trim();
+            atomNames[iAtom++] = atomName + chars.toString().trim();
             atomName = null;
           }
         }
@@ -191,7 +191,7 @@ public class XmlVaspReader extends XmlReader {
       }
 
       if ("atoms".equals(localName)) {
-        ac = parseIntStr(chars);
+        ac = parseIntStr(chars.toString());
         atomNames = new String[ac];
         atomSyms = new String[ac];
         iAtom = 0;

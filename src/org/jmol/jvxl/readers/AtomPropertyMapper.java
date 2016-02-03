@@ -24,6 +24,7 @@
 package org.jmol.jvxl.readers;
 
 
+import org.jmol.quantum.MepCalculation;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
@@ -32,7 +33,6 @@ import javajs.util.T3;
 
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
-import org.jmol.api.MepCalculationInterface;
 import org.jmol.jvxl.data.MeshData;
 
 /**
@@ -41,7 +41,7 @@ import org.jmol.jvxl.data.MeshData;
  */
 class AtomPropertyMapper extends AtomDataReader {
 
-  private MepCalculationInterface mepCalc;
+  private MepCalculation mepCalc;
   private String mepType;
   private int calcType = 0;
 
@@ -83,7 +83,7 @@ class AtomPropertyMapper extends AtomDataReader {
       doSmoothProperty = true;
       if (params.mep_calcType >= 0)
         calcType = params.mep_calcType;
-      mepCalc = (MepCalculationInterface) Interface.getOption("quantum."
+      mepCalc = (MepCalculation) Interface.getOption("quantum."
           + mepType + "Calculation", (Viewer) sg.atomDataServer, "file");
     }
     if (!doSmoothProperty && maxDistance == Integer.MAX_VALUE)
@@ -165,7 +165,7 @@ class AtomPropertyMapper extends AtomDataReader {
       int ia = iter.next();
       int myAtom = myIndex[ia];
       boolean isNearby = (myAtom >= firstNearbyAtom);
-      P3 ptA = atomXyz[myAtom];
+      P3 ptA = atomXyzTruncated[myAtom];
       float p = atomProp[myAtom];
       //System.out.println(iAtom + " " + ia + ptA + " " + isNearby + " " + p);
       if (Float.isNaN(p))

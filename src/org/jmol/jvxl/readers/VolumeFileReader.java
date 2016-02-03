@@ -25,20 +25,18 @@ package org.jmol.jvxl.readers;
 
 import java.io.BufferedReader;
 
-
-import org.jmol.api.Interface;
-import org.jmol.api.QuantumPlaneCalculationInterface;
-import org.jmol.atomdata.AtomData;
-import org.jmol.java.BS;
-
-import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
-
 import javajs.util.AU;
-import javajs.util.SB;
 import javajs.util.P3;
+import javajs.util.SB;
 import javajs.util.T3;
 import javajs.util.V3;
+
+import org.jmol.api.Interface;
+import org.jmol.atomdata.AtomData;
+import org.jmol.java.BS;
+import org.jmol.quantum.NciCalculation;
+import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 
 abstract class VolumeFileReader extends SurfaceFileReader {
@@ -50,7 +48,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
   protected boolean isAngstroms;
   protected boolean canDownsample;
   protected int[] downsampleRemainders;
-  private boolean preProcessPlanes;
+  private boolean getNCIPlanes;
   protected int nData;
   private boolean readerClosed;
 
@@ -69,7 +67,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
     boundingBox = params.boundingBox;
     if (params.qmOrbitalType == Parameters.QM_TYPE_NCI_SCF) {
       hasColorData = (params.parameters == null || params.parameters[1] >= 0);
-      preProcessPlanes = true;
+      getNCIPlanes = true;
       params.insideOut = !params.insideOut;
     }
   }
@@ -325,8 +323,8 @@ abstract class VolumeFileReader extends SurfaceFileReader {
   public float[] getPlane(int x) {
     if (x == 0)
       initPlanes();
-    if (preProcessPlanes)
-      return getPlaneProcessed(x);
+    if (getNCIPlanes)
+      return getPlaneNCI(x);
     float[] plane = getPlaneSR(x);
     if (qpc == null)
       getPlaneVFR(plane, true);
@@ -334,7 +332,7 @@ abstract class VolumeFileReader extends SurfaceFileReader {
   }
 
   private float[][] yzPlanesRaw;
-  private int iPlaneRaw;
+  private int iPlaneNCI;
 
   /**
    * Retrieve raw file planes and pass them to the calculation object for
@@ -345,20 +343,19 @@ abstract class VolumeFileReader extends SurfaceFileReader {
    * @param x
    * @return plane (for testing)
    */
-  public float[] getPlaneProcessed(int x) {
+  public float[] getPlaneNCI(int x) {
     float[] plane;
-    if (iPlaneRaw == 0) {
-      qpc = (QuantumPlaneCalculationInterface) Interface
+    if (iPlaneNCI == 0) {
+      qpc = (NciCalculation) Interface
           .getOption("quantum.NciCalculation", (Viewer) sg.atomDataServer, null);
       AtomData atomData = new AtomData();
       atomData.modelIndex = -1; // -1 here means fill ALL atoms; any other
       // means "this model only"
       atomData.bsSelected = params.bsSelected;
       sg.fillAtomData(atomData, AtomData.MODE_FILL_COORDS);
-      qpc.setupCalculation(volumeData, sg.params.bsSelected, null, null, null,
-          atomData.atomXyz, null, -1, null, null, null, null, null, null, params.isSquaredLinear,
-          null, params.theProperty, true, null, params.parameters, params.testFlags);
-      iPlaneRaw = 1;
+      ((NciCalculation) qpc).setupCalculation(volumeData, sg.params.bsSelected, null, null,
+          atomData.atoms, -1, true, null, params.parameters, params.testFlags);
+      iPlaneNCI = 1;
       qpc.setPlanes(yzPlanesRaw = new float[4][yzCount]);
       if (hasColorData) {
         //float nan = qpc.getNoValue();
@@ -369,11 +366,11 @@ abstract class VolumeFileReader extends SurfaceFileReader {
           plane[i] = Float.NaN;
         return plane;
       }
-      iPlaneRaw = -1;
+      iPlaneNCI = -1;
     }
     float nan = qpc.getNoValue();
     int x1 = nPointsX - 1;
-    switch (iPlaneRaw) {
+    switch (iPlaneNCI) {
     case -1:
       plane = yzPlanes[x % 2];
       x1++;
@@ -384,11 +381,11 @@ abstract class VolumeFileReader extends SurfaceFileReader {
       yzPlanesRaw[1] = yzPlanesRaw[2];
       yzPlanesRaw[2] = yzPlanesRaw[3];
       yzPlanesRaw[3] = plane;
-      plane = yzPlanesRaw[iPlaneRaw];
+      plane = yzPlanesRaw[iPlaneNCI];
       break;
     default:
-      iPlaneRaw++;
-      plane = yzPlanesRaw[iPlaneRaw];
+      iPlaneNCI++;
+      plane = yzPlanesRaw[iPlaneNCI];
     }
     if (x < x1) {
       getPlaneVFR(plane, false);

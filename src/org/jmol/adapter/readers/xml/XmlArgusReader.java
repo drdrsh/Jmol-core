@@ -129,9 +129,10 @@ public class XmlArgusReader extends XmlReader {
   @Override
   void processEndElement(String localName) {
     //System.out.println("close " + localName);
-    if (chars != null && chars.length() > 0
-        && chars.charAt(chars.length() - 1) == '\n')
-      chars = chars.substring(0, chars.length() - 1);
+    int n = chars.length();
+    if (n > 0
+        && chars.charAt(n - 1) == '\n')
+      chars.setLength(n - 1);
     if ("molecule".equals(localName)) {
       elementContext = UNSET;
       return;
@@ -165,27 +166,27 @@ public class XmlArgusReader extends XmlReader {
 
     if (elementContext == MOLECULE) {
       if ("name".equals(localName)) {
-        asc.setAtomSetName(chars);
+        asc.setAtomSetName(chars.toString());
         setKeepChars(false);
       }
       return;
     }
     if (atom != null && elementContext == ATOM) {
       if ("x".equals(localName)) {
-        atom.x = parseFloatStr(chars);
+        atom.x = parseFloatStr(chars.toString());
       } else if ("y".equals(localName)) {
-        atom.y = parseFloatStr(chars);
+        atom.y = parseFloatStr(chars.toString());
         return;
       } else if ("z".equals(localName)) {
-        atom.z = parseFloatStr(chars);
+        atom.z = parseFloatStr(chars.toString());
         return;
       } else if ("atsym".equals(localName)) {
-        atom.elementSymbol = chars;
+        atom.elementSymbol = chars.toString();
         return;
       } else if ("formalchg".equals(localName)) {
-        atom.formalCharge = parseIntStr(chars);
+        atom.formalCharge = parseIntStr(chars.toString());
       } else if ("atomkey".equals(localName)) {
-        atom.atomName = chars;
+        atom.atomName = chars.toString();
       }
       setKeepChars(false);
       return;
@@ -193,16 +194,16 @@ public class XmlArgusReader extends XmlReader {
     if (elementContext == BOND) {
       if ("atomkey".equals(localName)) {
         if (atomName1 == null)
-          atomName1 = chars;
+          atomName1 = chars.toString();
         else
-          atomName2 = chars;
+          atomName2 = chars.toString();
         setKeepChars(false);
       }
       return;
     }
     
     if (elementContext == TRANSFORMMAT) {
-      trans[ptTrans++] = parseFloatStr(chars);
+      trans[ptTrans++] = parseFloatStr(chars.toString());
       setKeepChars(false);
       return;
     }

@@ -25,14 +25,6 @@ package org.jmol.export;
 
 import java.util.Map;
 
-import org.jmol.api.Interface;
-import org.jmol.api.JmolRendererInterface;
-import org.jmol.g3d.HermiteRenderer;
-import org.jmol.modelset.Atom;
-import org.jmol.script.T;
-import org.jmol.util.GData;
-import org.jmol.util.MeshSurface;
-
 import javajs.awt.Font;
 import javajs.util.M3;
 import javajs.util.M4;
@@ -40,6 +32,13 @@ import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.T3;
 
+import org.jmol.api.Interface;
+import org.jmol.api.JmolRendererInterface;
+import org.jmol.g3d.HermiteRenderer;
+import org.jmol.modelset.Atom;
+import org.jmol.script.T;
+import org.jmol.util.GData;
+import org.jmol.util.MeshSurface;
 import org.jmol.viewer.Viewer;
 
 public class Export3D implements JmolRendererInterface {

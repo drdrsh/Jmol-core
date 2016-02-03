@@ -171,11 +171,11 @@ public class XmlOdysseyReader extends XmlReader {
     if ("group".equals(localName)) {
       formalCharge = Integer.MIN_VALUE;
     } else if ("title".equals(localName)) {
-      modelName = chars;
+      modelName = chars.toString();
     } else if ("formula".equals(localName)) {
-      formula = chars;
+      formula = chars.toString();
     } else if ("phase".equals(localName)) {
-      phase = chars;
+      phase = chars.toString();
     }
     setKeepChars(false);
   }

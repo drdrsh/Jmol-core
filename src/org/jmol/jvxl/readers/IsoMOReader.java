@@ -28,7 +28,6 @@ import java.util.Random;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.M4;
 import javajs.util.Measure;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -36,23 +35,36 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 import org.jmol.api.Interface;
-import org.jmol.api.MOCalculationInterface;
-import org.jmol.api.QuantumPlaneCalculationInterface;
 import org.jmol.jvxl.data.VolumeData;
+import org.jmol.quantum.MOCalculation;
+import org.jmol.quantum.NciCalculation;
 import org.jmol.quantum.QS;
+import org.jmol.quantum.QuantumCalculation;
+import org.jmol.quantum.QuantumPlaneCalculation;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
 class IsoMOReader extends AtomDataReader {
 
   private Random random;
-  
-  IsoMOReader(){}
-  
+  private P3[] points;
+  private V3 vTemp;
+  private QuantumCalculation q;
+  private Lst<Map<String, Object>> mos;
+  private boolean isNci;
+  private float[] coef;
+  private int[][] dfCoefMaps;
+  private float[] linearCombination;
+  private float[][] coefs;
+  private boolean isElectronDensityCalc;
+
+  IsoMOReader() {
+  }
+
   @Override
   void init(SurfaceGenerator sg) {
     initADR(sg);
-        isNci = (params.qmOrbitalType == Parameters.QM_TYPE_NCI_PRO);
+    isNci = (params.qmOrbitalType == Parameters.QM_TYPE_NCI_PRO);
     if (isNci) {
       // NCI analysis org.jmol.quantum.NciCalculation
       // allows for progressive plane reading, which requires
@@ -62,7 +74,7 @@ class IsoMOReader extends AtomDataReader {
       params.insideOut = !params.insideOut;
     }
   }
-  
+
   /////// ab initio/semiempirical quantum mechanical orbitals ///////
 
   @Override
@@ -78,7 +90,8 @@ class IsoMOReader extends AtomDataReader {
     setup2();
     doAddHydrogens = false;
     getAtoms(params.bsSelected, doAddHydrogens, !isNci, isNci, isNci, false,
-        false, params.qm_marginAngstroms, (isNci ? null : params.modelInvRotation));
+        false, params.qm_marginAngstroms, (isNci ? null
+            : params.modelInvRotation));
     String className;
     if (isNci) {
       className = "quantum.NciCalculation";
@@ -87,33 +100,35 @@ class IsoMOReader extends AtomDataReader {
           "see NCIPLOT: A Program for Plotting Noncovalent Interaction Regions, Julia Contreras-Garcia, et al., J. of Chemical Theory and Computation, 2011, 7, 625-632");
     } else {
       className = "quantum.MOCalculation";
-      setHeader("MO", "calculation type: "
-          + params.moData.get("calculationType"));
+      setHeader("MO",
+          "calculation type: " + params.moData.get("calculationType"));
     }
     setRanges(params.qm_ptsPerAngstrom, params.qm_gridMax, 0);
     if (haveVolumeData) {
       for (int i = params.title.length; --i >= 0;)
         fixTitleLine(i, mo);
     } else {
-      q = (MOCalculationInterface) Interface.getOption(className, 
-          (Viewer) sg.atomDataServer, "file");
+      q = (QuantumCalculation) Interface.getOption(
+          className, (Viewer) sg.atomDataServer, "file");
       if (isNci) {
-        qpc = (QuantumPlaneCalculationInterface) q;
-      } else if (linearCombination == null) {
-        for (int i = params.title.length; --i >= 0;)
-          fixTitleLine(i, mo);
-        coef = (float[]) mo.get("coefficients");
-        dfCoefMaps = (int[][]) mo.get("dfCoefMaps");
+        qpc = (QuantumPlaneCalculation) q;
       } else {
-        coefs = AU.newFloat2(mos.size());
-        for (int i = 1; i < linearCombination.length; i += 2) {
-          int j = (int) linearCombination[i];
-          if (j > mos.size() || j < 1)
-            return;
-          coefs[j - 1] = (float[]) mos.get(j - 1).get("coefficients");
+        if (linearCombination == null) {
+          for (int i = params.title.length; --i >= 0;)
+            fixTitleLine(i, mo);
+          coef = (float[]) mo.get("coefficients");
+          dfCoefMaps = (int[][]) mo.get("dfCoefMaps");
+        } else {
+          coefs = AU.newFloat2(mos.size());
+          for (int i = 1; i < linearCombination.length; i += 2) {
+            int j = (int) linearCombination[i];
+            if (j > mos.size() || j < 1)
+              return;
+            coefs[j - 1] = (float[]) mos.get(j - 1).get("coefficients");
+          }
+          for (int i = params.title.length; --i >= 0;)
+            fixTitleLine(i, null);
         }
-        for (int i = params.title.length; --i >= 0;)
-          fixTitleLine(i, null);
       }
       isElectronDensityCalc = (coef == null && linearCombination == null && !isNci);
     }
@@ -131,7 +146,7 @@ class IsoMOReader extends AtomDataReader {
       random = new Random(params.randomSeed);
     }
   }
-  
+
   @Override
   protected boolean readVolumeParameters(boolean isMapData) {
     setup(isMapData);
@@ -151,19 +166,23 @@ class IsoMOReader extends AtomDataReader {
         line = PT.rep(line, " MO ", " " + nboType + " ");
     }
     if (line.indexOf("%M") >= 0)
-      line = params.title[iLine] = PT.formatStringS(line, "M", atomData.modelName);
+      line = params.title[iLine] = PT.formatStringS(line, "M",
+          atomData.modelName);
     if (line.indexOf("%F") >= 0)
-      line = params.title[iLine] = PT.formatStringS(line, "F", PT.rep(params.fileName, "DROP_", ""));
+      line = params.title[iLine] = PT.formatStringS(line, "F",
+          PT.rep(params.fileName, "DROP_", ""));
     int pt = line.indexOf("%");
     if (line.length() == 0 || pt < 0)
       return;
     int rep = 0;
-//    if (line.indexOf("%F") >= 0)
-  //    line = PT.formatStringS(line, "F", params.fileName);
+    //    if (line.indexOf("%F") >= 0)
+    //    line = PT.formatStringS(line, "F", params.fileName);
     if (line.indexOf("%I") >= 0)
-      line = PT.formatStringS(line, "I",
-          params.qm_moLinearCombination == null ? "" + params.qm_moNumber
-              : QS.getMOString(params.qm_moLinearCombination));
+      line = PT.formatStringS(
+          line,
+          "I",
+          params.qm_moLinearCombination == null ? "" + params.qm_moNumber : QS
+              .getMOString(params.qm_moLinearCombination));
     if (line.indexOf("%N") >= 0)
       line = PT.formatStringS(line, "N", "" + params.qmOrbitalCount);
     Float energy = null;
@@ -173,7 +192,7 @@ class IsoMOReader extends AtomDataReader {
         if (linearCombination[i] != 0) {
           mo = mos.get((int) linearCombination[i + 1] - 1);
           Float e = (Float) mo.get("energy");
-          if (energy == null) { 
+          if (energy == null) {
             if (e == null)
               break;
             energy = e;
@@ -188,25 +207,30 @@ class IsoMOReader extends AtomDataReader {
     }
 
     if (line.indexOf("%E") >= 0)
-      line = PT.formatStringS(line, "E",
-          energy != null && ++rep != 0 ? "" + energy : "");
+      line = PT.formatStringS(line, "E", energy != null && ++rep != 0 ? ""
+          + energy : "");
     if (line.indexOf("%U") >= 0)
       line = PT.formatStringS(line, "U",
           energy != null && params.moData.containsKey("energyUnits")
               && ++rep != 0 ? (String) params.moData.get("energyUnits") : "");
     if (line.indexOf("%S") >= 0)
-      line = PT.formatStringS(line, "S", mo != null
-          && mo.containsKey("symmetry") && ++rep != 0 ? "" + mo.get("symmetry")
-          : "");
+      line = PT.formatStringS(
+          line,
+          "S",
+          mo != null && mo.containsKey("symmetry") && ++rep != 0 ? ""
+              + mo.get("symmetry") : "");
     if (line.indexOf("%O") >= 0) {
       Float obj = (mo == null ? null : (Float) mo.get("occupancy"));
       float o = (obj == null ? 0 : obj.floatValue());
-      line = PT.formatStringS(line, "O", obj != null && ++rep != 0 ? (o == (int) o ? "" + (int) o : 
-               PT.formatF(o, 0, 4, false, false)) : "");
+      line = PT.formatStringS(
+          line,
+          "O",
+          obj != null && ++rep != 0 ? (o == (int) o ? "" + (int) o : PT
+              .formatF(o, 0, 4, false, false)) : "");
     }
     if (line.indexOf("%T") >= 0)
-      line = PT.formatStringS(line, "T", mo != null
-          && mo.containsKey("type") && ++rep != 0 ? "" + mo.get("type") : "");
+      line = PT.formatStringS(line, "T", mo != null && mo.containsKey("type")
+          && ++rep != 0 ? "" + mo.get("type") : "");
     if (line.equals("string")) {
       params.title[iLine] = "";
       return;
@@ -215,9 +239,9 @@ class IsoMOReader extends AtomDataReader {
     params.title[iLine] = (!isOptional ? line : rep > 0
         && !line.trim().endsWith("=") ? line.substring(1) : "");
   }
-  
+
   private final float[] vDist = new float[3];
-  
+
   @Override
   protected void readSurfaceData(boolean isMapData) throws Exception {
     if (volumeData.sr != null)
@@ -266,18 +290,19 @@ class IsoMOReader extends AtomDataReader {
   protected void postProcessVertices() {
     // not clear that this is a good idea...
     //if (params.thePlane != null && params.slabInfo == null)
-      //params.addSlabInfo(MeshSurface.getSlabWithinRange(0.01f, -0.01f));
-      
+    //params.addSlabInfo(MeshSurface.getSlabWithinRange(0.01f, -0.01f));
+
   }
 
-  private void getValues() {        
+  private void getValues() {
     for (int j = 0; j < 1000; j++) {
       voxelData[j][0][0] = 0;
-      points[j].set(volumeData.volumetricOrigin.x + getRnd(vDist[0]), 
-          volumeData.volumetricOrigin.y + getRnd(vDist[1]), 
+      points[j].set(volumeData.volumetricOrigin.x + getRnd(vDist[0]),
+          volumeData.volumetricOrigin.y + getRnd(vDist[1]),
           volumeData.volumetricOrigin.z + getRnd(vDist[2]));
       if (params.thePlane != null)
-        Measure.getPlaneProjection(points[j], params.thePlane, points[j], vTemp);
+        Measure
+            .getPlaneProjection(points[j], params.thePlane, points[j], vTemp);
     }
     createOrbital();
   }
@@ -286,14 +311,13 @@ class IsoMOReader extends AtomDataReader {
   public float getValueAtPoint(T3 pt, boolean getSource) {
     return (q == null ? 0 : q.processPt(pt));
   }
-  
 
   private float getRnd(float f) {
     return random.nextFloat() * f;
   }
 
   //mapping mos fails
-  
+
   @Override
   protected void generateCube() {
     if (params.volumeData != null)
@@ -302,24 +326,13 @@ class IsoMOReader extends AtomDataReader {
     createOrbital();
   }
 
-  private P3[] points;
-  private V3 vTemp;
-  MOCalculationInterface q;
-  Lst<Map<String, Object>> mos;
-  boolean isNci;
-  float[] coef; 
-  int[][] dfCoefMaps;
-  float[] linearCombination;
-  float[][] coefs;
-  private boolean isElectronDensityCalc;
-  
   protected void createOrbital() {
     boolean isMonteCarlo = (params.psi_monteCarloCount > 0);
     if (isElectronDensityCalc) {
       // electron density calc
       if (mos == null || isMonteCarlo)
         return;
-      for (int i = params.qm_moNumber; --i >= 0; ) {
+      for (int i = params.qm_moNumber; --i >= 0;) {
         Logger.info(" generating isosurface data for MO " + (i + 1));
         Map<String, Object> mo = mos.get(i);
         coef = (float[]) mo.get("coefficients");
@@ -330,22 +343,23 @@ class IsoMOReader extends AtomDataReader {
       }
     } else {
       if (!isMonteCarlo)
-        Logger.info("generating isosurface data for MO using cutoff " + params.cutoff);
+        Logger.info("generating isosurface data for MO using cutoff "
+            + params.cutoff);
       if (!setupCalculation())
         return;
       q.createCube();
     }
   }
-  
+
   @Override
   public float[] getPlane(int x) {
-    if (!qSetupDone) 
+    if (!qSetupDone)
       setupCalculation();
-    return getPlaneSR(x); 
+    return getPlaneSR(x);
   }
 
   private boolean qSetupDone;
-  
+
   @SuppressWarnings("unchecked")
   private boolean setupCalculation() {
     qSetupDone = true;
@@ -353,43 +367,42 @@ class IsoMOReader extends AtomDataReader {
     case Parameters.QM_TYPE_VOLUME_DATA:
       break;
     case Parameters.QM_TYPE_GAUSSIAN:
-      return q.setupCalculation(volumeData, bsMySelected, null, null, (String) params.moData
-                      .get("calculationType"),
-          atomXyz, atoms, atomData.firstAtomIndex, (Lst<int[]>) params.moData.get("shells"), (float[][]) params.moData
-                          .get("gaussians"), dfCoefMaps, null,
-          coef, linearCombination, params.isSquaredLinear, coefs,
-          null, params.moData.get("isNormalized") == null, points, params.parameters, params.testFlags);
+      return ((MOCalculation) q).setupCalculation(volumeData, bsMySelected,
+          (String) params.moData.get("calculationType"), atomData.xyz, atomData.atoms,
+          atomData.firstAtomIndex, (Lst<int[]>) params.moData.get("shells"),
+          (float[][]) params.moData.get("gaussians"), dfCoefMaps, null, coef,
+          linearCombination, params.isSquaredLinear, coefs,
+          params.moData.get("isNormalized") == null, points);
     case Parameters.QM_TYPE_SLATER:
-      return q.setupCalculation(volumeData, bsMySelected, null, null, (String) params.moData
-                      .get("calculationType"),
-          atomXyz, atoms, atomData.firstAtomIndex, null, null, null, params.moData.get("slaters"),
-          coef, linearCombination, params.isSquaredLinear, coefs, 
-          null, true, points, params.parameters, params.testFlags);
+      return ((MOCalculation) q).setupCalculation(volumeData, bsMySelected,
+          (String) params.moData.get("calculationType"), atomData.xyz, atomData.atoms,
+          atomData.firstAtomIndex, null, null, null,
+          params.moData.get("slaters"), coef, linearCombination,
+          params.isSquaredLinear, coefs, true, points);
     case Parameters.QM_TYPE_NCI_PRO:
-      return q.setupCalculation(volumeData, bsMySelected, params.bsSolvent,
-          atomData.bsMolecules, null, atomData.atomXyz, atoms, atomData.firstAtomIndex, null, null,
-          null, null, null, null, params.isSquaredLinear, null,
-          null, true, points, params.parameters, params.testFlags);
+      return ((NciCalculation) q).setupCalculation(volumeData, bsMySelected,
+          params.bsSolvent, atomData.bsMolecules, atomData.atoms,
+          atomData.firstAtomIndex, true, points, params.parameters,
+          params.testFlags);
     }
     return false;
   }
-  
+
   @Override
   protected float getSurfacePointAndFraction(float cutoff,
                                              boolean isCutoffAbsolute,
                                              float valueA, float valueB,
-                                             T3 pointA,
-                                             V3 edgeVector, int x, int y,
-                                             int z, int vA, int vB,
+                                             T3 pointA, V3 edgeVector, int x,
+                                             int y, int z, int vA, int vB,
                                              float[] fReturn, T3 ptReturn) {
-      float zero = getSPF(cutoff, isCutoffAbsolute, valueA,
-          valueB, pointA, edgeVector, x, y, z, vA, vB, fReturn, ptReturn);
-      if (q != null && !Float.isNaN(zero)) {
+    float zero = getSPF(cutoff, isCutoffAbsolute, valueA, valueB, pointA,
+        edgeVector, x, y, z, vA, vB, fReturn, ptReturn);
+    if (q != null && !Float.isNaN(zero)) {
       zero = q.processPt(ptReturn);
       if (params.isSquared)
         zero *= zero;
-      }
-      return zero;
+    }
+    return zero;
   }
-  
+
 }

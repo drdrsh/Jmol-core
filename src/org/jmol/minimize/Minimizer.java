@@ -30,7 +30,6 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
-import org.jmol.api.MinimizerInterface;
 import org.jmol.i18n.GT;
 import org.jmol.java.BS;
 import org.jmol.minimize.forcefield.ForceField;
@@ -49,7 +48,7 @@ import org.jmol.script.T;
 import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.Viewer;
 
-public class Minimizer implements MinimizerInterface {
+public class Minimizer {
 
   public Viewer vwr;
   public Atom[] atoms;
@@ -88,8 +87,8 @@ public class Minimizer implements MinimizerInterface {
   public Minimizer() {
   }
 
-  @Override
-  public MinimizerInterface setProperty(String propertyName, Object value) {
+  
+  public Minimizer setProperty(String propertyName, Object value) {
     switch (("ff        " + "cancel    " + "clear     " + "constraint"
         +    "fixed     " + "stop      " + "vwr    ").indexOf(propertyName)) {
     case 0:
@@ -124,7 +123,12 @@ public class Minimizer implements MinimizerInterface {
     return this;
   }
 
-  @Override
+  
+  /**
+   * @param propertyName 
+   * @param param  
+   * @return Object
+   */
   public Object getProperty(String propertyName, int param) {
     if (propertyName.equals("log")) {
       return (pFF == null ? "" : pFF.getLogData());
@@ -187,7 +191,7 @@ public class Minimizer implements MinimizerInterface {
     pFF = null;
   }
   
-  @Override
+  
   public boolean minimize(int steps, double crit, BS bsSelected,
                           BS bsFixed, boolean haveFixed, boolean forceSilent, 
                           String ff) throws JmolAsyncException {
@@ -511,14 +515,14 @@ public class Minimizer implements MinimizerInterface {
    ****************************************************************/
 
   private boolean minimizationOn;
-  @Override
+  
   public boolean minimizationOn() {
     return minimizationOn;
   }
 
   private MinimizationThread minimizationThread;
   
-  @Override
+  
   public JmolThread getThread() {
     return minimizationThread;
   }
@@ -555,7 +559,7 @@ public class Minimizer implements MinimizerInterface {
     vwr.setFloatProperty("_minimizationEnergy", pFF.toUserUnits(pFF.getEnergy()));
   }
 
-  @Override
+  
   public boolean startMinimization() {
    try {
       Logger.info("minimizer: startMinimization");
@@ -576,7 +580,7 @@ public class Minimizer implements MinimizerInterface {
     return true;
   }
 
-  @Override
+  
   public boolean stepMinimization() {
     if (!minimizationOn)
       return false;
@@ -595,7 +599,7 @@ public class Minimizer implements MinimizerInterface {
     return going;
   }
 
-  @Override
+  
   public void endMinimization() {
     updateAtomXYZ();
     setMinimizationOn(false);
@@ -670,7 +674,7 @@ public class Minimizer implements MinimizerInterface {
       vwr.scriptEcho(msg);    
   }
 
-  @Override
+  
   public void calculatePartialCharges(Bond[] bonds, int bondCount,
                                       Atom[] atoms, BS bsAtoms) throws JmolAsyncException {
     ForceFieldMMFF ff = new ForceFieldMMFF(this);

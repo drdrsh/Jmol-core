@@ -1,12 +1,13 @@
-package org.jmol.api;
+package org.jmol.quantum;
+
 
 /**
  * Allows modification of the planes prior to isosurface creation
  * Used by Noncovalent Interaction Calculation for progressive readers
  */
 
-public interface QuantumPlaneCalculationInterface extends MOCalculationInterface {
- 
+public abstract class QuantumPlaneCalculation extends QuantumCalculation {
+  
   /**
    * Planes to use for holding raw file data. These will be managed by
    * VolumeFileReader, but they will be needed by the calculation.

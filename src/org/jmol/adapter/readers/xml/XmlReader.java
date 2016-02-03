@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.Rdr;
+import javajs.util.SB;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
@@ -311,11 +312,11 @@ public class XmlReader extends AtomSetCollectionReader {
    */
 
   protected boolean keepChars;
-  protected String chars;
+  protected SB chars = SB.newN(2000);
 
   protected void setKeepChars(boolean TF) {
     keepChars = TF;
-    chars = null;
+    chars.setLength(0);
   }
 
   /**
@@ -356,7 +357,7 @@ public class XmlReader extends AtomSetCollectionReader {
       return;
     if (localName.equals("#text")) {
       if (keepChars)
-        chars = (String) jsObjectGetMember(domObj, "data");
+        chars.append((String) jsObjectGetMember(domObj, "data"));
       return;
     }
     localName = localName.toLowerCase();

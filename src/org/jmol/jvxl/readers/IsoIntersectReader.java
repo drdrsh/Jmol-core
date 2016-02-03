@@ -181,7 +181,7 @@ class IsoIntersectReader extends AtomDataReader {
   private float getValueAtPoint2(T3 pt, BS bs) {
     float value = Float.MAX_VALUE;
     for (int iAtom = bs.nextSetBit(0); iAtom >= 0; iAtom = bs.nextSetBit(iAtom + 1)) {
-      float r = pt.distance(atomXyz[iAtom]) - atomRadius[iAtom];
+      float r = pt.distance(atomXyzTruncated[iAtom]) - atomRadius[iAtom];
       if (r < value)
         value = r;
     }

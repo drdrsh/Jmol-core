@@ -24,7 +24,6 @@
 package org.jmol.jvxl.readers;
 
 
-import org.jmol.api.QuantumPlaneCalculationInterface;
 import org.jmol.java.BS;
 import org.jmol.jvxl.api.MeshDataServer;
 import org.jmol.jvxl.api.VertexDataServer;
@@ -34,6 +33,7 @@ import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.JvxlData;
 import org.jmol.jvxl.data.MeshData;
 import org.jmol.jvxl.data.VolumeData;
+import org.jmol.quantum.QuantumPlaneCalculation;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
@@ -544,7 +544,7 @@ public abstract class SurfaceReader implements VertexDataServer {
   protected float[][] yzPlanes;
   protected int yzCount;
 
-  protected QuantumPlaneCalculationInterface qpc;
+  protected QuantumPlaneCalculation qpc;
   
   @Override
   public float[] getPlane(int x) {
@@ -554,7 +554,7 @@ public abstract class SurfaceReader implements VertexDataServer {
   protected float[] getPlaneSR(int x) {
     if (yzCount == 0)
       initPlanes();
-    if (qpc != null)
+    if (qpc != null) // NCICalculation only
       qpc.getPlane(x, yzPlanes[x % 2]);
     return yzPlanes[x % 2];
   }

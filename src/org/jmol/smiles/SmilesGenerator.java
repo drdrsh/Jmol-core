@@ -99,30 +99,29 @@ public class SmilesGenerator {
       return "";
     this.atoms = atoms;
     this.ac = ac;
-    addAtomComment = JC.checkFlag(flags, JC.SMILES_ATOM_COMMENT);
+    addAtomComment = ((flags & JC.SMILES_ATOM_COMMENT) == JC.SMILES_ATOM_COMMENT);
     bsSelected = BSUtil.copy(bsSelected);    
     
-    if (JC.checkFlag(flags, JC.SMILES_BIO))
+    if ((flags & JC.SMILES_BIO) == JC.SMILES_BIO)
       return getBioSmiles(bsSelected, comment, flags);
     
     this.bsSelected = bsSelected;
-    explicitH = JC.checkFlag(flags, JC.SMILES_EXPLICIT_H);
-    topologyOnly = JC.checkFlag(flags, JC.SMILES_TOPOLOGY);
-    getAromatic = !JC.checkFlag(flags, JC.SMILES_NOAROMATIC);
-    noStereo = JC.checkFlag(flags, JC.SMILES_NOSTEREO);
-    isPolyhedral = JC.checkFlag(flags, JC.SMILES_POLYHEDRAL);
+    explicitH = ((flags & JC.SMILES_EXPLICIT_H) == JC.SMILES_EXPLICIT_H);
+    topologyOnly = ((flags & JC.SMILES_TOPOLOGY) == JC.SMILES_TOPOLOGY);
+    getAromatic = !((flags & JC.SMILES_NOAROMATIC) == JC.SMILES_NOAROMATIC);
+    noStereo = ((flags & JC.SMILES_NOSTEREO) ==  JC.SMILES_NOSTEREO);
+    isPolyhedral = ((flags & JC.SMILES_POLYHEDRAL) == JC.SMILES_POLYHEDRAL);
     return getSmilesComponent(atoms[ipt], bsSelected, true, false, false);
   }
 
   private String getBioSmiles(BS bsSelected, String comment, int flags)
       throws InvalidSmilesException {
-    addAtomComment = JC.checkFlag(flags, JC.SMILES_ATOM_COMMENT);
-    boolean allowUnmatchedRings = JC.checkFlag(flags,
-        JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS);
-    boolean noBioComments = JC.checkFlag(flags, JC.SMILES_BIO_NOCOMMENTS);
-    boolean crosslinkCovalent = JC
-        .checkFlag(flags, JC.SMILES_BIO_COV_CROSSLINK);
-    boolean crosslinkHBonds = JC.checkFlag(flags, JC.SMILES_BIO_HH_CROSSLINK);
+    addAtomComment = ((flags & JC.SMILES_ATOM_COMMENT) == JC.SMILES_ATOM_COMMENT);
+    boolean allowUnmatchedRings = ((flags & 
+        JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS) == JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS);
+    boolean noBioComments = ((flags & JC.SMILES_BIO_NOCOMMENTS) == JC.SMILES_BIO_NOCOMMENTS);
+    boolean crosslinkCovalent = ((flags & JC.SMILES_BIO_COV_CROSSLINK) == JC.SMILES_BIO_COV_CROSSLINK);
+    boolean crosslinkHBonds = ((flags & JC.SMILES_BIO_HH_CROSSLINK) == JC.SMILES_BIO_HH_CROSSLINK);
     boolean addCrosslinks = (crosslinkCovalent || crosslinkHBonds);
     SB sb = new SB();
     BS bs = bsSelected;

@@ -554,12 +554,12 @@ class IsoSolventReader extends AtomDataReader {
       }
     Logger.info("cavities include " + n + " voxel points");
     atomRadius = new float[n];
-    atomXyz = new P3[n];
+    atomXyzTruncated = new P3[n];
     for (int x = 0, ipt = 0, apt = 0; x < nPointsX; ++x)
       for (int y = 0; y < nPointsY; ++y)
         for (int z = 0; z < nPointsZ; ++z)
           if (bs.get(ipt++)) {
-            volumeData.voxelPtToXYZ(x, y, z, (atomXyz[apt] = new P3()));
+            volumeData.voxelPtToXYZ(x, y, z, (atomXyzTruncated[apt] = new P3()));
             atomRadius[apt++] = voxelData[x][y][z];
           }
     myAtomCount = firstNearbyAtom = n;
@@ -678,7 +678,7 @@ class IsoSolventReader extends AtomDataReader {
     for (int iatomA = 0; iatomA < myAtomCount; iatomA++)
       bsLocale[iatomA] = new BS();
     for (int iatomA = 0; iatomA < myAtomCount; iatomA++) {
-      P3 ptA = atomXyz[iatomA];
+      P3 ptA = atomXyzTruncated[iatomA];
       float rA = rs[iatomA];
       sg.atomDataServer.setIteratorForAtom(iter, atomIndex[iatomA], rA + maxRS);
       while (iter.hasNext()) {
@@ -686,7 +686,7 @@ class IsoSolventReader extends AtomDataReader {
         int iatomB = myIndex[iB];
         if (iatomA >= firstNearbyAtom && iatomB >= firstNearbyAtom)
           continue;
-        P3 ptB = atomXyz[iatomB];
+        P3 ptB = atomXyzTruncated[iatomB];
         float rB = rs[iatomB];
         float dAB = ptA.distance(ptB);
         if (dAB >= rA + rB)
@@ -725,9 +725,9 @@ class IsoSolventReader extends AtomDataReader {
       this.d = d;
       d2 = d * d;
       maxr = (float) Math.sqrt(d2 / 4 + Math.max(r.rs2[ia], r.rs2[ib]));
-      ave(r.atomXyz[ia], r.atomXyz[ib]);
+      ave(r.atomXyzTruncated[ia], r.atomXyzTruncated[ib]);
       cosASB2 = (r.rs2[ia] + r.rs2[ib] - d2) / (r.rs[ib] * r.rs[ia]);
-      v = V3.newVsub(r.atomXyz[ib], r.atomXyz[ia]);
+      v = V3.newVsub(r.atomXyzTruncated[ib], r.atomXyzTruncated[ia]);
       v.normalize();
     }
 
@@ -776,25 +776,25 @@ class IsoSolventReader extends AtomDataReader {
       this.pS = P3.newP(pS);
     }
 
-    protected void dump() {
-      P3 ptA = atomXyz[ia];
-      P3 ptB = atomXyz[ib];
-      P3 ptC = atomXyz[ic];
-      String color = "red";
-      String label = "f"+ ia + "_" + ib + "_" + ic + "_";
-      sg.log("draw ID \"x" + label + (nTest++) + "\" "
-          + P3.newP(ptA)
-          + " " + P3.newP(ptB) 
-          + " " + P3.newP(ptC)
-          + " color " + color);
-
-      //dumpLine(ptA, ptB, label, color);
-      //dumpLine(ptB, ptC, label, color);
-      //dumpLine(ptC, ptA, label, color);
-      //dumpLine2(pS, ptA, label, sr, color, "white");
-      //dumpLine2(pS, ptB, label, sr, color, "white");
-      //dumpLine2(pS, ptC, label, sr, color, "white");
-    }
+//    protected void dump() {
+//      P3 ptA = atomXyz[ia];
+//      P3 ptB = atomXyz[ib];
+//      P3 ptC = atomXyz[ic];
+//      String color = "red";
+//      String label = "f"+ ia + "_" + ib + "_" + ic + "_";
+//      sg.log("draw ID \"x" + label + (nTest++) + "\" "
+//          + P3.newP(ptA)
+//          + " " + P3.newP(ptB) 
+//          + " " + P3.newP(ptC)
+//          + " color " + color);
+//
+//      //dumpLine(ptA, ptB, label, color);
+//      //dumpLine(ptB, ptC, label, color);
+//      //dumpLine(ptC, ptA, label, color);
+//      //dumpLine2(pS, ptA, label, sr, color, "white");
+//      //dumpLine2(pS, ptB, label, sr, color, "white");
+//      //dumpLine2(pS, ptC, label, sr, color, "white");
+//    }
 
     @Override
     public String toString() {
@@ -874,7 +874,7 @@ class IsoSolventReader extends AtomDataReader {
       int iatom = myIndex[iia];
       if (iatom == ia || iatom == ib || iatom == ic)
         continue;
-      float d = atomData.atomXyz[iia].distance(ptS);
+      float d = atomData.atoms[iia].distance(ptS);
       if (d < atomData.atomRadius[iia] + sr) {
         isValid = false;
         break;
@@ -924,9 +924,9 @@ class IsoSolventReader extends AtomDataReader {
 
     for (int fi = vFaces.size(); --fi >= 0;) {
       Face f = vFaces.get(fi);
-      P3 ptA = atomXyz[f.ia];
-      P3 ptB = atomXyz[f.ib];
-      P3 ptC = atomXyz[f.ic];
+      P3 ptA = atomXyzTruncated[f.ia];
+      P3 ptB = atomXyzTruncated[f.ib];
+      P3 ptC = atomXyzTruncated[f.ic];
       P3 ptS = f.pS;
       // For the second pass (exterior of faces), we track 
       // voxels that have already been over-written by another face.
@@ -1051,8 +1051,8 @@ class IsoSolventReader extends AtomDataReader {
         continue;
       int ia = edge.ia;
       int ib = edge.ib;
-      P3 ptA = atomXyz[ia];
-      P3 ptB = atomXyz[ib];
+      P3 ptA = atomXyzTruncated[ia];
+      P3 ptB = atomXyzTruncated[ib];
       rAS = rs[ia];
       rBS = rs[ib];
       rAS2 = rs2[ia];//rAS * rAS;
@@ -1142,11 +1142,11 @@ class IsoSolventReader extends AtomDataReader {
     V3 v = edge.v;
     float cosAngleBAS = (edge.d2 + rs2[ia] - rs2[ib]) / (2 * edge.d * rAS);
     float angleBAS = (float) Math.acos(cosAngleBAS);
-    p.scaleAdd2(cosAngleBAS * rAS, v, atomXyz[ia]);
+    p.scaleAdd2(cosAngleBAS * rAS, v, atomXyzTruncated[ia]);
     Measure.getPlaneThroughPoint(p, v, plane);
     float dPS = (float)(Math.sin(angleBAS) * rAS);
 
-    P3 ptC = atomXyz[ic];
+    P3 ptC = atomXyzTruncated[ic];
     float rCS = rs[ic];
     float dCT = Measure.distanceToPlane(plane, ptC);
     if (Math.abs(dCT) >= rCS * 0.9f) 
@@ -1330,7 +1330,7 @@ class IsoSolventReader extends AtomDataReader {
     for (int iAtom = 0; iAtom < firstNearbyAtom; iAtom++) {
 //      if (rs == null  || atomXyz == null || atomXyz[iAtom] == null || pt == null)
 //        System.out.println("HOH");
-      float r = pt.distance(atomXyz[iAtom]) - rs[iAtom];
+      float r = pt.distance(atomXyzTruncated[iAtom]) - rs[iAtom];
       if (r < value)
         value = r;
     }

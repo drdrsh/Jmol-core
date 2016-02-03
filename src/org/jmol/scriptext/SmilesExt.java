@@ -189,7 +189,7 @@ public class SmilesExt {
     BS[] b;
     if (bsMatch3D == null) {
       // getting a BitSet or BitSet[] from a set of atoms or a pattern.
-      boolean isSmarts = JC.checkFlag(flags, JC.SMILES_TYPE_SMARTS);
+      boolean isSmarts = ((flags & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
       try {
         if (smiles == null) {
           b = sm.getSubstructureSetArray(pattern, e.vwr.ms.at, e.vwr.ms.ac,

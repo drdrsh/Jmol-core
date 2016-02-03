@@ -24,13 +24,12 @@
 
 package org.jmol.adapter.readers.quantum;
 
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.adapter.smarter.Atom;
+import java.util.Map;
 
 import javajs.util.Lst;
 import javajs.util.PT;
 
-import java.util.Map;
+import org.jmol.adapter.smarter.Atom;
 
 public class GamessUKReader extends GamessReader {
 

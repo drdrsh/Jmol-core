@@ -3,7 +3,6 @@ package org.jmol.util;
 import java.util.Hashtable;
 
 import javajs.util.AU;
-import javajs.util.PT;
 
 /**
  * A class to allow for more complex vibrations and associated phenomena, such

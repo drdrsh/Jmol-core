@@ -109,13 +109,13 @@ public class XmlQEReader extends XmlReader {
         break;
 
 //      if ("NUMBER_OF_ATOMS".equals(localName)) {
-//        ac = parseIntStr(chars);
+//        ac = parseIntStr(chars.toString());
 //        break;
 //      }
 
       if ("cell_dimensions".equals(localName)) {
         parent.setFractionalCoordinates(true);
-        float[] data = getTokensFloat(chars, null, 6);
+        float[] data = getTokensFloat(chars.toString(), null, 6);
         a = data[0];
         b = (data[1] == 0 ? a : data[1]);
         c = (data[2] == 0 ? a : data[2]);
@@ -127,7 +127,7 @@ public class XmlQEReader extends XmlReader {
 
       if ("at".equals(localName)) {
         // probably wrong -- only cubic
-        float[] m = getTokensFloat(chars, null, 9);
+        float[] m = getTokensFloat(chars.toString(), null, 9);
         for (int i = 0; i < 9; i += 3) {
           m[i] *= a;
           m[i + 1] *= b;

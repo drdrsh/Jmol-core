@@ -23,17 +23,15 @@
  */
 package org.jmol.adapter.readers.xml;
 
-import org.jmol.adapter.smarter.Atom;
-import org.jmol.api.Interface;
-import org.jmol.api.VolumeDataInterface;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javajs.util.Lst;
 import javajs.util.PT;
 
-import java.util.Hashtable;
-
-import java.util.Map;
-
+import org.jmol.adapter.smarter.Atom;
+import org.jmol.api.Interface;
+import org.jmol.jvxl.data.VolumeData;
 import org.jmol.util.Logger;
 
 /**
@@ -107,33 +105,18 @@ public class XmlChem3dReader extends XmlReader {
 
     if ("griddata".equals(localName)) {
       int nPointsX = parseIntStr(atts.get("griddatxdim"));
-      int nPointsY = parseIntStr(atts.get("griddatyxim"));
+      int nPointsY = parseIntStr(atts.get("griddatydim"));
       int nPointsZ = parseIntStr(atts.get("griddatzdim"));
       float xStep = parseFloatStr(atts.get("griddatxsize")) / (nPointsX);
-      float yStep = parseFloatStr(atts.get("griddatyzize")) / (nPointsY);
+      float yStep = parseFloatStr(atts.get("griddatysize")) / (nPointsY);
       float zStep = parseFloatStr(atts.get("griddatzsize")) / (nPointsZ);
       tokens = PT.getTokens(atts.get("griddatorigin"));
       float ox = parseFloatStr(tokens[0]);
       float oy = parseFloatStr(tokens[1]);
       float oz = parseFloatStr(tokens[2]);
-
       tokens = PT.getTokens(atts.get("griddatdata"));
       int pt = 1;
       float[][][] voxelData = new float[nPointsX][nPointsY][nPointsZ];
-
-      /* from adeptscience:
-       *
-       * 
-      "Here is what we can tell you:
-
-      In Chem3D, all grid data in following format:
-
-      for (int z = 0; z < ZDim; z++)
-      for (int y = 0; y < YDim; y++)
-      for (int x = 0; x < XDim; x++)"
-      
-       */
-
       float sum = 0;
       for (int z = 0; z < nPointsZ; z++)
         for (int y = 0; y < nPointsY; y++)
@@ -142,7 +125,6 @@ public class XmlChem3dReader extends XmlReader {
             voxelData[x][y][z] = f;
             sum += f * f;
           }
-
       // normalizing!
       sum = (float) (1 / Math.sqrt(sum));
       for (int z = 0; z < nPointsZ; z++)
@@ -150,7 +132,7 @@ public class XmlChem3dReader extends XmlReader {
           for (int x = 0; x < nPointsX; x++) {
             voxelData[x][y][z] *= sum;
           }
-      VolumeDataInterface vd = (VolumeDataInterface) Interface
+      VolumeData vd = (VolumeData) Interface
           .getOption("jvxl.data.VolumeData", vwr, "file");
       vd.setVoxelCounts(nPointsX, nPointsY, nPointsZ);
       vd.setVolumetricVector(0, xStep, 0, 0);

@@ -183,8 +183,7 @@ public class SB {
     /**
      * @j2sNative
      * 
-     * for (var i = len,j=off; --i >= 0;)
-     *            this.s += cb[j++];
+     * this.s += cb.slice(off,off+len).join("");
      * 
      */
     {

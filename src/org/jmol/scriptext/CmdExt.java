@@ -30,13 +30,13 @@ import java.util.Map.Entry;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
-import org.jmol.api.MinimizerInterface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.STER;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
 import org.jmol.java.BS;
+import org.jmol.minimize.Minimizer;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
@@ -2367,7 +2367,7 @@ public class CmdExt extends ScriptExt {
     boolean isSilent = false;
     BS bsFixed = null;
     boolean isOnly = false;
-    MinimizerInterface minimizer = vwr.getMinimizer(false);
+    Minimizer minimizer = vwr.getMinimizer(false);
     // may be null
     for (int i = 1; i < slen; i++)
       switch (getToken(i).tok) {

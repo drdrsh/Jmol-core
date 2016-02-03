@@ -50,7 +50,7 @@ class QMAtom extends P3 {
    * @j2sOverride
    * 
    * @param i
-   * @param xyz
+   * @param xyzAng 
    * @param atom 
    * @param X
    * @param Y
@@ -60,7 +60,7 @@ class QMAtom extends P3 {
    * @param Z2
    * @param unitFactor
    */
-  QMAtom(int i, T3 xyz, Atom atom, float[] X, float[] Y, float[] Z, 
+  QMAtom(int i, T3 xyzAng, Atom atom, float[] X, float[] Y, float[] Z, 
       float[] X2, float[] Y2, float[] Z2, float unitFactor) {
     index = i;
     myX = X;
@@ -69,10 +69,10 @@ class QMAtom extends P3 {
     myX2 = X2;
     myY2 = Y2;
     myZ2 = Z2;
-    this.atom = (atom == null ? (Atom) xyz : atom);
+    this.atom = atom;
     
     //this.isExcluded = isExcluded;
-    setT(xyz);
+    setT(xyzAng);
     scale(unitFactor);
     znuc = atom.getElementNumber();
   }

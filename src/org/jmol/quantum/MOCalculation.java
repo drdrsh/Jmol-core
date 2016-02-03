@@ -26,9 +26,9 @@ package org.jmol.quantum;
 import javajs.util.Lst;
 import javajs.util.T3;
 
-import org.jmol.api.MOCalculationInterface;
-import org.jmol.api.VolumeDataInterface;
 import org.jmol.java.BS;
+import org.jmol.jvxl.data.VolumeData;
+import org.jmol.modelset.Atom;
 import org.jmol.util.Logger;
 
 
@@ -89,8 +89,7 @@ import org.jmol.util.Logger;
  * 
  */
 
-public class MOCalculation extends QuantumCalculation implements
-    MOCalculationInterface {
+public class MOCalculation extends QuantumCalculation {
 
   private final static double CUT = -50;
   
@@ -128,17 +127,14 @@ public class MOCalculation extends QuantumCalculation implements
   public MOCalculation() {
   }
 
-  @Override
-  public boolean setupCalculation(VolumeDataInterface volumeData, BS bsSelected,
-                        BS bsExclude, BS[] bsMolecules,
-                        String calculationType, T3[] atomCoordAngstroms, T3[] atoms,
+  public boolean setupCalculation(VolumeData volumeData, BS bsSelected,
+                        String calculationType, T3[] xyz, Atom[] atoms,
                         int firstAtomOffset, Lst<int[]> shells,
                         float[][] gaussians,
                         int[][] dfCoefMaps, Object slaters, float[] moCoefficients,
                         float[] linearCombination, boolean isSquaredLinear, 
-                        float[][] coefs, float[] partialCharges, 
-                        boolean doNormalize, T3[] points, 
-                        float[] parameters, int testFlags) {
+                        float[][] coefs,
+                        boolean doNormalize, T3[] points) {
     havePoints = (points != null);
     this.calculationType = calculationType;
     this.firstAtomOffset = firstAtomOffset;
@@ -160,7 +156,7 @@ public class MOCalculation extends QuantumCalculation implements
     voxelDataTemp = (isSquaredLinear ? new float[nX][nY][nZ] : voxelData);
     setupCoordinates(volumeData.getOriginFloat(), 
         volumeData.getVolumetricVectorLengths(), 
-        bsSelected, atomCoordAngstroms, atoms, points, false);
+        bsSelected, xyz, atoms, points, false);
     doDebug = (Logger.debugging);
     return (slaters != null || checkCalculationType());
   }  

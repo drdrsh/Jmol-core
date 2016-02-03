@@ -25,12 +25,10 @@ package org.jmol.quantum;
 
 import javajs.util.AU;
 import javajs.util.Eigen;
-import javajs.util.Lst;
 import javajs.util.T3;
 
-import org.jmol.api.QuantumPlaneCalculationInterface;
-import org.jmol.api.VolumeDataInterface;
 import org.jmol.java.BS;
+import org.jmol.jvxl.data.VolumeData;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
@@ -90,8 +88,7 @@ import org.jmol.util.Logger;
  * 
  */
 
-public class NciCalculation extends QuantumCalculation implements
-    QuantumPlaneCalculationInterface {
+public class NciCalculation extends QuantumPlaneCalculation {
   
   private boolean havePoints;
   private boolean isReducedDensity;
@@ -128,17 +125,12 @@ public class NciCalculation extends QuantumCalculation implements
   private boolean noValuesAtAll;
   private boolean useAbsolute;
 
-  @Override
-  public boolean setupCalculation(VolumeDataInterface volumeData,
+  public boolean setupCalculation(VolumeData volumeData,
                                   BS bsSelected, BS bsExcluded,
-                                  BS[] bsMolecules, String calculationType,
-                                  T3[] atomCoordAngstroms, T3[] atoms,
-                                  int firstAtomOffset, Lst<int[]> shells,
-                                  float[][] gaussians, int[][] dfCoefMaps,
-                                  Object slaters, float[] moCoefficients,
-                                  float[] linearCombination, boolean isSquaredLinear,
-                                  float[][] coefs,
-                                  float[] partialCharges, boolean isDensityOnly,
+                                  BS[] bsMolecules,
+                                  T3[] atomCoordAngstroms, 
+                                  int firstAtomOffset, 
+                                  boolean isReducedDensity,
                                   T3[] points, float[] parameters, int testFlags) {
     useAbsolute = (testFlags == 2);
     this.bsExcluded = bsExcluded;
@@ -149,7 +141,7 @@ public class NciCalculation extends QuantumCalculation implements
     }
     isPromolecular = (firstAtomOffset >= 0);
     havePoints = (points != null);
-    isReducedDensity = isDensityOnly;
+    this.isReducedDensity = isReducedDensity;
     if (parameters != null)
       Logger.info("NCI calculation parameters = " + Escape.eAF(parameters));
     // parameters[0] is the cutoff.

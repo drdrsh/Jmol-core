@@ -61,70 +61,68 @@ public class XmlMolproReader extends XmlMOReader {
     iHaveCoefMaps = true;
   }
   
-//  @Override
-//  protected String[] getDOMAttributes() {
-//    return myAttributes;
-//  }
-  
+  //  @Override
+  //  protected String[] getDOMAttributes() {
+  //    return myAttributes;
+  //  }
+
   @Override
   public void processStartElement(String localName, String nodeName) {
     if (!processing)
       return;
     processStart2(localName);
-    if (processStartMO(localName))
-      return;
-    if (localName.equals("normalcoordinate")) {
-      setKeepChars(false);
-      if (!parent.doGetVibration(++vibrationNumber))
+    if (!processStartMO(localName)) {
+      if (localName.equals("normalcoordinate")) {
+        setKeepChars(false);
+        if (!parent.doGetVibration(++vibrationNumber))
+          return;
+        try {
+          asc.cloneLastAtomSet();
+        } catch (Exception e) {
+          System.out.println("" + e);
+          asc.errorMessage = "Error processing normalCoordinate: "
+              + e.getMessage();
+          vibrationNumber = 0;
+          return;
+        }
+        if (atts.containsKey("wavenumber")) {
+          String wavenumber = atts.get("wavenumber");
+          String units = "cm^-1";
+          if (atts.containsKey("units")) {
+            units = atts.get("units");
+            if (units.startsWith("inverseCent"))
+              units = "cm^-1";
+          }
+          asc.setAtomSetFrequency(null, null, wavenumber, units);
+          setKeepChars(true);
+        }
         return;
-      try {
-        asc.cloneLastAtomSet();
-      } catch (Exception e) {
-        System.out.println("" + e);
-        asc.errorMessage = "Error processing normalCoordinate: "
-            + e.getMessage();
+      }
+      if (localName.equals("vibrations")) {
         vibrationNumber = 0;
         return;
       }
-      if (atts.containsKey("wavenumber")) {
-        String wavenumber = atts.get("wavenumber");
-        String units = "cm^-1";
-        if (atts.containsKey("units")) {
-          units = atts.get("units");
-          if (units.startsWith("inverseCent"))
-            units = "cm^-1";
-        }
-        asc.setAtomSetFrequency(null, null, wavenumber, units);
-        setKeepChars(true);
-      }
-      return;
-    }
-
-    if (localName.equals("vibrations")) {
-      vibrationNumber = 0;
-      return;
     }
   }
 
   @Override
   void processEndElement(String localName) {
-    if (processEndMO(localName))
-      return;
-    if (localName.equals("normalcoordinate")) {
-      if (!keepChars)
-        return;
-      int ac = asc.getLastAtomSetAtomCount();
-      int baseAtomIndex = asc.getLastAtomSetAtomIndex();
-      tokens = PT.getTokens(chars);
-      for (int offset = tokens.length - ac * 3, i = 0; i < ac; i++) {
-        asc.addVibrationVector(i + baseAtomIndex,
-            parseFloatStr(tokens[offset++]), parseFloatStr(tokens[offset++]),
-            parseFloatStr(tokens[offset++]));
+    if (!processEndMO(localName)) {
+      if (localName.equals("normalcoordinate")) {
+        if (!keepChars)
+          return;
+        int ac = asc.getLastAtomSetAtomCount();
+        int baseAtomIndex = asc.getLastAtomSetAtomIndex();
+        tokens = PT.getTokens(chars.toString());
+        for (int offset = tokens.length - ac * 3, i = 0; i < ac; i++) {
+          asc.addVibrationVector(i + baseAtomIndex,
+              parseFloatStr(tokens[offset++]), parseFloatStr(tokens[offset++]),
+              parseFloatStr(tokens[offset++]));
+        }
+        setKeepChars(false);
       }
     }
     processEnd2(localName);
   }
-  
-
 
 }

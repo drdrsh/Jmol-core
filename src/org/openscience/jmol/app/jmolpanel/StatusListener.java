@@ -23,22 +23,7 @@
  */
 package org.openscience.jmol.app.jmolpanel;
 
-import org.jmol.api.JSVInterface;
-import org.jmol.api.JmolAppConsoleInterface;
-import org.jmol.api.JmolCallbackListener;
-import org.jmol.api.JmolStatusListener;
-import org.jmol.api.JmolSyncInterface;
-import org.jmol.c.CBK;
-import org.jmol.dialog.Dialog;
-import javajs.util.PT;
-
-import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
-import org.openscience.jmol.app.jmolpanel.console.AppConsole;
-import org.openscience.jmol.app.webexport.WebExport;
-
 import java.awt.Component;
-import java.awt.Font;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
@@ -46,7 +31,20 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
 
+import javajs.util.PT;
 import jspecview.application.MainFrame;
+
+import org.jmol.api.JSVInterface;
+import org.jmol.api.JmolAppConsoleInterface;
+import org.jmol.api.JmolCallbackListener;
+import org.jmol.api.JmolStatusListener;
+import org.jmol.api.JmolSyncInterface;
+import org.jmol.c.CBK;
+import org.jmol.dialog.Dialog;
+import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
+import org.openscience.jmol.app.jmolpanel.console.AppConsole;
+import org.openscience.jmol.app.webexport.WebExport;
 
 class StatusListener implements JmolStatusListener, JmolSyncInterface, JSVInterface {
 

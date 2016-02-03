@@ -93,11 +93,13 @@ public final class Chain implements Structure {
       groups[i].fixIndices(atomsDeleted, bsDeleted);
   }
 
+  @Override
   public void setAtomBits(BS bs) {
     for (int i = 0; i < groupCount; i++)
       groups[i].setAtomBits(bs);
   }
 
+  @Override
   public void setAtomBitsAndClear(BS bs, BS bsOut) {
     for (int i = 0; i < groupCount; i++)
       groups[i].setAtomBitsAndClear(bs, bsOut);

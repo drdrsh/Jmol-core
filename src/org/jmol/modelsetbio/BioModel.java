@@ -1406,16 +1406,16 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     //  res:  ID|model|chain|resid|resno|atomName|altID|InsCode|symmetry  
     SB sb = new SB();
     Group m = atom.group;
-    boolean noTrim = !JC.checkFlag(flags, JC.UNITID_TRIM); 
-    char ch = (JC.checkFlag(flags, JC.UNITID_INSCODE) ? m.getInsertionCode() : '\0');
+    boolean noTrim =((flags & JC.UNITID_TRIM) != JC.UNITID_TRIM); 
+    char ch = ((flags & JC.UNITID_INSCODE) == JC.UNITID_INSCODE ? m.getInsertionCode() : '\0');
     boolean isAll = (ch != '\0');
-    if (JC.checkFlag(flags, JC.UNITID_MODEL) && (pdbID != null))
+    if ((flags & JC.UNITID_MODEL) == JC.UNITID_MODEL && (pdbID != null))
       sb.append(pdbID);      
     sb.append("|").appendO(ms.getInfo(modelIndex, "modelNumber"))
       .append("|").append(vwr.getChainIDStr(m.chain.chainID))
       .append("|").append(m.getGroup3())
       .append("|").appendI(m.getResno());
-    if (JC.checkFlag(flags, JC.UNITID_ATOM)) {
+    if ((flags & JC.UNITID_ATOM) == JC.UNITID_ATOM) {
       sb.append("|").append(atom.getAtomName());
       if (atom.altloc != '\0')
         sb.append("|").appendC(atom.altloc);

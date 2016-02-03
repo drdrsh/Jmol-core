@@ -23,14 +23,13 @@
  */
 package org.jmol.adapter.readers.quantum;
 
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.adapter.smarter.Atom;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import java.util.Hashtable;
 
-import java.util.Map;
+import org.jmol.adapter.smarter.Atom;
 
 
 /**

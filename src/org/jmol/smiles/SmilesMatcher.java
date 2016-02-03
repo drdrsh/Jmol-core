@@ -404,7 +404,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     s = g.getSmiles(atoms, atomCount, BSUtil.newBitSet2(0, atomCount),
         null, flags | JC.SMILES_EXPLICIT_H | JC.SMILES_NOAROMATIC
             | JC.SMILES_NOSTEREO);
-    if (JC.checkFlag(flags, JC.SMILES_POLYHEDRAL)) {
+    if ((flags & JC.SMILES_POLYHEDRAL) == JC.SMILES_POLYHEDRAL) {
       s = "//* " + center + " *//\t["
           + Elements.elementSymbolFromNumber(center.getElementNumber()) + "@PH"
           + atomCount + (details == null ? "" : "/" + details + "/") + "]." + s;
@@ -455,7 +455,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
                        BS bsAromatic, int flags) throws Exception {
     InvalidSmilesException.clear();
     try {
-      SmilesSearch search = SmilesParser.getMolecule(pattern, JC.checkFlag(flags, JC.SMILES_TYPE_SMARTS));
+      SmilesSearch search = SmilesParser.getMolecule(pattern, ((flags & JC.SMILES_TYPE_SMARTS) ==  JC.SMILES_TYPE_SMARTS));
       search.jmolAtoms = atoms;
       if (atoms instanceof BNode[])
         search.bioAtoms = (BNode[]) atoms;
@@ -466,8 +466,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       search.getSelections();
       search.bsRequired = null;//(bsRequired != null && bsRequired.cardinality() > 0 ? bsRequired : null);
       search.setRingData(bsAromatic);
-      search.firstMatchOnly = JC.checkFlag(flags, JC.SMILES_RETURN_FIRST);
-      search.matchAllAtoms = JC.checkFlag(flags, JC.SMILES_MATCH_ALL);
+      search.firstMatchOnly = ((flags & JC.SMILES_RETURN_FIRST) == JC.SMILES_RETURN_FIRST);
+      search.matchAllAtoms = ((flags & JC.SMILES_MATCH_ALL) == JC.SMILES_MATCH_ALL);
       switch (flags & SMILES_MODE_MASK) {
       case SMILES_MODE_BITSET:
         search.asVector = false;

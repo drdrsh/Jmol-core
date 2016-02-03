@@ -1115,11 +1115,6 @@ public final class JC {
 
   public static String READER_NOT_FOUND = "File reader was not found:";
 
-  public static boolean checkFlag(int flags, int flag) {
-    return (flags & flag) == flag;
-  }
-
-
   public final static int UNITID_MODEL = 1;
   public final static int UNITID_RESIDUE = 2;
   public final static int UNITID_ATOM = 4;

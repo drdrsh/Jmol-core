@@ -119,6 +119,7 @@ class Display {
    * @param y
    * @param width  unused in Jmol proper
    * @param height unused in Jmol proper
+   * @param isDTI 
    */
   static void drawImage(Object context, Object canvas, int x, int y, int width, int height, boolean isDTI) {
     /*

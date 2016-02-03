@@ -24,7 +24,7 @@
 package org.jmol.jvxl.readers;
 
 import org.jmol.api.Interface;
-import org.jmol.api.MepCalculationInterface;
+import org.jmol.quantum.MepCalculation;
 import org.jmol.viewer.Viewer;
 
 class IsoMepReader extends AtomDataReader {
@@ -57,9 +57,9 @@ class IsoMepReader extends AtomDataReader {
   @Override
   protected void generateCube() {
     newVoxelDataCube();
-    MepCalculationInterface m = (MepCalculationInterface) Interface.getOption("quantum." + type + "Calculation", 
+    MepCalculation m = (MepCalculation) Interface.getOption("quantum." + type + "Calculation", 
         (Viewer) sg.atomDataServer, "file");
-    m.calculate(volumeData, bsMySelected, atomData.atomXyz,
+    m.calculate(volumeData, bsMySelected, atomData.xyz, atomData.atoms,
           params.theProperty, params.mep_calcType);
   }
 }

@@ -477,7 +477,7 @@ public class XmlCmlReader extends XmlReader {
           state = START;
         }
       } else if (name.equals("cellparameter") && keepChars) {
-        String[] tokens = PT.getTokens(chars);
+        String[] tokens = PT.getTokens(chars.toString());
         setKeepChars(false);
         if (tokens.length != 3 || cellParameterType == null) {
         } else if (cellParameterType.equals("length")) {
@@ -518,7 +518,7 @@ public class XmlCmlReader extends XmlReader {
       }
       break;
     case LATTICE_VECTOR:
-      float[] values = getTokensFloat(chars, null, 3);
+      float[] values = getTokensFloat(chars.toString(), null, 3);
       parent.addPrimitiveLatticeVector(latticeVectorPtr, values, 0);
       latticeVectorPtr = (latticeVectorPtr + 1) % 3;
       setKeepChars(false);
@@ -590,12 +590,12 @@ public class XmlCmlReader extends XmlReader {
       if (name.equals("scalar")) {
         state = MOLECULE_ATOM;
         if ("jmol:charge".equals(scalarDictRef)) {
-          atom.partialCharge = parseFloatStr(chars);
+          atom.partialCharge = parseFloatStr(chars.toString());
         } else if (scalarDictRef != null
             && "_atom_site_label".equals(scalarDictValue)) {
           if (atomIdNames == null)
             atomIdNames = new Properties();
-          atomIdNames.put(atom.atomName, chars);
+          atomIdNames.put(atom.atomName, chars.toString());
         }
       }
       setKeepChars(false);
@@ -605,13 +605,13 @@ public class XmlCmlReader extends XmlReader {
     case MOLECULE_ATOM_BUILTIN:
       state = MOLECULE_ATOM;
       if (scalarDictValue.equals("x3"))
-        atom.x = parseFloatStr(chars);
+        atom.x = parseFloatStr(chars.toString());
       else if (scalarDictValue.equals("y3"))
-        atom.y = parseFloatStr(chars);
+        atom.y = parseFloatStr(chars.toString());
       else if (scalarDictValue.equals("z3"))
-        atom.z = parseFloatStr(chars);
+        atom.z = parseFloatStr(chars.toString());
       else if (scalarDictValue.equals("elementType"))
-        atom.elementSymbol = chars;
+        atom.elementSymbol = chars.toString();
       setKeepChars(false);
       break;
     case MOLECULE_BOND_BUILTIN: // ACD Labs
@@ -620,9 +620,9 @@ public class XmlCmlReader extends XmlReader {
         if (tokenCount == 0)
           tokens = new String[2];
         if (tokenCount < 2)
-          tokens[tokenCount++] = chars;
+          tokens[tokenCount++] = chars.toString();
       } else if (scalarDictValue.equals("order")) {
-        int order = parseBondToken(chars);
+        int order = parseBondToken(chars.toString());
         if (order > 0 && tokenCount == 2)
           addNewBond(tokens[0], tokens[1], order);
       }
@@ -701,7 +701,7 @@ public class XmlCmlReader extends XmlReader {
   private void checkUnitCellItem(String[] tags, String value) {
     for (int i = tags.length; --i >= 0;)
       if (value.equals(tags[i])) {
-        parent.setUnitCellItem(i, parseFloatStr(chars));
+        parent.setUnitCellItem(i, parseFloatStr(chars.toString()));
         return;
       }
   }

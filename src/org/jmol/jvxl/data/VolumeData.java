@@ -115,20 +115,19 @@ package org.jmol.jvxl.data;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.api.VolumeDataInterface;
+import javajs.util.M3;
+import javajs.util.P3;
+import javajs.util.P4;
+import javajs.util.SB;
+import javajs.util.T3;
+import javajs.util.T3i;
+import javajs.util.V3;
+
 import org.jmol.jvxl.readers.SurfaceReader;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
-import javajs.util.SB;
-import javajs.util.M3;
-import javajs.util.P3;
-import javajs.util.T3i;
-import javajs.util.P4;
-import javajs.util.T3;
-import javajs.util.V3;
-
-public class VolumeData implements VolumeDataInterface {
+public class VolumeData {
 
   public SurfaceReader sr; // used for delivering point-specific values, particularly when mapping
   public boolean doIterate = true;
@@ -140,12 +139,12 @@ public class VolumeData implements VolumeDataInterface {
   public int nPoints;
   private float[][][] voxelData;
 
-  @Override
+  
   public float[][][] getVoxelData() {
     return voxelData;
   }
 
-  @Override
+  
   public void setVoxelDataAsArray(float[][][] voxelData) {
     this.voxelData = voxelData;
     if (voxelData != null)
@@ -198,13 +197,13 @@ public class VolumeData implements VolumeDataInterface {
         / mappingPlaneNormalMag;
   }
 
-  @Override
+  
   public void setVolumetricOrigin(float x, float y, float z) {
     //System.out.println("vd setvo " + x + " " + y + " " + z + " " + this);
     volumetricOrigin.set(x, y, z);
   }
 
-  @Override
+  
   public float[] getOriginFloat() {
     return origin;
   }
@@ -229,12 +228,12 @@ public class VolumeData implements VolumeDataInterface {
     return yzCount = voxelCounts[1] * voxelCounts[2];
   }
 
-  @Override
+  
   public float[] getVolumetricVectorLengths() {
     return volumetricVectorLengths;
   }
 
-  @Override
+  
   public void setVolumetricVector(int i, float x, float y, float z) {
     volumetricVectors[i].x = x;
     volumetricVectors[i].y = y;
@@ -242,12 +241,12 @@ public class VolumeData implements VolumeDataInterface {
     setUnitVectors();
   }
 
-  @Override
+  
   public int[] getVoxelCounts() {
     return voxelCounts;
   }
 
-  @Override
+  
   public int setVoxelCounts(int nPointsX, int nPointsY, int nPointsZ) {
     voxelCounts[0] = nPointsX;
     voxelCounts[1] = nPointsY;
@@ -300,19 +299,19 @@ public class VolumeData implements VolumeDataInterface {
     return true;
   }
 
-  @Override
+  
   public void transform(V3 v1, V3 v2) {
     volumetricMatrix.rotate2(v1, v2);
   }
 
-  @Override
+  
   public void setPlaneParameters(P4 plane) {
     thePlane = plane;
     thePlaneNormalMag = (float) Math.sqrt(plane.x * plane.x + plane.y * plane.y
         + plane.z * plane.z);
   }
 
-  @Override
+  
   public float calcVoxelPlaneDistance(int x, int y, int z) {
     voxelPtToXYZ(x, y, z, ptXyzTemp);
     return distancePointToPlane(ptXyzTemp);
@@ -329,13 +328,13 @@ public class VolumeData implements VolumeDataInterface {
         * ptXyzTemp.z + thePlane.w) < toPlaneParameter);
   }
 
-  @Override
+  
   public float distancePointToPlane(T3 pt) {
     return (thePlane.x * pt.x + thePlane.y * pt.y + thePlane.z * pt.z + thePlane.w)
         / thePlaneNormalMag;
   }
 
-  @Override
+  
   public void voxelPtToXYZ(int x, int y, int z, T3 pt) {
     pt.scaleAdd2(x, volumetricVectors[0], volumetricOrigin);
     pt.scaleAdd2(y, volumetricVectors[1], pt);
@@ -368,7 +367,7 @@ public class VolumeData implements VolumeDataInterface {
     return setMatrix();
   }
 
-  @Override
+  
   public void xyzToVoxelPt(float x, float y, float z, T3i pt3i) {
     ptXyzTemp.set(x, y, z);
     ptXyzTemp.sub(volumetricOrigin);
@@ -379,7 +378,7 @@ public class VolumeData implements VolumeDataInterface {
 
   public boolean isPeriodic;
 
-  @Override
+  
   public float lookupInterpolatedVoxelValue(T3 point, boolean getSource) {
     if (mappingPlane != null)
       return distanceToMappingPlane(point);
@@ -461,7 +460,7 @@ public class VolumeData implements VolumeDataInterface {
     volumetricOrigin.sub2(center, pt);
   }
 
-  @Override
+  
   public void setDataDistanceToPlane(P4 plane) {
     //TODO REMOVE THIS METHOD.
     setPlaneParameters(plane);
@@ -477,7 +476,7 @@ public class VolumeData implements VolumeDataInterface {
 
   private boolean isSquared;
 
-  @Override
+  
   public void filterData(boolean isSquared, float invertCutoff) {
     boolean doInvert = (!Float.isNaN(invertCutoff));
     if (sr != null) {
@@ -499,7 +498,7 @@ public class VolumeData implements VolumeDataInterface {
             voxelData[x][y][z] = invertCutoff - voxelData[x][y][z];
   }
 
-  @Override
+  
   public void capData(P4 plane, float cutoff) {
     if (voxelData == null)
       return;

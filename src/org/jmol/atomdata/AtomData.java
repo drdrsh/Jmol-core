@@ -115,9 +115,12 @@ package org.jmol.atomdata;
 
 
 
+import javajs.util.M4;
 import javajs.util.P3;
 
 import org.jmol.java.BS;
+import org.jmol.modelset.Atom;
+import org.jmol.util.BSUtil;
 
 
 
@@ -155,7 +158,8 @@ public class AtomData {
   public float hAtomRadius;
   
   public int[] atomIndex;
-  public P3[] atomXyz;
+  public Atom[] atoms;
+  public P3[] xyz;
   public float[] atomRadius;
   public int[] atomicNumber;
   public int[] atomMolecule;
@@ -163,5 +167,24 @@ public class AtomData {
   public int ac;
   public int hydrogenAtomCount;
   public int adpMode;
+
+  /**
+   * allow for transformed XYZ
+   * 
+   * @param mat
+   * @param bs
+   */
+  public void transformXYZ(M4 mat, BS bs) {
+    P3[] p = new P3[xyz.length];
+    if (bs == null)
+      bs = BSUtil.newBitSet2(0, xyz.length);
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      if (xyz[i] == null)
+        continue;
+      p[i] = P3.newP(xyz[i]);
+      mat.rotTrans(p[i]);
+    }
+    xyz = p;
+  }
 }
 
