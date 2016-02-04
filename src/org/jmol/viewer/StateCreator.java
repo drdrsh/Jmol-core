@@ -233,8 +233,7 @@ public class StateCreator extends JmolStateCreator {
   }
 
   @Override
-  String getModelState(SB sfunc, boolean isAll,
-                              boolean withProteinStructure) {
+  String getModelState(SB sfunc, boolean isAll, boolean withProteinStructure) {
     SB commands = new SB();
     if (isAll && sfunc != null) {
       sfunc.append("  _setModelState;\n");
@@ -262,22 +261,21 @@ public class StateCreator extends JmolStateCreator {
       SB sb = new SB();
       for (int i = 0; i < ms.bondCount; i++)
         if (!models[bonds[i].atom1.mi].isModelKit)
-          if (bonds[i].isHydrogen()
-              || (bonds[i].order & Edge.BOND_NEW) != 0) {
+          if (bonds[i].isHydrogen() || (bonds[i].order & Edge.BOND_NEW) != 0) {
             Bond bond = bonds[i];
             int index = bond.atom1.i;
             if (bond.atom1.group.isAdded(index))
               index = -1 - index;
-            sb.appendI(index).appendC('\t').appendI(bond.atom2.i).appendC(
-                '\t').appendI(bond.order & ~Edge.BOND_NEW).appendC('\t')
-                .appendF(bond.mad / 1000f).appendC('\t').appendF(
-                    bond.getEnergy()).appendC('\t').append(
-                    Edge.getBondOrderNameFromOrder(bond.order)).append(
-                    ";\n");
+            sb.appendI(index).appendC('\t').appendI(bond.atom2.i).appendC('\t')
+                .appendI(bond.order & ~Edge.BOND_NEW).appendC('\t')
+                .appendF(bond.mad / 1000f).appendC('\t')
+                .appendF(bond.getEnergy()).appendC('\t')
+                .append(Edge.getBondOrderNameFromOrder(bond.order))
+                .append(";\n");
           }
       if (sb.length() > 0)
-        commands.append("data \"connect_atoms\"\n").appendSB(sb).append(
-            "end \"connect_atoms\";\n");
+        commands.append("data \"connect_atoms\"\n").appendSB(sb)
+            .append("end \"connect_atoms\";\n");
       commands.append("\n");
     }
 
@@ -302,13 +300,14 @@ public class StateCreator extends JmolStateCreator {
     // unnecessary. Removed in 11.5.35 -- oops!
 
     if (withProteinStructure)
-      commands.append(ms.getProteinStructureState(null, isAll ? T.all : T.state));
+      commands.append(ms
+          .getProteinStructureState(null, isAll ? T.all : T.state));
 
-    // don't want to mess with 14.4 states here
-    if (JC.versionInt > 1405000)
-      for (int i = 0; i < modelCount; i++)
-        if (models[i].mat4 != null)
-          commands.append("  frame orientation " + ms.getModelNumberDotted(i) + Escape.matrixToScript(models[i].mat4) + ";\n");
+    // introduced in 14.4.2
+    for (int i = 0; i < modelCount; i++)
+      if (models[i].mat4 != null)
+        commands.append("  frame orientation " + ms.getModelNumberDotted(i)
+            + Escape.matrixToScript(models[i].mat4) + ";\n");
 
     getShapeState(commands, isAll, Integer.MAX_VALUE);
 
@@ -320,33 +319,31 @@ public class StateCreator extends JmolStateCreator {
           break;
         }
       SB sb = new SB();
-           for (int i = 0; i < modelCount; i++) {
+      for (int i = 0; i < modelCount; i++) {
         Model m = models[i];
         sb.setLength(0);
         String s = (String) ms.getInfo(i, "modelID");
-        if (s != null
-            && !s.equals(ms.getInfo(i, "modelID0")))
-          sb.append("  frame ID ").append(PT.esc(s))
-              .append(";\n");
+        if (s != null && !s.equals(ms.getInfo(i, "modelID0")))
+          sb.append("  frame ID ").append(PT.esc(s)).append(";\n");
         String t = ms.frameTitles[i];
         if (t != null && t.length() > 0)
-          sb.append("  frame title ").append(PT.esc(t))
-              .append(";\n");
+          sb.append("  frame title ").append(PT.esc(t)).append(";\n");
         if (needOrientations && m.orientation != null
             && !ms.isTrajectorySubFrame(i))
-          sb.append("  ").append(
-              m.orientation.getMoveToText(false)).append(";\n");
+          sb.append("  ").append(m.orientation.getMoveToText(false))
+              .append(";\n");
         if (m.frameDelay != 0 && !ms.isTrajectorySubFrame(i))
-          sb.append("  frame delay ").appendF(
-              m.frameDelay / 1000f).append(";\n");
+          sb.append("  frame delay ").appendF(m.frameDelay / 1000f)
+              .append(";\n");
         if (m.simpleCage != null) {
-          sb.append("  unitcell ").append(
-              Escape.eAP(m.simpleCage.getUnitCellVectors())).append(
-              ";\n");
+          sb.append("  unitcell ")
+              .append(Escape.eAP(m.simpleCage.getUnitCellVectors()))
+              .append(";\n");
           getShapeState(sb, isAll, JC.SHAPE_UCCAGE);
         }
         if (sb.length() > 0)
-          commands.append("  frame " + ms.getModelNumberDotted(i) + ";\n").appendSB(sb);
+          commands.append("  frame " + ms.getModelNumberDotted(i) + ";\n")
+              .appendSB(sb);
       }
 
       boolean loadUC = false;
@@ -359,9 +356,8 @@ public class StateCreator extends JmolStateCreator {
           sb.setLength(0);
           if (symmetry.getState(sb)) {
             loadUC = true;
-            commands.append("  frame ")
-              .append(ms.getModelNumberDotted(i))
-              .appendSB(sb).append(";\n");
+            commands.append("  frame ").append(ms.getModelNumberDotted(i))
+                .appendSB(sb).append(";\n");
           }
           haveModulation |= (vwr.ms.getLastVibrationVector(i, T.modulation) >= 0);
         }
@@ -384,8 +380,8 @@ public class StateCreator extends JmolStateCreator {
       }
       commands.append("  set fontScaling " + vwr.getBoolean(T.fontscaling)
           + ";\n");
-//      if (vwr.getBoolean(T.modelkitmode))
-  //      commands.append("  set modelKitMode true;\n");
+      //      if (vwr.getBoolean(T.modelkitmode))
+      //      commands.append("  set modelKitMode true;\n");
     }
     if (sfunc != null)
       commands.append("\n}\n\n");

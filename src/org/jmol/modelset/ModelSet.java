@@ -3625,9 +3625,11 @@ public class ModelSet extends BondCollection {
       sm.notifyAtomPositionsChanged(i, bs, mat);
       if (mat != null) {
         Model m = am[i];
-        if (m.mat4 == null)
-          m.mat4 = M4.newM4(null);
-        m.mat4.mul2(mat, m.mat4);
+        if (m.isContainedIn(bs)) {
+          if (m.mat4 == null)
+            m.mat4 = M4.newM4(null);
+          m.mat4.mul2(mat, m.mat4);
+        }
       }
     }
     averageAtomPoint = null;

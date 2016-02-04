@@ -82,6 +82,9 @@ public class Model {
    */
   public ModelSet ms;
 
+  /**
+   * mat4 tracks the rotation/translation of the full model using  rotateSelected or translateSelected 
+   */
   public M4 mat4;
   
   public int modelIndex; // our 0-based reference
@@ -180,6 +183,22 @@ public class Model {
   // this one is variable and calculated only if necessary:
   public int getTrueAtomCount() {
     return bsAtoms.cardinality() - bsAtomsDeleted.cardinality();
+  }
+
+  private BS bsCheck;
+  
+  /**
+   * 
+   * @param bs
+   * @return true if all undeleted atom bits in this model are in bs
+   */
+  public boolean isContainedIn(BS bs) {
+    if (bsCheck == null)
+      bsCheck = new BS();
+    bsCheck.or(bs);
+    bsCheck.and(bsAtoms);
+    bsCheck.andNot(bsAtomsDeleted);
+    return (bsCheck.cardinality() == getTrueAtomCount());
   }
 
   public void resetBoundCount() {

@@ -25,6 +25,7 @@ package org.jmol.jvxl.data;
 
 
 
+import javajs.J2SIgnoreImport;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
@@ -34,13 +35,16 @@ import javajs.util.XmlUtil;
 
 import java.util.Map;
 
+import org.jmol.api.Interface;
 import org.jmol.java.BS;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 
+@J2SIgnoreImport({ javajs.util.XmlUtil.class })
 public class JvxlCoder {
 
   //TODO -- need to escapeXml for text data
@@ -57,6 +61,14 @@ public class JvxlCoder {
   // 2.2 adds color density Jmol 12.0.15/12.1.13
   // 2.3 adds discrete colors for vertex-only data (encoding="none")
   
+  /**
+   * @j2sIgnore
+   * 
+   * @param volumeData
+   * @param jvxlData
+   * @param title
+   * @return XML string
+   */
   public static String jvxlGetFile(VolumeData volumeData, JvxlData jvxlData,
                                    String[] title) {
     // for the simple writer
@@ -65,28 +77,35 @@ public class JvxlCoder {
     jvxlData.nPointsY = counts[1];
     jvxlData.nPointsZ = counts[2];
     jvxlData.jvxlVolumeDataXml = volumeData.setVolumetricXml();
-    return jvxlGetFile(jvxlData, null, title, null, true, 1, null, null);
+    return jvxlGetFileVwr(null, jvxlData, null, title, null, true, 1, null, null);
   }
 
-  public static String jvxlGetFile(JvxlData jvxlData, MeshData meshData,
-                                   String[] title, String msg,
-                                   boolean includeHeader, int nSurfaces,
-                                   String state, String comment) {
-    return jvxlGetFileXml(jvxlData, meshData, title, msg, includeHeader, nSurfaces, state, comment);
+  private static boolean haveXMLUtil;
+  
+  /**
+   * 
+   * @param vwr  for JSmol initInterface
+   * @param jvxlData
+   * @param meshData
+   * @param title
+   * @param msg
+   * @param includeHeader
+   * @param nSurfaces
+   * @param state
+   * @param comment
+   * @return
+   */
+  public static String jvxlGetFileVwr(Viewer vwr, JvxlData jvxlData,
+                                   MeshData meshData, String[] title,
+                                   String msg, boolean includeHeader,
+                                   int nSurfaces, String state, String comment) {
+    if (!haveXMLUtil) {
+      // creating an instance prevents pre-loading by JavaScript
+      if (vwr.isJS)
+        Interface.getInterface("javajs.util.XmlUtil", vwr, "show");
+      haveXMLUtil = true;  
+    }
     
-    // version1 decomissioned because of jvxlExcluded[] performing so well
-    
-    //    if (meshData != null || jvxlData == null || jvxlData.asXml 
-    //      || jvxlData.vContours != null || jvxlData.contourValues != null
-    //      || jvxlData.jvxlExcluded[0] != null || jvxlData.jvxlExcluded[1] != null )
-    //  return jvxlGetFileXml(jvxlData, meshData, title, msg, includeHeader, nSurfaces, state, comment);
-    //return jvxlGetFileVersion1(jvxlData, meshData, title, msg, includeHeader, nSurfaces, state, comment);
-  }
-
-  private static String jvxlGetFileXml(JvxlData jvxlData, MeshData meshData,
-                                       String[] title, String msg,
-                                       boolean includeHeader, int nSurfaces,
-                                       String state, String comment) {
     SB data = new SB();
     if ("TRAILERONLY".equals(msg)) {
       XmlUtil.closeTag(data, "jvxlSurfaceSet");

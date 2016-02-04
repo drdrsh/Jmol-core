@@ -930,7 +930,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       SB sb = new SB();
       getMeshCommand(sb, thisMesh.index);
       thisMesh.setJvxlColorMap(true);
-      return JvxlCoder.jvxlGetFile(jvxlData, meshData, title, "", true, 1, sb.toString(), null);
+      return JvxlCoder.jvxlGetFileVwr(vwr, jvxlData, meshData, title, "", true, 1, sb.toString(), null);
     }
     if (property == "jvxlFileInfo") {
       thisMesh.setJvxlColorMap(false);

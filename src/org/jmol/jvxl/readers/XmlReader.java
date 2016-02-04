@@ -27,12 +27,11 @@ package org.jmol.jvxl.readers;
 
 import java.io.BufferedReader;
 
-import org.jmol.util.Escape;
-
+import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.XmlUtil;
+
+import org.jmol.util.Escape;
 
 
 public class XmlReader {
@@ -139,9 +138,18 @@ public class XmlReader {
       return "";
     while (PT.isWhitespace(data.charAt(++pt1))) {
     }
-    return XmlUtil.unwrapCdata(data.substring(pt1, pt2));
+    return unwrapCdata(data.substring(pt1, pt2));
   }
 
+  /**
+   * @param s
+   * @return   unwrapped text
+   */
+  public static String unwrapCdata(String s) {
+    return (s.startsWith("<![CDATA[") && s.endsWith("]]>") ?
+        PT.rep(s.substring(9, s.length()-3),"]]]]><![CDATA[>", "]]>") : s);
+  }
+  
   public static String getXmlAttrib(String data, String what) {
     // TODO
     // presumes what = "xxxx"

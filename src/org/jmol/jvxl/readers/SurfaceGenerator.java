@@ -1120,10 +1120,19 @@ public class SurfaceGenerator {
       meshDataServer.notifySurfaceMappingCompleted();
   }
   
+  /**
+   * only called from org.openscience.jvxl.Jvxl.main
+   * 
+   * @j2sIgnore
+   * 
+   * @param property
+   * @param index
+   * @return Object
+   */
   public Object getProperty(String property, int index) {
     if (property == "jvxlFileData")
-      return JvxlCoder.jvxlGetFile(jvxlData, null, params.title, "", true,
-          index, null, null); // for Jvxl.java
+      return JvxlCoder.jvxlGetFileVwr(null, jvxlData, null, params.title, "",
+          true, index, null, null); // for Jvxl.java
     if (property == "jvxlFileInfo")
       return JvxlCoder.jvxlGetInfo(jvxlData); // for Jvxl.java
     return null;

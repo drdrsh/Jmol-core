@@ -2292,7 +2292,8 @@ public class PropertyManager implements JmolPropertyManager {
     if (nAtoms == 0)
       return "";
     // creating an instance prevents pre-loading by JavaScript
-    Interface.getInterface("javajs.util.XmlUtil", vwr, "file");
+    if (vwr.isJS)
+      Interface.getInterface("javajs.util.XmlUtil", vwr, "file");
     XmlUtil.openTag(sb, "molecule");
     XmlUtil.openTag(sb, "atomArray");
     BS bsAtoms = new BS();
