@@ -52,8 +52,6 @@ public class SmilesBond extends Edge {
 
   static String getBondOrderString(int order) {
     switch (order) {
-    case 1:
-      return "";
     case 2:
       return "=";
     case 3:
