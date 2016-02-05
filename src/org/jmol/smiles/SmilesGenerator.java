@@ -567,7 +567,7 @@ public class SmilesGenerator {
     if (sp2Atoms == null)
       sp2Atoms = new Node[5];
     if (bondPrev != null) {
-      strBond = SmilesBond.getBondOrderString(bondPrev.getCovalentOrder());
+      strBond = (isAromatic && bsAromatic.get(prevIndex) ? "" : SmilesBond.getBondOrderString(bondPrev.getCovalentOrder()));
       if (prevSp2Atoms == null)
         sp2Atoms[nSp2Atoms++] = prevAtom;
       else
