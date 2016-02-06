@@ -217,10 +217,9 @@ public abstract class MeshRenderer extends ShapeRenderer {
           : selectedPolyOnly ? mesh.bsSlabDisplay : null);
       
       renderLow = (!isExport && !vwr.checkMotionRendering(T.mesh));
-      boolean allowFrontOnly = (!tm.slabEnabled
-          && !mesh.isTwoSided && !selectedPolyOnly 
+      boolean allowFrontOnly = (!mesh.isTwoSided && !selectedPolyOnly 
           && (meshSlabValue == Integer.MIN_VALUE || meshSlabValue >= 100));
-      frontOnly = renderLow || mesh.frontOnly && allowFrontOnly;
+      frontOnly = renderLow || mesh.frontOnly && !tm.slabEnabled && allowFrontOnly;
       isShell = mesh.isShell && allowFrontOnly;
       screens = vwr.allocTempScreens(vertexCount);
       if (isPrecision)
