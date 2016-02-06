@@ -365,7 +365,7 @@ public class Mesh extends MeshSurface {
       s.append(" triangles");
     s.append(" ").append(T.nameOf(lighting));
     if (isShell && !isTwoSided)
-      s.append(" shell");
+      s.append(" backshell");
     return s.toString();
   }
 
