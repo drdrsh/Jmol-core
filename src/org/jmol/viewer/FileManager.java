@@ -1107,7 +1107,7 @@ public class FileManager implements BytePoster {
 
   ///// FILE TYPING /////
   
-  private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0";
+  private final static String DELPHI_BINARY_MAGIC_NUMBER = "\24\0\0\0"; //0x14 0 0 0 == "20-byte character string follows"
   public final static String PMESH_BINARY_MAGIC_NUMBER = "PM\1\0";
   public static final String JPEG_CONTINUE_STRING = " #Jmol...\0";
   

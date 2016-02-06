@@ -403,10 +403,9 @@ public class JvxlXmlReader extends VolumeFileReader {
     jvxlData.mappedDataMin = params.mappedDataMin;
     jvxlData.mappedDataMax = params.mappedDataMax;
     jvxlData.isColorReversed = params.isColorReversed;
-    jvxlData.insideOut = insideOut;
     if (params.insideOut)
-      jvxlData.insideOut = !jvxlData.insideOut;
-    params.insideOut = jvxlData.insideOut;
+      insideOut = !insideOut;
+    params.insideOut = jvxlData.insideOut = insideOut;
   }
 
   @Override

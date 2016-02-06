@@ -185,14 +185,6 @@ public class SurfaceGenerator {
       jvxlData.version = version;
   }
 
-  public boolean isInsideOut() {
-    return params.insideOut != params.dataXYReversed;
-  }
-  
-  public boolean isFullyLit() {
-    return (params.thePlane != null || params.fullyLit);
-  }
-
   //////////////////////////////////////////////////////////////
 
   /**

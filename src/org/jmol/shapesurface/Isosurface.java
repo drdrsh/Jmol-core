@@ -1480,7 +1480,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   public boolean notifySurfaceGenerationCompleted() {
     setMeshI();
     setBsVdw();
-    thisMesh.insideOut = sg.isInsideOut();
+    thisMesh.insideOut = sg.params.isInsideOut();
     thisMesh.isModelConnected = sg.params.isModelConnected;
     thisMesh.vertexSource = sg.params.vertexSource;
     thisMesh.spanningVectors = sg.getSpanningVectors();
@@ -1488,7 +1488,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     thisMesh.calculatedVolume = null;
     // from JVXL file:
     if (!thisMesh.isMerged) {
-      thisMesh.initialize(sg.isFullyLit() ? T.fullylit
+      thisMesh.initialize(sg.params.isFullyLit() ? T.fullylit
         : T.frontlit, null, sg.params.thePlane);
       if (jvxlData.fixedLattice != null) {
         thisMesh.lattice = jvxlData.fixedLattice;
@@ -1511,7 +1511,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   @Override
   public void notifySurfaceMappingCompleted() {
     if (!thisMesh.isMerged)
-      thisMesh.initialize(sg.isFullyLit() ? T.fullylit : T.frontlit, null,
+      thisMesh.initialize(sg.params.isFullyLit() ? T.fullylit : T.frontlit, null,
           sg.params.thePlane);
     setBsVdw();
     thisMesh.isColorSolid = false;

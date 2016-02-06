@@ -121,13 +121,14 @@ class MrcBinaryReader extends MapFileReader {
     if (nx < 0 || nx > 1<<8) {
       setStream(null, false);
       nx = binarydoc.swapBytesI(nx);
-      if (params.thePlane == null)
-        params.insideOut = !params.insideOut;
+      //removed for PDBE CCP4 files
+      //if (params.thePlane == null)
+        //params.insideOut = !params.insideOut;
       if (nx < 0 || nx > 1000) {
         Logger.info("nx=" + nx + " not displayable as MRC file");
         throw new Exception("MRC file type not readable");
       }
-      Logger.info("reading nonstandard little-endian MRC file");
+      Logger.info("reading little-endian MRC file");
     }
     ny = binarydoc.readInt();
     nz = binarydoc.readInt();
@@ -182,10 +183,13 @@ class MrcBinaryReader extends MapFileReader {
     mapr = binarydoc.readInt();
     maps = binarydoc.readInt();
 
-    Logger.info("MRC header: mapc mapr maps: " + mapc + " " + mapr + " " + maps);
+    String s = "" + mapc + mapr + maps;
+    Logger.info("MRC header: mapc mapr maps: " + s);
 
-    if (mapc != 1 && params.thePlane == null)
+    if (params.thePlane == null && "21321".indexOf(s) >= 1) {
+      Logger.info("MRC header: data are xy-reversed");
       params.dataXYReversed = true;
+    }
 
     dmin = binarydoc.readFloat(); 
     dmax = binarydoc.readFloat();
@@ -223,7 +227,7 @@ class MrcBinaryReader extends MapFileReader {
       labels[0] = "Jmol MrcBinaryReader";
 
     for (int i = 0; i < 10; i++) {
-      String s = binarydoc.readString(80).trim();
+      s = binarydoc.readString(80).trim();
       if (i < nlabel) {
         labels[i] = s;
         Logger.info(labels[i]);
@@ -232,7 +236,7 @@ class MrcBinaryReader extends MapFileReader {
     
     for (int i = 0; i < nsymbt; i += 80) {
       long position = binarydoc.getPosition();
-      String s = binarydoc.readString(80).trim();
+      s = binarydoc.readString(80).trim();
       if (s.indexOf('\0') != s.lastIndexOf('\0')) {
         // must not really be symmetry info!
         Logger.error("File indicates " + nsymbt + " symmetry lines, but "  + i + " found!");

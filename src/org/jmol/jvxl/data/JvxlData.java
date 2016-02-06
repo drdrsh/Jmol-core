@@ -111,7 +111,6 @@ public class JvxlData {
   public int colorFractionBase = JvxlCoder.defaultColorFractionBase;
   public int colorFractionRange = JvxlCoder.defaultColorFractionRange;
 
-  public boolean dataXYReversed;
   public boolean insideOut;
   public boolean isXLowToHigh;
   public boolean isContoured;

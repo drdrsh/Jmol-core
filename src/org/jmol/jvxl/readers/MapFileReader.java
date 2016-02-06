@@ -84,7 +84,7 @@ abstract class MapFileReader extends VolumeFileReader {
 
   protected void getVectorsAndOrigin() {
       
-      Logger.info("grid parameters: nx,ny,nz: " + nx + "," + ny + "," + nz);
+    Logger.info("grid parameters: nx,ny,nz: " + nx + "," + ny + "," + nz);
     Logger.info("grid parameters: nxStart,nyStart,nzStart: " + nxyzStart[0]
         + "," + nxyzStart[1] + "," + nxyzStart[2]);
 

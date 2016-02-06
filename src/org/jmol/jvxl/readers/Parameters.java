@@ -882,4 +882,13 @@ public class Parameters {
     slabInfo.addLast(slabObject);
   }
 
+  public boolean isInsideOut() {
+    return insideOut != dataXYReversed;
+  }
+  
+  public boolean isFullyLit() {
+    return (thePlane != null || fullyLit);
+  }
+
+
 }

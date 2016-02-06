@@ -2422,7 +2422,14 @@ public class IsoExt extends ScriptExt {
          * Or =xxxx, an EDM from Uppsala Electron Density Server
          * If the model auxiliary info has "jmolSufaceInfo", we use that.
          */
-        if (filename.startsWith("=") && filename.length() > 1) {
+        boolean checkWithin = false;
+        if (filename.startsWith("*") && filename.length() > 1) {
+          // new PDB ccp4 option
+          filename = (String) vwr.setLoadFormat(filename, '_', false);
+          //          filename = info[0];
+          checkWithin = true;
+        } else if (filename.startsWith("=") && filename.length() > 1) {
+          checkWithin = true;
           String[] info = (String[]) vwr.setLoadFormat(filename, '_', false);
           filename = info[0];
           String strCutoff = (!firstPass || !Float.isNaN(cutoff) ? null
@@ -2456,8 +2463,10 @@ public class IsoExt extends ScriptExt {
               sbCommand.append(" cutoff ").appendF(cutoff);
             }
           }
+        }
+        if (checkWithin) {
           if (ptWithin == 0) {
-            onlyOneModel = "=xxxx";
+            onlyOneModel = filename;
             if (modelIndex < 0)
               modelIndex = vwr.am.cmi;
             bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
@@ -2469,7 +2478,6 @@ public class IsoExt extends ScriptExt {
           if (firstPass)
             defaultMesh = true;
         }
-
         if (firstPass && vwr.getP("_fileType").equals("Pdb")
             && Float.isNaN(sigma) && Float.isNaN(cutoff)) {
           // negative sigma just indicates that 

@@ -370,8 +370,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     nPointsY = voxelCounts[1];
     nPointsZ = voxelCounts[2];
     jvxlData.isSlabbable = ((params.dataType & Parameters.IS_SLABBABLE) != 0);
-    jvxlData.insideOut = params.insideOut;
-    jvxlData.dataXYReversed = params.dataXYReversed;
+    jvxlData.insideOut = params.isInsideOut();
     jvxlData.isBicolorMap = params.isBicolorMap;
     jvxlData.nPointsX = nPointsX;
     jvxlData.nPointsY = nPointsY;

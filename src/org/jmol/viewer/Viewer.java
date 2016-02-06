@@ -3926,17 +3926,17 @@ public class Viewer extends JmolViewer implements AtomDataServer,
           return name;
         }
       } else {
-        format = ( 
-            // following is temporary, until issues are resolved for AJAX asych
-            isJS && g.loadFormat.equals(g.pdbLoadFormat) ? g.pdbLoadFormat0 
-                : g.loadFormat);
+        format = (
+        // following is temporary, until issues are resolved for AJAX asych
+        isJS && g.loadFormat.equals(g.pdbLoadFormat) ? g.pdbLoadFormat0
+            : g.loadFormat);
       }
       //$FALL-THROUGH$
     case '#': // ligand
       if (format == null)
         format = g.pdbLoadLigandFormat;
       if (id.indexOf(".") >= 0 && format.equals(g.pdbLoadFormat))
-          format = g.pdbLoadFormat0; // older version for =1crn.cif or  =1crn.pdb
+        format = g.pdbLoadFormat0; // older version for =1crn.cif or  =1crn.pdb
       return g.resolveDataBase(null, id, format);
     case '*':
       // European Bioinformatics Institute
@@ -4055,6 +4055,13 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return (withPrefix ? "MOL3D::" : "")
           + PT.formatStringS(format, "FILE", id);
     case '_': // isosurface "=...", but we code that type as '_'
+      if (name.startsWith("*")) {
+        boolean isDiff = id.startsWith("*");
+        if (isDiff)
+          id = id.substring(1);
+        return g.resolveDataBase((isDiff ? "pdbemapdiff" : "pdbemap"), id,
+            null);
+      }
       return g.fixSurfaceFileNameVariables(id);
     }
     return id;
