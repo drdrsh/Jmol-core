@@ -1206,10 +1206,10 @@ public class FileManager implements BytePoster {
     if (pt0 >= 0) {
       if (line.indexOf(FileManager.PMESH_BINARY_MAGIC_NUMBER) == 0)
         return "Pmesh";
-      if (line.indexOf(DELPHI_BINARY_MAGIC_NUMBER) == 0)
-        return "DelPhi";
       if (line.indexOf("MAP ") == 208)
         return "Mrc";
+      if (line.indexOf(DELPHI_BINARY_MAGIC_NUMBER) == 0)
+        return "DelPhi";
       if (line.length() > 37 && (line.charAt(36) == 0 && line.charAt(37) == 100 
           || line.charAt(36) == 0 && line.charAt(37) == 100)) { 
            // header19 (short)100
