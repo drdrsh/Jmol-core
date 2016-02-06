@@ -924,7 +924,7 @@ public class GlobalSettings {
       id = id.substring(1);
     String server = resolveDataBase(null, id, (isDiff ? edsUrlFormatDiff
         : edsUrlFormat));
-    String strCutoff = (isDiff ? "" : resolveDataBase(null, id, edsUrlCutoff));
+    String strCutoff = resolveDataBase(null, id, edsUrlCutoff);
     return new String[] { server, strCutoff, isDiff ? "diff" : null };
   }
 

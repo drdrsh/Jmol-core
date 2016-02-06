@@ -1174,6 +1174,7 @@ public class IsoExt extends ScriptExt {
     boolean isWild = (idSeen && getShapeProperty(iShape, "ID") == null);
     boolean isColorSchemeTranslucent = false;
     boolean isInline = false;
+    boolean isSign = false;
     Object onlyOneModel = null;
     String translucency = null;
     String colorScheme = null;
@@ -1549,8 +1550,8 @@ public class IsoExt extends ScriptExt {
       case T.sign:
       case T.color:
         idSeen = true;
-        boolean isSign = (eval.theTok == T.sign);
-        if (isSign) {
+        if (eval.theTok == T.sign) {
+          isSign = true;
           sbCommand.append(" sign");
           addShapeProperty(propertyList, "sign", Boolean.TRUE);
         } else {
@@ -2425,8 +2426,18 @@ public class IsoExt extends ScriptExt {
         boolean checkWithin = false;
         if (filename.startsWith("*") && filename.length() > 1) {
           // new PDB ccp4 option
+          if (filename.startsWith("**")) {
+            if (Float.isNaN(sigma))
+              addShapeProperty(propertyList, "sigma", Float.valueOf(sigma = 3));
+            if (!isSign) {
+              isSign = true;
+              sbCommand.append(" sign");
+              addShapeProperty(propertyList, "sign", Boolean.TRUE);
+            }
+          }
+          if (!Float.isNaN(sigma))
+            showString("using sigma=" + sigma);
           filename = (String) vwr.setLoadFormat(filename, '_', false);
-          //          filename = info[0];
           checkWithin = true;
         } else if (filename.startsWith("=") && filename.length() > 1) {
           checkWithin = true;
