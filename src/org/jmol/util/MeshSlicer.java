@@ -71,8 +71,10 @@ public class MeshSlicer {
         m.bsSlabGhost = null;
         m.slabMeshType = T.none;
       }
-      if (slabType == T.none)
+      if (slabType == T.none) {
+        
         return false;
+      }
     }
     Object slabbingObject = slabObject[1];
     boolean andCap = ((Boolean) slabObject[2]).booleanValue()

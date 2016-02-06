@@ -62,6 +62,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
 
   protected boolean isTranslucent;
   protected boolean frontOnly;
+  protected boolean isShell;
   protected boolean antialias;
   protected boolean haveBsDisplay;
   protected boolean selectedPolyOnly;
@@ -216,16 +217,18 @@ public abstract class MeshRenderer extends ShapeRenderer {
           : selectedPolyOnly ? mesh.bsSlabDisplay : null);
       
       renderLow = (!isExport && !vwr.checkMotionRendering(T.mesh));
-      frontOnly = renderLow || !tm.slabEnabled && mesh.frontOnly
+      boolean allowFrontOnly = (!tm.slabEnabled
           && !mesh.isTwoSided && !selectedPolyOnly 
-          && (meshSlabValue == Integer.MIN_VALUE || meshSlabValue >= 100);
+          && (meshSlabValue == Integer.MIN_VALUE || meshSlabValue >= 100));
+      frontOnly = renderLow || mesh.frontOnly && allowFrontOnly;
+      isShell = mesh.isShell && allowFrontOnly;
       screens = vwr.allocTempScreens(vertexCount);
       if (isPrecision)
         p3Screens = vwr.allocTempPoints(vertexCount);
-      if (frontOnly)
+      if (frontOnly || isShell)
         transformedVectors = vwr.gdata.getTransformedVertexVectors();
       if (transformedVectors == null)
-        frontOnly = false;
+        frontOnly = isShell = false;
     }
     return true;
   }
@@ -329,6 +332,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (isTranslucentInherit)
       colix = C.copyColixTranslucency(mesh.slabColix, mesh.colix);
     g3d.setC(colix);
+    // isShell???
     if (generateSet) {
       if (frontOnly && fill)
         frontOnly = false;
@@ -384,7 +388,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       short nA = normixes[iA];
       short nB = normixes[iB];
       short nC = normixes[iC];
-      check = checkNormals(nA, nB, nC);
+      check = (frontOnly || isShell ? checkFront(nA, nB, nC) : 7);
       if (fill && check != 7)
         continue;
       switch (polygon.length) {
@@ -486,16 +490,14 @@ public abstract class MeshRenderer extends ShapeRenderer {
           screenA.y, screenA.z, screenC.x, screenC.y, screenC.z);
   }
 
-  protected int checkNormals(short nA, short nB, short nC) {
+  protected int checkFront(short nA, short nB, short nC) {
     int check = 7;
-    if (frontOnly) {
-      if (transformedVectors[nA].z < 0)
-        check ^= 1;
-      if (transformedVectors[nB].z < 0)
-        check ^= 2;
-      if (transformedVectors[nC].z < 0)
-        check ^= 4;
-    }
+    if (transformedVectors[nA].z < 0)
+      check ^= 1;
+    if (transformedVectors[nB].z < 0)
+      check ^= 2;
+    if (transformedVectors[nC].z < 0)
+      check ^= 4;
     return check;
   }
 

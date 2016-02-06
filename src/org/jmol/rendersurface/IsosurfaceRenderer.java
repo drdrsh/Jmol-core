@@ -161,6 +161,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
     volumeRender = (imesh.jvxlData.colorDensity && imesh.jvxlData.allowVolumeRender);
     int thisSlabValue = mySlabValue;
     frontOnly = mesh.frontOnly || shapeID == JC.SHAPE_LCAOCARTOON;
+    isShell = mesh.isShell && shapeID != JC.SHAPE_LCAOCARTOON;
     if (!isNavigationMode) {
       meshSlabValue = imesh.jvxlData.slabValue; 
       if (meshSlabValue != Integer.MIN_VALUE  
@@ -178,9 +179,11 @@ public class IsosurfaceRenderer extends MeshRenderer {
         }
         thisSlabValue = Math.round(z0 + (z1 - z0) * (100f - meshSlabValue)/100);
         frontOnly &= (meshSlabValue >= 100);
+        isShell &= (meshSlabValue >= 100);
       }
     }
     boolean tCover = vwr.gdata.translucentCoverOnly;
+    // isShell??
     vwr.gdata.translucentCoverOnly = (frontOnly || !vwr.getBoolean(T.translucent));
     thePlane = imesh.jvxlData.jvxlPlane;
     vertexValues = mesh.vvs;
@@ -292,7 +295,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       int diam;
       if (mesh.diameter <= 0) {
         diam = vwr.getInt(T.dotscale);
-        frontOnly = false;
+        frontOnly = isShell = false;
       } else {
         diam = vwr.getScreenDim() / (volumeRender ? 50 : 100);        
       }
@@ -368,6 +371,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       colix = C.copyColixTranslucency(mesh.slabColix, mesh.colix);
     g3d.setC(colix);
     boolean generateSet = isExport;
+    // isShell???
     if (generateSet) {
       if (frontOnly && fill)
         frontOnly = false;
@@ -418,7 +422,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       short nA = normixes[iA];
       short nB = normixes[iB];
       short nC = normixes[iC];
-      int check = checkNormals(nA, nB, nC);
+      int check = (frontOnly || isShell ? checkFront(nA, nB, nC) : 7);
       if (fill && check == 0)
         continue;
       short colixA, colixB, colixC;

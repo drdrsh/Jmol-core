@@ -273,6 +273,7 @@ public abstract class MeshCollection extends Shape {
       case T.fullylit:
       case T.dots:
       case T.fill:
+      case T.backshell:
       case T.triangles:
       case T.frontonly:
         break;
@@ -304,6 +305,10 @@ public abstract class MeshCollection extends Shape {
       case T.nofill:
         test = false;
         tok = T.fill;
+        break;
+      case T.nobackshell:
+        test = false;
+        tok = T.backshell;
         break;
       case T.notriangles:
         test = false;

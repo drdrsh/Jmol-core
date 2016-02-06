@@ -8879,6 +8879,8 @@ public class ScriptEval extends ScriptExpr {
     case T.nomesh:
     case T.fill:
     case T.nofill:
+    case T.backshell:
+    case T.nobackshell:
     case T.triangles:
     case T.notriangles:
     case T.frontonly:

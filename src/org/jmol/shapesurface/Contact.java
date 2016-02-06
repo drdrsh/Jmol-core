@@ -142,6 +142,7 @@ public class Contact extends Isosurface {
     thisMesh.nSets = 0;
     thisMesh.info = null;
     String func = null;
+    boolean fullyLit = true;
     switch (displayType) {
     case T.full:
       func = "(a>b?a:b)";
@@ -157,7 +158,7 @@ public class Contact extends Isosurface {
     //VolumeData volumeData;
     switch (displayType) {
     case T.nci:
-      colorByType = false;
+      colorByType = fullyLit = false;
       bs = BSUtil.copy(bsA);
       bs.or(bsB); // for now -- TODO -- need to distinguish ligand
       if (parameters[0] < 0)
@@ -170,13 +171,13 @@ public class Contact extends Isosurface {
       break;
     case T.sasurface:
     case T.surface:
-      colorByType = false;
+      colorByType = fullyLit = false;
       thisMesh.nSets = 1;
       newSurface(T.surface, null, bsA, bsB, rd, null, null, colorDensity,
           null, saProbeRadius);
       break;
     case T.cap:
-      colorByType = false;
+      colorByType = fullyLit = false;
       thisMesh.nSets = 1;
       newSurface(T.slab, null, bsA, bsB, rd, null, null, false, null, 0);
       sg.initState();
@@ -230,7 +231,7 @@ public class Contact extends Isosurface {
     if (colorDensity) {
       setPropI("pointSize", Float.valueOf(ptSize), null);
     } else {
-      setPropI("token", Integer.valueOf(T.fullylit), null);
+      setPropI("token", Integer.valueOf(fullyLit ? T.fullylit : T.frontlit), null);
     }
     if (thisMesh.slabOptions != null) {
       thisMesh.slabOptions = null;

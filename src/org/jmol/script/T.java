@@ -1110,11 +1110,12 @@ public class T {
   public final static int auto   = misc  | 28;
   public final static int axis   = misc  | 30;
   public final static int babel         = misc  | 32;
-  public final static int babel21       = misc  | 34; 
-  public final static int back          = misc  | 35;
-  public final static int balls         = misc  | 36;
-  public final static int barb          = misc  | 37;
-  public final static int backlit       = misc  | 38;
+  public final static int babel21       = misc  | 33; 
+  public final static int back          = misc  | 34;
+  public final static int balls         = misc  | 35;
+  public final static int barb          = misc  | 36;
+  public final static int backlit       = misc  | 37;
+  public final static int backshell     = misc  | 38;
   public final static int best          = misc  | 39;
   public final static int basepair      = misc  | 40;
   public final static int binary        = misc  | 42;
@@ -1228,21 +1229,22 @@ public class T {
   public final static int msms           = misc  | 210;
   public final static int name           = misc  | 211;
   public final static int nci            = misc  | 212;
-  public final static int next    = misc  | 213;
+  public final static int next           = misc  | 213;
   public final static int nmr            = misc  | 214;
   public final static int nocontourlines  = misc  | 215;
   public final static int nocross        = misc  | 216;
   public final static int nodebug        = misc  | 217;
-  public final static int nodots  = misc  | 218;
+  public final static int nodots         = misc  | 218;
   public final static int noedges        = misc  | 220;
-  public final static int nofill  = misc  | 222;
+  public final static int nofill         = misc  | 222;
   public final static int nohead         = misc  | 224;
   public final static int noload         = misc  | 226;
-  public final static int nomesh  = misc  | 228;
+  public final static int nomesh         = misc  | 228;
   public final static int noplane        = misc  | 230;
   public final static int normal         = misc  | 232;
-  public final static int notfrontonly  = misc  | 234;
-  public final static int notriangles   = misc  | 236;
+  public final static int nobackshell    = misc  | 233;
+  public final static int notfrontonly   = misc  | 234;
+  public final static int notriangles    = misc  | 236;
   public final static int obj            = misc  | 238;
   public final static int object         = misc  | 240;
   public final static int offset         = misc  | 242;
@@ -1264,22 +1266,22 @@ public class T {
   public final static int period         = misc  | 266;
   public final static int perpendicular  = misc  | 268;
   public final static int phase          = misc  | 270;
-  public final static int play    = misc  | 272;
-  public final static int playrev = misc  | 274;
+  public final static int play           = misc  | 272;
+  public final static int playrev        = misc  | 274;
   public final static int planarparam    = misc  | 275;
   public final static int pocket         = misc  | 276;
   public final static int pointsperangstrom = misc  | 280;
   public final static int polygon        = misc  | 282;
-  public final static int prev    = misc  | 284;
-  public final static int probe   = misc  | 285;
-  public final static int pymol   = misc  | 286;
+  public final static int prev           = misc  | 284;
+  public final static int probe          = misc  | 285;
+  public final static int pymol          = misc  | 286;
   public final static int rad            = misc  | 287;
   public final static int radical        = misc  | 288;
-  public final static int range   = misc  | 290;
-  public final static int rasmol  = misc  | 292;
+  public final static int range          = misc  | 290;
+  public final static int rasmol         = misc  | 292;
   public final static int reference      = misc  | 294;
   public final static int remove         = misc  | 295;
-  public final static int residue = misc  | 296;
+  public final static int residue        = misc  | 296;
   public final static int resolution     = misc  | 298;
   public final static int reversecolor   = misc  | 300;
   public final static int rewind         = misc  | 301;
@@ -1288,7 +1290,7 @@ public class T {
   public final static int rna3d          = misc  | 304;
   public final static int rock           = misc  | 305;
   public final static int rotate45       = misc  | 306;
-  public final static int rotation = misc  | 308;
+  public final static int rotation       = misc  | 308;
   public final static int rubberband     = misc  | 310;
   public final static int sasurface      = misc  | 311;
   public final static int saved          = misc  | 312;
@@ -1301,7 +1303,7 @@ public class T {
   public final static int silent         = misc  | 324;
   public final static int solid          = misc  | 326;
   public final static int spacegroup     = misc  | 328;
-  public final static int sphere  = misc  | 330;
+  public final static int sphere         = misc  | 330;
   public final static int squared        = misc  | 332;
   public final static int state          = misc  | 334;
   public final static int stdinchi       = misc  | 335;
@@ -1315,17 +1317,17 @@ public class T {
   public final static int top            = misc  | 348;
   public final static int torsion        = misc  | 350;
   public final static int transform      = misc  | 352;
-  public final static int translation   = misc  | 354;
-  public final static int triangles     = misc  | 358;
-  public final static int url             = misc  | 360;
-  public final static int user            = misc  | 362;
-  public final static int val             = misc  | 364;
-  public final static int validation      = misc  | 365;
-  public final static int variable        = misc  | 366;
-  public final static int variables       = misc  | 368;
-  public final static int vertices        = misc  | 370;
-  public final static int spacebeforesquare      = misc  | 371;
-  public final static int width           = misc  | 372;
+  public final static int translation    = misc  | 354;
+  public final static int triangles      = misc  | 358;
+  public final static int url            = misc  | 360;
+  public final static int user           = misc  | 362;
+  public final static int val            = misc  | 364;
+  public final static int validation     = misc  | 365;
+  public final static int variable       = misc  | 366;
+  public final static int variables      = misc  | 368;
+  public final static int vertices       = misc  | 370;
+  public final static int spacebeforesquare = misc  | 371;
+  public final static int width          = misc  | 372;
 
   // used to be "expression":
   
@@ -1905,6 +1907,7 @@ public class T {
         "babel21",
         "back",
         "backlit",
+        "backshell",
         "balls",
         "baseModel",
         "best",
@@ -2050,6 +2053,7 @@ public class T {
         "null",
         "inherit",
         "normal",
+        "noBackshell",
         "noContourLines",
         "notFrontOnly",
         "noTriangles",
@@ -2938,6 +2942,7 @@ public class T {
         babel21,                            // "babel21"
         back,                               // "back"
         backlit,                            // "backlit"
+        backshell,                          // "backshell"
         balls,                              // "balls"
         basemodel,                          // "baseModel"
         best,                               // "best"
@@ -3083,6 +3088,7 @@ public class T {
         -1,                                 // "null"
         -1,                                 // "inherit"
         normal,                             // "normal"
+        nobackshell,                        // "nobackshell"
         nocontourlines,                     // "noContourLines"
         notfrontonly,                       // "notFrontOnly"
         notriangles,                        // "noTriangles"

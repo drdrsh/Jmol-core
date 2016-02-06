@@ -70,6 +70,7 @@ public class MolecularOrbital extends Isosurface {
   private int moMesh = T.mesh;
   private int moDots = T.nodots;
   private int moFrontOnly = T.frontonly;
+  private int moShell = T.nobackshell;
   private String moTitleFormat;
   private boolean moDebug;
   private int myColorPt;
@@ -289,6 +290,10 @@ public class MolecularOrbital extends Isosurface {
       case T.mesh:
       case T.nomesh:
         moMesh = tok;
+        break;
+      case T.backshell:
+      case T.nobackshell:
+        moShell = tok;
         break;
       case T.frontonly:
       case T.notfrontonly:
@@ -517,6 +522,7 @@ public class MolecularOrbital extends Isosurface {
       setPropI("translucency", moTranslucency, null);
     setPropI("token", Integer.valueOf(moFill), null);
     setPropI("token", Integer.valueOf(moMesh), null);
+    setPropI("token", Integer.valueOf(moShell), null);
     setPropI("token", Integer.valueOf(moDots), null);
     setPropI("token", Integer.valueOf(moFrontOnly), null);
     thisModel.put("mesh", currentMesh);

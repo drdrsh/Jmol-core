@@ -99,6 +99,8 @@ public class Mesh extends MeshSurface {
   public int visibilityFlags;
   public boolean insideOut;
   public int checkByteCount;
+  private boolean normalsInverted;
+  
 
   public void setVisibilityFlags(int n) {
     visibilityFlags = n;//set to 1 in mps
@@ -110,6 +112,7 @@ public class Mesh extends MeshSurface {
   public boolean fillTriangles = true;
   public boolean showTriangles = false; //as distinct entitities
   public boolean frontOnly = false;
+  public boolean isShell = false;
   public boolean isTwoSided = true;
   public boolean havePlanarContours = false;
 
@@ -161,6 +164,7 @@ public class Mesh extends MeshSurface {
     drawTriangles = false;
     fillTriangles = true;
     frontOnly = false;
+    isShell = false;
     havePlanarContours = false;
     haveXyPoints = false;
     isModelConnected = false;
@@ -190,7 +194,7 @@ public class Mesh extends MeshSurface {
   }
 
   protected BS bsTemp;
-  
+
   public void initialize(int lighting, T3[] vertices, P4 plane) {
     if (vertices == null)
       vertices = this.vs;
@@ -198,6 +202,8 @@ public class Mesh extends MeshSurface {
     setNormixes(normals);
     this.lighting = T.frontlit;
     if (insideOut)
+      invertNormixes();
+    if (isShell && !isTwoSided)
       invertNormixes();
     setLighting(lighting);
   }
@@ -214,7 +220,7 @@ public class Mesh extends MeshSurface {
     else
       for (int i = normixCount; --i >= 0;)
         normixes[i] = Normix.getNormixV(normals[i], bsTemp);
-    return normixes;
+    return normixes; 
   }
 
   public V3[] getNormals(T3[] vertices, P4 plane) {
@@ -256,6 +262,7 @@ public class Mesh extends MeshSurface {
 
   private void invertNormixes() {
     Normix.setInverseNormixes();
+    normalsInverted = !normalsInverted;
     for (int i = normixCount; --i >= 0;)
       normixes[i] = Normix.getInverseNormix(normixes[i]);
   }
@@ -357,6 +364,8 @@ public class Mesh extends MeshSurface {
     if (showTriangles)
       s.append(" triangles");
     s.append(" ").append(T.nameOf(lighting));
+    if (isShell && !isTwoSided)
+      s.append(" shell");
     return s.toString();
   }
 
@@ -447,29 +456,37 @@ public class Mesh extends MeshSurface {
         }
     return bs;
   }
-//
-//  BS getVisibleGhostBitSet() {
-//    BS bs = new BS();
-//    if (polygonCount == 0 && bsSlabGhost != null)
-//      BSUtil.copy2(bsSlabGhost, bs);
-//    else
-//      for (int i = polygonCount; --i >= 0;)
-//        if (bsSlabGhost == null || bsSlabGhost.get(i)) {
-//          int[] vertexIndexes = polygonIndexes[i];
-//          if (vertexIndexes == null)
-//            continue;
-//          bs.set(vertexIndexes[0]);
-//          bs.set(vertexIndexes[1]);
-//          bs.set(vertexIndexes[2]);
-//        }
-//    return bs;
-//  }
+
+  //
+  //  BS getVisibleGhostBitSet() {
+  //    BS bs = new BS();
+  //    if (polygonCount == 0 && bsSlabGhost != null)
+  //      BSUtil.copy2(bsSlabGhost, bs);
+  //    else
+  //      for (int i = polygonCount; --i >= 0;)
+  //        if (bsSlabGhost == null || bsSlabGhost.get(i)) {
+  //          int[] vertexIndexes = polygonIndexes[i];
+  //          if (vertexIndexes == null)
+  //            continue;
+  //          bs.set(vertexIndexes[0]);
+  //          bs.set(vertexIndexes[1]);
+  //          bs.set(vertexIndexes[2]);
+  //        }
+  //    return bs;
+  //  }
 
   public void setTokenProperty(int tokProp, boolean bProp) {
     switch (tokProp) {
     case T.notfrontonly:
     case T.frontonly:
       frontOnly = (tokProp == T.frontonly ? bProp : !bProp);
+      return;
+    case T.nobackshell:
+    case T.backshell:
+      if (!isTwoSided && isShell != (tokProp == T.backshell ? bProp : !bProp)) {
+        isShell = !isShell;
+        invertNormixes();
+      }
       return;
     case T.frontlit:
     case T.backlit:
@@ -478,23 +495,23 @@ public class Mesh extends MeshSurface {
       return;
     case T.nodots:
     case T.dots:
-      showPoints =  (tokProp == T.dots ? bProp : !bProp);
+      showPoints = (tokProp == T.dots ? bProp : !bProp);
       return;
     case T.nomesh:
     case T.mesh:
-      drawTriangles =  (tokProp == T.mesh ? bProp : !bProp);
+      drawTriangles = (tokProp == T.mesh ? bProp : !bProp);
       return;
     case T.nofill:
     case T.fill:
-      fillTriangles =  (tokProp == T.fill ? bProp : !bProp);
+      fillTriangles = (tokProp == T.fill ? bProp : !bProp);
       return;
     case T.notriangles:
     case T.triangles:
-      showTriangles =  (tokProp == T.triangles ? bProp : !bProp);
+      showTriangles = (tokProp == T.triangles ? bProp : !bProp);
       return;
     case T.nocontourlines:
     case T.contourlines:
-      showContourLines =  (tokProp == T.contourlines ? bProp : !bProp);
+      showContourLines = (tokProp == T.contourlines ? bProp : !bProp);
       return;
     }
   }

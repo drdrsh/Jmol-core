@@ -130,6 +130,8 @@ abstract public class QuantumCalculation {
 
     // all coordinates come in as angstroms, not bohr, and are converted here into bohr
 
+    if (atoms == null)
+      atoms = (Atom[]) xyz;
     if (points == null) {
       volume = 1;
       for (int i = 3; --i >= 0;) {
