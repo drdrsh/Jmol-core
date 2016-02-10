@@ -4078,6 +4078,7 @@ public class ScriptEval extends ScriptExpr {
     // invertSelected PLANE
     // invertSelected HKL
     // invertSelected STEREO {sp3Atom} {one or two groups)
+    // invertSelected ATOM {ring atom sets}
     P3 pt = null;
     P4 plane = null;
     BS bs = null;
@@ -4104,6 +4105,14 @@ public class ScriptEval extends ScriptExpr {
     case T.hkl:
       plane = hklParameter(2);
       break;
+    case T.atoms:
+      bs = atomExpressionAt(2);
+      if (!chk) {
+        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+          vwr.invertRingAt(i, false);
+        }
+      }
+      return;
     }
     checkLengthErrorPt(iToken + 1, 1);
     if (plane == null && pt == null && iAtom == Integer.MIN_VALUE)

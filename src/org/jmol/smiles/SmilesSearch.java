@@ -206,7 +206,7 @@ public class SmilesSearch extends JmolMolecule {
     boolean aromaticStrict = ((flags & Edge.FLAG_AROMATIC_STRICT) != 0);
     boolean aromaticDefined = ((flags & Edge.FLAG_AROMATIC_DEFINED) != 0);
     if (aromaticStrict && vRings == null)
-      vRings = AU.createArrayOfArrayList(4); 
+      vRings = AU.createArrayOfArrayList(4);
     if (aromaticDefined && needAromatic) {
       // predefined aromatic bonds
       bsAromatic = SmilesAromatic.checkAromaticDefined(jmolAtoms, bsSelected);
@@ -235,10 +235,10 @@ public class SmilesSearch extends JmolMolecule {
       SmilesSearch search = SmilesParser.getMolecule(smarts, true);
       Lst<Object> vR = (Lst<Object>) subsearch(search, false, true);
       if (vRings != null && i <= 5) {
-        Lst<BS> v = new  Lst<BS>();
-        for (int j = vR.size(); --j >= 0; )
+        Lst<BS> v = new Lst<BS>();
+        for (int j = vR.size(); --j >= 0;)
           v.addLast((BS) vR.get(j));
-        vRings[i-3] = v;
+        vRings[i - 3] = v;
       }
       if (needAromatic) {
         if (!aromaticDefined && (!aromaticStrict || i == 5 || i == 6))
@@ -246,8 +246,18 @@ public class SmilesSearch extends JmolMolecule {
             BS bs = (BS) vR.get(r);
             if (aromaticDefined
                 || SmilesAromatic.isFlatSp2Ring(jmolAtoms, bsSelected, bs,
-                    (aromaticStrict ? 0.1f : 0.01f)))
+                    (aromaticStrict ? 0.1f : 0.01f))) {
               bsAromatic.or(bs);
+              if (!aromaticStrict)
+                switch (i) {
+                case 5:
+                  bsAromatic5.or(bs);
+                  break;
+                case 6:
+                  bsAromatic6.or(bs);
+                  break;
+                }
+            }
           }
         if (aromaticStrict) {
           switch (i) {
@@ -260,7 +270,7 @@ public class SmilesSearch extends JmolMolecule {
                   bsAromatic);
             else
               SmilesAromatic.checkAromaticStrict(jmolAtoms, bsAromatic, v5, vR);
-            vRings[3] = new  Lst<BS>();
+            vRings[3] = new Lst<BS>();
             setAromatic56(v5, bsAromatic5, 5, vRings[3]);
             setAromatic56(vR, bsAromatic6, 6, vRings[3]);
             break;
@@ -859,11 +869,10 @@ public class SmilesSearch extends JmolMolecule {
         if (patternAtom.residueChar != null || patternAtom.elementNumber == -2) {
           char atype = a.getBioSmilesType();
           char ptype = patternAtom.getBioSmilesType();
-          char resChar = (patternAtom.residueChar == null ? '*'
-              : patternAtom.residueChar.charAt(0));
           boolean ok = true;
           boolean isNucleic = false;
           switch (ptype) {
+          case '\0':
           case '*':
             ok = true;
             break;
@@ -882,6 +891,8 @@ public class SmilesSearch extends JmolMolecule {
           if (!ok)
             break;
           String s = a.getGroup1('\0').toUpperCase();
+          char resChar = (patternAtom.residueChar == null ? '*'
+              : patternAtom.residueChar.charAt(0));
           boolean isOK = (resChar == s.charAt(0));
           switch (resChar) {
           case '*':

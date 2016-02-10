@@ -1823,44 +1823,8 @@ public class ActionManager implements EventManager {
       }
       return;
     case PICKING_INVERT_STEREO:
-      if (bnd(clickAction, ACTION_assignNew)) {
-        bs = vwr.getAtomBitSet("connected(atomIndex=" + atomIndex
-            + ") and !within(SMARTS,'[r50,R]')");
-        int nb = bs.cardinality();
-        switch (nb) {
-        case 0:
-        case 1:
-          // not enough non-ring atoms
-          return;
-        case 2:
-          break;
-        case 3:
-        case 4:
-          // three or four are not in a ring. So let's find the shortest two
-          // branches and invert them.
-          int[] lengths = new int[nb];
-          int[] points = new int[nb];
-          int ni = 0;
-          for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1), ni++) {
-            lengths[ni] = vwr.getBranchBitSet(i, atomIndex, true)
-                .cardinality();
-            points[ni] = i;
-          }
-          for (int j = 0; j < nb - 2; j++) {
-            int max = Integer.MIN_VALUE;
-            int imax = 0;
-            for (int i = 0; i < nb; i++)
-              if (lengths[i] >= max && bs.get(points[i])) {
-                imax = points[i];
-                max = lengths[i];
-              }
-            bs.clear(imax);
-          }
-        }
-        vwr.undoMoveActionClear(atomIndex, AtomCollection.TAINT_COORD, true);
-        vwr.invertSelected(null, null, atomIndex, bs);
-        vwr.setStatusAtomPicked(atomIndex, "inverted: " + Escape.eBS(bs), null);
-      }
+      if (bnd(clickAction, ACTION_assignNew))
+        vwr.invertRingAt(atomIndex), true);
       return;
     case PICKING_DELETE_ATOM:
       if (bnd(clickAction, ACTION_deleteAtom)) {
