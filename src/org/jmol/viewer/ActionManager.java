@@ -1824,7 +1824,7 @@ public class ActionManager implements EventManager {
       return;
     case PICKING_INVERT_STEREO:
       if (bnd(clickAction, ACTION_assignNew))
-        vwr.invertRingAt(atomIndex), true);
+        vwr.invertRingAt(atomIndex, true);
       return;
     case PICKING_DELETE_ATOM:
       if (bnd(clickAction, ACTION_deleteAtom)) {
