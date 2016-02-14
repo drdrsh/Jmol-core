@@ -23,6 +23,8 @@ public interface JmolToJSmolInterface extends JmolObjectInterface {
 
   void _setCanvasImage(Object canvas, int width, int height);
 
+  void _setCursor(Object html5Applet, int c);
+  
   Object _getHiddenCanvas(Object html5Applet, String string, int w, int h);
 
   Object _loadImage(Platform platform, String echoName, String path,
@@ -32,7 +34,7 @@ public interface JmolToJSmolInterface extends JmolObjectInterface {
   GenericImageDialog _consoleGetImageDialog(Viewer vwr,
                                             String title,
                                             Map<String, GenericImageDialog>imageMap);
-  
+
   /// more ///
   
 

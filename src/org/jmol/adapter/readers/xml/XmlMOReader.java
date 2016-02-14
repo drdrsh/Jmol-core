@@ -48,6 +48,8 @@ public abstract class XmlMOReader extends XmlCmlReader {
   }
 
   protected boolean processStartMO(String localName) {
+    if (!parent.doReadMolecularOrbitals)
+      return false;
     if (localName.equals("molecule")) {
       String method = atts.get("method");
       if (method != null)

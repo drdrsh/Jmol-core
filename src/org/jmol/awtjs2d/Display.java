@@ -67,26 +67,29 @@ class Display {
     }
   }
 
-  static void setTransparentCursor(Object canvas) {
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      System.out.println(canvas);
-    }
-  }
+  
+//  static void setTransparentCursor(Object canvas) {
+//    /**
+//     * @j2sNative
+//     * 
+//     */
+//    {
+//      System.out.println(canvas);
+//    }
+//  }
 
-  static void setCursor(int c, Object canvas) {
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      System.out.println("" + c + canvas);
-    }
-  }
-
+//  static void setCursor(Object vwr, int c) {
+//    Platform.Jmol()._setCursor(((Viewer) vwr).html5Applet, c);
+//  }
+//
+  
+  /**
+   * @param label 
+   * @param data 
+   * @param list 
+   * @param asButtons  
+   * @return "null" or result of prompt
+   */
   public static String prompt(String label, String data, String[] list,
                               boolean asButtons) {
     /**
@@ -100,7 +103,7 @@ class Display {
     return "null";
   }
 
-  public static void convertPointFromScreen(Object canvas, P3 ptTemp) {
+  public static void convertPointFromScreen(Object canvas, P3 ptTemp) {    
     /**
      * @j2sNative
      * 

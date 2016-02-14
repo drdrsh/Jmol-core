@@ -192,12 +192,12 @@ public class Platform implements GenericPlatform {
 
 	@Override
   public void setTransparentCursor(Object canvas) {
-		Display.setTransparentCursor(canvas);
+		//Display.setTransparentCursor(canvas);
 	}
 
 	@Override
   public void setCursor(int c, Object canvas) {
-		Display.setCursor(c, canvas);
+    Jmol()._setCursor(((Viewer) vwr).html5Applet, c);
 	}
 
 	// //// Image
