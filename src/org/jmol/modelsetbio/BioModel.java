@@ -123,17 +123,17 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       if (at[i].group.isAdded(i))
         continue;
-      monomerIndexCurrent = at[i].group.setProteinStructureType(type,
-          iLast == i - 1 ? -1 : monomerIndexCurrent);
+       monomerIndexCurrent = at[i].group.setProteinStructureType(type,
+          iLast == i - 1 ? monomerIndexCurrent : -1);
       int modelIndex = at[i].mi;
       ms.proteinStructureTainted = am[modelIndex].structureTainted = true;
       iLast = i = at[i].group.lastAtomIndex;
     }
     int[] lastStrucNo = new int[ms.mc];
-    for (int i = 0; i < ms.ac;) {
+    for (int i = 0; i < ms.ac; i++) {
       int modelIndex = at[i].mi;
       if (!bsModels.get(modelIndex)) {
-        i = am[modelIndex].firstAtomIndex + am[modelIndex].act;
+        i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
         continue;
       }
       Group g = at[i].group;
@@ -143,12 +143,11 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
           lastStrucNo[modelIndex] = iLast;
         i = g.lastAtomIndex;
       }
-      i++;
     }
-    for (int i = 0; i < ms.ac;) {
+    for (int i = 0; i < ms.ac; i++) {
       int modelIndex = at[i].mi;
       if (!bsModels.get(modelIndex)) {
-        i = am[modelIndex].firstAtomIndex + am[modelIndex].act;
+        i = am[modelIndex].firstAtomIndex + am[modelIndex].act - 1;
         continue;
       }
       Group g = at[i].group;
@@ -157,7 +156,6 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
         if (g.getStrucNo() > 1000)
           g.setStrucNo(++lastStrucNo[modelIndex]);
       }
-      i++;
     }
   }
 
