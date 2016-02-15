@@ -66,7 +66,7 @@ public class Structure {
     this.substructureType = substructureType;
     if (structureID == null)
       return;
-    setModels(modelIndex, 0);
+    modelStartEnd[0] = modelStartEnd[1] = modelIndex;
     this.structureID = structureID;
     this.strandCount = strandCount; // 1 for sheet initially; 0 for helix or turn
     this.serialID = serialID;
@@ -86,9 +86,4 @@ public class Structure {
     atomStartEnd[1] = iend;
   }
   
-  public void setModels(int model1, int model2) {
-    modelStartEnd[0] = model1;
-    modelStartEnd[1] = (model2 == 0 ? model1 : model2);
-  }
-
 }

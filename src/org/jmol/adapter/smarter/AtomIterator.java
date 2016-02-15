@@ -46,7 +46,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
 	AtomIterator(AtomSetCollection asc) {
 		ac = asc.ac;
-		atoms = asc.atoms;
+		atoms = asc.atoms;		
 		bsAtoms = asc.bsAtoms;
 		iatom = 0;
 	}

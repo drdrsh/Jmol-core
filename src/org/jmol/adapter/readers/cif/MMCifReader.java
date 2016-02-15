@@ -164,6 +164,50 @@ public class MMCifReader extends CifReader {
 
   }
 
+  private boolean requiresSorting;
+
+  /**
+   * issue here is that mmCIF assembly atoms can be in different blocks by chain:
+   * Model1:Chain1 Model2:Chain1 Model1:Chain2 Model2:Chain2 ... and so assigned
+   * to too many atom sets.
+   * 
+   */
+  protected void sortAssemblyModels() {
+    int natoms = asc.ac;
+    int lastSet = -1;
+    Atom[] atoms = asc.atoms;
+    Atom[] newAtoms = new Atom[natoms];
+    String[] ids = PT.split("," + modelStrings + ",", ",,");
+    BS bsAtomsNew = (asc.bsAtoms == null ? null : BS.newN(asc.bsAtoms.size()));
+    for (int im = 1, n = 0; im < ids.length; im++) {
+      String sModel = ids[im];
+      int modelIndex = -1;
+      for (int is = 0; is < asc.atomSetCount; is++) {
+        int ia0 = asc.getAtomSetAtomIndex(is);
+        int ia1 = ia0 + asc.getAtomSetAtomCount(is);
+        String am = "" + modelMap.get("_" + is);
+        if (am.equals(sModel)) {
+          if (modelIndex < 0 && (modelIndex = is) > lastSet)
+            lastSet = is;
+          for (int i = ia0; i < ia1; i++) {
+            if (bsAtomsNew == null || asc.bsAtoms.get(i)) {
+              if (bsAtomsNew != null)
+                bsAtomsNew.set(n);
+              atoms[i].atomSetIndex = modelIndex;
+              newAtoms[n++] = atoms[i];
+            }
+          }
+        }
+      }
+
+    }
+    asc.atoms = newAtoms;
+    asc.bsAtoms = bsAtomsNew;
+    if (++lastSet < asc.atomSetCount)
+      asc.atomSetCount = lastSet;
+  }
+
+
   @Override
   protected boolean finalizeSubclass() throws Exception {
     if (byChain && !isBiomolecule)
@@ -172,7 +216,7 @@ public class MMCifReader extends CifReader {
     if (!isCourseGrained && asc.ac == nAtoms) {
       asc.removeCurrentAtomSet();
     } else {
-      if ((dssr != null || validation != null || addedData != null) && !isCourseGrained) {
+      if ((dssr != null || validation != null || addedData != null) && !isCourseGrained && !requiresSorting) {
         MMCifValidationParser vs = ((MMCifValidationParser) getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser"))
             .set(this);
         String note = null;
@@ -204,6 +248,8 @@ public class MMCifReader extends CifReader {
         asc.xtalSymmetry = null;
       }
     }
+    if (requiresSorting)
+      sortAssemblyModels();
     return true;
   }
 
@@ -1110,16 +1156,31 @@ public class MMCifReader extends CifReader {
     return true;
   }
 
+  private String modelStrings = "";
+  
   @Override
   protected int checkPDBModelField(int modelField, int currentModelNo) throws Exception {
     // the model field value is only used if 
     // it is indicated AFTER the file name in the load command, 
     // not if we have a MODEL keyword before the file name.
-    // 
+    
     fieldProperty(modelField);
     int modelNo = parseIntStr(field);
     if (modelNo != currentModelNo) {
-      if (iHaveDesiredModel && asc.atomSetCount > 0) {
+      boolean isAssembly = (thisDataSetName != null && thisDataSetName.indexOf("-assembly-") >= 0);
+      if (isAssembly) {
+        // Files such as http://www.ebi.ac.uk/pdbe/static/entry/download/2lev-assembly-1.cif.gz
+        // may require sorting if there are multiple models, since the models are by chain, not by model.
+
+        useFileModelNumbers = true;
+        String key = "," + modelNo + ",";
+        if (modelStrings.indexOf(key) >= 0) {
+          requiresSorting = true;
+        } else {
+          modelStrings += key;
+        }
+      }      
+      if (iHaveDesiredModel && asc.atomSetCount > 0 && !isAssembly) {
         parser.skipLoop(false);
         // but only this atom loop
         skipping = false;

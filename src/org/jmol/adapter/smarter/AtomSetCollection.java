@@ -92,6 +92,7 @@ public class AtomSetCollection {
   public int atomSetCount;
   public int iSet = -1;
 
+
   public int[] atomSetNumbers = new int[16];
   public int[] atomSetAtomIndexes = new int[16];
   public int[] atomSetAtomCounts = new int[16];

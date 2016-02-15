@@ -91,7 +91,7 @@ public class CifReader extends AtomSetCollectionReader {
   private int configurationPtr = Integer.MIN_VALUE;
   private boolean useAuthorChainID = true;
 
-  private String thisDataSetName = "", lastDataSetName;
+  protected String thisDataSetName = "", lastDataSetName;
   private String chemicalName = "";
   private String thisStructuralFormula = "";
   private String thisFormula = "";
@@ -1043,7 +1043,7 @@ public class CifReader extends AtomSetCollectionReader {
           continue;
         }
       }
-      String assemblyId = null;
+      String componentId = null;
       String strChain = null;
       String id = null;
       int seqID = 0;
@@ -1137,7 +1137,7 @@ public class CifReader extends AtomSetCollectionReader {
           atom.group3 = field;
           break;
         case ASYM_ID:
-          assemblyId = field;
+          componentId = field;
           if (!useAuthorChainID)
             setChainID(atom, strChain = field);
           break;
@@ -1264,10 +1264,10 @@ public class CifReader extends AtomSetCollectionReader {
       }
       if (atom.elementSymbol == null && atom.atomName != null)
         atom.getElementSymbol();
-      if (!filterCIFAtom(atom, assemblyId))
+      if (!filterCIFAtom(atom, componentId))
         continue;
       setAtomCoord(atom);
-      if (isMMCIF && !processSubclassAtom(atom, assemblyId, strChain))
+      if (isMMCIF && !processSubclassAtom(atom, componentId, strChain))
         continue;
       if (asc.iSet < 0)
         nextAtomSet();
@@ -1316,10 +1316,10 @@ public class CifReader extends AtomSetCollectionReader {
     return true;
   }
 
-  protected boolean filterCIFAtom(Atom atom, String assemblyId) {
+  protected boolean filterCIFAtom(Atom atom, String componentId) {
     if (!filterAtom(atom, -1))
       return false;
-    if (filterAssembly && filterReject(filter, "$", assemblyId))
+    if (filterAssembly && filterReject(filter, "$", componentId))
       return false;
     if (configurationPtr > 0) {
       if (!disorderAssembly.equals(lastDisorderAssembly)) {

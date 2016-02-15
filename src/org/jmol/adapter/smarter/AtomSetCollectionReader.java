@@ -195,6 +195,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean forcePacked;
   public float packingError = 0.02f;
 
+
   // private state variables
 
   private SB loadNote = new SB();
