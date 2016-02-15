@@ -1527,8 +1527,8 @@ public class CifReader extends AtomSetCollectionReader {
     int bondCount = 0;
     String name1, name2 = null;
     while (parser.getData()) {
-      if ((asc.getAtomIndex(name1 = getField(GEOM_BOND_ATOM_SITE_LABEL_1))) < 0
-          || (asc.getAtomIndex(getField(GEOM_BOND_ATOM_SITE_LABEL_2))) < 0)
+      if (asc.getAtomIndex(name1 = getField(GEOM_BOND_ATOM_SITE_LABEL_1)) < 0
+          || asc.getAtomIndex(name2 = getField(GEOM_BOND_ATOM_SITE_LABEL_2)) < 0)
         continue;
       float dx = 0;
       String sdist = getField(GEOM_BOND_DISTANCE);
