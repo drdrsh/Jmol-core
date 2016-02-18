@@ -2466,14 +2466,16 @@ abstract public class AtomCollection {
   public BS getVisibleSet(boolean forceNew) {
     if (forceNew) {
       vwr.setModelVisibility();
-      vwr.shm.finalizeAtoms(false, true);
-    }
-    else if (haveBSVisible)
+      vwr.shm.finalizeAtoms(null, true);
+    } else if (haveBSVisible) {
       return bsVisible;
+    }
     bsVisible.clearAll();
     for (int i = ac; --i >= 0;)
       if (at[i].checkVisible())
         bsVisible.set(i);
+    if (vwr.shm.bsSlabbedInternal != null)
+      bsVisible.andNot(vwr.shm.bsSlabbedInternal);
     haveBSVisible = true;
     return bsVisible;
   }

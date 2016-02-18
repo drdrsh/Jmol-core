@@ -173,6 +173,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean doCheckUnitCell;
   protected boolean getHeader;
   protected boolean isSequential;
+  public boolean isMolecular; // only for CIF so that it can read multiple unit cells
   protected int templateAtomCount;
   public int modelNumber;
   protected int vibrationNumber;

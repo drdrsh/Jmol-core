@@ -831,7 +831,7 @@ public class TransformManager {
   public boolean slabEnabled;
   public boolean zShadeEnabled;
 
-  boolean internalSlab;
+  public boolean internalSlab;
 
   int slabPercentSetting;
   int depthPercentSetting;
@@ -851,8 +851,7 @@ public class TransformManager {
   }
 
   void setSlabEnabled(boolean slabEnabled) {
-    this.slabEnabled = slabEnabled;
-    vwr.g.setB("slabEnabled", slabEnabled);
+    vwr.g.setB("slabEnabled", this.slabEnabled = slabEnabled);
   }
 
   void setZShadeEnabled(boolean zShadeEnabled) {
@@ -922,15 +921,16 @@ public class TransformManager {
   }
 
   public void slabToPercent(int percentSlab) {
+    slabPlane = null;
     vwr.setFloatProperty("slabRange", 0);
     slabPercentSetting = percentSlab;
-    slabPlane = null;
     if (depthPercentSetting >= slabPercentSetting)
       depthPercentSetting = slabPercentSetting - 1;
     slabDepthChanged();
   }
 
   public void depthToPercent(int percentDepth) {
+    depthPlane = null;
     vwr.g.setI("depth", percentDepth);
     depthPercentSetting = percentDepth;
     if (slabPercentSetting <= depthPercentSetting)
@@ -972,23 +972,24 @@ public class TransformManager {
       depthPlane = null;
     else
       slabPlane = null;
+    finalizeTransformParameters();
     slabInternal(getSlabDepthPlane(isDepth), isDepth);
   }
 
   private P4 getSlabDepthPlane(boolean isDepth) {
     // the third row of the matrix defines the Z coordinate, which is all we need
     // and, in fact, it defines the plane. How convenient!
-    // eval "slab set"
+    // eval "slab set"  
     if (isDepth) {
       if (depthPlane != null)
         return depthPlane;
-    } else {
-      if (slabPlane != null)
+    } else if (slabPlane != null) {
         return slabPlane;
     }
     M4 m = matrixTransform;
-    return P4.new4(-m.m20, -m.m21, -m.m22, -m.m23
+    P4 plane = P4.new4(-m.m20, -m.m21, -m.m22, -m.m23
         + (isDepth ? depthValue : slabValue));
+    return plane;
   }
 
   /* ***************************************************************
@@ -1446,7 +1447,6 @@ public class TransformManager {
         // don't care
       }
     }
-
     vwr.g.setO("_slabPlane", Escape.eP4(getSlabDepthPlane(false)));
     vwr.g.setO("_depthPlane", Escape.eP4(getSlabDepthPlane(true)));
     if (slabEnabled)
@@ -1508,7 +1508,14 @@ public class TransformManager {
 
   public void transformPtScrT3(T3 ptXYZ, T3 pointScreen) {
     transformPt(ptXYZ);
+    // note that this point may be returned as z=1 if the point is 
+    // past the camera or slabbed internally
     pointScreen.setT(fScrPt);
+  }
+
+  public void transformPt3f(T3 ptXYZ, P3 screen) {
+    applyPerspective(ptXYZ, ptXYZ);
+    screen.setT(fScrPt);
   }
 
   public void transformPtNoClip(T3 ptXYZ, T3 pointScreen) {
@@ -1546,11 +1553,6 @@ public class TransformManager {
   public T3 getVibrationPoint(Vibration v, T3 pt, float scale) {
     return v.setCalcPoint(pt, vibrationT,
         (Float.isNaN(scale) ? vibrationScale : scale), vwr.g.modulationScale);
-  }
-
-  public void transformPt3f(T3 ptXYZ, P3 screen) {
-    applyPerspective(ptXYZ, ptXYZ);
-    screen.setT(fScrPt);
   }
 
   public synchronized P3i transformPt2D(T3 ptXyp) {
@@ -1650,14 +1652,17 @@ public class TransformManager {
     iScrPt.set((int) fScrPt.x, (int) fScrPt.y,
         (int) fScrPt.z);
 
-    if (ptRef != null
-        && (slabPlane != null
-            && ptRef.x * slabPlane.x + ptRef.y * slabPlane.y + ptRef.z
-                * slabPlane.z + slabPlane.w > 0 || depthPlane != null
-            && ptRef.x * depthPlane.x + ptRef.y * depthPlane.y + ptRef.z
-                * depthPlane.z + depthPlane.w < 0))
+    if (ptRef != null && xyzIsSlabbedInternal(ptRef))
       fScrPt.z = iScrPt.z = 1;
     return iScrPt;
+  }
+
+  public boolean xyzIsSlabbedInternal(T3 ptRef) {
+    return (slabPlane != null
+        && ptRef.x * slabPlane.x + ptRef.y * slabPlane.y + ptRef.z
+            * slabPlane.z + slabPlane.w > 0 || depthPlane != null
+        && ptRef.x * depthPlane.x + ptRef.y * depthPlane.y + ptRef.z
+            * depthPlane.z + depthPlane.w < 0);
   }
 
   final protected P3 untransformedPoint = new P3();

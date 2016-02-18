@@ -78,7 +78,7 @@ public class IsoExt extends ScriptExt {
   
   @Override
   public String dispatch(int iTok, boolean b, T[] st) throws ScriptException {
-    chk = e.chk;
+    chk = e.chk; 
     slen = e.slen;
     this.st = st;
 
@@ -1132,7 +1132,7 @@ public class IsoExt extends ScriptExt {
     boolean isPmesh = (iShape == JC.SHAPE_PMESH);
     boolean isPlot3d = (iShape == JC.SHAPE_PLOT3D);
     boolean isLcaoCartoon = (iShape == JC.SHAPE_LCAOCARTOON);
-    boolean isSilent = (isLcaoCartoon || tokAt(1) == T.delete);
+    boolean isSilent = (isLcaoCartoon || tokAt(1) == T.delete || eval.isStateScript);
     boolean surfaceObjectSeen = false;
     boolean planeSeen = false;
     boolean isMapped = false;

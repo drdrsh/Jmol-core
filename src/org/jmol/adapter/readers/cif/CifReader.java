@@ -51,8 +51,8 @@ import javajs.util.V3;
  * A true line-free CIF file reader for CIF files.
  * 
  * Subclasses of CIF -- mmCIF/PDBx (pre-initialized) and msCIF (initialized
- * here).
- * 
+ * here)
+ *
  * Note that a file can be a PDB file without being
  * 
  * Added nonstandard mCIF (magnetic_ tags) 5/2/2014 note that PRELIM keys can be
@@ -84,7 +84,6 @@ public class CifReader extends AtomSetCollectionReader {
 
   GenericCifDataParser parser;
 
-  private boolean isMolecular;
   private boolean filterAssembly;
   private boolean allowRotations = true;
   private boolean readIdeal = true;
@@ -181,6 +180,8 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean readAllData() throws Exception {
     if (key.startsWith("data_")) {
       isLigand = false;
+      if (asc.atomSetCount == 0)
+        iHaveDesiredModel = false;
       if (iHaveDesiredModel)
         return false;
       if (desiredModelNumber != Integer.MIN_VALUE)
@@ -222,7 +223,7 @@ public class CifReader extends AtomSetCollectionReader {
      * tokenizer.getTokenPeeked(); continue; }
      */
     if (key.indexOf("_") != 0) {
-        Logger.warn("CIF ERROR ? should be an underscore: " + key);
+      Logger.warn("CIF ERROR ? should be an underscore: " + key);
       parser.getTokenPeeked();
     } else if (!getData()) {
       return true;
@@ -243,22 +244,26 @@ public class CifReader extends AtomSetCollectionReader {
         processCellParameter();
       } else if (key.startsWith("_atom_sites_fract_tran")) {
         processUnitCellTransformMatrix();
-      } else if (key.equals("_audit_block_code")) {
-        auditBlockCode = parser.fullTrim(data).toUpperCase();
-        appendLoadNote(auditBlockCode);
-        if (htAudit != null && auditBlockCode.contains("_MOD_")) {
-          String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
-          if (asc.setSymmetry((SymmetryInterface) htAudit.get(key)) != null) {
-            unitCellParams = asc.getSymmetry().getUnitCellParams();
-            iHaveUnitCell = true;
+      } else if (key.startsWith("_audit")) {
+        if (key.equals("_audit_block_code")) {
+          auditBlockCode = parser.fullTrim(data).toUpperCase();
+          appendLoadNote(auditBlockCode);
+          if (htAudit != null && auditBlockCode.contains("_MOD_")) {
+            String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
+            if (asc.setSymmetry((SymmetryInterface) htAudit.get(key)) != null) {
+              unitCellParams = asc.getSymmetry().getUnitCellParams();
+              iHaveUnitCell = true;
+            }
+          } else if (htAudit != null) {
+            if (symops != null)
+              for (int i = 0; i < symops.size(); i++)
+                setSymmetryOperator(symops.get(i));
           }
-        } else if (htAudit != null) {
-          if (symops != null)
-            for (int i = 0; i < symops.size(); i++)
-              setSymmetryOperator(symops.get(i));
+          if (lastSpaceGroupName != null)
+            setSpaceGroupName(lastSpaceGroupName);
+        } else if (key.equals("_audit_creation_date")) {
+            symmetry = null;
         }
-        if (lastSpaceGroupName != null)
-          setSpaceGroupName(lastSpaceGroupName);
       } else if (key.equals(singleAtomID)) {
         readSingleAtom();
       } else if (key.startsWith("_symmetry_space_group_name_h-m")
@@ -847,7 +852,7 @@ public class CifReader extends AtomSetCollectionReader {
    */
   private void processAtomTypeLoopBlock() throws Exception {
     parseLoopParameters(atomTypeFields);
-    if (!checkAllFieldsPresent(atomTypeFields, false)) {
+    if (!checkAllFieldsPresent(atomTypeFields, -1, false)) {
       parser.skipLoop(false);
       return;
     }
@@ -1519,8 +1524,12 @@ public class CifReader extends AtomSetCollectionReader {
    * @throws Exception
    */
   private void processGeomBondLoopBlock() throws Exception {
+    // broken in 13.3.4_dev_2013.08.20c
+    // fixed in 14.4.3_2016.02.16
+    boolean bondLoopBug = (stateScriptVersionInt >= 130304 && stateScriptVersionInt < 140403
+        || stateScriptVersionInt >= 150000 && stateScriptVersionInt < 150403);
     parseLoopParameters(geomBondFields);
-    if (!checkAllFieldsPresent(geomBondFields, true)) {
+    if (bondLoopBug || !checkAllFieldsPresent(geomBondFields, 2, true)) {
       parser.skipLoop(false);
       return;
     }
@@ -1556,6 +1565,12 @@ public class CifReader extends AtomSetCollectionReader {
         dx = 0.015f;
       }
       int order = getBondOrder(getField(CCDC_GEOM_BOND_TYPE));
+      // This field is from Materials Studio. See supplemental material for
+      // http://pubs.rsc.org/en/Content/ArticleLanding/2012/CC/c2cc34714h
+      // http://www.rsc.org/suppdata/cc/c2/c2cc34714h/c2cc34714h.txt
+      // Jmol list discussion: https://sourceforge.net/p/jmol/mailman/message/31308577/
+      // this 5-model file can be read using one model at a time: load "c2cc34714h.txt" 3
+      // but it is far from perfect, and still the best way is load "c2cc34714h.txt" 3 packed
       bondCount++;
       bondTypes.addLast(new Object[] { name1, name2, Float.valueOf(distance),
           Float.valueOf(dx), Integer.valueOf(order) });
@@ -1594,12 +1609,12 @@ public class CifReader extends AtomSetCollectionReader {
    * (g) set all coordinates as Cartesians (h) remove all unit cell information
    */
   private void setBondingAndMolecules() {
-    Logger.info("CIF creating molecule "
-        + (bondTypes.size() > 0 ? " using GEOM_BOND records" : ""));
     atoms = asc.atoms;
     firstAtom = asc.getLastAtomSetAtomIndex();
     int nat = asc.getLastAtomSetAtomCount();
     ac = firstAtom + nat;
+    Logger.info("CIF creating molecule for " + nat + " atoms "
+        + (bondTypes.size() > 0 ? " using GEOM_BOND records" : ""));
 
     // get list of sites based on atom names
 
@@ -1836,8 +1851,8 @@ public class CifReader extends AtomSetCollectionReader {
     return doCheckUnitCell;
   }
 
-  protected boolean checkAllFieldsPresent(String[] keys, boolean critical) {
-    for (int i = keys.length; --i >= 0;)
+  protected boolean checkAllFieldsPresent(String[] keys, int lastKey, boolean critical) {
+    for (int i = (lastKey < 0 ? keys.length : lastKey); --i >= 0;)
       if (key2col[i] == NONE) {
         if (critical)
           Logger.warn("CIF reader missing property: " + keys[i]);

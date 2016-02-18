@@ -3346,7 +3346,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return;
     if (!haveDisplay) {
       setModelVisibility();
-      shm.finalizeAtoms(false, true);
+      shm.finalizeAtoms(null, true);
       return;
     }
     rm.requestRepaintAndWait(why);
@@ -3630,7 +3630,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         || rm == null)
       return;
     boolean antialias2 = antialiased && g.antialiasTranslucent;
-    int[] navMinMax = shm.finalizeAtoms(true, true);
+    int[] navMinMax = shm.finalizeAtoms(tm.bsSelectedAtoms, true);
     if (isWebGL) {
       rm.renderExport(gdata, ms, jsParams);
       notifyViewerRepaintDone();

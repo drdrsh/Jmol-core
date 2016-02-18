@@ -61,7 +61,7 @@ abstract class __RayTracerExporter extends ___Exporter {
     if (super.initOutput(vwr, privateKey, g3d, params)) {
       vwr.tm.perspectiveDepth = false;
       if (wasPerspective)
-        vwr.shm.finalizeAtoms(false, false);
+        vwr.shm.finalizeAtoms(null, false);
       return true;
     }
     return false; 

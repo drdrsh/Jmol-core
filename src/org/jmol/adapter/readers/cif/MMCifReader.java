@@ -688,7 +688,7 @@ public class MMCifReader extends CifReader {
    */
   private boolean processStructConfLoopBlock() throws Exception {
     parseLoopParametersFor(FAMILY_STRUCTCONF, structConfFields);
-    if (!checkAllFieldsPresent(structConfFields, true)) {
+    if (!checkAllFieldsPresent(structConfFields, -1, true)) {
       parser.skipLoop(true);
       return false;
     }
@@ -772,7 +772,7 @@ public class MMCifReader extends CifReader {
    */
   private boolean processStructSheetRangeLoopBlock() throws Exception {
     parseLoopParametersFor(FAMILY_SHEET, structSheetRangeFields);
-    if (!checkAllFieldsPresent(structSheetRangeFields, true)) {
+    if (!checkAllFieldsPresent(structSheetRangeFields, -1, true)) {
       parser.skipLoop(true);
       return false;
     }

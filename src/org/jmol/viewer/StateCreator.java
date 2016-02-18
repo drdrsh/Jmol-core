@@ -808,11 +808,12 @@ public class StateCreator extends JmolStateCreator {
     if (vwr.ms.modelSetHasVibrationVectors() && tm.vibrationOn)
       app(commands, "set vibrationPeriod " + tm.vibrationPeriod
           + ";vibration on");
+    boolean slabInternal = (tm.depthPlane != null || tm.slabPlane != null);
     if (navigating) {
       commands.append(tm.getNavigationState());
-      if (tm.depthPlane != null || tm.slabPlane != null)
-        commands.append("  slab on;\n");
-    }
+    } 
+    if (!tm.slabEnabled && slabInternal)
+      commands.append("  slab off;\n");
     if (sfunc != null)
       commands.append("}\n\n");
     return commands.toString();

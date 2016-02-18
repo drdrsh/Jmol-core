@@ -779,7 +779,7 @@ public class XtalSymmetry {
     boolean checkSymmetryRange = (checkRangeNoSymmetry || checkRange111);
     boolean checkDistances = (checkSpecial || checkSymmetryRange);
     boolean addCartesian = (checkSpecial || checkSymmetryMinMax);
-
+    BS bsAtoms = (acr.isMolecular ? null : asc.bsAtoms);
     SymmetryInterface symmetry = this.symmetry;
     if (checkRangeNoSymmetry)
       baseCount = noSymmetryCount;
@@ -809,7 +809,7 @@ public class XtalSymmetry {
         Atom a = asc.atoms[i];
         if (a.ignoreSymmetry)
           continue;
-        if (asc.bsAtoms != null && !asc.bsAtoms.get(i))
+        if (bsAtoms != null && !bsAtoms.get(i))
           continue;
 
         if (ms == null) {

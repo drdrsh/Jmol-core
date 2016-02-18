@@ -243,7 +243,7 @@ public class RepaintManager implements JmolRepaintManager {
   public String renderExport(GData gdata, ModelSet modelSet,
                              Map<String, Object> params) {
     boolean isOK;
-    shapeManager.finalizeAtoms(false, true);
+    shapeManager.finalizeAtoms(null, true);
     JmolRendererInterface exporter3D = vwr.initializeExporter(params);
     isOK = (exporter3D != null);
     if (!isOK) {

@@ -57,6 +57,7 @@ public class ShapeManager {
   public ShapeManager(Viewer vwr) {
     this.vwr = vwr;
     bsRenderableAtoms = new BS();
+    bsSlabbedInternal = new BS();
   }
 
   /**
@@ -308,10 +309,11 @@ public class ShapeManager {
   Object getProperty(Object paramInfo) {
     if (paramInfo.equals("getShapes"))
       return shapes;
+    // could be more here...
     return null;
   }
 
-  public final BS bsRenderableAtoms;
+  public final BS bsRenderableAtoms, bsSlabbedInternal;
 
   public Shape getShape(int i) {
     //RepaintManager
@@ -401,39 +403,43 @@ public class ShapeManager {
 
   private final int[] navMinMax = new int[4];
 
-  public int[] finalizeAtoms(boolean checkAtoms, boolean finalizeParams) {
+  public int[] finalizeAtoms(BS bsTranslateSelected, boolean finalizeParams) {
     Viewer vwr = this.vwr;
+    TransformManager tm = vwr.tm;
     if (finalizeParams)
       vwr.finalizeTransformParameters();
-    TransformManager tm = vwr.tm;
-    BS bs = bsRenderableAtoms;
-    BS bsAtoms = (checkAtoms ? tm.bsSelectedAtoms : null); 
-    if (bsAtoms != null) {
+    if (bsTranslateSelected != null) {
       // translateSelected operation
-      P3 ptCenter = ms.getAtomSetCenter(bsAtoms);
+      P3 ptCenter = ms.getAtomSetCenter(bsTranslateSelected);
       P3 pt = new P3();
       tm.transformPt3f(ptCenter, pt);
       pt.add(tm.ptOffset);
       tm.unTransformPoint(pt, pt);
       pt.sub(ptCenter);
-      vwr.setAtomCoordsRelative(pt, bsAtoms);
+      vwr.setAtomCoordsRelative(pt, bsTranslateSelected);
       tm.ptOffset.set(0, 0, 0);
       tm.bsSelectedAtoms = null;
     }
-    ms.getAtomsInFrame(bs);
+    BS bsOK = bsRenderableAtoms;
+    ms.getAtomsInFrame(bsOK);
     Vibration[] vibrationVectors = ms.vibrations;
     boolean vibs = (vibrationVectors != null && tm.vibrationOn);
     boolean checkOccupancy = (ms.bsModulated != null && ms.occupancies != null);
     Atom[] atoms = ms.at;
     int occ;
     boolean haveMods = false;
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+    BS bsSlabbed = bsSlabbedInternal;
+    bsSlabbed.clearAll();
+    for (int i = bsOK.nextSetBit(0); i >= 0; i = bsOK.nextSetBit(i + 1)) {
       // note that this vibration business is not compatible with
       // PDB objects such as cartoons and traces, which 
       // use Cartesian coordinates, not screen coordinates
       Atom atom = atoms[i];
       P3i screen = (vibs && atom.hasVibration() ? tm.transformPtVib(atom,
           vibrationVectors[i]) : tm.transformPt(atom));
+      if (screen.z == 1 && tm.internalSlab && tm.xyzIsSlabbedInternal(atom)) {
+        bsSlabbed.set(i);
+      }
       atom.sX = screen.x;
       atom.sY = screen.y;
       atom.sZ = screen.z;
@@ -471,7 +477,7 @@ public class ShapeManager {
           JmolMolecule m = molecules[i];
           int j = 0;
           int pt = m.firstAtomIndex;
-          if (!bs.get(pt))
+          if (!bsOK.get(pt))
             continue;
           for (; j < m.ac; j++, pt++)
             if (gdata.isClippedZ(atoms[pt].sZ - (atoms[pt].sD >> 1)))
@@ -479,13 +485,13 @@ public class ShapeManager {
           if (j != m.ac) {
             pt = m.firstAtomIndex;
             for (int k = 0; k < m.ac; k++) {
-              bs.clear(pt);
+              bsOK.clear(pt);
               atoms[pt++].sZ = 0;
             }
           }
         }
       }
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      for (int i = bsOK.nextSetBit(0); i >= 0; i = bsOK.nextSetBit(i + 1)) {
         Atom atom = atoms[i];
         if (gdata.isClippedZ(atom.sZ - (slabByAtom ? atoms[i].sD >> 1 : 0))) {
           atom.setClickable(0);
@@ -494,7 +500,7 @@ public class ShapeManager {
           int r = (slabByAtom ? -1 : 1) * atom.sD / 2;
           if (atom.sZ + r < minZ || atom.sZ - r > maxZ
               || !gdata.isInDisplayRange(atom.sX, atom.sY)) {
-            bs.clear(i);
+            bsOK.clear(i);
           }
         }
       }
@@ -506,7 +512,7 @@ public class ShapeManager {
     int maxX = Integer.MIN_VALUE;
     int minY = Integer.MAX_VALUE;
     int maxY = Integer.MIN_VALUE;
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+    for (int i = bsOK.nextSetBit(0); i >= 0; i = bsOK.nextSetBit(i + 1)) {
       Atom atom = atoms[i];
       if (atom.sX < minX)
         minX = atom.sX;

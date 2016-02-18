@@ -7492,8 +7492,7 @@ public class ScriptEval extends ScriptExpr {
             vwr.tm.slabToPercent(percent);
         return;
       case T.on:
-        checkLength(2);
-        TF = true;
+       TF = true;
         //$FALL-THROUGH$
       case T.off:
         checkLength(2);
@@ -7508,10 +7507,8 @@ public class ScriptEval extends ScriptExpr {
         return;
       case T.set:
         checkLength(2);
-        if (chk)
-          return;
-        vwr.tm.setSlabDepthInternal(isDepth);
-        setBooleanProperty("slabEnabled", true);
+        if (!chk)
+          vwr.tm.setSlabDepthInternal(isDepth);
         return;
       case T.minus:
         str = paramAsStr(2);

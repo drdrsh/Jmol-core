@@ -169,9 +169,9 @@ public class SticksRenderer extends FontLineShapeRenderer {
       return false;
 
     if (slabbing) {
-      if (vwr.gdata.isClippedZ(a.sZ) && vwr.gdata.isClippedZ(b.sZ)
-          || slabByAtom
-          && (vwr.gdata.isClippedZ(a.sZ) || vwr.gdata.isClippedZ(b.sZ)))
+      boolean ba = vwr.gdata.isClippedZ(a.sZ);
+      if (ba && vwr.gdata.isClippedZ(b.sZ) || slabByAtom
+          && (ba || vwr.gdata.isClippedZ(b.sZ)))
         return false;
     }
     zA = a.sZ;
@@ -182,14 +182,12 @@ public class SticksRenderer extends FontLineShapeRenderer {
     colixB = atomB0.colixAtom;
     if (((colix = bond.colix) & C.OPAQUE_MASK) == C.USE_PALETTE) {
       colix = (short) (colix & ~C.OPAQUE_MASK);
-      colixA = C
-          .getColixInherited(
-              (short) (colix | vwr.cm.getColixAtomPalette(atomA0, PAL.CPK.id)),
-              colixA);
-      colixB = C
-          .getColixInherited(
-              (short) (colix | vwr.cm.getColixAtomPalette(atomB0, PAL.CPK.id)),
-              colixB);
+      colixA = C.getColixInherited(
+          (short) (colix | vwr.cm.getColixAtomPalette(atomA0, PAL.CPK.id)),
+          colixA);
+      colixB = C.getColixInherited(
+          (short) (colix | vwr.cm.getColixAtomPalette(atomB0, PAL.CPK.id)),
+          colixB);
     } else {
       colixA = C.getColixInherited(colix, colixA);
       colixB = C.getColixInherited(colix, colixB);
@@ -258,7 +256,6 @@ public class SticksRenderer extends FontLineShapeRenderer {
       }
     }
 
-    
     // set the diameter
 
     xA = a.sX;
