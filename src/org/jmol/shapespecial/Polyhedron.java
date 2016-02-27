@@ -77,10 +77,14 @@ public class Polyhedron {
       int[][] triangles, int triangleCount, int[][] faces, V3[] normals, BS bsFlat, boolean collapsed, float distanceRef) {
     
     this.distanceRef = distanceRef;
-    centralAtom = (id == null  ? (Atom) atomOrPt : null);
-    center = (centralAtom == null ? (P3) atomOrPt : null);
-    this.modelIndex = (centralAtom == null ? modelIndex : centralAtom.mi);
-    this.id = id;
+    if (id == null) {
+      centralAtom = (Atom) atomOrPt;
+      this.modelIndex = centralAtom.mi;
+    } else {
+      this.id = id;
+      center = atomOrPt;
+      this.modelIndex = modelIndex;
+    }
     this.nVertices = vertexCount;
     this.vertices = new P3[nPoints + 1];
     this.normals = new V3[triangleCount];
@@ -177,12 +181,43 @@ public class Polyhedron {
     return ai;
   }
 
-  Map<String, Object> getInfo(Viewer vwr, boolean isAll) {
-    if (isAll && this.info != null && !Logger.debugging)
+  Map<String, Object> getInfo(Viewer vwr, boolean isState) {
+    if (!isState && this.info != null && !Logger.debugging)
       return this.info;
     Map<String, Object> info = new Hashtable<String, Object>();
-    int mi = (id == null ? centralAtom.mi : modelIndex);
-    if (isAll) {
+
+    info.put("vertexCount", Integer.valueOf(nVertices));
+    
+    // get COPY of vertices to prevent script variable from referencing Atom
+    int nv = (isState ? vertices.length : nVertices);
+    P3[] pts = new P3[nv];
+    for (int i = 0; i < nv; i++)
+      pts[i] = P3.newP(vertices[i]);
+    info.put("vertices", pts);
+
+    int[] elemNos = new int[nVertices];
+    for (int i = 0; i < nVertices; i++) {
+      P3 pt = vertices[i];
+      elemNos[i] = (pt instanceof Node ? ((Node) pt).getElementNumber()
+          : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
+    }
+    info.put("elemNos", elemNos);
+
+    if (id == null) {
+      info.put("atomIndex", Integer.valueOf(centralAtom.i));
+    } else {
+      info.put("id", id);
+      info.put("center", P3.newP(center));
+      info.put("color", C.getHexCode(colix));
+      info.put("colorEdge", C.getHexCode(colixEdge == 0 ? colix : colixEdge));
+      if (offset != null)
+        info.put("offset", offset);
+      if (scale != 1)
+        info.put("scale", Float.valueOf(scale));
+    }
+    if (id != null || !isState)
+      info.put("modelIndex", Integer.valueOf(modelIndex));
+    if (!isState) {
       this.info = info;
       if (id == null) {
         info.put("center", P3.newP(centralAtom));
@@ -196,40 +231,38 @@ public class Polyhedron {
       }
       info.put("triangleCount", Integer.valueOf(triangles.length));
       info.put("volume", getVolume());
+
       String[] names = new String[nVertices];
+      int[] indices = new int[nVertices];
       for (int i = nVertices; --i >= 0;) {
         P3 pt = vertices[i];
-        names[i] = (pt instanceof Node ? ((Node) pt).getAtomName()
+        boolean isNode = pt instanceof Node;
+        names[i] = (isNode ? ((Node) pt).getAtomName()
             : pt instanceof Point3fi ? Elements
                 .elementSymbolFromNumber(((Point3fi) pt).sD) : "");
+        indices[i] = (isNode ? ((Node) pt).getIndex() : -1);
       }
+      info.put("atomNames", names);
+      info.put("vertexIndices", indices);
+
       if (faces != null)
         info.put("faceCount", Integer.valueOf(faces.length));
-      info.put("atomNames", names);
+
       if (smarts != null)
         info.put("smarts", smarts);
       if (smiles != null)
         info.put("smiles", smiles);
       if (polySmiles != null)
         info.put("polySmiles", polySmiles);
+
       if (pointGroup != null)
         info.put("pointGroup", pointGroup.getPointGroupName());
       if (pointGroupFamily != null)
         info.put("pointGroupFamily", pointGroupFamily.getPointGroupName());
     }
-    if (id != null) {
-      info.put("id", id);
-      info.put("modelIndex", Integer.valueOf(mi));
-      info.put("color", C.getHexCode(colix));
-      info.put("colorEdge", C.getHexCode(colixEdge == 0 ? colix : colixEdge));
-      if (offset != null)
-        info.put("offset", offset);
-      if (scale != 1)
-        info.put("scale", Float.valueOf(scale));
-    }
     if (faces != null)
       info.put("faces", faces);
-    if (!isAll || Logger.debugging) {
+    if (isState || Logger.debugging) {
       info.put("bsFlat", bsFlat);
       if (collapsed)
         info.put("collapsed", Boolean.valueOf(collapsed));
@@ -241,22 +274,6 @@ public class Polyhedron {
       info.put("normals", n);
       info.put("triangles", AU.arrayCopyII(triangles, triangles.length));
     }
-    info.put("vertexCount", Integer.valueOf(nVertices));
-    if (center == null) {
-      info.put("atomIndex", Integer.valueOf(centralAtom.i));
-    } else {
-      info.put("id", id);
-      info.put("center", P3.newP(center));
-    }
-    info.put("vertices",
-        AU.arrayCopyPt(vertices, (isAll ? nVertices : vertices.length)));
-    int[] elemNos = new int[nVertices];
-    for (int i = 0; i < nVertices; i++) {
-      P3 pt = vertices[i];
-      elemNos[i] = (pt instanceof Node ? ((Node) pt).getElementNumber()
-          : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
-    }
-    info.put("elemNos", elemNos);
     return info;
   }
 
@@ -330,7 +347,7 @@ public class Polyhedron {
 
   String getState(Viewer vwr) {
     String ident = (id == null ? "({"+centralAtom.i+"})" : "ID " + Escape.e(id));
-    return "  polyhedron" + " @{" + Escape.e(getInfo(vwr, false)) + "} " 
+    return "  polyhedron" + " @{" + Escape.e(getInfo(vwr, true)) + "} " 
         + (isFullyLit ? " fullyLit" : "") + ";"
         + (visible ? "" : "polyhedra " + ident + " off;") + "\n";
   }

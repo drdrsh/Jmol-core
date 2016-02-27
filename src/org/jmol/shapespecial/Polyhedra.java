@@ -355,8 +355,9 @@ public class Polyhedra extends AtomShape {
       for (int i = polyhedronCount; --i >= 0;) {
         Polyhedron p = polyhedrons[i];
         p.info = null;
-        int mi = (p.id == null ? p.centralAtom.mi : p.modelIndex);
-        if (mi == modelIndex) {
+        if (p.modelIndex > modelIndex) {
+          p.modelIndex--;
+        } else if (p.modelIndex == modelIndex) {
           polyhedronCount--;
           polyhedrons = (Polyhedron[]) AU.deleteElements(polyhedrons, i, 1);
         }
@@ -453,7 +454,7 @@ public class Polyhedra extends AtomShape {
     if (property == "allInfo") {
       Lst<Map<String, Object>> info = new Lst<Map<String, Object>>();
       for (int i = polyhedronCount; --i >= 0;)
-        info.addLast(polyhedrons[i].getInfo(vwr, true));
+        info.addLast(polyhedrons[i].getInfo(vwr, false));
       data[1] = info;
       return true;
     }
@@ -461,7 +462,7 @@ public class Polyhedra extends AtomShape {
       p = findPoly(id, iatom, true);
       if (p == null)
         return false;
-      data[1] = p.getInfo(vwr, true);
+      data[1] = p.getInfo(vwr, false);
       return true;
     }
     return getPropShape(property, data);
@@ -504,7 +505,7 @@ public class Polyhedra extends AtomShape {
   public Lst<Map<String, Object>> getShapeDetail() {
     Lst<Map<String, Object>> lst = new Lst<Map<String, Object>>();
     for (int i = 0; i < polyhedronCount; i++)
-      lst.addLast(polyhedrons[i].getInfo(vwr, true));
+      lst.addLast(polyhedrons[i].getInfo(vwr, false));
     return lst;
   }
 
@@ -526,7 +527,7 @@ public class Polyhedra extends AtomShape {
     for (int i = 0; i < polyhedronCount; ++i) {
       Polyhedron p = polyhedrons[i];
       if (bs.get(i)) {
-        if (p.id == null)
+        if (colixes != null && p.id == null)
           setColixAndPalette(C.INHERIT_ALL, pid, p.centralAtom.i);
         continue;
       }
@@ -1078,7 +1079,7 @@ public class Polyhedra extends AtomShape {
       if (p.id == null) {
         if (ms.at[p.centralAtom.i].isDeleted())
           p.isValid = false;
-        p.visibilityFlags = (p.visible && bsModels.get(p.centralAtom.mi)
+        p.visibilityFlags = (p.visible && bsModels.get(p.modelIndex)
             && !ms.isAtomHidden(p.centralAtom.i)
             && !ms.at[p.centralAtom.i].isDeleted() ? vf : 0);
         if (p.visibilityFlags != 0)

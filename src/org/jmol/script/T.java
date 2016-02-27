@@ -1414,8 +1414,6 @@ public class T {
   
   public static T getTokenFromName(String name) {
     // this one needs to NOT be lower case for ScriptCompiler
-    if (name == null)
-      System.out.println("???");
     return tokenMap.get(name);
   }
   

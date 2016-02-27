@@ -287,6 +287,8 @@ public class SV extends T implements JSONEncodable {
       return getVariableAD((double[]) x);
     if (AU.isAS(x))
       return getVariableAS((String[]) x);
+    //NOTE: isAP(x) does not return TRUE for Atom[] in JavaScript
+    // only occurrence of this was for Polyhedron.getInfo()
     if (AU.isAP(x))
       return getVariableAP((T3[]) x);
     if (AU.isAII(x))

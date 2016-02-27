@@ -241,7 +241,7 @@ public class MeshSlicer {
         wPlane = 0;
       }
     }
-    
+
     if (fData == null) {
       if (tokType == T.decimal && bsSource != null) {
         if (m.vertexSource == null)
@@ -257,8 +257,7 @@ public class MeshSlicer {
     if (m.pc == 0) {
       for (int i = m.mergeVertexCount0; i < m.vc; i++) {
         if (Float.isNaN(fData[i])
-            || checkSlab(tokType, m.vs[i], fData[i], distance,
-                bsSource) > 0)
+            || checkSlab(tokType, m.vs[i], fData[i], distance, bsSource) > 0)
           m.bsSlabDisplay.clear(i);
       }
       return;
@@ -266,40 +265,58 @@ public class MeshSlicer {
     if (ptCenters != null || isGhost)
       andCap = false; // can only cap faces, and no capping of ghosts
     if (andCap && capper == null)
-      capper = ((MeshCapper) Interface.getInterface("org.jmol.util.MeshCapper", m.vwr, "script")).set(this);
+      capper = ((MeshCapper) Interface.getInterface("org.jmol.util.MeshCapper",
+          m.vwr, "script")).set(this);
     if (capper != null)
       capper.clear();
     double absD = Math.abs(distance);
     Map<String, Integer> mapEdge = new Hashtable<String, Integer>();
+    BS bsD = BS.newN(m.vc);
+    float[] d = new float[m.vc];
+    float d1 = 0, d2 = 0, d3 = 0, valA, valB, valC;
     for (int i = m.mergePolygonCount0, iLast = m.pc; i < iLast; i++) {
-      float d1, d2, d3, valA, valB, valC;      
-      int[] face = m.setABC(i); 
+      int[] face = m.setABC(i);
       if (face == null)
         continue;
       BS bsSlab = (m.bsSlabGhost != null && m.bsSlabGhost.get(i) ? m.bsSlabGhost
           : m.bsSlabDisplay);
       int check1 = face[MeshSurface.P_CHECK];
       int iContour = (m.dataOnly ? 0 : face[MeshSurface.P_CONTOUR]);
-      T3 vA = m.vs[m.iA];
-      T3 vB = m.vs[m.iB];
-      T3 vC = m.vs[m.iC];
-      valA = fData[m.iA];
-      valB = fData[m.iB];
-      valC = fData[m.iC];
+      int ia = m.iA;
+      int ib = m.iB;
+      int ic = m.iC;
+      T3 vA = m.vs[ia];
+      T3 vB = m.vs[ib];
+      T3 vC = m.vs[ic];
+      valA = fData[ia];
+      valB = fData[ib];
+      valC = fData[ic];
       if (m.vertexSource != null) {
-        sources[0] = m.vertexSource[m.iA];
-        sources[1] = m.vertexSource[m.iB];
-        sources[2] = m.vertexSource[m.iC];
+        sources[0] = m.vertexSource[ia];
+        sources[1] = m.vertexSource[ib];
+        sources[2] = m.vertexSource[ic];
       }
-      int thisSet = (m.vertexSets == null ? 0 : m.vertexSets[m.iA]);
-      d1 = checkSlab(tokType, vA, valA, (bsSource == null ? distance
-          : sources[0]), bsSource);
-      d2 = checkSlab(tokType, vB, valB, (bsSource == null ? distance
-          : sources[1]), bsSource);
-      d3 = checkSlab(tokType, vC, valC, (bsSource == null ? distance
-          : sources[2]), bsSource);
+      if (!bsD.get(ia)) {
+        bsD.set(ia);
+        d[ia] = checkSlab(tokType, vA, valA, (bsSource == null ? distance
+            : sources[0]), bsSource);
+      }
+      if (!bsD.get(ib)) {
+        bsD.set(ib);
+        d[ib] = checkSlab(tokType, vB, valB, (bsSource == null ? distance
+            : sources[1]), bsSource);
+      }
+      if (!bsD.get(ic)) {
+        bsD.set(ic);
+        d[ic] = checkSlab(tokType, vC, valC, (bsSource == null ? distance
+            : sources[2]), bsSource);
+      }
+      d1 = d[ia];
+      d2 = d[ib];
+      d3 = d[ic];
       int test1 = (d1 != 0 && d1 < 0 ? 1 : 0) + (d2 != 0 && d2 < 0 ? 2 : 0)
           + (d3 != 0 && d3 < 0 ? 4 : 0);
+      int thisSet = (m.vertexSets == null ? 0 : m.vertexSets[ia]);
 
       /*      
             if (iA == 955 || iB == 955 || iC == 955) {
@@ -340,8 +357,7 @@ public class MeshSlicer {
       case 6:
         // BC on same side
         if (ptCenters == null)
-          p = new P3[] {
-              interpolatePoint(vA, vB, -d1, d2, valA, valB, 0),
+          p = new P3[] { interpolatePoint(vA, vB, -d1, d2, valA, valB, 0),
               interpolatePoint(vA, vC, -d1, d3, valA, valC, 1) };
         else
           p = new P3[] {
@@ -352,8 +368,7 @@ public class MeshSlicer {
       case 5:
         //AC on same side
         if (ptCenters == null)
-          p = new P3[] {
-              interpolatePoint(vB, vA, -d2, d1, valB, valA, 1),
+          p = new P3[] { interpolatePoint(vB, vA, -d2, d1, valB, valA, 1),
               interpolatePoint(vB, vC, -d2, d3, valB, valC, 0) };
         else
           p = new P3[] {
@@ -364,8 +379,7 @@ public class MeshSlicer {
       case 4:
         //AB on same side need A-C, B-C
         if (ptCenters == null)
-          p = new P3[] {
-              interpolatePoint(vC, vA, -d3, d1, valC, valA, 0),
+          p = new P3[] { interpolatePoint(vC, vA, -d3, d1, valC, valA, 0),
               interpolatePoint(vC, vB, -d3, d2, valC, valB, 1) };
         else
           p = new P3[] {
@@ -405,32 +419,32 @@ public class MeshSlicer {
           boolean tossBC = (test1 == 1);
           if (tossBC || isGhost) {
             // 1: BC on side to toss -- +tossBC+isGhost  -tossBC+isGhost
-            if (!getDE(fracs, 0, m.iA, m.iB, m.iC, tossBC))
+            if (!getDE(fracs, 0, ia, ib, ic, tossBC))
               break;
             if (iD < 0)
-              iD = addIntersectionVertex(p[0], values[0], sources[0],
-                  thisSet, mapEdge, m.iA, m.iB);
+              iD = addIntersectionVertex(p[0], values[0], sources[0], thisSet,
+                  mapEdge, ia, ib);
             if (iE < 0)
-              iE = addIntersectionVertex(p[1], values[1], sources[0],
-                  thisSet, mapEdge, m.iA, m.iC);
+              iE = addIntersectionVertex(p[1], values[1], sources[0], thisSet,
+                  mapEdge, ia, ic);
             bs = (tossBC ? bsSlab : m.bsSlabGhost);
-            m.addPolygonV3(m.iA, iD, iE, check1 & 5 | 2, iContour, 0, bs);
+            m.addPolygonV3(ia, iD, iE, check1 & 5 | 2, iContour, 0, bs);
             if (!isGhost)
               break;
           }
           // BC on side to keep -- -tossBC+isGhost,  +tossBC+isGhost
-          if (!getDE(fracs, 1, m.iA, m.iC, m.iB, tossBC))
+          if (!getDE(fracs, 1, ia, ic, ib, tossBC))
             break;
           bs = (tossBC ? m.bsSlabGhost : bsSlab);
           if (iE < 0) {
             iE = addIntersectionVertex(p[0], values[0], sources[1], thisSet,
-                mapEdge, m.iA, m.iB);
-            m.addPolygonV3(iE, m.iB, m.iC, check1 & 3, iContour, 0, bs);
+                mapEdge, ia, ib);
+            m.addPolygonV3(iE, ib, ic, check1 & 3, iContour, 0, bs);
           }
           if (iD < 0) {
             iD = addIntersectionVertex(p[1], values[1], sources[2], thisSet,
-                mapEdge, m.iA, m.iC);
-            m.addPolygonV3(iD, iE, m.iC, check1 & 4 | 1, iContour, 0, bs);
+                mapEdge, ia, ic);
+            m.addPolygonV3(iD, iE, ic, check1 & 4 | 1, iContour, 0, bs);
           }
           break;
         case 5:
@@ -444,32 +458,32 @@ public class MeshSlicer {
           boolean tossAC = (test1 == 2);
           if (tossAC || isGhost) {
             //AC on side to toss
-            if (!getDE(fracs, 0, m.iB, m.iC, m.iA, tossAC))
+            if (!getDE(fracs, 0, ib, ic, ia, tossAC))
               break;
             bs = (tossAC ? bsSlab : m.bsSlabGhost);
             if (iE < 0)
-              iE = addIntersectionVertex(p[0], values[0], sources[1],
-                  thisSet, mapEdge, m.iB, m.iA);
+              iE = addIntersectionVertex(p[0], values[0], sources[1], thisSet,
+                  mapEdge, ib, ia);
             if (iD < 0)
-              iD = addIntersectionVertex(p[1], values[1], sources[1],
-                  thisSet, mapEdge, m.iB, m.iC);
-            m.addPolygonV3(iE, m.iB, iD, check1 & 3 | 4, iContour, 0, bs);
+              iD = addIntersectionVertex(p[1], values[1], sources[1], thisSet,
+                  mapEdge, ib, ic);
+            m.addPolygonV3(iE, ib, iD, check1 & 3 | 4, iContour, 0, bs);
             if (!isGhost)
               break;
           }
           // AC on side to keep
-          if (!getDE(fracs, 1, m.iB, m.iA, m.iC, tossAC))
+          if (!getDE(fracs, 1, ib, ia, ic, tossAC))
             break;
           bs = (tossAC ? m.bsSlabGhost : bsSlab);
           if (iD < 0) {
             iD = addIntersectionVertex(p[0], values[0], sources[0], thisSet,
-                mapEdge, m.iB, m.iA);
-            m.addPolygonV3(m.iA, iD, m.iC, check1 & 5, iContour, 0, bs);
+                mapEdge, ib, ia);
+            m.addPolygonV3(ia, iD, ic, check1 & 5, iContour, 0, bs);
           }
           if (iE < 0) {
             iE = addIntersectionVertex(p[1], values[1], sources[2], thisSet,
-                mapEdge, m.iB, m.iC);
-            m.addPolygonV3(iD, iE, m.iC, check1 & 2 | 1, iContour, 0, bs);
+                mapEdge, ib, ic);
+            m.addPolygonV3(iD, iE, ic, check1 & 2 | 1, iContour, 0, bs);
           }
           break;
         case 4:
@@ -482,32 +496,32 @@ public class MeshSlicer {
           //
           boolean tossAB = (test1 == 4);
           if (tossAB || isGhost) {
-            if (!getDE(fracs, 0, m.iC, m.iA, m.iB, tossAB))
+            if (!getDE(fracs, 0, ic, ia, ib, tossAB))
               break;
             if (iD < 0)
-              iD = addIntersectionVertex(p[0], values[0], sources[2],
-                  thisSet, mapEdge, m.iA, m.iC); //CA
+              iD = addIntersectionVertex(p[0], values[0], sources[2], thisSet,
+                  mapEdge, ia, ic); //CA
             if (iE < 0)
-              iE = addIntersectionVertex(p[1], values[1], sources[2],
-                  thisSet, mapEdge, m.iB, m.iC); //CB
+              iE = addIntersectionVertex(p[1], values[1], sources[2], thisSet,
+                  mapEdge, ib, ic); //CB
             bs = (tossAB ? bsSlab : m.bsSlabGhost);
-            m.addPolygonV3(iD, iE, m.iC, check1 & 6 | 1, iContour, 0, bs);
+            m.addPolygonV3(iD, iE, ic, check1 & 6 | 1, iContour, 0, bs);
             if (!isGhost)
               break;
           }
           //AB on side to keep
-          if (!getDE(fracs, 1, m.iC, m.iB, m.iA, tossAB))
+          if (!getDE(fracs, 1, ic, ib, ia, tossAB))
             break;
           bs = (tossAB ? m.bsSlabGhost : bsSlab);
           if (iE < 0) {
             iE = addIntersectionVertex(p[0], values[0], sources[0], thisSet,
-                mapEdge, m.iA, m.iC); //CA
-            m.addPolygonV3(m.iA, m.iB, iE, check1 & 5, iContour, 0, bs);
+                mapEdge, ia, ic); //CA
+            m.addPolygonV3(ia, ib, iE, check1 & 5, iContour, 0, bs);
           }
           if (iD < 0) {
             iD = addIntersectionVertex(p[1], values[1], sources[1], thisSet,
-                mapEdge, m.iB, m.iC); //CB
-            m.addPolygonV3(iE, m.iB, iD, check1 & 2 | 4, iContour, 0, bs);
+                mapEdge, ib, ic); //CB
+            m.addPolygonV3(iE, ib, iD, check1 & 2 | 4, iContour, 0, bs);
           }
           break;
         }

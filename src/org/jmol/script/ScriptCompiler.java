@@ -1010,7 +1010,8 @@ public class ScriptCompiler extends ScriptTokenParser {
   private int getPrefixToken() {
     ident = script.substring(ichToken, ichToken + cchToken);
     identLC = ident.toLowerCase();
-    boolean isUserVar = lastToken.tok != T.per && !isDotDot && isContextVariable(identLC);
+    boolean isUserVar = lastToken.tok != T.per && !isDotDot
+        && isContextVariable(identLC);
     String myName = ident;//(isUserVar ? ident : null);
     String preserveCase = null;
     if (nTokens == 0)
@@ -1048,14 +1049,21 @@ public class ScriptCompiler extends ScriptTokenParser {
         theToken = T.tv(theToken.tok, theToken.intValue, ident);
     } else {
       theToken = T.getTokenFromName(identLC);
-      if (theToken != null
-          && (lastToken.tok == T.per || lastToken.tok == T.leftsquare))
-        theToken = T.o(theToken.tok, ident);
+      if (theToken != null)
+        switch (lastToken.tok) {
+        case T.per:
+        case T.leftsquare:
+        case T.comma:
+          // looking out for hash names
+          theToken = T.o(theToken.tok, ident);
+        }
     }
 
     if (theToken == null) {
       // myName is just in case this is being used as a key to a hash
-      theToken = SV.newSV((identLC.indexOf("property_") == 0 ? T.property : T.identifier), Integer.MAX_VALUE, ident).setName(myName);
+      theToken = SV.newSV(
+          (identLC.indexOf("property_") == 0 ? T.property : T.identifier),
+          Integer.MAX_VALUE, ident).setName(myName);
     }
     return theTok = theToken.tok;
   }
