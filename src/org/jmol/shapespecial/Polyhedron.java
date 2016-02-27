@@ -108,6 +108,7 @@ public class Polyhedron {
       id = (info.containsKey("id") ? info.get("id").asString() : null);
       if (id == null) {
         centralAtom = at[info.get("atomIndex").intValue];
+        modelIndex = centralAtom.mi;
       } else {
         center = P3.newP(SV.ptValue(info.get("center")));
         modelIndex = info.get("modelIndex").intValue;
