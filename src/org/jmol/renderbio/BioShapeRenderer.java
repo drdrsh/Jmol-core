@@ -85,6 +85,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
   protected boolean wireframeOnly;
   private boolean needTranslucent;
   JmolBioMeshRenderer meshRenderer;
+  BioShape bioShape;
   
   protected abstract void renderBioShape(BioShape bioShape);
 
@@ -161,12 +162,13 @@ abstract class BioShapeRenderer extends ShapeRenderer {
 
     BioShapeCollection mps = (BioShapeCollection) shape;
     for (int c = mps.bioShapes.length; --c >= 0;) {
-      BioShape bioShape = mps.getBioShape(c);
+      bioShape = mps.getBioShape(c);
       if ((bioShape.modelVisibilityFlags & myVisibilityFlag) == 0)
         continue;
       if (bioShape.monomerCount >= 2 && initializePolymer(bioShape)) {
         if (meshRenderer != null)
           meshRenderer.initBS();    
+        isCyclic = bioShape.bioPolymer.isCyclic();
         renderBioShape(bioShape);
         if (meshRenderer != null)
           meshRenderer.renderMeshes();
@@ -304,12 +306,21 @@ abstract class BioShapeRenderer extends ShapeRenderer {
   short madBeg, madMid, madEnd;
   short colixBack;
   private BS reversed;
+  private boolean isCyclic;
 
   void setNeighbors(int i) {
-    iPrev = Math.max(i - 1, 0);
-    iNext = Math.min(i + 1, monomerCount);
-    iNext2 = Math.min(i + 2, monomerCount);
-    iNext3 = Math.min(i + 3, monomerCount);
+    if (isCyclic) {
+      i += monomerCount;
+      iPrev = (i - 1) % monomerCount;
+      iNext = (i + 1) % monomerCount;
+      iNext2 = (i + 2) % monomerCount;
+      iNext3 = (i + 3) % monomerCount;
+    } else {
+      iPrev = Math.max(i - 1, 0);
+      iNext = Math.min(i + 1, monomerCount);
+      iNext2 = Math.min(i + 2, monomerCount);
+      iNext3 = Math.min(i + 3, monomerCount);
+    }
   }
 
   protected boolean setColix(short colix) {

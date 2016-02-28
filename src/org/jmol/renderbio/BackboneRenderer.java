@@ -45,12 +45,15 @@ public class BackboneRenderer extends BioShapeRenderer {
     boolean showSteps = vwr.getBoolean(T.backbonesteps)
         && bioShape.bioPolymer.isNucleic();
     isDataFrame = vwr.ms.isJmolDataFrameForModel(bioShape.modelIndex);
+    int n = monomerCount;
+    Atom[] atoms = ms.at;
     for (int i = bsVisible.nextSetBit(0); i >= 0; i = bsVisible
         .nextSetBit(i + 1)) {
-      Atom atomA = ms.at[leadAtomIndices[i]];
+      Atom atomA = atoms[leadAtomIndices[i]];
       short cA = colixes[i];
       mad = mads[i];
-      drawSegment(atomA, ms.at[leadAtomIndices[i + 1]], cA, colixes[i + 1], 100, checkPass2);
+      int i1 = (i + 1) % n;
+      drawSegment(atomA, atoms[leadAtomIndices[i1]], cA, colixes[i1], 100, checkPass2);
       if (showSteps) {
         NucleicMonomer g = (NucleicMonomer) monomers[i];
         Lst<BasePair> bps = g.getBasePairs();
@@ -58,7 +61,7 @@ public class BackboneRenderer extends BioShapeRenderer {
           for (int j = bps.size(); --j >= 0;) {
             int iAtom = bps.get(j).getPartnerAtom(g);
             if (iAtom > i)
-              drawSegment(atomA, ms.at[iAtom], cA, cA, 1000, checkPass2);
+              drawSegment(atomA, atoms[iAtom], cA, cA, 1000, checkPass2);
           }
         }
       }

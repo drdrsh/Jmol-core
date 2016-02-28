@@ -81,6 +81,8 @@ public abstract class BioPolymer implements Structure {
   protected final static int TYPE_NUCLEIC = 2;
   protected final static int TYPE_CARBOHYDRATE = 3;
 
+  public int cyclicFlag;
+  
   protected void set(Monomer[] monomers) {
     this.monomers = monomers;
     monomerCount = monomers.length;
@@ -481,6 +483,11 @@ public abstract class BioPolymer implements Structure {
 
   public int getType() {
     return type;
+  }
+
+  public boolean isCyclic() { // Jmol 14.5.3
+    return ((cyclicFlag == 0 ? (cyclicFlag = (monomerCount >= 4 && monomers[0]
+        .isConnectedAfter(monomers[monomerCount - 1])) ? 1 : -1) : cyclicFlag) == 1);
   }
 
 }

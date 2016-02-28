@@ -73,9 +73,10 @@ public class Backbone extends BioShapeCollection {
       if (bioShape.bsSizeSet == null)
         bioShape.bsSizeSet = new BS();
       bioShape.isActive = true;
-      for (int i = bioShape.monomerCount - 1; --i >= 0;) {
+      int n = bioShape.monomerCount;
+      for (int i = n - (bioShape.bioPolymer.isCyclic() ? 0 : 1); --i >= 0;) {
         int index1 = atomIndices[i];
-        int index2 = atomIndices[i + 1];
+        int index2 = atomIndices[(i + 1) % n];
         boolean isAtom1 = bsSelected.get(index1);
         boolean isAtom2 = bsSelected.get(index2);
         if (isAtom1 && isAtom2 
