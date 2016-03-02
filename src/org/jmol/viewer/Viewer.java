@@ -2328,8 +2328,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
                                  boolean checkProtected, String state) {
     if (name == null)
       return getCurrentFileAsString(state);
-    String[] data = new String[2];
-    data[0] = name;
+    String[] data = new String[] {name, null};
     // ignore error completely
     fm.getFileDataAsString(data, nBytesMax, doSpecialLoad, allowBinary,
         checkProtected);
