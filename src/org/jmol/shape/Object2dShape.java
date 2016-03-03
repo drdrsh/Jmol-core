@@ -41,21 +41,19 @@ public abstract class Object2dShape extends Shape {
     }
 
     if ("delete" == propertyName) {
-      if (currentObject == null) {
-        if (isAll || thisID != null) {
-          Iterator<Text> e = objects.values().iterator();
-          while (e.hasNext()) {
-            Text text = e.next();
-            if (isAll
-                || PT.isMatch(text.target.toUpperCase(), thisID, true, true)) {
-              e.remove();
-            }
+      if (currentObject != null) {
+        objects.remove(currentObject.target);
+        currentObject = null;
+      } else if (isAll || thisID != null) {
+        Iterator<Text> e = objects.values().iterator();
+        while (e.hasNext()) {
+          Text text = e.next();
+          if (isAll
+              || PT.isMatch(text.target.toUpperCase(), thisID, true, true)) {
+            e.remove();
           }
         }
-        return;
       }
-      objects.remove(currentObject.target);
-      currentObject = null;
       return;
     }
 
@@ -76,26 +74,24 @@ public abstract class Object2dShape extends Shape {
 
     if ("model" == propertyName) {
       int modelIndex = ((Integer) value).intValue();
-      if (currentObject == null) {
-        if (isAll)
-          for (Text t : objects.values())
-            t.modelIndex = modelIndex;
-        return;
+      if (currentObject != null) {
+        currentObject.modelIndex = modelIndex;
+      } else if (isAll) {
+        for (Text t : objects.values())
+          t.modelIndex = modelIndex;
       }
-      currentObject.modelIndex = modelIndex;
       return;
     }
 
     if ("align" == propertyName) {
       String align = (String) value;
-      if (currentObject == null) {
-        if (isAll)
-          for (Object2d obj : objects.values())
-            obj.setAlignmentLCR(align);
-        return;
+      if (currentObject != null) {
+        if (!currentObject.setAlignmentLCR(align))
+          Logger.error("unrecognized align:" + align);
+      } else if (isAll) {
+        for (Object2d obj : objects.values())
+          obj.setAlignmentLCR(align);
       }
-      if (!currentObject.setAlignmentLCR(align))
-        Logger.error("unrecognized align:" + align);
       return;
     }
 
@@ -114,20 +110,18 @@ public abstract class Object2dShape extends Shape {
 
     if ("color" == propertyName) {
       currentColor = value;
-      if (currentObject == null) {
-        if (isAll || thisID != null) {
-          Iterator<Text> e = objects.values().iterator();
-          while (e.hasNext()) {
-            Text text = e.next();
-            if (isAll
-                || PT.isMatch(text.target.toUpperCase(), thisID, true, true)) {
-              text.colix = C.getColixO(value);
-            }
+      if (currentObject != null) {
+        currentObject.colix = C.getColixO(value);
+      } else if (isAll || thisID != null) {
+        Iterator<Text> e = objects.values().iterator();
+        while (e.hasNext()) {
+          Text text = e.next();
+          if (isAll
+              || PT.isMatch(text.target.toUpperCase(), thisID, true, true)) {
+            text.colix = C.getColixO(value);
           }
         }
-        return;
       }
-      currentObject.colix = C.getColixO(value);
       return;
     }
 
@@ -149,16 +143,14 @@ public abstract class Object2dShape extends Shape {
         currentBgTranslucentLevel = (isTranslucent ? translucentLevel : 0);
       else
         currentTranslucentLevel = (isTranslucent ? translucentLevel : 0);
-      if (currentObject == null) {
-        if (isAll) {
-          Iterator<Text> e = objects.values().iterator();
-          while (e.hasNext()) {
-            e.next().setTranslucent(translucentLevel, isBackground);
-          }
+      if (currentObject != null) {
+        currentObject.setTranslucent(translucentLevel, isBackground);
+      } else if (isAll) {
+        Iterator<Text> e = objects.values().iterator();
+        while (e.hasNext()) {
+          e.next().setTranslucent(translucentLevel, isBackground);
         }
-        return;
       }
-      currentObject.setTranslucent(translucentLevel, isBackground);
       return;
     }
 
