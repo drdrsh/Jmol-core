@@ -1540,7 +1540,6 @@ public class CifReader extends AtomSetCollectionReader {
           || asc.getAtomIndex(name2 = getField(GEOM_BOND_ATOM_SITE_LABEL_2)) < 0)
         continue;
       int order = getBondOrder(getField(CCDC_GEOM_BOND_TYPE));
-      float dx = 0;
       String sdist = getField(GEOM_BOND_DISTANCE);
       float distance = parseFloatStr(sdist);
       if (distance == 0 || Float.isNaN(distance)) {
@@ -1553,6 +1552,7 @@ public class CifReader extends AtomSetCollectionReader {
         }
         continue;
       }
+      float dx = 0;
       int pt = sdist.indexOf('(');
       if (pt >= 0) {
         char[] data = sdist.toCharArray();
