@@ -75,13 +75,13 @@ public abstract class Object2d {
     }
   }
 
-  private void setMovableX(int x) {
+  public void setMovableX(int x) {
     valign = (valign == JC.ECHO_XYZ ? JC.ECHO_XYZ : JC.ECHO_XY);
     movableX = x;
     movableXPercent = Integer.MAX_VALUE;
   }
 
-  private void setMovableY(int y) {
+  public void setMovableY(int y) {
     valign = (valign == JC.ECHO_XYZ ? JC.ECHO_XYZ : JC.ECHO_XY);
     movableY = y;
     movableYPercent = Integer.MAX_VALUE;
@@ -186,69 +186,6 @@ public abstract class Object2d {
     }
     return (x >= boxX && x <= boxX + boxWidth && y >= boxY && y <= boxY
         + boxHeight);
-  }
-
-  public static boolean setProperty(String propertyName, Object value,
-                                    Object2d currentObject) {
-
-    if ("script" == propertyName) {
-      if (currentObject != null)
-        currentObject.setScript((String) value);
-      return true;
-    }
-
-    if ("xpos" == propertyName) {
-      if (currentObject != null)
-        currentObject.setMovableX(((Integer) value).intValue());
-      return true;
-    }
-
-    if ("ypos" == propertyName) {
-      if (currentObject != null)
-        currentObject.setMovableY(((Integer) value).intValue());
-      return true;
-    }
-
-    if ("%xpos" == propertyName) {
-      if (currentObject != null)
-        currentObject.setMovableXPercent(((Integer) value).intValue());
-      return true;
-    }
-
-    if ("%ypos" == propertyName) {
-      if (currentObject != null)
-        currentObject.setMovableYPercent(((Integer) value).intValue());
-      return true;
-    }
-
-    if ("%zpos" == propertyName) {
-      if (currentObject != null)
-        currentObject.setMovableZPercent(((Integer) value).intValue());
-      return true;
-    }
-
-    if ("xypos" == propertyName) {
-      if (currentObject == null)
-        return true;
-      P3 pt = (P3) value;
-      currentObject.setXYZ(null, true);
-      if (pt.z == Float.MAX_VALUE) {
-        currentObject.setMovableX((int) pt.x);
-        currentObject.setMovableY((int) pt.y);
-      } else {
-        currentObject.setMovableXPercent((int) pt.x);
-        currentObject.setMovableYPercent((int) pt.y);
-      }
-      return true;
-    }
-
-    if ("xyz" == propertyName) {
-      if (currentObject != null) {
-        currentObject.setXYZ((P3) value, true);
-      }
-      return true;
-    }
-    return false;
   }
 
 }

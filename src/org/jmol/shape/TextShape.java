@@ -41,26 +41,24 @@ public abstract class TextShape extends Object2dShape {
   protected void setPropTS(String propertyName, Object value, BS bsSelected) {
     if ("text" == propertyName) {
       String text = (String) value;
-      if (currentObject == null) {
-        if (isAll)
-          for (Text t : objects.values())
-            t.setText(text);
-        return;
+      if (currentObject != null) {
+        ((Text) currentObject).setText(text);
+      } else if (isAll) {
+        for (Text t : objects.values())
+          t.setText(text);
       }
-      ((Text) currentObject).setText(text);
       return;
     }
 
     if ("font" == propertyName) {
       currentFont = (Font) value;
-      if (currentObject == null) {
-        if (isAll)
-          for (Text t : objects.values())
-            t.setFont(currentFont, true);
-        return;
+      if (currentObject != null) {
+        ((Text) currentObject).setFont(currentFont, true);
+        ((Text) currentObject).setFontScale(0);
+      } else if (isAll) {
+        for (Text t : objects.values())
+          t.setFont(currentFont, true);
       }
-      ((Text) currentObject).setFont(currentFont, true);
-      ((Text) currentObject).setFontScale(0);
       return;
     }
 

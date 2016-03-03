@@ -24,14 +24,13 @@
 
 package org.jmol.shape;
 
-import org.jmol.java.BS;
-import org.jmol.modelset.Object2d;
-import org.jmol.modelset.Text;
-import org.jmol.script.T;
-import org.jmol.util.C;
 import javajs.util.P3;
 import javajs.util.PT;
 
+import org.jmol.java.BS;
+import org.jmol.modelset.Text;
+import org.jmol.script.T;
+import org.jmol.util.C;
 import org.jmol.viewer.JC;
 
 public class Echo extends TextShape {
@@ -67,11 +66,12 @@ public class Echo extends TextShape {
     }
 
     if ("point" == propertyName) {
-      if (currentObject == null)
-        return;
-      Text t = (Text) currentObject;
-      t.pointerPt = (value == null ? null : (P3) value); // could be an atom.
-      t.pointer = (value == null ? JC.LABEL_POINTER_NONE : JC.LABEL_POINTER_ON);
+      if (currentObject != null) {
+        Text t = (Text) currentObject;
+        t.pointerPt = (value == null ? null : (P3) value); // could be an atom.
+        t.pointer = (value == null ? JC.LABEL_POINTER_NONE
+            : JC.LABEL_POINTER_ON);
+      }
       return;
     }
     if ("xyz" == propertyName) {
@@ -82,23 +82,21 @@ public class Echo extends TextShape {
     }
 
     if ("scale" == propertyName) {
-      if (currentObject == null) {
-        if (isAll)
-          for (Text t : objects.values())
-            t.setScale(((Float) value).floatValue());
-        return;
+      if (currentObject != null) {
+        ((Text) currentObject).setScale(((Float) value).floatValue());
+      } else if (isAll) {
+        for (Text t : objects.values())
+          t.setScale(((Float) value).floatValue());
       }
-      ((Text) currentObject).setScale(((Float) value).floatValue());
       return;
     }
     if ("image" == propertyName) {
-      if (currentObject == null) {
-        if (isAll)
-          for (Text t : objects.values())
-            t.setImage(value);
-        return;
+      if (currentObject != null) {
+        ((Text) currentObject).setImage(value);
+      } else if (isAll) {
+        for (Text t : objects.values())
+          t.setImage(value);
       }
-      ((Text) currentObject).setImage(value);
       return;
     }
     if ("thisID" == propertyName) {
@@ -111,28 +109,78 @@ public class Echo extends TextShape {
 
     if ("hidden" == propertyName) {
       boolean isHidden = ((Boolean) value).booleanValue();
-      if (currentObject == null) {
-        if (isAll || thisID != null)
-          for (Text t : objects.values())
-            if (isAll
-                || PT.isMatch(t.target.toUpperCase(), thisID, true,
-                    true))
-              t.hidden = isHidden;
-        return;
+      if (currentObject != null) {
+        ((Text) currentObject).hidden = isHidden;
+      } else if (isAll || thisID != null) {
+        for (Text t : objects.values())
+          if (isAll || PT.isMatch(t.target.toUpperCase(), thisID, true, true))
+            t.hidden = isHidden;
       }
-      ((Text) currentObject).hidden = isHidden;
       return;
     }
 
-    if (Object2d.setProperty(propertyName, value, currentObject))
+    if ("script" == propertyName) {
+      if (currentObject != null)
+        currentObject.setScript((String) value);
       return;
+    }
+
+    if ("xpos" == propertyName) {
+      if (currentObject != null)
+        currentObject.setMovableX(((Integer) value).intValue());
+      return;
+    }
+
+    if ("ypos" == propertyName) {
+      if (currentObject != null)
+        currentObject.setMovableY(((Integer) value).intValue());
+      return;
+    }
+
+    if ("%xpos" == propertyName) {
+      if (currentObject != null)
+        currentObject.setMovableXPercent(((Integer) value).intValue());
+      return;
+    }
+
+    if ("%ypos" == propertyName) {
+      if (currentObject != null)
+        currentObject.setMovableYPercent(((Integer) value).intValue());
+      return;
+    }
+
+    if ("%zpos" == propertyName) {
+      if (currentObject != null)
+        currentObject.setMovableZPercent(((Integer) value).intValue());
+      return;
+    }
+
+    if ("xypos" == propertyName) {
+      if (currentObject != null) {
+        P3 pt = (P3) value;
+        currentObject.setXYZ(null, true);
+        if (pt.z == Float.MAX_VALUE) {
+          currentObject.setMovableX((int) pt.x);
+          currentObject.setMovableY((int) pt.y);
+        } else {
+          currentObject.setMovableXPercent((int) pt.x);
+          currentObject.setMovableYPercent((int) pt.y);
+        }
+      }
+      return;
+    }
+
+    if ("xyz" == propertyName) {
+      if (currentObject != null) {
+        currentObject.setXYZ((P3) value, true);
+      }
+      return;
+    }
 
     if ("target" == propertyName) {
       thisID = null;
       String target = ((String) value).intern().toLowerCase();
-      if (target == "none" || target == "all") {
-        // process in Object2dShape
-      } else {
+      if (target != "none" && target != "all") {
         isAll = false;
         Text text = objects.get(target);
         if (text == null) {
@@ -149,8 +197,8 @@ public class Echo extends TextShape {
           } else if ("error" == target) {
             valign = JC.ECHO_TOP;
           }
-          text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE,
-              FONTSIZE), target, COLOR, valign, halign, 0);
+          text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
+              target, COLOR, valign, halign, 0);
           text.adjustForWindow = true;
           objects.put(target, text);
           if (currentFont != null)
@@ -168,6 +216,7 @@ public class Echo extends TextShape {
         return;
       }
     }
+    
     setPropTS(propertyName, value, null);
   }
 

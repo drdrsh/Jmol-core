@@ -47,8 +47,7 @@ public abstract class Object2dShape extends Shape {
           while (e.hasNext()) {
             Text text = e.next();
             if (isAll
-                || PT.isMatch(text.target.toUpperCase(), thisID, true,
-                    true)) {
+                || PT.isMatch(text.target.toUpperCase(), thisID, true, true)) {
               e.remove();
             }
           }
@@ -102,16 +101,14 @@ public abstract class Object2dShape extends Shape {
 
     if ("bgcolor" == propertyName) {
       currentBgColor = value;
-      if (currentObject == null) {
-        if (isAll) {
-          Iterator<Text> e = objects.values().iterator();
-          while (e.hasNext()) {
-            e.next().colix = C.getColixO(value);
-          }
+      if (currentObject != null) {
+        currentObject.bgcolix = C.getColixO(value);
+      } else if (isAll) {
+        Iterator<Text> e = objects.values().iterator();
+        while (e.hasNext()) {
+          e.next().bgcolix = C.getColixO(value);
         }
-        return;
       }
-      currentObject.bgcolix = C.getColixO(value);
       return;
     }
 
@@ -123,8 +120,7 @@ public abstract class Object2dShape extends Shape {
           while (e.hasNext()) {
             Text text = e.next();
             if (isAll
-                || PT.isMatch(text.target.toUpperCase(), thisID, true,
-                    true)) {
+                || PT.isMatch(text.target.toUpperCase(), thisID, true, true)) {
               text.colix = C.getColixO(value);
             }
           }
