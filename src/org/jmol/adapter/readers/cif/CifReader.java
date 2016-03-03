@@ -1539,11 +1539,20 @@ public class CifReader extends AtomSetCollectionReader {
       if (asc.getAtomIndex(name1 = getField(GEOM_BOND_ATOM_SITE_LABEL_1)) < 0
           || asc.getAtomIndex(name2 = getField(GEOM_BOND_ATOM_SITE_LABEL_2)) < 0)
         continue;
+      int order = getBondOrder(getField(CCDC_GEOM_BOND_TYPE));
       float dx = 0;
       String sdist = getField(GEOM_BOND_DISTANCE);
       float distance = parseFloatStr(sdist);
-      if (distance == 0 || Float.isNaN(distance))
+      if (distance == 0 || Float.isNaN(distance)) {
+        if (!iHaveFractionalCoordinates) {
+          // maybe this is a simple Cartesian file with coordinates and bonds
+          Atom a = asc.getAtomFromName(name1);
+          Atom b = asc.getAtomFromName(name2);
+          if (a != null && b != null)
+            asc.addNewBondWithOrder(a.index, b.index, order);
+        }
         continue;
+      }
       int pt = sdist.indexOf('(');
       if (pt >= 0) {
         char[] data = sdist.toCharArray();
@@ -1564,7 +1573,6 @@ public class CifReader extends AtomSetCollectionReader {
       } else {
         dx = 0.015f;
       }
-      int order = getBondOrder(getField(CCDC_GEOM_BOND_TYPE));
       // This field is from Materials Studio. See supplemental material for
       // http://pubs.rsc.org/en/Content/ArticleLanding/2012/CC/c2cc34714h
       // http://www.rsc.org/suppdata/cc/c2/c2cc34714h/c2cc34714h.txt
@@ -1661,7 +1669,7 @@ public class CifReader extends AtomSetCollectionReader {
       // main loop continues until no new atoms are found
     }
 
-    if (isMolecular) {
+    if (isMolecular && iHaveFractionalCoordinates) {
 
       // Set bsAtoms to control which atoms and 
       // bonds are delivered by the iterators.
@@ -1706,6 +1714,12 @@ public class CifReader extends AtomSetCollectionReader {
     bsExclude = null;
   }
 
+  private void fixAtomForBonding(P3 pt, int i) {
+    pt = (pt == null ? atoms[i] : P3.newP(atoms[i]));
+    if (iHaveFractionalCoordinates)
+      symmetry.toCartesian(pt, true);
+  }
+
   /**
    * Use the site bitset to check for atoms that are within +/-dx Angstroms of
    * the specified distances in GEOM_BOND where dx is determined by the
@@ -1737,12 +1751,15 @@ public class CifReader extends AtomSetCollectionReader {
       for (int j = bs1.nextSetBit(0); j >= 0; j = bs1.nextSetBit(j + 1))
         for (int k = bs2.nextSetBit(0); k >= 0; k = bs2.nextSetBit(k + 1)) {
           if ((!isMolecular || !bsConnected[j + firstAtom].get(k))
-              && symmetry.checkDistance(atoms[j + firstAtom], atoms[k
-                  + firstAtom], distance, dx, 0, 0, 0, ptOffset))
+              && checkBondDistance(atoms[j + firstAtom], atoms[k + firstAtom], distance, dx))
             addNewBond(j + firstAtom, k + firstAtom, order);
         }
     }
 
+    if (!iHaveFractionalCoordinates)
+      return false;
+
+    
     // do a quick check for H-X bonds if we have GEOM_BOND
 
     if (bondTypes.size() > 0)
@@ -1754,8 +1771,7 @@ public class CifReader extends AtomSetCollectionReader {
                 && atoms[k].elementNumber != 1
                 && (!checkAltLoc || atoms[k].altLoc == '\0' || atoms[k].altLoc == atoms[i].altLoc)) {
               if (!bsConnected[i].get(k)
-                  && symmetry.checkDistance(atoms[i], atoms[k], 1.1f, 0, 0, 0,
-                      0, ptOffset))
+                  && checkBondDistance(atoms[i], atoms[k], 1.1f, 0))
                 addNewBond(i, k, 1);
             }
         }
@@ -1793,16 +1809,14 @@ public class CifReader extends AtomSetCollectionReader {
             for (int k = bsBranch.nextSetBit(0); k >= 0; k = bsBranch
                 .nextSetBit(k + 1)) {
               atoms[k].add(ptOffset);
-              cart1.setT(atoms[k]);
-              symmetry.toCartesian(cart1, true);
+              fixAtomForBonding(cart1, k);
               BS bs = bsSets[asc.getAtomIndex(atoms[k].atomName) - firstAtom];
               if (bs != null)
                 for (int ii = bs.nextSetBit(0); ii >= 0; ii = bs
                     .nextSetBit(ii + 1)) {
                   if (ii + firstAtom == k)
                     continue;
-                  cart2.setT(atoms[ii + firstAtom]);
-                  symmetry.toCartesian(cart2, true);
+                  fixAtomForBonding(cart2, ii + firstAtom);
                   if (cart2.distance(cart1) < 0.1f) {
                     bsExclude.set(k);
                     break;
@@ -1813,6 +1827,13 @@ public class CifReader extends AtomSetCollectionReader {
             return true;
           }
     return false;
+  }
+
+  private boolean checkBondDistance(Atom a, Atom b, float distance, float dx) {
+    if (iHaveFractionalCoordinates)
+      return  symmetry.checkDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
+    float d = a.distance(b);
+    return (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1f); // same as in Symmetry
   }
 
   /**
