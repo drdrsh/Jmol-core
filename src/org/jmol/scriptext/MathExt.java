@@ -641,9 +641,13 @@ public class MathExt {
           if (s.indexOf("/") >= 0 || s.indexOf("\\") >= 0
               || s.indexOf("@") >= 0) {
             if (smiles1.indexOf("@") >= 0
-                && (bs2 != null || smiles2.indexOf("@") >= 0)) {
-              // reverse chirality centers              
-              smiles1 = "/invertstereo/" + smiles1;//vwr.getSmilesMatcher().reverseChirality(smiles1);
+                && (bs2 != null || smiles2.indexOf("@") >= 0)
+                && smiles1.indexOf("@SP") < 0) {
+              // reverse chirality centers to see if we have an enantiomer
+              // but only if not square planar
+              int pt = smiles1.toLowerCase().indexOf("invertstereo"); 
+              smiles1 = (pt >= 0 ? smiles1.substring(0, pt) + smiles1.substring(pt + 12) 
+                  : "/invertstereo/" + smiles1);//vwr.getSmilesMatcher().reverseChirality(smiles1);
               if (bs2 == null) {
                 check = (vwr.getSmilesMatcher().areEqual(smiles1, smiles2) > 0);
               } else {

@@ -771,13 +771,14 @@ public class SmilesGenerator {
     int n = v.size();
     Lst<Edge[]> axialPairs = new  Lst<Edge[]>();
     Lst<Edge> bonds = new  Lst<Edge>();
-    Node a1, a2;
+    Node a1, a2, a01 = null, a02 = null;
     Edge bond1, bond2;
     BS bsDone = new BS();
     Edge[] pair0 = null;
     Node[] stereo = new Node[6];
     boolean isOK = true; // AX6 or AX5
     String s = "";
+    int naxial = 0;
     for (int i = 0; i < n; i++) {
       bond1 = v.get(i);
       stereo[0] = a1 = bond1.getOtherAtomNode(atom);
@@ -795,6 +796,23 @@ public class SmilesGenerator {
         bond2 = v.get(j);
         a2 = bond2.getOtherAtomNode(atom);
         if (SmilesStereo.isDiaxial(atom, atom, a1, a2, vTemp, -0.95f)) {
+          switch (++naxial) {
+          case 1:
+            a01 = a1;
+            break;
+          case 2:
+            a02 = a1;
+            break;
+          case 3:
+            // we must check to see if we have the proper winding for the
+            // two "equatorial" pairs
+            if (SmilesStereo.getHandedness(a02, a01, a1, atom, vTemp) == 2) {
+              Edge b = bond1;
+              bond1 = bond2;
+              bond2 = b;
+            }
+            break;  
+          }
           axialPairs.addLast(new Edge[] { bond1, bond2 });
           isAxial = true;
           bsDone.set(j);
@@ -817,7 +835,6 @@ public class SmilesGenerator {
     stereo[0] = bond1.getOtherAtomNode(atom);
     
     // now sort them into the ligand vector in the proper order
-    
     v.clear();
     v.addLast(bond1);
     if (npAxial > 1)
@@ -834,6 +851,7 @@ public class SmilesGenerator {
       stereo[i + 1] = bond1.getOtherAtomNode(atom);
     }
     v.addLast(pair0[1]);
+    stereo[n - 1] = pair0[1].getOtherAtomNode(atom);
     
     // now deterimine the stereochemistry
     

@@ -62,7 +62,7 @@ public class SmilesStereo {
   final static int STEREOCHEMISTRY_DEFAULT = 0;
 
   private static int getChiralityClass(String xx) {
-    return ("0;PH;AL;33;TH;TP;OH;77;SP;".indexOf(xx) + 1) / 3;
+    return ("0;PH;AL;33;TH;TB;OH;77;SP;".indexOf(xx) + 1) / 3;
   }
 
   public static SmilesStereo newStereo(SmilesStereo stereo)
@@ -211,16 +211,142 @@ public class SmilesStereo {
         sAtom.stereo = null;
       break;
     case STEREOCHEMISTRY_ALLENE:
-    case STEREOCHEMISTRY_OCTAHEDRAL:
     case STEREOCHEMISTRY_TETRAHEDRAL:
-    case STEREOCHEMISTRY_TRIGONAL_BIPYRAMIDAL:
       if (nBonds != chiralClass)
+        sAtom.stereo = null;
+      break;
+    case STEREOCHEMISTRY_OCTAHEDRAL:
+    case STEREOCHEMISTRY_TRIGONAL_BIPYRAMIDAL:
+      if (nBonds != chiralClass || !normalizeClass(sAtom.bonds)) 
         sAtom.stereo = null;
       break;
     }
     if (sAtom.stereo == null)
       throw new InvalidSmilesException(
           "Incorrect number of bonds for stereochemistry descriptor");
+  }
+
+  // permutation tables courtesy of http://www.opensmiles.org/opensmiles.html
+  private static final int[] PERM_TB = new int[] {
+    // a,p,z, where:
+    // a = first axial
+    // z = last axial
+    // p = 1 @, -1 for @@
+    0, 1,4, //TB1 @
+    0,-1,4, //TB2 @@
+    0, 1,3, //TB3 @
+    0,-1,3, //TB4 @@
+    0, 1,2, //TB5 @
+    0,-1,2, //TB6 @@
+    0, 1,1, //TB7 @
+    0,-1,1, //TB8 @@
+    1, 1,4, //TB9 @
+    1, 1,3, //TB10 @
+    1,-1,4, //TB11 @@
+    1,-1,3, //TB12 @@
+    1, 1,2, //TB13 @
+    1,-1,2, //TB14 @@
+    2, 1,4, //TB15 @
+    2, 1,3, //TB16 @
+    3, 1,4, //TB17 @
+    3,-1,4, //TB18 @@
+    2,-1,3, //TB19 @@
+    2,-1,4, //TB20 @@
+  };
+  
+  private static final int[] PERM_OCT = new int[] {
+    // a,p,z, where:
+    // a = first axial
+    // z = last axial
+    // p = 1 @, -1 @@, or position to permute with p+1 after setting a and z (< 0 for @@)
+    0, 1,5, //OH1 a U f @ 
+    0,-1,5, //OH2 a U f @@  
+    0, 1,4, //OH3 a U e @ 
+    0, 3,5, //OH4 a Z f @ 
+    0, 3,4, //OH5 a Z e @ 
+    0, 1,3, //OH6 a U d @ 
+    0, 3,3, //OH7 a Z d @ 
+    0,-4,5, //OH8 a 4 f @@  
+    0,-4,4, //OH9 a 4 e @@  
+    0, 4,5, //OH10 a 4 f @  
+    0, 4,4, //OH11 a 4 e @  
+    0,-4,3, //OH12 a 4 d @@ 
+    0, 4,3, //OH13 a 4 d @  
+    0,-3,5, //OH14 a Z f @@ 
+    0,-3,4, //OH15 a Z e @@ 
+    0,-1,4, //OH16 a U e @@ 
+    0,-3,3, //OH17 a Z d @@ 
+    0,-1,3, //OH18 a U d @@ 
+    0, 1,2, //OH19 a U c @  
+    0, 3,2, //OH20 a Z c @  
+    0,-4,2, //OH21 a 4 c @@ 
+    0, 4,2, //OH22 a 4 c @  
+    0,-3,2, //OH23 a Z c @@ 
+    0,-1,2, //OH24 a U c @@ 
+    0, 1,1, //OH25 a U b @  
+    0, 3,1, //OH26 a Z b @  
+    0,-4,1, //OH27 a 4 b @@ 
+    0, 4,1, //OH28 a 4 b @  
+    0,-3,1, //OH29 a Z b @@ 
+    0,-1,1, //OH30 a U b @@ 
+  };
+ 
+  /**
+   * re-order bonds to match standard @ and @@ types
+   * 
+   * @param bonds
+   * @return true if OK
+   */
+  private boolean normalizeClass(SmilesBond[] bonds) {
+    if (chiralOrder < 3)  
+      return true;
+    int pt = (chiralOrder - 1) * 3;
+    int[] perm;
+    int ilast;
+    switch (chiralClass) {
+    case STEREOCHEMISTRY_TRIGONAL_BIPYRAMIDAL:
+      if (chiralOrder > 20)
+        return false;
+      perm = PERM_TB;
+      ilast = 4;
+      break;
+    case STEREOCHEMISTRY_OCTAHEDRAL:
+      if (chiralOrder > 30)
+        return false;
+      perm = PERM_OCT;
+      ilast = 5;
+      break;
+    default:
+      return true;
+    }
+    int a = perm[pt];
+    int p = Math.abs(perm[pt + 1]);
+    boolean isAtAt = (perm[pt + 1] < 0);
+    int z = perm[pt + 2];
+    SmilesBond b;
+    if (a != 0) {
+      b = bonds[a];
+      for (int i = a; i > 0; --i)
+        bonds[i] = bonds[i - 1];
+      bonds[0] = b;
+    }
+    if (z != ilast) {
+      b = bonds[z];
+      for (int i = z; i < ilast; i++)
+        bonds[i] = bonds[i + 1];
+      bonds[ilast] = b;
+    }
+    switch (p) {
+    case 1:
+      break;
+    default:
+      int q = p % (ilast - 1) + 1;
+      b = bonds[q];
+      bonds[q] = bonds[p];
+      bonds[p] = b;
+    }
+    chiralOrder = (isAtAt ? 2 : 1);
+    return true;
   }
 
   private boolean setSmilesCoordinates(SmilesAtom atom, SmilesAtom sAtom,
@@ -434,7 +560,7 @@ public class SmilesStereo {
     boolean invertStereochemistry = smilesSearch.invertStereochemistry;
 
     if (Logger.debugging)
-      Logger.debug("checking sstereochemistry...");
+      Logger.debug("checking stereochemistry...");
 
     //for debugging, first try SET DEBUG
     //for (int i = 0; i < ac; i++) {
@@ -700,7 +826,7 @@ public class SmilesStereo {
     return "";
   }
 
-  static boolean checkStereochemistryAll(boolean isNot, Node atom0,
+  private static boolean checkStereochemistryAll(boolean isNot, Node atom0,
                                          int chiralClass, int order,
                                          Node atom1, Node atom2, Node atom3,
                                          Node atom4, Node atom5, Node atom6,
@@ -718,18 +844,22 @@ public class SmilesStereo {
       return (isNot == (getHandedness(atom2, atom3, atom4, atom1, v) != order));
     case STEREOCHEMISTRY_TRIGONAL_BIPYRAMIDAL:
       // check for axial-axial'
-      return (isNot == (!isDiaxial(atom0, atom0, atom5, atom1, v, -0.95f) || getHandedness(
-          atom2, atom3, atom4, atom1, v) != order));
+      if (!isDiaxial(atom0, atom0, atom5, atom1, v, -0.95f))
+        return false;
+      return (isNot == (getHandedness(atom2, atom3, atom4, atom1, v) != order));
     case STEREOCHEMISTRY_OCTAHEDRAL:
-      if (isNot != (!isDiaxial(atom0, atom0, atom6, atom1, v, -0.95f)))
+      if (!isDiaxial(atom0, atom0, atom6, atom1, v, -0.95f)
+          || !isDiaxial(atom0, atom0, atom2, atom4, v, -0.95f)
+          || !isDiaxial(atom0, atom0, atom3, atom5, v, -0.95f))
         return false;
-      // check for CW or CCW set
       getPlaneNormals(atom2, atom3, atom4, atom5, v);
-      if (isNot != (v.vNorm1.dot(v.vNorm2) < 0 || v.vNorm2.dot(v.vNorm3) < 0))
+      // check for proper order 2-3-4-5
+      //                          n1n2n3
+      if (v.vNorm2.dot(v.vNorm3) < 0 || v.vNorm3.dot(v.vNorm4) < 0)
         return false;
-      // now check rotation in relation to the first atom
-      v.vNorm2.sub2((P3) atom0, (P3) atom1);
-      return (isNot == ((v.vNorm1.dot(v.vNorm2) < 0 ? 2 : 1) == order));
+      // check for CW or CCW set in relation to the first atom
+      v.vNorm3.sub2((P3) atom0, (P3) atom1);
+      return (isNot == ((v.vNorm2.dot(v.vNorm3) < 0 ? 2 : 1) == order));
       //case STEREOCHEMISTRY_DOUBLE_BOND:
       //System.out.println("draw p1 " + Point3f.new3((Point3f)atom1)+" color red");
       //System.out.println("draw p2 " + Point3f.new3((Point3f)atom2)+" color yellow");
@@ -744,11 +874,12 @@ public class SmilesStereo {
       // vNorm1 vNorm2 vNorm3 are right-hand normals for the given
       // triangles
       // 1-2-3, 2-3-4, 3-4-1
-      // sp1 up up up U-shaped
-      // sp2 up up DOWN 4-shaped
-      // sp3 up DOWN DOWN Z-shaped
-      return (v.vNorm1.dot(v.vNorm2) < 0 ? isNot == (order != 3) : v.vNorm2
-          .dot(v.vNorm3) < 0 ? isNot == (order != 2) : isNot == (order != 1));
+      // sp1 up up up U-shaped   1 2 3 4
+      // sp2 up up DOWN 4-shaped 1 2 4 3
+      // sp3 up DOWN DOWN Z-shaped  1 3 2 4
+      // 
+      return (v.vNorm2.dot(v.vNorm3) < 0 ? isNot == (order != 3) : v.vNorm3
+          .dot(v.vNorm4) < 0 ? isNot == (order != 2) : isNot == (order != 1));
     }
   }
 
@@ -763,7 +894,7 @@ public class SmilesStereo {
   }
 
   /**
-   * compares the
+   * determine the winding of the circuit a--b--c relative to point pt
    * 
    * @param a
    * @param b
@@ -772,7 +903,7 @@ public class SmilesStereo {
    * @param v
    * @return 1 for "@", 2 for "@@"
    */
-  private static int getHandedness(Node a, Node b, Node c, Node pt, VTemp v) {
+  static int getHandedness(Node a, Node b, Node c, Node pt, VTemp v) {
     float d = SmilesAromatic.getNormalThroughPoints(a, b, c, v.vTemp, v.vA,
         v.vB);
     //int atat = (distanceToPlane(v.vTemp, d, (Point3f) pt) > 0 ? 1 : 2);
@@ -786,11 +917,11 @@ public class SmilesStereo {
 
   private static void getPlaneNormals(Node atom1, Node atom2, Node atom3,
                                       Node atom4, VTemp v) {
-    SmilesAromatic.getNormalThroughPoints(atom1, atom2, atom3, v.vNorm1,
+    SmilesAromatic.getNormalThroughPoints(atom1, atom2, atom3, v.vNorm2,
         v.vTemp1, v.vTemp2);
-    SmilesAromatic.getNormalThroughPoints(atom2, atom3, atom4, v.vNorm2,
+    SmilesAromatic.getNormalThroughPoints(atom2, atom3, atom4, v.vNorm3,
         v.vTemp1, v.vTemp2);
-    SmilesAromatic.getNormalThroughPoints(atom3, atom4, atom1, v.vNorm3,
+    SmilesAromatic.getNormalThroughPoints(atom3, atom4, atom1, v.vNorm4,
         v.vTemp1, v.vTemp2);
   }
 
@@ -874,3 +1005,4 @@ public class SmilesStereo {
   }
 
 }
+ 

@@ -91,7 +91,7 @@ public class SmilesMeasure  {
     case 4:
       setTorsionData(points[0], points[1], points[2], points[3], search.v, true);
       d = search.v.vTemp1.angle(search.v.vTemp2) / radiansPerDegree
-          * (search.v.vNorm1.dot(search.v.vNorm2) < 0 ? 1 : -1);
+          * (search.v.vNorm2.dot(search.v.vNorm3) < 0 ? 1 : -1);
       break;
     }
     for (int i = minmax.length - 2; i >= 0; i -= 2)
@@ -110,13 +110,13 @@ public class SmilesMeasure  {
     v.vTemp2.sub2(pt2a, pt2);
     if (!isAll)
       return;
-    v.vNorm1.sub2(pt1, pt2);
-    v.vNorm1.normalize();
-    v.vTemp1.cross(v.vTemp1, v.vNorm1);
+    v.vNorm2.sub2(pt1, pt2);
+    v.vNorm2.normalize();
+    v.vTemp1.cross(v.vTemp1, v.vNorm2);
     v.vTemp1.normalize();
-    v.vTemp2.cross(v.vTemp2, v.vNorm1);
+    v.vTemp2.cross(v.vTemp2, v.vNorm2);
     v.vTemp2.normalize();
-    v.vNorm2.cross(v.vTemp1, v.vTemp2);
+    v.vNorm3.cross(v.vTemp1, v.vTemp2);
   }
   
   @Override

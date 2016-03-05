@@ -120,6 +120,7 @@ public class SmilesParser {
   private Map<Integer, SmilesBond> ringBonds = new Hashtable<Integer, SmilesBond>();
   private int braceCount;
   private int branchLevel;
+  private boolean ignoreStereochemistry;
 
   public static SmilesSearch getMolecule(String pattern, boolean isSmarts)
       throws InvalidSmilesException {
@@ -168,10 +169,15 @@ public class SmilesParser {
         flags |= Edge.FLAG_AROMATIC_DEFINED;
       if (strFlags.indexOf("AROMATICDOUBLE") >= 0)
         flags |= Edge.FLAG_AROMATIC_DOUBLE;
-      if (strFlags.indexOf("NOSTEREO") >= 0)
+      if (strFlags.indexOf("NOSTEREO") >= 0) {
         flags |= Edge.FLAG_IGNORE_STEREOCHEMISTRY;
-      else if (strFlags.indexOf("INVERTSTEREO") >= 0)
-        flags |= Edge.FLAG_INVERT_STEREOCHEMISTRY;
+        ignoreStereochemistry = true;
+      } else if (strFlags.indexOf("INVERTSTEREO") >= 0) {
+        if ((flags & Edge.FLAG_INVERT_STEREOCHEMISTRY) != 0)
+          flags &= ~Edge.FLAG_INVERT_STEREOCHEMISTRY;
+        else
+          flags |= Edge.FLAG_INVERT_STEREOCHEMISTRY;
+      }
     }
     if (pattern.indexOf("$") >= 0)
       pattern = parseVariables(pattern);
@@ -390,7 +396,7 @@ public class SmilesParser {
       throws InvalidSmilesException {
     for (int i = molecule.ac; --i >= 0;) {
       SmilesAtom sAtom = molecule.patternAtoms[i];
-      if (sAtom.stereo != null)
+      if (sAtom.stereo != null && !ignoreStereochemistry)
         sAtom.stereo.fixStereo(sAtom);
     }
   }

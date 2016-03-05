@@ -131,7 +131,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     // but
     //   $ print "c1ncnc1C".find("SMILES","MF")
     //   H 5 C 4 N 2   (incorrect)
-    SmilesSearch search = SmilesParser.getMolecule(pattern, isSmarts);
+    SmilesSearch search = SmilesParser.getMolecule("/nostereo/"+pattern, isSmarts);
     search.createTopoMap(null);
     search.nodes = search.jmolAtoms;
     return search.getMolecularFormula(!isSmarts, null, false);
@@ -155,7 +155,9 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     BS[] result = (BS[]) findPriv(smiles1, SmilesParser.getMolecule(smiles2, false),
         (smiles1.indexOf("*") >= 0 ? JC.SMILES_TYPE_SMARTS
             : JC.SMILES_TYPE_SMILES | JC.SMILES_MATCH_ALL)
-            | JC.SMILES_RETURN_FIRST | SMILES_MODE_ARRAY);
+            | JC.SMILES_RETURN_FIRST 
+            | SMILES_MODE_ARRAY
+            );
     return (result == null ? -1 : result.length);
   }
 
@@ -231,7 +233,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       // MF matched, but didn't match SMILES
       String s = smiles1 + smiles2;
       if (s.indexOf("/") >= 0 || s.indexOf("\\") >= 0 || s.indexOf("@") >= 0) {
-        if (n1 == n2 && n1 > 0) {
+        if (n1 == n2 && n1 > 0 && s.indexOf("@SP") < 0) {
           // reverse chirality centers
           check = (areEqual("/invertstereo/" + smiles2, smiles1) > 0);
           if (check)
@@ -315,14 +317,11 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       SmilesSearch ss = sp.getSearch(search,
           SmilesParser.cleanPattern(smarts[i]), flags);
       search.subSearches[0] = ss;
-      BS bs = BSUtil.copy((BS) search.search(false));//.subsearch(ss, false, false));
-      //System.out.println(i + " " + bs);
+      BS bs = BSUtil.copy((BS) search.search(false));
       ret.addLast(bs);
       bsDone.or(bs);
       if (bsDone.cardinality() == ac)
         return;
-      //if (ret[i] != null && ret[i].nextSetBit(0) >= 0)
-      //System.out.println(smarts[i] + "  "+ ret[i]);
     }
   }
 
