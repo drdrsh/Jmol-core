@@ -104,7 +104,7 @@ public class JmolSmilesApplet extends Applet {
    * 
    * @param smiles1
    * @param smiles2
-   * @return  IDENTICAL, ENANTIOMERS, DIASTERIOMERS, CONSTITUTIONAL ISOMERS, NONE, or an error message 
+   * @return  IDENTICAL, ENANTIOMERS, DIASTEREOMERS, CONSTITUTIONAL ISOMERS, NONE, or an error message 
    */
   public String getRelationship(String smiles1, String smiles2) {
     try {

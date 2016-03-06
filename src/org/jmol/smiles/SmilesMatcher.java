@@ -244,7 +244,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         if (check)
           return (n1 == n2 ? "diastereomers" : "ambiguous stereochemistry!");
       }
-      // MF matches, but not enantiomers or diasteriomers
+      // MF matches, but not enantiomers or diastereomers
       return "constitutional isomers";
     }
     return "identical";

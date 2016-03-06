@@ -667,9 +667,9 @@ public class MathExt {
               check = (((BS) ret).nextSetBit(0) >= 0);
             }
             if (check)
-              return mp.addXStr("DIASTERIOMERS");
+              return mp.addXStr("DIASTEREOMERS");
           }
-          // MF matches, but not enantiomers or diasteriomers
+          // MF matches, but not enantiomers or diastereomers
           return mp.addXStr("CONSTITUTIONAL ISOMERS");
         }
         //identical or conformational 
