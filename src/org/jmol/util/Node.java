@@ -43,6 +43,13 @@ public interface Node {
   public int getIsotopeNumber();
   public int getValence();
   public void set(float x, float y, float z);
+  
+  /**
+   * @param property  "property_xxxx"
+   * @return value or Float.NaN
+   */
+
+  public float getFloatProperty(String property);
 
   // abstracts out the essential pieces for SMARTS processing
   

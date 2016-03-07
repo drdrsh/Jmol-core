@@ -180,6 +180,7 @@ public class SmilesAtom extends P3 implements BNode {
   private Node matchingNode;
   public boolean hasSubpattern;
   public int mapIndex = -1; // in  CCC we have atoms 0, 1, and 2
+  public float osClass = Float.NaN; // OpenSMILES atom class is an integer
 
   public SmilesAtom setAll(int iComponent, int ptAtom, int atomicNumber,
       int charge) {
@@ -716,18 +717,21 @@ public class SmilesAtom extends P3 implements BNode {
   }
 
   /**
+   *
+   * called from SmilesGenerator
    * 
    * @param atomicNumber
    * @param isotopeNumber
    * @param valence set -1 to force brackets
    * @param charge
+   * @param osclass OpenSMILES value
    * @param nH
    * @param isAromatic
    * @param stereo
    * @return label
    */
   static String getAtomLabel(int atomicNumber, int isotopeNumber, int valence,
-                             int charge, int nH, boolean isAromatic,
+                             int charge, float osclass, int nH, boolean isAromatic,
                              String stereo) {
     String sym = Elements.elementSymbolFromNumber(atomicNumber);
     if (isAromatic) {
@@ -735,15 +739,20 @@ public class SmilesAtom extends P3 implements BNode {
       if (atomicNumber != 6)
         valence = Integer.MAX_VALUE; // force [n]
     }
-    int count = (stereo == null || stereo.length() > 0 || isotopeNumber != 0 || charge != 0 ? -1
+    int count = (isotopeNumber != 0 
+        || stereo != null && stereo.length() > 0 
+        || charge != 0 || osclass != 0 ? -1
         : getDefaultCount(atomicNumber, false));
     return (count == valence ? sym : 
+      // rearranged 14.5.3_2016.03.06 to 
       "["
-        + (isotopeNumber <= 0 ? "" : "" + isotopeNumber) + sym
+        + (isotopeNumber <= 0 ? "" : "" + isotopeNumber) 
+        + sym
+        + (stereo == null ? "" : stereo)
+        + (nH > 1 ? "H" + nH : nH == 1 ? "H" : "")
         + (charge < 0 && charge != Integer.MIN_VALUE ? "" + charge 
             : charge > 0 ? "+" + charge : "") 
-        + (stereo == null ? "" : stereo)
-        + (nH > 1 ? "H" + nH : nH == 1 ? "H" : "") 
+        + (osclass == 0 ? "" : ":" + (int) osclass)
         + "]");
   }
 
@@ -805,6 +814,13 @@ public class SmilesAtom extends P3 implements BNode {
         //    + " H:" + explicitHydrogenCount
         //    + " h:" + implicitHydrogenCount
         + "]";
+  }
+
+  @Override
+  public float getFloatProperty(String property) {
+    if (property == "property_osclass") // == is OK here.  
+      return osClass;
+    return Float.NaN;
   }
 
 }

@@ -86,6 +86,7 @@ public class SmilesGenerator {
   private boolean addAtomComment;
   private boolean noBioComment;
   private boolean noStereo;
+  private boolean openSMILES;
   public P3 stereoReference;
   private SmilesStereo smilesStereo;
   private boolean isPolyhedral;
@@ -99,13 +100,15 @@ public class SmilesGenerator {
       return "";
     this.atoms = atoms;
     this.ac = ac;
-    addAtomComment = ((flags & JC.SMILES_ATOM_COMMENT) == JC.SMILES_ATOM_COMMENT);
     bsSelected = BSUtil.copy(bsSelected);    
-    
+
+    // note -- some of these are 2-bit flags, so we need to use (flags & X) == X 
     if ((flags & JC.SMILES_BIO) == JC.SMILES_BIO)
       return getBioSmiles(bsSelected, comment, flags);
     
     this.bsSelected = bsSelected;
+    openSMILES = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
+    addAtomComment = ((flags & JC.SMILES_ATOM_COMMENT) == JC.SMILES_ATOM_COMMENT);
     explicitH = ((flags & JC.SMILES_EXPLICIT_H) == JC.SMILES_EXPLICIT_H);
     topologyOnly = ((flags & JC.SMILES_TOPOLOGY) == JC.SMILES_TOPOLOGY);
     getAromatic = !((flags & JC.SMILES_NOAROMATIC) == JC.SMILES_NOAROMATIC);
@@ -704,6 +707,7 @@ public class SmilesGenerator {
     int charge = atom.getFormalCharge();
     int isotope = atom.getIsotopeNumber();
     int valence = atom.getValence();
+    float osclass = (openSMILES ? atom.getFloatProperty("property_osclass") : 0);
     String atomName = atom.getAtomName();
     String groupType = (atom instanceof BNode ? ((BNode)atom).getBioStructureTypeName() : "");
     // for bioSMARTS we provide the connecting atom if 
@@ -717,7 +721,7 @@ public class SmilesGenerator {
       addBracketedBioName(sb, atom, "." + atomName, false);
     else
       sb.append(SmilesAtom
-          .getAtomLabel(atomicNumber, isotope, (forceBrackets ? -1 : valence), charge, nH, isAromatic,
+          .getAtomLabel(atomicNumber, isotope, (forceBrackets ? -1 : valence), charge, osclass, nH, isAromatic,
               atat != null ? atat : noStereo ? null : checkStereoPairs(atom, atomIndex, stereo, stereoFlag)));
     sb.appendSB(sMore);
 

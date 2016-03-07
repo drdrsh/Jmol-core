@@ -1272,7 +1272,8 @@ public class MathExt {
         && args[1].tok != T.off ? SV.sValue(args[1]) : "");
     boolean isSequence = !isList && sFind.equalsIgnoreCase("SEQUENCE");
     boolean isSeq = !isList && sFind.equalsIgnoreCase("SEQ");
-    boolean isSmiles = !isList && sFind.equalsIgnoreCase("SMILES");
+    boolean isOpenSmiles = !isList && sFind.equalsIgnoreCase("OPENSMILES");
+    boolean isSmiles = isOpenSmiles || !isList && sFind.equalsIgnoreCase("SMILES");
     boolean isSMARTS = !isList && sFind.equalsIgnoreCase("SMARTS");
     boolean isChemical = !isList && sFind.equalsIgnoreCase("CHEMICAL");
     boolean isMF = !isList && sFind.equalsIgnoreCase("MF");
@@ -1365,7 +1366,8 @@ public class MathExt {
                     | JC.SMILES_RETURN_FIRST);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
-            int smilesFlags = (isSmiles ? JC.SMILES_TYPE_SMILES
+            int smilesFlags = (isOpenSmiles ? JC.SMILES_TYPE_OPENSMILES 
+                : isSmiles ? JC.SMILES_TYPE_SMILES
                 : JC.SMILES_TYPE_SMARTS)
                 | (isON && sFind.length() == 0 ? JC.SMILES_BIO_COV_CROSSLINK
                     | JC.SMILES_BIO_COMMENT : 0);

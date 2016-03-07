@@ -25,16 +25,16 @@
 package org.jmol.smiles;
 
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
 
-import java.util.Hashtable;
-import java.util.Map;
-
 import org.jmol.util.Elements;
-import org.jmol.util.Edge;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 /**
  * Parses a SMILES String to create a <code>SmilesMolecule</code>.
@@ -121,6 +121,7 @@ public class SmilesParser {
   private int braceCount;
   private int branchLevel;
   private boolean ignoreStereochemistry;
+  private boolean openSMILES;
 
   public static SmilesSearch getMolecule(String pattern, boolean isSmarts)
       throws InvalidSmilesException {
@@ -160,23 +161,27 @@ public class SmilesParser {
       String strFlags = getSubPattern(pattern, 0, '/').toUpperCase();
       pattern = pattern.substring(strFlags.length() + 2);
       if (strFlags.indexOf("NONCANONICAL") >= 0)
-        flags |= Edge.FLAG_AROMATIC_NONCANONICAL;
+        flags |= SmilesSearch.FLAG_AROMATIC_NONCANONICAL;
+      if (strFlags.indexOf("OPENSMILES") >= 0) {
+        flags |= JC.SMILES_TYPE_OPENSMILES;
+        openSMILES = true;
+      }
       if (strFlags.indexOf("NOAROMATIC") >= 0)
-        flags |= Edge.FLAG_NO_AROMATIC;
+        flags |= SmilesSearch.FLAG_NO_AROMATIC;
       if (strFlags.indexOf("AROMATICSTRICT") >= 0)
-        flags |= Edge.FLAG_AROMATIC_STRICT;
+        flags |= SmilesSearch.FLAG_AROMATIC_STRICT;
       if (strFlags.indexOf("AROMATICDEFINED") >= 0)
-        flags |= Edge.FLAG_AROMATIC_DEFINED;
+        flags |= SmilesSearch.FLAG_AROMATIC_DEFINED;
       if (strFlags.indexOf("AROMATICDOUBLE") >= 0)
-        flags |= Edge.FLAG_AROMATIC_DOUBLE;
+        flags |= SmilesSearch.FLAG_AROMATIC_DOUBLE;
       if (strFlags.indexOf("NOSTEREO") >= 0) {
-        flags |= Edge.FLAG_IGNORE_STEREOCHEMISTRY;
+        flags |= SmilesSearch.FLAG_IGNORE_STEREOCHEMISTRY;
         ignoreStereochemistry = true;
       } else if (strFlags.indexOf("INVERTSTEREO") >= 0) {
-        if ((flags & Edge.FLAG_INVERT_STEREOCHEMISTRY) != 0)
-          flags &= ~Edge.FLAG_INVERT_STEREOCHEMISTRY;
+        if ((flags & SmilesSearch.FLAG_INVERT_STEREOCHEMISTRY) != 0)
+          flags &= ~SmilesSearch.FLAG_INVERT_STEREOCHEMISTRY;
         else
-          flags |= Edge.FLAG_INVERT_STEREOCHEMISTRY;
+          flags |= SmilesSearch.FLAG_INVERT_STEREOCHEMISTRY;
       }
     }
     if (pattern.indexOf("$") >= 0)
@@ -919,6 +924,11 @@ public class SmilesParser {
               molecule.stereo = SmilesStereo.newStereo(null);
             index = SmilesStereo.checkChirality(pattern, index,
                 molecule.patternAtoms[newAtom.index]);
+            break;
+          case ':': //openSmiles application-dependent atom class
+            index = getDigits(pattern, index + 1, ret);
+            if (openSMILES)
+              newAtom.osClass = ret[0];
             break;
           default:
             // SMARTS has ambiguities in terms of chaining without &.

@@ -285,16 +285,17 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   }
 
   /**
-   * called by ForceFieldMMFF.setAtomTypes
+   * called by ForceFieldMMFF.setAtomTypes only
    * 
    */
   @Override
-  public void getSubstructureSets(String[] smarts, Node[] atoms, int ac,
-                                  int flags, BS bsSelected, Lst<BS> ret,
+  public void getMMFF94AtomTypes(String[] smarts, Node[] atoms, int ac,
+                                  BS bsSelected, Lst<BS> ret,
                                   Lst<BS>[] vRings) throws Exception {
     InvalidSmilesException.clear();
     SmilesParser sp = new SmilesParser(true);
     SmilesSearch search = null;
+    int flags = (SmilesSearch.FLAG_AROMATIC_STRICT | SmilesSearch.FLAG_AROMATIC_DOUBLE);
     search = sp.parse("");
     search.firstMatchOnly = false;
     search.matchAllAtoms = false;

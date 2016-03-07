@@ -1067,23 +1067,24 @@ public final class JC {
   
   public static final int SMILES_TYPE_SMILES       = 0x1;
   public static final int SMILES_TYPE_SMARTS       = 0x2;
+  public static final int SMILES_TYPE_OPENSMILES   = 0x5; 
   
   public static final int SMILES_MATCH_ALL         = 0x10;
   public static final int SMILES_MATCH_ONE         = 0x20;
   public static final int SMILES_RETURN_FIRST      = 0x40;
 
-  public static final int SMILES_EXPLICIT_H                = 0x00100;
-  public static final int SMILES_TOPOLOGY                  = 0x00200;
-  public static final int SMILES_NOAROMATIC                = 0x00400;
-  public static final int SMILES_NOSTEREO                  = 0x00800;
-  public static final int SMILES_POLYHEDRAL                = 0x01000;
-  public static final int SMILES_BIO                       = 0x10000;
-  public static final int SMILES_BIO_ALLOW_UNMATCHED_RINGS = 0x11000;
-  public static final int SMILES_BIO_COV_CROSSLINK         = 0x12000;
-  public static final int SMILES_BIO_HH_CROSSLINK          = 0x16000;
-  public static final int SMILES_BIO_COMMENT               = 0x30000;
-  public static final int SMILES_BIO_NOCOMMENTS            = 0x50000;
-  public static final int SMILES_ATOM_COMMENT              = 0x80000;
+  public static final int SMILES_EXPLICIT_H                = 0x000100;
+  public static final int SMILES_TOPOLOGY                  = 0x000200;
+  public static final int SMILES_NOAROMATIC                = 0x000400;
+  public static final int SMILES_NOSTEREO                  = 0x000800;
+  public static final int SMILES_POLYHEDRAL                = 0x001000;
+  public static final int SMILES_ATOM_COMMENT              = 0x002000;
+  public static final int SMILES_BIO                       = 0x010000;
+  public static final int SMILES_BIO_ALLOW_UNMATCHED_RINGS = 0x030000;
+  public static final int SMILES_BIO_COV_CROSSLINK         = 0x050000;
+  public static final int SMILES_BIO_HH_CROSSLINK          = 0x090000;
+  public static final int SMILES_BIO_COMMENT               = 0x110000;
+  public static final int SMILES_BIO_NOCOMMENTS            = 0x210000;
 
  
   public static final int JSV_NOT = -1;

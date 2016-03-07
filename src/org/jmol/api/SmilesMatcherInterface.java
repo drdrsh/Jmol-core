@@ -45,9 +45,8 @@ public interface SmilesMatcherInterface {
                                              int ac, BS bsSelected,
                                              int flags) throws Exception;
 
-  public abstract void getSubstructureSets(String[] smarts, Node[] atoms, int ac,
-                                           int flags,
-                         BS bsSelected, Lst<BS> bitSets, Lst<BS>[] vRings) throws Exception;
+  public abstract void getMMFF94AtomTypes(String[] smarts, Node[] atoms, int ac,
+                                           BS bsSelected, Lst<BS> bitSets, Lst<BS>[] vRings) throws Exception;
 
   public abstract String getSmiles(Node[] atoms, int ac, BS bsSelected,
                                       String bioComment, int flags) throws Exception;

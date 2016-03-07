@@ -33,6 +33,7 @@ import javajs.util.P3;
 import javajs.util.T3;
 import javajs.util.V3;
 
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
@@ -1418,6 +1419,20 @@ public class Atom extends Point3fi implements BNode {
   public String getUnitID(int flags) {
     Model m = group.getModel();
     return (m.isBioModel ? ((BioModel) m).getUnitID(this, flags) : "");
+  }
+
+  @Override
+  public float getFloatProperty(String property) {
+    Object data = group.chain.model.ms.vwr.getDataObj(property, null,
+        JmolDataManager.DATA_TYPE_AF);
+    float f = 0;
+    if (data != null) {
+      try {
+        f = ((float[]) data)[i];
+      } catch (Exception e) {
+      }
+    }
+    return f;
   }
 
 }

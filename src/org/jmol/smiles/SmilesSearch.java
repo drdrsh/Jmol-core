@@ -40,6 +40,7 @@ import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
+import org.jmol.viewer.JC;
 
 /**
  *  -- was SmilesMolecule, 
@@ -58,7 +59,16 @@ public class SmilesSearch extends JmolMolecule {
     sb.append("\nmolecular formula: " + getMolecularFormula(true, null, false)); 
     return sb.toString();    
   }
+
   
+  final static int FLAG_AROMATIC_NONCANONICAL    = 0x400;
+  final static int FLAG_AROMATIC_DOUBLE          = 0x200;
+  final static int FLAG_AROMATIC_DEFINED         = 0x100;
+  final static int FLAG_AROMATIC_STRICT          = 0x080;
+  final static int FLAG_INVERT_STEREOCHEMISTRY   = 0x040;
+  final static int FLAG_IGNORE_STEREOCHEMISTRY   = 0x020;
+  final static int FLAG_NO_AROMATIC              = 0x010;
+
   private final static int INITIAL_ATOMS = 16;
   SmilesAtom[] patternAtoms = new SmilesAtom[INITIAL_ATOMS];
 
@@ -131,6 +141,7 @@ public class SmilesSearch extends JmolMolecule {
   private boolean noAromatic;
   private boolean aromaticDouble;
   private boolean noncanonical;
+  private boolean openSMILES;
     
 
   void setAtomArray() {
@@ -186,7 +197,7 @@ public class SmilesSearch extends JmolMolecule {
       needAromatic = false;
     if (needAromatic)
       needRingData = true;
-    boolean noAromatic = ((flags & Edge.FLAG_NO_AROMATIC) != 0);
+    boolean noAromatic = ((flags & FLAG_NO_AROMATIC) != 0);
     needAromatic &= (bsA == null) & !noAromatic;
     // when using "xxx".find("search","....")
     // or $(...), the aromatic set has already been determined
@@ -203,8 +214,8 @@ public class SmilesSearch extends JmolMolecule {
   @SuppressWarnings("unchecked")
   void getRingData(boolean needRingData, int flags, Lst<BS>[] vRings)
       throws InvalidSmilesException {
-    boolean aromaticStrict = ((flags & Edge.FLAG_AROMATIC_STRICT) != 0);
-    boolean aromaticDefined = ((flags & Edge.FLAG_AROMATIC_DEFINED) != 0);
+    boolean aromaticStrict = ((flags & FLAG_AROMATIC_STRICT) != 0);
+    boolean aromaticDefined = ((flags & FLAG_AROMATIC_DEFINED) != 0);
     if (aromaticStrict && vRings == null)
       vRings = AU.createArrayOfArrayList(4);
     if (aromaticDefined && needAromatic) {
@@ -406,11 +417,13 @@ public class SmilesSearch extends JmolMolecule {
      *    
      */
 
-    ignoreStereochemistry = ((flags & Edge.FLAG_IGNORE_STEREOCHEMISTRY) != 0);
-    invertStereochemistry = ((flags & Edge.FLAG_INVERT_STEREOCHEMISTRY) != 0);
-    noAromatic = ((flags & Edge.FLAG_NO_AROMATIC) != 0);
-    noncanonical = ((flags & Edge.FLAG_AROMATIC_NONCANONICAL) != 0);
-      aromaticDouble = ((flags & Edge.FLAG_AROMATIC_DOUBLE) != 0);
+    // flags are passed on from SmilesParser
+    aromaticDouble = ((flags & FLAG_AROMATIC_DOUBLE) != 0);
+    ignoreStereochemistry = ((flags & FLAG_IGNORE_STEREOCHEMISTRY) != 0);
+    invertStereochemistry = ((flags & FLAG_INVERT_STEREOCHEMISTRY) != 0);
+    noAromatic = ((flags & FLAG_NO_AROMATIC) != 0);
+    noncanonical = ((flags & FLAG_AROMATIC_NONCANONICAL) != 0);
+    openSMILES = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
     
     if (Logger.debugging && !isSilent)
       Logger.debug("SmilesSearch processing " + pattern);
@@ -928,8 +941,8 @@ public class SmilesSearch extends JmolMolecule {
         if (!noAromatic && !patternAtom.aromaticAmbiguous
             && isAromatic != bsAromatic.get(iAtom)) {
           if (!noncanonical
-              || patternAtom.getExplicitHydrogenCount() != 
-                        atom.getCovalentHydrogenCount())
+              || patternAtom.getExplicitHydrogenCount() != atom
+                  .getCovalentHydrogenCount())
             break;
         }
 
@@ -985,32 +998,40 @@ public class SmilesSearch extends JmolMolecule {
                 + atom.getImplicitHydrogenCount())
           break;
 
-        // r <n> ring of a given size
-        if (ringData != null && patternAtom.ringSize >= -1) {
-          if (patternAtom.ringSize <= 0) {
-            if ((ringCounts[iAtom] == 0) != (patternAtom.ringSize == 0))
-              break;
-          } else {
-            BS rd = ringData[patternAtom.ringSize == 500 ? 5
-                : patternAtom.ringSize == 600 ? 6 : patternAtom.ringSize];
-            if (rd == null || !rd.get(iAtom))
-              break;
-            if (!noAromatic)
-              if (patternAtom.ringSize == 500) {
-                if (!bsAromatic5.get(iAtom))
-                  break;
-              } else if (patternAtom.ringSize == 600) {
-                if (!bsAromatic6.get(iAtom))
-                  break;
-              }
-          }
-        }
-        // R <n> a certain number of rings
-        if (ringData != null && patternAtom.ringMembership >= -1) {
-          //  R --> -1 implies "!R0"
-          if (patternAtom.ringMembership == -1 ? ringCounts[iAtom] == 0
-              : ringCounts[iAtom] != patternAtom.ringMembership)
+        if (openSMILES) {
+          if (!Float.isNaN(patternAtom.osClass)
+              && patternAtom.osClass != atom.getFloatProperty("property_osclass"))
             break;
+        }
+
+        if (ringData != null) {
+          // r <n> ring of a given size
+          if (patternAtom.ringSize >= -1) {
+            if (patternAtom.ringSize <= 0) {
+              if ((ringCounts[iAtom] == 0) != (patternAtom.ringSize == 0))
+                break;
+            } else {
+              BS rd = ringData[patternAtom.ringSize == 500 ? 5
+                  : patternAtom.ringSize == 600 ? 6 : patternAtom.ringSize];
+              if (rd == null || !rd.get(iAtom))
+                break;
+              if (!noAromatic)
+                if (patternAtom.ringSize == 500) {
+                  if (!bsAromatic5.get(iAtom))
+                    break;
+                } else if (patternAtom.ringSize == 600) {
+                  if (!bsAromatic6.get(iAtom))
+                    break;
+                }
+            }
+            // R <n> a certain number of rings
+            if (patternAtom.ringMembership >= -1) {
+              //  R --> -1 implies "!R0"
+              if (patternAtom.ringMembership == -1 ? ringCounts[iAtom] == 0
+                  : ringCounts[iAtom] != patternAtom.ringMembership)
+                break;
+            }
+          }
         }
         // x <n>
         if (patternAtom.ringConnectivity >= 0) {

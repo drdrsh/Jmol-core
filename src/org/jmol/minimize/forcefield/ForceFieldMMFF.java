@@ -25,14 +25,12 @@
 package org.jmol.minimize.forcefield;
 
 import java.io.BufferedReader;
+import java.util.Hashtable;
+import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
-
-import java.util.Hashtable;
-
-import java.util.Map;
 
 import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.java.BS;
@@ -47,7 +45,6 @@ import org.jmol.modelset.Bond;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
-import org.jmol.util.Edge;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JmolAsyncException;
 
@@ -870,8 +867,7 @@ public class ForceFieldMMFF extends ForceField {
     // identifies that atom's MMFF94 type.
 
     try {
-      smartsMatcher.getSubstructureSets(smarts, atoms, atoms.length,
-          Edge.FLAG_AROMATIC_STRICT | Edge.FLAG_AROMATIC_DOUBLE,
+      smartsMatcher.getMMFF94AtomTypes(smarts, atoms, atoms.length,
           bsConnected, bitSets, vRings);
     } catch (Exception e) {
       Logger.error(e.toString());
