@@ -295,6 +295,7 @@ public class SmilesGenerator {
           bsSelected.clear(j);
       }
     if (getAromatic && !topologyOnly && bsSelected.cardinality() > 2) {
+      // not clear why only with getAromatic do we set bond directions 
       SmilesSearch search = null;
       search = SmilesParser.getMolecule("A[=&@]A", true);
       search.jmolAtoms = atoms;
@@ -303,7 +304,7 @@ public class SmilesGenerator {
       search.setSelected(bsSelected);
       search.jmolAtomCount = ac;
       search.ringDataMax = 7;
-      search.setRingData(null);
+      search.setRingData(null, true);
       bsAromatic = search.bsAromatic;
       ringSets = search.ringSets;
       setBondDirections();
@@ -387,13 +388,23 @@ public class SmilesGenerator {
       for (int k = 0; k < bonds.length; k++) {
         Edge bond = bonds[k];
         int index = bond.index;
-        if (bsDone.get(index))
-          continue;
-        Node atom2 = bond.getOtherAtomNode(atom1);
-        if (bond.getCovalentOrder() != 2
-            || SmilesSearch.isRingBond(ringSets, i, atom2.getIndex()))
+        Node atom2;
+        if (bsDone.get(index) || bond.getCovalentOrder() != 2
+            || SmilesSearch.isRingBond(ringSets, i, (atom2 = bond.getOtherAtomNode(atom1)).getIndex()))
           continue;
         bsDone.set(index);
+        int nCumulene = 0;
+        Node a10 = atom1;
+        while (atom2.getBondCount() == 2 && atom2.getValence() == 4) {
+          Edge[] e2 = atom2.getEdges();
+          Edge e = e2[e2[0].getOtherAtomNode(atom2) == a10 ? 1 : 0];
+          bsDone.set(e.index);
+          a10 = atom2;
+          atom2 = e.getOtherAtomNode(atom2);
+          nCumulene++;
+        }
+        if (nCumulene % 2 == 1)
+          continue;
         Edge b0 = null;
         Node a0 = null;
         int i0 = 0;
@@ -412,7 +423,7 @@ public class SmilesGenerator {
           Node atomA = atom12[j];
           Edge[] bb = atomA.getEdges();
           for (int b = 0; b < bb.length; b++) {
-            if (bb[b].getCovalentOrder() != 1)
+            if (bb[b].getCovalentOrder() != 1 || bb[b].getOtherAtomNode(atomA).getElementNumber() == 1)
               continue;
             edges[j][edgeCount++] = bb[b];
             if (getBondStereochemistry(bb[b], atomA) != '\0') {

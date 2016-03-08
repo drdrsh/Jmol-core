@@ -36,84 +36,93 @@ import org.jmol.util.Edge;
 import org.jmol.util.Node;
 
 public class SmilesAromatic {
-  /** 
+  /**
    * 3D-SEARCH aromaticity test.
    * 
-   * A simple and unambiguous test for aromaticity based on 3D geometry 
-   * and connectivity only, not Hueckel theory.
+   * A simple and unambiguous test for aromaticity based on 3D geometry and
+   * connectivity only, not Hueckel theory.
+   * @param n 
+   * 
    * @param atoms
-   *       a set of atoms with coordinate positions and associated bonds.
+   *        a set of atoms with coordinate positions and associated bonds.
    * @param bs
-   *       a bitset of atoms within the set of atoms, defining the ring 
+   *        a bitset of atoms within the set of atoms, defining the ring
    * @param bsSelected
-   *       must not be null 
+   *        must not be null
    * @param cutoff
-   *       an arbitrary value to test the standard deviation against. 
-   *       0.01 is appropriate here.   
-   * @return
-   *        true if standard deviation of vNorm.dot.vMean is less than cutoff
+   *        an arbitrary value to test the standard deviation against. 0.01 is
+   *        appropriate here.
+   * @param isGenerator 
+   * @return true if standard deviation of vNorm.dot.vMean is less than cutoff
    */
 
-  public final static boolean isFlatSp2Ring(Node[] atoms,
-                                            BS bsSelected, BS bs,
-                                            float cutoff) {
-    /*
-     * 
-     * Bob Hanson, hansonr@stolaf.edu
-     * 
-     *   Given a ring of N atoms...
-     *   
-     *                 1
-     *               /   \
-     *              2     6 -- 6a
-     *              |     |
-     *        5a -- 5     4
-     *               \   /
-     *                 3  
-     *   
-     *   with arbitrary order and up to N substituents
-     *   
-     *   1) Check to see if all ring atoms have no more than 3 connections.
-     *      Note: An alternative definition might include "and no substituent
-     *      is explicitly double-bonded to its ring atom, as in quinone.
-     *      Here we opt to allow the atoms of quinone to be called "aromatic."
-     *   2) Select a cutoff value close to zero. We use 0.01 here. 
-     *   3) Generate a set of normals as follows:
-     *      a) For each ring atom, construct the normal associated with the plane
-     *         formed by that ring atom and its two nearest ring-atom neighbors.
-     *      b) For each ring atom with a substituent, construct a normal 
-     *         associated with the plane formed by its connecting substituent
-     *         atom and the two nearest ring-atom neighbors.
-     *      c) If this is the first normal, assign vMean to it. 
-     *      d) If this is not the first normal, check vNorm.dot.vMean. If this
-     *         value is less than zero, scale vNorm by -1.
-     *      e) Add vNorm to vMean. 
-     *   4) Calculate the standard deviation of the dot products of the 
-     *      individual vNorms with the normalized vMean. 
-     *   5) The ring is deemed flat if this standard deviation is less 
-     *      than the selected cutoff value. 
-     *      
-     *   Efficiencies:
-     *   
-     *   1) Precheck bond counts.
-     *   
-     *   2) Each time a normal is added to the running mean, test to see if 
-     *      its dot product with the mean is within 5 standard deviations. 
-     *      If it is not, return false. Note that it can be shown that for 
-     *      a set of normals, even if all are aligned except one, with dot product
-     *      to the mean x, then the standard deviation will be (1 - x) / sqrt(N).
-     *      Given even an 8-membered ring, this still
-     *      results in a minimum value of x of about 1-4c (allowing for as many as
-     *      8 substituents), considerably better than our 1-5c. 
-     *      So 1-5c is a very conservative test.   
-     *      
-     *   3) One could probably dispense with the actual standard deviation 
-     *      calculation, as it is VERY unlikely that an actual nonaromatic rings
-     *      (other than quinones and other such compounds)
-     *      would have any chance of passing the first two tests.
-     *   
-     */
+  public final static boolean isFlatSp2Ring(int n, Node[] atoms, BS bsSelected,
+                                            BS bs, float cutoff,
+                                            boolean isGenerator) {
+///
+ // 
+ // Bob Hanson, hansonr@stolaf.edu
+ // 
+ //   Given a ring of N atoms...
+ //   
+ //                 1
+ //               /   \
+ //              2     6 -- 6a
+ //              |     |
+ //        5a -- 5     4
+ //               \   /
+ //                 3  
+ //   
+ //   with arbitrary order and up to N substituents
+ //   
+ //   1) Check to see if all ring atoms have no more than 3 connections.
+ //      Note: An alternative definition might include "and no substituent
+ //      is explicitly double-bonded to its ring atom, as in quinone.
+ //      Here we opt to allow the atoms of quinone to be called "aromatic."
+ //   2) Select a cutoff value close to zero. We use 0.01 here. 
+ //   3) Generate a set of normals as follows:
+ //      a) For each ring atom, construct the normal associated with the plane
+ //         formed by that ring atom and its two nearest ring-atom neighbors.
+ //      b) For each ring atom with a substituent, construct a normal 
+ //         associated with the plane formed by its connecting substituent
+ //         atom and the two nearest ring-atom neighbors.
+ //      c) If this is the first normal, assign vMean to it. 
+ //      d) If this is not the first normal, check vNorm.dot.vMean. If this
+ //         value is less than zero, scale vNorm by -1.
+ //      e) Add vNorm to vMean. 
+ //   4) Calculate the standard deviation of the dot products of the 
+ //      individual vNorms with the normalized vMean. 
+ //   5) The ring is deemed flat if this standard deviation is less 
+ //      than the selected cutoff value. 
+ //      
+ //   Efficiencies:
+ //   
+ //   1) Precheck bond counts.
+ //   
+ //   2) Each time a normal is added to the running mean, test to see if 
+ //      its dot product with the mean is within 5 standard deviations. 
+ //      If it is not, return false. Note that it can be shown that for 
+ //      a set of normals, even if all are aligned except one, with dot product
+ //      to the mean x, then the standard deviation will be (1 - x) / sqrt(N).
+ //      Given even an 8-membered ring, this still
+ //      results in a minimum value of x of about 1-4c (allowing for as many as
+ //      8 substituents), considerably better than our 1-5c. 
+ //      So 1-5c is a very conservative test.   
+ //      
+ //   3) One could probably dispense with the actual standard deviation 
+ //      calculation, as it is VERY unlikely that an actual nonaromatic rings
+ //      (other than quinones and other such compounds)
+ //      would have any chance of passing the first two tests.
+ //      
+ //   Generator:
+ //     
+ //   (a) the atom is in a 6-membered ring containing only C, N, or O and
+ //       matching SMARTS [#6X3+0,#6X2+1,#6X2-1,#7X2+0,#7X3+1,#8X2+1]
+ //   (b) the atom is not doubly bonded to any nonaromatic atom (prevents case of exocyclic double bonds)
+ //   (c) the atom connects with at least two other aromatic atoms
 
+    if (isGenerator && n != 6)
+      return false;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Node ringAtom = atoms[i];
       Edge[] bonds = ringAtom.getEdges();
@@ -124,7 +133,7 @@ public class SmilesAromatic {
     }
     if (cutoff == Float.MAX_VALUE)
       return true;
-    
+
     if (cutoff <= 0)
       cutoff = 0.01f;
 
@@ -138,6 +147,25 @@ public class SmilesAromatic {
     float maxDev = (1 - cutoff * 5);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Node ringAtom = atoms[i];
+      if (isGenerator) {
+        int elemno = ringAtom.getElementNumber();
+        switch (elemno) {
+        case 8:
+          // allow [o+1]
+          if (ringAtom.getFormalCharge() != 1)
+            return false;
+          break;
+        case 6:
+        case 7:
+          // trivalent C, [N+1]; divalent [N+0]
+          if (ringAtom.getCovalentBondCount() != (elemno == 6
+              || ringAtom.getFormalCharge() == 1 ? 3 : 2))
+            return false;
+          break;
+        default:
+          return false;
+        }
+      }
       Edge[] bonds = ringAtom.getEdges();
       // if more than three connections, ring cannot be fully conjugated
       // identify substituent and two ring atoms
@@ -237,17 +265,16 @@ public class SmilesAromatic {
     return bsDefined;
   }
   
-  static void checkAromaticStrict(Node[] jmolAtoms,
-                                         BS bsAromatic, Lst<Object> v5,
-                                         Lst<Object> v6) {
+  static void checkAromaticStrict(Node[] jmolAtoms, BS bsAromatic,
+                                  Lst<Object> v5, Lst<Object> v6) {
     BS bsStrict = new BS();
     BS bsTest = new BS();
-    for (int i = v5.size(); --i >= 0; ) {
+    for (int i = v5.size(); --i >= 0;) {
       BS bs = (BS) v5.get(i);
       if (isAromaticRing(bsAromatic, bsTest, bs, 5))
         checkAromaticStrict2(jmolAtoms, bsStrict, v5, v6, bs, true);
     }
-    for (int i = v6.size(); --i >= 0; ) {
+    for (int i = v6.size(); --i >= 0;) {
       BS bs = (BS) v6.get(i);
       if (isAromaticRing(bsAromatic, bsTest, bs, 6))
         checkAromaticStrict2(jmolAtoms, bsStrict, v5, v6, bs, false);

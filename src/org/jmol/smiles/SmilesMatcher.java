@@ -302,7 +302,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     search.jmolAtoms = atoms;
     search.jmolAtomCount = Math.abs(ac);
     search.setSelected(bsSelected);
-    search.getRingData(true, flags, vRings);
+    search.getRingData(true, flags, vRings, false);
     search.asVector = false;
     search.subSearches = new SmilesSearch[1];
     search.getSelections();
@@ -465,7 +465,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       search.setSelected(bsSelected);
       search.getSelections();
       search.bsRequired = null;//(bsRequired != null && bsRequired.cardinality() > 0 ? bsRequired : null);
-      search.setRingData(bsAromatic);
+      search.setRingData(bsAromatic, false);
       search.firstMatchOnly = ((flags & JC.SMILES_RETURN_FIRST) == JC.SMILES_RETURN_FIRST);
       search.matchAllAtoms = ((flags & JC.SMILES_MATCH_ALL) == JC.SMILES_MATCH_ALL);
       switch (flags & SMILES_MODE_MASK) {

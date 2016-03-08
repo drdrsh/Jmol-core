@@ -192,7 +192,7 @@ public class SmilesSearch extends JmolMolecule {
     return n;
   }
 
-  void setRingData(BS bsA) throws InvalidSmilesException {
+  void setRingData(BS bsA, boolean isGenerator) throws InvalidSmilesException {
     if (isTopology)
       needAromatic = false;
     if (needAromatic)
@@ -208,12 +208,12 @@ public class SmilesSearch extends JmolMolecule {
       if (!needRingMemberships && !needRingData)
         return;
     }
-    getRingData(needRingData, flags, null);
+    getRingData(needRingData, flags, null, isGenerator);
   }
 
   @SuppressWarnings("unchecked")
-  void getRingData(boolean needRingData, int flags, Lst<BS>[] vRings)
-      throws InvalidSmilesException {
+  void getRingData(boolean needRingData, int flags, Lst<BS>[] vRings,
+                   boolean isGenerator) throws InvalidSmilesException {
     boolean aromaticStrict = ((flags & FLAG_AROMATIC_STRICT) != 0);
     boolean aromaticDefined = ((flags & FLAG_AROMATIC_DEFINED) != 0);
     if (aromaticStrict && vRings == null)
@@ -235,11 +235,18 @@ public class SmilesSearch extends JmolMolecule {
 
     ringSets = new SB();
     String s = "****";
-    while (s.length() < ringDataMax)
-      s += s;
-
+    int max = ringDataMax;
+    int min = 3;
     Lst<Object> v5 = null;
-    for (int i = 3; i <= ringDataMax; i++) {
+    if (isGenerator) {
+      max = 6;
+      min = 4;
+      v5 = new Lst<Object>();
+    } else {
+      while (s.length() < max)
+        s += s;
+    }
+    for (int i = min; i <= max; i++) {
       if (i > jmolAtomCount)
         continue;
       String smarts = "*1" + s.substring(0, i - 2) + "*1";
@@ -256,8 +263,8 @@ public class SmilesSearch extends JmolMolecule {
           for (int r = vR.size(); --r >= 0;) {
             BS bs = (BS) vR.get(r);
             if (aromaticDefined
-                || SmilesAromatic.isFlatSp2Ring(jmolAtoms, bsSelected, bs,
-                    (aromaticStrict ? 0.1f : 0.01f))) {
+                || SmilesAromatic.isFlatSp2Ring(i, jmolAtoms, bsSelected, bs,
+                    (aromaticStrict ? 0.1f : 0.01f), isGenerator)) {
               bsAromatic.or(bs);
               if (!aromaticStrict)
                 switch (i) {
@@ -298,7 +305,30 @@ public class SmilesSearch extends JmolMolecule {
         }
       }
     }
+    // check that all aromatic atoms are double-bonded only to aromatic atoms
     if (needRingData) {
+      for (int i = bsAromatic.nextSetBit(0); i >= 0; i = bsAromatic
+          .nextSetBit(i + 1)) {
+        Edge[] bonds = jmolAtoms[i].getEdges();
+        int naro = 0;
+        for (int j = bonds.length; --j >= 0;) {
+          boolean isJAro = bsAromatic.get(bonds[j].getOtherAtomNode(
+              jmolAtoms[i]).getIndex());
+          if (isJAro) {
+            naro++;
+          } else if (bonds[j].getCovalentOrder() == 2) {
+            naro = 1;
+            break;
+          }
+        }
+        if (naro < 2) {
+          bsAromatic.clear(i);
+          bsAromatic6.clear(i);
+          bsAromatic5.clear(i);
+          i = -1;
+        }
+      }
+
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
           .nextSetBit(i + 1)) {
         Node atom = jmolAtoms[i];
@@ -1000,7 +1030,7 @@ public class SmilesSearch extends JmolMolecule {
 
         if (openSMILES) {
           if (!Float.isNaN(patternAtom.osClass)
-              && patternAtom.osClass != atom.getFloatProperty("property_osclass"))
+              && patternAtom.osClass != (int) atom.getFloatProperty("property_osclass"))
             break;
         }
 
@@ -1226,14 +1256,28 @@ public class SmilesSearch extends JmolMolecule {
         } else {
           if (sAtom2 == null || dir1 == 0)
             continue;
+          
+          // cumulene stuff here
+          // --> new sAtom2
+          Node a10 = sAtom1;
+          int nCumulene = 0;
+          while (sAtom2.getBondCount() == 2 && sAtom2.getValence() == 4) {
+            nCumulene++;
+            Edge[] e2 = sAtom2.getEdges();
+            Edge e = e2[e2[0].getOtherAtomNode(sAtom2) == a10 ? 1 : 0];
+            a10 = sAtom2;
+            sAtom2 = (SmilesAtom) e.getOtherAtomNode(sAtom2);
+          }
+          if (nCumulene % 2 == 1)
+            continue;         
           nBonds = sAtom2.getBondCount();
           for (int j = 0; j < nBonds && dir2 == 0; j++) {
             b = sAtom2.getBond(j);
-            boolean isAtom2 = (b.atom2 == sAtom2);
             int type = b.order;
             switch (type) {
             case SmilesBond.TYPE_DIRECTIONAL_1:
             case SmilesBond.TYPE_DIRECTIONAL_2:
+              boolean isAtom2 = (b.atom2 == sAtom2);
               sAtomDirected2 = (isAtom2 ? b.atom1 : b.atom2);
               dir2 = (isAtom2 != (type == SmilesBond.TYPE_DIRECTIONAL_1) ? 1
                   : -1);
@@ -1323,9 +1367,9 @@ public class SmilesSearch extends JmolMolecule {
       Edge[] bonds = dbAtom1.getEdges();
       for (int k = bonds.length; --k >= 0;) {
         Edge bond = bonds[k];
-        Node atom = bond.getOtherAtomNode(dbAtom1);
-        if (atom == dbAtom2)
+        if (bond.order == Edge.BOND_COVALENT_DOUBLE)
           continue;
+        Node atom = bond.getOtherAtomNode(dbAtom1);
         atom.set(-1, (nBonds++ == 0) ? -1 : 1, 0);
         int mode = (bond.getAtomIndex2() == dbAtom1.getIndex() ? nBonds
             : -nBonds);
@@ -1343,9 +1387,9 @@ public class SmilesSearch extends JmolMolecule {
       bonds = dbAtom2.getEdges();
       for (int k = bonds.length; --k >= 0;) {
         Edge bond = bonds[k];
-        Node atom = bond.getOtherAtomNode(dbAtom2);
-        if (atom == dbAtom1)
+        if (bond.order == Edge.BOND_COVALENT_DOUBLE)
           continue;
+        Node atom = bond.getOtherAtomNode(dbAtom2);
         atoms[nBonds] = atom;
         atom.set(1, (nBonds++ == 0) ? 1 : -1, 0);
         int mode = (bond.getAtomIndex2() == dbAtom2.getIndex() ? nBonds
