@@ -3659,7 +3659,7 @@ public class CmdExt extends ScriptExt {
         if (tokAtArray(pt + 1, args) == T.integer)
           quality = SV.iValue(tokenAt(++pt, args));
       } else if (PT.isOneOf(val.toLowerCase(),
-          ";xyz;xyzrn;xyzvib;mol;sdf;v2000;v3000;json;pdb;pqr;cml;")) {
+          ";xyz;xyzrn;xyzvib;mol;mol0;sdf;v2000;v3000;json;pdb;pqr;cml;")) {
         // this still could be overruled by a type indicated
         type = val.toUpperCase();
         if (pt + 1 == argCount)
