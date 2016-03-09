@@ -8683,7 +8683,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public String getSmiles(BS bs) throws Exception {
-    return getSmilesOpt(bs, -1, -1, Logger.debugging ? JC.SMILES_ATOM_COMMENT : 0);
+    return getSmilesOpt(bs, -1, -1, bs == null && Logger.debugging ? JC.SMILES_ATOM_COMMENT :0);  
   }
 
   public String getBioSmiles(BS bs) throws Exception {
