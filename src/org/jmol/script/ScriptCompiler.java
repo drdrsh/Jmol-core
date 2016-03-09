@@ -1200,7 +1200,11 @@ public class ScriptCompiler extends ScriptTokenParser {
         iHaveQuotedString = true;
         return OK;
       }
-      if (tokCommand == T.load) {
+      switch (tokCommand) {
+      case T.macro:
+        haveMacro = true;
+        break;
+      case T.load:
         if (nTokens == 1 || nTokens == 2 && (tokAt(1) == T.append)) {
           boolean isDataBase = Viewer.isDatabaseCode(charAt(ichToken));
           if (lookingAtLoadFormat(isDataBase)) {
@@ -1238,6 +1242,7 @@ public class ScriptCompiler extends ScriptTokenParser {
             }
             return CONTINUE;
           }
+          break;
         }
         BS bs;
         if (script.charAt(ichToken) == '{' || parenCount > 0)

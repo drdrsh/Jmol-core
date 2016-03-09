@@ -74,6 +74,7 @@ abstract class ScriptTokenParser {
   
   protected int ptNewSetModifier;
   protected boolean isNewSet;
+  protected boolean haveMacro;
 
   
 //----------------------------------------------------------------------------------------
@@ -148,9 +149,12 @@ abstract class ScriptTokenParser {
       }
     }
 
-    return ((isNewSet || isSetBrace) && size < ptNewSetModifier + 2
-        ? commandExpected() 
-            : size == 1 || !T.tokAttr(tokCommand, T.noArgs) ? true
+    if ((isNewSet || isSetBrace) && size < ptNewSetModifier + 2) {
+      if (!isNewSet || !haveMacro)
+        return commandExpected();
+      htUserFunctions.put((String) atokenInfix[0].value, Boolean.TRUE);
+    }
+    return(size == 1 || !T.tokAttr(tokCommand, T.noArgs) ? true
             : error(ERROR_badArgumentCount));
   }
 
