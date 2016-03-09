@@ -1125,7 +1125,9 @@ public class PropertyManager implements JmolPropertyManager {
 
   /**
    * 
-   * V3000, SDF, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR
+   * V3000, SDF, MOL, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR,
+   * 
+   * MOL0 is MOL with no bonds of type 6 or 7 (aromatic single/double)
    * 
    */
   @Override
@@ -1140,6 +1142,7 @@ public class PropertyManager implements JmolPropertyManager {
     
     boolean asV3000 = type.equalsIgnoreCase("V3000");
     boolean asSDF = type.equalsIgnoreCase("SDF");
+    boolean noAromatic = type.equalsIgnoreCase("MOL0");
     boolean asXYZVIB = (!doTransform && type.equalsIgnoreCase("XYZVIB"));
     boolean asXYZRN = type.equalsIgnoreCase("XYZRN");
     boolean isXYZ = type.toUpperCase().startsWith("XYZ");
@@ -1200,7 +1203,7 @@ public class PropertyManager implements JmolPropertyManager {
         BS bsTemp = BSUtil.copy(bsAtoms);
         bsTemp.and(ms.getModelAtomBitSetIncludingDeleted(i, false));
         bsBonds = getCovalentBondsForAtoms(ms.bo, ms.bondCount, bsTemp);
-        if (!(isOK = addMolFile(i, mol, bsTemp, bsBonds, false, false, q)))
+        if (!(isOK = addMolFile(i, mol, bsTemp, bsBonds, false, false, noAromatic, q)))
           break;
         mol.append("$$$$\n");
       }
@@ -1253,14 +1256,14 @@ public class PropertyManager implements JmolPropertyManager {
         }
       }
     } else {
-      isOK = addMolFile(-1, mol, bsAtoms, bsBonds, asV3000, asJSON, q);
+      isOK = addMolFile(-1, mol, bsAtoms, bsBonds, asV3000, asJSON, noAromatic, q);
     }
     return (isOK ? mol.toString()
         : "ERROR: Too many atoms or bonds -- use V3000 format.");
   }
 
   private boolean addMolFile(int iModel, SB mol, BS bsAtoms, BS bsBonds,
-                             boolean asV3000, boolean asJSON, Quat q) {
+                             boolean asV3000, boolean asJSON, boolean noAromatic, Quat q) {
     int nAtoms = bsAtoms.cardinality();
     int nBonds = bsBonds.cardinality();
     if (!asV3000 && !asJSON && (nAtoms > 999 || nBonds > 999))
@@ -1295,7 +1298,7 @@ public class PropertyManager implements JmolPropertyManager {
     }
     for (int i = bsBonds.nextSetBit(0), n = 0; i >= 0; i = bsBonds
         .nextSetBit(i + 1))
-      getBondRecordMOL(mol, ++n, ms.bo[i], atomMap, asV3000, asJSON);
+      getBondRecordMOL(mol, ++n, ms.bo[i], atomMap, asV3000, asJSON, noAromatic);
     // 21 21 0 0 0
     if (asV3000) {
       mol.append("M  V30 END BOND\nM  V30 END CTAB\n");
@@ -1420,7 +1423,7 @@ public class PropertyManager implements JmolPropertyManager {
   }
 
   private void getBondRecordMOL(SB mol, int n, Bond b, int[] atomMap,
-                                boolean asV3000, boolean asJSON) {
+                                boolean asV3000, boolean asJSON, boolean noAromatic) {
     //  1  2  1  0
     int a1 = atomMap[b.atom1.i];
     int a2 = atomMap[b.atom2.i];
@@ -1435,10 +1438,10 @@ public class PropertyManager implements JmolPropertyManager {
       order = (asJSON ? -3 : 5);
       break;
     case Edge.BOND_AROMATIC_SINGLE:
-      order = (asJSON ? 1: 6);
+      order = (asJSON || noAromatic ? 1: 6);
       break;
     case Edge.BOND_AROMATIC_DOUBLE:
-      order = (asJSON ? 2: 7);
+      order = (asJSON || noAromatic  ? 2: 7);
       break;
     case Edge.BOND_PARTIAL01:
       order = (asJSON ? -1: 8);
