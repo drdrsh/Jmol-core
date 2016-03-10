@@ -274,6 +274,8 @@ abstract public class JmolViewer {
 
   abstract public String getSmiles(BS atoms) throws Exception;
   
+  abstract public String getOpenSmiles(BS atoms) throws Exception;
+  
   abstract public void setScreenDimension(int width, int height);
   abstract public int getScreenWidth();
   abstract public int getScreenHeight();

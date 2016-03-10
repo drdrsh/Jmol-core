@@ -3973,7 +3973,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       format = g.pubChemFormat;
       if (id.equals("")) {
         try {
-          id = "smiles:" + getSmiles(bsA());
+          id = "smiles:" + getOpenSmiles(bsA());
         } catch (Exception e) {
           // oh well.
         }
@@ -8684,6 +8684,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   @Override
   public String getSmiles(BS bs) throws Exception {
     return getSmilesOpt(bs, -1, -1, bs == null && Logger.debugging ? JC.SMILES_ATOM_COMMENT :0);  
+  }
+
+  @Override
+  public String getOpenSmiles(BS bs) throws Exception {
+    return getSmilesOpt(bs, -1, -1, JC.SMILES_TYPE_OPENSMILES | (bs == null && Logger.debugging ? JC.SMILES_ATOM_COMMENT :0));  
   }
 
   public String getBioSmiles(BS bs) throws Exception {

@@ -52,13 +52,13 @@ public class SmilesAromatic {
    * @param cutoff
    *        an arbitrary value to test the standard deviation against. 0.01 is
    *        appropriate here.
-   * @param isGenerator 
+   * @param isOSGenerator 
    * @return true if standard deviation of vNorm.dot.vMean is less than cutoff
    */
 
   public final static boolean isFlatSp2Ring(int n, Node[] atoms, BS bsSelected,
                                             BS bs, float cutoff,
-                                            boolean isGenerator) {
+                                            boolean isOSGenerator) {
 ///
  // 
  // Bob Hanson, hansonr@stolaf.edu
@@ -114,14 +114,14 @@ public class SmilesAromatic {
  //      (other than quinones and other such compounds)
  //      would have any chance of passing the first two tests.
  //      
- //   Generator:
+ //   OpenSMILES Generator:
  //     
  //   (a) the atom is in a 6-membered ring containing only C, N, or O and
  //       matching SMARTS [#6X3+0,#6X2+1,#6X2-1,#7X2+0,#7X3+1,#8X2+1]
  //   (b) the atom is not doubly bonded to any nonaromatic atom (prevents case of exocyclic double bonds)
  //   (c) the atom connects with at least two other aromatic atoms
 
-    if (isGenerator && n != 6)
+    if (isOSGenerator && n != 6)
       return false;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Node ringAtom = atoms[i];
@@ -147,7 +147,7 @@ public class SmilesAromatic {
     float maxDev = (1 - cutoff * 5);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Node ringAtom = atoms[i];
-      if (isGenerator) {
+      if (isOSGenerator) {
         int elemno = ringAtom.getElementNumber();
         switch (elemno) {
         case 8:
@@ -269,82 +269,76 @@ public class SmilesAromatic {
                                   Lst<Object> v5, Lst<Object> v6) {
     BS bsStrict = new BS();
     BS bsTest = new BS();
-    for (int i = v5.size(); --i >= 0;) {
-      BS bs = (BS) v5.get(i);
-      if (isAromaticRing(bsAromatic, bsTest, bs, 5))
-        checkAromaticStrict2(jmolAtoms, bsStrict, v5, v6, bs, true);
-    }
-    for (int i = v6.size(); --i >= 0;) {
-      BS bs = (BS) v6.get(i);
-      if (isAromaticRing(bsAromatic, bsTest, bs, 6))
-        checkAromaticStrict2(jmolAtoms, bsStrict, v5, v6, bs, false);
-    }
+    checkAromaticStrict56(5, v5, v6, jmolAtoms, bsAromatic, bsTest, bsStrict);
+    checkAromaticStrict56(6, v5, v6, jmolAtoms, bsAromatic, bsTest, bsStrict);
     bsAromatic.clearAll();
     bsAromatic.or(bsStrict);
-  }
-
-  private static boolean isAromaticRing(BS bsAromatic, BS bsTest,
-                                        BS bs, int n) {
-    bsTest.clearAll();
-    bsTest.or(bs);
-    bsTest.and(bsAromatic);
-    return (bsTest.cardinality() == n);
   }
 
   /**
    * uses an MMFF94 strategy for determining aromaticity for a specific ring.
    * 
+   * @param n 
    * @param jmolAtoms
    * @param bsStrict  growing list of aromatic atoms
    * @param v5
    * @param v6
-   * @param bsRing  this ring's atoms
-   * @param is5
+   * @param bsTest
+   * @param bsAromatic
    */
-  private static void checkAromaticStrict2(Node[] jmolAtoms,
-                                          BS bsStrict, Lst<Object> v5,
-                                          Lst<Object> v6, BS bsRing,
-                                          boolean is5) {
+  private static void checkAromaticStrict56(int n, Lst<Object> v5, Lst<Object> v6,
+                                            Node[] jmolAtoms, BS bsAromatic,
+                                            BS bsTest, BS bsStrict) {
+
     // I believe this gives the wrong answer for mmff94_dative.mol2 CIKSEU10
     // but at least it agrees with MMFF94.  -- Bob Hanson
 
-    //System.out.println(bsRing);
-    int piElectronCount = countInternalPairs(jmolAtoms, bsRing, is5) << 1;
-    switch (piElectronCount) {
-    case -3:
-      break;
-    default:
-      for (int i = bsRing.nextSetBit(0); i >= 0; i = bsRing.nextSetBit(i + 1)) {
-        Edge[] bonds = jmolAtoms[i].getEdges();
-        for (int j = 0; j < bonds.length; j++)
-          if (bonds[j].order == Edge.BOND_COVALENT_DOUBLE) {
-            int i2 = bonds[j].getOtherAtomNode(jmolAtoms[i]).getIndex();
-            if (!bsRing.get(i2)) {
-              boolean piShared = false;
-              for (int k = v5.size(); --k >= 0 && !piShared;) {
-                BS bs = (BS) v5.get(k);
-                if (bs.get(i2)
-                    && (bsStrict.get(i2) || Math.abs(countInternalPairs(
-                        jmolAtoms, bs, true)) == 3))
-                  piShared = true;
+    boolean is5 = (n == 5);
+    Lst<Object> lst = (is5 ? v5 : v6);
+    for (int ir = lst.size(); --ir >= 0;) {
+      BS bsRing = (BS) lst.get(ir);
+      bsTest.clearAll();
+      bsTest.or(bsRing);
+      bsTest.and(bsAromatic);
+      if (bsTest.cardinality() != n)
+        continue;
+      int piElectronCount = countInternalPairsStrict(jmolAtoms, bsRing, is5) << 1;
+      switch (piElectronCount) {
+      case -3:
+        break;
+      default:
+        out: for (int i = bsRing.nextSetBit(0); i >= 0; i = bsRing.nextSetBit(i + 1)) {
+          Edge[] bonds = jmolAtoms[i].getEdges();
+          for (int j = 0; j < bonds.length; j++)
+            if (bonds[j].order == Edge.BOND_COVALENT_DOUBLE) {
+              int i2 = bonds[j].getOtherAtomNode(jmolAtoms[i]).getIndex();
+              if (!bsRing.get(i2)) {
+                boolean piShared = false;
+                for (int k = v5.size(); --k >= 0 && !piShared;) {
+                  BS bs = (BS) v5.get(k);
+                  if (bs.get(i2)
+                      && (bsStrict.get(i2) || Math.abs(countInternalPairsStrict(
+                          jmolAtoms, bs, true)) == 3))
+                    piShared = true;
+                }
+                for (int k = v6.size(); --k >= 0 && !piShared;) {
+                  BS bs = (BS) v6.get(k);
+                  if (bs.get(i2)
+                      && (bsStrict.get(i2) || Math.abs(countInternalPairsStrict(
+                          jmolAtoms, bs, false)) == 3))
+                    piShared = true;
+                }
+                if (!piShared)
+                  break out;
+                piElectronCount++;
               }
-              for (int k = v6.size(); --k >= 0 && !piShared;) {
-                BS bs = (BS) v6.get(k);
-                if (bs.get(i2)
-                    && (bsStrict.get(i2) || Math.abs(countInternalPairs(
-                        jmolAtoms, bs, false)) == 3))
-                  piShared = true;
-              }
-              if (!piShared)
-                return;
-              piElectronCount++;
             }
-          }
+        }
+        break;
       }
-      break;
+      if (piElectronCount == 6)
+        bsStrict.or(bsRing);
     }
-    if (piElectronCount == 6)
-      bsStrict.or(bsRing);
   }
 
   /**
@@ -358,13 +352,14 @@ public class SmilesAromatic {
    * @param is5
    * @return  number of pairs
    */
-  private static int countInternalPairs(Node[] jmolAtoms, BS bsRing,
+  private static int countInternalPairsStrict(Node[] jmolAtoms, BS bsRing,
                                         boolean is5) {
     int nDouble = 0;
     int nAromatic = 0;
     int nLonePairs = 0;
     for (int i = bsRing.nextSetBit(0); i >= 0; i = bsRing.nextSetBit(i + 1)) {
       Node atom = jmolAtoms[i];
+      
       Edge[] bonds = atom.getEdges();
       boolean haveDouble = false;
       for (int k = 0; k < bonds.length; k++) {
@@ -395,6 +390,88 @@ public class SmilesAromatic {
     }
     return (nAromatic == 0 ? nDouble / 2 + nLonePairs
         : nAromatic == (is5 ? 5 : 6) ? -3 : 0);
+  }
+
+  public static void setAromatic(int i, Node[] jmolAtoms, BS bsSelected,
+                                 Lst<Object> v5, Lst<Object> vR, Lst<BS>[] vRings,
+                                 BS bsAromatic,
+                                 BS bsAromatic5, BS bsAromatic6,
+                                 boolean aromaticDefined,
+                                 boolean aromaticStrict, boolean isOSGenerator, VTemp v) {
+    if (!aromaticDefined && (!aromaticStrict || i == 5 || i == 6))
+      for (int r = vR.size(); --r >= 0;) {
+        BS bs = (BS) vR.get(r);
+        if (aromaticDefined
+            || SmilesAromatic.isFlatSp2Ring(i, jmolAtoms, bsSelected, bs,
+                (aromaticStrict ? 0.1f : 0.01f), isOSGenerator)) {
+          bsAromatic.or(bs);
+          if (!aromaticStrict)
+            switch (i) {
+            case 5:
+              bsAromatic5.or(bs);
+              break;
+            case 6:
+              bsAromatic6.or(bs);
+              break;
+            }
+        }
+      }
+    if (aromaticStrict) {
+      switch (i) {
+      case 5:
+        v5 = vR;
+        break;
+      case 6:
+        if (aromaticDefined)
+          bsAromatic = SmilesAromatic.checkAromaticDefined(jmolAtoms,
+              bsAromatic);
+        else
+          SmilesAromatic.checkAromaticStrict(jmolAtoms, bsAromatic, v5, vR);
+        vRings[3] = new Lst<BS>();
+        setAromatic56(v5, bsAromatic5, 5, vRings[3], v, bsAromatic);
+        setAromatic56(vR, bsAromatic6, 6, vRings[3], v, bsAromatic);
+        break;
+      }
+    }
+  }
+
+  static private void setAromatic56(Lst<Object> vRings, BS bs56, int n56, Lst<BS> vAromatic56, VTemp v, BS bsAromatic) {
+    for (int k = 0; k < vRings.size(); k++) {
+      BS r = (BS) vRings.get(k);
+      v.bsTemp.clearAll();
+      v.bsTemp.or(r);
+      v.bsTemp.and(bsAromatic);
+      if (v.bsTemp.cardinality() == n56) {
+        bs56.or(r);
+        if (vAromatic56 != null)
+          vAromatic56.addLast(r);
+      }
+    }
+  }
+
+  public static void finalizeAromatic(Node[] jmolAtoms, BS bsAromatic,
+                                      BS bsAromatic5, BS bsAromatic6) {
+    for (int i = bsAromatic.nextSetBit(0); i >= 0; i = bsAromatic
+        .nextSetBit(i + 1)) {
+      Edge[] bonds = jmolAtoms[i].getEdges();
+      int naro = 0;
+      for (int j = bonds.length; --j >= 0;) {
+        boolean isJAro = bsAromatic.get(bonds[j].getOtherAtomNode(jmolAtoms[i])
+                .getIndex());
+        if (isJAro) {
+          naro++;
+        } else if (bonds[j].getCovalentOrder() == 2) {
+          naro = 1;
+          break;
+        }
+      }
+      if (naro < 2) {
+        bsAromatic.clear(i);
+        bsAromatic6.clear(i);
+        bsAromatic5.clear(i);
+        i = -1;
+      }
+    }
   }
 
 }

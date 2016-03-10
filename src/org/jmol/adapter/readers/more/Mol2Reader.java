@@ -172,11 +172,16 @@ public class Mol2Reader extends ForceFieldReader {
       Atom atom = asc.addNewAtom();
       String[] tokens = PT.getTokens(rd());
       String atomType = tokens[5];
-      atom.atomName = tokens[1] + '\0' + atomType;
+      String name = tokens[1];// + '\0' + atomType;
       int pt = atomType.indexOf(".");
-      // accepts "." for "no atom type"
-      atom.elementSymbol = (pt == 0 ? atom.atomName : pt > 0 ? atomType
-          .substring(0, pt) : atomType);
+      if (pt >= 0) {
+        // accepts "." for "no atom type"
+        atom.elementSymbol = atomType.substring(0, pt);
+      } else {
+        atom.atomName = name;
+        atom.elementSymbol = atom.getElementSymbol();
+      }
+      atom.atomName = name + '\0' + atomType;
       atom.set(parseFloatStr(tokens[2]), parseFloatStr(tokens[3]),
           parseFloatStr(tokens[4]));
       // apparently "NO_CHARGES" is not strictly enforced

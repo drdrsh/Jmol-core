@@ -4173,7 +4173,9 @@ public class CmdExt extends ScriptExt {
         if (tok != T.smiles) {
           msg = vwr.getDataBaseName(null);
           // this does not work for NCI, because, for example, "$menthol" returns an enantiomer, but menthol/smiles uses nonstereo option
-          if (msg != null && (/*msg.startsWith("$") ||*/ msg.startsWith(":"))) {
+          // but we don't want to be generating our own SMILES here, do we?
+          // what is the solution?
+          if (msg != null && (msg.startsWith("$") || msg.startsWith(":"))) {
             msg = msg.substring(1);
           } else {
             msg = null;
@@ -4182,7 +4184,7 @@ public class CmdExt extends ScriptExt {
           msg = vwr.getBioSmiles(null);
         }
         if (msg == null)
-          msg = vwr.getSmiles(null);
+          msg = (tok == T.smiles ? vwr.getSmiles(null) : vwr.getOpenSmiles(null));
       } catch (Exception ex) {
         msg = ex.getMessage();
       }

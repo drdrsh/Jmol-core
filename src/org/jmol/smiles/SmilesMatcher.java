@@ -302,7 +302,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     search.jmolAtoms = atoms;
     search.jmolAtomCount = Math.abs(ac);
     search.setSelected(bsSelected);
-    search.getRingData(true, flags, vRings, false);
+    search.getRingData(vRings, true, flags, false);
     search.asVector = false;
     search.subSearches = new SmilesSearch[1];
     search.getSelections();

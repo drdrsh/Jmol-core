@@ -1282,7 +1282,7 @@ public class MathExt {
     boolean isON = !isList && (argLast.tok == T.on);
     try {
       if (isChemical) {
-        String data = (x1.tok == T.bitset ? vwr.getSmiles((BS) x1.value) : SV.sValue(x1));
+        String data = (x1.tok == T.bitset ? vwr.getOpenSmiles((BS) x1.value) : SV.sValue(x1));
         data = data.length() == 0 ? "" : vwr.getChemicalInfo(data,
             args.length > 1 ? T.getTokenFromName(flags.toLowerCase()) : null);
         if (data.endsWith("\n"))

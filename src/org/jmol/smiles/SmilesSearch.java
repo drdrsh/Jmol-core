@@ -192,7 +192,7 @@ public class SmilesSearch extends JmolMolecule {
     return n;
   }
 
-  void setRingData(BS bsA, boolean isGenerator) throws InvalidSmilesException {
+  void setRingData(BS bsA, boolean isOSGenerator) throws InvalidSmilesException {
     if (isTopology)
       needAromatic = false;
     if (needAromatic)
@@ -208,12 +208,12 @@ public class SmilesSearch extends JmolMolecule {
       if (!needRingMemberships && !needRingData)
         return;
     }
-    getRingData(needRingData, flags, null, isGenerator);
+    getRingData(null, needRingData, flags, isOSGenerator);
   }
 
   @SuppressWarnings("unchecked")
-  void getRingData(boolean needRingData, int flags, Lst<BS>[] vRings,
-                   boolean isGenerator) throws InvalidSmilesException {
+  void getRingData(Lst<BS>[] vRings, boolean needRingData, int flags,
+                   boolean isOSGenerator) throws InvalidSmilesException {
     boolean aromaticStrict = ((flags & FLAG_AROMATIC_STRICT) != 0);
     boolean aromaticDefined = ((flags & FLAG_AROMATIC_DEFINED) != 0);
     if (aromaticStrict && vRings == null)
@@ -238,7 +238,7 @@ public class SmilesSearch extends JmolMolecule {
     int max = ringDataMax;
     int min = 3;
     Lst<Object> v5 = null;
-    if (isGenerator) {
+    if (isOSGenerator) {
       max = 6;
       min = 4;
       v5 = new Lst<Object>();
@@ -258,43 +258,10 @@ public class SmilesSearch extends JmolMolecule {
           v.addLast((BS) vR.get(j));
         vRings[i - 3] = v;
       }
-      if (needAromatic) {
-        if (!aromaticDefined && (!aromaticStrict || i == 5 || i == 6))
-          for (int r = vR.size(); --r >= 0;) {
-            BS bs = (BS) vR.get(r);
-            if (aromaticDefined
-                || SmilesAromatic.isFlatSp2Ring(i, jmolAtoms, bsSelected, bs,
-                    (aromaticStrict ? 0.1f : 0.01f), isGenerator)) {
-              bsAromatic.or(bs);
-              if (!aromaticStrict)
-                switch (i) {
-                case 5:
-                  bsAromatic5.or(bs);
-                  break;
-                case 6:
-                  bsAromatic6.or(bs);
-                  break;
-                }
-            }
-          }
-        if (aromaticStrict) {
-          switch (i) {
-          case 5:
-            v5 = vR;
-            break;
-          case 6:
-            if (aromaticDefined)
-              bsAromatic = SmilesAromatic.checkAromaticDefined(jmolAtoms,
-                  bsAromatic);
-            else
-              SmilesAromatic.checkAromaticStrict(jmolAtoms, bsAromatic, v5, vR);
-            vRings[3] = new Lst<BS>();
-            setAromatic56(v5, bsAromatic5, 5, vRings[3]);
-            setAromatic56(vR, bsAromatic6, 6, vRings[3]);
-            break;
-          }
-        }
-      }
+      if (needAromatic)
+        SmilesAromatic.setAromatic(i, jmolAtoms, bsSelected, v5, vR, vRings,
+            bsAromatic, bsAromatic5, bsAromatic6, aromaticDefined,
+            aromaticStrict, isOSGenerator, v);
       if (needRingData) {
         ringData[i] = new BS();
         for (int k = 0; k < vR.size(); k++) {
@@ -307,28 +274,9 @@ public class SmilesSearch extends JmolMolecule {
     }
     // check that all aromatic atoms are double-bonded only to aromatic atoms
     if (needRingData) {
-      for (int i = bsAromatic.nextSetBit(0); i >= 0; i = bsAromatic
-          .nextSetBit(i + 1)) {
-        Edge[] bonds = jmolAtoms[i].getEdges();
-        int naro = 0;
-        for (int j = bonds.length; --j >= 0;) {
-          boolean isJAro = bsAromatic.get(bonds[j].getOtherAtomNode(
-              jmolAtoms[i]).getIndex());
-          if (isJAro) {
-            naro++;
-          } else if (bonds[j].getCovalentOrder() == 2) {
-            naro = 1;
-            break;
-          }
-        }
-        if (naro < 2) {
-          bsAromatic.clear(i);
-          bsAromatic6.clear(i);
-          bsAromatic5.clear(i);
-          i = -1;
-        }
-      }
-
+      if (needAromatic && !isOSGenerator)
+        SmilesAromatic.finalizeAromatic(jmolAtoms, bsAromatic, bsAromatic5,
+            bsAromatic6); 
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
           .nextSetBit(i + 1)) {
         Node atom = jmolAtoms[i];
@@ -337,20 +285,6 @@ public class SmilesSearch extends JmolMolecule {
           for (int k = bonds.length; --k >= 0;)
             if (ringCounts[atom.getBondedAtomIndex(k)] > 0)
               ringConnections[i]++;
-      }
-    }
-  }
-
-  private void setAromatic56(Lst<Object> vRings, BS bs56, int n56, Lst<BS> vAromatic56) {
-    for (int k = 0; k < vRings.size(); k++) {
-      BS r = (BS) vRings.get(k);
-      v.bsTemp.clearAll();
-      v.bsTemp.or(r);
-      v.bsTemp.and(bsAromatic);
-      if (v.bsTemp.cardinality() == n56) {
-        bs56.or(r);
-        if (vAromatic56 != null)
-          vAromatic56.addLast(r);
       }
     }
   }

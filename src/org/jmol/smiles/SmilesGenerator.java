@@ -304,7 +304,7 @@ public class SmilesGenerator {
       search.setSelected(bsSelected);
       search.jmolAtomCount = ac;
       search.ringDataMax = 7;
-      search.setRingData(null, true);
+      search.setRingData(null, openSMILES);
       bsAromatic = search.bsAromatic;
       ringSets = search.ringSets;
       setBondDirections();
