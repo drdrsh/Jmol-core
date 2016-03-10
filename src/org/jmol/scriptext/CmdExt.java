@@ -4172,7 +4172,8 @@ public class CmdExt extends ScriptExt {
       try {
         if (tok != T.smiles) {
           msg = vwr.getDataBaseName(null);
-          if (msg != null && (msg.startsWith("$") || msg.startsWith(":"))) {
+          // this does not work for NCI, because, for example, "$menthol" returns an enantiomer, but menthol/smiles uses nonstereo option
+          if (msg != null && (/*msg.startsWith("$") ||*/ msg.startsWith(":"))) {
             msg = msg.substring(1);
           } else {
             msg = null;
