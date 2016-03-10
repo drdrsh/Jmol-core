@@ -1127,7 +1127,7 @@ public class PropertyManager implements JmolPropertyManager {
    * 
    * V3000, SDF, MOL, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR,
    * 
-   * MOL0 is MOL with no bonds of type 6 or 7 (aromatic single/double)
+   * MOL67 is MOL with bonds of type 6 or 7 (aromatic single/double)
    * 
    */
   @Override
@@ -1142,7 +1142,7 @@ public class PropertyManager implements JmolPropertyManager {
     
     boolean asV3000 = type.equalsIgnoreCase("V3000");
     boolean asSDF = type.equalsIgnoreCase("SDF");
-    boolean noAromatic = type.equalsIgnoreCase("MOL0");
+    boolean noAromatic = type.equalsIgnoreCase("MOL");
     boolean asXYZVIB = (!doTransform && type.equalsIgnoreCase("XYZVIB"));
     boolean asXYZRN = type.equalsIgnoreCase("XYZRN");
     boolean isXYZ = type.toUpperCase().startsWith("XYZ");

@@ -411,9 +411,10 @@ public class Polyhedra extends AtomShape {
       M4 mat = (M4) data[1];
       if (mat == null)
         return false;
-      BS bs = findPolyBS((BS) data[0]);
+      BS bsMoved = (BS) data[0];
+      BS bs = findPolyBS(bsMoved);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-        polyhedrons[i].move(mat);        
+        polyhedrons[i].move(mat, bsMoved);        
       return true;
     }
     if (property == "centers") {

@@ -41,7 +41,7 @@ public class Polyhedron {
   int nVertices;
   boolean collapsed;
   private BS bsFlat;
-  private float distanceRef;  
+  private float distanceRef;
   private V3[] normals;
   private short[] normixes;
 
@@ -68,14 +68,15 @@ public class Polyhedron {
   private P3 offset;
 
   public float scale = 1;
-  
 
-  Polyhedron() {  
+  Polyhedron() {
   }
-  
-  Polyhedron set(String id, int modelIndex, P3 atomOrPt, P3[] points, int nPoints, int vertexCount,
-      int[][] triangles, int triangleCount, int[][] faces, V3[] normals, BS bsFlat, boolean collapsed, float distanceRef) {
-    
+
+  Polyhedron set(String id, int modelIndex, P3 atomOrPt, P3[] points,
+                 int nPoints, int vertexCount, int[][] triangles,
+                 int triangleCount, int[][] faces, V3[] normals, BS bsFlat,
+                 boolean collapsed, float distanceRef) {
+
     this.distanceRef = distanceRef;
     if (id == null) {
       centralAtom = (Atom) atomOrPt;
@@ -188,7 +189,7 @@ public class Polyhedron {
     Map<String, Object> info = new Hashtable<String, Object>();
 
     info.put("vertexCount", Integer.valueOf(nVertices));
-    
+
     // get COPY of vertices to prevent script variable from referencing Atom
     int nv = (isState ? vertices.length : nVertices);
     P3[] pts = new P3[nv];
@@ -301,18 +302,19 @@ public class Polyhedron {
       // first time through includes all atoms as atoms
       for (int i = pts.length; --i >= 0;)
         pts[i] = vertices[i];
-      pointGroup = vwr.ms.getSymTemp(true).setPointGroup(null, null, pts,
-          null, false,
-          vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance), true);
+      pointGroup = vwr.ms.getSymTemp(true).setPointGroup(null, null, pts, null,
+          false, vwr.getFloat(T.pointgroupdistancetolerance),
+          vwr.getFloat(T.pointgrouplineartolerance), true);
       // second time through includes all atoms as points only
       for (int i = pts.length; --i >= 0;)
         pts[i] = P3.newP(vertices[i]);
       pointGroupFamily = vwr.ms.getSymTemp(true).setPointGroup(null, null, pts,
-          null, false,
-          vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance), true);
+          null, false, vwr.getFloat(T.pointgroupdistancetolerance),
+          vwr.getFloat(T.pointgrouplineartolerance), true);
     }
-    return (center == null ? centralAtom : center) + " " + pointGroup.getPointGroupName() + " "
-        + "("+pointGroupFamily.getPointGroupName()+")";
+    return (center == null ? centralAtom : center) + " "
+        + pointGroup.getPointGroupName() + " " + "("
+        + pointGroupFamily.getPointGroupName() + ")";
   }
 
   /**
@@ -343,22 +345,26 @@ public class Polyhedron {
     vAC.setT(vertices[j]);
     vTemp.cross(vAB, vAC);
     vAC.setT(vertices[k]);
-    return  vAC.dot(vTemp);
+    return vAC.dot(vTemp);
   }
 
   String getState(Viewer vwr) {
-    String ident = (id == null ? "({"+centralAtom.i+"})" : "ID " + Escape.e(id));
-    return "  polyhedron" + " @{" + Escape.e(getInfo(vwr, true)) + "} " 
+    String ident = (id == null ? "({" + centralAtom.i + "})" : "ID "
+        + Escape.e(id));
+    return "  polyhedron" + " @{" + Escape.e(getInfo(vwr, true)) + "} "
         + (isFullyLit ? " fullyLit" : "") + ";"
         + (visible ? "" : "polyhedra " + ident + " off;") + "\n";
   }
 
-  public void move(M4 mat) {
+  void move(M4 mat, BS bsMoved) {
     info = null;
     for (int i = 0; i < nVertices; i++) {
       P3 p = vertices[i];
-      if (p instanceof Atom)
+      if (p instanceof Atom) {
+        if (bsMoved.get(((Atom) p).i))
+          continue;
         p = vertices[i] = P3.newP(p);
+      }
       mat.rotTrans(p);
     }
     for (int i = normals.length; --i >= 0;)
