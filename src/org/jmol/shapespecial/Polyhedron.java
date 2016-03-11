@@ -281,11 +281,11 @@ public class Polyhedron {
 
   String getSymmetry(Viewer vwr, boolean withPointGroup) {
     if (id == null) {
-      info = null;
-      SmilesMatcherInterface sm = vwr.getSmilesMatcher();
-      try {
-        String details = (distanceRef <= 0 ? null : "r=" + distanceRef);
-        if (smarts == null) {
+      if (smarts == null) {
+        info = null;
+        SmilesMatcherInterface sm = vwr.getSmilesMatcher();
+        try {
+          String details = (distanceRef <= 0 ? null : "r=" + distanceRef);
           smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null,
               JC.SMILES_TOPOLOGY, null);
           smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
@@ -293,11 +293,13 @@ public class Polyhedron {
           polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
               vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_POLYHEDRAL
                   | JC.SMILES_ATOM_COMMENT, details);
+        } catch (Exception e) {
         }
-      } catch (Exception e) {
       }
     }
-    if (pointGroup == null && withPointGroup) {
+    if (!withPointGroup)
+      return null;
+    if (pointGroup == null) {
       T3[] pts = new T3[nVertices];
       // first time through includes all atoms as atoms
       for (int i = pts.length; --i >= 0;)
@@ -312,9 +314,9 @@ public class Polyhedron {
           null, false, vwr.getFloat(T.pointgroupdistancetolerance),
           vwr.getFloat(T.pointgrouplineartolerance), true);
     }
-    return (center == null ? centralAtom : center) + " "
-        + pointGroup.getPointGroupName() + " " + "("
-        + pointGroupFamily.getPointGroupName() + ")";
+    return (center == null ? centralAtom : center) + "    \t"
+        + pointGroup.getPointGroupName() + "\t"
+        + pointGroupFamily.getPointGroupName();
   }
 
   /**

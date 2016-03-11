@@ -442,8 +442,8 @@ public class ModelSet extends BondCollection {
       return (modelIndex < 0 && modelNumber > 0 ? new BS() : vwr
           .getModelUndeletedAtomsBitSet(modelIndex));
     case T.polyhedra:
-      Object[] data = new Object[] { null, null };
-      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "centers", data);
+      Object[] data = new Object[] { null, null, null };
+      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "getCenters", data);
       return (data[1] == null ? new BS() : (BS) data[1]);
     }
   }

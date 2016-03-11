@@ -37,6 +37,90 @@ import org.jmol.util.Node;
 
 public class SmilesAromatic {
   /**
+   * main entry point
+   * 
+   * @param i
+   * @param jmolAtoms
+   * @param bsSelected
+   * @param v5
+   * @param vR
+   * @param vRings
+   * @param bsAromatic
+   * @param bsAromatic5
+   * @param bsAromatic6
+   * @param aromaticDefined
+   * @param aromaticStrict
+   * @param isOSGenerator
+   * @param v
+   */
+  public static void setAromatic(int i, Node[] jmolAtoms, BS bsSelected,
+                                 Lst<Object> v5, Lst<Object> vR, Lst<BS>[] vRings,
+                                 BS bsAromatic,
+                                 BS bsAromatic5, BS bsAromatic6,
+                                 boolean aromaticDefined,
+                                 boolean aromaticStrict, boolean isOSGenerator, VTemp v) {
+    if (!aromaticDefined && (!aromaticStrict || i == 5 || i == 6))
+      for (int r = vR.size(); --r >= 0;) {
+        BS bs = (BS) vR.get(r);
+        if (aromaticDefined
+            || SmilesAromatic.isFlatSp2Ring(i, jmolAtoms, bsSelected, bs,
+                (aromaticStrict ? 0.1f : 0.01f), isOSGenerator)) {
+          bsAromatic.or(bs);
+          if (!aromaticStrict)
+            switch (i) {
+            case 5:
+              bsAromatic5.or(bs);
+              break;
+            case 6:
+              bsAromatic6.or(bs);
+              break;
+            }
+        }
+      }
+    if (aromaticStrict) {
+      switch (i) {
+      case 5:
+        v5 = vR;
+        break;
+      case 6:
+        if (aromaticDefined)
+          bsAromatic = SmilesAromatic.checkAromaticDefined(jmolAtoms,
+              bsAromatic);
+        else
+          SmilesAromatic.checkAromaticStrict(jmolAtoms, bsAromatic, v5, vR);
+        vRings[3] = new Lst<BS>();
+        setAromatic56(v5, bsAromatic5, 5, vRings[3], v, bsAromatic);
+        setAromatic56(vR, bsAromatic6, 6, vRings[3], v, bsAromatic);
+        break;
+      }
+    }
+  }
+
+  /**
+   * just doing some housekeeping here
+   * 
+   * @param vRings
+   * @param bs56
+   * @param n56
+   * @param vAromatic56
+   * @param v
+   * @param bsAromatic
+   */
+  static private void setAromatic56(Lst<Object> vRings, BS bs56, int n56, Lst<BS> vAromatic56, VTemp v, BS bsAromatic) {
+    for (int k = 0; k < vRings.size(); k++) {
+      BS r = (BS) vRings.get(k);
+      v.bsTemp.clearAll();
+      v.bsTemp.or(r);
+      v.bsTemp.and(bsAromatic);
+      if (v.bsTemp.cardinality() == n56) {
+        bs56.or(r);
+        if (vAromatic56 != null)
+          vAromatic56.addLast(r);
+      }
+    }
+  }
+
+  /**
    * 3D-SEARCH aromaticity test.
    * 
    * A simple and unambiguous test for aromaticity based on 3D geometry and
@@ -56,6 +140,7 @@ public class SmilesAromatic {
    * @return true if standard deviation of vNorm.dot.vMean is less than cutoff
    */
 
+  
   public final static boolean isFlatSp2Ring(int n, Node[] atoms, BS bsSelected,
                                             BS bs, float cutoff,
                                             boolean isOSGenerator) {
@@ -202,6 +287,13 @@ public class SmilesAromatic {
     return isFlat;
   }
 
+  /**
+   * adds a normal if similarity is within limits  
+   * @param vTemp
+   * @param vMean
+   * @param maxDev
+   * @return true if successful
+   */
   private final static boolean addNormal(V3 vTemp, V3 vMean,
                                          float maxDev) {
     float similarity = vMean.dot(vTemp);
@@ -214,6 +306,15 @@ public class SmilesAromatic {
     return true;
   }
 
+  /**
+   * calculates a dot-product standard deviation and reports if it is below a cutoff
+   * 
+   * @param vNorms
+   * @param vMean
+   * @param n
+   * @param cutoff
+   * @return true if stddev < cutoff
+   */
   private final static boolean checkStandardDeviation(V3[] vNorms,
                                                       V3 vMean, int n,
                                                       float cutoff) {
@@ -229,6 +330,16 @@ public class SmilesAromatic {
     return (sum < cutoff);
   }
 
+  /**
+   * calculates a normal to a plane for three points and returns a signed distance
+   * @param pointA
+   * @param pointB
+   * @param pointC
+   * @param vNorm
+   * @param vAB
+   * @param vAC
+   * @return a signed distance 
+   */
   static float getNormalThroughPoints(Node pointA, Node pointB,
                                       Node pointC, V3 vNorm,
                                       V3 vAB, V3 vAC) {
@@ -244,6 +355,7 @@ public class SmilesAromatic {
 
   /**
    * set aromatic atoms based on predefined BOND_AROMATIC definitions
+   * 
    * @param jmolAtoms
    * @param bsAtoms
    * @return bsAromatic
@@ -265,6 +377,14 @@ public class SmilesAromatic {
     return bsDefined;
   }
   
+  /**
+   * Carries out a Huekel strict assessment of aromaticity for 5 and 6-membered rings
+   * using bond and lone-pair counting. Experimental. 
+   * @param jmolAtoms
+   * @param bsAromatic
+   * @param v5
+   * @param v6
+   */
   static void checkAromaticStrict(Node[] jmolAtoms, BS bsAromatic,
                                   Lst<Object> v5, Lst<Object> v6) {
     BS bsStrict = new BS();
@@ -392,63 +512,20 @@ public class SmilesAromatic {
         : nAromatic == (is5 ? 5 : 6) ? -3 : 0);
   }
 
-  public static void setAromatic(int i, Node[] jmolAtoms, BS bsSelected,
-                                 Lst<Object> v5, Lst<Object> vR, Lst<BS>[] vRings,
-                                 BS bsAromatic,
-                                 BS bsAromatic5, BS bsAromatic6,
-                                 boolean aromaticDefined,
-                                 boolean aromaticStrict, boolean isOSGenerator, VTemp v) {
-    if (!aromaticDefined && (!aromaticStrict || i == 5 || i == 6))
-      for (int r = vR.size(); --r >= 0;) {
-        BS bs = (BS) vR.get(r);
-        if (aromaticDefined
-            || SmilesAromatic.isFlatSp2Ring(i, jmolAtoms, bsSelected, bs,
-                (aromaticStrict ? 0.1f : 0.01f), isOSGenerator)) {
-          bsAromatic.or(bs);
-          if (!aromaticStrict)
-            switch (i) {
-            case 5:
-              bsAromatic5.or(bs);
-              break;
-            case 6:
-              bsAromatic6.or(bs);
-              break;
-            }
-        }
-      }
-    if (aromaticStrict) {
-      switch (i) {
-      case 5:
-        v5 = vR;
-        break;
-      case 6:
-        if (aromaticDefined)
-          bsAromatic = SmilesAromatic.checkAromaticDefined(jmolAtoms,
-              bsAromatic);
-        else
-          SmilesAromatic.checkAromaticStrict(jmolAtoms, bsAromatic, v5, vR);
-        vRings[3] = new Lst<BS>();
-        setAromatic56(v5, bsAromatic5, 5, vRings[3], v, bsAromatic);
-        setAromatic56(vR, bsAromatic6, 6, vRings[3], v, bsAromatic);
-        break;
-      }
-    }
-  }
-
-  static private void setAromatic56(Lst<Object> vRings, BS bs56, int n56, Lst<BS> vAromatic56, VTemp v, BS bsAromatic) {
-    for (int k = 0; k < vRings.size(); k++) {
-      BS r = (BS) vRings.get(k);
-      v.bsTemp.clearAll();
-      v.bsTemp.or(r);
-      v.bsTemp.and(bsAromatic);
-      if (v.bsTemp.cardinality() == n56) {
-        bs56.or(r);
-        if (vAromatic56 != null)
-          vAromatic56.addLast(r);
-      }
-    }
-  }
-
+  /**
+   * Iteratively prunes a set of aromatic atoms that may be initially
+   * assigned to be aromatic but because their double bonds extend to non-aromatic
+   * atoms must be removed. Checks to see that these atoms really have
+   * two adjacent aromatic atoms and are not connected to any nonaromatic atom
+   * by a double bond. 
+   * 
+   * Only used in OpenSMILES generation: {*}.find("openSMILES")   
+   * 
+   * @param jmolAtoms
+   * @param bsAromatic
+   * @param bsAromatic5
+   * @param bsAromatic6
+   */
   public static void finalizeAromatic(Node[] jmolAtoms, BS bsAromatic,
                                       BS bsAromatic5, BS bsAromatic6) {
     for (int i = bsAromatic.nextSetBit(0); i >= 0; i = bsAromatic
@@ -469,9 +546,10 @@ public class SmilesAromatic {
         bsAromatic.clear(i);
         bsAromatic6.clear(i);
         bsAromatic5.clear(i);
-        i = -1;
+        i = -1; // restart
       }
     }
   }
+
 
 }

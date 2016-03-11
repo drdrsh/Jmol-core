@@ -184,6 +184,8 @@ public class ScriptMathProcessor {
     }
     if (++xPt == xStack.length)
       xStack = (SV[]) AU.doubleLength(xStack);
+    if (xPt < 0)
+      System.out.println("testing scriptemaafe");
     xStack[xPt] = x;
     ptx = ++ptid;
     if (debugHigh) {
@@ -849,6 +851,8 @@ public class ScriptMathProcessor {
       return eval.getMathExt().evaluate(this, op, args, tok);
     if (op.tok == T.propselector)
       xPt--; // pop x in "x.func(...)"
+    if (xPt < 0)
+      xPt = 0;
     switch (tok) {
     case T.connected:
     case T.polyhedra:

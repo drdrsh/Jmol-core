@@ -673,8 +673,11 @@ public class CmdExt extends ScriptExt {
       case T.symmetry:
       case T.pointgroup:
         if (!chk) {
-          if (eval.tokAt(2) == T.polyhedra) {
-            showString((String) getShapePropertyIndex(JC.SHAPE_POLYHEDRA, "symmetry", tokAt(3) == T.off ? 0 : 1));
+          if (tokAt(2) == T.polyhedra) {
+            String id = (tokAt(3) == T.string ? stringParameter(3) : null);
+            bs1 = (id != null || slen == 3 ? null : atomExpressionAt(3));
+            Object[] data = new Object[] { null, id, bs1 };            
+            showString(eval.getShapePropertyData(JC.SHAPE_POLYHEDRA, "symmetry", data) ? (String) data[1] : "");
           } else {
             showString(vwr.ms.calculatePointGroup(vwr.bsA()));
           }
@@ -3210,6 +3213,10 @@ public class CmdExt extends ScriptExt {
         propertyValue = e.theToken.value;
         needsGenerating = true;
         break;
+      case T.point:
+        propertyName = "points";
+        propertyValue = Float.valueOf(e.floatParameter(++i));
+        break;
       case T.scale:
         scale = floatParameter(++i);
         continue;
@@ -4786,6 +4793,11 @@ public class CmdExt extends ScriptExt {
       oabc = new P3[] {o, P3.new3(pt.x * 2, 0, 0), P3.new3(0, pt.y * 2, 0), P3.new3(0, 0, pt.z * 2) };
       pt = null;
       eval.iToken = i;
+      break;
+    case T.transform:
+      if (tokAt(++i) != T.matrix4f)
+        invArg();
+      newUC = new Object[] { getToken(i).value };
       break;
     case T.matrix3f:
     case T.matrix4f:

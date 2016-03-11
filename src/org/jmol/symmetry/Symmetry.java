@@ -648,69 +648,10 @@ public class Symmetry implements SymmetryInterface {
     return SymmetryOperation.fcoord(p);
   }
 
-  /**
-   * Accepts a string, a 3x3 matrix, or a 4x4 matrix.
-   * 
-   * Returns a set of four values as a P3 array consisting of an origin and
-   * three unit cell vectors a, b, and c.
-   */
   @Override
   public T3[] getV0abc(Object def) {
-    if (unitCell == null)
-      return null;
-    M4 m;
-    boolean isRev = false;
-    if (def instanceof String) {
-      String sdef = (String) def;
-      // a,b,c;0,0,0
-      if (sdef.indexOf(";") < 0)
-        sdef += ";0,0,0";
-      isRev = sdef.startsWith("!");
-      if (isRev)
-        sdef = sdef.substring(1);
-      Symmetry symTemp = new Symmetry();
-      symTemp.setSpaceGroup(false);
-      int i = symTemp.addSpaceGroupOperation("=" + sdef, 0);
-      if (i < 0)
-        return null;
-      m = symTemp.getSpaceGroupOperation(i);
-      ((SymmetryOperation) m).doFinalize();
-    } else {
-      m = (def instanceof M3 ? M4.newMV((M3) def, new P3()) : (M4) def);
-    }
-    // We have an operator that may need reversing.
-    // Note that translations are limited to 1/2, 1/3, 1/4, 1/6, 1/8.
-
-    V3[] pts = new V3[4];
-    P3 pt = new P3();
-    M3 m3 = new M3();
-    m.getRotationScale(m3);
-    m.getTranslation(pt);
-    if (isRev) {
-      m3.invert();
-      m3.transpose();
-      m3.rotate(pt);
-      pt.scale(-1);
-    } else {
-      m3.transpose();
-    }
-
-    // Note that only the origin is translated;
-    // the others are vectors from the origin.
-
-    // this is a point, so we do not ignore offset
-    unitCell.toCartesian(pt, false);
-    pts[0] = V3.newV(pt);
-    pts[1] = V3.new3(1, 0, 0);
-    pts[2] = V3.new3(0, 1, 0);
-    pts[3] = V3.new3(0, 0, 1);
-    for (int i = 1; i < 4; i++) {
-      m3.rotate(pts[i]);
-      // these are vectors, so we ignore offset
-      unitCell.toCartesian(pts[i], true);
-    }
-    return pts;
-  }
+    return (unitCell == null ? null : unitCell.getV0abc(def));
+  } 
 
   @Override
   public Quat getQuaternionRotation(String abc) {

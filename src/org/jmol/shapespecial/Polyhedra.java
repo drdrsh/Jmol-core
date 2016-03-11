@@ -83,7 +83,7 @@ public class Polyhedra extends AtomShape {
   public Polyhedron[] polyhedrons = new Polyhedron[32];
   public int drawEdges;
 
-  private float radius;
+  private float radius, pointScale;
   private int nVertices;
 
   float faceCenterOffset;
@@ -116,7 +116,7 @@ public class Polyhedra extends AtomShape {
       faceCenterOffset = DEFAULT_FACECENTEROFFSET;
       //distanceFactor = 
       planarParam = Float.NaN;
-      radius = 0.0f;
+      radius = pointScale = 0.0f;
       nVertices = 0;
       nPoints = 0;
       modelIndex = -1;
@@ -350,6 +350,11 @@ public class Polyhedra extends AtomShape {
       return;
     }
 
+    if ("points" == propertyName) {
+      pointScale = ((Float) value).floatValue();
+      return;
+    }
+    
     if (propertyName == "deleteModelAtoms") {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       for (int i = polyhedronCount; --i >= 0;) {
@@ -381,30 +386,41 @@ public class Polyhedra extends AtomShape {
   }
 
   @Override
-  public Object getProperty(String propertyName, int index) {
-    if (propertyName == "symmetry") {
-      String s = "";
-      for (int i = 0; i < polyhedronCount; i++)
-        s += polyhedrons[i].getSymmetry(vwr, true) + "\n";
-      return s;
-    }
-    return null;
-  }
-
-  @Override
   public boolean getPropertyData(String property, Object[] data) {
     int iatom = (data[0] instanceof Integer ? ((Integer) data[0]).intValue()
-        : -1);
+        : Integer.MIN_VALUE);
     String id = (data[0] instanceof String ? (String) data[0] : null);
     Polyhedron p;
     if (property == "checkID") {
       return checkID(id);
+    }
+    if (property == "info") {
+      // note that this does not set data[1] to null -- see ScriptExpr
+      p = findPoly(id, iatom, true);
+      if (p == null)
+        return false;
+      data[1] = p.getInfo(vwr, false);
+      return true;
     }
     if (property == "points") {
       p = findPoly(id, iatom, false);
       if (p == null)
         return false;
       data[1] = p.vertices;
+      return true;
+    }
+    if (property == "symmetry") {
+      BS bsSelected = (BS) data[2];
+      String s = "";
+      for (int i = 0; i < polyhedronCount; i++) {
+        p = polyhedrons[i];
+        if (p.id == null ? 
+            id != null || bsSelected != null && !bsSelected.get(p.centralAtom.i)
+            : id == null || !PT.isLike(id, p.id))
+          continue;
+        s += (i + 1) + "\t" + p.getSymmetry(vwr, true) + "\n";
+      }     
+      data[1] = s;
       return true;
     }
     if (property == "move") {
@@ -414,42 +430,49 @@ public class Polyhedra extends AtomShape {
       BS bsMoved = (BS) data[0];
       BS bs = findPolyBS(bsMoved);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-        polyhedrons[i].move(mat, bsMoved);        
+        polyhedrons[i].move(mat, bsMoved);
       return true;
     }
-    if (property == "centers") {
-      BS bs = new BS();
+    if (property == "getCenters") {
+      // return matching BS in data[1]
+
+      // number of vertices (>0) or faces (<0) is in data[0], now iatom
       String smiles = (String) data[1];
+      BS bsSelected = (BS) data[2];
       SmilesMatcherInterface sm = (smiles == null ? null : vwr
           .getSmilesMatcher());
-      Integer n = (Integer) data[0];
       if (sm != null)
         smiles = sm.cleanSmiles(smiles);
-      int nv = (smiles != null ? PT.countChar(smiles, '*')
-          : n == null ? Integer.MIN_VALUE : n.intValue());
-      if (smiles != null && nv == 0)
+      int nv = (smiles != null ? PT.countChar(smiles, '*') : iatom);
+      if (nv == 0)
         nv = Integer.MIN_VALUE;
-      for (int i = polyhedronCount; --i >= 0;) {
-        p = polyhedrons[i];
-        if (p.id != null)
-          continue; // for now
-        if (nv > 0 && p.nVertices != nv || nv > Integer.MIN_VALUE && nv < 0
-            && p.triangles.length != -nv)
-          continue;
-        if (smiles == null) {
-          bs.set(p.centralAtom.i);
-        } else if (sm != null) {
+      BS bs = new BS();
+      if (smiles == null || sm != null)
+        for (int i = polyhedronCount; --i >= 0;) {
+          p = polyhedrons[i];
+          if (p.id != null)
+            continue; // for now, no support for non-atomic polyhedra
+          // allows for -n being -(number of faces)
+          if (nv != (nv > 0 ? p.nVertices
+              : nv > Integer.MIN_VALUE ? -p.faces.length : nv))
+            continue;
+          iatom = p.centralAtom.i;
+          if (bsSelected != null && !bsSelected.get(iatom))
+            continue;
+          if (smiles == null) {
+            bs.set(iatom);
+            continue;
+          }
           p.getSymmetry(vwr, false);
           String smiles0 = p.polySmiles;
           try {
             if (sm.areEqual(smiles, smiles0) > 0)
-              bs.set(p.centralAtom.i);
+              bs.set(iatom);
           } catch (Exception e) {
             e.printStackTrace();
           }
         }
-      }
-      data[2] = bs;
+      data[1] = bs;
       return true;
     }
     if (property == "allInfo") {
@@ -457,13 +480,6 @@ public class Polyhedra extends AtomShape {
       for (int i = polyhedronCount; --i >= 0;)
         info.addLast(polyhedrons[i].getInfo(vwr, false));
       data[1] = info;
-      return true;
-    }
-    if (property == "info") {
-      p = findPoly(id, iatom, true);
-      if (p == null)
-        return false;
-      data[1] = p.getInfo(vwr, false);
       return true;
     }
     return getPropShape(property, data);
@@ -474,6 +490,13 @@ public class Polyhedra extends AtomShape {
       return (findPolyBS(null).cardinality() > 0);
    }
 
+  /**
+   * 
+   * @param id  may be null
+   * @param iatom  may be < 0 to (along with id==null) to get matching polyhedron 
+   * @param allowCollapsed
+   * @return Polyhedron or null
+   */
   private Polyhedron findPoly(String id, int iatom, boolean allowCollapsed) {
     for (int i = polyhedronCount; --i >= 0;) {
       Polyhedron p = polyhedrons[i]; 

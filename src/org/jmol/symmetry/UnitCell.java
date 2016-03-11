@@ -557,4 +557,72 @@ class UnitCell extends SimpleUnitCell {
   return Quat.getQuaternionFrame(null, v, x).inv();
   }
 
+  public T3[] getV0abc(Object def) {
+    M4 m;
+    boolean isRev = false;
+    V3[] pts = new V3[4];
+    V3 pt = pts[0] = V3.new3(0, 0, 0);
+    pts[1] = V3.new3(1, 0, 0);
+    pts[2] = V3.new3(0, 1, 0);
+    pts[3] = V3.new3(0, 0, 1);
+    M3 m3 = new M3();
+    if (def instanceof String) {
+      String sdef = (String) def;
+      // a,b,c;0,0,0
+      if (sdef.indexOf(";") < 0)
+        sdef += ";0,0,0";
+      isRev = sdef.startsWith("!");
+      if (isRev)
+        sdef = sdef.substring(1);
+      Symmetry symTemp = new Symmetry();
+      symTemp.setSpaceGroup(false);
+      int i = symTemp.addSpaceGroupOperation("=" + sdef, 0);
+      if (i < 0)
+        return null;
+      m = symTemp.getSpaceGroupOperation(i);
+      ((SymmetryOperation) m).doFinalize();
+    } else if (def instanceof M3) {
+      m = M4.newMV((M3) def, new P3());
+    } else if (def instanceof M4) {
+      m = (M4) def;
+    } else {
+      // direct 4x4 Cartesian transform
+      m = (M4) ((Object[]) def)[0];
+      m.getRotationScale(m3);
+      toCartesian(pt, false);
+      m.rotTrans(pt);
+      for (int i = 1; i < 4; i++) {
+        toCartesian(pts[i], true);
+        m3.rotate(pts[i]);
+      }
+      return pts;
+    }   
+    
+    // We have an operator that may need reversing.
+    // Note that translations are limited to 1/2, 1/3, 1/4, 1/6, 1/8.
+
+    m.getRotationScale(m3);
+    m.getTranslation(pt);
+    if (isRev) {
+      m3.invert();
+      m3.transpose();
+      m3.rotate(pt);
+      pt.scale(-1);
+    } else {
+      m3.transpose();
+    }
+
+    // Note that only the origin is translated;
+    // the others are vectors from the origin.
+
+    // this is a point, so we do not ignore offset
+    toCartesian(pt, false);
+    for (int i = 1; i < 4; i++) {
+      m3.rotate(pts[i]);
+      // these are vectors, so we ignore offset
+      toCartesian(pts[i], true);
+    }
+    return pts;
+  }
+
 }

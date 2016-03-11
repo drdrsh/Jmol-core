@@ -136,7 +136,8 @@ public class PolyhedraRenderer extends ShapeRenderer {
       }
     }
 
-    isAll = (drawEdges == Polyhedra.EDGES_ALL || bsSelected != null);
+    boolean isSelected = (bsSelected != null && bsSelected.get(iAtom));
+    isAll = (drawEdges == Polyhedra.EDGES_ALL || isSelected);
     frontOnly = (drawEdges == Polyhedra.EDGES_FRONT);
 
     // no edges to new points when not collapsed
@@ -157,7 +158,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
         //        g3d.fillTriangleTwoSided(normixes[i], sc[pl[2]], sc[pl[3]], sc[pl[0]]);
       }
     // edges are not drawn translucently ever
-    if (bsSelected != null && bsSelected.get(iAtom))
+    if (isSelected)
       colix = C.GOLD;
     else if (p.colixEdge != C.INHERIT_ALL)
       colix = p.colixEdge;

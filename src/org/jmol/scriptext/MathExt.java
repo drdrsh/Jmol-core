@@ -142,7 +142,7 @@ public class MathExt {
     case T.bondcount:
     case T.connected:
     case T.polyhedra:
-      return evaluateConnected(mp, args, tok);
+      return evaluateConnected(mp, args, tok, op.intValue);
     case T.unitcell:
       return evaluateUnitCell(mp, args);
     case T.contact:
@@ -779,8 +779,8 @@ public class MathExt {
     }
   }
 
-  private boolean evaluateConnected(ScriptMathProcessor mp, SV[] args, int tok)
-      throws ScriptException {
+  private boolean evaluateConnected(ScriptMathProcessor mp, SV[] args, int tok,
+                                    int intValue) throws ScriptException {
     /*
      * Several options here:
      * 
@@ -802,7 +802,7 @@ public class MathExt {
      * 
      * 
      */
-    
+
     if (args.length > 5)
       return false;
     float min = Integer.MIN_VALUE, max = Integer.MAX_VALUE;
@@ -816,8 +816,11 @@ public class MathExt {
     switch (tok) {
     case T.polyhedra:
       // polyhedra()
-      // polyhedra(3)
+      // polyhedra(n)
       // polyhedra(smilesString)
+      // {xx}.polyhedra()
+      // {xx}.polyhedra(n)
+      // {xx}.polyhedra(smilesString)
       int nv = Integer.MIN_VALUE;
       String smiles = null;
       if (args.length > 0) {
@@ -830,9 +833,12 @@ public class MathExt {
           break;
         }
       }
-      Object[] data = new Object[] { Integer.valueOf(nv), smiles, null };
-      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "centers", data);
-      return mp.addXBs(data[2] == null ? new BS() : (BS) data[2]);
+      if (intValue == T.polyhedra)
+        atoms1 = SV.getBitSet(mp.getX(), true);
+      Object[] data = new Object[] { Integer.valueOf(nv), smiles, atoms1 };
+      if (!vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "getCenters", data))
+        data[1] = null;
+      return mp.addXBs(data[1] == null ? new BS() : (BS) data[1]);
     case T.bondcount:
       // {atoms1}.bondCount({atoms2})
       SV x1 = mp.getX();
@@ -852,7 +858,7 @@ public class MathExt {
       }
       return mp.addXList(list);
     }
-    
+
     // connected(
     for (int i = 0; i < args.length; i++) {
       SV var = args[i];
