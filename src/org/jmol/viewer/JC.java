@@ -1065,28 +1065,28 @@ public final class JC {
     return hAlignNames[(align >> TEXT_ALIGN_SHIFT) & 3];
   }
   
-  public static final int SMILES_TYPE_SMILES       = 0x1;
-  public static final int SMILES_TYPE_SMARTS       = 0x2;
-  public static final int SMILES_TYPE_OPENSMILES   = 0x5; 
+  public static final int SMILES_TYPE_SMILES         = 0x1; // all -> matcher
+  public static final int SMILES_TYPE_SMARTS         = 0x2; // CmdExt -> matcher
+  public static final int SMILES_TYPE_OPENSMILES     = 0x5; // generator parser search
+  public static final int SMILES_TYPE_OPENSMARTS     = 0x6; // reserved
   
-  public static final int SMILES_MATCH_ALL         = 0x10;
-  public static final int SMILES_MATCH_ONE         = 0x20;
-  public static final int SMILES_RETURN_FIRST      = 0x40;
+  public static final int SMILES_MATCH_RETURN_FIRST  = 0x40; // MathExt to matcher -- mFlag -- do not adjust
 
-  public static final int SMILES_EXPLICIT_H                = 0x000100;
-  public static final int SMILES_TOPOLOGY                  = 0x000200;
-  public static final int SMILES_NOAROMATIC                = 0x000400;
-  public static final int SMILES_NOSTEREO                  = 0x000800;
-  public static final int SMILES_POLYHEDRAL                = 0x001000;
-  public static final int SMILES_ATOM_COMMENT              = 0x002000;
-  public static final int SMILES_BIO                       = 0x010000;
-  public static final int SMILES_BIO_ALLOW_UNMATCHED_RINGS = 0x030000;
-  public static final int SMILES_BIO_COV_CROSSLINK         = 0x050000;
-  public static final int SMILES_BIO_HH_CROSSLINK          = 0x090000;
-  public static final int SMILES_BIO_COMMENT               = 0x110000;
-  public static final int SMILES_BIO_NOCOMMENTS            = 0x210000;
+  public static final int SMILES_GEN_EXPLICIT_H                = 0x00001000; // SmilesExt -> generator
+  public static final int SMILES_GEN_TOPOLOGY                  = 0x00002000; // SmilesExt -> generator
+  public static final int SMILES_GEN_NOAROMATIC                = 0x00004000; // SmilesExt -> generator
+  public static final int SMILES_GEN_NOSTEREO                  = 0x00008000; // SmilesExt -> generator
+  public static final int SMILES_GEN_POLYHEDRAL                = 0x00010000; // polyhedron -> generator
+  public static final int SMILES_GEN_ATOM_COMMENT              = 0x00020000; // polyhedron,Viewer -> generator
+  public static final int SMILES_GEN_BIO                       = 0x00100000; // MathExt -> generator
+  public static final int SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS = 0x00300000; // MathExt -> generator
+  public static final int SMILES_GEN_BIO_COV_CROSSLINK         = 0x00500000; // MathExt -> generator
+  public static final int SMILES_GEN_BIO_HH_CROSSLINK          = 0x00900000; // MathExt -> generator
+  public static final int SMILES_GEN_BIO_COMMENT               = 0x01100000; // MathExt -> Viewer
+  public static final int SMILES_GEN_BIO_NOCOMMENTS            = 0x02100000; // MathExt -> Generator
+  
 
- 
+  
   public static final int JSV_NOT = -1;
   public static final int JSV_SEND_JDXMOL = 0;
   public static final int JSV_SETPEAKS = 7;

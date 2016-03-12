@@ -381,23 +381,24 @@ abstract class Calculations {
   String getAtomList(String title) {
     String trailer =
           "----------------------------------------"
-          + "-------------------------------------------------------\n";  
+          + "----------------------------------------------------------\n";  
     SB sb = new SB();
     sb.append("\n" + title + "\n\n"
-        + " ATOM    X        Y        Z    TYPE     GRADX    GRADY    GRADZ  "
+        + " ATOM    X        Y        Z    TYPE       GRADX    GRADY    GRADZ  "
         + "---------BONDED ATOMS--------\n"
         + trailer);
     for (int i = 0; i < ac; i++) {
       MinAtom atom = minAtoms[i];
       int[] others = atom.getBondedAtomIndexes();
-      int[] iVal = new int[others.length + 1];
+      int[] iVal = new int[others.length + 2];
       iVal[0] = atom.atom.getAtomNumber();
+      iVal[1] = (atom.ffAtomType == null ? 0 : atom.ffAtomType.mmType);
       String s = "   ";
       for (int j = 0; j < others.length; j++) {
         s += " %3d";
-        iVal[j + 1] = minAtoms[others[j]].atom.getAtomNumber();
+        iVal[j + 2] = minAtoms[others[j]].atom.getAtomNumber();
       }
-      sb.append(PT.sprintf("%3d %8.3f %8.3f %8.3f  %-5s %8.3f %8.3f %8.3f" + s + "\n", 
+      sb.append(PT.sprintf("%3d %8.3f %8.3f %8.3f %-5s %2d %8.3f %8.3f %8.3f" + s + "\n", 
           "sFI", new Object[] { atom.sType,
           new float[] { (float) atom.coord[0], (float) atom.coord[1],
             (float) atom.coord[2], (float) atom.force[0], (float) atom.force[1],

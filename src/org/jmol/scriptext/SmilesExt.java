@@ -95,7 +95,7 @@ public class SmilesExt {
       Atom[] atoms = e.vwr.ms.at;
       int ac = e.vwr.ms.ac;
       int[][] maps = sm.getCorrelationMaps(smiles, atoms, ac, bsA,
-          flags | JC.SMILES_RETURN_FIRST);
+          flags | JC.SMILES_MATCH_RETURN_FIRST);
       if (maps == null)
         e.evalError(sm.getLastException(), null);
       if (maps.length == 0)
@@ -172,7 +172,7 @@ public class SmilesExt {
                                  boolean firstMatchOnly) throws ScriptException {
 
     // just retrieving the SMILES or bioSMILES string
-      if (pattern.length() == 0 || pattern.equals("H") || pattern.equals("*") 
+      if (pattern.length() == 0 || pattern.endsWith("///") || pattern.equals("H") || pattern.equals("*") 
         || pattern.equalsIgnoreCase("NOAROMATIC")) {
       try {
         
@@ -180,9 +180,10 @@ public class SmilesExt {
             bsSelected,
             0,
             0,
-            flags | (pattern.equals("H") ? JC.SMILES_EXPLICIT_H : 0)
-                | (pattern.equals("*") ? JC.SMILES_TOPOLOGY : 0)
-                | (pattern.equalsIgnoreCase("NOAROMATIC") ? JC.SMILES_NOAROMATIC : 0));
+            flags | (pattern.equals("H") ? JC.SMILES_GEN_EXPLICIT_H : 0)
+                | (pattern.equals("*") ? JC.SMILES_GEN_TOPOLOGY : 0)
+                | (pattern.equalsIgnoreCase("NOAROMATIC") ? JC.SMILES_GEN_NOAROMATIC : 0)
+                , (pattern.endsWith("///") ? pattern : null));
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }

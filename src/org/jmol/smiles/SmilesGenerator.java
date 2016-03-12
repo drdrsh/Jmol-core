@@ -60,6 +60,7 @@ public class SmilesGenerator {
   private int ac;
   private BS bsSelected;
   private BS bsAromatic;
+  private int flags;
   
   private boolean explicitH;
   
@@ -98,33 +99,35 @@ public class SmilesGenerator {
     int ipt = bsSelected.nextSetBit(0);
     if (ipt < 0)
       return "";
+    this.flags = flags;
     this.atoms = atoms;
     this.ac = ac;
     bsSelected = BSUtil.copy(bsSelected);    
 
     // note -- some of these are 2-bit flags, so we need to use (flags & X) == X 
-    if ((flags & JC.SMILES_BIO) == JC.SMILES_BIO)
+    if ((flags & JC.SMILES_GEN_BIO) == JC.SMILES_GEN_BIO)
       return getBioSmiles(bsSelected, comment, flags);
     
     this.bsSelected = bsSelected;
+    this.flags = flags = SmilesSearch.addFlags(flags,  comment == null ? "" : comment.toUpperCase());
     openSMILES = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
-    addAtomComment = ((flags & JC.SMILES_ATOM_COMMENT) == JC.SMILES_ATOM_COMMENT);
-    explicitH = ((flags & JC.SMILES_EXPLICIT_H) == JC.SMILES_EXPLICIT_H);
-    topologyOnly = ((flags & JC.SMILES_TOPOLOGY) == JC.SMILES_TOPOLOGY);
-    getAromatic = !((flags & JC.SMILES_NOAROMATIC) == JC.SMILES_NOAROMATIC);
-    noStereo = ((flags & JC.SMILES_NOSTEREO) ==  JC.SMILES_NOSTEREO);
-    isPolyhedral = ((flags & JC.SMILES_POLYHEDRAL) == JC.SMILES_POLYHEDRAL);
+    addAtomComment = ((flags & JC.SMILES_GEN_ATOM_COMMENT) == JC.SMILES_GEN_ATOM_COMMENT);
+    explicitH = ((flags & JC.SMILES_GEN_EXPLICIT_H) == JC.SMILES_GEN_EXPLICIT_H);
+    topologyOnly = ((flags & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
+    getAromatic = !((flags & JC.SMILES_GEN_NOAROMATIC) == JC.SMILES_GEN_NOAROMATIC);
+    noStereo = ((flags & JC.SMILES_GEN_NOSTEREO) ==  JC.SMILES_GEN_NOSTEREO);
+    isPolyhedral = ((flags & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL);
     return getSmilesComponent(atoms[ipt], bsSelected, true, false, false);
   }
 
   private String getBioSmiles(BS bsSelected, String comment, int flags)
       throws InvalidSmilesException {
-    addAtomComment = ((flags & JC.SMILES_ATOM_COMMENT) == JC.SMILES_ATOM_COMMENT);
+    addAtomComment = ((flags & JC.SMILES_GEN_ATOM_COMMENT) == JC.SMILES_GEN_ATOM_COMMENT);
     boolean allowUnmatchedRings = ((flags & 
-        JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS) == JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS);
-    boolean noBioComments = ((flags & JC.SMILES_BIO_NOCOMMENTS) == JC.SMILES_BIO_NOCOMMENTS);
-    boolean crosslinkCovalent = ((flags & JC.SMILES_BIO_COV_CROSSLINK) == JC.SMILES_BIO_COV_CROSSLINK);
-    boolean crosslinkHBonds = ((flags & JC.SMILES_BIO_HH_CROSSLINK) == JC.SMILES_BIO_HH_CROSSLINK);
+        JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS) == JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS);
+    boolean noBioComments = ((flags & JC.SMILES_GEN_BIO_NOCOMMENTS) == JC.SMILES_GEN_BIO_NOCOMMENTS);
+    boolean crosslinkCovalent = ((flags & JC.SMILES_GEN_BIO_COV_CROSSLINK) == JC.SMILES_GEN_BIO_COV_CROSSLINK);
+    boolean crosslinkHBonds = ((flags & JC.SMILES_GEN_BIO_HH_CROSSLINK) == JC.SMILES_GEN_BIO_HH_CROSSLINK);
     boolean addCrosslinks = (crosslinkCovalent || crosslinkHBonds);
     SB sb = new SB();
     BS bs = bsSelected;
@@ -296,15 +299,14 @@ public class SmilesGenerator {
       }
     if (getAromatic && !topologyOnly && bsSelected.cardinality() > 2) {
       // not clear why only with getAromatic do we set bond directions 
-      SmilesSearch search = null;
-      search = SmilesParser.getMolecule("A[=&@]A", true);
+      SmilesSearch search = SmilesParser.getMolecule("A[=&@]A", true);
       search.jmolAtoms = atoms;
       if (atoms instanceof BNode[])
         search.bioAtoms = (BNode[]) atoms;
       search.setSelected(bsSelected);
       search.jmolAtomCount = ac;
       search.ringDataMax = 7;
-      search.setRingData(null, openSMILES);
+      search.setRingData(null, flags);
       bsAromatic = search.bsAromatic;
       ringSets = search.ringSets;
       setBondDirections();

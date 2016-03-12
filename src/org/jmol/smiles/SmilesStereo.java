@@ -805,7 +805,7 @@ public class SmilesStereo {
     case 4: // tetrahedral, square planar
       if (atom3 == null || atom4 == null)
         return "";
-      float d = SmilesAromatic.getNormalThroughPoints(atom1, atom2, atom3,
+      float d = SmilesSearch.getNormalThroughPoints(atom1, atom2, atom3,
           v.vTemp, v.vA, v.vB);
       if (Math.abs(distanceToPlane(v.vTemp, d, (P3) atom4)) < 0.2f) {
         chiralClass = STEREOCHEMISTRY_SQUARE_PLANAR;
@@ -904,7 +904,7 @@ public class SmilesStereo {
    * @return 1 for "@", 2 for "@@"
    */
   static int getHandedness(Node a, Node b, Node c, Node pt, VTemp v) {
-    float d = SmilesAromatic.getNormalThroughPoints(a, b, c, v.vTemp, v.vA,
+    float d = SmilesSearch.getNormalThroughPoints(a, b, c, v.vTemp, v.vA,
         v.vB);
     //int atat = (distanceToPlane(v.vTemp, d, (Point3f) pt) > 0 ? 1 : 2);
     //System.out.println("draw p1 " + Point3f.new3((Point3f)a) +" color red");
@@ -917,11 +917,11 @@ public class SmilesStereo {
 
   private static void getPlaneNormals(Node atom1, Node atom2, Node atom3,
                                       Node atom4, VTemp v) {
-    SmilesAromatic.getNormalThroughPoints(atom1, atom2, atom3, v.vNorm2,
+    SmilesSearch.getNormalThroughPoints(atom1, atom2, atom3, v.vNorm2,
         v.vTemp1, v.vTemp2);
-    SmilesAromatic.getNormalThroughPoints(atom2, atom3, atom4, v.vNorm3,
+    SmilesSearch.getNormalThroughPoints(atom2, atom3, atom4, v.vNorm3,
         v.vTemp1, v.vTemp2);
-    SmilesAromatic.getNormalThroughPoints(atom3, atom4, atom1, v.vNorm4,
+    SmilesSearch.getNormalThroughPoints(atom3, atom4, atom1, v.vNorm4,
         v.vTemp1, v.vTemp2);
   }
 

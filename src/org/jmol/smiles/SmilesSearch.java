@@ -32,6 +32,7 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.SB;
+import javajs.util.V3;
 
 import org.jmol.java.BS;
 import org.jmol.util.BNode;
@@ -60,15 +61,61 @@ public class SmilesSearch extends JmolMolecule {
     return sb.toString();    
   }
 
-  
-  final static int FLAG_AROMATIC_NONCANONICAL    = 0x400;
-  final static int FLAG_AROMATIC_DOUBLE          = 0x200;
-  final static int FLAG_AROMATIC_DEFINED         = 0x100;
-  final static int FLAG_AROMATIC_STRICT          = 0x080;
-  final static int FLAG_INVERT_STEREOCHEMISTRY   = 0x040;
-  final static int FLAG_IGNORE_STEREOCHEMISTRY   = 0x020;
-  final static int FLAG_NO_AROMATIC              = 0x010;
 
+  // note that JC.SMILES_... exclude 0x0FF0
+  final static int NO_AROMATIC                = 0x010; //SmilesParser -> SmilesSearch
+  final static int IGNORE_STEREOCHEMISTRY     = 0x020; //SmilesParser -> SmilesSearch
+  final static int INVERT_STEREOCHEMISTRY     = 0x040; //SmilesParser -> SmilesSearch
+  
+  /**
+   * AROMATIC_DEFINED draws all aromatic bonds from connection definitions
+   * It is used by MMFF94. 
+   */
+  final static int AROMATIC_DEFINED           = 0x080; //SmilesParser -> SmilesSearch
+  
+  /**
+   * AROMATIC_STRICT enforces Hueckel 4+2 rule, not allowing acyclic double bonds
+   * 
+   */
+  final static int AROMATIC_STRICT            = 0x100; //SmilesParser -> SmilesSearch
+  
+  /**
+   * AROMATIC_DOUBLE allows a distinction between single and double, as for
+   * example is necessary to distinguish between n=cNH2 and ncNH2 (necessary for
+   * MMFF94 atom typing)
+   */
+  final static int AROMATIC_DOUBLE            = 0x200; //SmilesParser -> SmilesSearch
+  
+  /**
+   * AROMATIC_MMFF94 also raises the strictness level to force all 6- and
+   * 7-membered rings to have exactly three double bonds.
+   */
+  static final int AROMATIC_MMFF94            = 0x700; // includes AROMATIC_STRICT and AROMATIC_DOUBLE;
+  
+  /**
+   * AROMATIC_JSME_NONCANONICAL matches the JSME noncanonical option.
+   * 
+   */
+  final static int AROMATIC_JSME_NONCANONICAL = 0x800; //SmilesParser -> SmilesSearch
+  
+ 
+  static final int addFlags(int flags, String strFlags) {
+    if (strFlags.indexOf("OPEN") >= 0)
+      flags |= JC.SMILES_TYPE_OPENSMILES;
+    if (strFlags.indexOf("NONCANONICAL") >= 0)
+      flags |= AROMATIC_JSME_NONCANONICAL;
+    if (strFlags.indexOf("STRICT") >= 0) // MMFF94
+      flags |= AROMATIC_STRICT;    
+    if (strFlags.indexOf("NOAROMATIC") >= 0)
+      flags |= NO_AROMATIC;
+    if (strFlags.indexOf("AROMATICDOUBLE") >= 0) // MMFF94
+      flags |= AROMATIC_DOUBLE;
+    if (strFlags.indexOf("AROMATICDEFINED") >= 0)
+      flags |= AROMATIC_DEFINED;
+    if (strFlags.indexOf("MMFF94") >= 0)
+      flags |= AROMATIC_MMFF94;
+    return flags;
+  }
   private final static int INITIAL_ATOMS = 16;
   SmilesAtom[] patternAtoms = new SmilesAtom[INITIAL_ATOMS];
 
@@ -140,7 +187,7 @@ public class SmilesSearch extends JmolMolecule {
   boolean invertStereochemistry;
   private boolean noAromatic;
   private boolean aromaticDouble;
-  private boolean noncanonical;
+  private boolean jsmeNoncanonical;
   private boolean openSMILES;
     
 
@@ -192,12 +239,20 @@ public class SmilesSearch extends JmolMolecule {
     return n;
   }
 
-  void setRingData(BS bsA, boolean isOSGenerator) throws InvalidSmilesException {
+  /**
+   * Sets up all aromatic and ring data.
+   * Called from SmilesGenerator.getSmilesComponent and SmilesMatcher.matchPriv.
+   * 
+   * @param bsA
+   * @param flags
+   * @throws InvalidSmilesException
+   */
+  void setRingData(BS bsA, int flags) throws InvalidSmilesException {
     if (isTopology)
       needAromatic = false;
     if (needAromatic)
       needRingData = true;
-    boolean noAromatic = ((flags & FLAG_NO_AROMATIC) != 0);
+    boolean noAromatic = ((flags & NO_AROMATIC) != 0);
     needAromatic &= (bsA == null) & !noAromatic;
     // when using "xxx".find("search","....")
     // or $(...), the aromatic set has already been determined
@@ -208,27 +263,36 @@ public class SmilesSearch extends JmolMolecule {
       if (!needRingMemberships && !needRingData)
         return;
     }
-    getRingData(null, needRingData, flags, isOSGenerator);
+    getRingData(null, needRingData, flags);
   }
 
   @SuppressWarnings("unchecked")
-  void getRingData(Lst<BS>[] vRings, boolean needRingData, int flags,
-                   boolean isOSGenerator) throws InvalidSmilesException {
-    boolean aromaticStrict = ((flags & FLAG_AROMATIC_STRICT) != 0);
-    boolean aromaticDefined = ((flags & FLAG_AROMATIC_DEFINED) != 0);
-    if (aromaticStrict && vRings == null)
-      vRings = AU.createArrayOfArrayList(4);
-    if (aromaticDefined && needAromatic) {
+  void getRingData(Lst<BS>[] vRings, boolean needRingData, int flags)
+      throws InvalidSmilesException {
+    boolean isStrict = ((flags & AROMATIC_STRICT) == AROMATIC_STRICT);
+    int strictness = (!isStrict ? 0
+        : (flags & SmilesSearch.AROMATIC_MMFF94) == SmilesSearch.AROMATIC_MMFF94 ? 2
+            : 1);
+    boolean isDefined = ((flags & AROMATIC_DEFINED) == AROMATIC_DEFINED);
+    boolean isOpenSmiles = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
+    isOpenSmiles &= !isStrict;
+    boolean doFinalize = (needAromatic && (isStrict || isOpenSmiles));
+
+    Lst<BS> v567 = (vRings == null ? new Lst<BS>()
+        : (vRings[3] = new Lst<BS>()));
+
+    if (isDefined && needAromatic) {
       // predefined aromatic bonds
-      bsAromatic = SmilesAromatic.checkAromaticDefined(jmolAtoms, bsSelected);
-      aromaticStrict = false;
+      SmilesAromatic.checkAromaticDefined(jmolAtoms, bsSelected, bsAromatic);
+      strictness = 0;
     }
+    int nAtoms = jmolAtomCount;
     if (ringDataMax < 0)
       ringDataMax = 8;
-    if (aromaticStrict && ringDataMax < 6)
+    if (strictness > 0 && ringDataMax < 6)
       ringDataMax = 6;
     if (needRingData) {
-      ringCounts = new int[jmolAtomCount];
+      ringCounts = new int[nAtoms];
       ringConnections = new int[jmolAtomCount];
       ringData = new BS[ringDataMax + 1];
     }
@@ -236,17 +300,9 @@ public class SmilesSearch extends JmolMolecule {
     ringSets = new SB();
     String s = "****";
     int max = ringDataMax;
-    int min = 3;
-    Lst<Object> v5 = null;
-    if (isOSGenerator) {
-      max = 6;
-      min = 4;
-      v5 = new Lst<Object>();
-    } else {
-      while (s.length() < max)
-        s += s;
-    }
-    for (int i = min; i <= max; i++) {
+    while (s.length() < max)
+      s += s;
+    for (int i = 3; i <= max; i++) {
       if (i > jmolAtomCount)
         continue;
       String smarts = "*1" + s.substring(0, i - 2) + "*1";
@@ -258,13 +314,23 @@ public class SmilesSearch extends JmolMolecule {
           v.addLast((BS) vR.get(j));
         vRings[i - 3] = v;
       }
-      if (needAromatic)
-        SmilesAromatic.setAromatic(i, jmolAtoms, bsSelected, v5, vR, vRings,
-            bsAromatic, bsAromatic5, bsAromatic6, aromaticDefined,
-            aromaticStrict, isOSGenerator, v);
+      if (vR.size() == 0)
+        continue;
+      if (needAromatic && !isDefined && i >= 5 && i <= 7) {
+        SmilesAromatic.setAromatic(i, jmolAtoms, bsSelected, vR, bsAromatic,
+            strictness, isOpenSmiles, v, nAtoms);
+        for (int j = vR.size(); --j >= 0;) {
+          BS bs = (BS) vR.get(j);
+          if (bs.get(nAtoms)) {
+            bs.clear(nAtoms);
+          } else {
+            v567.addLast(bs);
+          }
+        }
+      }
       if (needRingData) {
         ringData[i] = new BS();
-        for (int k = 0; k < vR.size(); k++) {
+        for (int k = vR.size(); --k >= 0;) {
           BS r = (BS) vR.get(k);
           ringData[i].or(r);
           for (int j = r.nextSetBit(0); j >= 0; j = r.nextSetBit(j + 1))
@@ -272,11 +338,28 @@ public class SmilesSearch extends JmolMolecule {
         }
       }
     }
-    // check that all aromatic atoms are double-bonded only to aromatic atoms
+    if (needAromatic) {
+      if (doFinalize)
+        SmilesAromatic.finalizeAromatic(jmolAtoms, bsAromatic, v567,
+            isOpenSmiles, isStrict);
+      // clean out all nonaromatic atoms from the ring list
+      // and recreate 5- and 6-membered ring bitsets
+      bsAromatic5.clearAll();
+      bsAromatic6.clearAll();
+      for (int i = v567.size(); --i >= 0;) {
+        BS bs = v567.get(i);
+        bs.and(bsAromatic);
+        switch (bs.cardinality()) {
+        case 5:
+          bsAromatic5.or(bs);
+          break;
+        case 6:
+          bsAromatic6.or(bs);
+          break;
+        }
+      }
+    }
     if (needRingData) {
-      if (needAromatic && !isOSGenerator)
-        SmilesAromatic.finalizeAromatic(jmolAtoms, bsAromatic, bsAromatic5,
-            bsAromatic6); 
       for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
           .nextSetBit(i + 1)) {
         Node atom = jmolAtoms[i];
@@ -381,12 +464,20 @@ public class SmilesSearch extends JmolMolecule {
      *    
      */
 
-    // flags are passed on from SmilesParser
-    aromaticDouble = ((flags & FLAG_AROMATIC_DOUBLE) != 0);
-    ignoreStereochemistry = ((flags & FLAG_IGNORE_STEREOCHEMISTRY) != 0);
-    invertStereochemistry = ((flags & FLAG_INVERT_STEREOCHEMISTRY) != 0);
-    noAromatic = ((flags & FLAG_NO_AROMATIC) != 0);
-    noncanonical = ((flags & FLAG_AROMATIC_NONCANONICAL) != 0);
+    // flags are passed on from SmilesParser /xxxxx/
+
+    noAromatic = ((flags & NO_AROMATIC) == NO_AROMATIC);
+    
+    // starting with Jmol 12.3.24, we allow the flag AROMATICDOUBLE to allow a
+    // distinction between single and double, as for example is necessary to distinguish
+    // between n=cNH2 and ncNH2 (necessary for MMFF94 atom typing
+
+    aromaticDouble = ((flags & AROMATIC_DOUBLE) == AROMATIC_DOUBLE);
+    jsmeNoncanonical = ((flags & AROMATIC_JSME_NONCANONICAL) == AROMATIC_JSME_NONCANONICAL);
+    
+    ignoreStereochemistry = ((flags & IGNORE_STEREOCHEMISTRY) == IGNORE_STEREOCHEMISTRY);
+    invertStereochemistry = ((flags & INVERT_STEREOCHEMISTRY) == INVERT_STEREOCHEMISTRY);
+
     openSMILES = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
     
     if (Logger.debugging && !isSilent)
@@ -904,7 +995,7 @@ public class SmilesSearch extends JmolMolecule {
         boolean isAromatic = patternAtom.isAromatic();
         if (!noAromatic && !patternAtom.aromaticAmbiguous
             && isAromatic != bsAromatic.get(iAtom)) {
-          if (!noncanonical
+          if (!jsmeNoncanonical
               || patternAtom.getExplicitHydrogenCount() != atom
                   .getCovalentHydrogenCount())
             break;
@@ -1076,7 +1167,7 @@ public class SmilesSearch extends JmolMolecule {
         // 
         // starting with Jmol 12.3.24, we allow the flag AROMATICDOUBLE to allow a
         // distinction between single and double, as for example is necessary to distinguish
-        // between n=c-NH2 and n-c-NH2 (necessary for MMFF94 atom typing
+        // between n=cNH2 and ncNH2 (necessary for MMFF94 atom typing
         //
         bondFound = !isSmarts || aromaticDouble &&
           (order == Edge.BOND_COVALENT_DOUBLE || order == Edge.BOND_AROMATIC_DOUBLE);
@@ -1589,5 +1680,37 @@ public class SmilesSearch extends JmolMolecule {
       }
     }
   }
-  
+
+  /**
+   * calculates a normal to a plane for three points and returns a signed
+   * distance
+   * 
+   * @param pointA
+   * @param pointB
+   * @param pointC
+   * @param vNorm
+   * @param vAB
+   * @param vAC
+   * @return a signed distance
+   */
+  static float getNormalThroughPoints(Node pointA, Node pointB, Node pointC,
+                                      V3 vNorm, V3 vAB, V3 vAC) {
+    vAB.sub2((P3) pointB, (P3) pointA);
+    vAC.sub2((P3) pointC, (P3) pointA);
+    vNorm.cross(vAB, vAC);
+    vNorm.normalize();
+    // ax + by + cz + d = 0
+    // so if a point is in the plane, then N dot X = -d
+    vAB.setT((P3) pointA);
+    return -vAB.dot(vNorm);
+  }
+
+  /**
+   * populate bsAromatic5 and bsAromatic6
+   * 
+   * @param lst
+   * @param bsAromatic5
+   * @param bsAromatic6
+   * @param bsAromatic
+   */
 }

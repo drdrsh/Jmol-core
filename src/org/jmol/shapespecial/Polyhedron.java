@@ -287,12 +287,12 @@ public class Polyhedron {
         try {
           String details = (distanceRef <= 0 ? null : "r=" + distanceRef);
           smarts = sm.polyhedronToSmiles(centralAtom, faces, nVertices, null,
-              JC.SMILES_TOPOLOGY, null);
+              JC.SMILES_GEN_TOPOLOGY, null);
           smiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
               vertices, JC.SMILES_TYPE_SMILES, null);
           polySmiles = sm.polyhedronToSmiles(centralAtom, faces, nVertices,
-              vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_POLYHEDRAL
-                  | JC.SMILES_ATOM_COMMENT, details);
+              vertices, JC.SMILES_TYPE_SMILES | JC.SMILES_GEN_POLYHEDRAL
+                  | JC.SMILES_GEN_ATOM_COMMENT, details);
         } catch (Exception e) {
         }
       }

@@ -34,7 +34,6 @@ import javajs.util.SB;
 
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
-import org.jmol.viewer.JC;
 
 /**
  * Parses a SMILES String to create a <code>SmilesMolecule</code>.
@@ -121,7 +120,6 @@ public class SmilesParser {
   private int braceCount;
   private int branchLevel;
   private boolean ignoreStereochemistry;
-  private boolean openSMILES;
 
   public static SmilesSearch getMolecule(String pattern, boolean isSmarts)
       throws InvalidSmilesException {
@@ -160,28 +158,17 @@ public class SmilesParser {
     while (pattern.startsWith("/")) {
       String strFlags = getSubPattern(pattern, 0, '/').toUpperCase();
       pattern = pattern.substring(strFlags.length() + 2);
-      if (strFlags.indexOf("NONCANONICAL") >= 0)
-        flags |= SmilesSearch.FLAG_AROMATIC_NONCANONICAL;
-      if (strFlags.indexOf("OPENSMILES") >= 0) {
-        flags |= JC.SMILES_TYPE_OPENSMILES;
-        openSMILES = true;
-      }
-      if (strFlags.indexOf("NOAROMATIC") >= 0)
-        flags |= SmilesSearch.FLAG_NO_AROMATIC;
-      if (strFlags.indexOf("AROMATICSTRICT") >= 0)
-        flags |= SmilesSearch.FLAG_AROMATIC_STRICT;
-      if (strFlags.indexOf("AROMATICDEFINED") >= 0)
-        flags |= SmilesSearch.FLAG_AROMATIC_DEFINED;
-      if (strFlags.indexOf("AROMATICDOUBLE") >= 0)
-        flags |= SmilesSearch.FLAG_AROMATIC_DOUBLE;
+      
+      flags = SmilesSearch.addFlags(flags,  strFlags);
+
       if (strFlags.indexOf("NOSTEREO") >= 0) {
-        flags |= SmilesSearch.FLAG_IGNORE_STEREOCHEMISTRY;
+        flags |= SmilesSearch.IGNORE_STEREOCHEMISTRY;
         ignoreStereochemistry = true;
       } else if (strFlags.indexOf("INVERTSTEREO") >= 0) {
-        if ((flags & SmilesSearch.FLAG_INVERT_STEREOCHEMISTRY) != 0)
-          flags &= ~SmilesSearch.FLAG_INVERT_STEREOCHEMISTRY;
+        if ((flags & SmilesSearch.INVERT_STEREOCHEMISTRY) != 0)
+          flags &= ~SmilesSearch.INVERT_STEREOCHEMISTRY;
         else
-          flags |= SmilesSearch.FLAG_INVERT_STEREOCHEMISTRY;
+          flags |= SmilesSearch.INVERT_STEREOCHEMISTRY;
       }
     }
     if (pattern.indexOf("$") >= 0)
@@ -927,8 +914,7 @@ public class SmilesParser {
             break;
           case ':': //openSmiles application-dependent atom class
             index = getDigits(pattern, index + 1, ret);
-            if (openSMILES)
-              newAtom.osClass = ret[0];
+            newAtom.osClass = ret[0];
             break;
           default:
             // SMARTS has ambiguities in terms of chaining without &.

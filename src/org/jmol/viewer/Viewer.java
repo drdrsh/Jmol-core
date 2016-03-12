@@ -4012,11 +4012,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       }
       if (name.equals("$"))
         try {
-          id = getSmiles(bsA());
+          id = getOpenSmiles(bsA());
         } catch (Exception e) {
           // oh well...
         }
       //$FALL-THROUGH$
+    case 'M':
     case 'N':
     case '2':
     case 'I':
@@ -4026,6 +4027,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     case '/':
       id = PT.escapeUrl(id);
       switch (type) {
+      case 'M':         
       case 'N':
         format = g.nihResolverFormat + "/names";
         break;
@@ -7785,7 +7787,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       type = 'S';
       break;
     case T.name:
-      type = 'N';
+      type = 'M';
       break;
     case T.image:
       type = '2';
@@ -7794,6 +7796,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       info = SV.sValue(t);
       if (info.equalsIgnoreCase("drawing") || info.equalsIgnoreCase("image"))
         type = '2';
+      else if (info.equalsIgnoreCase("name"))
+        type = 'M';
       // the following should not be necessary
       // but an NCI server fault on 3/29/2014 required this
       //if (info.equals("sdf"))
@@ -7806,7 +7810,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     }
     if (type == '/')
       s += PT.rep(info, " ", "%20");
-    return getFileAsString4(s, -1, false, false, false, "file");
+    s = getFileAsString4(s, -1, false, false, false, "file");
+    if (type == 'M' && s.indexOf("\n") > 0)
+      s = s.substring(0, s.indexOf("\n"));
+    return s;
   }
 
   // ///////////////////////////////////////////////////////////////
@@ -8683,20 +8690,20 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public String getSmiles(BS bs) throws Exception {
-    return getSmilesOpt(bs, -1, -1, bs == null && Logger.debugging ? JC.SMILES_ATOM_COMMENT :0);  
+    return getSmilesOpt(bs, -1, -1, bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT :0, null);  
   }
 
   @Override
   public String getOpenSmiles(BS bs) throws Exception {
-    return getSmilesOpt(bs, -1, -1, JC.SMILES_TYPE_OPENSMILES | (bs == null && Logger.debugging ? JC.SMILES_ATOM_COMMENT :0));  
+    return getSmilesOpt(bs, -1, -1, JC.SMILES_TYPE_OPENSMILES | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT :0), null);  
   }
 
   public String getBioSmiles(BS bs) throws Exception {
     return getSmilesOpt(bs, -1, -1,  
-          JC.SMILES_BIO_ALLOW_UNMATCHED_RINGS
-        | JC.SMILES_BIO_COV_CROSSLINK
-        | JC.SMILES_BIO_COMMENT
-        | (Logger.debugging ? JC.SMILES_ATOM_COMMENT : 0));
+          JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS
+        | JC.SMILES_GEN_BIO_COV_CROSSLINK
+        | JC.SMILES_GEN_BIO_COMMENT
+        | (Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0), null);
   }
 
   /**
@@ -8710,19 +8717,20 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    * @param index2
    *        when bsSeleced == null, end atomIndex or -1 for current
    * @param flags see JC.SMILES_xxxx
+   * @param options e.g. /strict,open/ 
    * @return SMILES string
    * @throws Exception
    */
-  public String getSmilesOpt(BS bsSelected, int index1, int index2, int flags)
+  public String getSmilesOpt(BS bsSelected, int index1, int index2, int flags, String options)
       throws Exception {
-    String bioComment = ((flags & JC.SMILES_BIO_COMMENT) == JC.SMILES_BIO_COMMENT ? getJmolVersion() + " "
-        + getModelName(am.cmi) : null);
+    String bioComment = ((flags & JC.SMILES_GEN_BIO_COMMENT) == JC.SMILES_GEN_BIO_COMMENT ? getJmolVersion() + " "
+        + getModelName(am.cmi) : options);
     Atom[] atoms = ms.at;
     if (bsSelected == null) {
       if (index1 < 0 || index2 < 0) {
         bsSelected = bsA();
       } else {
-        if ((flags & JC.SMILES_BIO) == JC.SMILES_BIO) {
+        if ((flags & JC.SMILES_GEN_BIO) == JC.SMILES_GEN_BIO) {
           if (index1 > index2) {
             int i = index1;
             index1 = index2;
