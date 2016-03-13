@@ -183,7 +183,7 @@ public class SmilesStereo {
   }
 
   public void fixStereo(SmilesAtom sAtom) throws InvalidSmilesException {
-    int nBonds = Math.max(sAtom.missingHydrogenCount, 0) + sAtom.getBondCount();
+    int nBonds = Math.max(sAtom.explicitHydrogenCount, 0) + sAtom.getBondCount();
     switch (chiralClass) {
     case STEREOCHEMISTRY_DEFAULT:
       switch (nBonds) {
@@ -587,7 +587,7 @@ public class SmilesStereo {
       Node atom0 = sAtom.getMatchingAtom();
       if (isSmilesFind)
         sAtom0 = (SmilesAtom) atom0;
-      int nH = Math.max(sAtom.missingHydrogenCount, 0);
+      int nH = Math.max(sAtom.explicitHydrogenCount, 0);
       int order = sAtom.stereo.chiralOrder;
       int chiralClass = sAtom.stereo.chiralClass;
       // SMILES string must match pattern for chiral class.

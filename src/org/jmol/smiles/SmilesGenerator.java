@@ -306,7 +306,8 @@ public class SmilesGenerator {
       search.setSelected(bsSelected);
       search.jmolAtomCount = ac;
       search.ringDataMax = 7;
-      search.setRingData(null, flags);
+      search.flags = flags;
+      search.setRingData(null, null);
       bsAromatic = search.bsAromatic;
       ringSets = search.ringSets;
       setBondDirections();
@@ -720,7 +721,7 @@ public class SmilesGenerator {
     int charge = atom.getFormalCharge();
     int isotope = atom.getIsotopeNumber();
     int valence = atom.getValence();
-    float osclass = (openSMILES ? atom.getFloatProperty("property_osclass") : 0);
+    float osclass = (openSMILES ? atom.getFloatProperty("property_atomclass") : 0);
     String atomName = atom.getAtomName();
     String groupType = (atom instanceof BNode ? ((BNode)atom).getBioStructureTypeName() : "");
     // for bioSMARTS we provide the connecting atom if 

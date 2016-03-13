@@ -1065,12 +1065,12 @@ public final class JC {
     return hAlignNames[(align >> TEXT_ALIGN_SHIFT) & 3];
   }
   
-  public static final int SMILES_TYPE_SMILES         = 0x1; // all -> matcher
+  public static final int SMILES_TYPE_SMILES         = 0x1; // placeholder -- DO NOT TEST FOR THIS as it is also in openSMARTS
   public static final int SMILES_TYPE_SMARTS         = 0x2; // CmdExt -> matcher
-  public static final int SMILES_TYPE_OPENSMILES     = 0x5; // generator parser search
-  public static final int SMILES_TYPE_OPENSMARTS     = 0x6; // reserved
+  public static final int SMILES_TYPE_OPENSMILES     = 0x5; // includes aromatic normalization of pattern; tests true when openSMARTS as well
+  public static final int SMILES_TYPE_OPENSMARTS     = 0x7; // does not include normalization of pattern
   
-  public static final int SMILES_MATCH_RETURN_FIRST  = 0x40; // MathExt to matcher -- mFlag -- do not adjust
+  public static final int SMILES_MATCH_ONCE_ONLY        = 0x20; // 0xFF0 reserved for SmilesMatcher mflag
 
   public static final int SMILES_GEN_EXPLICIT_H                = 0x00001000; // SmilesExt -> generator
   public static final int SMILES_GEN_TOPOLOGY                  = 0x00002000; // SmilesExt -> generator

@@ -43,15 +43,16 @@ public class SmilesAromatic {
    * @param vR
    * @param bsAromatic
    * @param strictness
-   * @param isOSGenerator
+   * @param isOpenSMILES
+   * @param checkFlatness 
    * @param v
    * @param nAtoms
    */
   static void setAromatic(int n, Node[] jmolAtoms, BS bsSelected,
                           Lst<Object> vR, BS bsAromatic, int strictness,
-                          boolean isOSGenerator, VTemp v, int nAtoms) {
+                          boolean isOpenSMILES, boolean checkFlatness, VTemp v, int nAtoms) {
 
-    boolean doCheck = (isOSGenerator || strictness > 0);
+    boolean doCheck = (isOpenSMILES || strictness > 0);
 
     // "strict" means we want true Hueckel 4+2
     //  -- relax planarity, as bonding should be more important
@@ -61,7 +62,7 @@ public class SmilesAromatic {
     for (int r = vR.size(); --r >= 0;) {
       BS bs = (BS) vR.get(r);
       boolean isOK = isFlatSp2Ring(n, jmolAtoms, bsSelected, bs,
-          (strictness > 0 ? 0.1f : 0.01f), strictness == 0);
+          (!checkFlatness ? Float.MAX_VALUE : strictness > 0 ? 0.1f : 0.01f), strictness == 0);
       if (isOK) {
         bsAromatic.or(bs);
         if (doCheck
@@ -120,7 +121,7 @@ public class SmilesAromatic {
    *        must not be null
    * @param cutoff
    *        an arbitrary value to test the standard deviation against. 0.01 is
-   *        appropriate here.
+   *        appropriate here. Use Float.MAX_VALUE to just do bond connectivity check
    * @param allowSOxide
    *        set TRUE to skip S atoms
    * @return true if standard deviation of vNorm.dot.vMean is less than cutoff
@@ -183,14 +184,6 @@ public class SmilesAromatic {
     //      (other than quinones and other such compounds)
     //      would have any chance of passing the first two tests.
     //      
-    //   OpenSMILES Generator:
-    //     
-    //   (a) the atom is in a 6-membered ring containing only C, N, or O and
-    //       matching SMARTS [#6X3+0,#6X2+1,#6X2-1,#7X2+0,#7X3+1,#8X2+1]
-    //   (b) the atom is not doubly bonded to any nonaromatic atom (prevents case of exocyclic double bonds)
-    //   (c) the atom connects with at least two other aromatic atoms
-    //
-    //  aromaticDaylight -- 
 
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Node ringAtom = atoms[i];
@@ -352,9 +345,12 @@ public class SmilesAromatic {
         .nextSetBit(i + 1)) {
       Node atom = jmolAtoms[i];
       int z = atom.getElementNumber();
-      int n = atom.getCovalentBondCount() + atom.getValence() - 4;
-      if (z == 6)
-        n += atom.getFormalCharge(); // add in charge for C
+      int n = atom.getCovalentBondCount() + atom.getMissingHydrogenCount() + atom.getValence() - 4;
+      if (z == 6) {
+        int fc = atom.getFormalCharge(); // add in charge for C
+        if (fc != Integer.MIN_VALUE) // SmilesAtom charge not set
+          n += fc;
+      }
       int pt = (z >= 5 && z <= 8 ? z - 5 // B, C, N, O
           : z == 15 ? 2 // P -> N
               : z == 34 ? 3 // Se -> O
@@ -400,7 +396,7 @@ public class SmilesAromatic {
     // Hueckel: npi =?= 4n + 2
     // MMFF94: all atoms must contribute 1 for 6- or 7-membered rings (3 double bonds)
     
-    return ((npi - 2) % 4 == 0 && (strictness < 2 || nAtoms == 5 || n1 == 6));
+    return (npi > 0 && (npi - 2) % 4 == 0 && (strictness < 2 || nAtoms == 5 || n1 == 6));
   }
 
   /**

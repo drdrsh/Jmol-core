@@ -464,6 +464,11 @@ public class Atom extends Point3fi implements BNode {
     return group.chain.model.ms.getImplicitHydrogenCount(this, false);
   }
 
+  @Override
+  public int getMissingHydrogenCount() {
+    return 0; 
+  }
+
   int getTargetValence() {
     switch (getElementNumber()) {
     case 6: //C

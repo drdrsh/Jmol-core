@@ -733,7 +733,7 @@ public class MathExt {
             null,
             bestMap,
             (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
-                | (!allMaps && !bestMap ? JC.SMILES_MATCH_RETURN_FIRST : 0));
+                | (!allMaps && !bestMap ? JC.SMILES_MATCH_ONCE_ONLY : 0));
         if (isMap) {
           int nAtoms = ptsA.size();
           if (nAtoms == 0)
@@ -1283,7 +1283,13 @@ public class MathExt {
         sFind += "/";
       flags = sFind.substring(6) + (flags.length() == 0 ? "///" : flags);
       sFind = "SMILES";
+    } else     if (sFind.toUpperCase().startsWith("SMARTS/")) {
+      if (!sFind.endsWith("/"))
+        sFind += "/";
+      flags = sFind.substring(6) + (flags.length() == 0 ? "///" : flags);
+      sFind = "SMARTS";
     }
+
     boolean isSmiles = !isList && sFind.equalsIgnoreCase("SMILES");
     boolean isSMARTS = !isList && sFind.equalsIgnoreCase("SMARTS");
     boolean isChemical = !isList && sFind.equalsIgnoreCase("CHEMICAL");
@@ -1330,15 +1336,16 @@ public class MathExt {
               asMap = SV.bValue(args[2]);
               break;
             }
+            boolean justOne = (!asMap && (!allMappings || !isSMARTS));
             try {
               ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
                   null,
                   isSMARTS ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
-                  !asMap, !allMappings);
+                  !asMap, justOne);
             } catch (Exception e) {
               return mp.addXInt(-1);
             }
-            if (!asMap && (!allMappings || !isSMARTS)) {
+            if (justOne) {
               int len = ((int[]) ret).length;
               return mp.addXInt(!allMappings && len > 0 ? 1 : len);
             }
@@ -1375,7 +1382,7 @@ public class MathExt {
                 vwr.ms.ac,
                 (BS) x1.value,
                 (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
-                    | JC.SMILES_MATCH_RETURN_FIRST);
+                    | JC.SMILES_MATCH_ONCE_ONLY);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
             

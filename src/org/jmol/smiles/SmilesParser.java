@@ -153,24 +153,11 @@ public class SmilesParser {
     SmilesSearch search = new SmilesSearch();
     if (pattern.indexOf("$(select") >= 0) // must do this before cleaning
       pattern = parseNested(search, pattern, "select");
-    pattern = cleanPattern(pattern);
-    flags = 0;
-    while (pattern.startsWith("/")) {
-      String strFlags = getSubPattern(pattern, 0, '/').toUpperCase();
-      pattern = pattern.substring(strFlags.length() + 2);
-      
-      flags = SmilesSearch.addFlags(flags,  strFlags);
-
-      if (strFlags.indexOf("NOSTEREO") >= 0) {
-        flags |= SmilesSearch.IGNORE_STEREOCHEMISTRY;
-        ignoreStereochemistry = true;
-      } else if (strFlags.indexOf("INVERTSTEREO") >= 0) {
-        if ((flags & SmilesSearch.INVERT_STEREOCHEMISTRY) != 0)
-          flags &= ~SmilesSearch.INVERT_STEREOCHEMISTRY;
-        else
-          flags |= SmilesSearch.INVERT_STEREOCHEMISTRY;
-      }
-    }
+    int[] ret = new int[1];
+    pattern = extractFlags(pattern, ret);
+    flags = ret[0];
+    ignoreStereochemistry = ((flags & SmilesSearch.IGNORE_STEREOCHEMISTRY) == SmilesSearch.IGNORE_STEREOCHEMISTRY);        
+    search.setFlags(flags);
     if (pattern.indexOf("$") >= 0)
       pattern = parseVariables(pattern);
     if (isSmarts && pattern.indexOf("[$") >= 0)
@@ -318,7 +305,7 @@ public class SmilesParser {
     molecule.setTop(parent);
     molecule.isSmarts = isSmarts;
     molecule.pattern = pattern;
-    molecule.flags = flags;
+    molecule.setFlags(flags);
     if (pattern.indexOf("$(") >= 0)
       pattern = parseNested(molecule, pattern, "");
     parseSmiles(molecule, pattern, null, false);
@@ -343,7 +330,7 @@ public class SmilesParser {
       if (molecule.isTopology && atom.isDefined())
         molecule.isTopology = false;
       atom.setBondArray();
-      if (!isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount(molecule))
+      if (!isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount())
         throw new InvalidSmilesException("unbracketed atoms must be one of: "
             + SmilesAtom.UNBRACKETED_SET);
     }
@@ -914,7 +901,7 @@ public class SmilesParser {
             break;
           case ':': //openSmiles application-dependent atom class
             index = getDigits(pattern, index + 1, ret);
-            newAtom.osClass = ret[0];
+            newAtom.atomClass = ret[0];
             break;
           default:
             // SMARTS has ambiguities in terms of chaining without &.
@@ -1148,6 +1135,7 @@ public class SmilesParser {
       SmilesBond bond0 = ringBonds.get(r);
       if (bond0 == null) {
         ringBonds.put(r, bond);
+        molecule.top.ringCount++;
         return;
       }
       ringBonds.remove(r);
@@ -1267,6 +1255,8 @@ public class SmilesParser {
           //molecule.parent.needAromatic = true;
         break;
       case SmilesBond.TYPE_DOUBLE:
+        molecule.top.nDouble++;
+        //$FALL-THROUGH$
       case SmilesBond.TYPE_SINGLE:
         if (currentAtom.isAromatic())
           molecule.top.needRingData = true;
@@ -1439,5 +1429,24 @@ public class SmilesParser {
     pattern = PT.rep(pattern, "//", "");
     return pattern;
   }
+
+  static String extractFlags(String pattern, int[] ret) throws InvalidSmilesException {
+    pattern = cleanPattern(pattern);
+    int flags = 0;
+    while (pattern.startsWith("/")) {
+      String strFlags = getSubPattern(pattern, 0, '/').toUpperCase();
+      pattern = pattern.substring(strFlags.length() + 2);
+      flags = SmilesSearch.addFlags(flags,  strFlags);
+    }
+    ret[0] = flags;
+    return pattern;
+  }
+
+  static int getFlags(String pattern) throws InvalidSmilesException {
+    int[] ret = new int[1];
+    extractFlags(pattern, ret);
+    return ret[0];
+  }
+
 
 }

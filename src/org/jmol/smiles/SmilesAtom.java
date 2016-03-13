@@ -85,7 +85,7 @@ public class SmilesAtom extends P3 implements BNode {
   int atomNumber = Integer.MIN_VALUE; // PDB atom number Jmol 14.3.16
   int residueNumber = Integer.MIN_VALUE; // PDB residue number Jmol 14.3.16
 
-  int missingHydrogenCount = Integer.MIN_VALUE;
+  int explicitHydrogenCount = Integer.MIN_VALUE;
   int implicitHydrogenCount = Integer.MIN_VALUE;
   SmilesAtom parent;
   SmilesBond[] bonds = new SmilesBond[4];
@@ -180,13 +180,15 @@ public class SmilesAtom extends P3 implements BNode {
   private Node matchingNode;
   public boolean hasSubpattern;
   public int mapIndex = -1; // in  CCC we have atoms 0, 1, and 2
-  public float osClass = Float.NaN; // OpenSMILES atom class is an integer
+  public float atomClass = Float.NaN; // OpenSMILES atom class is an integer
+  String symbol;
+  private int implicitHCount; // generally 0; pattern atoms may have this, though.
 
-  public SmilesAtom setAll(int iComponent, int ptAtom, int atomicNumber,
+  public SmilesAtom setAll(int iComponent, int ptAtom, String symbol,
       int charge) {
     component = iComponent;
     index = ptAtom;
-    elementNumber = atomicNumber;
+    setSymbol(symbol);
     this.charge = charge;
     return this;
   }
@@ -198,12 +200,11 @@ public class SmilesAtom extends P3 implements BNode {
    * or explicitly mentioned in the bracketed atom, "[CH2]". These hydrogen atoms
    * are not part of the topological model constructed and need to be accounted for. 
    * 
-   * @param molecule Molecule containing the atom.
    * @return false if inappropriate
    */
-  public boolean setHydrogenCount(SmilesSearch molecule) {
+  public boolean setHydrogenCount() {
     // only called for SMILES search -- simple C or [C]
-    if (missingHydrogenCount != Integer.MIN_VALUE)
+    if (explicitHydrogenCount != Integer.MIN_VALUE)
       return true;
     // Determining max count
     int count = getDefaultCount(elementNumber, isAromatic);
@@ -240,7 +241,7 @@ public class SmilesAtom extends P3 implements BNode {
     }
 
     if (count >= 0)
-      missingHydrogenCount = count;
+      explicitHydrogenCount = count;
     return true;
   }
 
@@ -300,6 +301,7 @@ public class SmilesAtom extends P3 implements BNode {
    * @return  false if invalid symbol
    */
   public boolean setSymbol(String symbol) {
+    this.symbol = symbol;
     isAromatic = symbol.equals(symbol.toLowerCase());
     hasSymbol = true;
     if (symbol.equals("*")) {
@@ -417,7 +419,7 @@ public class SmilesAtom extends P3 implements BNode {
    * @param count Number of hydrogen atoms.
    */
   public void setExplicitHydrogenCount(int count) {
-    missingHydrogenCount = count;
+    explicitHydrogenCount = count;
   }
 
   /**
@@ -426,6 +428,8 @@ public class SmilesAtom extends P3 implements BNode {
    * @param count Number of hydrogen atoms.
    */
   public void setImplicitHydrogenCount(int count) {
+    //if (count == Integer.MIN_VALUE)
+    // set count implicitly for pattern atom in SMILES match
     implicitHydrogenCount = count;
   }
 
@@ -475,8 +479,7 @@ public class SmilesAtom extends P3 implements BNode {
   }
 
   public int getExplicitHydrogenCount() {
-    System.out.println(this + " " + missingHydrogenCount);
-    return missingHydrogenCount;
+    return explicitHydrogenCount;
   }
 
   @Override
@@ -574,7 +577,7 @@ public class SmilesAtom extends P3 implements BNode {
 
   @Override
   public int getBondCount() {
-    return (parent != null ? parent.getCovalentBondCount() : bondCount);
+    return (parent != null ? parent.getCovalentBondCount() : bondCount + implicitHCount);
   }
 
   public int getMatchingBondedAtom(int i) {
@@ -818,9 +821,14 @@ public class SmilesAtom extends P3 implements BNode {
 
   @Override
   public float getFloatProperty(String property) {
-    if (property == "property_osclass") // == is OK here.  
-      return osClass;
+    if (property == "property_atomclass") // == is OK here.  
+      return atomClass;
     return Float.NaN;
+  }
+
+  @Override
+  public int getMissingHydrogenCount() {
+    return explicitHydrogenCount;
   }
 
 }

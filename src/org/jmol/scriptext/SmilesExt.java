@@ -95,7 +95,7 @@ public class SmilesExt {
       Atom[] atoms = e.vwr.ms.at;
       int ac = e.vwr.ms.ac;
       int[][] maps = sm.getCorrelationMaps(smiles, atoms, ac, bsA,
-          flags | JC.SMILES_MATCH_RETURN_FIRST);
+          flags | JC.SMILES_MATCH_ONCE_ONLY);
       if (maps == null)
         e.evalError(sm.getLastException(), null);
       if (maps.length == 0)
