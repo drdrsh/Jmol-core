@@ -302,19 +302,19 @@ public class SmilesAromatic {
   /**
    * 
    * Index to inner array is covalent bond count (b) + valence (v) + charge (c,
-   * carbon only) - 4. Except for one case (C=O, C=S), listed here as -1, these
-   * counts are unique. -2 indicates not considered aromatic (probably not
-   * possible). 
+   * carbon only) - 4. Special cases are listed here as -1. -2 indicates not
+   * considered aromatic (probably not possible).
    * 
-   * Many thanks to John May for the excellent visual guide that I have condensed here.
+   * Many thanks to John May for the excellent visual guide that I have
+   * condensed here.
    * 
    */
   final static private int[][] OS_PI_COUNTS = { 
       { -2, 1, 0 },          // 0 B    b+v-4
       { 1, 2, 1, -1 },       // 1 C    b+v+c-4
-      { 2, 1, 2, 1, 1 },     // 2 N,P  b+v-4
+      { 2, 1, 2, 1, -1 },    // 2 N,P  b+v-4
       { 2, 1 },              // 3 O,Se b+v-4
-      { 2, -2, -2, -2, 1 },  // 4 As   b+v-4
+      { -2, 1, 2, 1, -2 },   // 4 As   b+v-4
       { 2, 1, 2, 2 }         // 5 S    b+v-4
   };
 
@@ -366,19 +366,40 @@ public class SmilesAromatic {
             // not a connection/valence/charge of interest
             return false;
           case -1:
-            // check for C=het(nonaromatic)
-            Edge[] bonds = atom.getEdges();
-            for (int j = bonds.length; --j >= 0;) {
-              Edge b = bonds[j];
-              if (b.getCovalentOrder() != 2)
-                continue;
-              // just check that the connected atom is either C or flat-aromatic
-              // if it is, assign 1 pi electron; if it is not, set it to 0 as long
-              // we are not being strict or discard this ring if we are.
-              Node het = b.getOtherAtomNode(atom);
-              n = (het.getElementNumber() == 6
-                  || bsAromatic.get(het.getIndex()) ? 1 : strictness > 0 ? -100 : 0);
+            switch (z) {
+            case 6:
+              // check for c=X(nonaromatic) 0
+              Edge[] bonds = atom.getEdges();
+              for (int j = bonds.length; --j >= 0;) {
+                Edge b = bonds[j];
+                if (b.getCovalentOrder() != 2)
+                  continue;
+                // just check that the connected atom is either C or flat-aromatic
+                // if it is, assign 1 pi electron; if it is not, set it to 0 as long
+                // we are not being strict or discard this ring if we are.
+                Node het = b.getOtherAtomNode(atom);
+                n = (het.getElementNumber() == 6
+                    || bsAromatic.get(het.getIndex()) ? 1 : strictness > 0 ? -100 : 0);
+                break;
+              }
               break;
+            case 7:
+              // check for n=C(nonaromatic) 2
+              Edge[] nbonds = atom.getEdges();
+              n = -100;
+              for (int j = nbonds.length; --j >= 0;) {
+                Edge b = nbonds[j];
+                if (b.getCovalentOrder() != 2)
+                  continue;
+                Node other = b.getOtherAtomNode(atom);
+                if (bsAromatic.get(other.getIndex()))
+                   continue;
+                n = (other.getElementNumber() == 6 ? 2 : 1);
+                break;
+              }
+              break;
+            default:
+              return false;
             }
             //$FALL-THROUGH$
           default:
