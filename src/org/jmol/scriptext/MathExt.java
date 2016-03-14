@@ -1341,7 +1341,7 @@ public class MathExt {
               ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
                   null,
                   isSMARTS ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
-                  !asMap, justOne);
+                  !asMap, !allMappings);
             } catch (Exception e) {
               return mp.addXInt(-1);
             }
