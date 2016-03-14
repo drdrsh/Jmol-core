@@ -331,21 +331,24 @@ public class SmilesAromatic {
    * @param jmolAtoms
    * @param bsAromatic
    * @param bsRing
-   * @param strictness 0 (not) 1 (OpenSMILES), 2 (MMFF94)
-   *        standard organic chemist's Hueckel interpretation
+   * @param strictness
+   *        0 (not) 1 (OpenSMILES), 2 (MMFF94) standard organic chemist's
+   *        Hueckel interpretation
    * @return TRUE if aromatic
    * @author Bob Hanson 3/12/2016
    * 
    */
-  private static boolean checkOpenSmilesAromatic(int nAtoms, Node[] jmolAtoms, BS bsAromatic,
-                                              BS bsRing, int strictness) {
+  private static boolean checkOpenSmilesAromatic(int nAtoms, Node[] jmolAtoms,
+                                                 BS bsAromatic, BS bsRing,
+                                                 int strictness) {
     int npi = 0;
     int n1 = 0;
     for (int i = bsRing.nextSetBit(0); i >= 0 && npi >= 0; i = bsRing
         .nextSetBit(i + 1)) {
       Node atom = jmolAtoms[i];
       int z = atom.getElementNumber();
-      int n = atom.getCovalentBondCount() + atom.getMissingHydrogenCount() + atom.getValence() - 4;
+      int n = atom.getCovalentBondCount() + atom.getMissingHydrogenCount()
+          + atom.getValence() - 4;
       if (z == 6) {
         int fc = atom.getFormalCharge(); // add in charge for C
         if (fc != Integer.MIN_VALUE) // SmilesAtom charge not set
@@ -361,62 +364,68 @@ public class SmilesAromatic {
         int[] a = OS_PI_COUNTS[pt];
         if (n < 0 || n >= a.length)
           return false;
-          switch (n = a[n]) {
-          case -2:
-            // not a connection/valence/charge of interest
-            return false;
-          case -1:
-            switch (z) {
-            case 6:
-              // check for c=X(nonaromatic) 0
-              Edge[] bonds = atom.getEdges();
-              for (int j = bonds.length; --j >= 0;) {
-                Edge b = bonds[j];
-                if (b.getCovalentOrder() != 2)
-                  continue;
-                // just check that the connected atom is either C or flat-aromatic
-                // if it is, assign 1 pi electron; if it is not, set it to 0 as long
-                // we are not being strict or discard this ring if we are.
-                Node het = b.getOtherAtomNode(atom);
-                n = (het.getElementNumber() == 6
-                    || bsAromatic.get(het.getIndex()) ? 1 : strictness > 0 ? -100 : 0);
-                break;
-              }
+        switch (n = a[n]) {
+        case -2:
+          // not a connection/valence/charge of interest
+          return false;
+        case -1:
+          switch (z) {
+          case 6:
+            // check for c=X(nonaromatic) 0
+            // against c[c+1](C)c (0) and c=c (1)
+            Edge[] bonds = atom.getEdges();
+            n = 0; // no double bond; sp2 c cation
+            for (int j = bonds.length; --j >= 0;) {
+              Edge b = bonds[j];
+              if (b.getCovalentOrder() != 2)
+                continue;
+              // just check that the connected atom is either C or flat-aromatic
+              // if it is, assign 1 pi electron; if it is not, set it to 0 as long
+              // we are not being strict or discard this ring if we are.
+              Node het = b.getOtherAtomNode(atom);
+              n = (het.getElementNumber() == 6
+                  || bsAromatic.get(het.getIndex()) ? 1 : strictness > 0 ? -100
+                  : 0);
               break;
-            case 7:
-              // check for n=C(nonaromatic) 2
-              Edge[] nbonds = atom.getEdges();
-              n = -100;
+            }
+            break;
+          case 7:
+            // check for n=C(nonaromatic) 2
+            // against c=n=O(nonaromatic) 1
+            // only if not strict
+            Edge[] nbonds = atom.getEdges();
+            n = -100;
+            if (strictness == 0)
               for (int j = nbonds.length; --j >= 0;) {
                 Edge b = nbonds[j];
                 if (b.getCovalentOrder() != 2)
                   continue;
                 Node other = b.getOtherAtomNode(atom);
                 if (bsAromatic.get(other.getIndex()))
-                   continue;
+                  continue;
                 n = (other.getElementNumber() == 6 ? 2 : 1);
                 break;
               }
-              break;
-            default:
-              return false;
-            }
-            //$FALL-THROUGH$
+            break;
           default:
-            // ok -- add in the number of pi electrons for this atom
-            npi += n;
-            if (n == 1)
-              n1++;
-            if (Logger.debugging)
-              Logger.debug("atom " + atom + " pi=" + n + " npi=" + npi);
-            // normal continuance
-            continue;
+            return false;
           }
+          //$FALL-THROUGH$
+        default:
+          // ok -- add in the number of pi electrons for this atom
+          npi += n;
+          if (n == 1)
+            n1++;
+          if (Logger.debugging)
+            Logger.debug("atom " + atom + " pi=" + n + " npi=" + npi);
+          // normal continuance
+          continue;
         }
+      }
     }
     // Hueckel: npi =?= 4n + 2
     // MMFF94: all atoms must contribute 1 for 6- or 7-membered rings (3 double bonds)
-    
+
     return (npi > 0 && (npi - 2) % 4 == 0 && (strictness < 2 || nAtoms == 5 || n1 == 6));
   }
 
