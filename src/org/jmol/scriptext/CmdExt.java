@@ -3204,6 +3204,7 @@ public class CmdExt extends ScriptExt {
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     P3 offset = null;
     String id = null;
+    boolean ok = false;
     for (int i = 1; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
@@ -3215,10 +3216,12 @@ public class CmdExt extends ScriptExt {
         break;
       case T.point:
         propertyName = "points";
-        propertyValue = Float.valueOf(e.floatParameter(++i));
+        propertyValue = Float.valueOf(tokAt(++i) == T.off ? 0 : e.floatParameter(i));
+        ok = true;
         break;
       case T.scale:
         scale = floatParameter(++i);
+        ok = true;
         continue;
       case T.unitcell:
         if (id != null)
@@ -3274,6 +3277,7 @@ public class CmdExt extends ScriptExt {
         if (!isFloatParameter(i + 1)) {
           offset = getPoint3f(++i, true);
           i = eval.iToken;
+          ok = true;
           continue;
         }
         //$FALL-THROUGH$
@@ -3363,6 +3367,7 @@ public class CmdExt extends ScriptExt {
         if (edgeParameterSeen)
           error(ScriptError.ERROR_incompatibleArguments);
         edgeParameterSeen = true;
+        ok = true;
         propertyName = T.nameOf(eval.theTok);
         break;
       case T.triangles:
@@ -3411,7 +3416,7 @@ public class CmdExt extends ScriptExt {
       if (!typeSeen && haveBonds)
         setShapeProperty(JC.SHAPE_POLYHEDRA, "bonds", null);
       setShapeProperty(JC.SHAPE_POLYHEDRA, "generate", null);
-    } else if (!edgeParameterSeen && offset == null && Float.isNaN(scale)) {// && lighting == T.nada)
+    } else if (!ok) {// && lighting == T.nada)
       error(ScriptError.ERROR_insufficientArguments);
     }
     if (offset != null)
@@ -4189,9 +4194,18 @@ public class CmdExt extends ScriptExt {
           }
         } else if (eval.optParameterAsString(2).equalsIgnoreCase("true")) {
           msg = vwr.getBioSmiles(null);
+        } else {
+          msg = eval.optParameterAsString(2);
+          if (msg.startsWith("/")) {
+            msg = vwr.getSmilesOpt(null, -1, -1, JC.SMILES_TYPE_SMILES, msg
+                + "///");
+          } else {
+            msg = null;
+          }
         }
         if (msg == null)
-          msg = (tok == T.smiles ? vwr.getSmiles(null) : vwr.getOpenSmiles(null));
+          msg = (tok == T.smiles ? vwr.getSmiles(null) : vwr
+              .getOpenSmiles(null));
       } catch (Exception ex) {
         msg = ex.getMessage();
       }

@@ -24,6 +24,7 @@
 package org.jmol.renderspecial;
 
 
+import org.jmol.c.PAL;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.render.ShapeRenderer;
@@ -118,21 +119,35 @@ public class PolyhedraRenderer extends ShapeRenderer {
     int[][] planes = p.triangles;
     for (int i = vertices.length; --i >= 0;) {
       Atom atom = (vertices[i] instanceof Atom ? (Atom) vertices[i] : null);
+      P3 v = sc[i];
       if (atom == null) {
-        tm.transformPtScrT3(vertices[i], sc[i]);
+        tm.transformPtScrT3(vertices[i], v);
       } else if (atom.isVisible(myVisibilityFlag)) {
-        sc[i].set(atom.sX, atom.sY, atom.sZ);
+        v.set(atom.sX, atom.sY, atom.sZ);
       } else if (vibs && atom.hasVibration()) {
         scrVib = tm.transformPtVib(atom, ms.vibrations[atom.i]);
-        sc[i].set(scrVib.x, scrVib.y, scrVib.z);
+        v.set(scrVib.x, scrVib.y, scrVib.z);
       } else {
-        tm.transformPt3f(atom, sc[i]);
+        tm.transformPt3f(atom, v);
+      }
+      if (p.pointScale > 0) {
+        int[] elemNos = p.getElemNos();
+        for (int j = elemNos.length; --j >= 0;) {
+          if (g3d.setC(elemNos[j] < 0 ? C.BLACK : vwr.cm.setElementArgb(
+              elemNos[j], Integer.MAX_VALUE))) {
+            g3d.fillSphereBits(
+                (int) tm.scaleToScreen((int) v.z, (int) (p.pointScale * 1000)),
+                v);
+          }
+        }
+        g3d.setC(colix);
       }
       if (showNumbers) {
-        g3d.setC(C.BLACK);
-        g3d.drawStringNoSlab("" + i, null, (int) sc[i].x, (int) sc[i].y,
-            (int) sc[i].z - 30, (short) 0);
-        g3d.setC(colix);
+        if (g3d.setC(C.BLACK)) {
+          g3d.drawStringNoSlab("" + i, null, (int) v.x, (int) v.y,
+              (int) v.z - 30, (short) 0);
+          g3d.setC(colix);
+        }
       }
     }
 

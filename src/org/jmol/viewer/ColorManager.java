@@ -277,22 +277,25 @@ public class ColorManager {
     return JC.altArgbsCpk[Elements.altElementIndexFromNumber(id)];
   }
 
-  void setElementArgb(int id, int argb) {
+  public short setElementArgb(int id, int argb) {
     if (argb == T.jmol && argbsCpk == PAL.argbsCpk)
-      return;
+      return 0;
     argb = getJmolOrRasmolArgb(id, argb);
     if (argbsCpk == PAL.argbsCpk) {
       argbsCpk = AU.arrayCopyRangeI(PAL.argbsCpk, 0, -1);
       altArgbsCpk = AU.arrayCopyRangeI(JC.altArgbsCpk, 0, -1);
     }
     if (id < Elements.elementNumberMax) {
+      if (argb == Integer.MAX_VALUE)
+        return C.getColix(argbsCpk[id]);
       argbsCpk[id] = argb;
       g3d.changeColixArgb(id, argb);
-      return;
+      return 0;
     }
     id = Elements.altElementIndexFromNumber(id);
     altArgbsCpk[id] = argb;
     g3d.changeColixArgb(Elements.elementNumberMax + id, argb);
+    return 0;
   }
 
   ///////////////////  propertyColorScheme ///////////////

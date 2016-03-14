@@ -83,7 +83,7 @@ public class Polyhedra extends AtomShape {
   public Polyhedron[] polyhedrons = new Polyhedron[32];
   public int drawEdges;
 
-  private float radius, pointScale;
+  private float radius;
   private int nVertices;
 
   float faceCenterOffset;
@@ -116,7 +116,7 @@ public class Polyhedra extends AtomShape {
       faceCenterOffset = DEFAULT_FACECENTEROFFSET;
       //distanceFactor = 
       planarParam = Float.NaN;
-      radius = pointScale = 0.0f;
+      radius = 0.0f;
       nVertices = 0;
       nPoints = 0;
       modelIndex = -1;
@@ -351,7 +351,7 @@ public class Polyhedra extends AtomShape {
     }
 
     if ("points" == propertyName) {
-      pointScale = ((Float) value).floatValue();
+        pointsPolyhedra(bs, ((Float) value).floatValue());
       return;
     }
     
@@ -371,6 +371,12 @@ public class Polyhedra extends AtomShape {
     }
 
     setPropAS(propertyName, value, bs);
+  }
+
+  private void pointsPolyhedra(BS bs, float pointScale) {
+    bs = findPolyBS(thisID == null ? bs : null);
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+      polyhedrons[i].pointScale = pointScale;  
   }
 
   private void scalePolyhedra(float scale) {

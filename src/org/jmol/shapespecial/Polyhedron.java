@@ -69,6 +69,8 @@ public class Polyhedron {
 
   public float scale = 1;
 
+  public float pointScale;
+
   Polyhedron() {
   }
 
@@ -148,6 +150,8 @@ public class Polyhedron {
           vertices[i] = p;
         }
       }
+      if (info.containsKey("pointScale"))
+        pointScale = Math.max(0, SV.fValue(info.get("pointScale")));
       SV faces = info.get("faces");
       SV o = info.get("triangles");
       if (o == null) { // formerly
@@ -196,14 +200,7 @@ public class Polyhedron {
     for (int i = 0; i < nv; i++)
       pts[i] = P3.newP(vertices[i]);
     info.put("vertices", pts);
-
-    int[] elemNos = new int[nVertices];
-    for (int i = 0; i < nVertices; i++) {
-      P3 pt = vertices[i];
-      elemNos[i] = (pt instanceof Node ? ((Node) pt).getElementNumber()
-          : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
-    }
-    info.put("elemNos", elemNos);
+    info.put("elemNos", getElemNos());
 
     if (id == null) {
       info.put("atomIndex", Integer.valueOf(centralAtom.i));
@@ -262,6 +259,8 @@ public class Polyhedron {
       if (pointGroupFamily != null)
         info.put("pointGroupFamily", pointGroupFamily.getPointGroupName());
     }
+    if (pointScale > 0)
+      info.put("pointScale", Float.valueOf(pointScale));
     if (faces != null)
       info.put("faces", faces);
     if (isState || Logger.debugging) {
@@ -277,6 +276,20 @@ public class Polyhedron {
       info.put("triangles", AU.arrayCopyII(triangles, triangles.length));
     }
     return info;
+  }
+
+  private int[] elemNos;
+  
+  public int[] getElemNos() {
+    if (elemNos == null) {      
+      elemNos = new int[nVertices];
+      for (int i = 0; i < nVertices; i++) {
+        P3 pt = vertices[i];
+        elemNos[i] = (pt instanceof Node ? ((Node) pt).getElementNumber()
+            : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
+      }
+    }
+    return elemNos;
   }
 
   String getSymmetry(Viewer vwr, boolean withPointGroup) {
