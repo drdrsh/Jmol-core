@@ -8581,9 +8581,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public void setShapeProperty(int shapeID, String propertyName, Object value) {
     // Eval, BondCollection, StateManager, local
-    if (shapeID < 0)
-      return; // not applicable
-    shm.setShapePropertyBs(shapeID, propertyName, value, null);
+    if (shapeID >= 0)
+      shm.setShapePropertyBs(shapeID, propertyName, value, null);
   }
 
   public Object getShapeProperty(int shapeType, String propertyName) {
@@ -8598,9 +8597,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public void setModelVisibility() {
-    if (shm == null) // necessary for file chooser
-      return;
-    shm.setModelVisibility();
+    if (shm != null) // necessary for file chooser
+      shm.setModelVisibility();
   }
 
   public void resetShapes(boolean andCreateNew) {
@@ -8651,9 +8649,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   void undoMoveActionClear(int taintedAtom, int type, boolean clearRedo) {
     // called by actionManager
-    if (!g.preserveState)
-      return;
-    getStateCreator().undoMoveActionClear(taintedAtom, type, clearRedo);
+    if (g.preserveState)
+      getStateCreator().undoMoveActionClear(taintedAtom, type, clearRedo);
   }
 
   protected void moveAtomWithHydrogens(int atomIndex, int deltaX, int deltaY,

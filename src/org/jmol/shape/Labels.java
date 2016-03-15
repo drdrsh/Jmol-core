@@ -351,7 +351,7 @@ public class Labels extends AtomShape {
           if (i < nbg && !bsBgColixSet.get(i))
             setBgcolix(i, defaultBgcolix);
         }
-        setShapeVisibility(atom, strings != null && i < strings.length
+        atom.setShapeVisibility(vf, strings != null && i < strings.length
             && strings[i] != null && mads[i] >= 0);
       }
       return;
@@ -457,7 +457,7 @@ public class Labels extends AtomShape {
     String label = t.getText();
     Atom atom = atoms[i];
     addString(atom, i, label, format == null ? PT.rep(label, "%", "%%") : format);
-    setShapeVisibility(atom, true);
+    atom.setShapeVisibility(vf, true);
     if (t.colix >= 0)
       setLabelColix(i, t.colix, PAL.UNKNOWN.id);
     setFont(i, t.font.fid);
@@ -503,7 +503,7 @@ public class Labels extends AtomShape {
   }
 
   private boolean addString(Atom atom, int i, String label, String strLabel) {
-    setShapeVisibility(atom, label != null);
+    atom.setShapeVisibility(vf, label != null);
     boolean notNull = (strLabel != null);
     boolean isNew = (strings[i] == null);
     strings[i] = label;

@@ -570,8 +570,11 @@ public class Polyhedra extends AtomShape {
 
   private void setVisible(boolean visible) {
     BS bs = findPolyBS(centers);
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-      polyhedrons[i].visible = visible;
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      Polyhedron p = polyhedrons[i];
+      p.visible = visible;
+      atoms[p.centralAtom.i].setShapeVisibility(vf, visible);
+    }
   }
 
   private void buildPolyhedra() {
@@ -1107,15 +1110,16 @@ public class Polyhedra extends AtomShape {
     for (int i = polyhedronCount; --i >= 0;) {
       Polyhedron p = polyhedrons[i];
       if (p.id == null) {
-        if (ms.at[p.centralAtom.i].isDeleted())
+        int ia = p.centralAtom.i;
+        if (ms.at[ia].isDeleted())
           p.isValid = false;
-        p.visibilityFlags = (p.visible && bsModels.get(p.modelIndex)
-            && !ms.isAtomHidden(p.centralAtom.i)
-            && !ms.at[p.centralAtom.i].isDeleted() ? vf : 0);
-        if (p.visibilityFlags != 0)
-          setShapeVisibility(atoms[p.centralAtom.i], true);
+       p.visibilityFlags = (p.visible && bsModels.get(p.modelIndex)
+            && !ms.isAtomHidden(ia)
+            && !ms.at[ia].isDeleted() ? vf : 0);
+        atoms[ia].setShapeVisibility(vf, p.visibilityFlags != 0);
       } else {
-        p.visibilityFlags = (p.visible && (p.modelIndex < 0 || bsModels.get(p.modelIndex)) ? vf : 0);
+        p.visibilityFlags = (p.visible
+            && (p.modelIndex < 0 || bsModels.get(p.modelIndex)) ? vf : 0);
       }
     }
   }
@@ -1135,15 +1139,16 @@ public class Polyhedra extends AtomShape {
     s.append(vwr.getAtomShapeState(this));
     for (int i = 0; i < polyhedronCount; i++) {
       Polyhedron p = polyhedrons[i];
+      int ia = p.centralAtom.i;
       if (p.isValid && p.id == null && p.colixEdge != C.INHERIT_ALL
-          && bsColixSet.get(p.centralAtom.i))
+          && bsColixSet.get(ia))
         appendCmd(
             s,
             "select ({"
-                + p.centralAtom.i
+                + ia
                 + "}); color polyhedra "
-                + (C.isColixTranslucent(colixes[p.centralAtom.i]) ? "translucent "
-                    : "") + C.getHexCode(colixes[p.centralAtom.i]) + " "
+                + (C.isColixTranslucent(colixes[ia]) ? "translucent "
+                    : "") + C.getHexCode(colixes[ia]) + " "
                 + C.getHexCode(p.colixEdge));
     }
     return s.toString();

@@ -24,7 +24,11 @@
 package org.jmol.renderspecial;
 
 
-import org.jmol.c.PAL;
+import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.T3;
+import javajs.util.V3;
+
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.render.ShapeRenderer;
@@ -33,11 +37,6 @@ import org.jmol.shapespecial.Polyhedra;
 import org.jmol.shapespecial.Polyhedron;
 import org.jmol.util.C;
 import org.jmol.util.GData;
-
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.T3;
-import javajs.util.V3;
 
 public class PolyhedraRenderer extends ShapeRenderer {
 

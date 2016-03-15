@@ -114,7 +114,7 @@ public abstract class AtomShape extends Shape {
     Atom atom = atoms[i];
     mads[i] = atom.calculateMad(vwr, rd);
     bsSizeSet.setBitTo(i, isVisible);
-    setShapeVisibility(atom, isVisible);
+    atom.setShapeVisibility(vf, isVisible);
   }
 
   protected void setPropAS(String propertyName, Object value, BS bs) {

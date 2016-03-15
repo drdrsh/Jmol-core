@@ -171,11 +171,6 @@ public abstract class Shape {
   protected void initModelSet() {
   }
 
-  protected void setShapeVisibility(Atom atom, boolean isVisible) {
-    // only used for AtomShapes and BioShapes 
-    atom.setShapeVisibility(vf, isVisible);
-  }
-
   public void setShapeSizeRD(int size, RadiusData rd, BS bsSelected) {
     if (rd == null)
       setSize(size, bsSelected);

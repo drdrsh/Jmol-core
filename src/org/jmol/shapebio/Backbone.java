@@ -108,7 +108,7 @@ public class Backbone extends BioShapeCollection {
   
   public void addDisplayedBackbone(Atom a, boolean isVisible) {
     a.nBackbonesDisplayed += (isVisible ? 1 : -1);
-    setShapeVisibility(a, isVisible);
+    a.setShapeVisibility(vf, isVisible);
   }
   
   @Override

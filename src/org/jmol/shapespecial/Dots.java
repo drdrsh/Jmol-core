@@ -117,7 +117,7 @@ public class Dots extends AtomShape {
       thisAtom = ((Integer) value).intValue();
       if (thisAtom >= atoms.length)
         return;
-      setShapeVisibility(atoms[thisAtom], true);
+      atoms[thisAtom].setShapeVisibility(vf, true);
       ec.allocDotsConvexMaps(ac);
       return;
     }
@@ -126,7 +126,7 @@ public class Dots extends AtomShape {
         return;
       isActive = true;
       ec.setFromBits(thisAtom, (BS) value);
-      setShapeVisibility(atoms[thisAtom], true);
+      atoms[thisAtom].setShapeVisibility(vf, true);
       if (mads == null) {
         ec.setMads(null);
         mads = new short[ac];
@@ -249,9 +249,8 @@ public class Dots extends AtomShape {
         bsOn.setBitTo(i, false);
     }
 
-    for (int i = ac; --i >= 0;) {
-      setShapeVisibility(atoms[i], bsOn.get(i));
-    }
+    for (int i = ac; --i >= 0;)
+      atoms[i].setShapeVisibility(vf, bsOn.get(i));
     if (!isVisible)
       return;
     if (newSet) {

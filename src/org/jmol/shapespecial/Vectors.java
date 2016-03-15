@@ -31,11 +31,10 @@ import org.jmol.shape.AtomShape;
 
 public class Vectors extends AtomShape {
 
- @Override
-protected void initModelSet() {
-    if (!(isActive = ms.modelSetHasVibrationVectors()))
-      return;
-    super.initModelSet();
+  @Override
+  protected void initModelSet() {
+    if (!!(isActive = ms.modelSetHasVibrationVectors()))
+      super.initModelSet();
   }
 
  @Override

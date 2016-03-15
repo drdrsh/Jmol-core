@@ -68,13 +68,10 @@ public class Halos extends AtomShape {
 
   @Override
   public void setModelVisibilityFlags(BS bs) {
-    BS bsSelected = (vwr.getSelectionHalosEnabled() ? vwr
-        .bsA() : null);
-    for (int i = ac; --i >= 0;) {
-      boolean isVisible = bsSelected != null && bsSelected.get(i)
-          || (mads != null && mads[i] != 0);
-      setShapeVisibility(atoms[i], isVisible);
-    }
+    BS bsSelected = (vwr.getSelectionHalosEnabled() ? vwr.bsA() : null);
+    for (int i = ac; --i >= 0;)
+      atoms[i].setShapeVisibility(vf, bsSelected != null && bsSelected.get(i)
+          || mads != null && mads[i] != 0);
   }
 
   @Override

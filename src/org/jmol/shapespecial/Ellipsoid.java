@@ -25,6 +25,7 @@
 
 package org.jmol.shapespecial;
 
+import org.jmol.modelset.Atom;
 import org.jmol.util.C;
 
 import javajs.util.M3;
@@ -61,7 +62,7 @@ public class Ellipsoid {
     return e;
   }
 
-  public static Ellipsoid getEllipsoidForAtomTensor(Tensor t, P3 center) {
+  public static Ellipsoid getEllipsoidForAtomTensor(Tensor t, Atom center) {
     Ellipsoid e = new Ellipsoid();
     e.tensor = t;
     e.modelIndex = t.modelIndex;
