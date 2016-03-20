@@ -1085,7 +1085,7 @@ public class SmilesSearch extends JmolMolecule {
         }
 
         if (ringData != null) {
-          // r <n> ring of a given size
+          // r <n> ring of a given size or [R]
           if (patternAtom.ringSize >= -1) {
             if (patternAtom.ringSize <= 0) {
               if ((ringCounts[iAtom] == 0) != (patternAtom.ringSize == 0))
@@ -1104,23 +1104,23 @@ public class SmilesSearch extends JmolMolecule {
                     break;
                 }
             }
-            // R <n> a certain number of rings
-            if (patternAtom.ringMembership >= -1) {
-              //  R --> -1 implies "!R0"
-              if (patternAtom.ringMembership == -1 ? ringCounts[iAtom] == 0
-                  : ringCounts[iAtom] != patternAtom.ringMembership)
-                break;
-            }
           }
-        }
-        // x <n>
-        if (patternAtom.ringConnectivity >= 0) {
-          // default > 0
-          n = ringConnections[iAtom];
-          if (patternAtom.ringConnectivity == -1 && n == 0
-              || patternAtom.ringConnectivity != -1
-              && n != patternAtom.ringConnectivity)
-            break;
+          // R <n> a certain number of rings
+          if (patternAtom.ringMembership >= -1) {
+            //  R --> -1 implies "!R0"
+            if (patternAtom.ringMembership == -1 ? ringCounts[iAtom] == 0
+                : ringCounts[iAtom] != patternAtom.ringMembership)
+              break;
+          }
+          // x <n>
+          if (patternAtom.ringConnectivity >= 0) {
+            // default > 0
+            n = ringConnections[iAtom];
+            if (patternAtom.ringConnectivity == -1 && n == 0
+                || patternAtom.ringConnectivity != -1
+                && n != patternAtom.ringConnectivity)
+              break;
+          }
         }
       }
       foundAtom = !foundAtom;
