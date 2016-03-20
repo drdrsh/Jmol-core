@@ -75,7 +75,7 @@ class Subsystem {
 
     SymmetryInterface s0 = msRdr.cr.asc.getSymmetry();
     T3[] vu43 = s0.getUnitCellVectors();
-    T3[] vr43 = SimpleUnitCell.getReciprocal(vu43);
+    T3[] vr43 = SimpleUnitCell.getReciprocal(vu43, null);
 
     // using full matrix math here:
     //
@@ -102,7 +102,7 @@ class Subsystem {
     uc_nu[0] = vu43[0]; // origin
     for (int i = 0; i < 3; i++)
       uc_nu[i + 1] = V3.new3((float) a[i][0], (float) a[i][1], (float) a[i][2]);    
-    uc_nu = SimpleUnitCell.getReciprocal(uc_nu);
+    uc_nu = SimpleUnitCell.getReciprocal(uc_nu, null);
     symmetry = ((Symmetry) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCell(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)

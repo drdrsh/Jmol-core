@@ -64,6 +64,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.Edge;
 import org.jmol.util.Parser;
 import org.jmol.util.Point3fi;
+import org.jmol.util.SimpleUnitCell;
 
 import javajs.awt.Font;
 import javajs.util.AU;
@@ -2632,7 +2633,7 @@ public class CmdExt extends ScriptExt {
       case T.off:
         if (chk)
           return;
-        eval.setObjectMad(JC.SHAPE_AXES, "axes", 1);
+        eval.setObjectMad10(JC.SHAPE_AXES, "axes", 10);
         setShapeProperty(JC.SHAPE_AXES, "position",
             P3.new3(50, 50, Float.MAX_VALUE));
         eval.setBooleanProperty("navigationMode", true);
@@ -4761,7 +4762,7 @@ public class CmdExt extends ScriptExt {
   private void unitcell(int i) throws ScriptException {
     ScriptEval eval = e;
     int icell = Integer.MAX_VALUE;
-    int mad = Integer.MAX_VALUE;
+    int mad10 = Integer.MAX_VALUE;
     T3 pt = null;
     TickInfo tickInfo = eval.tickParamAsStr(i, true, false, false);
     i = eval.iToken;
@@ -4784,14 +4785,32 @@ public class CmdExt extends ScriptExt {
       String s = paramAsStr(i).toLowerCase();
       ucname = s;
       if (s.indexOf(",") < 0 && !chk) {
-        // parent, standard, conventional
-        eval.setCurrentCagePts(null, null);
-        if (PT.isOneOf(s, ";parent;standard;primitive;")) {
+        // parent, standard, conventional, primitive
+        eval.setCurrentCagePts(null, null); // reset
+        if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {
           newUC = vwr.ms.getInfo(vwr.am.cmi, "unitcell_conventional");
           if (newUC != null)
             eval.setCurrentCagePts(vwr.getV0abc(newUC), "" + newUC);
         }
-        s = (String) vwr.ms.getInfo(vwr.am.cmi, "unitcell_" + s);
+        s = (String) vwr.ms.getInfo(vwr.am.cmi, "unitcell_" + ucname);
+        if (s == null) {
+          boolean isPrimitive = ucname.equals("primitive");
+          if (isPrimitive || ucname.equals("reciprocal")) {
+            SymmetryInterface u = vwr.getCurrentUnitCell();
+            ucname = (u == null ? "" : u.getSpaceGroupName() + " ") + ucname;
+            oabc = (u == null ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
+                P3.new3(0, 1, 0), P3.new3(0, 0, 1) } : u.getUnitCellVectors());
+            if (isPrimitive) {
+              String stype = (String) vwr.ms.getSymTemp(false)
+                  .getSymmetryInfoAtom(vwr.ms, vwr.bsA(), null, 0, null, null,
+                      null, T.lattice);
+              (u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(true, stype.charAt(0), oabc);
+            } else {
+              SimpleUnitCell.getReciprocal(oabc, oabc);
+            }
+            break;
+          }
+        }
         showString(s);
       }
       newUC = s;
@@ -4804,7 +4823,8 @@ public class CmdExt extends ScriptExt {
       P3 o = P3.newP(vwr.getBoundBoxCenter());
       pt = vwr.getBoundBoxCornerVector();
       o.sub(pt);
-      oabc = new P3[] {o, P3.new3(pt.x * 2, 0, 0), P3.new3(0, pt.y * 2, 0), P3.new3(0, 0, pt.z * 2) };
+      oabc = new P3[] { o, P3.new3(pt.x * 2, 0, 0), P3.new3(0, pt.y * 2, 0),
+          P3.new3(0, 0, pt.z * 2) };
       pt = null;
       eval.iToken = i;
       break;
@@ -4878,13 +4898,13 @@ public class CmdExt extends ScriptExt {
         i--;
       }
     }
-    mad = eval.getSetAxesTypeMad(++i);
+    mad10 = eval.getSetAxesTypeMad10(++i);
     eval.checkLast(eval.iToken);
-    if (chk || mad == Integer.MAX_VALUE)
+    if (chk || mad10 == Integer.MAX_VALUE)
       return;
-    if (mad == Integer.MAX_VALUE)
+    if (mad10 == Integer.MAX_VALUE)
       vwr.am.cai = -1;
-    if (newUC != null)
+    if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(newUC);
     if (icell != Integer.MAX_VALUE)
       vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), null, icell);
@@ -4892,7 +4912,7 @@ public class CmdExt extends ScriptExt {
       vwr.setCurrentCage(id);
     else if (isReset || oabc != null)
       eval.setCurrentCagePts(oabc, ucname);
-    eval.setObjectMad(JC.SHAPE_UCCAGE, "unitCell", mad);
+    eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
     if (pt != null)
       vwr.ms.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);
     if (tickInfo != null)

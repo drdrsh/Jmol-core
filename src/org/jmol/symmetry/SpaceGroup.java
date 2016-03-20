@@ -116,6 +116,8 @@ class SpaceGroup {
 
   boolean isBilbao;
 
+  String latticeType = "P"; // P A B C I F
+
   static SpaceGroup getNull(boolean doInit, boolean doNormalize, boolean doFinalize) {
       getSpaceGroups();
     SpaceGroup sg = new SpaceGroup(null, doInit);
@@ -206,8 +208,10 @@ class SpaceGroup {
     isBio = (name.indexOf("bio") >= 0);
     if (index >= getSpaceGroups().length && !isBio && name.indexOf("SSG:") < 0  && name.indexOf("[subsystem") < 0) {
       SpaceGroup sg = getDerivedSpaceGroup();
-      if (sg != null)
+      if (sg != null) {
         name = sg.getName();
+        latticeType = sg.latticeType;
+      }
     }
     
     finalOperations = new SymmetryOperation[operationCount];
@@ -579,7 +583,7 @@ class SpaceGroup {
     return determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, sg.index);
   }
 
-  private final static SpaceGroup determineSpaceGroupNA(String name,
+  final static SpaceGroup determineSpaceGroupNA(String name,
                                                      float[] unitCellParams) {
     return (unitCellParams == null ? determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, -1)
         : determineSpaceGroup(name, unitCellParams[0], unitCellParams[1],
@@ -767,7 +771,7 @@ class SpaceGroup {
   
   private static String ambiguousNames = "";
   private static String lastInfo = "";
-  
+ 
   private void buildSpaceGroup(String cifLine) {
     String[] terms = PT.split(cifLine.toLowerCase(), ";");    
     intlTableNumberFull = terms[0].trim(); // International Table Number :
@@ -807,6 +811,7 @@ class SpaceGroup {
     hmSymbolFull = Character.toUpperCase(terms[2].charAt(0))
         + terms[2].substring(1);
     parts = PT.split(hmSymbolFull, ":");
+    latticeType = hmSymbolFull.substring(0, 1);
     hmSymbol = parts[0];
     hmSymbolExt = (parts.length == 1 ? "" : parts[1]);
     int pt = hmSymbol.indexOf(" -3");
@@ -850,6 +855,47 @@ class SpaceGroup {
     return defs;
   }
 
+  // primitives:
+  // 1: primitive:  1. P1   2. P1¯,
+  //                3. P2  10. P2/m   
+  //                4. P21  11. P21/m   
+  //                6. Pm   13. P2/c
+  //                7. Pc   14. P21/c
+  
+  //                16. P222    25. Pmm2  29. Pca21  33. Pna21  50. Pban  54. Pcca   58. Pnnm   62. Pnma   
+  //                17. P2221   26. Pmc21 30. Pnc2   34. Pnn2   51. Pmma  55. Pbam   59. Pmmn   
+  //                18. P21212  27. Pcc2  31. Pmn21  47. Pmmm   52. Pnna  56. Pccn   60. Pbcn
+  //                19. P212121 28. Pma2  32. Pba2   49. Pccm   53. Pmna  57. Pbcm   61. Pbca
+  
+  //                75. P4      81. P4¯   86. P42/n  92. P41212  96. P43212 102. P42nm  106. P42bc  114. P4_21c  118. P4¯n2  126. P4/nnc  130. P4/ncc  134. P42/nnm  138. P42/ncm
+  //                76. P41     83. P4/m  89. P422   93. P4222   99. P4mm   103. P4cc   111. P4¯2m  115. P4¯m2   123. P4/mmm 127. P4/mbm  131. P42/mmc 135. P42/mbc
+  //                77. P42     84. P42/m 90. P4212  94. P42212 100. P4bm   104. P4nc   112. P4¯2c  116. P4¯c2   124. P4/mcc 128. P4/mnc  132. P42/mcm 136. P42/mnm
+  //                78. P43     85. P4/n  91. P4122  95. P4322  101. P42cm  105. P42mc  113. P4¯21m 117. P4¯b2   125. P4/nbm 129. P4/nmm  133. P42/nbc 137. P42/nmc
+  //
+  // + all hexagonal and rhombohedral
+ 
+  // 2: base-centered:  5. C2     8. Cm    9. Cc    12. C2/m   15. C2/c
+  //                   20. C2221 37. Ccc2 66. Cccm  
+  //                   21. C222  63. Cmcm 67. Cmma
+  //                   35. Cmm2  64. Cmca 68. Ccca
+  //                   36. Cmc21 65. Cmmm
+  
+  // 3: face-centered:  22. F222 42. Fmm2   43. Fdd2    69. Fmmm   70. Fddd
+  //                   143. P3  149. P312  153. P3212  158. P3c1  164. P3¯m1  
+  //                   144. P31 150. P321  154. P3221  159. P31c  165. P3¯c1
+  //                   145. P32 151. P3112 156. P3m1   162. P3¯1m 
+  //                   147. P3¯ 152. P3121 157. P31m   163. P3¯1c
+  
+  
+  // 4: body-centered: 80. I41    97. I422  109. I41md   121. I4¯2m   141. I41/amd  
+  //                   82. I4¯    98. I4122 110. I41cd   122. I4¯2d   142. I41/acd
+  //                   87. I4/m  107. I4mm  119. I4¯m2   139. I4/mmm
+  //                   88. I41/a 108. I4cm  120. I4¯c2   140. I4/mcm
+  
+  
+  /**
+   * intlNo:options;schoenflies;hermannMouguin;Hall;BilbaoFlag
+   */
   private static String[] STR_SG = {
     "1;c1^1;p 1;p 1",
     "2;ci^1;p -1;-p 1",

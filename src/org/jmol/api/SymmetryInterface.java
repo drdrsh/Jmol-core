@@ -196,10 +196,10 @@ public interface SymmetryInterface {
 
   public T3 getFractionalOrigin();
 
-  public void setAxes(float scale, P3[] axisPoints, P3 fixedOrigin, P3 originPoint);
-
   public boolean getState(SB commands);
 
   public AtomIndexIterator getIterator(Viewer vwr, Atom atom, Atom[] atoms, BS bstoms, float radius);
+
+  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc);
 
 }

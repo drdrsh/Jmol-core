@@ -45,6 +45,7 @@ class SymmetryInfo {
   int[] cellRange;
   private P3 periodicOriginXyz;
   Lst<V3> centerings;
+  String latticeType = "P";
 
   boolean isPeriodic() {
     return periodicOriginXyz != null;
@@ -66,6 +67,8 @@ class SymmetryInfo {
     sgName = (String) info.get("spaceGroup");
     if (sgName == null || sgName == "")
       sgName = "spacegroup unspecified";
+    if ((latticeType = (String) info.get("latticeType")) == null)
+      latticeType = "P";
     int symmetryCount = info.containsKey("symmetryCount") ? 
         ((Integer) info.get("symmetryCount")).intValue() 
         : 0;

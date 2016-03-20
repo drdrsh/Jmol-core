@@ -654,9 +654,9 @@ public class Escape {
     switch (tokType) {
     case T.point:
       return (pts == null ? new P3() : pts[0]);
-    case T.axis:
+    case T.axes:
     case T.radius:
-      return (pts == null ? new V3() : pts[tokType == T.axis ? 1 : 2]);
+      return (pts == null ? new V3() : pts[tokType == T.axes ? 1 : 2]);
     case T.angle:
       return Float.valueOf(pts == null ? Float.NaN : pts[3].x);
     case T.draw:

@@ -1278,7 +1278,8 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   @Override
   public void drawDottedLineBits(P3 pointA, P3 pointB) {
     //axes, bbcage only
-    line3d.plotDashedLineBits(argbCurrent, 2, 1, pointA, pointB);
+    // these were just too short at 2, 1
+    line3d.plotDashedLineBits(argbCurrent, 8, 4, pointA, pointB);
   }
 
   @Override

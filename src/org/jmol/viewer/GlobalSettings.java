@@ -200,6 +200,7 @@ public class GlobalSettings {
     setI("axesMode", axesMode == T.axesunitcell ? 2
         : axesMode == T.axesmolecular ? 1 : 0);
     setF("axesScale", axesScale);
+    setF("axesOffset", axesOffset);
     setB("axesOrientationRasmol", axesOrientationRasmol);
     setB("backboneSteps", backboneSteps);
     setB("bondModeOr", bondModeOr);
@@ -564,6 +565,7 @@ public class GlobalSettings {
   boolean autoFps = false;
   public int axesMode = T.axeswindow;
   float axesScale = 2;
+  float axesOffset = 0;
   float starWidth = 0.05f;
   boolean bondPicking = false;
   String dataSeparator = "~~~";

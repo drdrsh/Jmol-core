@@ -141,6 +141,10 @@ public class ModelSet extends BondCollection {
   public BS bboxModels;
   private BS bboxAtoms;
   private final BoxInfo boxInfo;
+  
+  public BoxInfo getBoxInfo() {
+    return boxInfo;
+  }
 
   public Lst<StateScript> stateScripts;
   /*
@@ -978,7 +982,7 @@ public class ModelSet extends BondCollection {
       pts = uc.getCanonicalCopy(scale, true);
       break;
     case T.boundbox:
-      pts = boxInfo.getCanonicalCopy(scale);
+      pts = getBoxInfo().getCanonicalCopy(scale);
       break;
     }
     Lst<Object> v = new Lst<Object>();

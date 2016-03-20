@@ -25,21 +25,21 @@
 
 package org.jmol.symmetry;
 
-import org.jmol.api.Interface;
-import org.jmol.util.BoxInfo;
-import org.jmol.util.Escape;
-import javajs.util.P3;
-import org.jmol.util.Tensor;
-import org.jmol.util.SimpleUnitCell;
-
 import javajs.util.Lst;
 import javajs.util.M3;
 import javajs.util.M4;
+import javajs.util.P3;
 import javajs.util.P3i;
 import javajs.util.Quat;
 import javajs.util.T3;
 import javajs.util.T4;
 import javajs.util.V3;
+
+import org.jmol.api.Interface;
+import org.jmol.util.BoxInfo;
+import org.jmol.util.Escape;
+import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Tensor;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -57,10 +57,10 @@ import org.jmol.viewer.Viewer;
 class UnitCell extends SimpleUnitCell {
   
   private P3[] vertices; // eight corners
-  private final P3 cartesianOffset = new P3();
   private P3 fractionalOffset;
   private boolean allFractionalRelative; // specifically used for JmolData
-  private P3 unitCellMultiplier;
+  protected final P3 cartesianOffset = new P3();
+  protected P3 unitCellMultiplier;
   public Lst<String> moreInfo;
   public String name = "";
   
@@ -79,6 +79,8 @@ class UnitCell extends SimpleUnitCell {
    */
   static UnitCell newP(T3[] points, boolean setRelative) {
     UnitCell c = new UnitCell();
+    if (points.length == 3)
+      points = new T3[] { new P3(), points[0], points[1], points[2] };
     float[] parameters = new float[] { -1, 0, 0, 0, 0, 0, points[1].x,
         points[1].y, points[1].z, points[2].x, points[2].y, points[2].z,
         points[3].x, points[3].y, points[3].z };
@@ -520,10 +522,11 @@ class UnitCell extends SimpleUnitCell {
   }
 
   /**
-   * Returns a quaternion that will take the standard frame
-   * to a view down a particular axis, expressed as its counterparts.
+   * Returns a quaternion that will take the standard frame to a view down a
+   * particular axis, expressed as its counterparts.
    * 
-   * @param abc  ab  bc  ca
+   * @param abc
+   *        ab bc ca
    * @return quaternion
    */
   public Quat getQuaternionRotation(String abc) {
@@ -532,29 +535,62 @@ class UnitCell extends SimpleUnitCell {
     T3 c = V3.newVsub(vertices[1], vertices[0]);
     T3 x = new V3();
     T3 v = new V3();
-  
-//  qab = !quaternion({0 0 0}, cross(cxb,c), cxb);
-//  qbc = !quaternion({0 0 0}, cross(axc,a), axc)
-//  qca = !quaternion({0 0 0}, cross(bxa,b), bxa);
-//      
-      
-  switch ("abc".indexOf(abc)) {
-  case 0: // bc
-    x.cross(a, c);
-    v.cross(x, a);
-    break;
-  case 1: // ca
-    x.cross(b, a);
-    v.cross(x, b);
-    break;
-  case 2: // ab
-    x.cross(c, b);
-    v.cross(x, c);
-    break;
-  default:
-    return null;
-  }
-  return Quat.getQuaternionFrame(null, v, x).inv();
+
+    //  qab = !quaternion({0 0 0}, cross(cxb,c), cxb);
+    //  qbc = !quaternion({0 0 0}, cross(axc,a), axc)
+    //  qca = !quaternion({0 0 0}, cross(bxa,b), bxa);
+    //
+
+    int quadrant = 0;
+    if (abc.length() == 2) { // a1 a2 a3 a4 b1 b2 b3 b4...
+      quadrant = abc.charAt(1) - 48;
+      abc = abc.substring(0, 1);
+    }
+    int axis = "abc".indexOf(abc);
+    
+    T3 v1, v2;
+    switch (axis) {
+    case 0:
+    default:
+      v1 = a;
+      v2 = c;
+      break;
+    case 1:
+      v1 = b;
+      v2 = a;
+      break;
+    case 2:
+      v1 = c;
+      v2 = a;
+      // "c" puts origin in the bottom left
+      if (quadrant != 0)
+        v1.scale(-1);
+      break;
+    }
+    switch(quadrant) {
+    case 0:
+    default:
+      // upper left for a b; bottom left for c
+    case 1:
+      // upper left
+      break;
+    case 2:
+      // upper right
+      v1.scale(-1);
+      v2.scale(-1);
+      break;
+    case 3:
+      // lower right
+      v2.scale(-1);
+      break;
+    case 4:
+      // lower left
+      v1.scale(-1);
+      break;
+    }
+    x.cross(v1, v2);
+    v.cross(x, v1);    
+    return Quat.getQuaternionFrame(null, v, x).inv();
   }
 
   public T3[] getV0abc(Object def) {
@@ -625,4 +661,58 @@ class UnitCell extends SimpleUnitCell {
     return pts;
   }
 
+  /**
+   * 
+   * @param toPrimitive  or assumed conventional
+   * @param type P, A, B, C, I(BCC), or F(FCC)
+   * @param uc either [origin, va, vb, vc] or just [va, vb, vc]
+   * @return true if successful
+   */
+  public boolean toFromPrimitive(boolean toPrimitive, char type,
+                                       T3[] uc) {
+    int offset = uc.length - 3;
+    M3 mf;
+    switch (type) {
+    default:
+      return false;
+    case 'r': // reciprocal
+      getReciprocal(uc, uc);
+      return true;
+    case 'P':
+      mf = M3.newA9(new float[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 });
+      toPrimitive = true;
+      break;
+    case 'A':
+      mf = M3.newA9(new float[] { 1, 0, 0, 0, 0.5f, -0.5f, 0, 0.5f, 0.5f});
+      break;
+    case 'B':
+      mf = M3.newA9(new float[] { 0.5f, 0, -0.5f, 0, 1, 0, 0.5f, 0, 0.5f});
+      break;
+    case 'C':
+      mf = M3.newA9(new float[] { 0.5f, -0.5f, 0, 0.5f, 0.5f, 0, 0, 0, 1});
+      break;
+    case 'I':
+//      f = new float[] { .5f, .5f, -.5f, -.5f, .5f, .5f, .5f, -.5f, .5f };
+      mf = M3.newA9(new float[] { -.5f,  .5f,  .5f,  // was y   
+                         .5f, -.5f,  .5f,  // was z
+                         .5f,  .5f, -.5f });// was x
+//    : new float[] { 1, 0, 1, 1, 1, 0, 0, 1, 1 })
+      break;
+    case 'F':
+     // WAS f = new float[] { .5f, .5f, 0, 0, .5f, .5f, .5f, 0, .5f };
+      mf = M3.newA9(new float[] { 0, 0.5f, 0.5f, 0.5f, 0, 0.5f, 0.5f, 0.5f, 0 });
+//      : new float[] { 1, -1, 1, 1, 1, -1, -1, 1, 1 }) : null);
+      break;
+    }
+    if (!toPrimitive)
+      mf.invert();
+    for (int i = uc.length; --i >= offset;) {
+      T3 p = uc[i];
+      toFractional(p, false);
+      mf.rotate(p);
+      toCartesian(p, false);
+    }
+    return true;
+  }
+  
 }

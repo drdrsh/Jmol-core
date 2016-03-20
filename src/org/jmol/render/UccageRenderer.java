@@ -27,6 +27,7 @@ package org.jmol.render;
 
 import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
+import org.jmol.shape.Axes;
 import org.jmol.shape.Uccage;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
@@ -37,6 +38,7 @@ import javajs.util.P3;
 import javajs.util.PT;
 
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.StateManager;
 
 public class UccageRenderer extends CageRenderer {
@@ -108,7 +110,13 @@ public class UccageRenderer extends CageRenderer {
       cell1.scale(-1 / fset.z);
     }
     float scale = Math.abs(fset.z);
-    P3[] axisPoints = vwr.getAxisPoints();
+    Axes axes = (Axes) vwr.shm.getShape(JC.SHAPE_AXES);
+    if (axes != null && vwr.areAxesTainted())
+      axes.reinitShape();
+    P3[] axisPoints = (axes == null
+        || vwr.getObjectMad(StateManager.OBJ_AXIS1) == 0 || axes.axisXY.z != 0
+        || axes.fixedOrigin != null || axes.fixedOriginUC.lengthSquared() > 0 ? null
+        : axes.axisPoints);
     boolean drawAllLines = (vwr.getObjectMad(StateManager.OBJ_AXIS1) == 0
         || vwr.getFloat(T.axesscale) < 2 || axisPoints == null);
     P3[] aPoints = axisPoints;

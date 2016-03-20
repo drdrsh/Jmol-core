@@ -843,6 +843,10 @@ public class SymmetryDesc {
     boolean isBio = uc.isBio();
     int iop = op;
     V3 centering = null;
+    if (type == T.lattice) {
+      SpaceGroup sg = SpaceGroup.determineSpaceGroupNA(uc.getSpaceGroupName(), uc.getUnitCellParams());
+      return (sg == null ? "P" : sg.latticeType);      
+    }
     if (xyz == null) {
       SymmetryOperation[] ops = (SymmetryOperation[]) uc
           .getSymmetryOperations();
@@ -921,7 +925,7 @@ public class SymmetryDesc {
       return info[6];
     case T.point:
       return info[7];
-    case T.axis:
+    case T.axes:
     case T.plane:
       return ((ang == 0) == (type == T.plane) ? (V3) info[8] : null);
     case T.angle:

@@ -327,8 +327,7 @@ public class MathExt {
     if (ucnew == null) {
       ucnew = new P3[4];
       if (haveUC) {
-        ucnew[0] = P3.newP(SV.ptValue(uc.get(0)));
-        for (int i = 1; i < 4; i++)
+        for (int i = 0; i < 4; i++)
           ucnew[i] = P3.newP(SV.ptValue(uc.get(i)));
       } else {
         ucnew[0] = SV.ptValue(args[0]);
@@ -353,12 +352,23 @@ public class MathExt {
       }
     }
     String op = (ptParam <= lastParam ? args[ptParam].asString() : null);
-    boolean isPrimitive = "primitive".equalsIgnoreCase(op);
-    if (isPrimitive || "conventional".equalsIgnoreCase(op)) {
-      if (!SimpleUnitCell.transformCubic(isPrimitive, args[++ptParam].asString(), ucnew))
+    boolean toPrimitive = "primitive".equalsIgnoreCase(op);
+    if (toPrimitive || "conventional".equalsIgnoreCase(op)) {
+      String stype = (++ptParam > lastParam ? "" : args[ptParam].asString().toUpperCase());
+      if (stype.equals("BCC"))
+        stype = "I";
+      else if (stype.length() == 0)
+        stype = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, vwr.bsA(), null, 0, null, null, null,
+            T.lattice);
+      
+      if (stype == null || stype.length() == 0)
+        return false;
+      
+      
+      if (!(u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(true, stype.charAt(0), ucnew))
         return false;
     } else if ("reciprocal".equalsIgnoreCase(op)) {
-      ucnew = SimpleUnitCell.getReciprocal(ucnew);
+      ucnew = SimpleUnitCell.getReciprocal(ucnew, null);
     }
     if (scale != 1)
       for (int i = 1; i < 4; i++)
@@ -1222,11 +1232,9 @@ public class MathExt {
         .getAtoms(T.resno, new Integer(args[0].asInt())));
     switch (tok) {
     case T.point:
-      return mp.addXObj(getHelixData(bs, T.point));
-    case T.axis:
-      return mp.addXObj(getHelixData(bs, T.axis));
+    case T.axes:
     case T.radius:
-      return mp.addXObj(getHelixData(bs, T.radius));
+      return mp.addXObj(getHelixData(bs, tok));
     case T.angle:
       return mp.addXFloat(((Float) getHelixData(bs, T.angle)).floatValue());
     case T.draw:
@@ -3034,7 +3042,7 @@ public class MathExt {
     } else if (desc.equalsIgnoreCase("translation")) {
       tok = T.translation;
     } else if (desc.equalsIgnoreCase("axis")) {
-      tok = T.axis;
+      tok = T.axes;
     } else if (desc.equalsIgnoreCase("plane")) {
       tok = T.plane;
     } else if (desc.equalsIgnoreCase("angle")) {

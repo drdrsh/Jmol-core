@@ -23,13 +23,11 @@
  */
 package org.jmol.render;
 
+import javajs.util.P3;
+
 import org.jmol.script.T;
 import org.jmol.shape.Axes;
 import org.jmol.util.GData;
-
-import javajs.awt.Font;
-import javajs.util.P3;
-
 import org.jmol.viewer.StateManager;
 
 
@@ -44,6 +42,8 @@ public class AxesRenderer extends CageRenderer {
   
   private short[] colixes = new short[3];
 
+  private P3 pt000;
+
   private final static String[] axesTypes = {"a", "b", "c"};
 
   @Override
@@ -55,23 +55,22 @@ public class AxesRenderer extends CageRenderer {
   @Override
   protected boolean render() {
     Axes axes = (Axes) shape;
-    int mad = vwr.getObjectMad(StateManager.OBJ_AXIS1);
+    int mad10 = vwr.getObjectMad(StateManager.OBJ_AXIS1);
     // no translucent axes
-    if (mad == 0 || !g3d.checkTranslucent(false))
+    if (mad10 == 0 || !g3d.checkTranslucent(false))
       return false;
     boolean isXY = (axes.axisXY.z != 0);
     if (!isXY && tm.isNavigating() && vwr.getBoolean(T.navigationperiodic))
       return false;
     imageFontScaling = vwr.imageFontScaling;
-    if (vwr.areAxesTainted()) {
-      Font f = axes.font3d;
-      axes.initShape();
-      if (f != null)
-        axes.font3d = f;
-    }
+    if (vwr.areAxesTainted())
+      axes.reinitShape();
     font3d = vwr.gdata.getFont3DScaled(axes.font3d, imageFontScaling);
 
     int modelIndex = vwr.am.cmi;
+    boolean isDataFrame = vwr.isJmolDataFrame();
+    pt000 = (isDataFrame ? pt0 : axes.originPoint);
+
     // includes check here for background model present
     boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
     if (vwr.ms.isJmolDataFrameForModel(modelIndex)
@@ -96,18 +95,18 @@ public class AxesRenderer extends CageRenderer {
         nPoints = (axes.labels.length < 6 ? 3 : 6);
       labelPtr = -1;
     }
-    boolean isDataFrame = vwr.isJmolDataFrame();
 
     int slab = vwr.gdata.slab;
-    int diameter = mad;
+    int diameter = mad10;
     boolean drawTicks = false;
+    P3 ptTemp = originScreen;
     if (isXY) {
       if (exportType == GData.EXPORT_CARTESIAN)
         return false;
-      if (mad >= 20) {
+      if (mad10 >= 20) {
         // width given in angstroms as mAng.
         // max out at 500
-        diameter = (mad > 500 ? 5 : mad / 100);
+        diameter = (mad10 > 500 ? 5 : mad10 / 100);
         if (diameter == 0)
           diameter = 2;
       } else {
@@ -115,38 +114,62 @@ public class AxesRenderer extends CageRenderer {
           diameter += diameter;
       }
       g3d.setSlab(0);
-      float z = axes.axisXY.z;
-      pt0i.setT(z == Float.MAX_VALUE || z == -Float.MAX_VALUE ? tm
-          .transformPt2D(axes.axisXY) : tm.transformPt(axes.axisXY));
-      originScreen.set(pt0i.x, pt0i.y, pt0i.z);
+      ptTemp = axes.axisXY;
+      pt0i.setT(tm.transformPt2D(ptTemp));
+      if (ptTemp.x < 0) {
+        // window origin
+        int offx = (int) ptTemp.x;
+        int offy = (int) ptTemp.x;
+        // offset is from {0 0 0}
+        pointT.setT(pt000);
+        for (int i = 0; i < 3; i++)
+          pointT.add(axes.getAxisPoint(i, false));
+        pt0i.setT(tm.transformPt(pt000));
+        pt2i.scaleAdd(-1, pt0i, tm.transformPt(pointT));
+        if (pt2i.x < 0)
+          offx = -offx;
+        if (pt2i.y < 0)
+          offy = -offy;
+        pt0i.x += offx;
+        pt0i.y += offy;
+      }
+      ptTemp = originScreen;
+      ptTemp.set(pt0i.x, pt0i.y, pt0i.z);
       float zoomDimension = vwr.getScreenDim();
       float scaleFactor = zoomDimension / 10f * axes.scale;
       if (g3d.isAntialiased())
         scaleFactor *= 2;
       for (int i = 0; i < 3; i++) {
-        tm.rotatePoint(axes.getAxisPoint(i, false), p3Screens[i]);
-        p3Screens[i].z *= -1;
-        p3Screens[i].scaleAdd2(scaleFactor, p3Screens[i], originScreen);
+        P3 pt = p3Screens[i];
+        tm.rotatePoint(axes.getAxisPoint(i, false), pt);
+        pt.z *= -1;
+        pt.scaleAdd2(scaleFactor, pt, ptTemp);
       }
     } else {
       drawTicks = (axes.tickInfos != null);
       if (drawTicks) {
         checkTickTemps();
-        tickA.setT(axes.getOriginPoint(isDataFrame));
+        tickA.setT(pt000);
       }
-      tm.transformPtNoClip(axes.getOriginPoint(isDataFrame), originScreen);
-      diameter = getDiameter((int) originScreen.z, mad);
+      tm.transformPtNoClip(pt000, ptTemp);
+      diameter = getDiameter((int) ptTemp.z, mad10);
       for (int i = nPoints; --i >= 0;)
         tm.transformPtNoClip(axes.getAxisPoint(i, isDataFrame), p3Screens[i]);
     }
-    float xCenter = originScreen.x;
-    float yCenter = originScreen.y;
+    float xCenter = ptTemp.x;
+    float yCenter = ptTemp.y;
     colixes[0] = vwr.getObjectColix(StateManager.OBJ_AXIS1);
     colixes[1] = vwr.getObjectColix(StateManager.OBJ_AXIS2);
     colixes[2] = vwr.getObjectColix(StateManager.OBJ_AXIS3);
+    boolean showOrigin = (!isXY && nPoints == 3);
     for (int i = nPoints; --i >= 0;) {
-      if (isXY && axes.axisType != null
-          && !axes.axisType.contains(axesTypes[i]))
+      if (isXY
+          && axes.axisType != null
+          && !axes.axisType.contains(axesTypes[i])
+          || Math.abs(xCenter - p3Screens[i].x)
+              + Math.abs(yCenter - p3Screens[i].y) <= 2
+          && (!(showOrigin = false)) // setting showOrigin here
+      )
         continue;
       colix = colixes[i % 3];
       g3d.setC(colix);
@@ -165,17 +188,15 @@ public class AxesRenderer extends CageRenderer {
           tickInfo.signFactor = (i % 6 >= 3 ? -1 : 1);
         }
       }
-      renderLine(originScreen, p3Screens[i], diameter, drawTicks
-          && tickInfo != null);
+      renderLine(ptTemp, p3Screens[i], diameter, drawTicks && tickInfo != null);
     }
-    if (nPoints == 3 && !isXY) { // a b c [orig]
+    if (showOrigin) { // a b c [orig]
       String label0 = (axes.labels == null || axes.labels.length == 3
           || axes.labels[3] == null ? "0" : axes.labels[3]);
       if (label0 != null && label0.length() != 0) {
         colix = vwr.cm.colixBackgroundContrast;
         g3d.setC(colix);
-        renderLabel(label0, originScreen.x, originScreen.y, originScreen.z,
-            xCenter, yCenter);
+        renderLabel(label0, xCenter, yCenter, ptTemp.z, xCenter, yCenter);
       }
     }
     if (isXY)

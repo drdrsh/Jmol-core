@@ -477,14 +477,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     display = info.get("display");
     isSingleThreaded = apiPlatform.isSingleThreaded();
     noGraphicsAllowed = checkOption2("noDisplay", "-n");
-    //System.out.println("nographics " + noGraphicsAllowed);
     headless = apiPlatform.isHeadless();
     haveDisplay = (isWebGL || display != null && !noGraphicsAllowed
         && !headless && !dataOnly);
     noGraphicsAllowed &= (display == null);
-    //System.out.println("nographics " + noGraphicsAllowed);
     headless |= noGraphicsAllowed;
-    //System.out.println("headless " + headless + commandOptions);
     if (haveDisplay) {
       mustRender = true;
       multiTouch = checkOption2("multiTouch", "-multitouch");
@@ -1454,12 +1451,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return fm.getBufferedInputStream(fullPathName);
   }
 
-  /*
-    public void addLoadScript(String script) {
-      System.out.println("VIEWER addLoadSCript " + script);
-      // fileManager.addLoadScript(script);
-    }
-  */
   private Map<String, Object> setLoadParameters(Map<String, Object> htParams,
                                                 boolean isAppend) {
     if (htParams == null)
@@ -3267,10 +3258,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public void popHoldRepaint(String why) {
-    //System.out.println("vwr popHoldRepaint " + why);
     if (rm != null) {
       rm.popHoldRepaint(why.indexOf(JC.REPAINT_IGNORE) < 0, why);
-      //System.out.println("vwr popHoldRepaint " + why + " " + ((org.jmol.render.RepaintManager)repaintManager).holdRepaint);
     }
   }
 
@@ -3498,9 +3487,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     //        --> repaintManager.repaintDone()
     //        --> which sets repaintPending false and does notify();
 
-    //System.out.println(Thread.currentThread() + "render Screen Image " +
-    // creatingImage);
-    //System.out.println("viewer render");
     if (updateWindow(width, height)) {
       if (!checkStereoSlave || gRight == null) {
         getScreenImageBuffer(gLeft, false);
@@ -3508,8 +3494,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         drawImage(gRight, getImage(true, false), 0, 0, tm.stereoDoubleDTI);
         drawImage(gLeft, getImage(false, false), 0, 0, tm.stereoDoubleDTI);
       }
-      //System.out.println(Thread.currentThread() +
-      // "notifying repaintManager repaint is done");
     }
     if (captureParams != null
         && Boolean.FALSE != captureParams.get("captureEnabled")) {
@@ -3569,7 +3553,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   private boolean updateWindow(int width, int height) {
-    //System.out.println("Viewer updateWindow " + width + " " + height);
     if (!refreshing || creatingImage)
       return (refreshing ? false : !isJS);
     if (isTainted || tm.slabEnabled)
@@ -5263,6 +5246,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     switch (tok) {
     case T.atoms:
       return g.particleRadius;
+    case T.axesoffset:
+      return  g.axesOffset;
     case T.axesscale:
       return g.axesScale;
     case T.bondtolerance:
@@ -5685,8 +5670,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       // /11.1///
       g.defaultTranslucent = value;
       break;
+    case T.axesoffset:
+      setAxesScale(tok, value);
+      break;
     case T.axesscale:
-      setAxesScale(value);
+      setAxesScale(tok, value);
       break;
     case T.visualrange:
       tm.visualRangeAngstroms = value;
@@ -6727,21 +6715,13 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     reset(true);
   }
 
-  void setAxesScale(float scale) {
-    scale = checkFloatRange(scale, -100, 100);
-    g.axesScale = scale;
+  private void setAxesScale(int tok, float val) {
+    val = checkFloatRange(val, -100, 100);
+    if (tok == T.axesoffset)
+      g.axesOffset = val;
+    else
+      g.axesScale = val;
     axesAreTainted = true;
-  }
-
-  public P3[] getAxisPoints() {
-    // for uccage renderer
-    shm.loadShape(JC.SHAPE_AXES);
-    return (getObjectMad(StateManager.OBJ_AXIS1) == 0
-        || g.axesMode != T.axesunitcell
-        || ((Boolean) getShapeProperty(JC.SHAPE_AXES, "axesTypeXY"))
-            .booleanValue()
-        || getShapeProperty(JC.SHAPE_AXES, "origin") != null ? null
-        : (P3[]) getShapeProperty(JC.SHAPE_AXES, "axisPoints"));
   }
 
   void setAxesMode(int mode) {
@@ -8008,12 +7988,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     ms.setProteinType(bs == null ? bsA() : bs, type);
   }
 
-  /*
-   * void debugStack(String msg) { //what's the right way to do this? try {
-   * Logger.error(msg); String t = null; t.substring(3); } catch (Exception e) {
-   * System.out.println(e.toString()); } }
-   */
-
   public int getVanderwaalsMar(int i) {
     return (defaultVdw == VDW.USER ? userVdwMars[i] : Elements
         .getVanderwaalsMar(i, defaultVdw));
@@ -8360,12 +8334,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   public void unBindAction(String desc, String name) {
     if (haveDisplay)
       acm.unbindAction(desc, name);
-  }
-
-  public Lst<Object> getPlaneIntersection(int type, P4 plane, float scale,
-                                          int flags) {
-    return ms.getPlaneIntersection(type, plane, scale, flags,
-        type == T.unitcell ? getCurrentUnitCell() : null);
   }
 
   public int calculateStruts(BS bs1, BS bs2) {

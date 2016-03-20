@@ -312,7 +312,7 @@ public class SmilesAromatic {
   final static private int[][] OS_PI_COUNTS = { 
       { -2, 1, 0 },          // 0 B    b+v-4
       { 1, 2, 1, -1 },       // 1 C    b+v+c-4
-      { 2, 1, 2, 1, -1 },    // 2 N,P  b+v-4
+      { 2, 1, 2, 1, 1 },    // 2 N,P  b+v-4
       { 2, 1 },              // 3 O,Se b+v-4
       { -2, 1, 2, 1, -2 },   // 4 As   b+v-4
       { 2, 1, 2, 2 }         // 5 S    b+v-4
@@ -369,48 +369,23 @@ public class SmilesAromatic {
           // not a connection/valence/charge of interest
           return false;
         case -1:
-          switch (z) {
-          case 6:
-            // check for c=X(nonaromatic) 0
-            // against c[c+1](C)c (0) and c=c (1)
-            Edge[] bonds = atom.getEdges();
-            n = 0; // no double bond; sp2 c cation
-            for (int j = bonds.length; --j >= 0;) {
-              Edge b = bonds[j];
-              if (b.getCovalentOrder() != 2)
-                continue;
-              // just check that the connected atom is either C or flat-aromatic
-              // if it is, assign 1 pi electron; if it is not, set it to 0 as long
-              // we are not being strict or discard this ring if we are.
-              Node het = b.getOtherAtomNode(atom);
-              n = (het.getElementNumber() == 6
-                  || bsAromatic.get(het.getIndex()) ? 1 : strictness > 0 ? -100
-                  : 0);
-              break;
-            }
-            break;
-          case 7:
-            // check for n=C(nonaromatic) 2
-            // against c=n=O(nonaromatic) 1
-            // only if not strict
-            Edge[] nbonds = atom.getEdges();
-            n = -100;
-            if (strictness == 0)
-              for (int j = nbonds.length; --j >= 0;) {
-                Edge b = nbonds[j];
-                if (b.getCovalentOrder() != 2)
-                  continue;
-                Node other = b.getOtherAtomNode(atom);
-                if (bsAromatic.get(other.getIndex()))
-                  continue;
-                n = (other.getElementNumber() == 6 ? 2 : 1);
-                break;
-              }
-            break;
-          default:
-            return false;
+          // check for c=X(nonaromatic) 0
+          // against c[c+1](C)c (0) and c=c (1)
+          Edge[] bonds = atom.getEdges();
+          n = 0; // no double bond; sp2 c cation
+          for (int j = bonds.length; --j >= 0;) {
+            Edge b = bonds[j];
+            if (b.getCovalentOrder() != 2)
+              continue;
+            // just check that the connected atom is either C or flat-aromatic
+            // if it is, assign 1 pi electron; if it is not, set it to 0 as long
+            // we are not being strict or discard this ring if we are.
+            Node het = b.getOtherAtomNode(atom);
+            n = (het.getElementNumber() == 6 || bsAromatic.get(het.getIndex()) ? 1
+                : strictness > 0 ? -100 : 0);
           }
-          //$FALL-THROUGH$
+          break;
+        //$FALL-THROUGH$
         default:
           // ok -- add in the number of pi electrons for this atom
           npi += n;

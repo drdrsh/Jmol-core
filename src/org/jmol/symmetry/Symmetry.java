@@ -664,20 +664,6 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setAxes(float scale, P3[] axisPoints, P3 fixedOrigin,
-                      P3 originPoint) {
-    P3[] vertices = getUnitCellVerticesNoOffset();
-    P3 offset = getCartesianOffset();
-    if (fixedOrigin == null)
-      originPoint.add2(offset, vertices[0]);
-    else
-      offset = fixedOrigin;
-    axisPoints[0].scaleAdd2(scale, vertices[4], offset);
-    axisPoints[1].scaleAdd2(scale, vertices[2], offset);
-    axisPoints[2].scaleAdd2(scale, vertices[1], offset);
-  }
-
-  @Override
   public boolean getState(SB commands) {
     P3 pt = getFractionalOffset();
     boolean loadUC = false;
@@ -698,6 +684,13 @@ public class Symmetry implements SymmetryInterface {
                                        BS bsAtoms, float radius) {
     return ((UnitCellIterator) Interface.getInterface("org.jmol.symmetry.UnitCellIterator", vwr, "script"))
         .set(this, atom, atoms, bsAtoms, radius);
+  }
+
+  @Override
+  public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc) {
+    if (unitCell == null)
+      unitCell = UnitCell.newP(oabc, false);
+    return unitCell.toFromPrimitive(toPrimitive, type, oabc);
   }
 
 }

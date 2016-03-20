@@ -45,7 +45,6 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   protected Font font3d;
 
   final protected P3i pt0i = new P3i();
-  final protected P3i pt1i = new P3i();
   final protected P3i pt2i = new P3i();
   protected final P3i s1 = new P3i();
   protected final P3i s2 = new P3i();
@@ -71,23 +70,23 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   //  box.setBounds(0, 0, 0, 0);
   //}
   
-  protected int getDiameter(int z, int madOrPixels) {
+  protected int getDiameter(int z, int mad10OrPixels) {
     int diameter;
-    boolean isMad = (madOrPixels > 20);
+    boolean isMad10 = (mad10OrPixels > 20);
     switch (exportType) {
     case GData.EXPORT_CARTESIAN:
-      diameter = (isMad ? madOrPixels 
-          : (int) Math.floor(vwr.tm.unscaleToScreen(z, madOrPixels * 2) * 1000));
+      diameter = (isMad10 ? mad10OrPixels 
+          : (int) Math.floor(vwr.tm.unscaleToScreen(z, mad10OrPixels * 2/10f) * 1000));
       break;
     default:
-      if (isMad) {
+      if (isMad10) {
         // mad
-        diameter = (int) vwr.tm.scaleToScreen(z, madOrPixels); 
+        diameter = (int) vwr.tm.scaleToScreen(z, mad10OrPixels/10); 
       } else {
         // pixels, and that's what we want
         if (g3d.isAntialiased())
-          madOrPixels += madOrPixels;
-        diameter = madOrPixels;
+          mad10OrPixels += mad10OrPixels;
+        diameter = mad10OrPixels;
       }
     }
     return diameter;
@@ -240,7 +239,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
         drawDashed(x1, y1, z1, x2, y2, z2, dashDots);
     } else {
       if (diameter < 0) {
-        g3d.drawDashedLineBits(4, 2, pt0 , pt1);
+        g3d.drawDashedLineBits(8, 4, pt0 , pt1);
         return 1;
       }    
       g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, pt0, pt1);

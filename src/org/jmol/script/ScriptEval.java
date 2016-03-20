@@ -2836,9 +2836,13 @@ public class ScriptEval extends ScriptExpr {
       return;
     }
     switch (tok) {
+    case T.offset:
+      setFloatProperty("axisOffset", floatParameter(++index));
+      checkLast(iToken);
+      return;
     case T.center:
-      P3 center = centerParameter(index + 1, null);
-      setShapeProperty(JC.SHAPE_AXES, "origin", center);
+      setShapeProperty(JC.SHAPE_AXES, "origin",
+          centerParameter(index + 1, null));
       checkLast(iToken);
       return;
     case T.type:
@@ -2865,9 +2869,8 @@ public class ScriptEval extends ScriptExpr {
       case 7:
         // axes labels "X" "Y" "Z" "-X" "-Y" "-Z"
         setShapeProperty(JC.SHAPE_AXES, "labels", new String[] {
-            paramAsStr(++index), paramAsStr(++index),
-            paramAsStr(++index), paramAsStr(++index),
-            paramAsStr(++index), paramAsStr(++index) });
+            paramAsStr(++index), paramAsStr(++index), paramAsStr(++index),
+            paramAsStr(++index), paramAsStr(++index), paramAsStr(++index) });
         break;
       case 5:
         sOrigin = paramAsStr(index + 4);
@@ -2875,8 +2878,8 @@ public class ScriptEval extends ScriptExpr {
       case 4:
         // axes labels "X" "Y" "Z" [origin]
         setShapeProperty(JC.SHAPE_AXES, "labels", new String[] {
-            paramAsStr(++index), paramAsStr(++index),
-            paramAsStr(++index), sOrigin });
+            paramAsStr(++index), paramAsStr(++index), paramAsStr(++index),
+            sOrigin });
         break;
       default:
         bad();
@@ -2897,10 +2900,10 @@ public class ScriptEval extends ScriptExpr {
       setShapeProperty(JC.SHAPE_AXES, "position", xyp);
       return;
     }
-    int mad = getSetAxesTypeMad(index);
-    if (chk || mad == Integer.MAX_VALUE)
+    int mad10 = getSetAxesTypeMad10(index);
+    if (chk || mad10 == Integer.MAX_VALUE)
       return;
-    setObjectMad(JC.SHAPE_AXES, "axes", mad);
+    setObjectMad10(JC.SHAPE_AXES, "axes", mad10);
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_AXES, "tickInfo", tickInfo);
   }
@@ -3022,12 +3025,12 @@ public class ScriptEval extends ScriptExpr {
       if (index == slen)
         return;
     }
-    int mad = getSetAxesTypeMad(index);
-    if (chk || mad == Integer.MAX_VALUE)
+    int mad10 = getSetAxesTypeMad10(index);
+    if (chk || mad10 == Integer.MAX_VALUE)
       return;
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_BBCAGE, "tickInfo", tickInfo);
-    setObjectMad(JC.SHAPE_BBCAGE, "boundbox", mad);
+    setObjectMad10(JC.SHAPE_BBCAGE, "boundbox", mad10);
   }
 
   private void cmdCD() throws ScriptException {
@@ -5389,7 +5392,7 @@ public class ScriptEval extends ScriptExpr {
       axis.set(-1, 0, 0);
       checkLength(++i);
       break;
-    case T.axis:
+    case T.axes:
       String abc = paramAsStr(++i);
       checkLength(++i);
       switch ("xyz".indexOf(abc)) {
@@ -6773,9 +6776,9 @@ public class ScriptEval extends ScriptExpr {
       case T.integer:
       case T.decimal:
         vwr.shm.loadShape(JC.SHAPE_MEASURES);
-        int mad = getSetAxesTypeMad(2);
-        if (mad != Integer.MAX_VALUE)
-          setShapeSizeBs(JC.SHAPE_MEASURES, mad, null);
+        int mad10 = getSetAxesTypeMad10(2);
+        if (mad10 != Integer.MAX_VALUE)
+          setShapeSizeBs(JC.SHAPE_MEASURES, mad10, null);
         return;
       }
       setUnits(paramAsStr(2), T.measurementunits);
@@ -8647,7 +8650,7 @@ public class ScriptEval extends ScriptExpr {
     return data;
   }
 
-  public int getSetAxesTypeMad(int index) throws ScriptException {
+  public int getSetAxesTypeMad10(int index) throws ScriptException {
     if (index == slen)
       return 1;
     switch (getToken(checkLast(index)).tok) {
@@ -8661,7 +8664,7 @@ public class ScriptEval extends ScriptExpr {
       return intParameterRange(index, -1, 19);
     case T.decimal:
       float angstroms = floatParameterRange(index, 0, 2);
-      return (Float.isNaN(angstroms) ? Integer.MAX_VALUE : (int) Math.floor(angstroms * 1000 * 2));
+      return (Float.isNaN(angstroms) ? Integer.MAX_VALUE : (int) Math.floor(angstroms * 10000 * 2));
     }
     if (!chk)
       errorStr(ERROR_booleanOrWhateverExpected, "\"DOTTED\"");
@@ -8913,10 +8916,9 @@ public class ScriptEval extends ScriptExpr {
     vwr.setObjectArgb(str, argb);
   }
 
-  public void setObjectMad(int iShape, String name, int mad) {
-    if (chk)
-      return;
-    vwr.setObjectMad(iShape, name, mad);
+  public void setObjectMad10(int iShape, String name, int mad10) {
+    if (!chk)
+      vwr.setObjectMad(iShape, name, mad10);
   }
 
   private String setObjectProp(String id, int tokCommand, int ptColor)

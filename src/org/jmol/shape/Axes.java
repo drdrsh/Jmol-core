@@ -30,21 +30,26 @@ import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.util.Escape;
 
+import javajs.awt.Font;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.P3;
 import javajs.util.V3;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.StateManager;
 
 public class Axes extends FontLineShape {
 
   public P3 axisXY = new P3();
   public float scale;
   
-  private P3 fixedOrigin;
-  final P3 originPoint = new P3();
-  final P3[] axisPoints = new P3[6];
-  final static P3 pt0 = new P3();
+  public P3 fixedOrigin;
+  public final P3 originPoint = new P3();
+  
+  /**
+   * [x, y, z, -x, -y, -z] or [a, b, c, -a, -b, -c]
+   */
+  final public P3[] axisPoints = new P3[6];
   public String[] labels;
   public String axisType; //a b c ab, ac, bc
   
@@ -53,19 +58,6 @@ public class Axes extends FontLineShape {
       axisPoints[i] = new P3();
   }
 
-  public P3 getOriginPoint(boolean isDataFrame) {
-    return (isDataFrame ? pt0 : originPoint);
-  }
-  
-  final P3 ptTemp = new P3();
-  public P3 getAxisPoint(int i, boolean isDataFrame) {
-    if (!isDataFrame && axisXY.z == 0)
-      return axisPoints[i];
-    ptTemp.sub2(axisPoints[i], originPoint);
-    ptTemp.scale(0.5f);
-    return ptTemp; 
-  }
-  
   private final static float MIN_AXIS_LEN = 1.5f;
 
   @Override
@@ -80,14 +72,14 @@ public class Axes extends FontLineShape {
       return;
     }
     if ("origin" == propertyName) {
-      if (value == null) {
+      if (value == null || ((P3) value).length() == 0) {
         fixedOrigin = null;
       } else {
         if (fixedOrigin == null)
           fixedOrigin = new P3();
         fixedOrigin.setT((P3) value);
       }
-      initShape();
+      reinitShape();
       return;
     }
     if ("labels" == propertyName) {
@@ -111,37 +103,73 @@ public class Axes extends FontLineShape {
     setPropFLS(propertyName, value);
   }
 
+  private final P3 pt0 = new P3();
+  public final P3 fixedOriginUC = new P3();
+
   @Override
   public void initShape() {
-    super.initShape();
+    translucentAllowed = false;
     myType = "axes";
     font3d = vwr.gdata.getFont3D(JC.AXES_DEFAULT_FONTSIZE);
     int axesMode = vwr.g.axesMode;
-    if (fixedOrigin == null)
-      originPoint.set(0, 0, 0);
-    else
-      originPoint.setT(fixedOrigin);
-    if (axesMode == T.axesunitcell
-        && ms.unitCells != null) {
+    if (axesMode == T.axesunitcell && ms.unitCells != null) {
       SymmetryInterface unitcell = vwr.getCurrentUnitCell();
       if (unitcell != null) {
+        float voffset = vwr.getFloat(T.axesoffset);
+        fixedOriginUC.set(voffset, voffset, voffset);
+        P3 offset = unitcell.getCartesianOffset();
+        P3[] vertices = unitcell.getUnitCellVerticesNoOffset();
+        originPoint.add2(offset, vertices[0]);
+        if (voffset != 0)
+          unitcell.toCartesian(fixedOriginUC, false);
+        else if (fixedOrigin != null)
+          originPoint.setT(fixedOrigin);
+        if (voffset != 0) {
+          originPoint.add(fixedOriginUC);
+        }
+//        unitcell.setAxes(scale, axisPoints, fixedO, originPoint);
         // We must divide by 2 because that is the default for ALL axis types.
         // Not great, but it will have to do.
         scale = vwr.getFloat(T.axesscale) / 2f;
-        unitcell.setAxes(scale, axisPoints, fixedOrigin, originPoint);
+        // these are still relative vectors, not points
+        axisPoints[0].scaleAdd2(scale, vertices[4], originPoint);
+        axisPoints[1].scaleAdd2(scale, vertices[2], originPoint);
+        axisPoints[2].scaleAdd2(scale, vertices[1], originPoint);
         return;
       }
-    } else if (axesMode == T.axeswindow) {
-      if (fixedOrigin == null)
-        originPoint.setT(vwr.getBoundBoxCenter());
     }
+    originPoint.setT(fixedOrigin != null ? fixedOrigin
+        : axesMode == T.axeswindow ? vwr.getBoundBoxCenter() 
+        : pt0);
     setScale(vwr.getFloat(T.axesscale) / 2f);
   }
   
+  public void reinitShape() {
+    Font f = font3d;
+    initShape();
+    if (f != null)
+      font3d = f;
+  }
+
+  final P3 ptTemp = new P3();
+  /**
+   * get actual point or 1/2 vector from origin to this point
+   * 
+   * @param i
+   * @param isDataFrame
+   * @return actual point if not a data frame and not an XY request; otherwise return 1/2 vector along unit cell
+   */
+  public P3 getAxisPoint(int i, boolean isDataFrame) {
+    if (!isDataFrame && axisXY.z == 0)
+      return axisPoints[i];
+    ptTemp.sub2(axisPoints[i], originPoint);
+    ptTemp.scale(0.5f);
+    return ptTemp; 
+  }
+  
+
   @Override
   public Object getProperty(String property, int index) {
-    if (property == "axisPoints")
-      return axisPoints;
     if (property == "origin")
       return fixedOrigin;
     if (property == "axesTypeXY")

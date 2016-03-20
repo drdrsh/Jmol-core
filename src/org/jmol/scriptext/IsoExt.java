@@ -298,13 +298,25 @@ public class IsoExt extends ScriptExt {
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
-      switch (getToken(i).tok) {
+      int tok = getToken(i).tok;
+      switch (tok) {
       case T.unitcell:
       case T.boundbox:
         if (chk)
           break;
-        Lst<Object> vp = vwr.getPlaneIntersection(eval.theTok, null,
-            intScale / 100f, 0);
+        SymmetryInterface uc = null;
+        if (tok == T.unitcell) {
+          if (eval.isArrayParameter(i + 1)) {
+            P3[] points = eval.getPointArray(i + 1, -1, false);
+            uc = vwr.ms.getSymTemp(true).getUnitCell(points, false, null);
+            i = eval.iToken;
+          } else {          
+            uc = vwr.getCurrentUnitCell();
+          }
+          if (uc == null)
+            invArg();
+        }
+        Lst<Object> vp = getPlaneIntersection(tok, null, uc, intScale / 100f, 0);
         intScale = 0;
         propertyName = "polygon";
         propertyValue = vp;
@@ -509,7 +521,7 @@ public class IsoExt extends ScriptExt {
         if (tokIntersect != 0) {
           if (chk)
             break;
-          Lst<Object> vpc = vwr.getPlaneIntersection(tokIntersect, plane,
+          Lst<Object> vpc = getPlaneIntersection(tokIntersect, plane, null,
               intScale / 100f, 0);
           intScale = 0;
           propertyName = "polygon";
@@ -734,6 +746,13 @@ public class IsoExt extends ScriptExt {
         havePoints, connections, iptDisplayProperty, null);
     return true;
   }
+
+  private Lst<Object> getPlaneIntersection(int type, P4 plane,
+                                           SymmetryInterface uc,
+                                           float scale, int flags) {
+    return vwr.ms.getPlaneIntersection(type, plane, scale, flags, uc);
+  }
+
 
   private void mo(boolean isInitOnly, int iShape) throws ScriptException {
     ScriptEval eval = e;
