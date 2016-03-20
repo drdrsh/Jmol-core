@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
+import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.SB;
@@ -91,6 +92,7 @@ public class SmilesGenerator {
   public P3 stereoReference;
   private SmilesStereo smilesStereo;
   private boolean isPolyhedral;
+  private Lst<BS> aromaticRings;
 
   // generation of SMILES strings
 
@@ -307,9 +309,11 @@ public class SmilesGenerator {
       search.jmolAtomCount = ac;
       search.ringDataMax = 7;
       search.flags = flags;
-      search.setRingData(null, null);
+      Lst<BS>[] vRings = AU.createArrayOfArrayList(4);
+      search.setRingData(null, vRings);
       bsAromatic = search.bsAromatic;
       ringSets = search.ringSets;
+      aromaticRings = vRings[3];
       setBondDirections();
     } else {
       bsAromatic = new BS();
@@ -584,7 +588,7 @@ public class SmilesGenerator {
     if (sp2Atoms == null)
       sp2Atoms = new Node[5];
     if (bondPrev != null) {
-      strBond = (isAromatic && bsAromatic.get(prevIndex) ? "" : SmilesBond.getBondOrderString(bondPrev.getCovalentOrder()));
+      strBond = getBondOrder(bondPrev, atomIndex, prevIndex, isAromatic);
       if (prevSp2Atoms == null)
         sp2Atoms[nSp2Atoms++] = prevAtom;
       else
@@ -686,7 +690,7 @@ public class SmilesGenerator {
       if (bond == bond0)
         continue;
       Node a = bond.getOtherAtomNode(atom);
-      strBond = SmilesBond.getBondOrderString(bond.order);
+      strBond = getBondOrder(bond, atomIndex, a.getIndex(), isAromatic);
       if (!deferStereo) {
         chBond = getBondStereochemistry(bond, atom);
         if (chBond != '\0')
@@ -760,6 +764,30 @@ public class SmilesGenerator {
     prevSp2Atoms = sp2Atoms;
     prevAtom = atom;
     return atomNext;
+  }
+
+  /**
+   * 
+   * @param bondPrev
+   * @param atomIndex
+   * @param prevIndex
+   * @param isAromatic
+   * @return "-", "=", "#", or ""
+   */
+  private String getBondOrder(Edge bondPrev, int atomIndex, int prevIndex,
+                              boolean isAromatic) {
+    int border = bondPrev.getCovalentOrder();
+    return (!isAromatic || !bsAromatic.get(prevIndex) ? SmilesBond
+        .getBondOrderString(border) : border == 1
+        && !isSameAromaticRing(atomIndex, prevIndex) ? "-" : "");
+  }
+
+  private boolean isSameAromaticRing(int a1, int a2) {
+    BS bs;
+    for (int i = aromaticRings.size(); --i >= 0;)
+      if ((bs = aromaticRings.get(i)).get(a1) && bs.get(a2))
+        return true;
+    return false;
   }
 
   void sortBonds(Node atom, Node refAtom, P3 center) {
