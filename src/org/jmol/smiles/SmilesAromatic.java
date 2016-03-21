@@ -230,8 +230,6 @@ public class SmilesAromatic {
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Node ringAtom = atoms[i];
       Edge[] bonds = ringAtom.getEdges();
-      if (bonds.length < 3)
-        continue;
       if (bonds.length > 3)
         return false;
     }

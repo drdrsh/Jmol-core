@@ -742,9 +742,9 @@ public class SmilesAtom extends P3 implements BNode {
       if (atomicNumber != 6)
         valence = Integer.MAX_VALUE; // force [n]
     }
-    int count = (isotopeNumber != 0 
-        || stereo != null && stereo.length() > 0 
-        || charge != 0 || osclass != 0 ? -1
+    int count = (valence == Integer.MAX_VALUE || isotopeNumber != 0 
+        || charge != 0 || osclass != 0 
+        || stereo != null && stereo.length() > 0 ? -1
         : getDefaultCount(atomicNumber, false));
     return (count == valence ? sym : 
       // rearranged 14.5.3_2016.03.06 to 
