@@ -262,7 +262,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   }
 
   /**
-   * Returns a bitset matching the pattern within atoms.
+   * Returns a bitset matching the pattern within a set of Jmol atoms.
    * 
    * @param pattern
    *        SMILES or SMARTS pattern.
@@ -274,7 +274,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
 
   @Override
   public BS getSubstructureSet(String pattern, Node[] atoms, int ac, BS bsSelected, int flags) throws Exception {
-    return (BS) matchPriv(pattern, atoms, ac, bsSelected, null, 
+    return (BS) matchPriv(pattern, atoms, ac, bsSelected, null, true,
         flags, MODE_BITSET);
   }
 
@@ -296,7 +296,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     search.jmolAtomCount = Math.abs(ac);
     search.setSelected(bsSelected);
     search.flags = flags;
-    search.getRingData(vRings, true);
+    search.getRingData(vRings, true, true);
     search.asVector = false;
     search.subSearches = new SmilesSearch[1];
     search.getSelections();
@@ -336,7 +336,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   public BS[] getSubstructureSetArray(String pattern, Node[] atoms, int ac,
                                       BS bsSelected, BS bsAromatic, int flags)
       throws Exception {
-    return (BS[]) matchPriv(pattern, atoms, ac, bsSelected, bsAromatic, 
+    return (BS[]) matchPriv(pattern, atoms, ac, bsSelected, bsAromatic, true, 
         flags, MODE_ARRAY);
   }
   
@@ -421,7 +421,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   @Override
   public int[][] getCorrelationMaps(String pattern, Node[] atoms, int atomCount,
                                     BS bsSelected, int flags) throws Exception {
-    return (int[][]) matchPriv(pattern, atoms, atomCount, bsSelected, null, 
+    return (int[][]) matchPriv(pattern, atoms, atomCount, bsSelected, null, true,
         flags, MODE_MAP);
   }
 
@@ -436,27 +436,30 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     search.setFlags(search.flags | SmilesParser.getFlags(pattern));
     search.createTopoMap(bsAromatic);
     return matchPriv(pattern, search.jmolAtoms, -search.jmolAtoms.length,
-        null, bsAromatic, flags, mode);
+        null, bsAromatic, bsAromatic.isEmpty(), flags, mode);
   }
 
   @SuppressWarnings({ "unchecked" })
   private Object matchPriv(String pattern, Node[] atoms, int ac, BS bsSelected,
-                       BS bsAromatic, int flags, int mode) throws Exception {
+                       BS bsAromatic, boolean doTestAromatic, int flags, int mode) throws Exception {
     InvalidSmilesException.clear();
     try {
       boolean isSmarts = ((flags & JC.SMILES_TYPE_SMARTS) ==  JC.SMILES_TYPE_SMARTS);
       SmilesSearch search = SmilesParser.getMolecule(pattern, isSmarts);
-      if (search.openSMILES && !isSmarts)
+      if (search.openSMILES && !isSmarts && !search.patternAromatic)
         SmilesSearch.normalizeAromaticity(search.patternAtoms, bsAromatic, search.flags);
       
       search.jmolAtoms = atoms;
       search.jmolAtomCount = Math.abs(ac);
-      if (atoms instanceof BNode[])
+      boolean is3D = !(atoms[0] instanceof SmilesAtom); 
+      if (atoms[0] instanceof BNode)
         search.bioAtoms = (BNode[]) atoms;
       search.setSelected(bsSelected);
       search.getSelections();
       search.bsRequired = null;
-      search.setRingData(null, null);
+      if (!doTestAromatic)
+        search.bsAromatic = bsAromatic;
+      search.setRingData(null, null, is3D || doTestAromatic);
       search.exitFirstMatch = ((flags & JC.SMILES_MATCH_ONCE_ONLY) == JC.SMILES_MATCH_ONCE_ONLY);
       switch (mode) {
       case MODE_BITSET:

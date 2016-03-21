@@ -1065,6 +1065,10 @@ public final class JC {
     return hAlignNames[(align >> TEXT_ALIGN_SHIFT) & 3];
   }
   
+  public static boolean isSmilesCanonical(String options) {
+    return (options != null && PT.isOneOf(options.toLowerCase(), ";/cactvs///;/cactus///;/nci///;/canonical///;"));
+  }
+
   public static final int SMILES_TYPE_SMILES         = 0x1; // placeholder -- DO NOT TEST FOR THIS as it is also in openSMARTS
   public static final int SMILES_TYPE_SMARTS         = 0x2; // CmdExt -> matcher
   public static final int SMILES_TYPE_OPENSMILES     = 0x5; // includes aromatic normalization of pattern; tests true when openSMARTS as well
@@ -1123,7 +1127,7 @@ public final class JC {
   public final static int UNITID_ATOM = 4;
   public final static int UNITID_INSCODE = 8;
   public final static int UNITID_TRIM = 16;
-  
+
   /**
    * Get a unitID type
    * 
@@ -1147,5 +1151,7 @@ public final class JC {
     }
     return i;
   }
+
+
 
 }

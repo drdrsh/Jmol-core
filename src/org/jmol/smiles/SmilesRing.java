@@ -32,7 +32,7 @@ import org.jmol.java.BS;
 import org.jmol.util.Edge;
 
 /**
- * Ring of Nodes
+ * Ring of (tentatively) aromatic nodes and edges
  */
 
 class SmilesRing extends BS {
@@ -41,23 +41,23 @@ class SmilesRing extends BS {
   Lst<Edge> edges;
   BS bsEdgesToCheck;
   boolean isOK;
+  int n;
 
-  SmilesRing(BS atoms, Lst<Edge> edges, boolean isOK) {
+  SmilesRing(int n, BS atoms, Lst<Edge> edges, boolean isOK) {
     this.or(atoms);
     this.edges = edges;
     this.isOK = isOK;
+    this.n = n;
   }
 
   void addEdges(Hashtable<String, SmilesRingSet> htEdgeMap) {
-    for (int i = edges.size(); --i >= 0;) {
-      Edge e = edges.get(i);
-      htEdgeMap.put(getKey(e), set);
-    }
+    for (int i = edges.size(); --i >= 0;)
+      htEdgeMap.put(getKey(edges.get(i)), set);
   }
 
   static SmilesRingSet getSetByEdge(Edge edge,
                                            Hashtable<String, SmilesRingSet> htEdgeMap) {
-    return htEdgeMap.get(SmilesRing.getKey(edge));
+    return htEdgeMap.get(getKey(edge));
   }
 
   private static String getKey(Edge e) {

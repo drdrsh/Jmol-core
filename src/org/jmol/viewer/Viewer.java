@@ -8660,7 +8660,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   @Override
   public String getOpenSmiles(BS bs) throws Exception {
-    return getSmilesOpt(bs, -1, -1, JC.SMILES_TYPE_OPENSMILES | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT :0), null);  
+    return getSmilesOpt(bs, -1, -1, JC.SMILES_TYPE_OPENSMILES | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT :0), "/openstrict///");  
   }
 
   public String getBioSmiles(BS bs) throws Exception {
@@ -8708,7 +8708,12 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         bsSelected.setBits(index1, index2 + 1);
       }
     }
-    return getSmilesMatcher().getSmiles(atoms, ms.ac, bsSelected, bioComment, flags);
+    SmilesMatcherInterface sm = getSmilesMatcher();
+    if (JC.isSmilesCanonical(options)) {
+      String smiles = sm.getSmiles(atoms, ms.ac, bsSelected, "/noAromatic/", flags);
+      return getChemicalInfo(smiles, T.getTokenFromName("smiles")).trim();
+    }
+    return sm.getSmiles(atoms, ms.ac, bsSelected, bioComment, flags);
   }
 
   public void alert(String msg) {

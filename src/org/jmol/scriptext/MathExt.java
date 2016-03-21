@@ -635,14 +635,14 @@ public class MathExt {
         if (!mf1.equals(mf2))
           return mp.addXStr("NONE");
         if (bs1 != null)
-          smiles1 = (String) e.getSmilesExt().getSmilesMatches("", null, bs1,
+          smiles1 = (String) e.getSmilesExt().getSmilesMatches("/strict///", null, bs1,
               null, JC.SMILES_TYPE_SMILES, true, false);
         boolean check;
         if (bs2 == null) {
           // note: find smiles1 IN smiles2 here
           check = (vwr.getSmilesMatcher().areEqual(smiles2, smiles1) > 0);
         } else {
-          check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null, bs2,
+          check = (((BS) e.getSmilesExt().getSmilesMatches("/strict///" + smiles1, null, bs2,
               null, JC.SMILES_TYPE_SMILES, true, false)).nextSetBit(0) >= 0);
         }
         if (!check) {
@@ -657,11 +657,11 @@ public class MathExt {
               // but only if not square planar
               int pt = smiles1.toLowerCase().indexOf("invertstereo"); 
               smiles1 = (pt >= 0 ? smiles1.substring(0, pt) + smiles1.substring(pt + 12) 
-                  : "/invertstereo/" + smiles1);//vwr.getSmilesMatcher().reverseChirality(smiles1);
+                  : "/invertstereo strict/" + smiles1);//vwr.getSmilesMatcher().reverseChirality(smiles1);
               if (bs2 == null) {
                 check = (vwr.getSmilesMatcher().areEqual(smiles1, smiles2) > 0);
               } else {
-                check = (((BS) e.getSmilesExt().getSmilesMatches(smiles1, null,
+                check = (((BS) e.getSmilesExt().getSmilesMatches("/strict/" + smiles1, null,
                     bs2, null, JC.SMILES_TYPE_SMILES, true, false)).nextSetBit(0) >= 0);
               }
               if (check)
@@ -1286,15 +1286,22 @@ public class MathExt {
         && args[1].tok != T.off ? SV.sValue(args[1]) : "");
     boolean isSequence = !isList && sFind.equalsIgnoreCase("SEQUENCE");
     boolean isSeq = !isList && sFind.equalsIgnoreCase("SEQ");
+    
     if (sFind.toUpperCase().startsWith("SMILES/")) {
       if (!sFind.endsWith("/"))
         sFind += "/";
-      flags = sFind.substring(6) + (flags.length() == 0 ? "///" : flags);
-      sFind = "SMILES";
-    } else     if (sFind.toUpperCase().startsWith("SMARTS/")) {
+      String s = sFind.substring(6) + "//";
+      if (JC.isSmilesCanonical(s)) {
+        flags = "SMILES";
+        sFind = "CHEMICAL";
+      } else {
+        sFind = "SMILES";
+        flags = s + flags;
+      }
+    } else if (sFind.toUpperCase().startsWith("SMARTS/")) {
       if (!sFind.endsWith("/"))
         sFind += "/";
-      flags = sFind.substring(6) + (flags.length() == 0 ? "///" : flags);
+      flags = sFind.substring(6) + (flags.length() == 0 ? "//" : flags);
       sFind = "SMARTS";
     }
 
@@ -1307,11 +1314,11 @@ public class MathExt {
     boolean isON = !isList && (argLast.tok == T.on);
     try {
       if (isChemical) {
-        String data = (x1.tok == T.bitset ? vwr.getOpenSmiles((BS) x1.value) : SV.sValue(x1));
-        data = data.length() == 0 ? "" : vwr.getChemicalInfo(data,
-            args.length > 1 ? T.getTokenFromName(flags.toLowerCase()) : null);
-        if (data.endsWith("\n"))
-          data = data.substring(0, data.length() - 1);
+        String data = (x1.tok == T.bitset ? vwr.getOpenSmiles((BS) x1.value) : SV
+            .sValue(x1));
+        T type = (flags.length() > 0 ? T.getTokenFromName(flags.toLowerCase())
+                    : null);
+        data = (data.length() == 0 ? "" : vwr.getChemicalInfo(data, type)).trim();
         if (data.startsWith("InChI"))
           data = PT.rep(PT.rep(data, "InChI=", ""), "InChIKey=", "");
         return mp.addXStr(data);
@@ -1370,12 +1377,13 @@ public class MathExt {
           if (isSequence || isSeq) {
             boolean isHH = (argLast.asString().equalsIgnoreCase("H"));
             isAll |= isHH;
-            return mp.addXStr(vwr.getSmilesOpt((BS) x1.value, -1, -1,
-                   (isAll ? JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS
-                        | JC.SMILES_GEN_BIO_COV_CROSSLINK 
-                        | (isHH ? JC.SMILES_GEN_BIO_HH_CROSSLINK : 0) 
-                   : 0)
-                   | (isSeq ? JC.SMILES_GEN_BIO_NOCOMMENTS : JC.SMILES_GEN_BIO), null));
+            return mp.addXStr(vwr
+                .getSmilesOpt((BS) x1.value, -1, -1,
+                    (isAll ? JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS
+                        | JC.SMILES_GEN_BIO_COV_CROSSLINK
+                        | (isHH ? JC.SMILES_GEN_BIO_HH_CROSSLINK : 0) : 0)
+                        | (isSeq ? JC.SMILES_GEN_BIO_NOCOMMENTS
+                            : JC.SMILES_GEN_BIO), null));
           }
           if (isSmiles || isSMARTS)
             sFind = (args.length > 1 && args[1].tok == T.bitset ? vwr
@@ -1393,14 +1401,14 @@ public class MathExt {
                     | JC.SMILES_MATCH_ONCE_ONLY);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
           } else {
-            
-            int smilesFlags = (isSmiles ? 
-                
-                (flags.indexOf("OPEN") >= 0 ? JC.SMILES_TYPE_OPENSMILES 
-                    : JC.SMILES_TYPE_SMILES)
-                : JC.SMILES_TYPE_SMARTS)
+
+            int smilesFlags = (isSmiles ?
+
+            (flags.indexOf("OPEN") >= 0 ? JC.SMILES_TYPE_OPENSMILES
+                : JC.SMILES_TYPE_SMILES) : JC.SMILES_TYPE_SMARTS)
                 | (isON && sFind.length() == 0 ? JC.SMILES_GEN_BIO_COV_CROSSLINK
-                    | JC.SMILES_GEN_BIO_COMMENT : 0);
+                    | JC.SMILES_GEN_BIO_COMMENT
+                    : 0);
             ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value,
                 bsMatch3D, smilesFlags, !isON, false);
           }
@@ -1424,7 +1432,7 @@ public class MathExt {
       Lst<SV> svlist = (isList ? x1.getList() : null);
       if (isPattern) {
         try {
-          pattern =  pm.compile(sFind, isCaseInsensitive);
+          pattern = pm.compile(sFind, isCaseInsensitive);
         } catch (Exception ex) {
           e.evalError(ex.toString(), null);
         }

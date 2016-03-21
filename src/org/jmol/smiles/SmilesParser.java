@@ -325,10 +325,13 @@ public class SmilesParser {
     molecule.setAtomArray();
 
     molecule.isTopology = true;
+    molecule.patternAromatic = false;
     for (int i = molecule.ac; --i >= 0;) {
       SmilesAtom atom = molecule.patternAtoms[i];
       if (molecule.isTopology && atom.isDefined())
         molecule.isTopology = false;
+      if (atom.isAromatic())
+        molecule.patternAromatic = true;
       atom.setBondArray();
       if (!isSmarts && atom.bioType == '\0' && !atom.setHydrogenCount())
         throw new InvalidSmilesException("unbracketed atoms must be one of: "

@@ -176,6 +176,12 @@ public class SmilesSearch extends JmolMolecule {
   boolean isSmarts;
   boolean isSmilesFind;
   boolean isTopology;
+  /**
+   * Set false by SmilesParser to indicate to SmilesMatcher that 
+   * the string already has aromatic atoms indicated and so
+   * no aromaticity model should be applied.
+   */
+  boolean patternAromatic = true; 
   
   SmilesSearch[] subSearches;
   boolean haveSelected;
@@ -281,9 +287,10 @@ public class SmilesSearch extends JmolMolecule {
    * 
    * @param bsA
    * @param vRings 
+   * @param doProcessAromatic 
    * @throws InvalidSmilesException
    */
-  void setRingData(BS bsA, Lst<BS>[] vRings) throws InvalidSmilesException {
+  void setRingData(BS bsA, Lst<BS>[] vRings, boolean doProcessAromatic) throws InvalidSmilesException {
     if (isTopology)
       needAromatic = false;
     if (needAromatic)
@@ -299,11 +306,11 @@ public class SmilesSearch extends JmolMolecule {
       if (!needRingMemberships && !needRingData)
         return;
     }
-    getRingData(vRings, needRingData);
+    getRingData(vRings, needRingData, doProcessAromatic);
   }
 
   @SuppressWarnings("unchecked")
-  void getRingData(Lst<BS>[] vRings, boolean needRingData)
+  void getRingData(Lst<BS>[] vRings, boolean needRingData, boolean doTestAromatic)
       throws InvalidSmilesException {
     boolean isStrict = ((flags & AROMATIC_STRICT) == AROMATIC_STRICT);
     int strictness = (!isStrict ? 0
@@ -311,8 +318,10 @@ public class SmilesSearch extends JmolMolecule {
             : 1);
     boolean isDefined = ((flags & AROMATIC_DEFINED) == AROMATIC_DEFINED);
     boolean isOpenSmiles = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
+    boolean isOpenStrict = isOpenSmiles && isStrict;
     isOpenSmiles &= !isStrict;
-    boolean doFinalize = (needAromatic && (isStrict || isOpenSmiles));
+    boolean doFinalize = (needAromatic && doTestAromatic && (isStrict || isOpenSmiles));
+    int aromaticMax = 7;
     Lst<BS> v567 = (vRings == null ? new Lst<BS>()
         : (vRings[3] = new Lst<BS>()));
 
@@ -356,18 +365,9 @@ public class SmilesSearch extends JmolMolecule {
       }
       if (vR.size() == 0)
         continue;
-      if (needAromatic && !isDefined && i >= 5 && i <= 7) {
+      if (needAromatic && !isDefined && i >= 5 && i <= aromaticMax)
         SmilesAromatic.setAromatic(i, jmolAtoms, bsSelected, vR, bsAromatic,
-            strictness, isOpenSmiles, checkFlatness, v, nAtoms, vPossible, eCounts);
-        for (int j = vR.size(); --j >= 0;) {
-          BS bs = (BS) vR.get(j);
-          if (bs.get(nAtoms)) {
-            bs.clear(nAtoms);
-          } else {
-            v567.addLast(bs);
-          }
-        }
-      }
+            strictness, isOpenSmiles, checkFlatness, v, nAtoms, v567, vPossible, eCounts, doTestAromatic);
       if (needRingData) {
         ringData[i] = new BS();
         for (int k = vR.size(); --k >= 0;) {
@@ -381,7 +381,7 @@ public class SmilesSearch extends JmolMolecule {
     if (needAromatic) {
       if (doFinalize)
         SmilesAromatic.finalizeAromatic(jmolAtoms, bsAromatic, v567, vPossible, eCounts,
-            isOpenSmiles, isStrict);
+            isOpenSmiles, isStrict || isOpenSmiles);
       // clean out all nonaromatic atoms from the ring list
       // and recreate 5- and 6-membered ring bitsets
       bsAromatic5.clearAll();
@@ -1570,12 +1570,13 @@ public class SmilesSearch extends JmolMolecule {
       atom.isLeadAtom = sAtom.isLeadAtom;
       atom.mapIndex = i;
       atom.setAtomicMass(sAtom.getAtomicMass());
-      //System.out.println(atom);
+
       // we pass on the aromatic flag because
       // we don't want SmilesSearch to calculate
       // that for us
       if (sAtom.isAromatic())
         bsAromatic.set(ptAtom);
+      
       // set up the bonds array and fill with H atoms
       // when there is only 1 H and the atom is NOT FIRST, then it will
       // be important to designate the bonds in order -- with the
@@ -1593,7 +1594,6 @@ public class SmilesSearch extends JmolMolecule {
         SmilesAtom atomH = atoms[ptAtom] = new SmilesAtom().setAll(0, ptAtom,
             "H", 0);
         atomH.mapIndex = -i - 1;
-        //System.out.println(atomH);
         ptAtom++;
         atomH.setBonds(new SmilesBond[1]);
         SmilesBond b = new SmilesBond(atom, atomH, Edge.BOND_COVALENT_SINGLE,
@@ -1672,20 +1672,22 @@ public class SmilesSearch extends JmolMolecule {
   }
 
   /**
-   * create a temporary object to generate the aromaticity in
+   * create a temporary object to generate the aromaticity in a SMILES pattern for which there is no explicit aromaticity (Kekule)
+   * 
    * @param atoms
    * @param bsAromatic
    * @param flags
    * @throws InvalidSmilesException
    */
-  static void normalizeAromaticity(SmilesAtom[] atoms, BS bsAromatic, int flags) throws InvalidSmilesException {
+  static void normalizeAromaticity(SmilesAtom[] atoms, BS bsAromatic, int flags)
+      throws InvalidSmilesException {
     SmilesSearch ss = new SmilesSearch();
     ss.setFlags(flags);
     ss.jmolAtoms = atoms;
     ss.jmolAtomCount = atoms.length;
     ss.bsSelected = BSUtil.newBitSet2(0, atoms.length);
     Lst<BS>[] vRings = AU.createArrayOfArrayList(4);
-    ss.setRingData(null, vRings);
+    ss.setRingData(null, vRings, true);
     bsAromatic.or(ss.bsAromatic);
     if (!bsAromatic.isEmpty()) {
       Lst<BS> lst = vRings[3]; // aromatic rings

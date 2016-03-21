@@ -310,7 +310,7 @@ public class SmilesGenerator {
       search.ringDataMax = 7;
       search.flags = flags;
       Lst<BS>[] vRings = AU.createArrayOfArrayList(4);
-      search.setRingData(null, vRings);
+      search.setRingData(null, vRings, true);
       bsAromatic = search.bsAromatic;
       ringSets = search.ringSets;
       aromaticRings = vRings[3];
