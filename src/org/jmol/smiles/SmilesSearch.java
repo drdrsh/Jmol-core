@@ -317,9 +317,7 @@ public class SmilesSearch extends JmolMolecule {
         : (flags & AROMATIC_MMFF94) == AROMATIC_MMFF94 ? 2
             : 1);
     boolean isDefined = ((flags & AROMATIC_DEFINED) == AROMATIC_DEFINED);
-    boolean isOpenNotStrict = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
-    boolean isOpenStrict = isOpenNotStrict && isStrict;
-    isOpenNotStrict &= !isStrict;
+    boolean isOpenNotStrict = (!isStrict && (flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
     boolean doFinalize = (needAromatic && doTestAromatic && (isStrict || isOpenNotStrict));
     int aromaticMax = 7;
     Lst<BS> lstAromatic = (vRings == null ? new Lst<BS>()
@@ -352,7 +350,7 @@ public class SmilesSearch extends JmolMolecule {
     while (s.length() < max)
       s += s;
     for (int i = 3; i <= max; i++) {
-      if (i > jmolAtomCount)
+      if (i > nAtoms)
         continue;
       String smarts = "*1" + s.substring(0, i - 2) + "*1";
       SmilesSearch search = SmilesParser.getMolecule(smarts, true);
@@ -367,7 +365,7 @@ public class SmilesSearch extends JmolMolecule {
         continue;
       if (needAromatic && !isDefined && i >= 5 && i <= aromaticMax)
         SmilesAromatic.setAromatic(i, jmolAtoms, bsSelected, vR, bsAromatic,
-            strictness, isOpenNotStrict, checkFlatness, v, nAtoms, lstAromatic, lstSP2, eCounts, doTestAromatic);
+            strictness, isOpenNotStrict, checkFlatness, v, lstAromatic, lstSP2, eCounts, doTestAromatic);
       if (needRingData) {
         ringData[i] = new BS();
         for (int k = vR.size(); --k >= 0;) {

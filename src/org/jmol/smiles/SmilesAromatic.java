@@ -50,7 +50,6 @@ public class SmilesAromatic {
    * @param isOpenSMILES
    * @param checkFlatness
    * @param v
-   * @param nAtoms
    * @param vOK
    * @param lstSP2
    * @param eCounts
@@ -59,7 +58,7 @@ public class SmilesAromatic {
   static void setAromatic(int n, Node[] jmolAtoms, BS bsSelected,
                           Lst<Object> vR, BS bsAromatic, int strictness,
                           boolean isOpenSMILES, boolean checkFlatness, VTemp v,
-                          int nAtoms, Lst<BS> vOK, Lst<SmilesRing> lstSP2,
+                          Lst<BS> vOK, Lst<SmilesRing> lstSP2,
                           int[] eCounts, boolean doTestAromatic) {
 
     boolean doCheck = (isOpenSMILES || strictness > 0);
@@ -482,7 +481,7 @@ public class SmilesAromatic {
     if (isStrict)
       removeBridgingRings(lstAromatic, lstSP2);
 
-    // we allow for combined 4n+2 even if contibuting rings are not (5+7 for azulene) 
+    // we allow for combined 4n+2 even if contributing rings are not (5+7 for azulene) 
     checkFusedRings(lstSP2, eCounts, lstAromatic);
 
     // regenerate bsAromatic, using only valid rings now
