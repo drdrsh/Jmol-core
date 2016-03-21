@@ -317,15 +317,15 @@ public class SmilesSearch extends JmolMolecule {
         : (flags & AROMATIC_MMFF94) == AROMATIC_MMFF94 ? 2
             : 1);
     boolean isDefined = ((flags & AROMATIC_DEFINED) == AROMATIC_DEFINED);
-    boolean isOpenSmiles = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
-    boolean isOpenStrict = isOpenSmiles && isStrict;
-    isOpenSmiles &= !isStrict;
-    boolean doFinalize = (needAromatic && doTestAromatic && (isStrict || isOpenSmiles));
+    boolean isOpenNotStrict = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
+    boolean isOpenStrict = isOpenNotStrict && isStrict;
+    isOpenNotStrict &= !isStrict;
+    boolean doFinalize = (needAromatic && doTestAromatic && (isStrict || isOpenNotStrict));
     int aromaticMax = 7;
-    Lst<BS> v567 = (vRings == null ? new Lst<BS>()
+    Lst<BS> lstAromatic = (vRings == null ? new Lst<BS>()
         : (vRings[3] = new Lst<BS>()));
 
-    Lst<SmilesRing> vPossible = (doFinalize ? new Lst<SmilesRing>() : null);
+    Lst<SmilesRing> lstSP2 = (doFinalize ? new Lst<SmilesRing>() : null);
     int[] eCounts = (doFinalize ? new int[jmolAtomCount] : null);
 
     if (isDefined && needAromatic) {
@@ -367,7 +367,7 @@ public class SmilesSearch extends JmolMolecule {
         continue;
       if (needAromatic && !isDefined && i >= 5 && i <= aromaticMax)
         SmilesAromatic.setAromatic(i, jmolAtoms, bsSelected, vR, bsAromatic,
-            strictness, isOpenSmiles, checkFlatness, v, nAtoms, v567, vPossible, eCounts, doTestAromatic);
+            strictness, isOpenNotStrict, checkFlatness, v, nAtoms, lstAromatic, lstSP2, eCounts, doTestAromatic);
       if (needRingData) {
         ringData[i] = new BS();
         for (int k = vR.size(); --k >= 0;) {
@@ -380,14 +380,14 @@ public class SmilesSearch extends JmolMolecule {
     }
     if (needAromatic) {
       if (doFinalize)
-        SmilesAromatic.finalizeAromatic(jmolAtoms, bsAromatic, v567, vPossible, eCounts,
-            isOpenSmiles, isStrict || isOpenSmiles);
+        SmilesAromatic.finalizeAromatic(jmolAtoms, bsAromatic, lstAromatic, lstSP2, eCounts,
+            isOpenNotStrict, isStrict);
       // clean out all nonaromatic atoms from the ring list
       // and recreate 5- and 6-membered ring bitsets
       bsAromatic5.clearAll();
       bsAromatic6.clearAll();
-      for (int i = v567.size(); --i >= 0;) {
-        BS bs = v567.get(i);
+      for (int i = lstAromatic.size(); --i >= 0;) {
+        BS bs = lstAromatic.get(i);
         bs.and(bsAromatic);
         switch (bs.cardinality()) {
         case 5:
