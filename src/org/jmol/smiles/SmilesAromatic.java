@@ -552,11 +552,10 @@ public class SmilesAromatic {
   private static void removeBridgingRings(Lst<BS> lstAromatic, Lst<SmilesRing> lstSP2) {
     BS bs = new BS();
     BS bsBad = new BS();
-    checkBridges(lstAromatic, bsBad, null, null, bs);
     BS bsBad2 = new BS();
-    checkBridges(lstSP2, bsBad2, null, null, bs);
+    checkBridges(lstAromatic, bsBad, lstAromatic, bsBad, bs);
+    checkBridges(lstSP2, bsBad2, lstSP2, bsBad2, bs);
     checkBridges(lstAromatic, bsBad, lstSP2, bsBad2, bs);
-
     for (int i = lstAromatic.size(); --i >= 0;)
       if (bsBad.get(i))
         lstAromatic.remove(i);
@@ -567,22 +566,10 @@ public class SmilesAromatic {
 
   private static void checkBridges(Lst<?> lst, BS bsBad, Lst<?> lst2,
                                    BS bsBad2, BS bs) {
+    boolean isSameList = (lst == lst2);
     for (int i = lst.size(); --i >= 0;) {
       BS bs1 = (BS) lst.get(i);
-      if (lst2 == null)
-        for (int j = lst.size(); --j > i;) {
-          BS bs2 = (BS) lst.get(j);
-          bs.clearAll();
-          bs.or(bs1);
-          bs.and(bs2);
-          int n = bs.cardinality();
-          if (n > 2) {
-            bsBad.set(i);
-            bsBad.set(j);
-          }
-        }
-      else
-        for (int j = lst2.size(); --j >= 0;) {
+        for (int j0 = (isSameList ? i + 1 : 0), j = lst2.size(); --j >= j0;) {
           BS bs2 = (BS) lst2.get(j);
           if (bs2.equals(bs1))
             continue;
@@ -592,9 +579,8 @@ public class SmilesAromatic {
           int n = bs.cardinality();
           if (n > 2) {
             bsBad.set(i);
-            bsBad2.set(i);
+            bsBad2.set(j);
           }
-
         }
     }
   }
