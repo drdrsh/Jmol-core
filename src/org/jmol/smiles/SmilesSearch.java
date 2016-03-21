@@ -313,9 +313,11 @@ public class SmilesSearch extends JmolMolecule {
     boolean isOpenSmiles = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
     isOpenSmiles &= !isStrict;
     boolean doFinalize = (needAromatic && (isStrict || isOpenSmiles));
-
     Lst<BS> v567 = (vRings == null ? new Lst<BS>()
         : (vRings[3] = new Lst<BS>()));
+
+    Lst<SmilesRing> vPossible = (doFinalize ? new Lst<SmilesRing>() : null);
+    int[] eCounts = (doFinalize ? new int[jmolAtomCount] : null);
 
     if (isDefined && needAromatic) {
       // predefined aromatic bonds
@@ -356,7 +358,7 @@ public class SmilesSearch extends JmolMolecule {
         continue;
       if (needAromatic && !isDefined && i >= 5 && i <= 7) {
         SmilesAromatic.setAromatic(i, jmolAtoms, bsSelected, vR, bsAromatic,
-            strictness, isOpenSmiles, checkFlatness, v, nAtoms);
+            strictness, isOpenSmiles, checkFlatness, v, nAtoms, vPossible, eCounts);
         for (int j = vR.size(); --j >= 0;) {
           BS bs = (BS) vR.get(j);
           if (bs.get(nAtoms)) {
@@ -378,7 +380,7 @@ public class SmilesSearch extends JmolMolecule {
     }
     if (needAromatic) {
       if (doFinalize)
-        SmilesAromatic.finalizeAromatic(jmolAtoms, bsAromatic, v567,
+        SmilesAromatic.finalizeAromatic(jmolAtoms, bsAromatic, v567, vPossible, eCounts,
             isOpenSmiles, isStrict);
       // clean out all nonaromatic atoms from the ring list
       // and recreate 5- and 6-membered ring bitsets

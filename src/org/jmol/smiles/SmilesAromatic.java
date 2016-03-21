@@ -24,6 +24,8 @@
 
 package org.jmol.smiles;
 
+import java.util.Hashtable;
+
 import javajs.util.Lst;
 import javajs.util.V3;
 
@@ -33,6 +35,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.Node;
 
 public class SmilesAromatic {
+
   /**
    * Main entry point. Note that unless bonds are pre-defined as aromatic, Jmol
    * will first check for a flat ring configuration. This is 3D, after all.
@@ -44,13 +47,16 @@ public class SmilesAromatic {
    * @param bsAromatic
    * @param strictness
    * @param isOpenSMILES
-   * @param checkFlatness 
+   * @param checkFlatness
    * @param v
    * @param nAtoms
+   * @param vPossible
+   * @param eCounts 
    */
   static void setAromatic(int n, Node[] jmolAtoms, BS bsSelected,
                           Lst<Object> vR, BS bsAromatic, int strictness,
-                          boolean isOpenSMILES, boolean checkFlatness, VTemp v, int nAtoms) {
+                          boolean isOpenSMILES, boolean checkFlatness, VTemp v,
+                          int nAtoms, Lst<SmilesRing> vPossible, int[] eCounts) {
 
     boolean doCheck = (isOpenSMILES || strictness > 0);
 
@@ -61,13 +67,38 @@ public class SmilesAromatic {
 
     for (int r = vR.size(); --r >= 0;) {
       BS bs = (BS) vR.get(r);
-      boolean isOK = isFlatSp2Ring(n, jmolAtoms, bsSelected, bs,
-          (!checkFlatness ? Float.MAX_VALUE : strictness > 0 ? 0.1f : 0.01f), strictness == 0);
+      boolean isOK = isSp2Ring(n, jmolAtoms, bsSelected, bs,
+          (!checkFlatness ? Float.MAX_VALUE : strictness > 0 ? 0.1f : 0.01f),
+          strictness == 0);
       if (isOK) {
         bsAromatic.or(bs);
-        if (doCheck
-            && !checkOpenSmilesAromatic(n, jmolAtoms, bsAromatic, bs, strictness))
-          isOK = false;
+        if (doCheck) {
+          // we will need to check these edges later
+          Lst<Edge> edges = new Lst<Edge>();
+          for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+            Node a = jmolAtoms[i];
+            Edge[] aedges = a.getEdges();
+            int ai = a.getIndex();
+            for (int j = aedges.length; --j >= 0;) {
+              Node a2 = aedges[j].getOtherAtomNode(a);
+              int a2i = a2.getIndex();
+              if (a2i > ai && bs.get(a2i))
+                edges.addLast(aedges[j]);
+            }
+          }
+            switch (checkOpenSmilesAromatic(n, jmolAtoms, bsAromatic, bs,
+                strictness, eCounts)) {
+            case -1: // absolutely not
+              isOK = false;
+              break;
+            case 0: // maybe -- needs fused ring check
+              isOK = false;
+              //$FALL-THROUGH$
+            case 1:
+              if (vPossible != null)
+                vPossible.addLast(new SmilesRing(bs, edges, isOK));
+            }
+        }
       }
       // flag to indicate this is not an aromatic ring
       if (!isOK)
@@ -127,7 +158,7 @@ public class SmilesAromatic {
    * @return true if standard deviation of vNorm.dot.vMean is less than cutoff
    */
 
-  private final static boolean isFlatSp2Ring(int n, Node[] atoms, BS bsSelected, BS bs,
+  private final static boolean isSp2Ring(int n, Node[] atoms, BS bsSelected, BS bs,
                                      float cutoff, boolean allowSOxide) {
     ///
     // 
@@ -334,13 +365,14 @@ public class SmilesAromatic {
    * @param strictness
    *        0 (not) 1 (OpenSMILES), 2 (MMFF94) standard organic chemist's
    *        Hueckel interpretation
-   * @return TRUE if aromatic
+   * @return -1 if absolutely not, 0 if possible, 1 if certainly
    * @author Bob Hanson 3/12/2016
+   * @param eCounts
    * 
    */
-  private static boolean checkOpenSmilesAromatic(int nAtoms, Node[] jmolAtoms,
+  private static int checkOpenSmilesAromatic(int nAtoms, Node[] jmolAtoms,
                                                  BS bsAromatic, BS bsRing,
-                                                 int strictness) {
+                                                 int strictness, int[] eCounts) {
     int npi = 0;
     int n1 = 0;
     for (int i = bsRing.nextSetBit(0); i >= 0 && npi >= 0; i = bsRing
@@ -363,11 +395,11 @@ public class SmilesAromatic {
       if (pt >= 0) {
         int[] a = OS_PI_COUNTS[pt];
         if (n < 0 || n >= a.length)
-          return false;
+          return -1;
         switch (n = a[n]) {
         case -2:
           // not a connection/valence/charge of interest
-          return false;
+          return -1;
         case -1:
           // check for c=X(nonaromatic) 0
           // against c[c+1](C)c (0) and c=c (1)
@@ -383,11 +415,15 @@ public class SmilesAromatic {
             Node het = b.getOtherAtomNode(atom);
             n = (het.getElementNumber() == 6 || bsAromatic.get(het.getIndex()) ? 1
                 : strictness > 0 ? -100 : 0);
+            break;
           }
-          break;
-        //$FALL-THROUGH$
+          //$FALL-THROUGH$
         default:
           // ok -- add in the number of pi electrons for this atom
+          if (n < 0)
+            return -1;
+          if (eCounts != null)
+            eCounts[i] = n;
           npi += n;
           if (n == 1)
             n1++;
@@ -400,8 +436,7 @@ public class SmilesAromatic {
     }
     // Hueckel: npi =?= 4n + 2
     // MMFF94: all atoms must contribute 1 for 6- or 7-membered rings (3 double bonds)
-
-    return (npi > 0 && (npi - 2) % 4 == 0 && (strictness < 2 || nAtoms == 5 || n1 == 6));
+    return ((npi - 2) % 4 == 0 && (strictness < 2 || nAtoms == 5 || n1 == 6) ? 1 : 0);
   }
 
   /**
@@ -411,35 +446,43 @@ public class SmilesAromatic {
    * aromatic atoms and are not connected to any nonaromatic atom by a double
    * bond.
    * 
-   * Could be entered with one of /open/, /open strict/, or /strict/ 
+   * Could be entered with one of /open/, /open strict/, or /strict/
    * 
    * @param jmolAtoms
    * @param bsAromatic
    * @param lstAromatic
-   * @param isOpenSmiles  /open/ option
-   * @param doTrim        remove noncyclic double bonds (/strict/ option) 
+   * @param vPossible
+   * @param eCounts
+   * @param isOpenSmiles
+   *        /open/ option
+   * @param doTrim
+   *        remove noncyclic double bonds (/strict/ option)
    */
   static void finalizeAromatic(Node[] jmolAtoms, BS bsAromatic,
-                                     Lst<BS> lstAromatic,
-                                         boolean isOpenSmiles, boolean doTrim) {
+                               Lst<BS> lstAromatic, Lst<SmilesRing> vPossible,
+                               int[] eCounts, boolean isOpenSmiles,
+                               boolean doTrim) {
 
+    addFusedRings(vPossible, eCounts, lstAromatic);
+    
     // list of all 5- to 7-membered potentially aromatic rings
     
+
     // regenerate bsAromatic, using only valid rings
     // may or may not be strict
     bsAromatic.clearAll();
     for (int i = lstAromatic.size(); --i >= 0;)
       bsAromatic.or(lstAromatic.get(i));
-     
+
     if (!doTrim)
       return;
-    
+
     // Check each aromatic atom for 
     // (a) at least to adjacent aromatic atoms (Hueckel cyclic requirement)
     // (b) no exocyclic double bonds to nonaromatic atoms
     //      (standard organic chemist's interpretation of "cyclic pi system")
     // Resetting i to -1 iterates.
-    
+
     for (int i = bsAromatic.nextSetBit(0); i >= 0; i = bsAromatic
         .nextSetBit(i + 1)) {
       Edge[] bonds = jmolAtoms[i].getEdges();
@@ -459,7 +502,51 @@ public class SmilesAromatic {
         bsAromatic.clear(i);
         i = -1; // restart
       }
-    }    
+    }
+  }
+
+  /**
+   * Add fused rings based on the Hueckel 4+2 rule. Note that this may be
+   * reverted later if in a STRICT setting, because in at this point in some
+   * cases we will have double bonds to exocyclic nonaromatic atoms.
+   * 
+   * We are being careful here to only group FUSED rings -- that is rings that
+   * have only one bond in common.
+   * 
+   * @param rings
+   * @param eCounts
+   * @param lstAromatic
+   *        list to be appended to
+   */
+  private static void addFusedRings(Lst<SmilesRing> rings, int[] eCounts,
+                                    Lst<BS> lstAromatic) {
+    Hashtable<String, SmilesRingSet> htEdgeMap = new Hashtable<String, SmilesRingSet>();
+    for (int i = rings.size(); --i >= 0;) {
+      SmilesRing r = rings.get(i);
+      Lst<Edge> edges = r.edges;
+      for (int j = edges.size(); --j >= 0;) {
+        SmilesRingSet set = SmilesRing.getSetByEdge(edges.get(j), htEdgeMap);
+        if (set == null || set == r.set)
+          continue;
+        if (r.set != null)
+          set.addSet(r.set, htEdgeMap);
+        else
+          set.addRing(r);
+      }
+      (r.set == null ? r.set = new SmilesRingSet() : r.set).addRing(r);
+      r.addEdges(htEdgeMap);
+    }
+    SmilesRingSet set;
+    SmilesRing r;
+    for (int i = rings.size(); --i >= 0;) {
+      if ((r = rings.get(i)).isOK || (set = r.set) == null || set.isEmpty())
+        continue;
+      if ((set.getElectronCount(eCounts) % 4) == 2)
+        for (int j = set.size(); --j >= 0;)
+          if (!(r = set.get(j)).isOK)
+            lstAromatic.addLast(r);
+      set.clear();
+    }
   }
 
 }
