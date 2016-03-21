@@ -143,8 +143,8 @@ public class SmilesSearch extends JmolMolecule {
   }
 
   void setFlags(int flags) {
-    if (flags != 0)
-      System.out.println("SmilesSearch flags: " + flags);
+    //if (flags != 0)
+      //System.out.println("SmilesSearch flags: " + flags);
     this.flags = flags;
     noAromatic = ((flags & NO_AROMATIC) == NO_AROMATIC);
     
@@ -1146,14 +1146,16 @@ public class SmilesSearch extends JmolMolecule {
       return false;
     }
 
-    if (patternBond.primitives == null) {
-      if (!checkPrimitiveBond(patternBond, iAtom, matchingAtom, bond))
-        return false;
-    } else {
-      for (int i = 0; i < patternBond.nPrimitives; i++)
-        if (!checkPrimitiveBond(patternBond.primitives[i], iAtom, matchingAtom, bond))
+    if (!isRingCheck && !isTopology)
+      if (patternBond.primitives == null) {
+        if (!checkPrimitiveBond(patternBond, iAtom, matchingAtom, bond))
           return false;
-    }
+      } else {
+        for (int i = 0; i < patternBond.nPrimitives; i++)
+          if (!checkPrimitiveBond(patternBond.primitives[i], iAtom,
+              matchingAtom, bond))
+            return false;
+      }
     patternBond.matchingBond = bond;
     return true;
   }
