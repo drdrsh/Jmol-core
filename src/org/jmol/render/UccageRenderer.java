@@ -182,8 +182,14 @@ public class UccageRenderer extends CageRenderer {
       if (sgName.startsWith("cell=!"))
         sgName = "cell=inverse[" + sgName.substring(6) + "]";
       sgName = PT.rep(sgName, ";0,0,0", "");
-      if (!sgName.equals("-- [--]"))
+      if (sgName.indexOf("#") < 0) {
+        String intTab = unitcell.getIntTableNumber();
+        if (intTab != null)
+          sgName += " #" + intTab;
+      }
+      if (!sgName.equals("-- [--]")) {
         drawInfo(sgName, 0, null);
+      }
     }
     Lst<String> info = unitcell.getMoreInfo();
     if (info != null)

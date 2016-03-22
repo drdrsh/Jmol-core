@@ -204,4 +204,6 @@ public interface SymmetryInterface {
 
   public String getLatticeType();
 
+  public String getIntTableNumber();
+
 }

@@ -4018,6 +4018,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         format = g.nihResolverFormat + "/image";
         break;
       case 'I':
+      case 'T':
         format = g.nihResolverFormat + "/stdinchi";
         break;
       case 'K':
@@ -4025,9 +4026,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         break;
       case 'S':
         format = g.nihResolverFormat + "/stdinchikey";
-        break;
-      case 'T':
-        format = g.nihResolverFormat + "/stdinchi";
         break;
       case '/':
         format = g.nihResolverFormat + "/";
@@ -7750,38 +7748,35 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     showUrl(g.helpPath + what);
   }
 
-  public String getChemicalInfo(String smiles, T t) {
-    String info = null;
+  public String getChemicalInfo(String smiles, String info) {
+    info = info.toLowerCase();
     char type = '/';
-    switch ((t == null ? T.name : t.tok)) {
-    case T.inchi:
-      type = 'I';
+    switch (";inchi;inchikey;stdinchi;stdinchikey;name;image;drawing;names;".indexOf(";"+info+";")) {
+    //       0     6        15       24          36   41    47      55
+    //       0         1         2         3         4         5
+    //       0123456789012345678901234567890123456789012345678901234567890
+    case 0: // inchi
+      type = 'I'; 
       break;
-    case T.inchikey:
+    case 6: // inchikey
       type = 'K';
       break;
-    case T.stdinchi:
+    case 15: // stdinchi
       type = 'T';
       break;
-    case T.stdinchikey:
+    case 24: // stdinchikey
       type = 'S';
       break;
-    case T.name:
+    case 36: // name
       type = 'M';
       break;
-    case T.image:
+    case 41: // image
+    case 47: // drawing
       type = '2';
       break;
-    default:
-      info = SV.sValue(t);
-      if (info.equalsIgnoreCase("drawing") || info.equalsIgnoreCase("image"))
-        type = '2';
-      else if (info.equalsIgnoreCase("name"))
-        type = 'M';
-      // the following should not be necessary
-      // but an NCI server fault on 3/29/2014 required this
-      //if (info.equals("sdf"))
-      //info = "file?format=sdf";
+    case 55: // names
+      type = 'N';
+      break;
     }
     String s = (String) setLoadFormat("_" + smiles, type, false);
     if (type == '2') { 
@@ -8711,7 +8706,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     SmilesMatcherInterface sm = getSmilesMatcher();
     if (JC.isSmilesCanonical(options)) {
       String smiles = sm.getSmiles(atoms, ms.ac, bsSelected, "/noAromatic/", flags);
-      return getChemicalInfo(smiles, T.getTokenFromName("smiles")).trim();
+      return getChemicalInfo(smiles, "smiles").trim();
     }
     return sm.getSmiles(atoms, ms.ac, bsSelected, bioComment, flags);
   }

@@ -701,4 +701,9 @@ public class Symmetry implements SymmetryInterface {
     return (symmetryInfo != null ? symmetryInfo.latticeType : spaceGroup == null ? "P" : spaceGroup.latticeType);
   }
 
+  @Override
+  public String getIntTableNumber() {
+    return (symmetryInfo != null ? symmetryInfo.intlTableNo : spaceGroup == null ? null : spaceGroup.intlTableNumber);
+  }
+
 }

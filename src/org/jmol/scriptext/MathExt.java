@@ -1316,9 +1316,7 @@ public class MathExt {
       if (isChemical) {
         String data = (x1.tok == T.bitset ? vwr.getOpenSmiles((BS) x1.value) : SV
             .sValue(x1));
-        T type = (flags.length() > 0 ? T.getTokenFromName(flags.toLowerCase())
-                    : null);
-        data = (data.length() == 0 ? "" : vwr.getChemicalInfo(data, type)).trim();
+        data = (data.length() == 0 ? "" : vwr.getChemicalInfo(data, flags.toLowerCase())).trim();
         if (data.startsWith("InChI"))
           data = PT.rep(PT.rep(data, "InChI=", ""), "InChIKey=", "");
         return mp.addXStr(data);
