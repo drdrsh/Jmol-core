@@ -678,12 +678,6 @@ class SymmetryOperation extends M4 {
     return PT.approx(f, 100);
   }
 
-  static void normalizeTranslation(M4 operation) {
-    operation.m03 = ((int)operation.m03 + 12) % 12;
-    operation.m13 = ((int)operation.m13 + 12) % 12;
-    operation.m23 = ((int)operation.m23 + 12) % 12;    
-  }
-
   static String getXYZFromRsVs(Matrix rs, Matrix vs, boolean is12ths) {
     double[][] ra = rs.getArray();
     double[][] va = vs.getArray();

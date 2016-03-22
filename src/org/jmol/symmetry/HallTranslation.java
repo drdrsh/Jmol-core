@@ -135,8 +135,7 @@ class HallTranslation {
      */
     for (int i = 1, ipt = 3; i <= nLatticeTypes; i++, ipt += 3)
       if (latticeTranslationData[ipt].charAt(0) == latt)
-        return latticeTranslationData[ipt + 2]
-            + (isCentrosymmetric ? " -1" : "");
+        return latticeTranslationData[ipt + 2] + (isCentrosymmetric ? " -1" : "");
     return "";
   }
 

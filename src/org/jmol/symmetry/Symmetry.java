@@ -621,6 +621,9 @@ public class Symmetry implements SymmetryInterface {
         type, modelSet);
   }
 
+//  SpaceGroup getSpaceGroup() {
+  //  return (spaceGroup == null ? null : spaceGroup.getDerivedSpaceGroup());
+ // }
   @Override
   public String getSymmetryInfoString(ModelSet modelSet, int modelIndex,
                                       int symOp, P3 pt1, P3 pt2, String drawID,
@@ -691,6 +694,11 @@ public class Symmetry implements SymmetryInterface {
     if (unitCell == null)
       unitCell = UnitCell.newP(oabc, false);
     return unitCell.toFromPrimitive(toPrimitive, type, oabc);
+  }
+
+  @Override
+  public String getLatticeType() {
+    return (symmetryInfo != null ? symmetryInfo.latticeType : spaceGroup == null ? "P" : spaceGroup.latticeType);
   }
 
 }

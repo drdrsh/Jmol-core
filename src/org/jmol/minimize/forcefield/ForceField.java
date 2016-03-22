@@ -71,7 +71,7 @@ abstract public class ForceField {
   public static final int R3 = 0;
   public static final int R4 = 1;
   public static final int R5 = 2;
-  public static final int R567 = 3;
+  public static final int Raromatic = 3;
   
   public String name;
 

@@ -202,4 +202,6 @@ public interface SymmetryInterface {
 
   public boolean toFromPrimitive(boolean toPrimitive, char type, T3[] oabc);
 
+  public String getLatticeType();
+
 }

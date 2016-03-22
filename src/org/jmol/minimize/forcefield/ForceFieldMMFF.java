@@ -779,9 +779,9 @@ public class ForceFieldMMFF extends ForceField {
  }
 
   private boolean isAromaticBond(int a1, int a2) {
-    if (vRings[R567] != null)
-      for (int i = vRings[R567].size(); --i >= 0;) {
-        BS bsRing = vRings[R567].get(i);
+    if (vRings[Raromatic] != null)
+      for (int i = vRings[Raromatic].size(); --i >= 0;) {
+        BS bsRing = vRings[Raromatic].get(i);
         if (bsRing.get(a1) && bsRing.get(a2))
           return true;
       }

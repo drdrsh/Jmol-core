@@ -365,7 +365,7 @@ public class MathExt {
         return false;
       
       
-      if (!(u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(true, stype.charAt(0), ucnew))
+      if (!(u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(toPrimitive, stype.charAt(0), ucnew))
         return false;
     } else if ("reciprocal".equalsIgnoreCase(op)) {
       ucnew = SimpleUnitCell.getReciprocal(ucnew, null);

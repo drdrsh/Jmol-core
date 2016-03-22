@@ -982,6 +982,7 @@ public class XtalSymmetry {
     }
     asc.setCurrentModelInfo("symmetryCount",
         Integer.valueOf(operationCount));
+    asc.setCurrentModelInfo("latticeType", symmetry.getLatticeType());
   }
 
   public T3 getOverallSpan() {

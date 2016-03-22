@@ -300,7 +300,7 @@ class SpaceGroup {
         .append("\ninternational table number: ").append(intlTableNumber)
         .append(intlTableNumberExt.length() > 0 ? ":" + intlTableNumberExt : "")
         .append("\n\n").appendI(operationCount).append(" operators")
-        .append(!hallInfo.hallSymbol.equals("--") ? " from Hall symbol "  + hallInfo.hallSymbol: "")
+        .append(!hallInfo.hallSymbol.equals("--") ? " from Hall symbol "  + hallInfo.hallSymbol + "  #" + intlTableNumberFull: "")
         .append(": ");
     for (int i = 0; i < operationCount; i++) {
       sb.append("\n").append(operations[i].xyz);
@@ -392,10 +392,10 @@ class SpaceGroup {
     if (canonicalSeitzList == null)
       canonicalSeitzList = new String[SG.length];
     for (int i = 0; i < SG.length; i++) {
-      if (canonicalSeitzList[i] == null)
-        canonicalSeitzList[i] = (String) SG[i] 
-            .dumpCanonicalSeitzList();
-      if (canonicalSeitzList[i].indexOf(s) >= 0)
+      String cs = canonicalSeitzList[i];
+      if (cs == null)
+        cs = canonicalSeitzList[i] = SG[i].dumpCanonicalSeitzList().toString();
+      if (cs.indexOf(s) >= 0)
         return SG[i];
     }
     return null;
@@ -477,7 +477,9 @@ class SpaceGroup {
   }
 
   private int checkXYZlist(String xyz) {
-    return (xyzList.containsKey(xyz) && !(latticeOp > 0 && xyz.indexOf("/") < 0)
+    // problem was that in the case we are adding two half-cell translations,
+    // we will get 2/2 --> nothing, instead of 1. 
+    return (xyzList.containsKey(xyz)// && !(latticeOp > 0 && xyz.indexOf("/") < 0)
         ? xyzList.get(xyz).intValue() : -1);
   }
 
@@ -485,22 +487,19 @@ class SpaceGroup {
     String xyz = op.xyz;
     if (!isSpecial) {
       // ! in character 0 indicates we are using the symop() function and want to be explicit
-      // exception for a lattice op that has no / in it. (I 41 by name)  
       int id = checkXYZlist(xyz);
       if (id >= 0)
         return id;
       if (latticeOp < 0) {
-        String xxx0 = (modDim > 0 ? SymmetryOperation.replaceXn(xyz, modDim + 3) : xyz);
+        // do this check until we find a lattice operation
         String xxx = PT.replaceAllCharacters(
-            xxx0, "+123/", "");
-        // problem here with I/41. In that group we have a 4-bar 
-        // axis that results in -x+1/2, -y+1/2, z+1/2 FIRST
-        // and -x,-y,z later, causing it to not be recorded.
-        // so here we add "-x,-y,z" inappropriately.
-        if (xyzList.containsKey(xxx))
+            modDim > 0 ? SymmetryOperation.replaceXn(xyz, modDim + 3) : xyz,
+            "+123/", "");
+        if (xyzList.containsKey(xxx + "!")) {
           latticeOp = operationCount;
-        else
-          xyzList.put(xxx, Integer.valueOf(operationCount));
+        } else {
+          xyzList.put(xxx + "!", Integer.valueOf(operationCount));
+        }
       }
       xyzList.put(xyz, Integer.valueOf(operationCount));
     }
@@ -538,6 +537,18 @@ class SpaceGroup {
       setLattice(hallInfo.latticeCode, hallInfo.isCentrosymmetric);
       init(true);
     }
+    switch (h.latticeCode) {
+    case '\0':
+    case 'R':
+    case 'S':
+    case 'T':
+    case 'P':
+      latticeType = "P";
+      break;
+    default:
+      latticeType = "" + h.latticeCode;
+      break;
+    }
     M4 mat1 = new M4();
     M4 operation = new M4();
     M4[] newOps = new M4[7];
@@ -545,19 +556,24 @@ class SpaceGroup {
       newOps[i] = new M4();
     // prior to Jmol 11.7.36/11.6.23 this was setting nOps within the loop
     // and setIdentity() outside the loop. That caused a multiplication of
-    // operations, not a resetting of them each time. 
+    // operations, not a resetting of them each time.
     for (int i = 0; i < h.nRotations; i++) {
-      mat1.setM4(h.rotationTerms[i].seitzMatrix12ths);
-      int nRot = h.rotationTerms[i].order;
+      HallRotationTerm rt = h.rotationTerms[i];
+      mat1.setM4(rt.seitzMatrix12ths);
+      int nRot = rt.order;
       // this would iterate int nOps = operationCount;
       newOps[0].setIdentity();
       int nOps = operationCount;
+      
       for (int j = 1; j <= nRot; j++) {
-        newOps[j].mul2(mat1, newOps[0]);
-        newOps[0].setM4(newOps[j]);
+        M4 m = newOps[j];
+        m.mul2(mat1, newOps[0]);
+        newOps[0].setM4(m);
         for (int k = 0; k < nOps; k++) {
-          operation.mul2(newOps[j], operations[k]);
-          SymmetryOperation.normalizeTranslation(operation);
+          operation.mul2(m, operations[k]);
+          operation.m03 = ((int)operation.m03 + 12) % 12;
+          operation.m13 = ((int)operation.m13 + 12) % 12;
+          operation.m23 = ((int)operation.m23 + 12) % 12; 
           String xyz = SymmetryOperation.getXYZFromMatrix(operation, true, true, true);
           addSymmetrySM(xyz, operation);
         }

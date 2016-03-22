@@ -844,8 +844,7 @@ public class SymmetryDesc {
     int iop = op;
     V3 centering = null;
     if (type == T.lattice) {
-      SpaceGroup sg = SpaceGroup.determineSpaceGroupNA(uc.getSpaceGroupName(), uc.getUnitCellParams());
-      return (sg == null ? "P" : sg.latticeType);      
+      return uc.getLatticeType();
     }
     if (xyz == null) {
       SymmetryOperation[] ops = (SymmetryOperation[]) uc
