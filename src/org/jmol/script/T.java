@@ -934,6 +934,7 @@ public class T {
   public final static int strandcountformeshribbon       = intparam | 52;
   public final static int strandcountforstrands          = intparam | 54;
   public final static int strutspacing                   = intparam | 56;
+  public final static int vectortrail                    = intparam | 57;
   public final static int zdepth                         = intparam | 58;
   public final static int zslab                          = intparam | 60;
   public final static int zshadepower                    = intparam | 62;
@@ -1081,9 +1082,9 @@ public class T {
   public final static int usenumberlocalization          = booleanparam | 195;
   public final static int vectorscentered                = booleanparam | 196;
   public final static int vectorsymmetry                 = booleanparam | 197;
-  public final static int waitformoveto                  = booleanparam | 198;
-  public final static int windowcentered                 = booleanparam | 199;
-  public final static int wireframerotation              = booleanparam | 200;
+  public final static int waitformoveto                  = booleanparam | 199;
+  public final static int windowcentered                 = booleanparam | 200;
+  public final static int wireframerotation              = booleanparam | 201;
   public final static int zerobasedxyzrasmol             = booleanparam | 202;
   public final static int zoomenabled                    = booleanparam | 204;
   public final static int zoomheight                     = booleanparam | 206;
@@ -2435,6 +2436,7 @@ public class T {
        "vectorScale",
        "vectorsCentered",
        "vectorSymmetry",
+       "vectorTrail",
        "vibrationPeriod",
        "vibrationScale",
        "visualRange",
@@ -3472,6 +3474,7 @@ public class T {
         vectorscale,                        //        "vectorScale"
         vectorscentered,                    //        "vectorsCenered"
         vectorsymmetry,                     //        "vectorSymmetry"
+        vectortrail,                        //        "vectorTrail"
         vibrationperiod,                    //        "vibrationPeriod"
         vibrationscale,                     //        "vibrationScale"
         visualrange,                        //        "visualRange"

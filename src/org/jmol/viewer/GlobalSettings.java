@@ -379,6 +379,7 @@ public class GlobalSettings {
     setB("vectorsCentered", vectorsCentered);
     setF("vectorScale", vectorScale);
     setB("vectorSymmetry", vectorSymmetry);
+    setI("vectorTrail", vectorTrail);
     setF("vibrationPeriod", vibrationPeriod);
     setF("vibrationScale", vibrationScale);
     setB("waitForMoveTo", waitForMoveTo);
@@ -629,6 +630,7 @@ public class GlobalSettings {
   float vectorScale = 1f;
   boolean vectorSymmetry = false; // Jmol 12.3.2
   boolean vectorsCentered = false; // Jmol 14.1.14
+  int vectorTrail = 0; // Jmol 14.4.4
   float vibrationPeriod = 1f;
   float vibrationScale = 1f;
   boolean wireframeRotation = false;

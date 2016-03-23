@@ -1884,7 +1884,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
         htParams.put(
             "loadScript",
             loadScript = new SB().append(PT.rep(loadScript.toString(),
-                "$FILENAME$", "data \"model inline\"\n" + strModel
+                "/*file*/$FILENAME$", "/*data*/data \"model inline\"\n" + strModel
                     + "end \"model inline\"")));
     }
     if (strModel != null) {
@@ -5038,6 +5038,8 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       return g.smallMoleculeMaxAtoms;
     case T.strutspacing:
       return g.strutSpacing;
+    case T.vectortrail:
+      return  g.vectorTrail;
     }
     Logger.error("viewer.getInt(" + T.nameOf(tok) + ") - not listed");
     return 0;
@@ -5773,6 +5775,9 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     case T.historylevel:
     case T.scriptreportinglevel:
       value = eval.setStatic(tok, value);
+      break;
+    case T.vectortrail:
+      g.vectorTrail = value;
       break;
     case T.bondingversion:
       // 14.1.11

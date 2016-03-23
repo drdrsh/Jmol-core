@@ -2,6 +2,7 @@ package org.jmol.util;
 
 import java.util.Map;
 
+import javajs.util.P3;
 import javajs.util.T3;
 import javajs.util.V3;
 
@@ -86,6 +87,34 @@ public class Vibration extends V3 {
    */
   public int getOccupancy100(boolean isTemp) {
     return Integer.MIN_VALUE;
+  }
+
+  public boolean showTrace;
+  private P3[] trace = null;
+  public int tracePt;
+  
+  public void startTrace(int n) {
+    trace = new P3[n];
+    tracePt = n;
+  }
+  
+  public P3[] addTracePt(int n, Point3fi ptNew) {
+    if (ptNew == null || trace == null || n == 0 || n > trace.length)
+      startTrace(n);
+    if (ptNew != null && n > 2) {
+      if (--tracePt <= 0) {
+        P3 p0 = trace[trace.length - 1];
+        for (int i = trace.length; --i >= 1;)
+          trace[i] = trace[i-1];
+        trace[1] = p0;
+        tracePt = 1;
+      }
+      P3 p = trace[tracePt];
+      if (p == null)
+        p = trace[tracePt] = new P3();
+      p.setT(ptNew);
+    }      
+    return trace;
   }
 
 }

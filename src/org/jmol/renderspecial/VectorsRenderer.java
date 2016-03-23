@@ -37,6 +37,7 @@ import org.jmol.util.Point3fi;
 
 import javajs.util.P3;
 import javajs.util.P3i;
+import javajs.util.T3;
 import javajs.util.V3;
 import org.jmol.util.Vibration;
 
@@ -67,6 +68,10 @@ public class VectorsRenderer extends ShapeRenderer {
   private boolean vibrationOn;
   private boolean drawCap;
   private boolean showModVecs;
+  private int vectorTrace;
+  private P3 ptTemp4;
+  private P3 ptTemp3;
+  private P3 ptTemp2;
 
 
   @Override
@@ -81,6 +86,7 @@ public class VectorsRenderer extends ShapeRenderer {
     short[] colixes = vectors.colixes;
     boolean needTranslucent = false;
     vectorScale = vwr.getFloat(T.vectorscale);
+    vectorTrace = vwr.getInt(T.vectortrail);
     if (vectorScale < 0)
       vectorScale = 1;
     vectorSymmetry = vwr.getBoolean(T.vectorsymmetry);
@@ -115,14 +121,14 @@ public class VectorsRenderer extends ShapeRenderer {
         needTranslucent = true;
         continue;
       }
-      renderVector(atom);
+      renderVector(atom, vib);
       if (vectorSymmetry) {
         if (vibTemp == null)
           vibTemp = new Vibration();
         vibTemp.setT(vib);
         vibTemp.scale(-1);
         transform(mads[i], atom, vibTemp, null);
-        renderVector(atom);
+        renderVector(atom, vib);
       }
     }
     if (haveModulations)
@@ -133,21 +139,22 @@ public class VectorsRenderer extends ShapeRenderer {
         JmolModulationSet mod = ms.getModulation(i);
         if (mod == null)
           continue;
-        // now we focus on modulations 
-        // this may involve a modulated atom or a spin modulation
-        if (!transform(mads[i], atom, null, mod))
-          continue;
         if (!g3d.setC(Shape.getColix(colixes, i, atom))) {
           needTranslucent = true;
           continue;
         }
-        renderVector(atom);
+        // now we focus on modulations 
+        // this may involve a modulated atom or a spin modulation
+        if (!transform(mads[i], atom, null, mod))
+          continue;
+        renderVector(atom, null);
       }
 
     return needTranslucent;
   }
 
-  private boolean transform(short mad, Atom atom, Vibration vib, JmolModulationSet mod2) {
+  private boolean transform(short mad, Atom atom, Vibration vib,
+                            JmolModulationSet mod2) {
     boolean isMod = (vib == null || vib.modDim >= 0);
     boolean isSpin = (!isMod && vib.modDim == Vibration.TYPE_SPIN);
     if (vib == null)
@@ -188,15 +195,15 @@ public class VectorsRenderer extends ShapeRenderer {
       headOffsetVector.scale(headScale / headOffsetVector.length());
     } else if (vectorsCentered || isSpin) {
       standardVector = false;
- //     Vibration v;
- //     if (mod2 == null || !mod2.isEnabled()) {
- //       v = vib; 
-//      } else {
-//        v = vibTemp;
-//        vibTemp.set(0,  0,  0);
-//        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
-//        vwr.tm.getVibrationPoint(vib, v, Float.NaN);
-//      }
+      //     Vibration v;
+      //     if (mod2 == null || !mod2.isEnabled()) {
+      //       v = vib; 
+      //      } else {
+      //        v = vibTemp;
+      //        vibTemp.set(0,  0,  0);
+      //        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
+      //        vwr.tm.getVibrationPoint(vib, v, Float.NaN);
+      //      }
       pointVectorEnd.scaleAdd2(0.5f * vectorScale, vib, ptTemp);
       pointVectorStart.scaleAdd2(-0.5f * vectorScale, vib, ptTemp);
     } else {
@@ -212,6 +219,7 @@ public class VectorsRenderer extends ShapeRenderer {
         tm.transformPtScrT3(pointArrowHead, screenArrowHead);
       }
     }
+
     if (!standardVector) {
       tm.transformPtScrT3(pointVectorEnd, screenVectorEnd);
       tm.transformPtScrT3(pointVectorStart, screenVectorStart);
@@ -226,10 +234,30 @@ public class VectorsRenderer extends ShapeRenderer {
     headWidthPixels = diameter << 1;
     if (headWidthPixels < diameter + 2)
       headWidthPixels = diameter + 2;
+    
     return true;
   }
   
-  private void renderVector(Atom atom) {
+  private void renderVector(Atom atom, Vibration vib) {
+    if (vib != null && vectorTrace > 0) {// show trace
+      if (ptTemp4 == null) {
+        ptTemp3 = new P3();
+        ptTemp4 = new P3();
+        ptTemp2 = new P3();
+      }
+      int d = Math.max(1, diameter >> 2);
+      P3[] pts = vib.addTracePt(vectorTrace, pointVectorEnd);
+      tm.transformPtScrT3(atom, ptTemp4);
+      if (pts != null)
+        for (int i = pts.length, p = vectorTrace; --i >= 0;) {
+          P3 pt = pts[--p];
+          if (pt == null)
+            break;
+          tm.transformPtScrT3(pt, ptTemp2);
+          g3d.fillCylinderBits(GData.ENDCAPS_FLAT, d, ptTemp4, ptTemp2);
+        }
+    }
+
     if (drawShaft) {
       pTemp3.set(atom.sX, atom.sY, atom.sZ);
       if (standardVector)

@@ -68,6 +68,7 @@ public final class JC {
     "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
     "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
+    "magndata", "http://webbdcrista1.ehu.es/magndata/mcif/%FILE.mcif",
     // _#CHANGEABLE_ flag indicates that the loaded file should be saved in any state in full
     // ' at start indicates a Jmol script evaluation
     "ams", "'http://rruff.geo.arizona.edu/AMS/viewJmol.php?'+(0+'%file'==0? 'mineral':('%file'.length==7? 'amcsd':'id'))+'=%file&action=showcif#_DOCACHE_'",

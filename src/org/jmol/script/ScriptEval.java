@@ -4590,7 +4590,7 @@ public class ScriptEval extends ScriptExpr {
       } else if (!isData) {
         if (localName != null)
           localName = vwr.fm.getFilePath(localName, false, false);
-        if (!filename.equals("string") && !filename.equals("String[]"))
+        if (!filename.equals("String[]"))
           loadScript.append("/*file*/").append(
               (localName != null ? PT.esc(localName) : "$FILENAME$"));
       }
@@ -7885,6 +7885,9 @@ public class ScriptEval extends ScriptExpr {
       break;
     case 3:
       switch (tokAt(1)) {
+      case T.trace:
+          setIntProperty("vectorTrace", intParameterRange(2, 0, 20));
+        return;
       case T.scale:
         if (!Float.isNaN(value = floatParameterRange(2, -100, 100)))
           setFloatProperty("vectorScale", value);
