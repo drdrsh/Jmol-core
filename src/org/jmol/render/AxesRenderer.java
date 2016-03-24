@@ -55,7 +55,7 @@ public class AxesRenderer extends CageRenderer {
   @Override
   protected boolean render() {
     Axes axes = (Axes) shape;
-    int mad10 = vwr.getObjectMad(StateManager.OBJ_AXIS1);
+    int mad10 = vwr.getObjectMad10(StateManager.OBJ_AXIS1);
     // no translucent axes
     if (mad10 == 0 || !g3d.checkTranslucent(false))
       return false;

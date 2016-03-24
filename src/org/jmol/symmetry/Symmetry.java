@@ -297,6 +297,11 @@ public class Symmetry implements SymmetryInterface {
 
   /// symmetryInfo ////
 
+  // symmetryInfo is (inefficiently) passed to Jmol from the adapter 
+  // in lieu of saving the actual unit cell read in the reader. Not perfect.
+  // The idea was to be able to create the unit cell from "scratch" independent
+  // of the reader. 
+  
   @Override
   public String getSpaceGroupName() {
     return (symmetryInfo != null ? symmetryInfo.sgName
@@ -309,6 +314,20 @@ public class Symmetry implements SymmetryInterface {
     return (symmetryInfo != null ? symmetryInfo.symmetryOperations.length
         : spaceGroup != null && spaceGroup.finalOperations != null ? spaceGroup.finalOperations.length
             : 0);
+  }
+
+  @Override
+  public String getLatticeType() {
+    return (symmetryInfo != null ? symmetryInfo.latticeType 
+        : spaceGroup == null ? "P" 
+            : spaceGroup.latticeType);
+  }
+
+  @Override
+  public String getIntTableNumber() {
+    return (symmetryInfo != null ? symmetryInfo.intlTableNo 
+        : spaceGroup == null ? null 
+            : spaceGroup.intlTableNumber);
   }
 
   @Override
@@ -694,16 +713,6 @@ public class Symmetry implements SymmetryInterface {
     if (unitCell == null)
       unitCell = UnitCell.newP(oabc, false);
     return unitCell.toFromPrimitive(toPrimitive, type, oabc);
-  }
-
-  @Override
-  public String getLatticeType() {
-    return (symmetryInfo != null ? symmetryInfo.latticeType : spaceGroup == null ? "P" : spaceGroup.latticeType);
-  }
-
-  @Override
-  public String getIntTableNumber() {
-    return (symmetryInfo != null ? symmetryInfo.intlTableNo : spaceGroup == null ? null : spaceGroup.intlTableNumber);
   }
 
 }

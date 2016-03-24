@@ -41,7 +41,7 @@ public class BbcageRenderer extends CageRenderer {
     if (bbox.isVisible && (isExport || g3d.checkTranslucent(false))
         && !vwr.isJmolDataFrame()) {
       colix = vwr.getObjectColix(StateManager.OBJ_BOUNDBOX);
-      renderCage(bbox.mad, ms.getBBoxVertices(), null, 0, 0xFF, 0xFF, 1);
+      renderCage(vwr.getObjectMad10(StateManager.OBJ_BOUNDBOX), ms.getBBoxVertices(), null, 0, 0xFF, 0xFF, 1);
     }
     return false;
   }

@@ -57,8 +57,8 @@ public class UccageRenderer extends CageRenderer {
   protected boolean render() {
     imageFontScaling = vwr.imageFontScaling;
     font3d = vwr.gdata.getFont3DScaled(((Uccage) shape).font3d, imageFontScaling);
-    int mad = vwr.getObjectMad(StateManager.OBJ_UNITCELL);
-    if (mad == 0 || vwr.isJmolDataFrame() || tm.isNavigating()
+    int mad10 = vwr.getObjectMad10(StateManager.OBJ_UNITCELL);
+    if (mad10 == 0 || vwr.isJmolDataFrame() || tm.isNavigating()
         && vwr.getBoolean(T.navigationperiodic))
       return false;
     colix = vwr.getObjectColix(StateManager.OBJ_UNITCELL);
@@ -66,7 +66,7 @@ public class UccageRenderer extends CageRenderer {
     if (!isExport && needTranslucent != vwr.gdata.isPass2)
       return needTranslucent;
     //doLocalize = vwr.getUseNumberLocalization();
-    render1(mad);
+    render1(mad10);
     return false;
   }
 
@@ -84,7 +84,7 @@ public class UccageRenderer extends CageRenderer {
 
   private int ypos;
   
-  private void render1(int mad) {
+  private void render1(int mad10) {
     g3d.setC(colix);
     unitcell = vwr.getCurrentUnitCell();
     if (unitcell == null)
@@ -114,10 +114,10 @@ public class UccageRenderer extends CageRenderer {
     if (axes != null && vwr.areAxesTainted())
       axes.reinitShape();
     P3[] axisPoints = (axes == null
-        || vwr.getObjectMad(StateManager.OBJ_AXIS1) == 0 || axes.axisXY.z != 0
+        || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0 || axes.axisXY.z != 0
         || axes.fixedOrigin != null || axes.fixedOriginUC.lengthSquared() > 0 ? null
         : axes.axisPoints);
-    boolean drawAllLines = (vwr.getObjectMad(StateManager.OBJ_AXIS1) == 0
+    boolean drawAllLines = (vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0
         || vwr.getFloat(T.axesscale) < 2 || axisPoints == null);
     P3[] aPoints = axisPoints;
     if (fset.z == 0) {
@@ -136,7 +136,7 @@ public class UccageRenderer extends CageRenderer {
         unitcell.toCartesian(v, true);
         verticesT[i].add2(v, offsetT);
       }
-      renderCage(mad, verticesT, aPoints, firstLine, allow0, allow1, 1);
+      renderCage(mad10, verticesT, aPoints, firstLine, allow0, allow1, 1);
     } else
       for (int x = (int) cell0.x; x < cell1.x; x++) {
         for (int y = (int) cell0.y; y < cell1.y; y++) {
@@ -156,7 +156,7 @@ public class UccageRenderer extends CageRenderer {
             allow1 = 0xFF;
             for (int i = 8; --i >= 0;)
               verticesT[i].add2(vertices[i], offsetT);
-            renderCage(mad, verticesT, aPoints, firstLine, allow0, allow1,
+            renderCage(mad10, verticesT, aPoints, firstLine, allow0, allow1,
                 scale);
           }
         }

@@ -1260,27 +1260,38 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     return g.objColors[(StateManager.OBJ_BACKGROUND)];
   }
 
-  public void setObjectMad(int iShape, String name, int mad) {
+  /**
+   * input here is a JC.SHAPE_xxxx identifier
+   * @param iShape
+   * @param name
+   * @param mad10
+   */
+  public void setObjectMad10(int iShape, String name, int mad10) {
     int objId = StateManager
         .getObjectIdFromName(name.equalsIgnoreCase("axes") ? "axis" : name);
     if (objId < 0)
       return;
-    if (mad == -2 || mad == -4) { // turn on if not set "showAxes = true"
-      int m = mad + 3;
-      mad = getObjectMad(objId);
-      if (mad == 0)
-        mad = m;
+    if (mad10 == -2 || mad10 == -4) { // turn on if not set "showAxes = true"
+      int m = mad10 + 3;
+      mad10 = getObjectMad10(objId);
+      if (mad10 == 0)
+        mad10 = m;
     }
-    g.setB("show" + name, mad != 0);
-    g.objStateOn[objId] = (mad != 0);
-    if (mad == 0)
+    g.setB("show" + name, mad10 != 0);
+    g.objStateOn[objId] = (mad10 != 0);
+    if (mad10 == 0)
       return;
-    g.objMad[objId] = mad;
-    setShapeSize(iShape, mad, null); // just loads it
+    g.objMad10[objId] = mad10;
+    setShapeSize(iShape, mad10, null); // just loads it
   }
 
-  public int getObjectMad(int objId) {
-    return (g.objStateOn[objId] ? g.objMad[objId] : 0);
+  /**
+   * 
+   * @param objId
+   * @return  mad10
+   */
+  public int getObjectMad10(int objId) {
+    return (g.objStateOn[objId] ? g.objMad10[objId] : 0);
   }
 
   public void setPropertyColorScheme(String scheme, boolean isTranslucent,
@@ -6869,30 +6880,30 @@ public class Viewer extends JmolViewer implements AtomDataServer,
   }
 
   public void setShowBbcage(boolean value) {
-    setObjectMad(JC.SHAPE_BBCAGE, "boundbox", (short) (value ? -4 : 0));
+    setObjectMad10(JC.SHAPE_BBCAGE, "boundbox", (short) (value ? -4 : 0));
     g.setB("showBoundBox", value);
   }
 
   public boolean getShowBbcage() {
-    return getObjectMad(StateManager.OBJ_BOUNDBOX) != 0;
+    return getObjectMad10(StateManager.OBJ_BOUNDBOX) != 0;
   }
 
   public void setShowUnitCell(boolean value) {
-    setObjectMad(JC.SHAPE_UCCAGE, "unitcell", (short) (value ? -2 : 0));
+    setObjectMad10(JC.SHAPE_UCCAGE, "unitcell", (short) (value ? -2 : 0));
     g.setB("showUnitCell", value);
   }
 
   public boolean getShowUnitCell() {
-    return getObjectMad(StateManager.OBJ_UNITCELL) != 0;
+    return getObjectMad10(StateManager.OBJ_UNITCELL) != 0;
   }
 
   public void setShowAxes(boolean value) {
-    setObjectMad(JC.SHAPE_AXES, "axes", (short) (value ? -2 : 0));
+    setObjectMad10(JC.SHAPE_AXES, "axes", (short) (value ? -2 : 0));
     g.setB("showAxes", value);
   }
 
   public boolean getShowAxes() {
-    return getObjectMad(StateManager.OBJ_AXIS1) != 0;
+    return getObjectMad10(StateManager.OBJ_AXIS1) != 0;
   }
 
   public boolean frankOn = true;
@@ -6903,7 +6914,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (isPreviewOnly)
       TF = false;
     frankOn = TF;
-    setObjectMad(JC.SHAPE_FRANK, "frank", (short) (TF ? 1 : 0));
+    setObjectMad10(JC.SHAPE_FRANK, "frank", (short) (TF ? 1 : 0));
   }
 
   public boolean getShowFrank() {
@@ -8540,11 +8551,19 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public boolean displayLoadErrors = true;
 
-  public void setShapeSize(int shapeID, int mad, BS bsSelected) {
+  /**
+   * 
+   * @param shapeID
+   * @param madOrMad10
+   *        for axes, unitcell, and boundbox 10*mad; otherwise milliangstrom
+   *        diameter
+   * @param bsSelected
+   */
+  public void setShapeSize(int shapeID, int madOrMad10, BS bsSelected) {
     // might be atoms or bonds
     if (bsSelected == null)
       bsSelected = bsA();
-    shm.setShapeSizeBs(shapeID, mad, null, bsSelected);
+    shm.setShapeSizeBs(shapeID, madOrMad10, null, bsSelected);
   }
 
   public void setShapeProperty(int shapeID, String propertyName, Object value) {

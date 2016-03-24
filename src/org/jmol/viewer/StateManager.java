@@ -69,7 +69,7 @@ public class StateManager {
   public final static int OBJ_BOUNDBOX = 4;
   public final static int OBJ_UNITCELL = 5;
   public final static int OBJ_FRANK = 6;
-  public final static int OBJ_MAX = 8;
+  public final static int OBJ_MAX = 7;
   private final static String objectNameList = "background axis1      axis2      axis3      boundbox   unitcell   frank      ";
 
   public static String getVariableList(Map<String, SV> htVariables, int nMax,

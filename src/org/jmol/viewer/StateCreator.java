@@ -923,11 +923,11 @@ public class StateCreator extends JmolStateCreator {
         .equalsIgnoreCase("axes") ? "axis" : myType);
     if (objId < 0)
       return "";
-    int mad = vwr.getObjectMad(objId);
+    int mad = vwr.getObjectMad10(objId);
     SB s = new SB().append("\n");
     app(s, myType
         + (mad == 0 ? " off" : mad == 1 ? " on" : mad == -1 ? " dotted"
-            : mad < 20 ? " " + mad : " " + (mad / 2000f)));
+            : mad < 20 ? " " + mad : " " + (mad / 20000f)));
     if (s.length() < 3)
       return "";
     String fcmd = Shape.getFontCommand(myType, font3d);

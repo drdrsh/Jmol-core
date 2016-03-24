@@ -26,6 +26,10 @@
 package org.jmol.renderspecial;
 
 
+import javajs.util.P3;
+import javajs.util.P3i;
+import javajs.util.V3;
+
 import org.jmol.api.JmolModulationSet;
 import org.jmol.modelset.Atom;
 import org.jmol.render.ShapeRenderer;
@@ -34,11 +38,6 @@ import org.jmol.shape.Shape;
 import org.jmol.shapespecial.Vectors;
 import org.jmol.util.GData;
 import org.jmol.util.Point3fi;
-
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.T3;
-import javajs.util.V3;
 import org.jmol.util.Vibration;
 
 public class VectorsRenderer extends ShapeRenderer {
@@ -68,9 +67,8 @@ public class VectorsRenderer extends ShapeRenderer {
   private boolean vibrationOn;
   private boolean drawCap;
   private boolean showModVecs;
-  private int vectorTrace;
+  private int vectorTrail;
   private P3 ptTemp4;
-  private P3 ptTemp3;
   private P3 ptTemp2;
 
 
@@ -86,7 +84,7 @@ public class VectorsRenderer extends ShapeRenderer {
     short[] colixes = vectors.colixes;
     boolean needTranslucent = false;
     vectorScale = vwr.getFloat(T.vectorscale);
-    vectorTrace = vwr.getInt(T.vectortrail);
+    vectorTrail = vwr.getInt(T.vectortrail);
     if (vectorScale < 0)
       vectorScale = 1;
     vectorSymmetry = vwr.getBoolean(T.vectorsymmetry);
@@ -239,17 +237,16 @@ public class VectorsRenderer extends ShapeRenderer {
   }
   
   private void renderVector(Atom atom, Vibration vib) {
-    if (vib != null && vectorTrace > 0) {// show trace
+    if (vib != null && vectorTrail > 0) {// show trace
       if (ptTemp4 == null) {
-        ptTemp3 = new P3();
         ptTemp4 = new P3();
         ptTemp2 = new P3();
       }
       int d = Math.max(1, diameter >> 2);
-      P3[] pts = vib.addTracePt(vectorTrace, pointVectorEnd);
+      P3[] pts = vib.addTracePt(vectorTrail, vibrationOn ? pointVectorEnd : null);
       tm.transformPtScrT3(atom, ptTemp4);
       if (pts != null)
-        for (int i = pts.length, p = vectorTrace; --i >= 0;) {
+        for (int i = pts.length, p = vectorTrail; --i >= 0;) {
           P3 pt = pts[--p];
           if (pt == null)
             break;

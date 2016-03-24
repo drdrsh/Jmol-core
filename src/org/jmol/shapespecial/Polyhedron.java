@@ -77,8 +77,8 @@ public class Polyhedron {
   Polyhedron set(String id, int modelIndex, P3 atomOrPt, P3[] points,
                  int nPoints, int vertexCount, int[][] triangles,
                  int triangleCount, int[][] faces, V3[] normals, BS bsFlat,
-                 boolean collapsed, float distanceRef) {
-
+                 boolean collapsed, float distanceRef, float pointScale) {
+    this.pointScale = pointScale;
     this.distanceRef = distanceRef;
     if (id == null) {
       centralAtom = (Atom) atomOrPt;

@@ -99,7 +99,7 @@ public class Vibration extends V3 {
   }
   
   public P3[] addTracePt(int n, Point3fi ptNew) {
-    if (ptNew == null || trace == null || n == 0 || n > trace.length)
+    if (trace == null || n == 0 || n != trace.length)
       startTrace(n);
     if (ptNew != null && n > 2) {
       if (--tracePt <= 0) {

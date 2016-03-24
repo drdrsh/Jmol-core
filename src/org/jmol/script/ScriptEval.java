@@ -8921,7 +8921,7 @@ public class ScriptEval extends ScriptExpr {
 
   public void setObjectMad10(int iShape, String name, int mad10) {
     if (!chk)
-      vwr.setObjectMad(iShape, name, mad10);
+      vwr.setObjectMad10(iShape, name, mad10);
   }
 
   private String setObjectProp(String id, int tokCommand, int ptColor)

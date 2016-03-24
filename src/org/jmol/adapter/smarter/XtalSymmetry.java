@@ -984,6 +984,8 @@ public class XtalSymmetry {
         Integer.valueOf(operationCount));
     asc.setCurrentModelInfo("latticeType", symmetry.getLatticeType());
     asc.setCurrentModelInfo("intlTableNo", symmetry.getIntTableNumber());
+    if (acr.sgName == null || acr.sgName.indexOf("?") >= 0 || acr.sgName.indexOf("!") >= 0)
+      setAtomSetSpaceGroupName(acr.sgName = symmetry.getSpaceGroupName());
   }
 
   public T3 getOverallSpan() {

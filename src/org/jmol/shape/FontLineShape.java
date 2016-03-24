@@ -34,7 +34,6 @@ public abstract class FontLineShape extends Shape {
   // Axes, Bbcage, Uccage
   
   public TickInfo[] tickInfos = new TickInfo[4];
-  public short mad;
 
   public Font font3d;
 

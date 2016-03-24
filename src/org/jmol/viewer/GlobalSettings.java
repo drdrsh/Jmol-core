@@ -650,7 +650,7 @@ public class GlobalSettings {
 
   int[] objColors = new int[StateManager.OBJ_MAX];
   boolean[] objStateOn = new boolean[StateManager.OBJ_MAX];
-  int[] objMad = new int[StateManager.OBJ_MAX];
+  int[] objMad10 = new int[StateManager.OBJ_MAX];
 
   boolean ellipsoidAxes = false;
   boolean ellipsoidDots = false;
