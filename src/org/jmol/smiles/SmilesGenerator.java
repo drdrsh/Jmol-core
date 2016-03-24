@@ -650,7 +650,6 @@ public class SmilesGenerator {
     // now construct the branches part, which will come after  [Xx] or Xx
 
     SB sbBranches = new SB();
-
     int stereoFlag0 = stereoFlag;
     int nSp2Atoms0 = nSp2Atoms;
 
@@ -783,11 +782,11 @@ public class SmilesGenerator {
     sb.appendSB(sbRings).appendSB(sbBranches);
 
     // check the next bond
-
+System.out.println(sb);
     if (bond0 == null)
       return null;
 
-    if (orderNext == 2 && (nSp2Atoms == 1 || nSp2Atoms == 2)) {
+    if (sp2Atoms != null && orderNext == 2 && (nSp2Atoms == 1 || nSp2Atoms == 2)) {
       if (sp2Atoms[0] == null)
         sp2Atoms[0] = atom; // CN=C= , for example. close enough!
       if (sp2Atoms[1] == null)
