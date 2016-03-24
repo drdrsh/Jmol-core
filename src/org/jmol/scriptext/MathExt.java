@@ -436,8 +436,9 @@ public class MathExt {
     float f0 = SV.fValue(args[0]);
     float f1 = SV.fValue(args[1]);
     float df = SV.fValue(args[2]);
-    String key = (args.length == 4 ? SV.sValue(args[3]) : null);
-    boolean addBins = (args.length == 5 && SV.bValue(args[4]));
+    int n = args.length;
+    boolean addBins = (n >= 4 && args[n - 1].tok == T.on && SV.bValue(args[--n]));
+    String key = (n >= 4 ? SV.sValue(args[--n]) : null);
     float[] data;
     Map<String, SV>[] maps = null;
     if (isListf) {
@@ -460,10 +461,8 @@ public class MathExt {
     for (int i = 0; i < nPoints; i++) {
       float v = data[i];
       int bin = (int) Math.floor((v - f0) / df);
-      if (bin < 0)
-        bin = 0;      
-      else if (bin >= nbins)
-        bin = nbins - 1;
+      if (bin < 0 || bin >= nbins)
+        continue;      
       array[bin]++;
       if (key != null) {
         Map<String, SV> map = maps[i];

@@ -5394,6 +5394,8 @@ public class ScriptEval extends ScriptExpr {
       break;
     case T.axes:
       String abc = paramAsStr(++i);
+      if (abc.equals("-"))
+        abc += paramAsStr(++i);
       checkLength(++i);
       switch ("xyz".indexOf(abc)) {
       case 0:

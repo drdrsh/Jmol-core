@@ -526,6 +526,8 @@ public class CifReader extends AtomSetCollectionReader {
       thisStructuralFormula = data = parser.fullTrim(data);
     } else if (type.equals("formula")) {
       thisFormula = data = parser.fullTrim(data);
+      if (thisFormula.length() > 1)
+        appendLoadNote(thisFormula);
     }
     if (debugging) {
       Logger.debug(type + " = " + data);

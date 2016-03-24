@@ -541,33 +541,53 @@ class UnitCell extends SimpleUnitCell {
     //  qca = !quaternion({0 0 0}, cross(bxa,b), bxa);
     //
 
+    int mul = (abc.charAt(0) == '-' ? -1 : 1);
+    if (mul < 0)
+      abc = abc.substring(1);
     int quadrant = 0;
     if (abc.length() == 2) { // a1 a2 a3 a4 b1 b2 b3 b4...
       quadrant = abc.charAt(1) - 48;
       abc = abc.substring(0, 1);
     }
+    boolean isEven = (quadrant % 2 == 0);
     int axis = "abc".indexOf(abc);
-    
+
     T3 v1, v2;
     switch (axis) {
     case 0:
     default:
       v1 = a;
       v2 = c;
+      if (quadrant > 0) {
+        if (mul > 0 == isEven) {
+          v2 = b;
+          v1.scale(-1);
+        }
+      }
       break;
-    case 1:
+    case 1: // b
       v1 = b;
       v2 = a;
+      if (quadrant > 0) {
+        if (mul > 0 == isEven) {
+          v2 = c;
+          v1.scale(-1);
+        }
+      }
       break;
-    case 2:
+    case 2: // c
       v1 = c;
       v2 = a;
-      // "c" puts origin in the bottom left
-      if (quadrant != 0)
-        v1.scale(-1);
+      if (quadrant > 0) {
+        quadrant = 5 - quadrant;
+        if (mul > 0 != isEven) {
+          v2 = b;
+          v1.scale(-1);
+        }
+      }
       break;
     }
-    switch(quadrant) {
+    switch (quadrant) {
     case 0:
     default:
       // upper left for a b; bottom left for c
@@ -589,7 +609,7 @@ class UnitCell extends SimpleUnitCell {
       break;
     }
     x.cross(v1, v2);
-    v.cross(x, v1);    
+    v.cross(x, v1);
     return Quat.getQuaternionFrame(null, v, x).inv();
   }
 
