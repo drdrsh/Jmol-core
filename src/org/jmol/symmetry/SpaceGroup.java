@@ -262,14 +262,17 @@ class SpaceGroup {
     finalOperations[i].newPoint(atom1, atom2, transX, transY, transZ);
   }
     
-  static String getInfo(String spaceGroup, SymmetryInterface cellInfo) {
-    SpaceGroup sg;
+  static String getInfo(SpaceGroup sg, String spaceGroup,
+                        SymmetryInterface cellInfo) {
     if (cellInfo != null) {
-      if (spaceGroup.indexOf("[") >= 0)
-        spaceGroup = spaceGroup.substring(0, spaceGroup.indexOf("[")).trim();
-      if (spaceGroup.equals("unspecified!"))
-        return "no space group identified in file";
-      sg = SpaceGroup.determineSpaceGroupNA(spaceGroup, cellInfo.getUnitCellParams());
+      if (sg == null) {
+        if (spaceGroup.indexOf("[") >= 0)
+          spaceGroup = spaceGroup.substring(0, spaceGroup.indexOf("[")).trim();
+        if (spaceGroup.equals("unspecified!"))
+          return "no space group identified in file";
+        sg = SpaceGroup.determineSpaceGroupNA(spaceGroup,
+            cellInfo.getUnitCellParams());
+      }
     } else if (spaceGroup.equalsIgnoreCase("ALL")) {
       return SpaceGroup.dumpAll();
     } else if (spaceGroup.equalsIgnoreCase("ALLSEITZ")) {
@@ -344,23 +347,24 @@ class SpaceGroup {
   }
 
   ///// private methods /////
-    
+
   /**
    * 
    * @return either a String or a SpaceGroup, depending on index.
    */
   private Object dumpCanonicalSeitzList() {
-    if (hallInfo == null)
-      hallInfo = new HallInfo(hallSymbol);
-    generateAllOperators(null);
+    if (nHallOperators != null) {
+      if (hallInfo == null)
+        hallInfo = new HallInfo(hallSymbol);
+      generateAllOperators(null);
+    } 
     String s = getCanonicalSeitzList();
     if (index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(operationCount, s);
       if (sgDerived != null)
         return sgDerived;
     }
-    return (index >= 0 && index < SG.length 
-        ? hallSymbol + " = " : "") + s;
+    return (index >= 0 && index < SG.length ? hallSymbol + " = " : "") + s;
   }
   
   /**

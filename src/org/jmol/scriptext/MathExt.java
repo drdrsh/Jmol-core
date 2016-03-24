@@ -427,7 +427,7 @@ public class MathExt {
 
   private boolean evaluateBin(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
-    if (args.length != 3 && args.length != 4)
+    if (args.length < 3 || args.length > 5)
       return false;
     SV x1 = mp.getX();
     boolean isListf = (x1.tok == T.listf);
@@ -437,6 +437,7 @@ public class MathExt {
     float f1 = SV.fValue(args[1]);
     float df = SV.fValue(args[2]);
     String key = (args.length == 4 ? SV.sValue(args[3]) : null);
+    boolean addBins = (args.length == 5 && SV.bValue(args[4]));
     float[] data;
     Map<String, SV>[] maps = null;
     if (isListf) {
@@ -475,7 +476,13 @@ public class MathExt {
         map.put("_binMax", SV.newF(bin == nbins - 1 ? Float.MAX_VALUE  : v2));        
       }
     }
-    return mp.addXAI(array);
+    if (addBins) {
+      Lst<float[]> lst = new Lst<float[]>();
+      for (int i = 0; i < nbins; i++)
+        lst.addLast(new float[] { f0 + df * i, array[i]});
+      return mp.addXList(lst);
+   }
+    return mp.addXAI(array);      
   }
 
   private boolean evaluateCache(ScriptMathProcessor mp, SV[] args) {

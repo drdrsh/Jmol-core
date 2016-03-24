@@ -179,7 +179,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getSpaceGroupInfoStr(String name, SymmetryInterface cellInfo) {
-    return SpaceGroup.getInfo(name, cellInfo);
+    return SpaceGroup.getInfo(spaceGroup, name, cellInfo);
   }
 
   @Override

@@ -50,6 +50,8 @@ public final class JC {
   
   public static final String PDB_ANNOTATIONS = ";dssr;rna3d;dom;val;";
 
+  // note list of RCSB access points: http://www.rcsb.org/pdb/static.do?p=download/http/index.html
+  
   public static String[] databases = { 
     "dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--json=ebi-no-str-id",
     //"dssr", "http://x3dna.bio.columbia.edu/dssr/report.php?id=%FILE&opts=--jmol%20--more",
@@ -60,8 +62,9 @@ public final class JC {
     "cod", "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif",
     "nmr", "http://www.nmrdb.org/new_predictor?POST?molfile=",
     "nmrdb", "http://www.nmrdb.org/service/predictor?POST?molfile=",
-    "pdb", "http://ftp.wwpdb.org/pub/pdb/data/structures/divided/pdb/%c2%c3/pdb%file.ent.gz", // new Jmol 14.5.0 10/28/2015
-    "pdb0", "http://www.rcsb.org/pdb/files/%FILE.pdb.gz",
+    //"pdb", "http://ftp.wwpdb.org/pub/pdb/data/structures/divided/pdb/%c2%c3/pdb%file.ent.gz", // new Jmol 14.5.0 10/28/2015
+    "pdb", "http://files.rcsb.org/view/%FILE.pdb", // new Jmol 14.4.4 3/2016
+    "pdb0", "http://files.rcsb.org/view/%FILE.pdb", // used in JSmol
     "pdbe", "http://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
     "pdbe2", "http://www.ebi.ac.uk/pdbe/static/entry/%FILE_updated.cif",
     "pubchem", "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",

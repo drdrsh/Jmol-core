@@ -89,6 +89,7 @@ public class Polyhedra extends AtomShape {
   float faceCenterOffset;
 //  float distanceFactor = Float.NaN;
   boolean isCollapsed;
+  boolean isFull;
 
   private boolean iHaveCenterBitSet;
   private boolean bondedOnly;
@@ -127,7 +128,7 @@ public class Polyhedra extends AtomShape {
       centers = null;
       info = null;
       bsVertexCount = new BS();
-      bondedOnly = isCollapsed = iHaveCenterBitSet = false;
+      bondedOnly = isCollapsed = isFull = iHaveCenterBitSet = false;
       haveBitSetVertices = false;
       if (Boolean.TRUE == value)
         drawEdges = EDGES_NONE;
@@ -175,7 +176,12 @@ public class Polyhedra extends AtomShape {
     }
 
     if ("collapsed" == propertyName) {
-      isCollapsed = ((Boolean) value).booleanValue();
+      isCollapsed = true;
+      return;
+    }
+
+    if ("full" == propertyName) {
+      isFull = true;
       return;
     }
 
@@ -790,10 +796,12 @@ public class Polyhedra extends AtomShape {
     int fmax = FACE_COUNT_MAX;
     int vmax = MAX_VERTICES;
     BS bsTemp = Normix.newVertexBitSet();
+    BS bsNodes = new BS();
     V3[] normals = normalsT;
     Map<Integer, Object[]> htNormMap = new Hashtable<Integer, Object[]>();
     Map<String, Object> htEdgeMap = new Hashtable<String, Object>();
     BS bsCenterPlanes = new BS();
+    Lst<int[]> lstRejected = (isFull ? new Lst<int[]>() : null);
     V3 vAC = this.vAC;
     for (int i = 0, pt = 0; i < ni; i++)
       for (int j = i + 1; j < nj; j++) {
@@ -814,13 +822,21 @@ public class Polyhedra extends AtomShape {
           boolean isWindingOK = Measure.getNormalFromCenter(rpt, points[i],
               points[j], points[k], !isThroughCenter, normal, vAC);
           // the standard face:
-          normals[triangleCount] = normal;
-          triangles[triangleCount] = new int[] { isWindingOK ? i : j,
-              isWindingOK ? j : i, k, -7 };
-          if (!checkFace(points, vertexCount, triangles, normals,
-              triangleCount, pTemp, nTemp, vAC, htNormMap, htEdgeMap,
-              planarParam, bsTemp))
+          int[] t = new int[] { isWindingOK ? i : j, isWindingOK ? j : i, k, -7 };
+          float err = checkFacet(points, vertexCount, t, normal, pTemp, nTemp,
+              vAC, htNormMap, htEdgeMap, planarParam, bsTemp, bsNodes);
+          if (err != 0) {
+            if (isFull && err != Float.MAX_VALUE && err < 0.5f) {
+              t[3] = (int) (err * 100);
+              lstRejected.addLast(t);
+            }
             continue;
+          }
+          bsNodes.set(i);
+          bsNodes.set(j);
+          bsNodes.set(k);
+          normals[triangleCount] = normal;
+          triangles[triangleCount] = t;
           if (isThroughCenter) {
             bsCenterPlanes.set(triangleCount++);
           } else if (collapsed) {
@@ -845,7 +861,7 @@ public class Polyhedra extends AtomShape {
       for (int i = 0; i < triangleCount; i++)
         Logger.info("Polyhedron " + PT.toJSON("face[" + i + "]", triangles[i]));
     }
-    //System.out.println(PT.toJSON(null, htEdgeMap));
+    //System.out.println(PT.toJSON(null, lstRejected));
     return new Polyhedron().set(thisID, modelIndex, atomOrPt, points, nPoints,
         vertexCount, triangles, triangleCount,
         getFaces(triangles, triangleCount, htNormMap), normals, bsCenterPlanes,
@@ -888,47 +904,49 @@ public class Polyhedra extends AtomShape {
    * 
    * @param points
    * @param nPoints
-   * @param planes
-   * @param normals
-   * @param index
+   * @param p1
+   * @param norm
    * @param pTemp
    * @param vNorm
    * @param vAC
    * @param htNormMap
-   * @param htEdgeMap 
+   * @param htEdgeMap
    * @param planarParam
    * @param bsTemp
    * @return true if valid
    */
-  private boolean checkFace(P3[] points, int nPoints, int[][] planes,
-                            V3[] normals, int index, P4 pTemp, V3 vNorm,
-                            V3 vAC, Map<Integer, Object[]> htNormMap,
-                            Map<String, Object> htEdgeMap, float planarParam,
-                            BS bsTemp) {
-    int[] p1 = planes[index];
+  private float checkFacet(P3[] points, int nPoints, int[] p1, V3 norm,
+                           P4 pTemp, V3 vNorm, V3 vAC,
+                           Map<Integer, Object[]> htNormMap,
+                           Map<String, Object> htEdgeMap, float planarParam,
+                           BS bsTemp, BS bsNodes) {
 
     // Check here for a 3D convex hull:
     int i0 = p1[0];
     pTemp = Measure.getPlaneThroughPoints(points[i0], points[p1[1]],
         points[p1[2]], vNorm, vAC, pTemp);
-    // See if all vertices are OUTSIDE the the plane we are considering.
+    // See if all vertices are OUTSIDE the plane we are considering.
     //System.out.println(PT.toJSON(null, p1));
     P3 pt = points[i0];
     for (int j = 0; j < nPoints; j++) {
       if (j == i0)
         continue;
+      //System.out.println("isosurface plane " + pTemp);
+      //System.out.println("polyh distance to pt" + Measure.distanceToPlane(pTemp, points[j]));
       vAC.sub2(points[j], pt);
       vAC.normalize();
       float v = vAC.dot(vNorm);
+      // this should be 0 for a perfect plane
+
       // we cannot just take a negative dot product as indication of being
       // inside the convex hull. That would be fine if this were about regular
       // polyhedra. But we can have imperfect quadrilateral faces that are slightly
       // bowed inward. 
       if (v > CONVEX_HULL_MAX) {
-        return false;
+        //System.out.println("polyhad " + v + " " + CONVEX_HULL_MAX + " " + points[j] + " " + pt);
+        return v;
       }
     }
-    V3 norm = normals[index];
     Integer normix = Integer.valueOf(Normix.getNormixV(norm, bsTemp));
     Object[] o = htNormMap.get(normix);
     //System.out.println(PT.toJSON(null, p1) + " " + normix);
@@ -943,6 +961,7 @@ public class Polyhedra extends AtomShape {
       V3[] norms = Normix.getVertexVectors();
       for (Entry<Integer, Object[]> e : htNormMap.entrySet()) {
         Integer n = e.getKey();
+        //System.out.println("norm " + n + " " + norms[n.intValue()].dot(norm) + " " + planarParam);
         if (norms[n.intValue()].dot(norm) > planarParam) {
           normix = n;
           o = e.getValue();
@@ -950,18 +969,27 @@ public class Polyhedra extends AtomShape {
         }
       }
       if (o == null)
-        htNormMap.put(normix, o = new Object[] {new BS(), new Lst<int[]>()});
+        htNormMap.put(normix, o = new Object[] { new Lst<int[]>() });
     }
     //System.out.println(PT.toJSON(null, p1) + " " + normix);
-    BS bsPts = (BS) o[0];
     @SuppressWarnings("unchecked")
-    Lst<int[]> lst = (Lst<int[]>) o[1];
+    Lst<int[]> faceEdgeList = (Lst<int[]>) o[0];
     for (int i = 0; i < 3; i++)
-      if (!addEdge(lst, htEdgeMap, normix, p1, i, points, bsPts))
-        return false;
-    return true;
-  }
+      if ((edgeTest[i] = addEdge(faceEdgeList, htEdgeMap, normix, p1, i, points)) == null)
+        return Float.MAX_VALUE;
+    for (int i = 0; i < 3; i++) {
+      Object oo = edgeTest[i];
+      if (oo == Boolean.TRUE)
+        continue;
+      Object[] oe = (Object[]) oo;
+      faceEdgeList.addLast((int[]) oe[2]);
+      htEdgeMap.put((String) oe[3], oe);
+    }
 
+    return 0;
+  }
+  private Object[] edgeTest = new Object[3];
+  
   /**
    * Check each edge to see that
    * 
@@ -970,74 +998,79 @@ public class Polyhedra extends AtomShape {
    * (b) it does not have vertex points on both sides of it
    * 
    * (c) if it runs opposite another edge, then both edge masks are set properly
-   * @param faceList 
+   * 
+   * @param faceEdgeList
    * @param htEdgeMap
    * @param normix
    * @param p1
    * @param i
    * @param points
-   * @param bsPts
    * @return true if this triangle is OK
    * 
    */
-  private boolean addEdge(Lst<int[]>faceList, Map<String, Object> htEdgeMap, Integer normix,
-                          int[] p1, int i, P3[] points, BS bsPts) {
+  private Object addEdge(Lst<int[]> faceEdgeList,
+                         Map<String, Object> htEdgeMap, Integer normix,
+                         int[] p1, int i, P3[] points) {
     // forward maps are out
+    int pt = p1[i];
     int pt1 = p1[(i + 1) % 3];
     String s1 = "_" + pt1;
-    int pt = p1[i];
     String s = "_" + pt;
     String edge = normix + s + s1;
     if (htEdgeMap.containsKey(edge))
-      return false;
+      return null;
     //reverse maps are in
     String edge0 = normix + s1 + s;
     Object o = htEdgeMap.get(edge0);
     int[] b;
     if (o == null) {
-      // first check that we have all points on the same side of this line. 
       P3 coord2 = points[pt1];
       P3 coord1 = points[pt];
       vAB.sub2(coord2, coord1);
-      for (int j = bsPts.nextSetBit(0); j >= 0; j = bsPts.nextSetBit(j + 1)) {
-        if (j == pt1 || j == pt)
-          continue;
-        vAC.sub2(points[j], coord1);
-        if (o == null) {
-          o = bsPts;
-          vBC.cross(vAC, vAB);
-          continue;
-        }
-        vAC.cross(vAC, vAB);
-        if (vBC.dot(vAC) < 0)
-          return false;
+      for (int j = faceEdgeList.size(); --j >= 0;) {
+        int[] e = faceEdgeList.get(j);
+        P3 c1 = points[e[0]];
+        P3 c2 = points[e[1]];
+        if (c1 != coord1 && c1 != coord2 && c2 != coord1 && c2 != coord2
+            && testDiff(c1, c2, coord1, coord2)
+            && testDiff(coord1, coord2, c1, c2))
+          return null;
       }
-      bsPts.set(pt);
-      bsPts.set(pt1);
-      b = new int[] {pt, pt1};
-      faceList.addLast(b);
-      htEdgeMap.put(edge, new Object[] { p1, Integer.valueOf(i), b });
-    } else {
-      // set mask to exclude both of these.
-      int[] p10 = (int[]) ((Object[]) o)[0];
-      if (p10 == null)
-        return false; // already seen
-      int i0 = ((Integer) ((Object[]) o)[1]).intValue();
-      p10[3] = -((-p10[3]) ^ (1 << i0));
-      p1[3] = -((-p1[3]) ^ (1 << i));
-      b = (int[])((Object[]) o)[2];
-      for (int j = faceList.size(); --j >= 0;) {
-        int[] f = faceList.get(j);
-        if (f[0] == b[0] && f[1] == b[1]) {
-          faceList.remove(j);
-          break;
-        }
-      }
-      // not supported for JavaScript faceList.removeObj(b);
-      htEdgeMap.put(edge, new Object[] {null});
-      htEdgeMap.put(edge0, new Object[] {null});
+      return new Object[] { p1, Integer.valueOf(i), new int[] { pt, pt1 }, edge };
     }
-    return true;
+    // set mask to exclude both of these.
+    int[] p10 = (int[]) ((Object[]) o)[0];
+    if (p10 == null)
+      return null; // already seen
+    int i0 = ((Integer) ((Object[]) o)[1]).intValue();
+    p10[3] = -((-p10[3]) ^ (1 << i0));
+    p1[3] = -((-p1[3]) ^ (1 << i));
+    b = (int[]) ((Object[]) o)[2];
+    for (int j = faceEdgeList.size(); --j >= 0;) {
+      int[] f = faceEdgeList.get(j);
+      if (f[0] == b[0] && f[1] == b[1]) {
+        faceEdgeList.remove(j);
+        break;
+      }
+    }
+    htEdgeMap.put(edge, new Object[] { null });
+    htEdgeMap.put(edge0, new Object[] { null });
+    return Boolean.TRUE;
+  }
+
+  private boolean testDiff(P3 a1, P3 b1, P3 a2, P3 b2) {
+    //
+    //       b1
+    //  a2_ /__b2
+    //     /
+    //    a1
+    //
+    vAB.sub2(b1, a1);
+    vAC.sub2(a2, a1);
+    vAC.cross(vAC, vAB);
+    vBC.sub2(b2, a1);
+    vBC.cross(vBC, vAB);
+    return (vBC.dot(vAC) < 0);
   }
 
   private final V3 vAB = new V3();
@@ -1072,12 +1105,12 @@ public class Polyhedra extends AtomShape {
     int fpt = 0;
     for (Entry<Integer, Object[]> e : htNormMap.entrySet()) {
       @SuppressWarnings("unchecked")
-      Lst<int[]> faceList = (Lst<int[]>)e.getValue()[1];
-      n = faceList.size();
+      Lst<int[]> faceEdgeList = (Lst<int[]>)e.getValue()[0];
+      n = faceEdgeList.size();
       int[] face = faces[fpt++] = new int[n];
       if (n < 2)
         continue;
-      int[] edge = faceList.get(0);
+      int[] edge = faceEdgeList.get(0);
       //System.out.println("poly edge=" + PT.toJSON(null, edge));
       face[0] = edge[0];
       face[1] = edge[1];
@@ -1087,7 +1120,7 @@ public class Polyhedra extends AtomShape {
       while (pt < n && pt0 != pt) {
         pt0 = pt;
         for (int i = i0; i < n; i++) {
-          edge = faceList.get(i);
+          edge = faceEdgeList.get(i);
           if (edge[0] == face[pt - 1]) {
             face[pt++] = edge[1];
             if (i == i0)

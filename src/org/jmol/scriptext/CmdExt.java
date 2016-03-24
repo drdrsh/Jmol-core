@@ -3244,6 +3244,9 @@ public class CmdExt extends ScriptExt {
             : eval.theTok == T.on ? "on" : "delete");
         onOffDelete = true;
         break;
+      case T.full:
+        propertyName = "full";
+        break;
       case T.integer:
         if (id != null)
           invArg();
@@ -3283,7 +3286,7 @@ public class CmdExt extends ScriptExt {
         }
         //$FALL-THROUGH$
       case T.facecenteroffset:
-        setShapeProperty(JC.SHAPE_POLYHEDRA, "collapsed", Boolean.TRUE);
+        setShapeProperty(JC.SHAPE_POLYHEDRA, "collapsed", null);
         //$FALL-THROUGH$
       case T.planarparam:
       case T.distancefactor:
@@ -3360,7 +3363,6 @@ public class CmdExt extends ScriptExt {
           setShapeProperty(JC.SHAPE_POLYHEDRA, "faceCenterOffset",
               Float.valueOf(floatParameter(++i)));
         propertyName = "collapsed";
-        propertyValue = Boolean.TRUE;
         break;
       case T.noedges:
       case T.edges:

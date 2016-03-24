@@ -203,7 +203,10 @@ class SymmetryOperation extends M4 {
       sb.append("[\t");
       for (int j = 0; j < 3; j++)
         sb.appendI((int) r[j]).append("\t");
-      sb.append(twelfthsOf(isCanonical ? ((int)r[3] + 12)%12 : (int) r[3])).append("\t]\n");
+      float trans = r[3];
+      if (trans != (int) trans)
+        trans = 12 * trans;
+      sb.append(twelfthsOf(isCanonical ? ((int)trans + 12)%12 : (int) trans)).append("\t]\n");
     }
     return sb.toString();
   }
