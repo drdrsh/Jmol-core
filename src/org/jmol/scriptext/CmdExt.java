@@ -3202,6 +3202,7 @@ public class CmdExt extends ScriptExt {
     eval.sm.loadShape(JC.SHAPE_POLYHEDRA);
     setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.TRUE);
     float translucentLevel = Float.MAX_VALUE;
+    float radius = -1;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     P3 offset = null;
     String id = null;
@@ -3273,7 +3274,7 @@ public class CmdExt extends ScriptExt {
           invArg();
         if (nAtomSets > 0)
           invPO();
-        propertyName = "radius";
+        propertyName = (radius != 0 ? "radius1" : "radius");
         propertyValue = Float.valueOf(floatParameter(i));
         needsGenerating = true;
         break;

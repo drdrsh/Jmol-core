@@ -84,7 +84,7 @@ public class Polyhedra extends AtomShape {
   public Polyhedron[] polyhedrons = new Polyhedron[32];
   public int drawEdges;
 
-  private float radius, pointScale;
+  private float radius, radiusMin, pointScale;
   private int nVertices;
 
   float faceCenterOffset;
@@ -118,7 +118,7 @@ public class Polyhedra extends AtomShape {
       faceCenterOffset = DEFAULT_FACECENTEROFFSET;
       //distanceFactor = 
       planarParam = Float.NaN;
-      radius = pointScale = 0.0f;
+      radius = radiusMin = pointScale = 0.0f;
       nVertices = 0;
       nPoints = 0;
       modelIndex = -1;
@@ -353,6 +353,12 @@ public class Polyhedra extends AtomShape {
     //    }
 
     if ("radius" == propertyName) {
+      radius = ((Float) value).floatValue();
+      return;
+    }
+
+    if ("radius1" == propertyName) {
+      radiusMin = radius;
       radius = ((Float) value).floatValue();
       return;
     }
@@ -652,13 +658,15 @@ public class Polyhedra extends AtomShape {
       if (bonds == null)
         return null;
       float r2 = radius * radius;
+      float r1 = radiusMin * radiusMin;
+      float r;
       for (int i = bonds.length; --i >= 0;) {
         Bond bond = bonds[i];
         if (!bond.isCovalent())
           continue;
         Atom other = bond.getOtherAtom(atom);
         if (bsVertices != null && !bsVertices.get(other.i) || radius > 0
-            && other.distanceSquared(atom) > r2)
+            && ((r = other.distanceSquared(atom)) > r2 || r < r1))
           continue;
         otherAtoms[otherAtomCount++] = other;
         if (otherAtomCount >= MAX_VERTICES)
@@ -725,6 +733,8 @@ public class Polyhedra extends AtomShape {
     int otherAtomCount = 0;
     distanceRef = radius;
     float r2 = radius * radius;
+    float r2min = radiusMin * radiusMin;
+    float r;
     outer: while (iter.hasNext()) {
       Atom other = atoms[iter.next()];
       P3 pt = iter.getPosition();
@@ -732,7 +742,7 @@ public class Polyhedra extends AtomShape {
         // this will happen with standard radius atom iterator
         pt = other;
         if (bsVertices != null && !bsVertices.get(other.i)
-            || atom.distanceSquared(pt) > r2)
+            || (r = atom.distanceSquared(pt)) > r2 || r < r2min)
           continue;
       }
       if (other.altloc != atom.altloc && other.altloc != 0 && atom.altloc != 0)

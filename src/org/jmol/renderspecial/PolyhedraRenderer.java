@@ -122,8 +122,8 @@ public class PolyhedraRenderer extends ShapeRenderer {
       P3 v = sc[i];
       if (atom == null) {
         tm.transformPtScrT3(vertices[i], v);
-      } else if (atom.isVisible(myVisibilityFlag)) {
-        v.set(atom.sX, atom.sY, atom.sZ);
+//      } else if (atom.isVisible(myVisibilityFlag)) {
+  //      v.set(atom.sX, atom.sY, atom.sZ);
       } else if (vibs && atom.hasVibration()) {
         scrVib = tm.transformPtVib(atom, ms.vibrations[atom.i]);
         v.set(scrVib.x, scrVib.y, scrVib.z);
