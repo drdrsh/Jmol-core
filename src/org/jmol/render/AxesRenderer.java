@@ -100,6 +100,7 @@ public class AxesRenderer extends CageRenderer {
     int diameter = mad10;
     boolean drawTicks = false;
     P3 ptTemp = originScreen;
+    boolean checkAxisType = (axes.axisType != null && (isXY || vwr.getFloat(T.axesoffset) != 0 || axes.fixedOrigin != null));
     if (isXY) {
       if (exportType == GData.EXPORT_CARTESIAN)
         return false;
@@ -163,8 +164,7 @@ public class AxesRenderer extends CageRenderer {
     colixes[2] = vwr.getObjectColix(StateManager.OBJ_AXIS3);
     boolean showOrigin = (!isXY && nPoints == 3 && axes.scale == 2);
     for (int i = nPoints; --i >= 0;) {
-      if (isXY
-          && axes.axisType != null
+      if (checkAxisType
           && !axes.axisType.contains(axesTypes[i])
           || Math.abs(xCenter - p3Screens[i].x)
               + Math.abs(yCenter - p3Screens[i].y) <= 2
