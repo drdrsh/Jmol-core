@@ -1529,7 +1529,7 @@ public class ScriptMathProcessor {
       case T.bitset:
         return addXBs(SV.bsSelectRange(x1, n));
       }
-      return addXInt(n == 0 ? 0 : x1.asInt() % n);
+      return addXInt(n == 0 ? x1.asInt() : x1.asInt() % n);
     }
     return true;
   }

@@ -25,18 +25,17 @@ package org.jmol.shape;
 
 
 
+import javajs.awt.Font;
+import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.SB;
+import javajs.util.V3;
+
 import org.jmol.api.SymmetryInterface;
 import org.jmol.java.BS;
 import org.jmol.script.T;
 import org.jmol.util.Escape;
-
-import javajs.awt.Font;
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.V3;
 import org.jmol.viewer.JC;
-import org.jmol.viewer.StateManager;
 
 public class Axes extends FontLineShape {
 

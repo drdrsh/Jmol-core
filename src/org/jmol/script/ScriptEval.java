@@ -2848,7 +2848,7 @@ public class ScriptEval extends ScriptExpr {
     case T.type:
       String s = stringParameter(index + 1);
       if (!PT.isOneOf(s, ";a;b;c;ab;ac;bc;abc;"))
-        invArg();
+        s = null;
       setShapeProperty(JC.SHAPE_AXES, "type", s);
       checkLast(iToken);
       return;

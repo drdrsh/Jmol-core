@@ -255,6 +255,8 @@ public class ScriptCompiler extends ScriptTokenParser {
   private void addTokenToPrefix(T token) {
     if (logMessages)
       Logger.info("addTokenToPrefix" + lineCurrent + " " + iCommand + " " + token);
+    if (iCommand == 8)
+      System.out.println("testing scriptcomp");
     ltoken.addLast(token);
     if (token.tok != T.nada)
       lastToken = token;
@@ -811,7 +813,9 @@ public class ScriptCompiler extends ScriptTokenParser {
 
     }
     boolean isOneLine = (flowContext != null && flowContext.addLine == 0); // if (....) xxxxx;
-    boolean isEndFlow = ((endOfLine || !isOneLine) && !haveENDIF && flowContext != null && flowContext.checkForceEndIf(-1));
+    boolean isEndFlow = ((endOfLine || !isOneLine) && !haveENDIF 
+          && flowContext != null 
+          && flowContext.checkForceEndIf(-1));
     if (endOfLine) {
       if (isEndFlow) {
         if (isComment) {
@@ -1759,7 +1763,9 @@ public class ScriptCompiler extends ScriptTokenParser {
         //        }
         //$FALL-THROUGH$
       default:
+        System.out.println(isFlowCmd + " " + tokenCommand);
         if (isFlowCmd) {
+          // if ... continue ....
           switch (checkFlowCommand((String) tokenCommand.value)) {
           case ERROR:
             return ERROR;
@@ -1767,15 +1773,18 @@ public class ScriptCompiler extends ScriptTokenParser {
             return CONTINUE;
           case RESTART:
             return RESTART;
+          case OK:
+            theToken = tokenCommand;
+            if (theTok == T.casecmd) {
+              addTokenToPrefix(tokenCommand);
+              theToken = T.tokenLeftParen;
+            }
+            return OK;
           }
-          theToken = tokenCommand;
-          if (theTok == T.casecmd) {
-            addTokenToPrefix(tokenCommand);
-            theToken = T.tokenLeftParen;
-          }
-          return OK;
+          // OK2 -- for break and continue; continue on as for any other standard command
         }
         if (flowContext != null && !haveENDIF && flowContext.addLine > 0) {
+          // increment the pointer indicating where to insert "end XXXX"
           fixFlowAddLine(flowContext);
           while (flowContext != null) {
             if (flowContext.checkForceEndIf(0)) {
@@ -2257,7 +2266,8 @@ public class ScriptCompiler extends ScriptTokenParser {
         return ERROR;
       }
       setCommand(T.tv(tokCommand, f.pt0, ident)); //copy
-      return OK;
+      theToken = tokenCommand;
+      return OK2;
     case T.function:
     case T.parallel:
       if (flowContext != null) {
