@@ -255,8 +255,6 @@ public class ScriptCompiler extends ScriptTokenParser {
   private void addTokenToPrefix(T token) {
     if (logMessages)
       Logger.info("addTokenToPrefix" + lineCurrent + " " + iCommand + " " + token);
-    if (iCommand == 8)
-      System.out.println("testing scriptcomp");
     ltoken.addLast(token);
     if (token.tok != T.nada)
       lastToken = token;
@@ -1763,7 +1761,6 @@ public class ScriptCompiler extends ScriptTokenParser {
         //        }
         //$FALL-THROUGH$
       default:
-        System.out.println(isFlowCmd + " " + tokenCommand);
         if (isFlowCmd) {
           // if ... continue ....
           switch (checkFlowCommand((String) tokenCommand.value)) {
