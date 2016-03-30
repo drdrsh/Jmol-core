@@ -451,6 +451,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       
       search.jmolAtoms = atoms;
       search.jmolAtomCount = Math.abs(ac);
+      if (ac < 0)
+        search.isSmilesFind = true;
       boolean is3D = !(atoms[0] instanceof SmilesAtom); 
       if (atoms[0] instanceof BNode)
         search.bioAtoms = (BNode[]) atoms;

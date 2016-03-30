@@ -816,12 +816,12 @@ System.out.println(sb);
     int n = i1 - i0;
     if (atemp == null || atemp.length < n)
       atemp = new Node[n];
-    for (int i = i1; --i >= i0;)
-      atemp[i] = a[i];
-    for (int i = i2, p = n; --i >= i1;) {
+    for (int p = n, i = i1; p > 0;)
+      atemp[--p] = a[--i];
+    for (int i = i1; i < i2; i++)
       a[i - n] = a[i];
-      a[i] = atemp[--p];
-    }
+    for (int p = n, i = i2; p > 0;)
+      a[--i] = atemp[--p];
   }
 
   /**
