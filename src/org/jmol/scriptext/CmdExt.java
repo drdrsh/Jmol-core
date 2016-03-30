@@ -3275,7 +3275,7 @@ public class CmdExt extends ScriptExt {
         if (nAtomSets > 0)
           invPO();
         propertyName = (radius != 0 ? "radius1" : "radius");
-        propertyValue = Float.valueOf(floatParameter(i));
+        propertyValue = Float.valueOf(radius = floatParameter(i));
         needsGenerating = true;
         break;
       case T.offset:
@@ -3651,7 +3651,11 @@ public class CmdExt extends ScriptExt {
       }
       if (tokAtArray(pt, args) == T.integer) {
         width = SV.iValue(tokenAt(pt++, args));
+        if (width <= 0)
+          invArg();
         height = SV.iValue(tokenAt(pt++, args));
+        if (height <= 0)
+          invArg();
       }
       break;
     }
@@ -3670,7 +3674,11 @@ public class CmdExt extends ScriptExt {
         if (tokAtArray(pt + 1, args) == T.integer
             && tokAtArray(pt + 2, args) == T.integer) {
           width = SV.iValue(tokenAt(++pt, args));
+          if (width <= 0)
+            invArg();
           height = SV.iValue(tokenAt(++pt, args));
+          if (height <= 0)
+            invArg();
         }
         if (tokAtArray(pt + 1, args) == T.integer)
           quality = SV.iValue(tokenAt(++pt, args));

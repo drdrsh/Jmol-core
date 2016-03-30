@@ -555,7 +555,6 @@ class SpaceGroup {
     }
     switch (h.latticeCode) {
     case '\0':
-    case 'R':
     case 'S':
     case 'T':
     case 'P':

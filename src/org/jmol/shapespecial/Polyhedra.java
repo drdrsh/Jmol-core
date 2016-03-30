@@ -696,7 +696,7 @@ public class Polyhedra extends AtomShape {
     if (myBondingRadius == 0)
       return null;
     float bondTolerance = vwr.getFloat(T.bondtolerance);
-    float minBondDistance = vwr.getFloat(T.minbonddistance);
+    float minBondDistance = (radiusMin == 0 ? vwr.getFloat(T.minbonddistance) : radiusMin);
     float minBondDistance2 = minBondDistance * minBondDistance;
     int otherAtomCount = 0;
     outer: while (iter.hasNext()) {
@@ -734,22 +734,22 @@ public class Polyhedra extends AtomShape {
     distanceRef = radius;
     float r2 = radius * radius;
     float r2min = radiusMin * radiusMin;
-    float r;
     outer: while (iter.hasNext()) {
       Atom other = atoms[iter.next()];
       P3 pt = iter.getPosition();
       if (pt == null) {
         // this will happen with standard radius atom iterator
         pt = other;
-        if (bsVertices != null && !bsVertices.get(other.i)
-            || (r = atom.distanceSquared(pt)) > r2 || r < r2min)
+        if (bsVertices != null && !bsVertices.get(other.i))
           continue;
       }
-      if (other.altloc != atom.altloc && other.altloc != 0 && atom.altloc != 0)
+      float r = atom.distanceSquared(pt);
+      if (other.altloc != atom.altloc && other.altloc != 0 && atom.altloc != 0
+          || r > r2 || r < r2min)
         continue;
       if (otherAtomCount == MAX_VERTICES)
         break;
-      for (int i = 0; i < otherAtomCount; i++)
+       for (int i = 0; i < otherAtomCount; i++)
         if (otherAtoms[i].distanceSquared(pt) < 0.01f)
           continue outer;
 

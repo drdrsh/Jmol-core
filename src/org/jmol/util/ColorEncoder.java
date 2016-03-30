@@ -425,7 +425,7 @@ import javajs.util.P3;
     return colix;
   }
 
-  public int getPaletteColorCount(int palette) {
+  private int getPaletteColorCount(int palette) {
     switch (palette) {
     case CUSTOM:
       return thisScale.length;
@@ -445,7 +445,7 @@ import javajs.util.P3;
     case RESU:
       return ce.userScale.length;
     case JMOL:
-      return argbsCpk.length;
+      return ce.argbsCpk.length;
     case RASMOL:
       return getRasmolScale().length;
     case SHAPELY:

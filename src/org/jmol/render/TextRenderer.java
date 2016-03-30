@@ -59,7 +59,7 @@ class TextRenderer {
       // now write properly aligned text
       for (int i = 0; i < text.lines.length; i++) {
         text.setXYA(temp, i);
-        
+        System.out.println("textrend x y " + temp[0] + " " + temp[1] + " " + text.lines[i]);
         g3d.drawString(text.lines[i], text.font, (int) temp[0], (int) temp[1],
             text.z, text.zSlab, text.bgcolix);
       }

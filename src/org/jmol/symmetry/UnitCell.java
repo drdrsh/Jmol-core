@@ -684,7 +684,7 @@ class UnitCell extends SimpleUnitCell {
   /**
    * 
    * @param toPrimitive  or assumed conventional
-   * @param type P, A, B, C, I(BCC), or F(FCC)
+   * @param type P, R, A, B, C, I(BCC), or F(FCC)
    * @param uc either [origin, va, vb, vc] or just [va, vb, vc]
    * @return true if successful
    */
@@ -703,24 +703,37 @@ class UnitCell extends SimpleUnitCell {
       toPrimitive = true;
       break;
     case 'A':
-      mf = M3.newA9(new float[] { 1, 0, 0, 0, 0.5f, -0.5f, 0, 0.5f, 0.5f});
+      mf = M3.newA9(new float[] { 1, 0,     0, 
+                                  0, 0.5f, -0.5f, 
+                                  0, 0.5f,  0.5f});
       break;
     case 'B':
-      mf = M3.newA9(new float[] { 0.5f, 0, -0.5f, 0, 1, 0, 0.5f, 0, 0.5f});
+      mf = M3.newA9(new float[] { 0.5f, 0, -0.5f, 
+                                  0,    1,  0, 
+                                  0.5f, 0,  0.5f});
       break;
     case 'C':
-      mf = M3.newA9(new float[] { 0.5f, -0.5f, 0, 0.5f, 0.5f, 0, 0, 0, 1});
+      mf = M3.newA9(new float[] { 0.5f, -0.5f, 0, 
+                                  0.5f,  0.5f, 0, 
+                                  0,       0,  1});
+      break;
+    case 'R':
+      mf = M3.newA9(new float[] { 1/3f,  1/3f, -2/3f, 
+                                 -1/3f,  2/3f, -1/3f, 
+                                  1/3f,  1/3f,  1/3f});
       break;
     case 'I':
 //      f = new float[] { .5f, .5f, -.5f, -.5f, .5f, .5f, .5f, -.5f, .5f };
       mf = M3.newA9(new float[] { -.5f,  .5f,  .5f,  // was y   
-                         .5f, -.5f,  .5f,  // was z
-                         .5f,  .5f, -.5f });// was x
+                                   .5f, -.5f,  .5f,  // was z
+                                   .5f,  .5f, -.5f });// was x
 //    : new float[] { 1, 0, 1, 1, 1, 0, 0, 1, 1 })
       break;
     case 'F':
      // WAS f = new float[] { .5f, .5f, 0, 0, .5f, .5f, .5f, 0, .5f };
-      mf = M3.newA9(new float[] { 0, 0.5f, 0.5f, 0.5f, 0, 0.5f, 0.5f, 0.5f, 0 });
+      mf = M3.newA9(new float[] { 0,    0.5f, 0.5f, 
+                                  0.5f, 0,    0.5f, 
+                                  0.5f, 0.5f, 0 });
 //      : new float[] { 1, -1, 1, 1, 1, -1, -1, 1, 1 }) : null);
       break;
     }

@@ -359,6 +359,7 @@ public class DrawRenderer extends MeshRenderer {
 
   private void renderXyPoint() {
     // new in Jmol 14.5
+    int f = (g3d.isAntialiased() ? 2 : 1);
     pt0.setT(vertices[0]);
     if (diameter == 0)
       diameter = (int) width;
@@ -367,11 +368,8 @@ public class DrawRenderer extends MeshRenderer {
       pt0.y *= vwr.tm.height / 100f;
       diameter = (int) (diameter * vwr.getScreenDim() / 100f);
     }
-    if (g3d.isAntialiased())
-      diameter *= 2;
-    pt0.y = vwr.tm.height - pt0.y;
-    pt0.z = vwr.tm.cameraDistance;
-    pt1i.set((int) pt0.x, (int) pt0.y, (int) pt0.z);
+    diameter *= f;
+    pt1i.set((int) (pt0.x * f), (int) (vwr.tm.height - pt0.y * f), (int) vwr.tm.cameraDistance);
     g3d.fillSphereI(diameter, pt1i);
   }
 

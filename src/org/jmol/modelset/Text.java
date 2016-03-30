@@ -349,7 +349,7 @@ public class Text extends Object2d {
       float y = (movableYPercent != Integer.MAX_VALUE ? movableYPercent
           * windowHeight / 100 : is3dEcho ? movableY : movableY * scale);
       boxXY[1] = (is3dEcho ? y : (windowHeight - y)) + offsetY * scale;
-    }
+   }
 
     if (align == JC.TEXT_ALIGN_CENTER)
       boxXY[1] -= (image != null ? boxHeight : xyz != null ? boxHeight 

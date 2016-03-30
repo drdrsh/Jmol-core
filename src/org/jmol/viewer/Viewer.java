@@ -3431,12 +3431,6 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       setShapeProperty(JC.SHAPE_LABELS, "clearBoxes", null);
     imageFontScaling = (antialiased ? 2f : 1f) * (isReset || tm.scale3D || width <= 0 ? 1
         : (g.zoomLarge == (height > width) ? height : width) * 1f / getScreenDim());
-    System.out.println(dimScreen.width + " " + dimScreen.height 
-        + " " + (antialiased ? 2f : 1f)  
-        + " " + width + " " + height + " " + (isReset || width <= 0 ? 1
-        : (g.zoomLarge == (height > width) ? height : width) * 1.0f / getScreenDim()));
-    if (imageFontScaling == 0)
-      System.out.println("??? viewer");
     if (width > 0) {
       dimScreen.width = width;
       dimScreen.height = height;

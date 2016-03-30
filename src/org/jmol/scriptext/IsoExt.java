@@ -393,8 +393,8 @@ public class IsoExt extends ScriptExt {
           points = new P3[nVertices];
           for (int j = 0; j < nVertices; j++)
             points[j] = centerParameter(++eval.iToken);
-          i = eval.iToken;
         }
+        i = eval.iToken;
         int[][] polygons = null;
         switch (tokAt(i + 1)) {
         case T.matrix3f:
