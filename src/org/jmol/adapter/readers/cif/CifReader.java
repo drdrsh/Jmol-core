@@ -1562,8 +1562,8 @@ public class CifReader extends AtomSetCollectionReader {
         String sdx = sdist.substring(pt + 1, sdist.length() - 1);
         int n = sdx.length();
         for (int j = pt; --j >= 0;) {
-          if (data[j] == '.')
-            --j;
+          if (data[j] == '.' && --j < 0)
+            break;
           data[j] = (--n < 0 ? '0' : sdx.charAt(n));
         }
         dx = parseFloatStr(String.valueOf(data));
