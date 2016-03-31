@@ -59,7 +59,7 @@ public final class JC {
     "iucr", "http://scripts.iucr.org/cgi-bin/sendcif_yard?%FILE", // e.g. wf5113sup1
     "ligand", "http://www.rcsb.org/pdb/files/ligand/%FILE.cif",
     "mp", "http://www.materialsproject.org/materials/%FILE/cif",
-    "nci", "http://cactus.nci.nih.gov/chemical/structure/%FILE",
+    "nci", "https://cactus.nci.nih.gov/chemical/structure/%FILE",
     "cod", "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif",
     "nmr", "http://www.nmrdb.org/new_predictor?POST?molfile=",
     "nmrdb", "http://www.nmrdb.org/service/predictor?POST?molfile=",

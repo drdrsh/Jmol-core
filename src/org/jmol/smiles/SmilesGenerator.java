@@ -602,14 +602,15 @@ public class SmilesGenerator {
     // atomNext will not be in parentheses or marked as a connection number
     int nMax = 0;
     BS bsBranches = new BS();
+    int nBonds = v.size();
     if (allowBranches)
-      for (int i = 0; i < v.size(); i++) {
+      for (int i = 0; i < nBonds; i++) {
         Edge bond = v.get(i);
         Node a = bond.getOtherAtomNode(atom);
         int n = a.getCovalentBondCount()
             - (explicitH ? 0 : a.getCovalentHydrogenCount());
         int order = bond.getCovalentOrder();
-        if (order == 1 && n == 1 && i < v.size() - (bond0 == null ? 1 : 0)) {
+        if (n == 1 && (bond0 != null || i < nBonds - 1)) {
           bsBranches.set(bond.index);
         } else if ((order > 1 || n > nMax)
             && !htRings.containsKey(getRingKey(a.getIndex(), atomIndex))) {
@@ -782,7 +783,6 @@ public class SmilesGenerator {
     sb.appendSB(sbRings).appendSB(sbBranches);
 
     // check the next bond
-System.out.println(sb);
     if (bond0 == null)
       return null;
 
