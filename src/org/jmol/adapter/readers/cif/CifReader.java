@@ -455,14 +455,14 @@ public class CifReader extends AtomSetCollectionReader {
       getModulationReader().setModulation(true, sym);
       mr.finalizeModulation();
     }
-    if (isMagCIF)
+    if (isMagCIF) {
       asc.setNoAutoBond();
-    //addJmolScript("connect none;");
-    if (isMagCIF && sym != null) {
-      addJmolScript("vectors on;vectors 0.15;");
-      int n = asc.getXSymmetry().setSpinVectors();
-      appendLoadNote(n
-          + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
+      if (sym != null) {
+        addJmolScript("vectors on;vectors 0.15;");
+        int n = asc.getXSymmetry().setSpinVectors();
+        appendLoadNote(n
+            + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
+      }
     }
     if (sym != null && auditBlockCode != null
         && auditBlockCode.contains("REFRNCE")) {

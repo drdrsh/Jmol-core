@@ -561,7 +561,7 @@ public class FileManager implements BytePoster {
    * @return String[2] where [0] is fullpathname and [1] is error message or null
    */
   Object getFullPathNameOrError(String filename, boolean getStream, String[] ret) {
-    String[] names = getClassifiedName(filename, true);
+    String[] names = getClassifiedName(JC.fixProtocol(filename), true);
     if (names == null || names[0] == null || names.length < 2)
       return new String[] { null, "cannot read file name: " + filename };
     String name = names[0];
@@ -578,6 +578,7 @@ public class FileManager implements BytePoster {
                                                  String[] fullPathNameReturn,
                                                  boolean isBinary,
                                                  boolean doSpecialLoad) {
+    name = JC.fixProtocol(name);
     Object data = cacheGet(name, false);
     boolean isBytes = AU.isAB(data);
     byte[] bytes = (isBytes ? (byte[]) data : null);
@@ -627,6 +628,7 @@ public class FileManager implements BytePoster {
       if (o != null)
         return o;
     }
+    name = JC.fixProtocol(name);
     if (bytes == null && (bytes = getCachedPngjBytes(name)) != null && htParams != null)
         htParams.put("sourcePNGJ", Boolean.TRUE);
     name = name.replace("#_DOCACHE_", "");
@@ -1443,7 +1445,7 @@ public class FileManager implements BytePoster {
     }
     Object data;
     if (isAdd) {
-      fileName = vwr.resolveDatabaseFormat(fileName);
+      fileName = JC.fixProtocol(vwr.resolveDatabaseFormat(fileName));
       data = getFileAsBytes(fileName, null);
       if (data instanceof String)
         return 0;

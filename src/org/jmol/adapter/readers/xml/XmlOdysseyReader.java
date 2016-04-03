@@ -116,7 +116,7 @@ public class XmlOdysseyReader extends XmlReader {
       parent.setUnitCellItem(4, 90);
       parent.setUnitCellItem(5, 90);
       P3 pt = P3.new3(-x / 2, -y / 2, -z / 2);
-      asc.setCurrentModelInfo("periodicOriginXyz", pt);
+      //asc.setCurrentModelInfo("periodicOriginXyz", pt);
       Atom[] atoms = asc.atoms;
       for (int i = asc.ac; --i >= 0;) {
         atoms[i].sub(pt);
@@ -124,9 +124,7 @@ public class XmlOdysseyReader extends XmlReader {
       }
       if (parent.latticeCells[0] == 0)
         parent.latticeCells[0] = parent.latticeCells[1] = parent.latticeCells[2] = 1;
-      parent.setSymmetryOperator("x,y,z");
-      parent.setSpaceGroupName("P1");
-      parent.applySymmetryAndSetTrajectory();
+//        parent.setSpaceGroupName("P1");
       return;
     }
     if ("odyssey_simulation".equals(localName)) {

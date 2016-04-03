@@ -89,10 +89,10 @@ public interface SymmetryInterface {
   public String getSpaceGroupXyz(int i, boolean doNormalize);
 
   public Object getSymmetryInfo(ModelSet modelSet, int iModel, int iAtom, SymmetryInterface uc, String xyz, int op,
-                                P3 pt, P3 pt2, String id, int type);
+                                P3 pt, P3 pt2, String id, int type, float scaleFactor);
 
   String getSymmetryInfoString(ModelSet modelSet, int modelIndex, int symOp, P3 pt1,
-                               P3 pt2, String drawID, String type);
+                               P3 pt2, String drawID, String type, float scaleFactor);
 
   public String getSymmetryInfoStr();
 
@@ -120,7 +120,7 @@ public interface SymmetryInterface {
 
   public boolean isBio();
 
-  public boolean isPeriodic();
+  public boolean isSimple();
 
   public boolean isPolymer();
 
@@ -167,8 +167,21 @@ public interface SymmetryInterface {
 
   public void setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, float[] notionalCell);
 
+  /**
+   * 
+   * @param ms
+   * @param bsAtoms
+   * @param xyz
+   * @param op
+   * @param pt
+   * @param pt2
+   * @param id
+   * @param type  T.point, T.lattice, or T.draw, T.matrix4f, T.label, T.list, T.info, T.translation, T.axes, T.plane, T.angle, T.center
+   * @param scaleFactor
+   * @return a variety of object types
+   */
   public Object getSymmetryInfoAtom(ModelSet ms, BS bsAtoms, String xyz, int op,
-                                    P3 pt, P3 pt2, String id, int type);
+                                    P3 pt, P3 pt2, String id, int type, float scaleFactor);
 
   public void setTimeReversal(int op, int val);
 
@@ -205,5 +218,6 @@ public interface SymmetryInterface {
   public String getLatticeType();
 
   public String getIntTableNumber();
+
 
 }

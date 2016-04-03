@@ -53,7 +53,6 @@ import javajs.util.T3;
 import javajs.util.V3;
 
 public class Symmetry implements SymmetryInterface {
-
   // NOTE: THIS CLASS IS VERY IMPORTANT.
   // IN ORDER TO MODULARIZE IT, IT IS REFERENCED USING 
   // xxxx = Interface.getSymmetry();
@@ -355,8 +354,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public boolean isPeriodic() {
-    return (symmetryInfo == null ? false : symmetryInfo.isPeriodic());
+  public boolean isSimple() {
+    return (symmetryInfo == null || symmetryInfo.symmetryOperations == null);
   }
 
   /**
@@ -635,9 +634,9 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Object getSymmetryInfoAtom(ModelSet modelSet, BS bsAtoms, String xyz,
-                                    int op, P3 pt, P3 pt2, String id, int type) {
+                                    int op, P3 pt, P3 pt2, String id, int type, float scaleFactor) {
     return getDesc(modelSet).getSymmetryInfoAtom(bsAtoms, xyz, op, pt, pt2, id,
-        type, modelSet);
+        type, modelSet, scaleFactor);
   }
 
 //  SpaceGroup getSpaceGroup() {
@@ -646,23 +645,23 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public String getSymmetryInfoString(ModelSet modelSet, int modelIndex,
                                       int symOp, P3 pt1, P3 pt2, String drawID,
-                                      String type) {
+                                      String type, float scaleFactor) {
     return getDesc(modelSet).getSymmetryInfoString(this, modelIndex, symOp,
-        pt1, pt2, drawID, type, modelSet);
+        pt1, pt2, drawID, type, modelSet, scaleFactor);
   }
 
   @Override
   public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName) {
     return getDesc(modelSet).getSpaceGroupInfo(this, -1, sgName, 0, null, null,
-        null, modelSet);
+        null, modelSet, 0);
   }
 
   @Override
   public Object getSymmetryInfo(ModelSet modelSet, int iModel, int iAtom,
                                 SymmetryInterface uc, String xyz, int op,
-                                P3 pt, P3 pt2, String id, int type) {
+                                P3 pt, P3 pt2, String id, int type, float scaleFactor) {
     return getDesc(modelSet).getSymmetryInfo(this, iModel, iAtom,
-        (Symmetry) uc, xyz, op, pt, pt2, id, type, modelSet);
+        (Symmetry) uc, xyz, op, pt, pt2, id, type, modelSet, scaleFactor);
   }
 
   @Override

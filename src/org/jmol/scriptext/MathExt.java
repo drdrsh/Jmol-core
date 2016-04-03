@@ -359,7 +359,7 @@ public class MathExt {
         stype = "I";
       else if (stype.length() == 0)
         stype = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, vwr.bsA(), null, 0, null, null, null,
-            T.lattice);
+            T.lattice, 0);
       
       if (stype == null || stype.length() == 0)
         return false;
@@ -3039,7 +3039,7 @@ public class MathExt {
     P3 pt = (args.length > 1 ?  mp.ptValue(args[1]) : null);
     if (args.length == 2 && pt != null)
       return mp.addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bs, xyz, iOp, pt, null, null,
-          T.point));
+          T.point, 0));
     String desc = (args.length == 1 ? "matrix" : SV.sValue(args[args.length - 1]))
         .toLowerCase();
     int tok = T.draw;
@@ -3065,7 +3065,7 @@ public class MathExt {
       tok = T.center;
     }
     return mp
-        .addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bs, xyz, iOp, pt, null, desc, tok));
+        .addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bs, xyz, iOp, pt, null, desc, tok, 0));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

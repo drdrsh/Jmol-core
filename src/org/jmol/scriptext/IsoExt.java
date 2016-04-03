@@ -310,7 +310,7 @@ public class IsoExt extends ScriptExt {
             P3[] points = eval.getPointArray(i + 1, -1, false);
             uc = vwr.ms.getSymTemp(true).getUnitCell(points, false, null);
             i = eval.iToken;
-          } else {          
+          } else {
             uc = vwr.getCurrentUnitCell();
           }
           if (uc == null)
@@ -473,7 +473,8 @@ public class IsoExt extends ScriptExt {
         eval.checkLast(eval.iToken);
         if (!chk) {
           String s = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(
-              vwr.ms, bsAtoms, xyz, iSym, center, target, thisId, T.draw);
+              vwr.ms, bsAtoms, xyz, iSym, center, target, thisId, T.draw,
+              intScale / 100f);
           showString(s.substring(0, s.indexOf('\n') + 1));
           eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId
               + "*\" delete");
@@ -605,18 +606,9 @@ public class IsoExt extends ScriptExt {
         }
         break;
       case T.scale:
-        if (++i >= slen)
-          error(ScriptError.ERROR_numberExpected);
-        switch (getToken(i).tok) {
-        case T.integer:
-          intScale = intParameter(i);
-          continue;
-        case T.decimal:
-          intScale = Math.round(floatParameter(i) * 100);
-          continue;
-        }
-        error(ScriptError.ERROR_numberExpected);
-        break;
+        intScale = Math.round(floatParameter(++i)
+            * (getToken(i).tok == T.integer ? 1 : 100));
+        continue;
       case T.id:
         thisId = setShapeId(JC.SHAPE_DRAW, ++i, idSeen);
         isWild = (getShapeProperty(JC.SHAPE_DRAW, "ID") == null);

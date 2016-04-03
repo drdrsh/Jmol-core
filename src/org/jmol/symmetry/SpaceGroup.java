@@ -299,22 +299,33 @@ class SpaceGroup {
    * @return detailed information
    */
   String dumpInfo(SymmetryInterface cellInfo) {
-    Object info  = dumpCanonicalSeitzList();
+    Object info = dumpCanonicalSeitzList();
     if (info instanceof SpaceGroup)
-      return ((SpaceGroup)info).dumpInfo(null);
+      return ((SpaceGroup) info).dumpInfo(null);
     SB sb = new SB().append("\nHermann-Mauguin symbol: ");
-    sb.append(hmSymbol).append(hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "")
-        .append("\ninternational table number: ").append(intlTableNumber)
-        .append(intlTableNumberExt.length() > 0 ? ":" + intlTableNumberExt : "")
-        .append("\n\n").appendI(operationCount).append(" operators")
-        .append(!hallInfo.hallSymbol.equals("--") ? " from Hall symbol "  + hallInfo.hallSymbol + "  #" + intlTableNumberFull: "")
-        .append(": ");
+    if (hmSymbol == null || hmSymbolExt == null) 
+      sb.append("?");
+    else
+      sb.append(hmSymbol)
+          .append(hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "")
+          .append("\ninternational table number: ")
+          .append(intlTableNumber)
+          .append(
+              intlTableNumberExt.length() > 0 ? ":" + intlTableNumberExt : "")
+          .append("\n\n")
+          .appendI(operationCount)
+          .append(" operators")
+          .append(
+              !hallInfo.hallSymbol.equals("--") ? " from Hall symbol "
+                  + hallInfo.hallSymbol + "  #" + intlTableNumberFull : "")
+          .append(": ");
     for (int i = 0; i < operationCount; i++) {
       sb.append("\n").append(operations[i].xyz);
     }
-    sb.append("\n\n").append(hallInfo == null ? "invalid Hall symbol" : hallInfo.dumpInfo());
+    sb.append("\n\n").append(
+        hallInfo == null ? "invalid Hall symbol" : hallInfo.dumpInfo());
 
-    sb.append("\n\ncanonical Seitz: ").append((String) info) 
+    sb.append("\n\ncanonical Seitz: ").append((String) info)
         .append("\n----------------------------------------------------\n");
     return sb.toString();
   }
@@ -530,6 +541,8 @@ class SpaceGroup {
     op.index = operationCount;
     if (Logger.debugging)
       Logger.debug("\naddOperation " + operationCount + op.dumpInfo());
+    if (operationCount == 17)
+      System.out.println("op 17 spacegroup");
     return operationCount - 1;
   }
 
@@ -544,9 +557,9 @@ class SpaceGroup {
 
   private void generateAllOperators(HallInfo h) {
     if (h == null) {
-      h = hallInfo;
       if (operationCount > 0)
         return;
+      h = hallInfo;
       operations = new SymmetryOperation[4];
       if (hallInfo == null || hallInfo.nRotations == 0)
         h = hallInfo = new HallInfo(hallSymbol);
@@ -634,8 +647,9 @@ class SpaceGroup {
     return (i >= 0 ? SG[i] : null);
   }
 
-  private final static int NAME_HALL = 5;
+  private final static int NAME_UNK = 0;
   private final static int NAME_HM = 3;
+  private final static int NAME_HALL = 5;
 
   private final static int determineSpaceGroupIndex(String name, float a,
                                                     float b, float c,
@@ -652,13 +666,18 @@ class SpaceGroup {
       name = name.substring(7);
     }
     int nameType = (name.startsWith("hall:") ? NAME_HALL : name
-        .startsWith("hm:") ? NAME_HM : 0);
-    if (nameType > 0)
+        .startsWith("hm:") ? NAME_HM : NAME_UNK);
+    switch (nameType) {
+    case NAME_HM:
+    case NAME_HALL:
       name = name.substring(nameType);
-    else if (name.contains("[")) {
-      // feeding back "P 1 [P 1]" for example
-      nameType = NAME_HALL;
-      name = name.substring(0, name.indexOf("[")).trim();
+      break;
+    case NAME_UNK:
+      if (name.contains("[")) {
+        // feeding back "P 1 [P 1]" for example
+        nameType = NAME_HALL;
+        name = name.substring(0, name.indexOf("[")).trim();
+      }
     }
     String nameExt = name;
     int i;

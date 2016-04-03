@@ -25,11 +25,7 @@
 
 package org.jmol.symmetry;
 
-
-import javajs.util.Lst;
-import javajs.util.P3;
 import javajs.util.PT;
-import javajs.util.V3;
 
 import org.jmol.util.SimpleUnitCell;
 
@@ -43,14 +39,8 @@ class SymmetryInfo {
   SymmetryOperation[] symmetryOperations;
   String infoStr;
   int[] cellRange;
-  private P3 periodicOriginXyz;
-  Lst<V3> centerings;
   String latticeType = "P";
   public String intlTableNo;
-
-  boolean isPeriodic() {
-    return periodicOriginXyz != null;
-  }
 
   SymmetryInfo() {    
   }
@@ -59,52 +49,46 @@ class SymmetryInfo {
   /**
    * 
    * @param info
-   * @param unitCellParams an array of parameters could be from model, but also could be from a trajectory listing 
-   * @return actual unit cell parameters 
+   * @param unitCellParams
+   *        an array of parameters could be from model, but also could be from a
+   *        trajectory listing
+   * @return actual unit cell parameters
    */
   float[] setSymmetryInfo(Map<String, Object> info, float[] unitCellParams) {
     cellRange = (int[]) info.get("unitCellRange");
-    periodicOriginXyz = (P3) info.get("periodicOriginXyz");
     sgName = (String) info.get("spaceGroup");
     if (sgName == null || sgName == "")
       sgName = "spacegroup unspecified";
+    infoStr = "Spacegroup: " + sgName;
     if ((latticeType = (String) info.get("latticeType")) == null)
       latticeType = "P";
     intlTableNo = (String) info.get("intlTableNo");
-    int symmetryCount = info.containsKey("symmetryCount") ? 
-        ((Integer) info.get("symmetryCount")).intValue() 
-        : 0;
+    int symmetryCount = info.containsKey("symmetryCount") ? ((Integer) info
+        .get("symmetryCount")).intValue() : 0;
     symmetryOperations = (SymmetryOperation[]) info.remove("symmetryOps");
-    infoStr = "Spacegroup: " + sgName;
-    if (symmetryOperations == null) {
-      infoStr += "\nNumber of symmetry operations: ?"
-          + "\nSymmetry Operations: unspecified\n";
-    } else {
-      centerings = new Lst<V3>();
+    if (symmetryOperations != null) {
       String c = "";
       String s = "\nNumber of symmetry operations: "
           + (symmetryCount == 0 ? 1 : symmetryCount) + "\nSymmetry Operations:";
       for (int i = 0; i < symmetryCount; i++) {
         SymmetryOperation op = symmetryOperations[i];
         s += "\n" + op.xyz;
-        if (op.isCenteringOp) {
-          centerings.addLast(op.centering);
-          String oc = PT.replaceAllCharacters(op.xyz, "xyz", "0"); 
-          c += " (" + PT.rep(oc, "0+", "") + ")";
-        }
+        if (op.isCenteringOp)
+          c += " ("
+              + PT.rep(PT.replaceAllCharacters(op.xyz, "xyz", "0"), "0+", "")
+              + ")";
       }
       if (c.length() > 0)
         infoStr += "\nCentering: " + c;
       infoStr += s;
+      infoStr += "\n";
     }
-    infoStr += "\n";
     if (unitCellParams == null)
       unitCellParams = (float[]) info.get("unitCellParams");
     if (!SimpleUnitCell.isValid(unitCellParams))
       return null;
-    coordinatesAreFractional = info.containsKey("coordinatesAreFractional") ? 
-        ((Boolean) info.get("coordinatesAreFractional")).booleanValue() 
-        : false;    
+    coordinatesAreFractional = info.containsKey("coordinatesAreFractional") ? ((Boolean) info
+        .get("coordinatesAreFractional")).booleanValue() : false;
     isMultiCell = (coordinatesAreFractional && symmetryOperations != null);
     return unitCellParams;
   }

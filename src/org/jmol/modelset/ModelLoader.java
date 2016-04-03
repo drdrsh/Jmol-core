@@ -560,8 +560,8 @@ public final class ModelLoader {
       setModelNameNumberProperties(ipt, iTrajectory,
           modelName, modelNumber, modelProperties, modelAuxiliaryInfo,
           jmolData);
-      if (ms.getInfo(ipt, "periodicOriginXyz") != null)
-        ms.someModelsHaveSymmetry = true;
+      //if (ms.getInfo(ipt, "periodicOriginXyz") != null)
+        //ms.someModelsHaveSymmetry = true;
     }
     Model m = ms.am[baseModelIndex];
     vwr.setSmilesString((String) ms.msInfo.get("smilesString"));

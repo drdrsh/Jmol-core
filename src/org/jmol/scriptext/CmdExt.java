@@ -4259,7 +4259,7 @@ public class CmdExt extends ScriptExt {
       checkLength(len = ++eval.iToken);
       if (!chk)
         msg = vwr.ms.getSymTemp(true).getSymmetryInfoString(vwr.ms, vwr.am.cmi,
-            iop, pt1, pt2, null, type);
+            iop, pt1, pt2, null, type, 0);
       break;
     case T.vanderwaals:
       VDW vdwType = null;
@@ -4814,7 +4814,7 @@ public class CmdExt extends ScriptExt {
             if (isPrimitive) {
               String stype = (String) vwr.ms.getSymTemp(false)
                   .getSymmetryInfoAtom(vwr.ms, vwr.bsA(), null, 0, null, null,
-                      null, T.lattice);
+                      null, T.lattice, 0);
               (u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(true, stype.charAt(0), oabc);
             } else {
               SimpleUnitCell.getReciprocal(oabc, oabc);

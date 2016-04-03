@@ -68,7 +68,7 @@ public final class JC {
     "pdb0", "http://files.rcsb.org/view/%FILE.pdb", // used in JSmol
     "pdbe", "http://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
     "pdbe2", "http://www.ebi.ac.uk/pdbe/static/entry/%FILE_updated.cif",
-    "pubchem", "http://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
+    "pubchem", "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
     "map", "http://www.ebi.ac.uk/pdbe/api/%TYPE/%FILE?pretty=false&metadata=true", 
     "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
     "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
@@ -79,7 +79,19 @@ public final class JC {
     "pdbemap", "http://wwwdev.ebi.ac.uk/pdbe/coordinates/files/%file.ccp4",
     "pdbemapdiff", "http://wwwdev.ebi.ac.uk/pdbe/coordinates/files/%file_diff.ccp4"
   };
-  
+
+  /**
+   * Check for databases that have changed from http:// to https:// over time.
+   * We substitute https here in case this is from an old reference.
+   * 
+   * @param name
+   * @return https protocol if necessary
+   */
+  public static String fixProtocol(String name) {
+    return (name != null && name.indexOf("http://pubchem") == 0 || name.indexOf("http://cactus") == 0
+        ? "https://" + name.substring(7) : name);
+  }
+
   public static String[] macros = {
     "aflow", "http://aflowlib.mems.duke.edu/users/jmolers/jmol/spt/AFLOW.spt"
   };

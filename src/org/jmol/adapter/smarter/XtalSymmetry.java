@@ -223,7 +223,7 @@ public class XtalSymmetry {
       packingError = acr.packingError;
       if (doApplySymmetry) {
         if (readerSymmetry != null)
-          symmetry.setSpaceGroupFrom(readerSymmetry);
+          setSpaceGroupFrom(readerSymmetry);
         //parameters are counts of unit cells as [a b c]
         applySymmetryLattice();
         if (readerSymmetry != null && filterSymop == null)
@@ -243,6 +243,10 @@ public class XtalSymmetry {
       acr.addVibrations = false;
     }
     return symmetry;
+  }
+
+  public void setSpaceGroupFrom(SymmetryInterface readerSymmetry) {
+    getSymmetry().setSpaceGroupFrom(readerSymmetry);
   }
 
   private void setAtomSetSpaceGroupName(String spaceGroupName) {

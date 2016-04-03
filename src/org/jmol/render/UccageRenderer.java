@@ -167,7 +167,7 @@ public class UccageRenderer extends CageRenderer {
   private void renderInfo() {
     if (isExport 
         || !vwr.getBoolean(T.displaycellparameters) 
-        || unitcell.isPeriodic() 
+        || unitcell.isSimple() 
         || vwr.isPreviewOnly
         || !vwr.gdata.setC(vwr.cm.colixBackgroundContrast)
         || vwr.gdata.getTextPosition() != 0) // molecularOrbital has displayed
