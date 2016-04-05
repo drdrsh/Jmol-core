@@ -880,18 +880,19 @@ public class SmilesParser {
             else
               newAtom.elementNumber = ret[0];
             break;
-          case '(':
-            // JmolSMARTS, JmolSMILES reference to atom
-            String name = getSubPattern(pattern, index, '(');
-            index += 2 + name.length();
-            newAtom = checkReference(newAtom, name, ret);
-            isNewAtom = (ret[0] == 1); // we are done here
-            if (!isNewAtom) {
-              if (isNot)
-                index = 0; // triggers an error
-              isNot = true; // flags that this must be the end
-            }
-            break;
+// does not work
+//          case '(':
+//            // JmolSMARTS, JmolSMILES reference to atom
+//            String name = getSubPattern(pattern, index, '(');
+//            index += 2 + name.length();
+//            newAtom = checkReference(newAtom, name, ret);
+//            isNewAtom = (ret[0] == 1); // we are done here
+//            if (!isNewAtom) {
+//              if (isNot)
+//                index = 0; // triggers an error
+//              isNot = true; // flags that this must be the end
+//            }
+//            break;
           case '-':
           case '+':
             index = checkCharge(pattern, index, newAtom);
@@ -1085,39 +1086,39 @@ public class SmilesParser {
 
   private Map<String, SmilesAtom> atomRefs;
   
-  /**
-   * allow for [(...)] to indicate a specific pattern atom
-   * 
-   * @param newAtom
-   * @param name
-   * @param ret
-   *        set [0] to 1 for new atom; 0 otherwise
-   * @return new or old atom
-   */
-  private SmilesAtom checkReference(SmilesAtom newAtom, String name, int[] ret) {
-    if (atomRefs == null)
-      atomRefs = new Hashtable<String, SmilesAtom>();
-    SmilesAtom ref = atomRefs.get(name);
-    if (ref == null) {
-      // this is a new atom
-      atomRefs.put(newAtom.referance = name, ref = newAtom);
-      if (!newAtom.hasSymbol) {
-        if (name.length() > 0) {
-          String s = null;
-          if (name.length() >= 2
-              && (Elements.elementNumberFromSymbol(s = name.substring(0, 2),
-                  true) > 0 || Elements.elementNumberFromSymbol(
-                  s = name.substring(0, 1), true) > 0)) {
-            newAtom.setSymbol(s);
-          }
-        }
-      }
-      ret[0] = 1;
-    } else {
-      ret[0] = 0;
-    }
-    return ref;
-  }
+//  /**
+//   * allow for [(...)] to indicate a specific pattern atom
+//   * 
+//   * @param newAtom
+//   * @param name
+//   * @param ret
+//   *        set [0] to 1 for new atom; 0 otherwise
+//   * @return new or old atom
+//   */
+//  private SmilesAtom checkReference(SmilesAtom newAtom, String name, int[] ret) {
+//    if (atomRefs == null)
+//      atomRefs = new Hashtable<String, SmilesAtom>();
+//    SmilesAtom ref = atomRefs.get(name);
+//    if (ref == null) {
+//      // this is a new atom
+//      atomRefs.put(newAtom.referance = name, ref = newAtom);
+//      if (!newAtom.hasSymbol) {
+//        if (name.length() > 0) {
+//          String s = null;
+//          if (name.length() >= 2
+//              && (Elements.elementNumberFromSymbol(s = name.substring(0, 2),
+//                  true) > 0 || Elements.elementNumberFromSymbol(
+//                  s = name.substring(0, 1), true) > 0)) {
+//            newAtom.setSymbol(s);
+//          }
+//        }
+//      }
+//      ret[0] = 1;
+//    } else {
+//      ret[0] = 0;
+//    }
+//    return ref;
+//  }
 
   /**
    * Parses a ring definition

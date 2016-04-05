@@ -713,14 +713,14 @@ class UnitCell extends SimpleUnitCell {
                                   0.5f, 0,  0.5f});
       break;
     case 'C':
-      mf = M3.newA9(new float[] { 0.5f, -0.5f, 0, 
-                                  0.5f,  0.5f, 0, 
-                                  0,       0,  1});
+      mf = M3.newA9 (new float[] { 0.5f, 0.5f, 0, 
+                                  -0.5f, 0.5f, 0, 
+                                   0,    0,    1});
       break;
     case 'R':
-      mf = M3.newA9(new float[] { 1/3f,  1/3f, -2/3f, 
-                                 -1/3f,  2/3f, -1/3f, 
-                                  1/3f,  1/3f,  1/3f});
+        mf = M3.newA9(new float[] { 1/3f,  1/3f, -2/3f, 
+                                   -1/3f,  2/3f, -1/3f, 
+                                    1/3f,  1/3f,  1/3f});
       break;
     case 'I':
 //      f = new float[] { .5f, .5f, -.5f, -.5f, .5f, .5f, .5f, -.5f, .5f };

@@ -1776,7 +1776,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     }
     id = id.replace('\\', '/');
     boolean isLigand = prefix.equals("ligand_");
-    id = (isLigand ? id.toUpperCase() : id.substring(id.lastIndexOf("/") + 1));
+    id = (id.indexOf("/cif") >= 0 ? id : isLigand ? id.toUpperCase() : id.substring(id.lastIndexOf("/") + 1));
     if (ligandModelSet == null)
       ligandModelSet = new Hashtable<String, Boolean>();
     ligandModelSet.put(id, Boolean.TRUE);

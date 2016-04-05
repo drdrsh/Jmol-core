@@ -427,7 +427,8 @@ public class MathExt {
 
   private boolean evaluateBin(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
-    if (args.length < 3 || args.length > 5)
+    int n = args.length;
+    if (n < 3 || n > 5)
       return false;
     SV x1 = mp.getX();
     boolean isListf = (x1.tok == T.listf);
@@ -436,9 +437,8 @@ public class MathExt {
     float f0 = SV.fValue(args[0]);
     float f1 = SV.fValue(args[1]);
     float df = SV.fValue(args[2]);
-    int n = args.length;
-    boolean addBins = (n >= 4 && args[n - 1].tok == T.on && SV.bValue(args[--n]));
-    String key = (n >= 4 ? SV.sValue(args[--n]) : null);
+    boolean addBins = (n >= 4 && args[n-1].tok == T.on);
+    String key = ((n == 5 || n == 4 && !addBins) && args[3].tok != T.off ? SV.sValue(args[3]) : null);
     float[] data;
     Map<String, SV>[] maps = null;
     if (isListf) {

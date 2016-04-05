@@ -117,11 +117,13 @@ public class SmilesSearch extends JmolMolecule {
   static final int addFlags(int flags, String strFlags) {
     if (strFlags.indexOf("OPEN") >= 0)
       flags |= JC.SMILES_TYPE_OPENSMILES;
+    if (strFlags.indexOf("BIO") >= 0)
+      flags |= JC.SMILES_GEN_BIO;
     if (strFlags.indexOf("NONCANONICAL") >= 0)
       flags |= AROMATIC_JSME_NONCANONICAL;
     if (strFlags.indexOf("STRICT") >= 0) // MMFF94
       flags |= AROMATIC_STRICT;    
-    if (strFlags.indexOf("NOAROMATIC") >= 0)
+    if (strFlags.indexOf("NOAROMATIC") >= 0 || strFlags.indexOf("NONAROMATIC") >= 0)
       flags |= NO_AROMATIC;
     if (strFlags.indexOf("AROMATICDOUBLE") >= 0) // MMFF94
       flags |= AROMATIC_DOUBLE;
@@ -129,7 +131,7 @@ public class SmilesSearch extends JmolMolecule {
       flags |= AROMATIC_DEFINED;
     if (strFlags.indexOf("MMFF94") >= 0)
       flags |= AROMATIC_MMFF94;
-    
+
     if (strFlags.indexOf("NOSTEREO") >= 0) {
       flags |= IGNORE_STEREOCHEMISTRY;
     } else if (strFlags.indexOf("INVERTSTEREO") >= 0) {
@@ -139,6 +141,20 @@ public class SmilesSearch extends JmolMolecule {
         flags |= INVERT_STEREOCHEMISTRY;
     }
 
+    
+    if ((flags & JC.SMILES_GEN_BIO) == JC.SMILES_GEN_BIO) {
+      if (strFlags.indexOf("NOCOMMENT") >= 0)
+        flags |= JC.SMILES_GEN_BIO_NOCOMMENTS;
+      if (strFlags.indexOf("ATOMCOMMENT") >= 0)
+        flags |= JC.SMILES_GEN_ATOM_COMMENT;
+      if (strFlags.indexOf("UNMATCHED") >= 0)
+        flags |= JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS;
+      if (strFlags.indexOf("COVALENT") >= 0)
+        flags |= JC.SMILES_GEN_BIO_COV_CROSSLINK;
+      if (strFlags.indexOf("HBOND") >= 0)
+        flags |= JC.SMILES_GEN_BIO_HH_CROSSLINK;
+    }
+    
     return flags;
   }
 

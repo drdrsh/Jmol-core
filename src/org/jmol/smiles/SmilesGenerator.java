@@ -107,11 +107,11 @@ public class SmilesGenerator {
     bsSelected = BSUtil.copy(bsSelected);    
 
     // note -- some of these are 2-bit flags, so we need to use (flags & X) == X 
-    if ((flags & JC.SMILES_GEN_BIO) == JC.SMILES_GEN_BIO)
-      return getBioSmiles(bsSelected, comment, flags);
     
     this.bsSelected = bsSelected;
     this.flags = flags = SmilesSearch.addFlags(flags,  comment == null ? "" : comment.toUpperCase());
+    if ((flags & JC.SMILES_GEN_BIO) == JC.SMILES_GEN_BIO)
+      return getBioSmiles(bsSelected, comment, flags);
     openSMILES = ((flags & JC.SMILES_TYPE_OPENSMILES) == JC.SMILES_TYPE_OPENSMILES);
     addAtomComment = ((flags & JC.SMILES_GEN_ATOM_COMMENT) == JC.SMILES_GEN_ATOM_COMMENT);
     explicitH = ((flags & JC.SMILES_GEN_EXPLICIT_H) == JC.SMILES_GEN_EXPLICIT_H);

@@ -851,8 +851,9 @@ public class Polyhedra extends AtomShape {
           if (isThroughCenter) {
             bsCenterPlanes.set(triangleCount++);
           } else if (collapsed) {
-            ptRef.setT(points[nPoints] = new P3());
+            points[nPoints] = new P3();
             points[nPoints].scaleAdd2(offset, normal, atomOrPt);
+            ptRef.setT(points[nPoints]);
             addFacet(i, j, k, ptRef, points, normals, triangles,
                 triangleCount++, nPoints, isWindingOK, vAC);
             addFacet(k, i, j, ptRef, points, normals, triangles,
@@ -899,13 +900,14 @@ public class Polyhedra extends AtomShape {
                         V3[] normals, int[][] faces, int planeCount, int nRef,
                         boolean isWindingOK, V3 vTemp) {
     V3 normal = new V3();
-    Measure.getNormalFromCenter(points[k], ptRef, points[i], points[j], false, normal, vTemp);
+    int ii = isWindingOK ? i : j;
+    int jj = isWindingOK ? j : i;
+    Measure.getNormalFromCenter(points[k], ptRef, points[ii], points[jj], false, normal, vTemp);
     normals[planeCount] = normal;
-    faces[planeCount] = new int[] { nRef, isWindingOK ? i : j, isWindingOK ? j : i,
-        -2 };
-    //            System.out.println("draw ID \"d" + faceId(i, j, k) + "\" VECTOR "
-    //              + ptRef + " " + normal + " color blue \">" + faceId(i, j, k) + isWindingOK
-    //            + "\"");
+    faces[planeCount] = new int[] { nRef, ii, jj, -2 };
+    //        System.out.println("draw ID \"d" + i+ j+ k + "\" VECTOR "
+      //           + ptRef + " " + normal + " color blue \">" + i + j +k + isWindingOK
+        //        + "\"");
   }
 
   /**

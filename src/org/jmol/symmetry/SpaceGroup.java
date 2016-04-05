@@ -541,8 +541,6 @@ class SpaceGroup {
     op.index = operationCount;
     if (Logger.debugging)
       Logger.debug("\naddOperation " + operationCount + op.dumpInfo());
-    if (operationCount == 17)
-      System.out.println("op 17 spacegroup");
     return operationCount - 1;
   }
 
