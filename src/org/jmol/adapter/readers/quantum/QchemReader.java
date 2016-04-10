@@ -572,7 +572,7 @@ $end
      * 
      */
     String orbitalType = getTokens()[0]; // is RESTRICTED or ALPHA
-    alphaBeta = (orbitalType.equals("RESTRICTTED") ? "" : "A");
+    alphaBeta = (orbitalType.equals("RESTRICTED") ? "" : "A");
     readMOs(orbitalType.equals("RESTRICTED"), alphas);
     if (orbitalType.equals("ALPHA")) { // we also have BETA orbitals....
       discardLinesUntilContains("BETA");
