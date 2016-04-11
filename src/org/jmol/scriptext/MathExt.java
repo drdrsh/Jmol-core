@@ -1120,12 +1120,12 @@ public class MathExt {
     }
 
     if (tok == T.cross) {
-      P3 a = P3.newP(mp.ptValue(x1));
-      a.cross(a, mp.ptValue(x2));
+      P3 a = P3.newP(mp.ptValue(x1, null));
+      a.cross(a, mp.ptValue(x2, null));
       return mp.addXPt(a);
     }
 
-    P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2));
+    P3 pt2 = (x2.tok == T.varray ? null : mp.ptValue(x2, null));
     P4 plane2 = mp.planeValue(x2);
     if (isDist) {
       int minMax = (op == Integer.MIN_VALUE ? 0 : op & T.minmaxmask);
@@ -1187,7 +1187,7 @@ public class MathExt {
         }
       }
     }
-    P3 pt1 = mp.ptValue(x1);
+    P3 pt1 = mp.ptValue(x1, null);
     P4 plane1 = mp.planeValue(x1);
     float f = Float.NaN;
     try {
@@ -1233,8 +1233,8 @@ public class MathExt {
     int tok = T.getTokFromName(type);
     if (args.length > 2) {
       // helix(pt1, pt2, dq ...)
-      P3 pta = mp.ptValue(args[0]);
-      P3 ptb = mp.ptValue(args[1]);
+      P3 pta = mp.ptValue(args[0], null);
+      P3 ptb = mp.ptValue(args[1], null);
       if (tok == T.nada || args[2].tok != T.point4f || pta == null || ptb == null)
         return false;
       Quat dq = Quat.newP4((P4) args[2].value);
@@ -2219,7 +2219,7 @@ public class MathExt {
     }
     P3[] pts = new P3[nPoints];
     for (int i = 0; i < nPoints; i++) {
-      if ((pts[i] = mp.ptValue(args[i])) == null)
+      if ((pts[i] = mp.ptValue(args[i], null)) == null)
         return false;
     }
     switch (nPoints) {
@@ -2321,7 +2321,7 @@ public class MathExt {
             return mp.addXStr("");
           return mp.addXList(list);
         }
-        pt2 = mp.ptValue(args[0]);
+        pt2 = mp.ptValue(args[0], null);
         if (pt2 == null)
           return mp.addXStr("");
         return mp.addXPt(Measure.getIntersection(pt2, null, plane, pt3, norm,
@@ -2336,8 +2336,8 @@ public class MathExt {
         return mp.addXPt4(e.getHklPlane(P3.new3(SV.fValue(args[0]),
             SV.fValue(args[1]), SV.fValue(args[2]))));
       case T.intersection:
-        pt1 = mp.ptValue(args[0]);
-        pt2 = mp.ptValue(args[1]);
+        pt1 = mp.ptValue(args[0], null);
+        pt2 = mp.ptValue(args[1], null);
         if (pt1 == null || pt2 == null)
           return mp.addXStr("");
         V3 vLine = V3.newV(pt2);
@@ -2353,7 +2353,7 @@ public class MathExt {
             return mp.addXStr("");
           return mp.addXPt(pt1);
         }
-        pt3 = mp.ptValue(args[2]);
+        pt3 = mp.ptValue(args[2], null);
         if (pt3 == null)
           return mp.addXStr("");
         // intersection(ptLine, vLine, pt2); 
@@ -2388,13 +2388,13 @@ public class MathExt {
         break;
       case T.bitset:
       case T.point3f:
-        pt1 = mp.ptValue(args[0]);
-        pt2 = mp.ptValue(args[1]);
+        pt1 = mp.ptValue(args[0], null);
+        pt2 = mp.ptValue(args[1], null);
         if (pt2 == null)
           return false;
         pt3 = (args.length > 2
             && (args[2].tok == T.bitset || args[2].tok == T.point3f) ? mp
-            .ptValue(args[2]) : null);
+            .ptValue(args[2], null) : null);
         norm = V3.newV(pt2);
         if (pt3 == null) {
           plane = new P4();
@@ -2421,7 +2421,7 @@ public class MathExt {
         // plane(<point1>,<point2>,<point3>)
         // plane(<point1>,<point2>,<point3>,<pointref>)
         V3 vAB = new V3();
-        P3 ptref = (args.length == 4 ? mp.ptValue(args[3]) : null);
+        P3 ptref = (args.length == 4 ? mp.ptValue(args[3], null) : null);
         float nd = Measure.getDirectedNormalThroughPoints(pt1, pt2, pt3,
             ptref, norm, vAB);
         return mp.addXPt4(P4.new4(norm.x, norm.y, norm.z, nd));
@@ -2581,7 +2581,7 @@ public class MathExt {
             && (args[1].tok == T.integer || args[1].tok == T.bitset))
           break;
       }
-      if ((pt0 = mp.ptValue(args[0])) == null || tok != T.quaternion
+      if ((pt0 = mp.ptValue(args[0], null)) == null || tok != T.quaternion
           && args[1].tok == T.point3f)
         return false;
       break;
@@ -2653,7 +2653,7 @@ public class MathExt {
           break;
         }
       }
-      P3 pt1 = mp.ptValue(args[1]);
+      P3 pt1 = mp.ptValue(args[1], null);
       p4 = mp.planeValue(args[0]);
       if (pt1 != null)
         q = Quat.getQuaternionFrame(P3.new3(0, 0, 0), pt0, pt1);
@@ -3038,17 +3038,11 @@ public class MathExt {
 
     // x = y.symop(n,"time")
     // Returns the time reversal of a symmetry operator in a magnetic space group
-    
+
     int narg = args.length;
     if (narg == 0)
       return false;
     SV x1 = (haveBitSet ? mp.getX() : null);
-    BS bsAtoms = null;
-    if (x1 != null) {
-      if (x1.tok != T.bitset)
-        return false;
-      bsAtoms = (BS) x1.value;
-    }
     String xyz = null;
     int iOp = Integer.MIN_VALUE;
     int apt = 0;
@@ -3066,19 +3060,20 @@ public class MathExt {
       apt++;
       break;
     }
-    int len = apt;
-    if (bsAtoms == null)
-      if (apt < narg && args[apt].tok == T.bitset) {
-        bsAtoms = (BS) args[apt].value;
-      } else {
-        bsAtoms = vwr.getAllAtoms();
-      }
-    // check for symop(op, pt)
-    // check for symop(op, pt1, pt2)
+    BS bsAtoms = null;
+    if (x1 != null) {
+      if (x1.tok != T.bitset)
+        return false;
+      bsAtoms = (BS) x1.value;
+    } else if (apt < narg && args[apt].tok == T.bitset) {
+      bsAtoms = (BS) args[apt].value;
+    } else if (apt + 1 < narg && args[apt + 1].tok == T.bitset) {
+      bsAtoms = (BS) args[apt + 1].value;
+    }
     P3 pt1 = null, pt2 = null;
-    if ((pt1 = (narg > apt ? mp.ptValue(args[apt]) : null)) != null) 
+    if ((pt1 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
       apt++;
-    if ((pt2 = (narg > apt ? mp.ptValue(args[apt]) : null)) != null) 
+    if ((pt2 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
       apt++;
     int nth = (pt2 != null && args.length > apt && iOp == Integer.MIN_VALUE
         && args[apt].tok == T.integer ? args[apt].intValue : 0);
@@ -3086,10 +3081,14 @@ public class MathExt {
       apt++;
     if (iOp == Integer.MIN_VALUE)
       iOp = 0;
-    String desc = (narg == apt ? (pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
-        : SV.sValue(args[apt++]).toLowerCase());
-    return (apt == args.length && mp.addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bsAtoms,
-        xyz, iOp, pt1, pt2, desc, 0, 0, nth)));
+    String desc = (narg == apt ? (pt2 != null ? "all" : pt1 != null ? "point"
+        : "matrix") : SV.sValue(args[apt++]).toLowerCase());
+    if (bsAtoms == null)
+      bsAtoms = vwr.getAllAtoms(); 
+
+    return (apt == args.length && mp.addXObj(vwr.ms.getSymTemp(false)
+        .getSymmetryInfoAtom(vwr.ms, bsAtoms, xyz, iOp, pt1, pt2,
+            desc, 0, 0, nth)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

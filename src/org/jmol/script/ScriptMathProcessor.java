@@ -1259,8 +1259,8 @@ public class ScriptMathProcessor {
         return (isDecimal(x2) || isDecimal(x1) ? addXFloat(x1.asFloat()
             * x2.asFloat()) : addXInt(x1.asInt() * x2.asInt()));
       }
-      pt = (x1.tok == T.matrix3f || x1.tok == T.matrix4f ? ptValue(x2)
-          : x2.tok == T.matrix3f ? ptValue(x1) : null);
+      pt = (x1.tok == T.matrix3f || x1.tok == T.matrix4f ? ptValue(x2, null)
+          : x2.tok == T.matrix3f ? ptValue(x1, null) : null);
       pt4 = (x1.tok == T.matrix4f ? planeValue(x2)
           : x2.tok == T.matrix4f ? planeValue(x1) : null);
       // checking here to make sure arrays remain arrays and
@@ -1541,7 +1541,7 @@ public class ScriptMathProcessor {
             .lastIndexOf("-") > 0));
   }
 
-  public P3 ptValue(SV x) throws ScriptException {
+  public P3 ptValue(SV x, BS bsRestrict) throws ScriptException {
     Object pt;
     switch (x.tok) {
     case T.point3f:
@@ -1550,6 +1550,10 @@ public class ScriptMathProcessor {
       BS bs = (BS) x.value;
       if (bs.isEmpty())
         break;
+      if (bsRestrict != null) {
+        bs = BSUtil.copy(bs);
+        bs.and(bsRestrict);
+      }
       return (P3) eval.getBitsetProperty(bs, T.xyz, null, null,
           x.value, null, false, Integer.MAX_VALUE, false);
     case T.string:

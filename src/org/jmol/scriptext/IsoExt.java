@@ -481,10 +481,11 @@ public class IsoExt extends ScriptExt {
           default:
             if (!eval.isCenterParameter(i))
               iSym = intParameter(i++);
+            Object[] ret = new Object[] {null, vwr.getFrameAtoms()};
             if (eval.isCenterParameter(i))
-              center = centerParameter(i);
+              center = eval.centerParameter(i, ret);
             if (eval.isCenterParameter(eval.iToken + 1))
-              target = centerParameter(++eval.iToken);
+              target = eval.centerParameter(++eval.iToken, ret);
             if (chk)
               return;
             i = eval.iToken;

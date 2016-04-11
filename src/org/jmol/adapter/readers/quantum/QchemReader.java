@@ -153,6 +153,7 @@ public class QchemReader extends MOReader {
   private void readAtoms() throws Exception {
     asc.newAtomSet();
     setMOData(true);
+    dFixed = fFixed = false;
     readLines(2);
     String[] tokens;
     while (rd() != null && !line.startsWith(" --")) {

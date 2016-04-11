@@ -63,6 +63,88 @@ public class SymmetryDesc {
       "inversionCenter", null /*point*/, "axisVector", "rotationAngle", "matrix",
       "unitTranslation", "centeringVector", "timeReversal", "plane" };
 
+  private static int getType(String id) {
+    int type;
+    if (id.equalsIgnoreCase("matrix")) {
+      type = T.matrix4f;
+    } else if (id.equalsIgnoreCase("description")) {
+      type = T.label;
+    } else if (id.equalsIgnoreCase("axispoint")) {
+      type = T.point;
+    } else if (id.equalsIgnoreCase("time")) {
+      type = T.times;
+    } else if (id.equalsIgnoreCase("info")) {
+      type = T.array;
+    } else {
+      // center, draw, plane, axis, translation, angle, array, list
+      type = T.getTokFromName(id);
+      if (type == 0) {
+        for (type = 0; type < keys.length; type++)
+          if (id.equalsIgnoreCase(keys[type]))
+            break; 
+        type = (type < keys.length ? -1 - type : T.full);
+      }
+    }
+    return type;
+  }
+
+  private static Object getInfo(Object[] info, int type) {
+    if (info == null)
+      return "";
+    if (type < 0 && type >= -keys.length)
+      return info[-1 - type];
+    switch (type) {
+    case T.array:
+      Map<String, Object> lst = new Hashtable<String, Object>();
+      for (int j = 0, n = info.length; j < n; j++)
+        if (keys[j] != null && info[j] != null)
+          lst.put(keys[j], info[j]);
+      return lst;
+      //    case T.list:
+      //      String[] sinfo = new String[] {
+      //          (String) info[0],
+      //          (String) info[1],
+      //          (String) info[2],
+      //          // skipping DRAW commands here
+      //          Escape.eP((V3) info[4]), Escape.eP((V3) info[5]),
+      //          Escape.eP((P3) info[6]), Escape.eP((P3) info[7]),
+      //          Escape.eP((V3) info[8]), "" + info[9], "" + Escape.e(info[10]),
+      //          "" + info[13] };
+      //      return sinfo;
+    case T.angle:
+      return info[9];
+    case T.axes:
+      return info[8];
+    case T.center:
+      return info[6];
+    case T.draw:
+      return info[3] + "\nprint " + PT.esc(info[0] + " " + info[2]);
+    case T.full:
+      return info[0] + "  \t" + info[2];
+    case T.info:
+      return info; // internal only; if user selects "info", it is turned into "array"
+    default:
+    case T.label:
+      return info[2];
+    case T.matrix4f:
+      return info[10];
+    case T.point:
+      return info[7];
+      // 11: vTrans
+      // 12: centering
+    case T.times:
+      return info[13];
+    case T.plane:
+      return info[14];
+    case T.translation:
+      return info[5]; // cartesian translation
+    case T.unitcell:
+      return info[11];
+    case T.xyz:
+      return info[0];
+    }
+  }
+
   /**
    * 
    * @param op
@@ -109,10 +191,9 @@ public class SymmetryDesc {
    * 
    */
 
-  private Object[] getDescription(SymmetryOperation op, SymmetryInterface uc,
+  private Object[] createInfoArray(SymmetryOperation op, SymmetryInterface uc,
                                   P3 pta00, P3 ptTarget, String id,
                                   ModelSet modelSet, float scaleFactor) {
-
     if (!op.isFinalized)
       op.doFinalize();
     if (scaleFactor == 0)
@@ -831,6 +912,31 @@ public class SymmetryDesc {
     return pt;
   }
 
+  /**
+   * multipurpose function handling a variety of tasks, including:
+   * 
+   * processing of "lattice", "draw", and "point" output types
+   * 
+   * finding the operator in the given space group
+   * 
+   * creating a temporary space group for an xyz operator
+   * 
+   * 
+   * @param sym
+   * @param iModel
+   * @param iAtom
+   * @param uc
+   * @param xyz
+   * @param op
+   * @param pt
+   * @param pt2
+   * @param id
+   * @param type
+   * @param modelSet
+   * @param scaleFactor
+   * @param nth
+   * @return a string or an Object[] containing information
+   */
   private Object getSymmetryInfo(Symmetry sym, int iModel, int iAtom,
                                  Symmetry uc, String xyz, int op, P3 pt,
                                  P3 pt2, String id, int type,
@@ -884,9 +990,10 @@ public class SymmetryDesc {
         symTemp.toCartesian(sympt, false);
         return sympt;
       }
-      info = getDescription(opTemp, uc, pt, pt2, (id == null ? "sym" : id),
+      info = createInfoArray(opTemp, uc, pt, pt2, (id == null ? "sym" : id),
           modelSet, scaleFactor);
     } else {
+      // pt1, pt2
       boolean isList = (type == T.list);
       nth = (nth != 0 ? nth : isList ? -1 : 1);
       Object ret = getSymmetryInfoObject(sym, iModel, op, pt, pt2, null,
@@ -895,73 +1002,24 @@ public class SymmetryDesc {
         return ret;
       info = (Object[]) ret;
     }
-    if (info == null)
-      return "";
-    /*
-     *  xyz (Jones-Faithful calculated from matrix)
-     *  xyzOriginal (Provided by operation) 
-     *  description ("C2 axis", for example) 
-     *  translation vector (fractional)  
-     *  translation vector (cartesian)
-     *  inversion point 
-     *  axis point 
-     *  axis vector
-     *  angle of rotation
-     *  matrix representation
-     *  time reversal
-     */
-    switch (type) {
-    case T.array:
-      Map<String, Object> lst = new Hashtable<String, Object>();
-      for (int j = 0, n = info.length; j < n; j++)
-        if (keys[j] != null && info[j] != null)
-          lst.put(keys[j], info[j]);
-      return lst;
-      //    case T.list:
-      //      String[] sinfo = new String[] {
-      //          (String) info[0],
-      //          (String) info[1],
-      //          (String) info[2],
-      //          // skipping DRAW commands here
-      //          Escape.eP((V3) info[4]), Escape.eP((V3) info[5]),
-      //          Escape.eP((P3) info[6]), Escape.eP((P3) info[7]),
-      //          Escape.eP((V3) info[8]), "" + info[9], "" + Escape.e(info[10]),
-      //          "" + info[13] };
-      //      return sinfo;
-    case T.angle:
-      return info[9];
-    case T.axes:
-      return info[8];
-    case T.center:
-      return info[6];
-    case T.draw:
-      return info[3] + "\nprint " + PT.esc(info[0] + " " + info[2]);
-    case T.full:
-      return info[0] + "  \t" + info[2];
-    case T.info:
-      return info; // internal only
-    default:
-    case T.label:
-      return info[2];
-    case T.matrix4f:
-      return info[10];
-    case T.point:
-      return info[7];
-      // 11: vTrans
-      // 12: centering
-    case T.times:
-      return info[13];
-    case T.plane:
-      return info[14];
-    case T.translation:
-      return info[5]; // cartesian translation
-    case T.unitcell:
-      return info[11];
-    case T.xyz:
-      return info[0];
-    }
+    return getInfo(info, type);
   }
 
+  /**
+   * 
+   * @param sym
+   * @param modelIndex
+   * @param symOp
+   * @param pt1
+   * @param pt2
+   * @param drawID
+   * @param type
+   * @param modelSet
+   * @param scaleFactor
+   * @param nth
+   * @param asString
+   * @return
+   */
   Object getSymmetryInfoObject(Symmetry sym, int modelIndex, int symOp, P3 pt1,
                                P3 pt2, String drawID, String type,
                                ModelSet modelSet, float scaleFactor, int nth,
@@ -969,7 +1027,7 @@ public class SymmetryDesc {
     String strOperations = "";
     Object[][] infolist;
     Object ret = (asString ? "" : null);
-    if (type != null && type.indexOf("y") >= 0) {
+    if (type != null && type.indexOf(",") >= 0) {
       // SHOW SYMOP "x,y,...."
       sym = (Symmetry) modelSet.getSymTemp(true);
       sym.setSpaceGroup(false);
@@ -1092,7 +1150,7 @@ public class SymmetryDesc {
             isStandard = false;
           jf += ";" + op.xyz;
           Object[] ret = (symOp > 0 && symOp - 1 != iop ? null
-              : getDescription(op, cellInfo, pt1, pt2, drawID, modelSet,
+              : createInfoArray(op, cellInfo, pt1, pt2, drawID, modelSet,
                   scaleFactor));
           if (ret != null) {
             if (nth > 0 && ++nop != nth)
@@ -1136,25 +1194,8 @@ public class SymmetryDesc {
   Object getSymmetryInfoAtom(BS bsAtoms, String xyz, int op, P3 pt, P3 pt2,
                              String id, int type, ModelSet modelSet,
                              float scaleFactor, int nth) {
-    if (type == 0) {
-      type = T.xyz;
-      if (id.equalsIgnoreCase("matrix")) {
-        type = T.matrix4f;
-      } else if (id.equalsIgnoreCase("description")) {
-        type = T.label;
-      } else if (id.equalsIgnoreCase("axispoint")) {
-        type = T.point;
-      } else if (id.equalsIgnoreCase("time")) {
-        type = T.times;
-      } else if (id.equalsIgnoreCase("info")) {
-        type = T.array;
-      } else {
-        // center, draw, plane, axis, translation, angle, array, list
-        type = T.getTokFromName(id);
-        if (type == 0)
-          type = T.label;
-      }
-    }
+    if (type == 0) 
+      type = getType(id);
     int iModel = -1;
     if (bsAtoms == null) {
       iModel = modelSet.vwr.am.cmi;

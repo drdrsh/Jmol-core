@@ -788,7 +788,7 @@ class SymmetryOperation extends M4 {
     if (!isFinalized)
       doFinalize();
     if (centering == null && !unCentered) {
-      if (modDim == 0 && index > 1 && m00 == 1 && m11 == 1 && m22 == 1
+      if (modDim == 0 && m00 == 1 && m11 == 1 && m22 == 1
           && m01 == 0 && m02 == 0 && m10 == 0 && m12 == 0 && m20 == 0
           && m21 == 0 && (m03 != 0 || m13 != 0 || m23 != 0)) {
         isCenteringOp = true;

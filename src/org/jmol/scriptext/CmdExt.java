@@ -4252,8 +4252,9 @@ public class CmdExt extends ScriptExt {
       pt2 = null;
       int nth = -1;
       if (slen > 3 && tokAt(3) != T.string) {
-        pt1 = centerParameter(2);
-        pt2 = centerParameter(++eval.iToken);
+        Object[] ret = new Object[] {null, vwr.getFrameAtoms()};
+        pt1 = eval.centerParameter(2, ret);
+        pt2 = eval.centerParameter(++eval.iToken, ret);
         if (tokAt(eval.iToken + 1) == T.integer) {
           nth  = eval.getToken(++eval.iToken).intValue;
         }
