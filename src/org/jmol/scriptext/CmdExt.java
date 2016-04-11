@@ -3204,6 +3204,7 @@ public class CmdExt extends ScriptExt {
     float translucentLevel = Float.MAX_VALUE;
     float radius = -1;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
+    int noToParam = -1;
     P3 offset = null;
     String id = null;
     boolean ok = false;
@@ -3308,7 +3309,7 @@ public class CmdExt extends ScriptExt {
         propertyValue = Integer.valueOf(intParameter(++i));
         break;
       case T.to:
-        if (nAtomSets > 1 || id != null && !haveCenter)
+        if (nAtomSets > 1 || id != null && !haveCenter || noToParam == i)
           invPO();
         nAtomSets = 3; // don't allow two of these
         if (tokAt(++i) == T.bitset || tokAt(i) == T.expressionBegin) {
@@ -3406,6 +3407,8 @@ public class CmdExt extends ScriptExt {
       default:
         if (eval.isColorParam(i)) {
           colorArgb[0] = eval.getArgbParam(i);
+          if (eval.isCenterParameter(i))
+            noToParam = eval.iToken + 1;
           i = eval.iToken;
           continue;
         }
@@ -3869,8 +3872,8 @@ public class CmdExt extends ScriptExt {
       if (data == "MENU") {
         data = vwr.getMenu("");
       } else if (data == "PGRP") {
-        data = vwr.ms.getPointGroupAsString(vwr.bsA(), type2.equals("draw"),
-            null, 0, 1.0f);
+        data = vwr.ms.getPointGroupAsString(vwr.bsA(),
+            null, 0, 1.0f, null, null, type2.equals("draw") ? "" : null);
       } else if (data == "PDB" || data == "PQR") {
         if (showOnly) {
           data = vwr.getPdbAtomData(null, null, (data == "PQR"), isCoord);
@@ -4247,9 +4250,13 @@ public class CmdExt extends ScriptExt {
       int iop = 0;
       P3 pt1 = null,
       pt2 = null;
+      int nth = -1;
       if (slen > 3 && tokAt(3) != T.string) {
         pt1 = centerParameter(2);
         pt2 = centerParameter(++eval.iToken);
+        if (tokAt(eval.iToken + 1) == T.integer) {
+          nth  = eval.getToken(++eval.iToken).intValue;
+        }
       } else {
         // show symop 3 "fmatrix"
         iop = (tokAt(2) == T.integer ? intParameter(2) : 0);
@@ -4258,8 +4265,8 @@ public class CmdExt extends ScriptExt {
           : null);
       checkLength(len = ++eval.iToken);
       if (!chk)
-        msg = vwr.ms.getSymTemp(true).getSymmetryInfoString(vwr.ms, vwr.am.cmi,
-            iop, pt1, pt2, null, type, 0);
+        msg = (String) vwr.ms.getSymTemp(true).getSymmetryInfoObject(vwr.ms, vwr.am.cmi,
+            iop, pt1, pt2, null, type, 0, nth, true);
       break;
     case T.vanderwaals:
       VDW vdwType = null;
@@ -4439,13 +4446,7 @@ public class CmdExt extends ScriptExt {
       name = paramAsStr(2);
       if (name.startsWith("/") && (len = slen) == 3) {
         if (!chk) {
-          name = name.substring(1).toLowerCase();
-          String[] info = PT.split(vwr.getStateInfo(), "\n");
-          SB sb = new SB();
-          for (int i = 0; i < info.length; i++)
-            if (info[i].toLowerCase().indexOf(name) >= 0)
-              sb.append(info[i]).appendC('\n');
-          msg = sb.toString();
+          msg = getShowLines(vwr.getStateInfo(), name);
         }
         break;
       } else if (tokAt(2) == T.file && (len = slen) == 4) {
@@ -4480,18 +4481,21 @@ public class CmdExt extends ScriptExt {
       break;
     case T.spacegroup:
       Map<String, Object> info = null;
-      if ((len = slen) == 2) {
+      String sg = "";
+      if ((len = slen) == 2 || (sg = paramAsStr(2)).startsWith("/") && len == 3) {
         if (!chk) {
           info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(vwr.ms, null);
         }
       } else {
-        String sg = paramAsStr(2);
         if (!chk)
           info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(vwr.ms,
               PT.rep(sg, "''", "\""));
       }
-      if (info != null)
+      if (info != null) {
         msg = "" + info.get("spaceGroupInfo") + info.get("symmetryInfo");
+        if (sg.startsWith("/"))
+          msg = getShowLines(msg, sg);
+      }
       break;
     case T.dollarsign:
       len = 3;
@@ -4512,19 +4516,24 @@ public class CmdExt extends ScriptExt {
       break;
     case T.file:
       // as a string
-      if (!chk)
-        vwr.sm.clearConsole();
       if (slen == 2) {
         if (!chk)
-          msg = vwr.getCurrentFileAsString("script");
+          vwr.sm.clearConsole();
+        msg = vwr.getCurrentFileAsString("script");
         if (msg == null)
           msg = "<unavailable>";
         break;
       }
       len = 3;
       value = paramAsStr(2);
-      if (!chk)
-        msg = vwr.getFileAsString3(value, true, null);
+      if (!chk) {
+        if (value.startsWith("/") && value.lastIndexOf("/") == 0) {
+          msg = getShowLines(vwr.getCurrentFileAsString("script"), value);
+        } else {
+          vwr.sm.clearConsole();
+          msg = vwr.getFileAsString3(value, true, null);
+        }
+      }
       break;
     case T.frame:
       if (tokAt(2) == T.all && (len = 3) > 0)
@@ -4612,8 +4621,8 @@ public class CmdExt extends ScriptExt {
         typ = null;
       len = slen;
       if (!chk)
-        showString(vwr.ms.getPointGroupAsString(vwr.bsA(), false,
-            "show:" + typ, 0, 0));
+        showString(vwr.ms.getPointGroupAsString(vwr.bsA(), "show:" + typ, 0, 0,
+            null, null, null));
       return;
     case T.symmetry:
       if (!chk)
@@ -4697,6 +4706,16 @@ public class CmdExt extends ScriptExt {
         showString(str + " = "
             + ((SV) eval.getParameter(str, T.variable, true)).escape());
     }
+  }
+
+  private String getShowLines(String msg, String name) {
+    name = name.substring(1).toLowerCase();
+    String[] info = PT.split(msg, "\n");
+    SB sb = new SB();
+    for (int i = 0; i < info.length; i++)
+      if (info[i].toLowerCase().indexOf(name) >= 0)
+        sb.append(info[i]).appendC('\n');
+    return sb.toString();
   }
 
   private void stereo() throws ScriptException {
@@ -4814,7 +4833,7 @@ public class CmdExt extends ScriptExt {
             if (isPrimitive) {
               String stype = (String) vwr.ms.getSymTemp(false)
                   .getSymmetryInfoAtom(vwr.ms, vwr.bsA(), null, 0, null, null,
-                      null, T.lattice, 0);
+                      null, T.lattice, 0, -1);
               (u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(true, stype.charAt(0), oabc);
             } else {
               SimpleUnitCell.getReciprocal(oabc, oabc);

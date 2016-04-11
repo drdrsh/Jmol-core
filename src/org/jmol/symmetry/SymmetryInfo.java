@@ -72,7 +72,8 @@ class SymmetryInfo {
           + (symmetryCount == 0 ? 1 : symmetryCount) + "\nSymmetry Operations:";
       for (int i = 0; i < symmetryCount; i++) {
         SymmetryOperation op = symmetryOperations[i];
-        s += "\n" + op.xyz;
+        s += "\n" + op.fixMagneticXYZ(op, op.xyz, true);
+        // TODO magnetic centering
         if (op.isCenteringOp)
           c += " ("
               + PT.rep(PT.replaceAllCharacters(op.xyz, "xyz", "0"), "0+", "")

@@ -23,8 +23,7 @@
 package org.jmol.bspt;
 
 
-import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.T3;
 
 /**
  * the internal tree is made up of elements ... either Node or Leaf
@@ -34,9 +33,9 @@ import javajs.util.P3;
 abstract class Element {
   Bspt bspt;
   int count;
-  abstract Element addTuple(int level, P3 tuple);
+  abstract Element addTuple(int level, T3 tuple);
   
-  abstract void dump(int level, SB sb);
+  //abstract void dump(int level, SB sb);
   
 }
 

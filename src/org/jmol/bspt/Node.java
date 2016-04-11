@@ -24,8 +24,7 @@ package org.jmol.bspt;
 
 
 //import org.jmol.util.Logger;
-import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.T3;
 
 /**
  * Nodes of the bspt. It is a binary tree so nodes contain two children,
@@ -83,7 +82,7 @@ class Node extends Element {
   }
   
   @Override
-  Element addTuple(int level, P3 tuple) {
+  Element addTuple(int level, T3 tuple) {
     float dimValue = getDimensionValue(tuple, dim);
     ++count;
     boolean addLeft;
@@ -124,22 +123,22 @@ class Node extends Element {
     return this;
   }
   
-  @Override
-  void dump(int level, SB sb) {
-    sb.append("\nnode LEFT" + level);
-    eleLeft.dump(level + 1, sb);
-    for (int i = 0; i < level; ++i)
-    sb.append("->");
-    sb.append(" RIGHT" + level);
-    eleRight.dump(level + 1, sb);
-    }
+//  @Override
+//  void dump(int level, SB sb) {
+//    sb.append("\nnode LEFT" + level);
+//    eleLeft.dump(level + 1, sb);
+//    for (int i = 0; i < level; ++i)
+//    sb.append("->");
+//    sb.append(" RIGHT" + level);
+//    eleRight.dump(level + 1, sb);
+//    }
     
-    @Override
-    public String toString() {
-      return eleLeft.toString() + dim + ":" + "\n" + eleRight.toString();
-    }
+//    @Override
+//    public String toString() {
+//      return eleLeft.toString() + dim + ":" + "\n" + eleRight.toString();
+//    }
   
-  static float getDimensionValue(P3 pt, int dim) {
+  static float getDimensionValue(T3 pt, int dim) {
     switch (dim) {
     case 0:
       return pt.x;

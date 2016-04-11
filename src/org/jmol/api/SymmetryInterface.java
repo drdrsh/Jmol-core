@@ -64,7 +64,7 @@ public interface SymmetryInterface {
 
   public Matrix getOperationRsVs(int op);
   
-  public Object getPointGroupInfo(int modelIndex, boolean asDraw,
+  public Object getPointGroupInfo(int modelIndex, String drawID,
                                            boolean asInfo, String type,
                                            int index, float scale);
 
@@ -88,11 +88,8 @@ public interface SymmetryInterface {
 
   public String getSpaceGroupXyz(int i, boolean doNormalize);
 
-  public Object getSymmetryInfo(ModelSet modelSet, int iModel, int iAtom, SymmetryInterface uc, String xyz, int op,
-                                P3 pt, P3 pt2, String id, int type, float scaleFactor);
-
-  String getSymmetryInfoString(ModelSet modelSet, int modelIndex, int symOp, P3 pt1,
-                               P3 pt2, String drawID, String type, float scaleFactor);
+  Object getSymmetryInfoObject(ModelSet modelSet, int modelIndex, int symOp, P3 pt1,
+                               P3 pt2, String drawID, String type, float scaleFactor, int nth, boolean asString);
 
   public String getSymmetryInfoStr();
 
@@ -178,10 +175,11 @@ public interface SymmetryInterface {
    * @param id
    * @param type  T.point, T.lattice, or T.draw, T.matrix4f, T.label, T.list, T.info, T.translation, T.axes, T.plane, T.angle, T.center
    * @param scaleFactor
+   * @param nth TODO
    * @return a variety of object types
    */
   public Object getSymmetryInfoAtom(ModelSet ms, BS bsAtoms, String xyz, int op,
-                                    P3 pt, P3 pt2, String id, int type, float scaleFactor);
+                                    P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth);
 
   public void setTimeReversal(int op, int val);
 
@@ -218,6 +216,8 @@ public interface SymmetryInterface {
   public String getLatticeType();
 
   public String getIntTableNumber();
+
+  Lst<P3> generateCrystalClass(P3 pt0);
 
 
 }

@@ -37,6 +37,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolEnvCalc;
 import org.jmol.api.JmolModulationSet;
+import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.atomdata.RadiusData.EnumType;
@@ -2713,6 +2714,15 @@ abstract public class AtomCollection {
     return bs;
   }
 
+
+  public Lst<P3> generateCrystalClass(int atomIndex, P3 pt) {
+    SymmetryInterface sym = (atomIndex < 0 || atomIndex >= ac ? null
+        : at[atomIndex].getUnitCell());
+    boolean isRandom = (pt != null && Float.isNaN(pt.x));
+    return (sym == null ? new Lst<P3>() : sym
+        .generateCrystalClass(isRandom ? null : pt != null ? pt : at[atomIndex]));
+
+  }
 
 
 }

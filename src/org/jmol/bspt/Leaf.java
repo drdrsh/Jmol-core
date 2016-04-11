@@ -23,11 +23,8 @@
 package org.jmol.bspt;
 
 
-import org.jmol.modelset.Atom;
-import org.jmol.util.Escape;
-
-import javajs.util.SB;
 import javajs.util.P3;
+import javajs.util.T3;
 
 /**
  * A leaf of Point3f objects in the bsp tree
@@ -35,7 +32,7 @@ import javajs.util.P3;
  * @author Miguel, miguel@jmol.org
  */
 class Leaf extends Element {
-  P3[] tuples;
+  T3[] tuples;
     
   /**
    * @param bspt 
@@ -59,10 +56,10 @@ class Leaf extends Element {
 
   void sort(int dim) {
     for (int i = count; --i > 0; ) { // this is > not >=
-      P3 champion = tuples[i];
+      T3 champion = tuples[i];
       float championValue = Node.getDimensionValue(champion, dim);
       for (int j = i; --j >= 0; ) {
-        P3 challenger = tuples[j];
+        T3 challenger = tuples[j];
         float challengerValue = Node.getDimensionValue(challenger, dim);
         if (challengerValue > championValue) {
           tuples[i] = challenger;
@@ -75,7 +72,7 @@ class Leaf extends Element {
   }
 
   @Override
-  Element addTuple(int level, P3 tuple) {
+  Element addTuple(int level, T3 tuple) {
     if (count < Bspt.leafCountMax) {
       tuples[count++] = tuple;
       return this;
@@ -85,20 +82,20 @@ class Leaf extends Element {
   }
     
  
-  @Override
-  void dump(int level, SB sb) {
-    for (int i = 0; i < count; ++i) {
-      P3 t = tuples[i];
-      for (int j = 0; j < level; ++j)
-        sb.append(".");
-      sb.append(Escape.eP(t)).append("Leaf ").appendI(i).append(": ").append(((Atom) t).getInfo());
-    }
-  }
+//  @Override
+//  void dump(int level, SB sb) {
+//    for (int i = 0; i < count; ++i) {
+//      T3 t = tuples[i];
+//      for (int j = 0; j < level; ++j)
+//        sb.append(".");
+//      sb.append(Escape.eP(t)).append("Leaf ").appendI(i).append(": ").append(((Atom) t).getInfo());
+//    }
+//  }
 
-  @Override
-  public String toString() {
-    return "leaf:" + count + "\n";
-  }
+//  @Override
+//  public String toString() {
+//    return "leaf:" + count + "\n";
+//  }
  
 
 }

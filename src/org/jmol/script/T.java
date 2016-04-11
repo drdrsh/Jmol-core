@@ -770,7 +770,7 @@ public class T {
 
   // ___.xxx(a,b,c)
   
-  public final static int symop        = 2 | 3 << 9 | mathfunc | mathproperty | intproperty; 
+  public final static int symop        = 2 | 4 << 9 | mathfunc | mathproperty | intproperty; 
 
   // set parameters 
   

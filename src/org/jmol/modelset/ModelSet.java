@@ -483,20 +483,20 @@ public class ModelSet extends BondCollection {
   ///////// atom and shape selecting /////////
 
   public String calculatePointGroup(BS bsAtoms) {
-    return (String) calculatePointGroupForFirstModel(bsAtoms, false, false,
-        false, null, 0, 0);
+    return (String) calculatePointGroupForFirstModel(bsAtoms, false,
+        false, null, 0, 0, null, null, null);
   }
 
   @SuppressWarnings("unchecked")
   public Map<String, Object> getPointGroupInfo(BS bsAtoms) {
     return (Map<String, Object>) calculatePointGroupForFirstModel(bsAtoms,
-        false, false, true, null, 0, 0);
+        false, true, null, 0, 0, null, null, null);
   }
 
-  public String getPointGroupAsString(BS bsAtoms, boolean asDraw, String type,
-                                      int index, float scale) {
-    return (String) calculatePointGroupForFirstModel(bsAtoms, true, asDraw,
-        false, type, index, scale);
+  public String getPointGroupAsString(BS bsAtoms, String type,
+                                      int index, float scale, P3[] pts, P3 center, String id) {
+    return (String) calculatePointGroupForFirstModel(bsAtoms, true,
+        false, type, index, scale, pts, center, id);
   }
 
   private SymmetryInterface pointGroup;
@@ -504,55 +504,63 @@ public class ModelSet extends BondCollection {
   private BoxInfo defaultBBox;
 
   private Object calculatePointGroupForFirstModel(BS bsAtoms, boolean doAll,
-                                                  boolean asDraw,
                                                   boolean asInfo, String type,
-                                                  int index, float scale) {
-    int modelIndex = vwr.am.cmi;
-    int iAtom = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
-    if (modelIndex < 0 && iAtom >= 0)
-      modelIndex = at[iAtom].mi;
-    if (modelIndex < 0) {
-      modelIndex = vwr.getVisibleFramesBitSet().nextSetBit(0);
-      bsAtoms = null;
-    }
-    BS bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-    boolean localEnvOnly = (bsAtoms != null && bs.cardinality() != bsAtoms
-        .cardinality());
-    if (bsAtoms != null)
-      bs.and(bsAtoms);
-    iAtom = bs.nextSetBit(0);
-    if (iAtom < 0) {
-      bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-      iAtom = bs.nextSetBit(0);
-    }
-    Object obj = vwr.shm.getShapePropertyIndex(JC.SHAPE_VECTORS, "mad", iAtom);
-    boolean haveVibration = (obj != null && ((Integer) obj).intValue() != 0 || vwr.tm.vibrationOn);
-
-    SymmetryInterface symmetry = Interface.getSymmetry(vwr, "ms");
-
-    T3[] pts = at;
+                                                  int index, float scale,
+                                                  T3[] pts, P3 center, String id) {
     SymmetryInterface pointGroup = this.pointGroup;
-    boolean isPolyhedron = (type != null && type.toUpperCase().indexOf(":POLY") >= 0);
-    if (isPolyhedron) {
-      Object[] data = new Object[] { Integer.valueOf(iAtom), null };
-      vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "points", data);
-      pts = (T3[]) data[1];
-      if (pts == null)
-        return null;
-      bs = null;
-      haveVibration = false;
-      pointGroup = null;
+    SymmetryInterface symmetry = Interface.getSymmetry(vwr, "ms");
+    BS bs = null;
+    boolean haveVibration = false;
+    boolean isPolyhedron = false;
+    boolean localEnvOnly = false;
+    boolean isPoints = (pts != null);
+    int modelIndex = vwr.am.cmi;
+    if (!isPoints) {
+      int iAtom = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
+      if (modelIndex < 0 && iAtom >= 0)
+        modelIndex = at[iAtom].mi;
+      if (modelIndex < 0) {
+        modelIndex = vwr.getVisibleFramesBitSet().nextSetBit(0);
+        bsAtoms = null;
+      }
+      bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+      localEnvOnly = (bsAtoms != null && bs.cardinality() != bsAtoms
+          .cardinality());
+      if (bsAtoms != null)
+        bs.and(bsAtoms);
+      iAtom = bs.nextSetBit(0);
+      if (iAtom < 0) {
+        bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+        iAtom = bs.nextSetBit(0);
+      }
+      Object obj = vwr.shm
+          .getShapePropertyIndex(JC.SHAPE_VECTORS, "mad", iAtom);
+      haveVibration = (obj != null && ((Integer) obj).intValue() != 0 || vwr.tm.vibrationOn);
+      isPolyhedron = (type != null && type.toUpperCase().indexOf(":POLY") >= 0);
+      if (isPolyhedron) {
+        Object[] data = new Object[] { Integer.valueOf(iAtom), null };
+        vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "points", data);
+        pts = (T3[]) data[1];
+        if (pts == null)
+          return null;
+        bs = null;
+        haveVibration = false;
+        pointGroup = null;
+      } else {
+        pts = at;
+      }
     }
+
     if (type != null && type.indexOf(":") >= 0)
       type = type.substring(0, type.indexOf(":"));
-    pointGroup = symmetry.setPointGroup(pointGroup, null, pts, bs,
-        haveVibration,
-        vwr.getFloat(T.pointgroupdistancetolerance), vwr.getFloat(T.pointgrouplineartolerance), localEnvOnly);
-    if (!isPolyhedron)
+    pointGroup = symmetry.setPointGroup(pointGroup, center, pts, bs,
+        haveVibration, (isPoints ? 0 : vwr.getFloat(T.pointgroupdistancetolerance)),
+        vwr.getFloat(T.pointgrouplineartolerance), localEnvOnly);
+    if (!isPolyhedron && !isPoints)
       this.pointGroup = pointGroup;
     if (!doAll && !asInfo)
       return pointGroup.getPointGroupName();
-    Object ret = pointGroup.getPointGroupInfo(modelIndex, asDraw, asInfo, type,
+    Object ret = pointGroup.getPointGroupInfo(modelIndex, id, asInfo, type,
         index, scale);
     return (asInfo ? ret : (mc > 1 ? "frame "
         + getModelNumberDotted(modelIndex) + "; " : "")

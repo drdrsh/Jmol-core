@@ -230,7 +230,7 @@ public class MathExt {
     // pointGroup(points, center)
     // pointGroup(points, center, distanceTolerance (def. 0.2 A), linearTolerance (def. 8 deg.)
     // center can be non-point to ignore, such as 0 or ""
-    T3[] pts;
+    T3[] pts = null;
     P3 center = null;
     float distanceTolerance = Float.NaN;
     float linearTolerance = Float.NaN;
@@ -243,27 +243,41 @@ public class MathExt {
       distanceTolerance = args[2].asFloat();
       //$FALL-THROUGH$
     case 2:
-      switch  (args[1].tok) {
+      switch (args[1].tok) {
       case T.point3f:
         center = SV.ptValue(args[1]);
         break;
       case T.bitset:
-        bsAtoms = SV.getBitSet(args[0], false);
+        // pointgroup {vertices} {center}
+        bsAtoms = SV.getBitSet(args[1], false);
         int iatom = bsAtoms.nextSetBit(0);
         if (iatom < 0 || iatom >= vwr.ms.ac || bsAtoms.cardinality() != 1)
           return false;
-        center = vwr.ms.at[iatom];
-        break;
+        if (SV.sValue(args[0]).equalsIgnoreCase("spaceGroup")) {
+          // pointgroup("spaceGroup", @1)
+          Lst<P3> lst = vwr.ms.generateCrystalClass(iatom,
+              P3.new3(Float.NaN, Float.NaN, Float.NaN));
+          pts = new T3[lst.size()];
+          for (int i = pts.length; --i >= 0;)
+            pts[i] = lst.get(i);
+          center = new P3();
+          if (args.length == 2)
+            distanceTolerance = 0; // will set tolerances especially tight
+        } else {
+          center = vwr.ms.at[iatom];
+        }
       }
+      if (pts != null)
+        break;
       //$FALL-THROUGH$
     case 1:
       switch (args[0].tok) {
       case T.varray:
-      Lst<SV> points = args[0].getList();
-      pts = new T3[points.size()];
-      for (int i = pts.length; --i >= 0;)
-        pts[i] = SV.ptValue(points.get(i));
-      break;
+        Lst<SV> points = args[0].getList();
+        pts = new T3[points.size()];
+        for (int i = pts.length; --i >= 0;)
+          pts[i] = SV.ptValue(points.get(i));
+        break;
       case T.bitset:
         bsAtoms = SV.getBitSet(args[0], false);
         Lst<P3> atoms = vwr.ms.getAtomPointVector(bsAtoms);
@@ -287,9 +301,8 @@ public class MathExt {
         Float.isNaN(distanceTolerance) ? vwr
             .getFloat(T.pointgroupdistancetolerance) : distanceTolerance,
         Float.isNaN(linearTolerance) ? vwr
-            .getFloat(T.pointgrouplineartolerance)
-        : linearTolerance, true);
-    return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, false,
+            .getFloat(T.pointgrouplineartolerance) : linearTolerance, true);
+    return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, null,
         true, null, 0, 1));
   }
 
@@ -359,13 +372,9 @@ public class MathExt {
         stype = "I";
       else if (stype.length() == 0)
         stype = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, vwr.bsA(), null, 0, null, null, null,
-            T.lattice, 0);
-      
-      if (stype == null || stype.length() == 0)
-        return false;
-      
-      
-      if (!(u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(toPrimitive, stype.charAt(0), ucnew))
+            T.lattice, 0, -1);      
+      if (stype == null || stype.length() == 0 
+          || !(u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(toPrimitive, stype.charAt(0), ucnew))
         return false;
     } else if ("reciprocal".equalsIgnoreCase(op)) {
       ucnew = SimpleUnitCell.getReciprocal(ucnew, null);
@@ -1265,6 +1274,7 @@ public class MathExt {
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
 
+    // {*}.find("crystalClass")
     // {*}.find("CF",true|false)
     // {*}.find("MF")
     // {*}.find("MF", "C2H4")
@@ -1292,7 +1302,6 @@ public class MathExt {
         && args[1].tok != T.off ? SV.sValue(args[1]) : "");
     boolean isSequence = !isList && sFind.equalsIgnoreCase("SEQUENCE");
     boolean isSeq = !isList && sFind.equalsIgnoreCase("SEQ");
-    
     if (sFind.toUpperCase().startsWith("SMILES/")) {
       if (!sFind.endsWith("/"))
         sFind += "/";
@@ -1320,9 +1329,10 @@ public class MathExt {
     boolean isON = !isList && (argLast.tok == T.on);
     try {
       if (isChemical) {
-        String data = (x1.tok == T.bitset ? vwr.getOpenSmiles((BS) x1.value) : SV
-            .sValue(x1));
-        data = (data.length() == 0 ? "" : vwr.getChemicalInfo(data, flags.toLowerCase())).trim();
+        String data = (x1.tok == T.bitset ? vwr.getOpenSmiles((BS) x1.value)
+            : SV.sValue(x1));
+        data = (data.length() == 0 ? "" : vwr.getChemicalInfo(data,
+            flags.toLowerCase())).trim();
         if (data.startsWith("InChI"))
           data = PT.rep(PT.rep(data, "InChI=", ""), "InChIKey=", "");
         return mp.addXStr(data);
@@ -1371,18 +1381,17 @@ public class MathExt {
           }
           break;
         case T.bitset:
+          BS bs = (BS) x1.value;
           if (isMF && flags.length() != 0)
-            return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at,
-                (BS) x1.value, flags));
+            return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at, bs, flags));
           if (isMF || isCF)
-            return mp.addXStr(JmolMolecule.getMolecularFormula(vwr.ms.at,
-                (BS) x1.value, false,
-                (isMF ? null : vwr.ms.getCellWeights((BS) x1.value)), isON));
+            return mp.addXStr(JmolMolecule.getMolecularFormula(vwr.ms.at, bs,
+                false, (isMF ? null : vwr.ms.getCellWeights(bs)), isON));
           if (isSequence || isSeq) {
             boolean isHH = (argLast.asString().equalsIgnoreCase("H"));
             isAll |= isHH;
             return mp.addXStr(vwr
-                .getSmilesOpt((BS) x1.value, -1, -1,
+                .getSmilesOpt(bs, -1, -1,
                     (isAll ? JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS
                         | JC.SMILES_GEN_BIO_COV_CROSSLINK
                         | (isHH ? JC.SMILES_GEN_BIO_HH_CROSSLINK : 0) : 0)
@@ -1400,12 +1409,20 @@ public class MathExt {
                 sFind,
                 vwr.ms.at,
                 vwr.ms.ac,
-                (BS) x1.value,
+                bs,
                 (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS)
                     | JC.SMILES_MATCH_ONCE_ONLY);
             ret = (map.length > 0 ? vwr.ms.getDihedralMap(map[0]) : new int[0]);
+          } else if (sFind.equalsIgnoreCase("crystalClass")) {
+            // {*}.find("crystalClass")
+            // {*}.find("crystalClass", pt)
+            ret = vwr.ms
+                .generateCrystalClass(
+                    bs.nextSetBit(0),
+                    (args.length != 2 ? null : argLast.tok == T.bitset ? vwr.ms
+                        .getAtomSetCenter((BS) argLast.value) : SV
+                        .ptValue(argLast)));
           } else {
-
             int smilesFlags = (isSmiles ?
 
             (flags.indexOf("OPEN") >= 0 ? JC.SMILES_TYPE_OPENSMILES
@@ -1413,8 +1430,8 @@ public class MathExt {
                 | (isON && sFind.length() == 0 ? JC.SMILES_GEN_BIO_COV_CROSSLINK
                     | JC.SMILES_GEN_BIO_COMMENT
                     : 0);
-            ret = e.getSmilesExt().getSmilesMatches(sFind, null, (BS) x1.value,
-                bsMatch3D, smilesFlags, !isON, false);
+            ret = e.getSmilesExt().getSmilesMatches(sFind, null, bs, bsMatch3D,
+                smilesFlags, !isON, false);
           }
           break;
         }
@@ -2997,7 +3014,10 @@ public class MathExt {
 
   private boolean evaluateSymop(ScriptMathProcessor mp, SV[] args,
                                 boolean haveBitSet) throws ScriptException {
-    
+
+    // In the following, "op" can be the operator number in a space group 
+    // or a string representation of the operator, such as "x,-y,z"
+
     // x = y.symop(op,atomOrPoint) 
     // Returns the point that is the result of the transformation of atomOrPoint 
     // via a crystallographic symmetry operation. The atom set y selects the unit 
@@ -3006,66 +3026,70 @@ public class MathExt {
     // {*/1.2} or {atomno=1}. The first parameter, op, is a symmetry operation. 
     // This can be the 1-based index of a symmetry operation in a file (use show spacegroup to get this listing) 
     // or a specific Jones-Faithful expression in quotes such as "x,1/2-y,z".
-    //
+
     // x = y.symop(op,"label")
     // This form of the .symop() function returns a set of draw commands that describe 
     // the symmetry operation in terms of rotation axes, inversion centers, planes, and 
     // translational vectors. The draw objects will all have IDs starting with whatever 
     // is given for the label. 
-    //
-    // x = symop("x,y,-z")
-    // x = symop(3)
+
+    // x = y.symop(op)
+    // Returns the 4x4 matrix associated with this operator.
+
+    // x = y.symop(n,"time")
+    // Returns the time reversal of a symmetry operator in a magnetic space group
     
-    
-    if (args.length == 0)
+    int narg = args.length;
+    if (narg == 0)
       return false;
     SV x1 = (haveBitSet ? mp.getX() : null);
-    if (x1 != null && x1.tok != T.bitset)
-      return false;
-    BS bs = (x1 != null ? (BS) x1.value : args.length > 2
-        && args[1].tok == T.bitset ? (BS) args[1].value : vwr.getAllAtoms());
-    String xyz;
+    BS bsAtoms = null;
+    if (x1 != null) {
+      if (x1.tok != T.bitset)
+        return false;
+      bsAtoms = (BS) x1.value;
+    }
+    String xyz = null;
+    int iOp = Integer.MIN_VALUE;
+    int apt = 0;
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
+      apt++;
       break;
     case T.matrix4f:
       xyz = args[0].escape();
+      apt++;
       break;
-    default:
-      xyz = null;
+    case T.integer:
+      iOp = args[0].asInt();
+      apt++;
+      break;
     }
-    int iOp = (xyz == null ? args[0].asInt() : 0);
-    P3 pt = (args.length > 1 ?  mp.ptValue(args[1]) : null);
-    if (args.length == 2 && pt != null)
-      return mp.addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bs, xyz, iOp, pt, null, null,
-          T.point, 0));
-    String desc = (args.length == 1 ? "matrix" : SV.sValue(args[args.length - 1]))
-        .toLowerCase();
-    int tok = T.draw;
-    if (desc.equalsIgnoreCase("matrix")) {
-      tok = T.matrix4f;
-    } else if (desc.equalsIgnoreCase("array") || desc.equalsIgnoreCase("list")) {
-      tok = T.list;
-    } else if (desc.equalsIgnoreCase("description")) {
-      tok = T.label;
-    } else if (desc.equalsIgnoreCase("xyz")) {
-      tok = T.info;
-    } else if (desc.equalsIgnoreCase("translation")) {
-      tok = T.translation;
-    } else if (desc.equalsIgnoreCase("axis")) {
-      tok = T.axes;
-    } else if (desc.equalsIgnoreCase("plane")) {
-      tok = T.plane;
-    } else if (desc.equalsIgnoreCase("angle")) {
-      tok = T.angle;
-    } else if (desc.equalsIgnoreCase("axispoint")) {
-      tok = T.point;
-    } else if (desc.equalsIgnoreCase("center")) {
-      tok = T.center;
-    }
-    return mp
-        .addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bs, xyz, iOp, pt, null, desc, tok, 0));
+    int len = apt;
+    if (bsAtoms == null)
+      if (apt < narg && args[apt].tok == T.bitset) {
+        bsAtoms = (BS) args[apt].value;
+      } else {
+        bsAtoms = vwr.getAllAtoms();
+      }
+    // check for symop(op, pt)
+    // check for symop(op, pt1, pt2)
+    P3 pt1 = null, pt2 = null;
+    if ((pt1 = (narg > apt ? mp.ptValue(args[apt]) : null)) != null) 
+      apt++;
+    if ((pt2 = (narg > apt ? mp.ptValue(args[apt]) : null)) != null) 
+      apt++;
+    int nth = (pt2 != null && args.length > apt && iOp == Integer.MIN_VALUE
+        && args[apt].tok == T.integer ? args[apt].intValue : 0);
+    if (nth > 0)
+      apt++;
+    if (iOp == Integer.MIN_VALUE)
+      iOp = 0;
+    String desc = (narg == apt ? (pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
+        : SV.sValue(args[apt++]).toLowerCase());
+    return (apt == args.length && mp.addXObj(vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, bsAtoms,
+        xyz, iOp, pt1, pt2, desc, 0, 0, nth)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)
@@ -3352,6 +3376,7 @@ public class MathExt {
                 bsp.clear(pt2.i);
             }
           }
+          
           for (int i = bsp.nextSetBit(0); i >= 0; i = bsp.nextSetBit(i + 1))
             pts.addLast(P3.newP(pt3[i]));
           return mp.addXList(pts);

@@ -23,10 +23,7 @@
 package org.jmol.bspt;
 
 
-import org.jmol.util.Logger;
-
-import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.T3;
 
 
 //import org.jmol.util.Logger;
@@ -108,7 +105,7 @@ public final class Bspt {
    * 
    * @param tuple
    */
-  public void addTuple(P3 tuple) {
+  public void addTuple(T3 tuple) {
     eleRoot = eleRoot.addTuple(0, tuple);
   }
 
@@ -123,12 +120,12 @@ public final class Bspt {
     //    }
   }
 
-  public void dump() {
-    SB sb = new SB();
-    eleRoot.dump(0, sb);
-    Logger.info(sb.toString());
-  }
-
+//  public void dump() {
+//    SB sb = new SB();
+//    eleRoot.dump(0, sb);
+//    Logger.info(sb.toString());
+//  }
+//
   //    @Override
   //    public String toString() {
   //     return eleRoot.toString();

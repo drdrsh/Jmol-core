@@ -242,39 +242,19 @@ public class IsoExt extends ScriptExt {
       setShapeProperty(JC.SHAPE_DIPOLES, "set", null);
   }
 
-  private boolean draw() throws ScriptException {
+  private void draw() throws ScriptException {
     ScriptEval eval = e;
     eval.sm.loadShape(JC.SHAPE_DRAW);
     switch (tokAt(1)) {
     case T.list:
       if (listIsosurface(JC.SHAPE_DRAW))
-        return false;
+        return;
       break;
-    case T.pointgroup:
-      // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
-      int pt = 2;
-      String type = (tokAt(pt) == T.scale ? "" : eval.optParameterAsString(pt));
-      if (type.equalsIgnoreCase("chemicalShift"))
-        type = "cs";
-      else if (type.equalsIgnoreCase("polyhedra"))
-        type = ":poly";
-      float scale = 1;
-      int index = 0;
-      if (type.length() > 0) {
-        if (isFloatParameter(++pt))
-          index = intParameter(pt++);
-      }
-      if (tokAt(pt) == T.scale)
-        scale = floatParameter(++pt);
-      if (!chk)
-        eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), true, type,
-            index, scale));
-      return false;
     case T.helix:
     case T.quaternion:
     case T.ramachandran:
       e.getCmdExt().dispatch(T.plot, false, st);
-      return false;
+      return;
     }
     boolean havePoints = false;
     boolean isInitialized = false;
@@ -300,6 +280,50 @@ public class IsoExt extends ScriptExt {
       Object propertyValue = null;
       int tok = getToken(i).tok;
       switch (tok) {
+      case T.pointgroup:
+        // draw pointgroup [array  of points] CENTER xx
+        // draw pointgroup SPACEGROUP
+        // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
+        P3[] pts = (eval.isArrayParameter(++i) ? eval.getPointArray(i, -1,
+            false) : null);
+        if (pts != null) {
+          i = eval.iToken + 1;
+          if (tokAt(i) == T.center) {
+            center = eval.centerParameter(++i, null);
+            i = eval.iToken + 1;
+          }
+        }
+        String type = (tokAt(i) == T.scale ? "" : eval.optParameterAsString(i));
+        if (type.equalsIgnoreCase("spacegroup")) {
+          if (center == null)
+            center = new P3();
+          Lst<P3> crpts = vwr.ms.generateCrystalClass(vwr.bsA().nextSetBit(0),
+              P3.new3(Float.NaN, Float.NaN, Float.NaN));
+          if (pts != null)
+            invArg();
+          pts = new P3[crpts.size()];
+          for (int j = crpts.size(); --j >= 0;)
+            pts[j] = crpts.get(j);
+          i++;
+          type = "";
+        } else if (type.equalsIgnoreCase("chemicalShift")) {
+          type = "cs";
+        } else if (type.equalsIgnoreCase("polyhedra")) {
+          type = ":poly";
+        }
+        float scale = 1;
+        int index = 0;
+        if (type.length() > 0) {
+          ++i;
+          if (isFloatParameter(i + 1))
+            index = intParameter(i++);
+        }
+        if (tokAt(i) == T.scale)
+          scale = floatParameter(++i);
+        if (!chk)
+          eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), type, index,
+              scale, pts, center, thisId == null ? "" : thisId));
+        return;
       case T.unitcell:
       case T.boundbox:
         if (chk)
@@ -437,49 +461,53 @@ public class IsoExt extends ScriptExt {
         propertyValue = v;
         i = eval.iToken;
         break;
+      case T.spacegroup:
       case T.symop:
         String xyz = null;
-        int iSym = 0;
+        int iSym = Integer.MAX_VALUE;
         plane = null;
         P3 target = null;
-        switch (tokAt(++i)) {
-        case T.string:
-          xyz = stringParameter(i);
-          break;
-        case T.matrix4f:
-          xyz = SV.sValue(getToken(i));
-          break;
-        case T.integer:
-        default:
-          if (!eval.isCenterParameter(i))
-            iSym = intParameter(i++);
-          if (eval.isCenterParameter(i))
-            center = centerParameter(i);
-          if (eval.isCenterParameter(eval.iToken + 1))
-            target = centerParameter(++eval.iToken);
-          if (chk)
-            return false;
-          i = eval.iToken;
-        }
         BS bsAtoms = null;
+        if (tok == T.symop) {
+          iSym = 0;
+          switch (tokAt(++i)) {
+          case T.string:
+            xyz = stringParameter(i);
+            break;
+          case T.matrix4f:
+            xyz = SV.sValue(getToken(i));
+            break;
+          case T.integer:
+          default:
+            if (!eval.isCenterParameter(i))
+              iSym = intParameter(i++);
+            if (eval.isCenterParameter(i))
+              center = centerParameter(i);
+            if (eval.isCenterParameter(eval.iToken + 1))
+              target = centerParameter(++eval.iToken);
+            if (chk)
+              return;
+            i = eval.iToken;
+          }
+        }
         if (center == null && i + 1 < slen) {
           center = centerParameter(++i);
           // draw ID xxx symop [n or "x,-y,-z"] [optional {center}]
           // so we also check here for the atom set to get the right model
           bsAtoms = (tokAt(i) == T.bitset || tokAt(i) == T.expressionBegin ? atomExpressionAt(i)
               : null);
-          i = eval.iToken + 1;
+          i = eval.iToken;
         }
+        int nth = (target != null && tokAt(i + 1) == T.integer ? eval.getToken(++i).intValue : -1);
         eval.checkLast(eval.iToken);
         if (!chk) {
           String s = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(
               vwr.ms, bsAtoms, xyz, iSym, center, target, thisId, T.draw,
-              intScale / 100f);
-          showString(s.substring(0, s.indexOf('\n') + 1));
+              intScale / 100f, nth);
           eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId
               + "*\" delete");
         }
-        return false;
+        return;
       case T.frame:
         isFrame = true;
         // draw ID xxx frame {center} {q1 q2 q3 q4}
@@ -496,7 +524,7 @@ public class IsoExt extends ScriptExt {
               eval.runScript(Escape.drawQuat(Quat.newP4((P4) propertyValue),
                   (thisId == null ? "frame" : thisId), " " + swidth,
                   (center == null ? new P3() : center), intScale / 100f));
-            return false;
+            return;
           }
           propertyName = "planedef";
         } else {
@@ -736,7 +764,6 @@ public class IsoExt extends ScriptExt {
     }
     finalizeObject(JC.SHAPE_DRAW, colorArgb[0], translucentLevel, intScale,
         havePoints, connections, iptDisplayProperty, null);
-    return true;
   }
 
   private Lst<Object> getPlaneIntersection(int type, P4 plane,

@@ -24,17 +24,19 @@
 
 package org.jmol.symmetry;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.Lst;
+import javajs.util.P3;
 import javajs.util.PT;
 import javajs.util.Quat;
 import javajs.util.SB;
 import javajs.util.T3;
+import javajs.util.V3;
 
-import java.util.Hashtable;
-
-import java.util.Map;
-
-
+import org.jmol.bspt.Bspt;
+import org.jmol.bspt.CubeIterator;
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
@@ -42,9 +44,6 @@ import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
 import org.jmol.util.Point3fi;
-
-import javajs.util.P3;
-import javajs.util.V3;
 
 /*
  * Bob Hanson 7/2008
@@ -131,6 +130,7 @@ class PointGroup {
   Map<String, Object> info;
   String textInfo;
 
+  private CubeIterator iter;
   private String drawType = "";
   private int drawIndex;
   private float scale = Float.NaN;  
@@ -139,6 +139,7 @@ class PointGroup {
   private int nAtoms;
   private float radius;
   private float distanceTolerance = 0.25f; // making this just a bit more generous
+  private float distanceTolerance2;
   private float linearTolerance = 8f;
   private float cosTolerance = 0.99f; // 8 degrees
   private String name = "C_1?";
@@ -184,10 +185,15 @@ class PointGroup {
                                          boolean haveVibration,
                                          float distanceTolerance, float linearTolerance, boolean localEnvOnly) {
     PointGroup pg = new PointGroup();
+    if (distanceTolerance == 0) {
+      distanceTolerance = 0.01f;
+      linearTolerance = 0.5f;
+    }
     pg.distanceTolerance = distanceTolerance;
+    pg.distanceTolerance2 = distanceTolerance * distanceTolerance;
     pg.linearTolerance = linearTolerance;
     pg.isAtoms = (bsAtoms != null);
-    pg.bsAtoms = (bsAtoms == null ? BSUtil.newBitSet2(0, atomset.length) : bsAtoms);
+    pg.bsAtoms = (pg.isAtoms ? bsAtoms : BSUtil.newBitSet2(0, atomset.length));
     pg.haveVibration = haveVibration;
     pg.center = center;
     pg.localEnvOnly = localEnvOnly;
@@ -405,6 +411,7 @@ class PointGroup {
     if (needCenter)
       center = new P3();
     // we optionally include bonding information
+    Bspt bspt = new Bspt(3, 0);
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1), nAtoms++) {
       T3 p = points[nAtoms] = atomset[i];
       if (p instanceof Node) {
@@ -412,19 +419,27 @@ class PointGroup {
             ((Node) p).getCovalentBondCount()));
         elements[nAtoms] = ((Node) p).getElementNumber() * bondIndex;
       } else if (p instanceof Point3fi) {
-        elements[nAtoms] = ((Point3fi) p).sD;
+        elements[nAtoms] = Math.max(0, ((Point3fi) p).sD);
+      } else {
+        Point3fi newPt = new Point3fi();
+        newPt.setT(p);
+        newPt.i = nAtoms;
+        p = newPt;
       }
+      bspt.addTuple(p);
       if (needCenter)
         center.add(points[nAtoms]);
     }
+    iter = bspt.allocateCubeIterator();
     if (needCenter)
       center.scale(1f / nAtoms);
     for (int i = nAtoms; --i >= 0;) {
-      float r = center.distance(points[i]);
-      if (isAtoms && r < distanceTolerance)
+      float r2 = center.distanceSquared(points[i]);
+      if (isAtoms && r2 < distanceTolerance2)
         centerAtomIndex = i;
-      radius = Math.max(radius, r);
+      radius = Math.max(radius, r2);
     }
+    radius = (float) Math.sqrt(radius);
     return true;
   }
 
@@ -440,44 +455,49 @@ class PointGroup {
     P3 pt = new P3();
     int nFound = 0;
     boolean isInversion = (iOrder < firstProper);
-    out: for (int i = points.length; --i >= 0 && nFound < points.length;)
-      if (i == centerAtomIndex) {
-        nFound++;
+
+    out: for (int i = points.length; --i >= 0 && nFound < points.length;) {
+      if (i == centerAtomIndex)
+        continue;
+      T3 a1 = points[i];
+      int e1 = elements[i];
+      if (q != null) {
+        pt.sub2(a1, center);
+        q.transform2(pt, pt).add(center);
       } else {
-        T3 a1 = points[i];
-        int e1 = elements[i];
-        if (q != null) {
-          pt.sub2(a1, center);
-          q.transform2(pt, pt).add(center);
-        } else {
-          pt.setT(a1);
-        }
-        if (isInversion) {
-          // A trick here: rather than 
-          // actually doing a rotation/reflection
-          // we do a rotation INVERSION. This works
-          // due to the symmetry of S2, S4, and S8
-          // For S3 and S6, we play the trick of b
-          // rotating as C6 and C3, respectively, 
-          // THEN doing the rotation/inversion. 
-          vTemp.sub2(center, pt);
-          pt.scaleAdd2(2, vTemp, pt);
-        }
-        if ((q != null || isInversion) && pt.distance(a1) < distanceTolerance) {
-          nFound++;
+        pt.setT(a1);
+      }
+      if (isInversion) {
+        // A trick here: rather than 
+        // actually doing a rotation/reflection
+        // we do a rotation INVERSION. This works
+        // due to the symmetry of S2, S4, and S8
+        // For S3 and S6, we play the trick of b
+        // rotating as C6 and C3, respectively, 
+        // THEN doing the rotation/inversion. 
+        vTemp.sub2(center, pt);
+        pt.scaleAdd2(2, vTemp, pt);
+      }
+      if ((q != null || isInversion)
+          && pt.distanceSquared(a1) < distanceTolerance2) {
+        nFound++;
+        continue;
+      }
+      iter.initialize(pt, distanceTolerance, false);
+      while (iter.hasMoreElements()) {
+        T3 a2 = iter.nextElement();
+        if (a2 == a1)
           continue;
-        }
-        for (int j = points.length; --j >= 0;) {
-          if (j == i || j == centerAtomIndex || elements[j] != e1)
-            continue;
-          T3 a2 = points[j];
-          if (pt.distance(a2) < distanceTolerance) {
-            nFound++;
-            continue out;
-          }
+        int j = ((Point3fi) a2).i;
+        if (centerAtomIndex >= 0 && j == centerAtomIndex || elements[j] != e1)
+          continue;
+        if (pt.distanceSquared(a2) < distanceTolerance2) {
+          continue out;
         }
       }
-    return nFound == points.length;
+      return false;
+    }
+    return true;
   }
 
   private boolean isLinear(T3[] atoms) {
@@ -921,8 +941,9 @@ class PointGroup {
     }
   }
 
-  Object getInfo(int modelIndex, boolean asDraw, boolean asInfo, String type,
+  Object getInfo(int modelIndex, String drawID, boolean asInfo, String type,
                  int index, float scaleFactor) {
+    boolean asDraw = (drawID != null);
     info = (asInfo ? new Hashtable<String, Object>() : null);
     V3 v = new V3();
     Operation op;
@@ -936,6 +957,7 @@ class PointGroup {
     SB sb = new SB()
       .append("# ").appendI(nAtoms).append(" atoms\n");
     if (asDraw) {
+      drawID = "draw " + drawID;
       boolean haveType = (type != null && type.length() > 0);
       drawType = type = (haveType ? type : "");
       drawIndex = index;
@@ -944,10 +966,10 @@ class PointGroup {
       sb.append("set perspectivedepth off;\n");
       String m = "_" + modelIndex + "_";
       if (!haveType)
-        sb.append("draw pg0").append(m).append("* delete;draw pgva").append(m
+        sb.append(drawID + "pg0").append(m).append("* delete;draw pgva").append(m
            ).append("* delete;draw pgvp").append(m).append("* delete;");
       if (!haveType || type.equalsIgnoreCase("Ci"))
-        sb.append("draw pg0").append(m).append(
+        sb.append(drawID + "pg0").append(m).append(
             haveInversionCenter ? "inv " : " ").append(
             Escape.eP(center)).append(haveInversionCenter ? "\"i\";\n" : ";\n");
       float offset = 0.1f;
@@ -968,7 +990,7 @@ class PointGroup {
             v.add2(op.normalOrAxis, center);
             if (op.type == OPERATION_IMPROPER_AXIS)
               scale = -scale;
-            sb.append("draw pgva").append(m).append(label).append("_").appendI(
+            sb.append(drawID + "pgva").append(m).append(label).append("_").appendI(
                 j + 1).append(" width 0.05 scale ").appendF(scale).append(" ").append(
                 Escape.eP(v));
             v.scaleAdd2(-2, op.normalOrAxis, v);
@@ -976,7 +998,7 @@ class PointGroup {
             sb.append(Escape.eP(v)).append(
                 "\"").append(label).append(isPA ? "*" : "").append("\" color ").append(
                 isPA ? "red" : op.type == OPERATION_IMPROPER_AXIS ? "blue"
-                    : "yellow").append(";\n");
+                    : "orange").append(";\n");
           }
       }
       if (!haveType || type.equalsIgnoreCase("Cs"))
@@ -984,13 +1006,13 @@ class PointGroup {
           if (index > 0 && j + 1 != index)
             continue;
           op = axes[0][j];
-          sb.append("draw pgvp").append(m).appendI(j + 1).append(
+          sb.append(drawID + "pgvp").append(m).appendI(j + 1).append(
               "disk scale ").appendF(scaleFactor * radius * 2).append(" CIRCLE PLANE ")
               .append(Escape.eP(center));
           v.add2(op.normalOrAxis, center);
           sb.append(Escape.eP(v)).append(" color translucent yellow;\n");
           v.add2(op.normalOrAxis, center);
-          sb.append("draw pgvp").append(m).appendI(j + 1).append(
+          sb.append(drawID + "pgvp").append(m).appendI(j + 1).append(
               "ring width 0.05 scale ").appendF(scaleFactor * radius * 2).append(" arc ")
               .append(Escape.eP(v));
           v.scaleAdd2(-2, op.normalOrAxis, v);
@@ -1014,7 +1036,10 @@ class PointGroup {
           sb.append("=").appendI(nAxes[i]);
         }
       sb.append(";\n");
+      sb.append("print '" + name + "';\n");
       drawInfo = sb.toString();
+      if (Logger.debugging)
+        Logger.info(drawInfo);
       return drawInfo;
     }
     int n = 0;
@@ -1022,36 +1047,36 @@ class PointGroup {
     String ctype = (haveInversionCenter ? "Ci" : "center");
     if (haveInversionCenter)
       nTotal++;
-    if (info == null)
-      sb.append("\n\n").append(name).append("\t").append(ctype).append("\t").append(Escape.eP(center));
-    else
+    if (asInfo)
       info.put(ctype, center);
+    else
+      sb.append("\n\n").append(name).append("\t").append(ctype).append("\t").append(Escape.eP(center));
     for (int i = maxAxis; --i >= 0;) {
       if (nAxes[i] > 0) {
         n = nUnique[i];
         String label = axes[i][0].getLabel();
-        if (info == null)
-          sb.append("\n\n").append(name).append("\tn").append(label).append("\t").appendI(nAxes[i]).append("\t").appendI(n);
-        else
+        if (asInfo)
           info.put("n" + label, Integer.valueOf(nAxes[i]));
+        else
+          sb.append("\n\n").append(name).append("\tn").append(label).append("\t").appendI(nAxes[i]).append("\t").appendI(n);
         n *= nAxes[i];
         nTotal += n;
         nType[axes[i][0].type][1] += n;
-        Lst<V3> vinfo = (info == null ? null : new  Lst<V3>());
+        Lst<V3> vinfo = (asInfo ? new  Lst<V3>() : null);
         for (int j = 0; j < nAxes[i]; j++) {
           //axes[i][j].typeIndex = j + 1;
-          if (vinfo == null)
-            sb.append("\n").append(name).append("\t").append(label).append("_").appendI(j + 1).append("\t"
-               ).appendO(axes[i][j].normalOrAxis);
-          else
+          if (asInfo)
             vinfo.addLast(axes[i][j].normalOrAxis);
+          else
+            sb.append("\n").append(name).append("\t").append(label).append("_").appendI(j + 1).append("\t"
+                ).appendO(axes[i][j].normalOrAxis);
         }
-        if (info != null)
+        if (asInfo)
           info.put(label, vinfo);
       }
     }
     
-    if (info == null) {
+    if (!asInfo) {
       sb.append("\n");
       sb.append("\n").append(name).append("\ttype\tnType\tnUnique");
       sb.append("\n").append(name).append("\tE\t  1\t  1");
@@ -1073,8 +1098,7 @@ class PointGroup {
 
       sb.append(name).append("\t\tTOTAL\t");
       PT.rightJustify(sb, "    ", nTotal + "\n");
-      textInfo = sb.toString();
-      return textInfo;
+      return (textInfo = sb.toString());
     }
     info.put("name", name);
     info.put("nAtoms", Integer.valueOf(nAtoms));
@@ -1085,6 +1109,7 @@ class PointGroup {
     info.put("nSn", Integer.valueOf(nType[OPERATION_IMPROPER_AXIS][0]));
     info.put("distanceTolerance", Float.valueOf(distanceTolerance));
     info.put("linearTolerance", Float.valueOf(linearTolerance));
+    info.put("points", points);
     info.put("detail", sb.toString().replace('\n', ';'));
     if (principalAxis != null && principalAxis.index > 0)
       info.put("principalAxis", principalAxis.normalOrAxis);

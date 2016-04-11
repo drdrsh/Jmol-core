@@ -272,7 +272,8 @@ public class Polyhedron {
       P3[] n = new P3[normals.length];
       for (int i = n.length; --i >= 0;)
         n[i] = P3.newP(normals[i]);
-      info.put("normals", n);
+      if (!isState)
+        info.put("normals", n);
       info.put("triangles", AU.arrayCopyII(triangles, triangles.length));
     }
     return info;

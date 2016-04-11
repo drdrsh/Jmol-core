@@ -1197,11 +1197,11 @@ public class Polyhedra extends AtomShape {
     else if (drawEdges == EDGES_ALL)
       appendCmd(s, "polyhedra edges");
     s.append(vwr.getAtomShapeState(this));
+    int ia;
     for (int i = 0; i < polyhedronCount; i++) {
       Polyhedron p = polyhedrons[i];
-      int ia = p.centralAtom.i;
       if (p.isValid && p.id == null && p.colixEdge != C.INHERIT_ALL
-          && bsColixSet.get(ia))
+          && bsColixSet.get(ia = p.centralAtom.i))
         appendCmd(
             s,
             "select ({"

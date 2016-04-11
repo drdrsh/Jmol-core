@@ -77,6 +77,9 @@ public class CubeIterator {
     /*centerValues[1] =*/ cy = center.y;
     /*centerValues[2] =*/ cz = center.z;
     leaf = null;
+    // allow dynamic allocation (Symmetry.getCrystalClass)
+    if (stack.length < bspt.treeDepth)
+      set(bspt);
     stack[0] = bspt.eleRoot;
     sp = 1;
     findLeftLeaf();

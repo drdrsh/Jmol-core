@@ -19,7 +19,6 @@ import org.jmol.util.Point3fi;
 public class UnitCellIterator implements AtomIndexIterator {
 
   private Atom[] atoms;
-  private Atom refAtom;
   private T3 center;
   private T3 translation;
   private int nFound;
@@ -55,7 +54,6 @@ public class UnitCellIterator implements AtomIndexIterator {
     this.atoms = atoms;
     addAtoms(bsAtoms);
     p = new P3();
-    refAtom = atom;
     if (distance > 0)
       setCenter(atom, distance);
     return this;

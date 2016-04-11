@@ -56,7 +56,7 @@ class SymmetryOperation extends M4 {
   private boolean doNormalize = true;
   boolean isFinalized;
   private int opId;
-  V3 centering;
+  private V3 centering;
 
   private P3 atomTest;
 
@@ -266,18 +266,30 @@ class SymmetryOperation extends M4 {
         }
       }
     }
+    String mxyz = null;
+    // we use ",m" and ",-m" as internal notation for time reversal.
     if (xyz.endsWith("m")) {
       timeReversal = (xyz.indexOf("-m") >= 0 ? -1 : 1);
       allowScaling = true;
+    } else if (xyz.indexOf("mz)") >= 0) {
+      // alternatively, we accept notation indicating explicit spin transformation "(mx,my,mz)"
+      int pt = xyz.indexOf("(");
+      mxyz = xyz.substring(pt + 1, xyz.length() - 1);
+      xyz = xyz.substring(0, pt);
+      allowScaling = false; 
     }
     String strOut = getMatrixFromString(this, xyz, linearRotTrans, allowScaling);
     if (strOut == null)
       return false;
+    if (mxyz != null) {
+      // base time reversal on relationship between x and mx in relation to determinant
+      boolean isProper = (M4.newA16(linearRotTrans).determinant3() == 1); 
+      timeReversal = (((xyz.indexOf("-x") < 0) == (mxyz.indexOf("-mx") < 0)) == isProper ? 1 : -1);
+    }
     setMatrix(isReverse);
     this.xyz = (isReverse ? getXYZFromMatrix(this, true, false, false) : strOut);
     if (timeReversal != 0)
       this.xyz += (timeReversal == 1 ? ",m" : ",-m");
-    //System.out.println("testing " + xyz +  " == " + this.xyz + " " + this + "\n" + Escape.eAF(linearRotTrans));
     if (Logger.debugging)
       Logger.debug("" + this);
     return true;
@@ -374,6 +386,9 @@ class SymmetryOperation extends M4 {
     if (myLabels == null)
       myLabels = labelsXYZ;
     xyz = xyz.toLowerCase() + ",";
+    xyz = xyz.replace('(', ','); 
+//        load =magndata/1.23
+//        draw symop "-x,-y,-z(mx,my,mz)"
     if (modDim > 0)
       xyz = replaceXn(xyz, modDim + 3);
     int xpt = 0;
@@ -670,8 +685,10 @@ class SymmetryOperation extends M4 {
 
   private static String fc(float x) {
     float xabs = Math.abs(x);
-    int x24 = (int) approxF(xabs * 24);
     String m = (x < 0 ? "-" : "");
+    int x24 = (int) approxF(xabs * 24);
+    if (x24 / 24f == (int)(x24 / 24f))
+      return m + (x24 / 24);
     if (x24%8 != 0)
       return m + twelfthsOf(x24 >> 1);
     return (x24 == 0 ? "0" : x24 == 24 ? m + "1" : m + (x24/8) + "/3");
@@ -708,32 +725,44 @@ class SymmetryOperation extends M4 {
   boolean isCenteringOp;
 
   private float magOp = Float.MAX_VALUE;
+
   /**
-   * Magnetic spin operations have a flag m=1 or m=-1 (m or -m)
-   * that indicates how the vector quantity changes with symmetry.
-   * This we call "timeReversal." 
-   * 
-   * To apply, timeReversal must be multiplied by the 3x3 determinant, which
-   * is always 1 (standard rotation) or -1 (rotation-inversion). This we store
-   * as magOp. 
+   * Magnetic spin is a pseudo (or "axial") vector. This means that it acts as a
+   * rotation, not a vector. When a rotation about x is passed through the
+   * mirror plane xz, it is reversed; when it is passed through the mirror plane
+   * yz, it is not reversed -- exactly opposite what you would imagine from a
+   * standard "polar" vector.
    * 
    * For example, a vector perpendicular to a plane of symmetry (det=-1) will be
-   * flipped (m=1), while a vector parallel to that plane will not be flipped (m=-1)
+   * flipped (m=1), while a vector parallel to that plane will not be flipped
+   * (m=-1)
+   * 
+   * In addition, magnetic spin operations have a flag m=1 or m=-1 (m or -m)
+   * that indicates how the vector quantity changes with symmetry. This is
+   * called "time reversal" and stored here as timeReversal.
+   * 
+   * To apply, timeReversal must be multiplied by the 3x3 determinant, which is
+   * always 1 (standard rotation) or -1 (rotation-inversion). This we store as
+   * magOp. See https://en.wikipedia.org/wiki/Pseudovector
    * 
    * @return +1, -1, or 0
    */
-  float getSpinOp() {
-    if (magOp == Float.MAX_VALUE)
-      magOp = determinant3() * timeReversal;
-    //System.out.println("sym op " + index + " " + xyz + " has tr " + timeReversal + " and magop " + magOp);
-    return magOp;
+  float getMagneticOp() {
+    return (magOp == Float.MAX_VALUE ? magOp = determinant3()
+        * timeReversal : magOp);
   }
 
+  /**
+   * set the time reversal, and indicate internally in xyz as appended ",m" or ",-m"
+   * @param magRev
+   */
   void setTimeReversal(int magRev) {
     timeReversal = magRev;
     if (xyz.indexOf("m") >= 0)
       xyz = xyz.substring(0, xyz.indexOf("m"));
-    xyz += (magRev == 1 ? ",m" : magRev == -1 ? ",-m" : "");
+    if (magRev != 0) {
+    xyz += (magRev == 1 ? ",m" : ",-m");
+    }
   }
 
   static String getPrettyMatrix(SB sb, M4 m4) {
@@ -753,28 +782,42 @@ class SymmetryOperation extends M4 {
   /**
    * assumption here is that these are in order of sets, as in ITA
    * 
-   * @param c
-   * @param isFinal
-   *        TODO
    * @return centering
    */
-  V3 setCentering(V3 c, boolean isFinal) {
+  V3 getCentering() {
+    if (!isFinalized)
+      doFinalize();
     if (centering == null && !unCentered) {
       if (modDim == 0 && index > 1 && m00 == 1 && m11 == 1 && m22 == 1
           && m01 == 0 && m02 == 0 && m10 == 0 && m12 == 0 && m20 == 0
-          && m21 == 0) {
-        centering = V3.new3(m03, m13, m23);
-        if (centering.lengthSquared() == 0) {
-          unCentered = true;
-          centering = null;
-        } else if (!isFinal)
-          centering.scale(1 / 12f);
+          && m21 == 0 && (m03 != 0 || m13 != 0 || m23 != 0)) {
         isCenteringOp = true;
+        centering = V3.new3(m03, m13, m23);
       } else {
-        centering = c;
+        unCentered = true;
+        centering = null;
       }
     }
     return centering;
+  }
+
+  String fixMagneticXYZ(M4 m, String xyz, boolean addMag) {
+    if (timeReversal == 0)
+      return xyz;
+    int pt = xyz.indexOf("m");
+    pt -= (3 - timeReversal) / 2;
+    xyz = (pt < 0 ? xyz : xyz.substring(0, pt));
+    if (!addMag)
+      return xyz + (timeReversal > 0 ? " +1" : " -1"); 
+    M4 m2 = M4.newM4(m);
+    m2.m03 = m2.m13 = m2.m23 = 0;
+    if (getMagneticOp() < 0)
+      m2.scale(-1); // does not matter that we flip m33 - it is never checked
+    xyz += "("
+        + PT.rep(PT.rep(PT.rep(
+            SymmetryOperation.getXYZFromMatrix(m2, false, false, false), "x",
+            "mx"), "y", "my"), "z", "mz") + ")";
+    return xyz;
   }
   
 }

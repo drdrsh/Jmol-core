@@ -25,11 +25,10 @@ package org.jmol.bspt;
 
 
 
-import org.jmol.java.BS;
-import org.jmol.util.Logger;
-
 import javajs.util.AU;
 import javajs.util.P3;
+
+import org.jmol.java.BS;
 
 /**
  * A Binary Space Partitioning Forest
@@ -84,13 +83,13 @@ public final class Bspf {
   }
 
   
-  public void dump() {
-    for (int i = 0; i < bspts.length; ++i) {
-      Logger.info(">>>>\nDumping bspt #" + i + "\n>>>>");
-      bspts[i].dump();
-    }
-    Logger.info("<<<<");
-  }
+//  public void dump() {
+//    for (int i = 0; i < bspts.length; ++i) {
+//      Logger.info(">>>>\nDumping bspt #" + i + "\n>>>>");
+//      bspts[i].dump();
+//    }
+//    Logger.info("<<<<");
+//  }
   
   /**
    * @param bsptIndex

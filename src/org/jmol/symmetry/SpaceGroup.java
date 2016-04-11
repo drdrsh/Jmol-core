@@ -81,7 +81,7 @@ class SpaceGroup {
   boolean isSSG;
   String name = "unknown!";
   String hallSymbol;
-  //String schoenfliesSymbol; //parsed but not read
+  String crystalClass; //schoenfliesSymbol;
   String hmSymbol; 
   String hmSymbolFull; 
   //String hmSymbolCompressed; 
@@ -197,7 +197,7 @@ class SpaceGroup {
         (xyz.indexOf("x") < 0 || xyz.indexOf("y") < 0 || xyz.indexOf("z") < 0) 
         ? -1 : addOperation(xyz, opId, allowScaling));
   }
-   
+  
   void setFinalOperations(P3[] atoms, int atomIndex, int count,
                           boolean doNormalize) {
     //from AtomSetCollection.applySymmetry only
@@ -236,11 +236,10 @@ class SpaceGroup {
           atom.setT(c);
         }
     }
-    V3 centering = null;
     for (int i = 0; i < operationCount; i++) {
       finalOperations[i] = new SymmetryOperation(operations[i], atoms,
           atomIndex, count, doNormalize);
-      centering = finalOperations[i].setCentering(centering, true);
+      finalOperations[i].getCentering();
     }
   }
 
@@ -312,6 +311,7 @@ class SpaceGroup {
           .append(intlTableNumber)
           .append(
               intlTableNumberExt.length() > 0 ? ":" + intlTableNumberExt : "")
+          .append("\ncrystal class: " + crystalClass)
           .append("\n\n")
           .appendI(operationCount)
           .append(" operators")
@@ -487,13 +487,16 @@ class SpaceGroup {
     if (xyz0.startsWith("x1,x2,x3,x4") && modDim == 0) {
       xyzList.clear();
       operationCount = 0;
-      modDim = PT.parseInt(xyz0.substring(xyz0
-          .lastIndexOf("x") + 1)) - 3;
-    } else if (xyz0.equals("x,y,z,m")) {
-      xyzList.clear();
-      operationCount = 0;
-    }
+      modDim = PT.parseInt(xyz0.substring(xyz0.lastIndexOf("x") + 1)) - 3;
+    } else if (xyz0.indexOf("m") >= 0) {
+      // accept ",+m" or ",m" or ",-m"
+      xyz0 = PT.rep(xyz0, "+m", "m");
+      if (xyz0.equals("x,y,z,m") || xyz0.equals("x,y,z(mx,my,mz)")) {
+        xyzList.clear();
+        operationCount = 0;
+      }
 
+    }
     SymmetryOperation op = new SymmetryOperation(null, null, 0, opId,
         doNormalize);
     if (!op.setMatrixFromXYZ(xyz0, modDim, allowScaling)) {
@@ -539,6 +542,9 @@ class SpaceGroup {
           operationCount * 2);
     operations[operationCount++] = op;
     op.index = operationCount;
+    // check for initialization of group without time reversal
+    if (op.timeReversal != 0)
+      operations[0].timeReversal = 1;
     if (Logger.debugging)
       Logger.debug("\naddOperation " + operationCount + op.dumpInfo());
     return operationCount - 1;
@@ -689,7 +695,7 @@ class SpaceGroup {
       i = (name.indexOf("-") == 0 ? 2 : 1);
       if (i < name.length() && name.charAt(i) != ' ')
         name = name.substring(0, i) + " " + name.substring(i);
-      name = name.substring(0, 2).toUpperCase() + name.substring(2);
+      name = toCap(name, 2);
     }
 
     // get extension
@@ -877,8 +883,9 @@ class SpaceGroup {
       htByOpCount.put(nHallOperators, lst = new Lst<SpaceGroup>());
     lst.addLast(this);
     
-    ////  terms[2] -- Shoenflies ////
+    ////  terms[2] -- Schoenflies ////
     
+    crystalClass = toCap(PT.split(terms[2], "^")[0], 1);
     
     /* schoenfliesSymbol = terms[2] */
 
@@ -886,8 +893,7 @@ class SpaceGroup {
     ////  terms[3] -- Hermann-Mauguin ////
     
 
-    hmSymbolFull = Character.toUpperCase(terms[3].charAt(0))
-        + terms[3].substring(1);
+    hmSymbolFull = toCap(terms[3], 1);
     parts = PT.split(hmSymbolFull, ":");
     latticeType = hmSymbolFull.substring(0, 1);
     hmSymbol = parts[0];
@@ -908,8 +914,9 @@ class SpaceGroup {
     
 
     hallSymbol = terms[4];
+    
     if (hallSymbol.length() > 1)
-      hallSymbol = hallSymbol.substring(0, 2).toUpperCase() + hallSymbol.substring(2);
+      hallSymbol = toCap(hallSymbol, 2);
     String info = intlTableNumber + hallSymbol;
     if (intlTableNumber.charAt(0) != '0' && lastInfo.equals(info))
       ambiguousNames += hmSymbol + ";";
@@ -919,6 +926,10 @@ class SpaceGroup {
 //    System.out.println(intlTableNumber + (intlTableNumberExt.equals("") ? "" : ":" + intlTableNumberExt) + "\t"
   //      + hmSymbol + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort + "\t"
     //    + hallSymbol);
+  }
+
+  private static String toCap(String s, int n) {
+    return s.substring(0, n).toUpperCase() + s.substring(n);
   }
 
   @Override
@@ -1586,15 +1597,22 @@ class SpaceGroup {
     "230;96;oh^10;i a -3 d;-i 4bd 2c 3",    
   };
   
+  /**
+   * 
+   * @param lattvecs
+   *        could be magnetic centering, in which case there is an additional
+   *        lattice parameter that is time reversal
+   * @return true if successful
+   */
   boolean addLatticeVectors(Lst<float[]> lattvecs) {
     if (latticeOp >= 0 || lattvecs.size() == 0)
       return false;
     int nOps = latticeOp = operationCount;
-    boolean isMag = (lattvecs.get(0).length == modDim + 4);
+    boolean isMagnetic = (lattvecs.get(0).length == modDim + 4);
     int magRev = -2;
     for (int j = 0; j < lattvecs.size(); j++) {
       float[] data = lattvecs.get(j);
-      if (isMag) {
+      if (isMagnetic) {
         magRev = (int) data[modDim + 3];
         data = AU.arrayCopyF(data, modDim + 3);
       }
