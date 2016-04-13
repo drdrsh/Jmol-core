@@ -24,30 +24,26 @@
 
 package org.jmol.shapespecial;
 
-import org.jmol.shape.Shape;
+import java.util.Hashtable;
+import java.util.Map;
 
-import org.jmol.util.BSUtil;
-import org.jmol.util.C;
-import org.jmol.util.Edge;
-import org.jmol.util.JmolMolecule;
-import org.jmol.util.Logger;
+import javajs.util.AU;
+import javajs.util.Lst;
 import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.SB;
 import javajs.util.V3;
-import org.jmol.script.T;
 
 import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.BondIterator;
-
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
-import java.util.Hashtable;
-
-import java.util.Map;
+import org.jmol.script.T;
+import org.jmol.shape.Shape;
+import org.jmol.util.C;
+import org.jmol.util.Edge;
+import org.jmol.util.JmolMolecule;
+import org.jmol.util.Logger;
 
 
 

@@ -274,7 +274,7 @@ public class SymmetryDesc {
       return lst;
     case T.angle:
       return info[9];
-    case T.axes:
+    case T.axis:
       return info[8];
     case T.center:
       return info[6];
@@ -286,6 +286,7 @@ public class SymmetryDesc {
       return info; // internal only; if user selects "info", it is turned into "array"
     default:
     case T.label:
+      
       return info[2];
     case T.matrix4f:
       return info[10];

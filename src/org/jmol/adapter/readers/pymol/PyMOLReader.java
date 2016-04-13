@@ -189,6 +189,10 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
 
   @Override
   public void processBinaryDocument() throws Exception {
+    String logFile = vwr.getLogFileName();
+    logging = (logFile.length() > 0);
+    Logger.info(logging ? "PyMOL (1) file data streaming to " + logFile : "To view raw PyMOL file data, use 'set logFile \"some_filename\" ");
+
     PickleReader reader = new PickleReader(binaryDoc, vwr);
     Map<String, Object> map = reader.getMap(logging);
     reader = null;

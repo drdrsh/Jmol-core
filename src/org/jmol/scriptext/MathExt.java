@@ -1254,7 +1254,7 @@ public class MathExt {
         .getAtoms(T.resno, new Integer(args[0].asInt())));
     switch (tok) {
     case T.point:
-    case T.axes:
+    case T.axis:
     case T.radius:
       return mp.addXObj(getHelixData(bs, tok));
     case T.angle:

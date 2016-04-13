@@ -170,7 +170,7 @@ public interface SymmetryInterface {
    * @param pt
    * @param pt2
    * @param id
-   * @param type  T.point, T.lattice, or T.draw, T.matrix4f, T.label, T.list, T.info, T.translation, T.axes, T.plane, T.angle, T.center
+   * @param type  T.point, T.lattice, or T.draw, T.matrix4f, T.label, T.list, T.info, T.translation, T.axis, T.plane, T.angle, T.center
    * @param scaleFactor
    * @param nth TODO
    * @return a variety of object types

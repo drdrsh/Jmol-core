@@ -1110,6 +1110,7 @@ public class T {
   public final static int async         = misc  | 25;
   public final static int atomicorbital = misc  | 26;
   public final static int auto   = misc  | 28;
+  public final static int axis   = misc  | 30;
   public final static int babel         = misc  | 32;
   public final static int babel21       = misc  | 33; 
   public final static int back          = misc  | 34;
@@ -1660,7 +1661,6 @@ public class T {
         "anim",
         "assign",
         "axes",
-        "axis",
         "backbone",
         "background",
         "bind",
@@ -2698,7 +2698,6 @@ public class T {
         -1,                                 // "anim"
         assign,                             // "assign"
         axes,                               // "axes"
-        -1,                                 // "axis"
         backbone,                           // "backbone"
         background,                         // "background"
         bind,                               // "bind"

@@ -5392,7 +5392,7 @@ public class ScriptEval extends ScriptExpr {
       axis.set(-1, 0, 0);
       checkLength(++i);
       break;
-    case T.axes:
+    case T.axis:
       String abc = paramAsStr(++i);
       if (abc.equals("-"))
         abc += paramAsStr(++i);
