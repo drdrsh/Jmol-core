@@ -115,7 +115,7 @@ class UnitCell extends SimpleUnitCell {
    * @param pt
    * @param offset
    */
-  final void toUnitCell(P3 pt, P3 offset) {
+  final void toUnitCell(T3 pt, T3 offset) {
     if (matrixCartesianToFractional == null)
       return;
     if (offset == null) {
@@ -132,7 +132,7 @@ class UnitCell extends SimpleUnitCell {
     }
   }
   
-  public void unitize(P3 pt) {
+  public void unitize(T3 pt) {
     switch (dimension) {
     case 3:
       pt.z = toFractionalX(pt.z);  

@@ -1210,7 +1210,7 @@ public class StateCreator extends JmolStateCreator {
       clearTemp();
       break;
     case JC.SHAPE_BALLS:
-      clearTemp();
+      clearTemp();  
       int ac = vwr.ms.ac;
       Atom[] atoms = vwr.ms.at;
       Balls balls = (Balls) shape;

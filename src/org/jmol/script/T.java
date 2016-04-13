@@ -698,7 +698,7 @@ public class T {
   public final static int replace          = 27 | 0 << 9 | mathfunc | mathproperty;
   public final static int sort             = 28 | 0 << 9 | mathfunc | mathproperty;
   public final static int tensor           = 29 | 0 << 9 | mathfunc | mathproperty;
-  public final static int unitcell         = 30 | 0 << 9 | mathfunc | shapeCommand | deprecatedparam | predefinedset | defaultON;
+  public final static int unitcell         = 30 | 0 << 9 | mathfunc | mathproperty | shapeCommand | deprecatedparam | predefinedset | defaultON;
   public final static int within           = 31 | 0 << 9 | mathfunc;
   public final static int write            = 32 | 0 << 9 | mathfunc | scriptCommand;
   public final static int _                = 33 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 

@@ -35,6 +35,7 @@ import org.jmol.java.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
+import org.jmol.viewer.JC;
 
 public abstract class AtomShape extends Shape {
 
@@ -128,6 +129,7 @@ public abstract class AtomShape extends Shape {
       return;
     }
     if ("params" == propertyName) {
+      // PyMOL only
       isActive = true;
       Object[] data = (Object[]) value;
       short[] colixes = (short[]) data[0];
@@ -142,11 +144,12 @@ public abstract class AtomShape extends Shape {
       int i0 = bs.nextSetBit(0);
       if (mads == null && i0 >= 0)
         mads = new short[ac];
+      
       int n = checkColixLength(colixes == null ? 0 : C.BLACK, bs.length());
       for (int i = i0, pt = 0; i >= 0 && i < n; i = bs.nextSetBit(i + 1), pt++) {
         short colix = (colixes == null ? 0 : colixes[pt]);
-        if (colix == 0)
-          colix = C.INHERIT_ALL;
+        //if (colix == 0)
+          //colix = C.INHERIT_ALL;  IS 0 already
         float f = (atrans == null ? 0 : atrans[pt]);
         if (f > 0.01f)
           colix = C.getColixTranslucent3(colix, true, f);
@@ -204,7 +207,7 @@ public abstract class AtomShape extends Shape {
   
   protected void setColixAndPalette(short colix, byte paletteID, int atomIndex) {
     colixes[atomIndex] = colix = getColixI(colix, paletteID, atomIndex);
-    bsColixSet.setBitTo(atomIndex, colix != C.INHERIT_ALL);
+    bsColixSet.setBitTo(atomIndex, colix != C.INHERIT_ALL || shapeID == JC.SHAPE_BALLS);
     paletteIDs[atomIndex] = paletteID;
   }
 

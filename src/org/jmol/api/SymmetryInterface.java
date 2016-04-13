@@ -74,7 +74,7 @@ public interface SymmetryInterface {
 
   public Object getSpaceGroup();
 
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup);
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex);
 
   public String getSpaceGroupInfoStr(String name, SymmetryInterface cellInfo);
 
@@ -87,9 +87,6 @@ public interface SymmetryInterface {
   public int getSpaceGroupOperationCount();
 
   public String getSpaceGroupXyz(int i, boolean doNormalize);
-
-  Object getSymmetryInfoObject(ModelSet modelSet, int modelIndex, int symOp, P3 pt1,
-                               P3 pt2, String drawID, String type, float scaleFactor, int nth, boolean asString);
 
   public String getSymmetryInfoStr();
 
@@ -162,12 +159,12 @@ public interface SymmetryInterface {
 
   public void setSpaceGroupFrom(SymmetryInterface symmetry);
 
-  public void setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, float[] notionalCell);
+  public SymmetryInterface setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, float[] notionalCell);
 
   /**
    * 
    * @param ms
-   * @param bsAtoms
+   * @param iatom
    * @param xyz
    * @param op
    * @param pt
@@ -178,7 +175,7 @@ public interface SymmetryInterface {
    * @param nth TODO
    * @return a variety of object types
    */
-  public Object getSymmetryInfoAtom(ModelSet ms, BS bsAtoms, String xyz, int op,
+  public Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
                                     P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth);
 
   public void setTimeReversal(int op, int val);
@@ -193,11 +190,11 @@ public interface SymmetryInterface {
 
   public P3 toSupercell(P3 fpt);
 
-  public void toUnitCell(P3 pt, P3 offset);
+  public void toUnitCell(T3 pt, T3 offset);
 
   public boolean unitCellEquals(SymmetryInterface uc2);
 
-  public void unitize(P3 ptFrac);
+  public void unitize(T3 ptFrac);
 
   public T3[] getV0abc(Object def);
 
@@ -218,6 +215,5 @@ public interface SymmetryInterface {
   public String getIntTableNumber();
 
   Lst<P3> generateCrystalClass(P3 pt0);
-
 
 }

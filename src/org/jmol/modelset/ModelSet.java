@@ -170,7 +170,6 @@ public class ModelSet extends BondCollection {
 
   private static float hbondMin = 2.5f;
   public boolean proteinStructureTainted;
-  public SymmetryInterface symTemp;
 
   public Hashtable<String, BS> htPeaks;
 
@@ -953,12 +952,9 @@ public class ModelSet extends BondCollection {
     if (getInfo(modelIndex, "unitCellParams") != null) {
       if (unitCells == null)
         unitCells = new SymmetryInterface[mc];
-      getSymTemp(true).setSymmetryInfo(modelIndex,
-          am[modelIndex].auxiliaryInfo, null);
-      SymmetryInterface unitCell = symTemp;
-      symTemp = null;
       haveUnitCells = true;
-      return unitCells[modelIndex] = unitCell;
+      return unitCells[modelIndex] = vwr.getSymTemp().setSymmetryInfo(modelIndex,
+          am[modelIndex].auxiliaryInfo, null);
     }
     return null;
   }
@@ -2295,7 +2291,7 @@ public class ModelSet extends BondCollection {
     return bsResult;
   }
 
-  public BS getAtomsWithin(float distance, P3 coord, BS bsResult, int modelIndex) {
+  public BS getAtomsWithin(float distance, T3 coord, BS bsResult, int modelIndex) {
 
     if (bsResult == null)
       bsResult = new BS();
@@ -2928,11 +2924,6 @@ public class ModelSet extends BondCollection {
           .getSymmetryInfoStr());
     }
     return sb.toString();
-  }
-
-  public SymmetryInterface getSymTemp(boolean forceNew) {
-    return (symTemp == null || forceNew ? (symTemp = Interface.getSymmetry(vwr,
-        "ms")) : symTemp);
   }
 
   public void createModels(int n) {

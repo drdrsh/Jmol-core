@@ -193,32 +193,33 @@ abstract public class ScriptParam extends ScriptError {
    * 
    * @param i
    * @param ret
-   *        return P3 or BS to ret[0]; on input, passing a BS as ret[1] indicates that
-   *        it should be ANDED with this BS prior to calculation (SHOW/DRAW SYMOP)
+   *        return P3 or BS to ret[0]; on input, passing a BS as ret[1]
+   *        indicates that it should be ANDED with this BS prior to calculation
+   *        (SHOW/DRAW SYMOP)
    * @return point -- ORIGINAL, non-copied atom, if a single atom
    * 
    * @throws ScriptException
    */
-  protected P3 atomCenterOrCoordinateParameter(int i, Object[] ret) throws ScriptException {
+  protected P3 atomCenterOrCoordinateParameter(int i, Object[] ret)
+      throws ScriptException {
     switch (getToken(i).tok) {
     case T.bitset:
     case T.expressionBegin:
       BS bs = atomExpression(st, i, 0, true, false, ret, true);
-      if (bs != null) {
-        if (ret != null) {
-          if (ret.length == 2 && ret[1] instanceof BS) {
-            bs = BSUtil.copy(bs);
-            bs.and((BS) ret[1]);
-          } else {
-            ret[0] = bs;
-          }
-        }
-        return (bs.cardinality() == 1 ? vwr.ms.at[bs.nextSetBit(0)] : vwr.ms.getAtomSetCenter(bs));
-      }
-      if (ret != null && ret[0] instanceof P3)
+      if (bs == null) {
+        if (ret == null || !(ret[0] instanceof P3))
+          invArg();
         return (P3) ret[0];
-      invArg();
-      break;
+      }
+      if (ret != null) {
+        if (ret.length == 2 && ret[1] instanceof BS) {
+          bs = BSUtil.copy(bs);
+          bs.and((BS) ret[1]);
+        }
+        ret[0] = bs;
+      }
+      return (bs.cardinality() == 1 ? vwr.ms.at[bs.nextSetBit(0)] : vwr.ms
+          .getAtomSetCenter(bs));
     case T.leftbrace:
     case T.point3f:
       return getPoint3f(i, true);

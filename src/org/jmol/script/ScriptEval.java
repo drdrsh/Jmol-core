@@ -5412,7 +5412,7 @@ public class ScriptEval extends ScriptExpr {
         SymmetryInterface uc;
         uc = vwr.getCurrentUnitCell();
         if (uc == null) {
-          uc = vwr.ms.getSymTemp(true);
+          uc = vwr.getSymTemp();
           uc.setUnitCell(new float[] { 1, 1, 1, 90, 90, 90 }, false);
         }
         q = uc.getQuaternionRotation(abc);
@@ -5949,8 +5949,8 @@ public class ScriptEval extends ScriptExpr {
         int symop = intParameter(++i);
         if (chk)
           continue;
-        Map<String, Object> info = vwr.ms.getSymTemp(true).getSpaceGroupInfo(
-            vwr.ms, null);
+        Map<String, Object> info = vwr.getSymTemp().getSpaceGroupInfo(
+            vwr.ms, null, -1);
         Object[] op = (info == null ? null : (Object[]) info.get("operations"));
         if (symop == 0 || op == null || op.length < Math.abs(symop))
           invArg();

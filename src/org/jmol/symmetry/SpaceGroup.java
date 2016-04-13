@@ -1620,7 +1620,7 @@ class SpaceGroup {
         return false;
       for (int i = 0; i < nOps; i++) {
         SymmetryOperation newOp = new SymmetryOperation(null, null, 0, 0,
-            doNormalize);
+            true); // must normalize these
         newOp.modDim = modDim;
         SymmetryOperation op = operations[i];
         newOp.linearRotTrans = AU.arrayCopyF(op.linearRotTrans, -1);

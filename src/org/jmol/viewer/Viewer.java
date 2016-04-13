@@ -7159,7 +7159,7 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       jmolpopup = null;
       return menuStructure = (String) paramInfo;
     case 140:
-      return ms.getSymTemp(true).getSpaceGroupInfo(ms, null);
+      return getSymTemp().getSpaceGroupInfo(ms, null, -1);
     case 160:
       g.disablePopupMenu = true; // no false here, because it's a
       // one-time setting
@@ -9403,6 +9403,15 @@ public class Viewer extends JmolViewer implements AtomDataServer,
     if (jsonParser == null)
       jsonParser = ((JSJSONParser) Interface.getInterface("javajs.util.JSJSONParser", this, "script"));
     return jsonParser.parseMap(ann, true);
+  }
+
+  /**
+   * Retrieve a Symmetry object, possibly re-using an old one.
+   * 
+   * @return org.jmol.symmetry.Symmetry object
+   */
+  public SymmetryInterface getSymTemp() {
+    return Interface.getSymmetry(this, "ms");
   }
 
 }

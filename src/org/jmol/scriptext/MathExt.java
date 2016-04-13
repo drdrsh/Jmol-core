@@ -144,7 +144,7 @@ public class MathExt {
     case T.polyhedra:
       return evaluateConnected(mp, args, tok, op.intValue);
     case T.unitcell:
-      return evaluateUnitCell(mp, args);
+      return evaluateUnitCell(mp, args, op.tok == T.propselector);
     case T.contact:
       return evaluateContact(mp, args);
     case T.data:
@@ -292,7 +292,7 @@ public class MathExt {
     default:
       return false;
     }
-    SymmetryInterface pointGroup = vwr.ms.getSymTemp(true).setPointGroup(
+    SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(
         null,
         center,
         pts,
@@ -306,15 +306,20 @@ public class MathExt {
         true, null, 0, 1));
   }
 
-  private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args) {
+  private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args, boolean isSelector) throws ScriptException {
     // optional last parameter: scale
-    // unitcell()
     // unitcell(uc)
     // unitcell(uc, "reciprocal")
-    // unitcell(ucconv, "primitive","BCC"|"FCC")
-    // unitcell(ucprim, "conventional","BCC"|"FCC")
     // unitcell(origin, [va, vb, vc])
     // unitcell(origin, pta, ptb, ptc)
+
+    // next can be without {1.1}, but then assume "all atoms"
+    // {1.1}.unitcell()
+    // {1.1}.unitcell(ucconv, "primitive","BCC"|"FCC")
+    // {1.1}.unitcell(ucprim, "conventional","BCC"|"FCC")
+
+    BS x1 = (isSelector ? SV.getBitSet(mp.getX(), true) : null);
+    int iatom = ((x1 == null ? vwr.getAllAtoms() : x1).nextSetBit(0));
     int lastParam = args.length - 1;
     float scale = 1;
     switch (lastParam < 0 ? T.nada : args[lastParam].tok) {
@@ -333,7 +338,8 @@ public class MathExt {
     int ptParam = (haveUC ? 1 : 0);
     T3[] ucnew = null;
     if (!haveUC && tok0 != T.point3f) {
-      u = vwr.getCurrentUnitCell();
+      // unitcell() or {1.1}.unitcell
+      u = (iatom < 0 ? null : vwr.ms.getUnitCell(vwr.ms.at[iatom].mi));
       ucnew = (u == null ? new P3[] { P3.new3(0, 0, 0), P3.new3(1, 0, 0),
           P3.new3(0, 1, 0), P3.new3(0, 0, 1) } : u.getUnitCellVectors());
     }
@@ -364,6 +370,7 @@ public class MathExt {
         }
       }
     }
+
     String op = (ptParam <= lastParam ? args[ptParam].asString() : null);
     boolean toPrimitive = "primitive".equalsIgnoreCase(op);
     if (toPrimitive || "conventional".equalsIgnoreCase(op)) {
@@ -371,10 +378,10 @@ public class MathExt {
       if (stype.equals("BCC"))
         stype = "I";
       else if (stype.length() == 0)
-        stype = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(vwr.ms, vwr.bsA(), null, 0, null, null, null,
+        stype = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms, iatom, null, 0, null, null, null,
             T.lattice, 0, -1);      
       if (stype == null || stype.length() == 0 
-          || !(u == null ? vwr.ms.getSymTemp(true) : u).toFromPrimitive(toPrimitive, stype.charAt(0), ucnew))
+          || !(u == null ? vwr.getSymTemp() : u).toFromPrimitive(toPrimitive, stype.charAt(0), ucnew))
         return false;
     } else if ("reciprocal".equalsIgnoreCase(op)) {
       ucnew = SimpleUnitCell.getReciprocal(ucnew, null);
@@ -3039,10 +3046,24 @@ public class MathExt {
     // x = y.symop(n,"time")
     // Returns the time reversal of a symmetry operator in a magnetic space group
 
-    int narg = args.length;
-    if (narg == 0)
-      return false;
     SV x1 = (haveBitSet ? mp.getX() : null);
+    if (x1 != null && x1.tok != T.bitset)
+      return false;
+    BS bsAtoms = (x1 == null ? null : (BS) x1.value);
+    if (bsAtoms == null && vwr.ms.mc == 1)
+      bsAtoms = vwr.getModelUndeletedAtomsBitSet(0);
+    int narg = args.length;
+    if (narg == 0) {
+      if (bsAtoms.isEmpty())
+        return false;
+      String[] ops = PT.split(PT.trim((String) vwr.getSymTemp()
+          .getSpaceGroupInfo(vwr.ms, null, vwr.ms.at[bsAtoms.nextSetBit(0)].mi)
+          .get("symmetryInfo"), "\n"), "\n");
+      Lst<String[]> lst = new Lst<String[]>();
+      for (int i = 0, n = ops.length; i < n; i++)
+        lst.addLast(PT.split(ops[i], "\t"));
+      return mp.addXList(lst);
+    }
     String xyz = null;
     int iOp = Integer.MIN_VALUE;
     int apt = 0;
@@ -3060,15 +3081,12 @@ public class MathExt {
       apt++;
       break;
     }
-    BS bsAtoms = null;
-    if (x1 != null) {
-      if (x1.tok != T.bitset)
-        return false;
-      bsAtoms = (BS) x1.value;
-    } else if (apt < narg && args[apt].tok == T.bitset) {
-      bsAtoms = (BS) args[apt].value;
-    } else if (apt + 1 < narg && args[apt + 1].tok == T.bitset) {
-      bsAtoms = (BS) args[apt + 1].value;
+    if (bsAtoms == null) {
+      if (apt < narg && args[apt].tok == T.bitset)
+        (bsAtoms = new BS()).or((BS) args[apt].value);
+      if (apt + 1 < narg && args[apt + 1].tok == T.bitset)
+        (bsAtoms == null ? (bsAtoms = new BS()) : bsAtoms)
+            .or((BS) args[apt + 1].value);
     }
     P3 pt1 = null, pt2 = null;
     if ((pt1 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
@@ -3083,12 +3101,10 @@ public class MathExt {
       iOp = 0;
     String desc = (narg == apt ? (pt2 != null ? "all" : pt1 != null ? "point"
         : "matrix") : SV.sValue(args[apt++]).toLowerCase());
-    if (bsAtoms == null)
-      bsAtoms = vwr.getAllAtoms(); 
 
-    return (apt == args.length && mp.addXObj(vwr.ms.getSymTemp(false)
-        .getSymmetryInfoAtom(vwr.ms, bsAtoms, xyz, iOp, pt1, pt2,
-            desc, 0, 0, nth)));
+    return (bsAtoms != null && !bsAtoms.isEmpty() && apt == args.length && mp
+        .addXObj(vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
+            bsAtoms.nextSetBit(0), xyz, iOp, pt1, pt2, desc, 0, 0, nth)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

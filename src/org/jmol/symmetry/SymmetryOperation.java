@@ -529,7 +529,7 @@ class SymmetryOperation extends M4 {
     return (s.charAt(0) == '0' ? "" : n > 0 ? "+" + s : s);
   }
 
-  private final static String twelfthsOf(float n12ths) {
+  final static String twelfthsOf(float n12ths) {
     String str = "";
     if (n12ths < 0) {
       n12ths = -n12ths;
@@ -763,20 +763,6 @@ class SymmetryOperation extends M4 {
     if (magRev != 0) {
     xyz += (magRev == 1 ? ",m" : ",-m");
     }
-  }
-
-  static String getPrettyMatrix(SB sb, M4 m4) {
-    sb.append("[ ");
-    float[] row = new float[4];
-    for (int i = 0; i < 3; i++) {
-      m4.getRow(i, row);
-      sb.append("[ ")
-        .appendI((int)row[0]).appendC(' ')
-        .appendI((int)row[1]).appendC(' ')
-        .appendI((int)row[2]).appendC(' ');      
-      sb.append(twelfthsOf(row[3]*12)).append(" ]");
-    }
-    return sb.append(" ]").toString();
   }
 
   /**

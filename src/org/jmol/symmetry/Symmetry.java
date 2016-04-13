@@ -367,26 +367,27 @@ public class Symmetry implements SymmetryInterface {
    */
   @SuppressWarnings("unchecked")
   @Override
-  public void setSymmetryInfo(int modelIndex,
-                              Map<String, Object> modelAuxiliaryInfo,
-                              float[] unitCellParams) {
+  public SymmetryInterface setSymmetryInfo(int modelIndex,
+                                           Map<String, Object> modelAuxiliaryInfo,
+                                           float[] unitCellParams) {
     symmetryInfo = new SymmetryInfo();
     float[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
         unitCellParams);
-    if (params == null)
-      return;
-    setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"));
-    unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
-        .get("moreUnitCellInfo");
-    modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
-    setOffsetPt((T3) modelAuxiliaryInfo.get("unitCellOffset"));
-    M3 matUnitCellOrientation = (M3) modelAuxiliaryInfo
-        .get("matUnitCellOrientation");
-    if (matUnitCellOrientation != null)
-      initializeOrientation(matUnitCellOrientation);
-    if (Logger.debugging)
-      Logger.debug("symmetryInfos[" + modelIndex + "]:\n"
-          + unitCell.dumpInfo(true));
+    if (params != null) {
+      setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"));
+      unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
+          .get("moreUnitCellInfo");
+      modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
+      setOffsetPt((T3) modelAuxiliaryInfo.get("unitCellOffset"));
+      M3 matUnitCellOrientation = (M3) modelAuxiliaryInfo
+          .get("matUnitCellOrientation");
+      if (matUnitCellOrientation != null)
+        initializeOrientation(matUnitCellOrientation);
+      if (Logger.debugging)
+        Logger.debug("symmetryInfos[" + modelIndex + "]:\n"
+            + unitCell.dumpInfo(true));
+    }
+    return this;
   }
 
   // UnitCell methods
@@ -437,12 +438,12 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void unitize(P3 ptFrac) {
+  public void unitize(T3 ptFrac) {
     unitCell.unitize(ptFrac);
   }
 
   @Override
-  public void toUnitCell(P3 pt, P3 offset) {
+  public void toUnitCell(T3 pt, T3 offset) {
     unitCell.toUnitCell(pt, offset);
   }
 
@@ -633,32 +634,20 @@ public class Symmetry implements SymmetryInterface {
 
   private SymmetryDesc getDesc(ModelSet modelSet) {
     return (desc == null ? (desc = ((SymmetryDesc) Interface.getInterface(
-        "org.jmol.symmetry.SymmetryDesc", modelSet.vwr, "eval"))) : desc);
+        "org.jmol.symmetry.SymmetryDesc", modelSet.vwr, "eval"))) : desc).set(modelSet);
   }
 
   @Override
-  public Object getSymmetryInfoAtom(ModelSet modelSet, BS bsAtoms, String xyz,
+  public Object getSymmetryInfoAtom(ModelSet modelSet, int iatom, String xyz,
                                     int op, P3 pt, P3 pt2, String id, int type, float scaleFactor, int nth) {
-    return getDesc(modelSet).getSymmetryInfoAtom(bsAtoms, xyz, op, pt, pt2, id,
-        type, modelSet, scaleFactor, nth);
-  }
-
-//  SpaceGroup getSpaceGroup() {
-  //  return (spaceGroup == null ? null : spaceGroup.getDerivedSpaceGroup());
- // }
-  @Override
-  public Object getSymmetryInfoObject(ModelSet modelSet, int modelIndex,
-                                      int symOp, P3 pt1, P3 pt2, String drawID,
-                                      String type, float scaleFactor, int nth, boolean asString) {
-    // from SHOW SYMOP
-    return getDesc(modelSet).getSymmetryInfoObject(this, modelIndex, symOp,
-        pt1, pt2, drawID, type, modelSet, scaleFactor, nth, asString);
+    return getDesc(modelSet).getSymopInfo(iatom, xyz, op, pt, pt2,
+        id, type, scaleFactor, nth);
   }
 
   @Override
-  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName) {
-    return getDesc(modelSet).getSpaceGroupInfo(this, -1, sgName, 0, null, null,
-        null, modelSet, 0, -1);
+  public Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String sgName, int modelIndex) {
+    return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0, null, null,
+        null, 0, -1);
   }
 
   @Override

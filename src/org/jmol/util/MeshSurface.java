@@ -47,6 +47,8 @@ public class MeshSurface {
    */
   public float[] vvs;
   public int[] vertexSource;
+  public BS surfaceAtoms;
+  
 
   /**
    * polygon count

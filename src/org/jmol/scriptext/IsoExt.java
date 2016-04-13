@@ -332,7 +332,7 @@ public class IsoExt extends ScriptExt {
         if (tok == T.unitcell) {
           if (eval.isArrayParameter(i + 1)) {
             P3[] points = eval.getPointArray(i + 1, -1, false);
-            uc = vwr.ms.getSymTemp(true).getUnitCell(points, false, null);
+            uc = vwr.getSymTemp().getUnitCell(points, false, null);
             i = eval.iToken;
           } else {
             uc = vwr.getCurrentUnitCell();
@@ -481,7 +481,7 @@ public class IsoExt extends ScriptExt {
           default:
             if (!eval.isCenterParameter(i))
               iSym = intParameter(i++);
-            Object[] ret = new Object[] {null, vwr.getFrameAtoms()};
+            Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
             if (eval.isCenterParameter(i))
               center = eval.centerParameter(i, ret);
             if (eval.isCenterParameter(eval.iToken + 1))
@@ -499,12 +499,17 @@ public class IsoExt extends ScriptExt {
               : null);
           i = eval.iToken;
         }
-        int nth = (target != null && tokAt(i + 1) == T.integer ? eval.getToken(++i).intValue : -1);
+        int nth = (target != null && tokAt(i + 1) == T.integer ? eval
+            .getToken(++i).intValue : -1);
         eval.checkLast(eval.iToken);
         if (!chk) {
-          String s = (String) vwr.ms.getSymTemp(false).getSymmetryInfoAtom(
-              vwr.ms, bsAtoms, xyz, iSym, center, target, thisId, T.draw,
-              intScale / 100f, nth);
+          String s = "";
+          if (bsAtoms == null && vwr.am.cmi >= 0)
+            bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
+          if (bsAtoms != null)
+            s = (String) vwr.getSymTemp().getSymmetryInfoAtom(vwr.ms,
+                bsAtoms.nextSetBit(0), xyz, iSym, center, target, thisId,
+                T.draw, intScale / 100f, nth);
           eval.runScript(s.length() > 0 ? s : "draw ID \"sym_" + thisId
               + "*\" delete");
         }

@@ -2118,14 +2118,17 @@ abstract public class AtomCollection {
     case T.rna:
     case T.sheet: // WITHIN -- not ends
       return (haveBioModels ? bioModelset.getAtomBitsBS(tokType, null, bs) : bs);
+    case T.hydrogen:
+      iSpec = 1;
+      //$FALL-THROUGH$
+    case T.elemno:
+      for (int i = ac; --i >= 0;)
+        if (at[i].getElementNumber() == iSpec)
+          bs.set(i);
+      return bs;
     case T.hetero:
       for (int i = ac; --i >= 0;)
         if (at[i].isHetero())
-          bs.set(i);
-      return bs;
-    case T.hydrogen:
-      for (int i = ac; --i >= 0;)
-        if (at[i].getElementNumber() == 1)
           bs.set(i);
       return bs;
     case T.identifier:

@@ -805,6 +805,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       data[1] = keys;
       keys.addLast("info");
       keys.addLast("data");
+      keys.addLast("atoms");
       // will continue on to super
     }
     if (property == "colorEncoder") {
@@ -876,7 +877,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return null;
     Object ret = getPropMC(property, index);
     if (ret != null)
-      return ret;      
+      return ret;
     if (property == "message") {
       String s = "";
       if (shapeID == JC.SHAPE_ISOSURFACE)
@@ -943,6 +944,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
          getMeshCommand(sb, i);
       return sb.toString();
     }
+    if (property == "atoms") {
+      return thisMesh.surfaceAtoms;
+    }    
     return null;
   }
 
@@ -1480,6 +1484,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   public boolean notifySurfaceGenerationCompleted() {
     setMeshI();
     setBsVdw();
+    thisMesh.surfaceAtoms = sg.params.bsSelected;
     thisMesh.insideOut = sg.params.isInsideOut();
     thisMesh.isModelConnected = sg.params.isModelConnected;
     thisMesh.vertexSource = sg.params.vertexSource;

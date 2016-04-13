@@ -109,10 +109,12 @@ public class Balls extends AtomShape {
       //float translucency  = ((Float) data[1]).floatValue();
       if (bsColixSet == null)
         bsColixSet = new BS();
+      short c;
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        if (i >= colixes.length)
+        if (i >= colixes.length ||(c = colixes[i]) == C.INHERIT_ALL)
           continue;
-        atoms[i].colixAtom = colixes[i];
+        
+        atoms[i].colixAtom = c;
         atoms[i].paletteID = PAL.UNKNOWN.id;
         bsColixSet.set(i);
       }

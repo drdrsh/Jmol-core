@@ -851,6 +851,7 @@ public class Parameters {
   public boolean showTiming;
   public float pointSize;
   public boolean isModelConnected;
+  public BS surfaceAtoms;
   
   void setMapRanges(SurfaceReader surfaceReader, boolean haveData) {
     if (!colorDensity)

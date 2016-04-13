@@ -815,7 +815,7 @@ class IsoSolventReader extends AtomDataReader {
      *      
      */
     BS bs = new BS();
-    validSpheres = new BS();
+    params.surfaceAtoms = validSpheres = new BS();
     noFaceSpheres = BSUtil.setAll(myAtomCount);
     for (int i = vEdges.size(); --i >= 0;) {
       Edge edge = vEdges.get(i);

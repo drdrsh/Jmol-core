@@ -775,7 +775,7 @@ public class Atom extends Point3fi implements BNode {
     return pt;
   }
   
-  float getFractionalUnitDistance(P3 pt, P3 ptTemp1, P3 ptTemp2) {
+  float getFractionalUnitDistance(T3 pt, T3 ptTemp1, T3 ptTemp2) {
     SymmetryInterface c = getUnitCell();
     if (c == null) 
       return distance(pt);
