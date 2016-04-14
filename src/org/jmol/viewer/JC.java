@@ -88,7 +88,12 @@ public final class JC {
    * @return https protocol if necessary
    */
   public static String fixProtocol(String name) {
-    return (name != null && (name.indexOf("http://pubchem") == 0 
+    if (name == null)
+      return name;
+    return (name.indexOf("http://www.rcsb.org/pdb/files/") == 0 
+        && name.indexOf("/ligand/") < 0 ? 
+        "https://files.rcsb.org/view/" + name.substring(30)
+        : (name.indexOf("http://pubchem") == 0 
         || name.indexOf("http://cactus") == 0
         || name.indexOf("http://www.materialsproject") == 0)
         ? "https://" + name.substring(7) : name);

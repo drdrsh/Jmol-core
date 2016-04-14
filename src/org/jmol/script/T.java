@@ -833,9 +833,10 @@ public class T {
   public final static int logfile                        = strparam | 47;
   public final static int measurementunits               = strparam | 48; 
   public final static int nmrpredictformat               = strparam | 49;
-  public final static int nmrurlformat                   = strparam | 50;
-  public final static int pathforallfiles                = strparam | 51;
-  public final static int picking                        = strparam | 52;
+  public final static int nihresolverformat              = strparam | 50;
+  public final static int nmrurlformat                   = strparam | 51;
+  public final static int pathforallfiles                = strparam | 52;
+  public final static int picking                        = strparam | 53;
   public final static int pickingstyle                   = strparam | 54;
   public final static int picklabel                      = strparam | 56;
   public final static int propertycolorscheme            = strparam | 58;
@@ -2375,6 +2376,7 @@ public class T {
        "loadLigandFormat",
        "logFile",
        "measurementUnits",
+       "nihResolverFormat",
        "nmrPredictFormat",
        "nmrUrlFormat",
        "pathForAllFiles",
@@ -3412,6 +3414,7 @@ public class T {
         loadligandformat,                   //        "loadLigandFormat"
         logfile,                            //        "logFile"
         measurementunits,                   //        "measurementUnits"
+        nihresolverformat,                  //        "nihResolverFormat"
         nmrpredictformat,                   //        "nmrPredictFormat"
         nmrurlformat,                       //        "nmrUrlFormat"
         pathforallfiles,                    //        "pathForAllFiles"
