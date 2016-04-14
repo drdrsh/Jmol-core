@@ -316,6 +316,7 @@ public class DSSR1 extends AnnotationParser {
       annotationCache.put(key, bs);
     try {
       // drilling
+      if (key.indexOf("[") < 0) {
       key = key.toLowerCase();
       int pt = DSSR_PATHS.indexOf(".." + key) + 2;
       int len = key.length();
@@ -327,6 +328,12 @@ public class DSSR1 extends AnnotationParser {
         int pt1 = DSSR_PATHS.indexOf(".", pt);
         key = DSSR_PATHS.substring(pt, pt1);
         len = key.length();
+      }
+      } else {
+        int pt = key.indexOf("[");
+        if (pt >= 0 && key.toLowerCase().indexOf("[select *") < 0)
+          key = key.substring(0, pt) + "[select * " + key.substring(pt + 1);
+        dbObj = vwr.extractProperty(dbObj, key, -1);
       }
       bs.or(vwr.ms.getAtoms(T.sequence, dbObj.toString()));
       bs.and(bsModel);

@@ -649,7 +649,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
     String lastModelChain = null;
     BS bsTemp = new BS();
     String[] units = PT.getTokens(PT.replaceAllCharacters(specInfo,
-        ", \t\n[]\"", " "));
+        ", \t\n[]\"=", " "));
     int[] ptrs = new int[8];
     for (int i = units.length; --i >= 0;) {
       String unit = units[i] + "|";

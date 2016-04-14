@@ -29,19 +29,15 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
-
-import org.jmol.api.SymmetryInterface;
-
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.V3;
-
-import org.jmol.util.Logger;
-
 import javajs.util.M4;
 import javajs.util.P3;
+import javajs.util.PT;
+import javajs.util.SB;
+
+import org.jmol.api.SymmetryInterface;
+import org.jmol.util.Logger;
 
 /*
  * 

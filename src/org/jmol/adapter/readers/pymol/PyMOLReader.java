@@ -947,21 +947,18 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
    * @return list of bonds
    */
   private Lst<Bond> getBondList(Lst<Object> bonds) {
-    int asSingle = (pymolScene.booleanSetting(PyMOL.valence) ? 0 : JmolAdapter.ORDER_PYMOL_SINGLE);
+    boolean asSingle = pymolScene.booleanSetting(PyMOL.valence);
     int n = bonds.size();
     Lst<Bond> bondList = new Lst<Bond>();
     bondList.ensureCapacity(n);
     for (int i = 0; i < n; i++) {
       Lst<Object> b = listAt(bonds, i);
+      int ia = intAt(b, 0);
+      int ib = intAt(b, 1);
       int order = intAt(b, 2);
       if (order < 1 || order > 3)
         order = 1;
-      int ia = intAt(b, 0);
-      int ib = intAt(b, 1);
-      if (order > 1 && asSingle == 0)
-        order |= JmolAdapter.ORDER_PYMOL_MULT;
-      else
-        order |= asSingle;
+      order |= (asSingle || order == 1 ? JmolAdapter.ORDER_PYMOL_SINGLE : JmolAdapter.ORDER_PYMOL_MULT);
       Bond bond = new Bond(ia, ib, order);
       bond.uniqueID = (b.size() > 6 && intAt(b, 6) != 0 ? intAt(b, 5) : -1);
       bondList.addLast(bond);
