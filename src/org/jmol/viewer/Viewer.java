@@ -5340,6 +5340,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   private void setStringPropertyTok(String key, int tok, String value) {
     switch (tok) {
+    // 14.4.10 new
+    case T.nihresolverformat:
+      g.nihResolverFormat = value;
+      break;
     // 14.3.10 (forgot to add these earlier)
     case T.edsurlcutoff:
       g.edsUrlCutoff = value;
