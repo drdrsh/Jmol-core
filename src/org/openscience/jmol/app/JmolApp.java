@@ -453,7 +453,7 @@ public class JmolApp implements JmolAppAPI {
           info.put("headlessImage", data);
         }
         else
-          script2 += ";write image " + width + " " + height + " " + type + " " + quality + " " + PT.esc(type_name);
+          script2 += ";write image " + (width > 0 && height > 0 ? width + " " + height : "") + " " + type + " " + quality + " " + PT.esc(type_name);
       }
     }
     if (GraphicsEnvironment.isHeadless())

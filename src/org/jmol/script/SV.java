@@ -1719,7 +1719,7 @@ public class SV extends T implements JSONEncodable {
         Lst<SV> lst;
         int n;
         if ((lst = getList()) != null && (n = lst.size()) > 0)
-          lst.get(n - 1).getKeyList(true, keys, prefix + n + ".");
+          lst.get(n - 1).getKeyList(true, keys, prefix + "." + n + ".");
       }
       return;
     }

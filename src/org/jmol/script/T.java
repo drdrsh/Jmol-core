@@ -793,6 +793,7 @@ public class T {
   public final static int trajectory       = setparam | 14;
   public final static int undo             = setparam | 16;
   public final static int usercolorscheme  = setparam | 18;
+  public final static int window           = setparam  | 20;
 
   // full set of all Jmol "set" parameters
 
@@ -2333,6 +2334,7 @@ public class T {
        "throw",
        "timeout",
        "timeouts",
+       "window",
        
        // string
        
@@ -3371,6 +3373,7 @@ public class T {
         throwcmd,                           //        "throw"
         timeout,                            //        "timeout"
         -1,                                 //        "timeouts"
+        window,                             //        "window"
                 
                 // string
                 

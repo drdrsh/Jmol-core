@@ -26,6 +26,7 @@
 package org.jmol.script;
 
 import org.jmol.api.JmolScriptEvaluator;
+import org.jmol.api.JmolToJSmolInterface;
 import org.jmol.thread.JmolThread;
 import org.jmol.viewer.Viewer;
 
@@ -56,6 +57,7 @@ class FileLoadThread extends JmolThread {
     sc.pc--; // re-start this load command.
   }
   
+  @SuppressWarnings({ "null", "unused" })
   @Override
   protected void run1(int mode) throws InterruptedException {
     while (true)
@@ -68,12 +70,21 @@ class FileLoadThread extends JmolThread {
           mode = FINISH;
           break;
         }
+        JmolToJSmolInterface jmol = null;
         /**
          * @j2sNative
          * 
-         * return Jmol._loadFileAsynchronously(this, this.vwr.html5Applet, this.fileName, null);
+         * jmol = Jmol;
          * 
          */
+        {}
+        if (jmol != null)
+           jmol._loadFileAsynchronously(this, vwr.html5Applet, fileName, null);
+
+        /**
+         * @j2sNative
+         * 
+         */        
         {
           if (vwr.testAsync) {
             if (!runSleep(sleepTime, CHECK1))

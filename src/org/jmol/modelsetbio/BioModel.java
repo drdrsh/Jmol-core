@@ -669,7 +669,7 @@ public final class BioModel extends Model implements JmolBioModelSet, JmolBioMod
       bsTemp.or(bsSelected);
       String mchain = unit.substring(0, ptrs[2]);
       if (lastModelChain != null && lastModelChain.equals(mchain)) {
-        bsTemp.or(bsModelChain);
+        bsTemp.and(bsModelChain);
       } else {
         if (!addUnit(T.model, unit.substring(0, ptrs[1]).toUpperCase(), bsTemp,
             maps[0]) 

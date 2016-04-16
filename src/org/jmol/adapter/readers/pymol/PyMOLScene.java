@@ -504,6 +504,18 @@ class PyMOLScene implements JmolSceneGenerator {
   }
 
   /**
+   * process the selection sets (sele), (...)
+   * 
+   * @param selection
+   */
+  void processSelection(Lst<Object> selection) {
+    String id = selection.get(0).toString();
+    id = "_" + (id.equals("sele") ? id : "sele_" + id); 
+    PyMOLGroup g = getGroup(id);
+    getSelectionAtoms(listAt(selection, 5), 0, g.bsAtoms);
+  }
+
+  /**
    * Add selected atoms to a growing bit set.
    * 
    * @param molecules
@@ -692,7 +704,7 @@ class PyMOLScene implements JmolSceneGenerator {
   }
   
   void offsetObjects() {
-    for (int i = 0; i < jmolObjects.size(); i++)
+    for (int i = 0, n = jmolObjects.size(); i < n; i++)
       jmolObjects.get(i).offset(baseModelIndex, baseAtomIndex);
   }
 
@@ -765,10 +777,11 @@ class PyMOLScene implements JmolSceneGenerator {
    * @param object
    * @param parent
    * @param type
+   * @param bsAtoms
    * @return group
    */
 
-  PyMOLGroup addGroup(Lst<Object> object, String parent, int type) {
+  PyMOLGroup addGroup(Lst<Object> object, String parent, int type, BS bsAtoms) {
     if (groups == null)
       groups = new Hashtable<String, PyMOLGroup>();
     PyMOLGroup myGroup = getGroup(objectName);
@@ -782,10 +795,12 @@ class PyMOLScene implements JmolSceneGenerator {
     }
     if (parent != null && parent.length() != 0)
       getGroup(parent).addList(myGroup);
+    if (bsAtoms != null)
+      myGroup.addGroupAtoms(bsAtoms);
     return myGroup;
   }
 
-  private PyMOLGroup getGroup(String name) {
+  PyMOLGroup getGroup(String name) {
     PyMOLGroup g = groups.get(name);
     if (g == null) {
       groups.put(name, (g = new PyMOLGroup(name)));

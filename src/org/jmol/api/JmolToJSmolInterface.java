@@ -30,10 +30,15 @@ public interface JmolToJSmolInterface extends JmolObjectInterface {
   Object _loadImage(Platform platform, String echoName, String path,
                     byte[] bytes, Object f);
 
+  Object _loadFileAsynchronously(Object fileLoadThread, Object html5Applet, String fileName, Object appData);
+
   // JSmolConsole.js 
   GenericImageDialog _consoleGetImageDialog(Viewer vwr,
                                             String title,
                                             Map<String, GenericImageDialog>imageMap);
+
+  // JSmolApi.js
+  void resizeApplet(Object html5Applet, int[] dims);
 
   /// more ///
   

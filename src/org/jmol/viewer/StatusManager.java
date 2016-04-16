@@ -776,7 +776,8 @@ public class StatusManager {
   }
 
   public int[] resizeInnerPanel(int width, int height) {
-    return (jsl == null ? new int[] { width, height } : jsl
+    return (jsl == null || width == vwr.getScreenWidth()
+        && height == vwr.getScreenHeight() ? new int[] { width, height } : jsl
         .resizeInnerPanel("preferredWidthHeight " + width + " " + height + ";"));
   }
 

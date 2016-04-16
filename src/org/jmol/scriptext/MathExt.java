@@ -1659,10 +1659,10 @@ public class MathExt {
           propertyName = "[SELECT " + propertyName + "]";
         return mp.addXObj(vwr.extractProperty(x, propertyName, -1));
       }
+      if (!lc.startsWith("bondinfo")
+          && !lc.startsWith("atominfo"))
+        propertyName = "atomInfo." + propertyName;
     }
-    if (isAtomProperty && !lc.startsWith("bondinfo")
-        && !lc.startsWith("atominfo"))
-      propertyName = "atomInfo." + propertyName;
     Object propertyValue = "";
     if (propertyName.equalsIgnoreCase("fileContents") && args.length > 2) {
       String s = SV.sValue(args[1]);

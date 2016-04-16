@@ -3,6 +3,7 @@ package org.jmol.shape;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 
 import org.jmol.java.BS;
@@ -13,6 +14,7 @@ import org.jmol.util.Logger;
 
 import javajs.api.GenericPlatform;
 import javajs.awt.Font;
+import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 

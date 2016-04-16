@@ -1621,24 +1621,23 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     String info = width + " " + height;
     if (data == null) {
       data = info;
-   } else {
-     int pt = data.indexOf("preferredWidthHeight ");
-     int pt2 = data.indexOf(";", pt + 1);
-     if (pt >= 0 && pt2 > pt)
-       data = data.substring(pt + 21, pt2).trim();
-     if (data.equals(info))
-       return new int[] {width, height};
-   }
+    } else {
+      int pt = data.indexOf("preferredWidthHeight ");
+      int pt2 = data.indexOf(";", pt + 1);
+      if (pt >= 0 && pt2 > pt)
+        data = data.substring(pt + 21, pt2).trim();
+      if (data.equals(info))
+        return new int[] { width, height };
+    }
     info = JOptionPane.showInputDialog(GT._("width height?"), data);
     if (info == null)
-      return new int[] {width, height};
+      return new int[] { width, height };
     float[] dims = new float[2];
     int n = Parser.parseStringInfestedFloatArray(info, null, dims);
     if (n < 2)
-      return new int[] {width, height};
-    System.out.println("JmolPanel requesting display "+ info + " " +dims[0] + " " + dims[1]);
+      return new int[] { width, height };
     resizeDisplay((int) dims[0], (int) dims[1]);
-    return new int[] {(int) dims[0], (int) dims[1]};
+    return new int[] { (int) dims[0], (int) dims[1] };
   }
 
   void resizeDisplay(int width, int height) {

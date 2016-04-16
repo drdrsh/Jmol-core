@@ -31,6 +31,7 @@ import java.util.Map;
 import javajs.api.JSInterface;
 import javajs.util.PT;
 
+import org.jmol.api.JmolToJSmolInterface;
 import org.jmol.util.GenericApplet;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
@@ -345,6 +346,19 @@ public class Jmol extends GenericApplet implements JSInterface {
   @Override
   public void setScreenDimension(int width, int height) {
     viewer.setScreenDimension(width, height);
+  }
+
+  @Override
+  public int[] resizeInnerPanel(String data) {
+    float[] dims = new float[2];
+    Parser.parseStringInfestedFloatArray(data, null, dims);
+    resizeDisplay((int) dims[0], (int) dims[1]);
+    return new int[] { (int) dims[0], (int) dims[1] };
+  }
+
+  void resizeDisplay(int width, int height) {
+    JmolToJSmolInterface jmol = org.jmol.awtjs2d.Platform.Jmol();
+    jmol.resizeApplet(viewer.html5Applet, new int[] {width, height});
   }
 
 }

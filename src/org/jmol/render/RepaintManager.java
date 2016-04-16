@@ -28,6 +28,7 @@ import java.util.Map;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.api.JmolRepaintManager;
+import org.jmol.api.JmolToJSmolInterface;
 import org.jmol.java.BS;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
@@ -85,15 +86,24 @@ public class RepaintManager implements JmolRepaintManager {
     }
   }
 
+  @SuppressWarnings({ "null", "unused" })
   @Override
   synchronized public void requestRepaintAndWait(String why) {
+    JmolToJSmolInterface jmol = null;
     /**
      * @j2sNative
      * 
-     *  if (typeof Jmol != "undefined" && Jmol._repaint) 
-     *    Jmol._repaint(this.vwr.html5Applet, false);
-     *  this.repaintDone();
-     *  
+     *  jmol = (self.Jmol && Jmol._repaint ? Jmol : null); 
+     */
+    {}
+    if (jmol != null) {
+      jmol._repaint(vwr.html5Applet,  false);
+      repaintDone();
+    }
+
+    /**
+     * @j2sNative
+     *     
      */
     {
       //System.out.println("RM requestRepaintAndWait() " + (test++));

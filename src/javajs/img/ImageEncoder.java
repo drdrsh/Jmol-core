@@ -93,6 +93,7 @@ public abstract class ImageEncoder implements GenericImageEncoder {
     logging = (Boolean.TRUE == params.get("logging"));
     width = ((Integer) params.get("imageWidth")).intValue();
     height = ((Integer) params.get("imageHeight")).intValue();
+    System.out.println("ImageEncoder width height " + width + " " + height);
     pixels = (int[]) params.get("imagePixels");
     date = (String) params.get("date");
     Integer q = (Integer) params.get("quality");

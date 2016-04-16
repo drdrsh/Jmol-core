@@ -24,6 +24,11 @@
 
 package org.jmol.shape;
 
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javajs.util.Lst;
 import javajs.util.P3;
 import javajs.util.PT;
 
@@ -245,4 +250,26 @@ public class Echo extends TextShape {
   public String getShapeState() {
     return vwr.getShapeState(this);
   }
+  
+  @Override
+  public Lst<Map<String, Object>> getShapeDetail() {
+    Lst<Map<String, Object>> lst = new Lst<Map<String, Object>>();
+    Map<String, Object> key = new Hashtable<String, Object>();
+    for (Entry<String, Text> e: objects.entrySet()) {
+      Map<String, Object> info = new Hashtable<String, Object>();
+      Text t = e.getValue();
+      String name = e.getKey();
+      info.put("name", name);
+      Object o = t.image;
+      if (o != null) {
+        info.put("imageFile", t.text);
+        info.put("imageWidth", Integer.valueOf(vwr.apiPlatform.getImageWidth(o)));
+        info.put("imageHeight", Integer.valueOf(vwr.apiPlatform.getImageHeight(o)));        
+        key.put(name, info);
+      }
+    }
+    lst.addLast(key);
+    return lst;
+  }
+
 }

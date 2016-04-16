@@ -454,7 +454,7 @@ public class Labels extends AtomShape {
   private void setPymolLabel(int i, Text t, String format) {
     if (t == null)
       return;
-    String label = t.getText();
+    String label = t.text;
     Atom atom = atoms[i];
     addString(atom, i, label, format == null ? PT.rep(label, "%", "%%") : format);
     atom.setShapeVisibility(vf, true);

@@ -307,7 +307,6 @@ public class DSSR1 extends AnnotationParser {
     if (!doCache) {
       key = PT.rep(key, "NOCACHE", "").trim();
     }
-//    key = fixKeyDSSR(key);
     BS bs = (doCache ? (BS) annotationCache.get(key) : null);
     if (bs != null)
       return bs;
@@ -316,23 +315,25 @@ public class DSSR1 extends AnnotationParser {
       annotationCache.put(key, bs);
     try {
       // drilling
-      if (key.indexOf("[") < 0) {
-      key = key.toLowerCase();
-      int pt = DSSR_PATHS.indexOf(".." + key) + 2;
-      int len = key.length();
-      while (pt >= 2 && len > 0) {
-        if (DSSR_PATHS.substring(pt + len, pt + len + 2).equals(".."))
-          key = "[select (" + key + ")]";
-        dbObj = vwr.extractProperty(dbObj, key, -1);
-        pt += len + 1;
-        int pt1 = DSSR_PATHS.indexOf(".", pt);
-        key = DSSR_PATHS.substring(pt, pt1);
-        len = key.length();
-      }
+      int pt = key.toLowerCase().indexOf(" where ");
+      if (pt < 0) {
+        // pairs   stems    etc.
+        key = key.toLowerCase();
+        pt = DSSR_PATHS.indexOf(".." + key) + 2;
+        int len = key.length();
+        while (pt >= 2 && len > 0) {
+          if (DSSR_PATHS.substring(pt + len, pt + len + 2).equals(".."))
+            key = "[select (" + key + ")]";
+          dbObj = vwr.extractProperty(dbObj, key, -1);
+          pt += len + 1;
+          int pt1 = DSSR_PATHS.indexOf(".", pt);
+          key = DSSR_PATHS.substring(pt, pt1);
+          len = key.length();
+        }
       } else {
-        int pt = key.indexOf("[");
-        if (pt >= 0 && key.toLowerCase().indexOf("[select *") < 0)
-          key = key.substring(0, pt) + "[select * " + key.substring(pt + 1);
+        // select within(dssr, "pairs where bp='G-C' or bp='C-G'")
+        key = key.substring(0, pt).trim() + "[select * "
+            + key.substring(pt + 1) + "]";
         dbObj = vwr.extractProperty(dbObj, key, -1);
       }
       bs.or(vwr.ms.getAtoms(T.sequence, dbObj.toString()));

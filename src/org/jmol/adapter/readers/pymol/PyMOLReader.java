@@ -79,6 +79,8 @@ import javajs.util.V3;
  * 
  */
 
+// TODO: PyMOL.OBJECT_SELECTION not being processed
+
 public class PyMOLReader extends PdbReader implements PymolAtomReader {
 
   private static final int MIN_RESNO = -1000; // minimum allowed residue number
@@ -125,7 +127,6 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
 
   private String objectName;
 
-  //private List<List<Object>> selections;
   private Map<String, Lst<Object>> volumeData;
   private Lst<Lst<Object>> mapObjects;
   private boolean haveMeasurements;
@@ -138,6 +139,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
   private Lst<Object> sceneOrder;
 
   private int bondCount;
+
   @Override
   protected void setup(String fullPath, Map<String, Object> htParams, Object reader) {
     isBinary = mustFinalizeModelSet = true;
@@ -194,7 +196,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     Logger.info(logging ? "PyMOL (1) file data streaming to " + logFile : "To view raw PyMOL file data, use 'set logFile \"some_filename\" ");
 
     PickleReader reader = new PickleReader(binaryDoc, vwr);
-    Map<String, Object> map = reader.getMap(logging);
+    Map<String, Object> map = reader.getMap(logging && Logger.debuggingHigh);
     reader = null;
     process(map);
   }
@@ -347,7 +349,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       if (width > 0 && height > 0) {
         note = "PyMOL dimensions width=" + width + " height=" + height;
         asc.setInfo(
-            "perferredWidthHeight", new int[] { width, height });
+            "preferredWidthHeight", new int[] { width, height });
         //Dimension d = 
         vwr.resizeInnerPanel(width, height);
       } else {
@@ -365,7 +367,6 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     }
     if (totalAtomCount == 0)
       asc.newAtomSet();
-    //selections = new List<List<Object>>();
 
     if (allStates && desiredModelNumber == Integer.MIN_VALUE) {
       // if all_states and no model number indicated, display all states
@@ -407,9 +408,6 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       processObject(listAt(names, i), false, 0);
     pymolScene.setReaderObjectInfo(null, 0, null, false, null, null, null);
 
-    // not currently generating selections
-    //processSelections();
-
     // meshes are special objects that depend upon grid map data
     if (mapObjects != null && allowSurface)
       processMeshes(); 
@@ -437,8 +435,9 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
   }
 
   /**
-   * Recent PyMOL files may not have all settings. 
-   * For now, we just add null values;
+   * Recent PyMOL files may not have all settings. For now, we just add null
+   * values;
+   * 
    * @param settings
    * @return settings
    */
@@ -447,12 +446,16 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     for (int i = 0; i < n; i++) {
       @SuppressWarnings("unchecked")
       int i2 = intAt((Lst<Object>) settings.get(i), 0);
-      while (i < i2) {
-        Logger.info("PyMOL reader adding null settings #" + i);
-        settings.add(i++, new Lst<Object>());
-        n++;
+      if (i2 == -1) {
+        Logger.info("PyMOL reader adding null setting #" + i);
+        settings.set(i, new Lst<Object>()); // PyMOL 1.7 needs this
+      } else {
+        while (i < i2) {
+          Logger.info("PyMOL reader adding null setting #" + i);
+          settings.add(i++, new Lst<Object>());
+          n++;
+        }
       }
-      
     }
     return settings;
   }
@@ -680,6 +683,13 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     
     Logger.info("PyMOL model " + (nModels) + " Object " + objectName
         + (isHidden ? " (hidden)" : " (visible)"));
+    if (!isHidden && !isMovie && !allStates) {
+      if (pymolFrame > 0 && pymolFrame != nModels) {
+        pymolFrame = nModels;
+        allStates = true;
+        pymolScene.setFrameObject(T.frame, Integer.valueOf(-1));
+      }
+    }
     Lst<Object> objectHeader = listAt(pymolObject, 0);
     String parentGroupName = (execObject.size() < 8 ? null : stringAt(
         execObject, 6));
@@ -694,8 +704,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       msg = "" + type;
       break;
     case PyMOL.OBJECT_SELECTION:
-      // not treating these properly yet
-      //selections.addLast(execObject);
+      pymolScene.processSelection(execObject);
       break;
     case PyMOL.OBJECT_MOLECULE:
       doExclude = false;
@@ -739,11 +748,8 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       msg = "SURFACE";
       break;
     }
-    if (parentGroupName != null || bsAtoms != null) {
-      PyMOLGroup group = pymolScene.addGroup(execObject, parentGroupName, type);
-      if (bsAtoms != null)
-        bsAtoms = group.addGroupAtoms(bsAtoms);
-    }
+    if (parentGroupName != null || bsAtoms != null)
+      pymolScene.addGroup(execObject, parentGroupName, type, bsAtoms);
     if (doExclude) {
       int i0 = intAt(startLen, 0);
       int len = intAt(startLen, 1);
@@ -807,37 +813,6 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     pymolObject.addLast(objectName);
   }
 
-//  private void processSelections() {
-//    for (int i = selections.size(); --i >= 0;) {
-//      List<Object> execObject = selections.get(i);
-//      checkObject(execObject);
-//      processObjectSelection(listAt(execObject, 5));
-//    }
-//  }
-////  [Ca, 1, 0, 
-////   [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], -1, 
-////   [
-////   [H115W, 
-////   [2529, 2707], 
-////   [1, 1]]], ]
-//  private void processObjectSelection(List<Object> pymolObject) {
-//    BS bs = new BS();
-//    for (int j = pymolObject.size(); --j >= 0;) {
-//      List<Object> data = listAt(pymolObject, j);
-//      String parent = stringAt(data, 0);
-//      atomMap = htAtomMap.get(parent);
-//      if (atomMap == null)
-//        continue;
-//      List<Object> atoms = listAt(data, 1);
-//      for (int i = atoms.size(); --i >= 0;) {
-//        int ia = atomMap[intAt(atoms, i)];
-//        if (ia >= 0)
-//          bs.set(ia);
-//      }
-//    }
-//    if (!bs.isEmpty())
-//      htNames.put(objectName, bs);
-//  }
 
 
   /**
@@ -1346,7 +1321,8 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
   // generally useful static methods
 
   private static int intAt(Lst<Object> list, int i) {
-    return ((Number) list.get(i)).intValue();
+    // PyMOL 1.7.5 may simply have a null list for a setting
+    return (list == null ? -1 : ((Number) list.get(i)).intValue());
   }
 
   private static String stringAt(Lst<Object> list, int i) {

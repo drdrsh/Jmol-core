@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -8183,7 +8184,11 @@ public class Viewer extends JmolViewer implements AtomDataServer,
       setBackgroundImage((image == null ? null : nameOrError), image);
     } else if (echoName.startsWith("\1")) {
       sm.showImage(echoName, image);
-    } else {
+    } else if (echoName.startsWith("\0")) {
+      if (image != null) {
+        setWindowDimensions(new float[] { apiPlatform.getImageWidth(image), apiPlatform.getImageHeight(image) });
+      }
+    }  else {
       shm.loadShape(JC.SHAPE_ECHO);
       setShapeProperty(JC.SHAPE_ECHO, "text", nameOrError);
       if (image != null)
@@ -9123,11 +9128,15 @@ public class Viewer extends JmolViewer implements AtomDataServer,
 
   public String getAtomDefs(Map<String, Object> names) {
     SB sb = new SB();
-    for (Map.Entry<String, ?> e : names.entrySet()) {
+    String[] keys = new String[names.size()];
+    int n = 0;
+    for (Map.Entry<String, ?> e : names.entrySet())
       if (e.getValue() instanceof BS)
-        sb.append("{" + e.getKey() + "} <" + ((BS) e.getValue()).cardinality()
-            + " atoms>\n");
-    }
+        keys[n++] = "{" + e.getKey() + "} <" + ((BS) e.getValue()).cardinality()
+            + " atoms>\n";
+    Arrays.sort(keys);
+    for (int i = 0; i < n; i++)
+      sb.append(keys[i]);
     return sb.append("\n").toString();
   }
 
@@ -9416,6 +9425,10 @@ public class Viewer extends JmolViewer implements AtomDataServer,
    */
   public SymmetryInterface getSymTemp() {
     return Interface.getSymmetry(this, "ms");
+  }
+
+  public void setWindowDimensions(float[] dims) {
+    resizeInnerPanel((int) dims[0], (int) dims[1]);
   }
 
 }

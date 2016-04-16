@@ -52,14 +52,10 @@ public class Text extends Object2d {
 
   private int textWidth;
   private int textHeight;
-  private String text;
+  public String text;
   public String textUnformatted;
   
   
-  public String getText() {
-    return text;
-  }
-
   public void setOffset(int offset) {
     //Labels only
     offsetX = JC.getXOffset(offset);

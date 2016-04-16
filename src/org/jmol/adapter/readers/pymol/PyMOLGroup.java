@@ -15,6 +15,7 @@ class PyMOLGroup {
   boolean visible = true;
   boolean occluded = false;
   BS bsAtoms = new BS();
+  int firstAtom;
   int type;
 
   PyMOLGroup parent;
@@ -36,11 +37,10 @@ class PyMOLGroup {
       return;    
   }
   
-  BS addGroupAtoms(BS bs) {
+  void addGroupAtoms(BS bs) {
     bsAtoms.or(bs);
     if (parent != null)
       parent.addGroupAtoms(bsAtoms);
-    return bsAtoms;
   }
 
   @Override

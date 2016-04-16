@@ -163,32 +163,32 @@ public class Platform implements GenericPlatform {
 		Display.requestFocusInWindow(canvas);
 	}
 
-	@SuppressWarnings({ "null", "unused" })
+  @SuppressWarnings({ "null", "unused" })
   @Override
   public void repaint(Object canvas) {
-	  
-	  JmolToJSmolInterface jmol = null;
-	  
+
+    JmolToJSmolInterface jmol = null;
+
     /**
      * Jmol._repaint(applet,asNewThread)
      * 
-     * should invoke 
+     * should invoke
      * 
-     *   setTimeout(applet._applet.update(applet._canvas)) // may be 0,0
-     *   
+     * setTimeout(applet._applet.update(applet._canvas)) // may be 0,0
+     * 
      * when it is ready to do so.
      * 
      * @j2sNative
      * 
-     * jmol = (typeof Jmol != "undefined" && Jmol._repaint ? Jmol : null);
+     *   jmol = (self.Jmol && Jmol._repaint ? Jmol : null);
      * 
      */
     {
     }
     if (jmol != null)
-      jmol._repaint(((Viewer) vwr).html5Applet,true);
+      jmol._repaint(((Viewer) vwr).html5Applet, true);
 
-	}
+  }
 
 	@Override
   public void setTransparentCursor(Object canvas) {

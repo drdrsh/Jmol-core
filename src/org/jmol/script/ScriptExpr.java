@@ -719,6 +719,7 @@ abstract class ScriptExpr extends ScriptParam {
     boolean isInMath = false;
     int nExpress = 0;
     int ac = vwr.ms.ac;
+    int ptWithin = -10;
     if (ignoreSubset)
       pcStart = -pcStart;
     ignoreSubset |= chk;
@@ -798,7 +799,11 @@ abstract class ScriptExpr extends ScriptParam {
             rpn.addXBs(bs);
             break;
           }
-        } else if (s.indexOf("|") >= 0) {
+        } else if (s.indexOf("|") >= 0 && ptWithin != pc - 4) {
+          // looking for unit IDs;
+          // of course this means that no string can have "|" in it
+          // other than unit ids. 
+          // avoiding within ( dssr , "pairs where xxxx | xxx")
           rpn.addXBs(vwr.ms.getAtoms(T.sequence, s));
           break;
         }
@@ -809,10 +814,12 @@ abstract class ScriptExpr extends ScriptParam {
           pc = iToken;
         }
         break;
+      case T.within:
+        ptWithin = pc;
+        //$FALL-THROUGH$
       case T.smiles:
       case T.search:
       case T.substructure:
-      case T.within:
       case T.contact:
       case T.connected:
       case T.comma:

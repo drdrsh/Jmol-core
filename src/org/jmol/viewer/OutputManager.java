@@ -311,6 +311,7 @@ abstract class OutputManager {
           .getImageHeight(objImage);
       params.put("imageWidth", Integer.valueOf(w));
       params.put("imageHeight", Integer.valueOf(h));
+      System.out.println("OutputManager imageWidth/height" + w + " " + h);
       int[] pixels = encodeImage(w, h, objImage);
       if (pixels != null)
         params.put("imagePixels", pixels);
@@ -669,11 +670,13 @@ abstract class OutputManager {
       localName = fileName;
     int saveWidth = vwr.dimScreen.width;
     int saveHeight = vwr.dimScreen.height;
+    System.out.println("OutputManager saveWidth/Height are " + saveWidth + " " +  saveHeight + " " + width + " " + height);
     vwr.creatingImage = true;
     if (mustRender) {
       vwr.mustRender = true;
       vwr.resizeImage(width, height, true, false, false);
       vwr.setModelVisibility();
+      System.out.println("OutputManager mustRender="+ mustRender);
     }
     
     try {

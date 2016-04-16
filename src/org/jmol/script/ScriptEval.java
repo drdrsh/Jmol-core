@@ -4494,7 +4494,11 @@ public class ScriptEval extends ScriptExpr {
     } else {
       Lst<String> fNames = new Lst<String>();
       if (i == 1) {
-        i++;
+        if (tokAt(i + 1) == T.plus) {
+          modelName = "files";
+        } else {
+          i++;
+        }
         loadScript.append(" " + modelName);
       }
       filter = getLoadFilesList(i, loadScript, sOptions, htParams, fNames);
@@ -4616,7 +4620,10 @@ public class ScriptEval extends ScriptExpr {
         } else {
           id = filename.substring(1, pt);
         }
-        String ext = filename.substring(pt + 1);
+        String fullext = filename.substring(pt + 1);
+        // allow for defined file =1
+        pt = fullext.indexOf("=");
+        String ext = (pt < 0 ? fullext : fullext.substring(0, pt));
         filename = filename.substring(0, pt);
         if ((pt = filename.indexOf(".")) >= 0)
           filename = filename.substring(0, pt);
@@ -6696,6 +6703,19 @@ public class ScriptEval extends ScriptExpr {
     // SO DO NOT ALLOW CALCULATIONS xxx = a + b...
     // and are thus "setparam" only
     // anything in this block MUST RETURN
+    case T.window:
+      Object o = (isArrayParameter(2) ? floatParameterSet(2, 2, 2) : tokAt(2) == T.integer ?new float[] { intParameter(2), intParameter(3) }
+      : stringParameter(2));
+      checkLast(iToken);
+      if (chk)
+        return;
+      if (o instanceof String) {
+        if (vwr.fm.loadImage(o, "\0windowImage", !useThreads()))
+          throw new ScriptInterruption(this,"windowImage", 1);
+      } else {
+        vwr.setWindowDimensions((float[]) o);
+      }
+      return;
     case T.structure:
       STR type = STR.getProteinStructureType(paramAsStr(2));
       if (type == STR.NOT)
